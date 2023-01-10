@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "src/Counter.sol";
 
 contract CounterTest is Test {
     Counter public counter;
