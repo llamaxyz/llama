@@ -39,7 +39,7 @@ contract SentryERC721 is ERC721, Ownable {
         return false;
     }
 
-    function hashPermission(Permission memory permission) internal pure returns (uint256) {
+    function hashPermission(Permission calldata permission) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
     }
 
@@ -47,9 +47,16 @@ contract SentryERC721 is ERC721, Ownable {
         return _totalSupply;
     }
 
-    function mint(address to, string[] memory roles) public onlyOwner {
+    function mint(address to, string[] calldata roles) public onlyOwner {
         uint256 tokenId = totalSupply() + 1;
         _mint(to, tokenId);
         tokenToRoles[tokenId] = roles;
+    }
+
+    function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
+        for (uint256 i; i < permissions.length; i++) {
+            uint256 permissionSignature = hashPermission(permissions[i]);
+            rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
+        }
     }
 }
