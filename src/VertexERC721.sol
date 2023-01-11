@@ -59,4 +59,8 @@ contract SentryERC721 is ERC721, Ownable {
             rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
         }
     }
+
+    function assignRole(uint256 tokenId, string calldata role) public onlyOwner {
+        tokenToRoles[tokenId].push(role);
+    }
 }
