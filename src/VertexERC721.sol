@@ -54,6 +54,11 @@ contract VertexERC721 is ERC721, Ownable {
         tokenToRoles[tokenId] = userRoles;
     }
 
+    function burn(uint256 tokenId) public onlyOwner {
+        delete tokenToRoles[tokenId];
+        _burn(tokenId);
+    }
+
     function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
         roles.push(role);
         for (uint256 i; i < permissions.length; i++) {
