@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/token/ERC721/ERC721.sol";
+import "@openzeppelin/access/Ownable.sol";
 
 struct Permission {
     address target;
@@ -9,9 +10,10 @@ struct Permission {
     address executor;
 }
 
-contract SentryERC721 is ERC721 {
+contract SentryERC721 is ERC721, Ownable {
     mapping(uint256 => string[]) public tokenToRoles;
     mapping(string => uint256[]) public rolesToPermissionSignatures;
+    uint256 private _totalSupply;
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
@@ -39,5 +41,15 @@ contract SentryERC721 is ERC721 {
 
     function hashPermission(Permission memory permission) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function mint(address to, string[] memory roles) public onlyOwner {
+        uint256 tokenId = totalSupply() + 1;
+        _mint(to, tokenId);
+        tokenToRoles[tokenId] = roles;
     }
 }
