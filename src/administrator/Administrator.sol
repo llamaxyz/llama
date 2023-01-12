@@ -7,7 +7,7 @@ import {GovernorCountingSimple} from "@openzeppelin/governance/extensions/Govern
 import {GovernorVotes, IVotes} from "@openzeppelin/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from "@openzeppelin/governance/extensions/GovernorVotesQuorumFraction.sol";
 import {TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
-import {ExecutorControl} from "src/core/ExecutorControl.sol";
+import {ExecutorControl} from "src/administrator/ExecutorControl.sol";
 
 /// @custom:security-contact austin@llama.xyz
 contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, ExecutorControl {
