@@ -9,10 +9,18 @@ contract PolicyERC721Test is Test {
     PolicyERC721 public policyERC721;
 
     event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
+    event RoleRevoked(uint256 tokenId, string role);
     event RoleDeleted(string role);
 
     function hashPermission(Permission memory permission) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+    }
+
+    function generateGenericPermissionArray() internal pure returns (Permission[] memory, Permission memory) {
+        Permission memory permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
+        Permission[] memory permissions = new Permission[](1);
+        permissions[0] = permission;
+        return (permissions, permission);
     }
 
     function setUp() public {
@@ -36,9 +44,7 @@ contract PolicyERC721Test is Test {
     }
 
     function testAddRole() public {
-        Permission memory permission = Permission(address(0), bytes4(0), address(0));
-        Permission[] memory permissions = new Permission[](1);
-        permissions[0] = permission;
+        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
         vm.expectEmit(true, true, true, true, address(policyERC721));
         emit RoleAdded("admin", permissions, hashPermission(permission));
@@ -47,9 +53,7 @@ contract PolicyERC721Test is Test {
     }
 
     function testAssignRole() public {
-        Permission memory permission = Permission(address(0), bytes4(0), address(0));
-        Permission[] memory permissions = new Permission[](1);
-        permissions[0] = permission;
+        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
         policyERC721.addRole("admin", permissions);
 
@@ -60,7 +64,8 @@ contract PolicyERC721Test is Test {
     }
 
     function testDeleteRole() public {
-        Permission[] memory permissions = new Permission[](0);
+        (Permission[] memory permissions, ) = generateGenericPermissionArray();
+
         policyERC721.addRole("admin", permissions);
 
         vm.expectEmit(true, false, false, true, address(policyERC721));
@@ -69,5 +74,15 @@ contract PolicyERC721Test is Test {
         policyERC721.deleteRole("admin");
     }
 
-    function testRevokeRole() public {}
+    function testRevokeRole() public {
+        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+
+        policyERC721.addRole("admin", permissions);
+        policyERC721.assignRole(1, "admin");
+
+        vm.expectEmit(true, true, false, true, address(policyERC721));
+        emit RoleRevoked(1, "admin");
+
+        policyERC721.revokeRole(1, "admin");
+    }
 }
