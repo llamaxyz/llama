@@ -13,18 +13,12 @@ $ node -v # v16.15.1 or higher
 $ npm -v # v8.12.2 or higher
 ```
 
-Finally run the command below to install [pnpm](https://pnpm.io/):
-
-```sh
-$ brew install pnpm
-```
-
 ## Installation
 
 ```sh
 $ git clone https://github.com/llama-community/vertex-v1.git
 $ cd vertex-v1
-$ pnpm install
+$ npm install
 $ forge install
 $ forge update
 $ git submodule update --init --recursive

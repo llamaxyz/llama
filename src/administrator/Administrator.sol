@@ -11,13 +11,10 @@ import {ExecutorControl} from "src/administrator/ExecutorControl.sol";
 
 /// @custom:security-contact austin@llama.xyz
 contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, ExecutorControl {
-    constructor(IVotes _token, TimelockController _timelock)
-        Governor("Protocol XYZ")
-        GovernorSettings(36000, 50400, 2)
-        GovernorVotes(_token)
-        GovernorVotesQuorumFraction(10)
-        ExecutorControl(_timelock)
-    {}
+    constructor(
+        IVotes _token,
+        TimelockController _timelock
+    ) Governor("Protocol XYZ") GovernorSettings(36000, 50400, 2) GovernorVotes(_token) GovernorVotesQuorumFraction(10) ExecutorControl(_timelock) {}
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
         return super.votingDelay();
