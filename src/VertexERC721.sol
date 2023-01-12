@@ -75,8 +75,9 @@ contract VertexERC721 is ERC721, Ownable {
     ///@param userRoles the roles of the token
     function mint(address to, string[] memory userRoles) public onlyOwner {
         uint256 tokenId = totalSupply() + 1;
-        _mint(to, tokenId);
+        _totalSupply++;
         tokenToRoles[tokenId] = userRoles;
+        _mint(to, tokenId);
     }
 
     ///@dev burns a token
