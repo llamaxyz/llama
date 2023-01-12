@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@forge-std/Test.sol";
-import "src/PolicyERC721.sol";
-import "@forge-std/console.sol";
+import "lib/forge-std/src/Test.sol";
+import "src/policy/PolicyERC721.sol";
+import "lib/forge-std/src/console.sol";
 
 contract PolicyERC721Test is Test {
     PolicyERC721 public policyERC721;
