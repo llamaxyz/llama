@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/token/ERC721/ERC721.sol";
 import "@openzeppelin/access/Ownable.sol";
+import "@forge-std/console.sol";
 
 ///@dev Struct to define a permission
 struct Permission {
@@ -31,6 +32,8 @@ contract VertexERC721 is ERC721, Ownable {
          * now the administrator contract can control the VertexERC721 contract via governance
          */
     }
+
+    event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
 
     ///@dev returns the permission signatures of a token
     ///@param tokenId the id of the token
@@ -94,7 +97,11 @@ contract VertexERC721 is ERC721, Ownable {
         roles.push(role);
         for (uint256 i; i < permissions.length; i++) {
             uint256 permissionSignature = hashPermission(permissions[i]);
-            rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
+            uint256 rtpLength = rolesToPermissionSignatures[role].length;
+            console.logUint(permissionSignature);
+            console.logUint(rtpLength);
+            rolesToPermissionSignatures[role].push(permissionSignature);
+            emit RoleAdded(role, permissions, permissionSignature);
         }
     }
 
