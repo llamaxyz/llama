@@ -5,21 +5,43 @@ on: [pull_request]
 env:
   RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
   BLOCK_NUMBER: ${{ secrets.BLOCK_NUMBER }}
+  FOUNDRY_PROFILE: ci
+  FORGE_TEST_VERBOSITY: 3
 
 jobs:
-  tests:
-    runs-on: ubuntu-latest
+  check:
+    strategy:
+      fail-fast: true
 
+    name: Vertex tests
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
       - uses: actions/setup-node@v2
+
       - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          npm run build
+        id: build
+
       - name: Install Dependencies
         run: npm install
+        id: npmBuild
+
       - name: Install Modules
         run: npm run add
-      - name: Run Tests
-        run: FOUNDRY_PROFILE=ci RPC_MAINNET_URL=$RPC_MAINNET_URL BLOCK_NUMBER=$BLOCK_NUMBER npm test
+        id: add
+
+      - name: Run Forge tests
+        run: |
+          FOUNDRY_PROFILE=$FOUNDRY_PROFILE RPC_MAINNET_URL=$RPC_MAINNET_URL V=$FORGE_TEST_VERBOSITY npm test
+        id: test

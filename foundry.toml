@@ -5,7 +5,7 @@ libs = ['lib']
 optimizer = true
 optimizer_runs = 200
 
-[ci]
+[profile.ci]
 fuzz_runs = 5_000
 
 [rpc_endpoints]
