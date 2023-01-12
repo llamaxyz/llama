@@ -4,7 +4,6 @@ on: [pull_request]
 
 env:
   RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
-  BLOCK_NUMBER: ${{ secrets.BLOCK_NUMBER }}
   FOUNDRY_PROFILE: ci
   FORGE_TEST_VERBOSITY: 3
 
@@ -43,5 +42,5 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          FOUNDRY_PROFILE=$FOUNDRY_PROFILE RPC_MAINNET_URL=$RPC_MAINNET_URL V=$FORGE_TEST_VERBOSITY npm test
+          FOUNDRY_PROFILE=$FOUNDRY_PROFILE RPC_MAINNET_URL=$RPC_MAINNET_URL ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY V=$FORGE_TEST_VERBOSITY npm test
         id: test

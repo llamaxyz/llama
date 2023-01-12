@@ -4,7 +4,6 @@ on: [pull_request]
 
 env:
   RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
-  BLOCK_NUMBER: ${{ secrets.BLOCK_NUMBER }}
   FOUNDRY_PROFILE: ci
 
 jobs:
