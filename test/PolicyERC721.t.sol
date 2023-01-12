@@ -9,6 +9,7 @@ contract PolicyERC721Test is Test {
     PolicyERC721 public policyERC721;
 
     event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
+    event RoleDeleted(string role);
 
     function hashPermission(Permission memory permission) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
@@ -57,4 +58,16 @@ contract PolicyERC721Test is Test {
         uint256[] memory tokenPermissions = policyERC721.getPermissionSignatures(1);
         assertEq(policyERC721.hasPermission(1, hashPermission(permission)), true);
     }
+
+    function testDeleteRole() public {
+        Permission[] memory permissions = new Permission[](0);
+        policyERC721.addRole("admin", permissions);
+
+        vm.expectEmit(true, false, false, true, address(policyERC721));
+        emit RoleDeleted("admin");
+
+        policyERC721.deleteRole("admin");
+    }
+
+    function testRevokeRole() public {}
 }
