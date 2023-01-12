@@ -12,11 +12,11 @@ struct Permission {
     address executor;
 }
 
-///@title VertexERC721
-///@dev VertexERC721 is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
+///@title PolicyERC721
+///@dev PolicyERC721 is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
 ///@dev The roles and permissions determine how the token can interact with the vertex administrator contract
 
-contract VertexERC721 is ERC721, Ownable {
+contract PolicyERC721 is ERC721, Ownable {
     mapping(uint256 => string[]) public tokenToRoles;
     mapping(string => uint256[]) public rolesToPermissionSignatures;
     string[] public roles;
@@ -27,9 +27,9 @@ contract VertexERC721 is ERC721, Ownable {
          * 1: mint initial NFTs with initial roles to users, contributors, etc
          * 2: deploy the administator contract
          * 2.5: (in the constructor of the administrator contract will deploy the initial executor contracts)
-         * 3: set administrator contract as owner of VertexERC721
+         * 3: set administrator contract as owner of PolicyERC721
          *
-         * now the administrator contract can control the VertexERC721 contract via governance
+         * now the administrator contract can control the PolicyERC721 contract via governance
          */
     }
 
@@ -97,9 +97,6 @@ contract VertexERC721 is ERC721, Ownable {
         roles.push(role);
         for (uint256 i; i < permissions.length; i++) {
             uint256 permissionSignature = hashPermission(permissions[i]);
-            uint256 rtpLength = rolesToPermissionSignatures[role].length;
-            console.logUint(permissionSignature);
-            console.logUint(rtpLength);
             rolesToPermissionSignatures[role].push(permissionSignature);
             emit RoleAdded(role, permissions, permissionSignature);
         }

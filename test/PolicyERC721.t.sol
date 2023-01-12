@@ -2,11 +2,11 @@
 pragma solidity ^0.8.17;
 
 import "@forge-std/Test.sol";
-import "src/VertexERC721.sol";
+import "src/PolicyERC721.sol";
 import "@forge-std/console.sol";
 
-contract VertexERC721Test is Test {
-    VertexERC721 public vertexERC721;
+contract PolicyERC721Test is Test {
+    PolicyERC721 public policyERC721;
 
     event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
 
@@ -15,18 +15,18 @@ contract VertexERC721Test is Test {
     }
 
     function setUp() public {
-        vertexERC721 = new VertexERC721("Test", "TST");
-        // console.logAddress(address(vertexERC721)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
-        // console.logAddress(vertexERC721.owner()); //0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
+        policyERC721 = new PolicyERC721("Test", "TST");
+        // console.logAddress(address(policyERC721)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+        // console.logAddress(policyERC721.owner()); //0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
         string[] memory roles = new string[](0);
-        vertexERC721.mint(address(this), roles);
+        policyERC721.mint(address(this), roles);
     }
 
     function testMint() public {
         string[] memory roles = new string[](0);
-        vertexERC721.mint(address(this), roles);
-        assertEq(vertexERC721.balanceOf(address(this)), 2);
-        assertEq(vertexERC721.ownerOf(2), address(this));
+        policyERC721.mint(address(this), roles);
+        assertEq(policyERC721.balanceOf(address(this)), 2);
+        assertEq(policyERC721.ownerOf(2), address(this));
     }
 
     function testAddRole() public {
@@ -34,10 +34,10 @@ contract VertexERC721Test is Test {
         Permission[] memory permissions = new Permission[](1);
         permissions[0] = permission;
 
-        vm.expectEmit(true, true, true, true, address(vertexERC721));
+        vm.expectEmit(true, true, true, true, address(policyERC721));
         emit RoleAdded("admin", permissions, hashPermission(permission));
 
-        vertexERC721.addRole("admin", permissions);
-        // assertEq(vertexERC721.tokenToRoles(1)[0], "test");
+        policyERC721.addRole("admin", permissions);
+        // assertEq(policyERC721.tokenToRoles(1)[0], "test");
     }
 }
