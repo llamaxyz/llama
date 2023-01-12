@@ -127,6 +127,16 @@ contract PolicyERC721 is ERC721, Ownable {
         _burn(tokenId);
     }
 
+    ///@dev overriding transferFrom to disable transfers for SBTs
+    ///@note this is a temporary solution, we will need to conform to a Souldbound standard
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        revert("PolicyERC721: transferFrom is disabled");
+    }
+
     ///@dev adds a role to the contract
     ///@param role the role to add
     ///@param permissions the permissions of the role
