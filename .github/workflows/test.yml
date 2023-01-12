@@ -4,6 +4,7 @@ on: [pull_request]
 
 env:
   RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
+  ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
   FOUNDRY_PROFILE: ci
   FORGE_TEST_VERBOSITY: 3
 
