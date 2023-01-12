@@ -35,11 +35,11 @@ contract PolicyERC721Test is Test {
         string[] memory roles = new string[](0);
         policyERC721.mint(address(this), roles);
         assertEq(policyERC721.balanceOf(address(this)), 2);
-        assertEq(policyERC721.ownerOf(2), address(this));
+        assertEq(policyERC721.ownerOf(1), address(this));
     }
 
     function testBurn() public {
-        policyERC721.burn(1);
+        policyERC721.burn(0);
         assertEq(policyERC721.balanceOf(address(this)), 0);
     }
 

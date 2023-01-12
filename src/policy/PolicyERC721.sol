@@ -52,11 +52,13 @@ contract PolicyERC721 is ERC721, Ownable {
         (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
         uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
         uint256 psIndex;
-        for (uint256 i; i < userRolesLength; i++) {
-            uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
-            for (uint256 j; j < rolePermissionSignatures.length; j++) {
-                permissionSignatures[psIndex] = rolePermissionSignatures[j];
-                psIndex++;
+        unchecked {
+            for (uint256 i; i < userRolesLength; i++) {
+                uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
+                for (uint256 j; j < rolePermissionSignatures.length; j++) {
+                    permissionSignatures[psIndex] = rolePermissionSignatures[j];
+                    psIndex++;
+                }
             }
         }
         return permissionSignatures;
@@ -78,12 +80,14 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param permissionSignature the signature of the permission
     function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
         uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
-        for (uint256 i; i < permissionSignatures.length; i++) {
-            if (permissionSignatures[i] == permissionSignature) {
-                return true;
+        unchecked {
+            for (uint256 i; i < permissionSignatures.length; i++) {
+                if (permissionSignatures[i] == permissionSignature) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
     }
 
     ///@dev checks if a token has a role
@@ -91,9 +95,11 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to check
     function hasRole(uint256 tokenId, string calldata role) public view returns (bool) {
         string[] memory userRoles = tokenToRoles[tokenId];
-        for (uint256 i; i < userRoles.length; i++) {
-            if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
-                return true;
+        unchecked {
+            for (uint256 i; i < userRoles.length; i++) {
+                if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
+                    return true;
+                }
             }
         }
         return false;
@@ -114,7 +120,7 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
     function mint(address to, string[] memory userRoles) public onlyOwner {
-        uint256 tokenId = totalSupply() + 1;
+        uint256 tokenId = totalSupply();
         _totalSupply++;
         tokenToRoles[tokenId] = userRoles;
         _mint(to, tokenId);
