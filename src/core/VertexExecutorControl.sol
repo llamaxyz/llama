@@ -23,7 +23,7 @@ import {IGovernorTimelock} from "@openzeppelin/governance/extensions/IGovernorTi
  *
  * _Available since v4.3._
  */
-abstract contract ExecutorControl is IGovernorTimelock, Governor {
+abstract contract VertexExecutorControl is IGovernorTimelock, Governor {
     TimelockController private _timelock;
     mapping(uint256 => bytes32) private _timelockIds;
 
