@@ -121,7 +121,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param userRoles the roles of the token
     function mint(address to, string[] memory userRoles) public onlyOwner {
         uint256 tokenId = totalSupply();
-        _totalSupply++;
+        unchecked {
+            _totalSupply++;
+        }
         tokenToRoles[tokenId] = userRoles;
         _mint(to, tokenId);
     }
@@ -148,10 +150,12 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param permissions the permissions of the role
     function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
         roles.push(role);
-        for (uint256 i; i < permissions.length; i++) {
-            uint256 permissionSignature = hashPermission(permissions[i]);
-            rolesToPermissionSignatures[role].push(permissionSignature);
-            emit RoleAdded(role, permissions, permissionSignature);
+        unchecked {
+            for (uint256 i; i < permissions.length; i++) {
+                uint256 permissionSignature = hashPermission(permissions[i]);
+                rolesToPermissionSignatures[role].push(permissionSignature);
+                emit RoleAdded(role, permissions, permissionSignature);
+            }
         }
     }
 
@@ -167,9 +171,11 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to revoke
     function revokeRole(uint256 tokenId, string calldata role) public onlyOwner {
         string[] storage userRoles = tokenToRoles[tokenId];
-        for (uint256 i; i < userRoles.length; i++) {
-            if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
-                delete roles[i];
+        unchecked {
+            for (uint256 i; i < userRoles.length; i++) {
+                if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
+                    delete roles[i];
+                }
             }
         }
         emit RoleRevoked(tokenId, role);
@@ -179,9 +185,11 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to delete
     function deleteRole(string calldata role) public onlyOwner {
         delete rolesToPermissionSignatures[role];
-        for (uint256 i; i < roles.length; i++) {
-            if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
-                delete roles[i];
+        unchecked {
+            for (uint256 i; i < roles.length; i++) {
+                if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
+                    delete roles[i];
+                }
             }
         }
         emit RoleDeleted(role);
