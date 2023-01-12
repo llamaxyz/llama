@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/token/ERC721/ERC721.sol";
 import "@openzeppelin/access/Ownable.sol";
 import "@forge-std/console.sol";
+import "@forge-std/Test.sol";
 
 ///@dev Struct to define a permission
 struct Permission {
@@ -39,14 +40,28 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param tokenId the id of the token
     function getPermissionSignatures(uint256 tokenId) public view returns (uint256[] memory) {
         string[] memory userRoles = tokenToRoles[tokenId];
-        uint256[] memory permissionSignatures;
-        for (uint256 i; i < userRoles.length; i++) {
+        (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
+        uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
+        uint256 psIndex;
+        for (uint256 i; i < userRolesLength; i++) {
             uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
             for (uint256 j; j < rolePermissionSignatures.length; j++) {
-                permissionSignatures[permissionSignatures.length - 1] = rolePermissionSignatures[j];
+                permissionSignatures[psIndex] = rolePermissionSignatures[j];
+                psIndex++;
             }
         }
         return permissionSignatures;
+    }
+
+    ///@dev helper fn which returns the total number of roles and permissions of a token
+    function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
+        uint256 userRolesLength;
+        uint256 permissionSignaturesLength;
+        for (uint256 i; i < userRoles.length; i++) {
+            userRolesLength++;
+            permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
+        }
+        return (userRolesLength, permissionSignaturesLength);
     }
 
     ///@dev checks if a token has a permission
@@ -118,6 +133,7 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
     function assignRole(uint256 tokenId, string calldata role) public onlyOwner {
+        require(rolesToPermissionSignatures[role].length > 0, "PolicyERC721: role does not exist");
         tokenToRoles[tokenId].push(role);
     }
 

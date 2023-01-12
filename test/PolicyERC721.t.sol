@@ -46,9 +46,15 @@ contract PolicyERC721Test is Test {
     }
 
     function testAssignRole() public {
-        string[] memory roles = new string[](1);
-        roles[0] = "admin";
+        Permission memory permission = Permission(address(0), bytes4(0), address(0));
+        Permission[] memory permissions = new Permission[](1);
+        permissions[0] = permission;
+
+        policyERC721.addRole("admin", permissions);
+
         policyERC721.assignRole(1, "admin");
         assertEq(policyERC721.hasRole(1, "admin"), true);
+        uint256[] memory tokenPermissions = policyERC721.getPermissionSignatures(1);
+        assertEq(policyERC721.hasPermission(1, hashPermission(permission)), true);
     }
 }
