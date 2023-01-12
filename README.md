@@ -34,7 +34,7 @@ Duplicate `.env.example` and rename to `.env`:
 ### Commands
 
 - `make build` - build the project
-- `make tests [optional](V={1,2,3,4,5})` - run tests (with different debug levels if provided)
+- `make test [optional](V={1,2,3,4,5})` - run tests (with different debug levels if provided)
 - `make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)` - run matched tests (with different debug levels if provided)
 
 ### Deploy and Verify

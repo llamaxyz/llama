@@ -20,7 +20,7 @@
     "build": "make build",
     "sync": "make update",
     "add": "make install",
-    "test": "make tests",
+    "test": "make test",
     "snapshot": "make snapshot",
     "report": "make report",
     "lint": "make lint",
