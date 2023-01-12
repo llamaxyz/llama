@@ -1,23 +1,24 @@
-name: Tests
+name: Reports
 
 on: [pull_request]
 
 env:
   RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
-  ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
   FOUNDRY_PROFILE: ci
-  FORGE_TEST_VERBOSITY: 3
 
 jobs:
   check:
     strategy:
       fail-fast: true
 
-    name: Run tests
+    name: Generate gas report
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
           submodules: recursive
 
       - uses: actions/setup-node@v2
@@ -38,10 +39,15 @@ jobs:
       - name: Run Forge build
         run: |
           forge --version
-          forge build --sizes
+          npm run build
         id: build
 
-      - name: Run Forge tests
-        run: |
-          FOUNDRY_PROFILE=$FOUNDRY_PROFILE RPC_MAINNET_URL=$RPC_MAINNET_URL ETHERSCAN_API_KEY=$ETHERSCAN_API_KEY V=$FORGE_TEST_VERBOSITY npm test
-        id: test
+      - name: Generate gas report
+        run: npm run report
+
+      - name: Add & Commit
+        uses: EndBug/add-and-commit@v9.0.0
+        with:
+          add: ".gas-report"
+          message: Generate updated gas report
+          default_author: github_actions
