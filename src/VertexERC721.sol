@@ -126,11 +126,17 @@ contract VertexERC721 is ERC721, Ownable {
         }
     }
 
+    ///@dev adds a permission to a role
+    ///@param role the role to add the permission to
+    ///@param permission the permission to add
     function addPermissionToRole(string calldata role, Permission calldata permission) public onlyOwner {
         uint256 permissionSignature = hashPermission(permission);
         rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
     }
 
+    ///@dev deletes a permission from a role
+    ///@param role the role to delete the permission from
+    ///@param permission the permission to delete
     function deletePermissionFromRole(string calldata role, Permission calldata permission) public onlyOwner {
         uint256 permissionSignature = hashPermission(permission);
         uint256[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
