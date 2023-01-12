@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {IERC165} from "@openzeppelin/interfaces/IERC165.sol";
+import {IGovernor} from "@openzeppelin/governance/IGovernor.sol";
 import {Governor} from "@openzeppelin/governance/Governor.sol";
 import {TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
 import {IGovernorTimelock} from "@openzeppelin/governance/extensions/IGovernorTimelock.sol";
@@ -22,7 +24,7 @@ import {IGovernorTimelock} from "@openzeppelin/governance/extensions/IGovernorTi
  * _Available since v4.3._
  */
 abstract contract ExecutorControl is IGovernorTimelock, Governor {
-    TimelockController[] private _timelock;
+    TimelockController private _timelock;
     mapping(uint256 => bytes32) private _timelockIds;
 
     /**

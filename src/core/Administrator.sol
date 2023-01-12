@@ -6,17 +6,17 @@ import {GovernorSettings} from "@openzeppelin/governance/extensions/GovernorSett
 import {GovernorCountingSimple} from "@openzeppelin/governance/extensions/GovernorCountingSimple.sol";
 import {GovernorVotes, IVotes} from "@openzeppelin/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from "@openzeppelin/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {GovernorTimelockControl, TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
+import {TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
 import {ExecutorControl} from "src/core/ExecutorControl.sol";
 
 /// @custom:security-contact austin@llama.xyz
 contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, ExecutorControl {
-    constructor(IVotes _token, TimelockController[] _executors)
+    constructor(IVotes _token, TimelockController _timelock)
         Governor("Protocol XYZ")
         GovernorSettings(36000, 50400, 2)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(10)
-        ExecutorControl(_executors)
+        ExecutorControl(_timelock)
     {}
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
@@ -31,7 +31,7 @@ contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, Go
         return super.quorum(blockNumber);
     }
 
-    function state(uint256 proposalId) public view override(Governor, GovernorTimelockControl) returns (ProposalState) {
+    function state(uint256 proposalId) public view override(Governor, ExecutorControl) returns (ProposalState) {
         return super.state(proposalId);
     }
 
@@ -54,7 +54,7 @@ contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, Go
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal override(Governor, GovernorTimelockControl) {
+    ) internal override(Governor, ExecutorControl) {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
@@ -63,15 +63,15 @@ contract Administrator is Governor, GovernorSettings, GovernorCountingSimple, Go
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal override(Governor, GovernorTimelockControl) returns (uint256) {
+    ) internal override(Governor, ExecutorControl) returns (uint256) {
         return super._cancel(targets, values, calldatas, descriptionHash);
     }
 
-    function _executor() internal view override(Governor, GovernorTimelockControl) returns (address) {
+    function _executor() internal view override(Governor, ExecutorControl) returns (address) {
         return super._executor();
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(Governor, GovernorTimelockControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(Governor, ExecutorControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
