@@ -3,7 +3,7 @@ name: Tests
 on: [pull_request]
 
 env:
-  RPC_URL: ${{ secrets.RPC_URL }}
+  RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
   BLOCK_NUMBER: ${{ secrets.BLOCK_NUMBER }}
 
 jobs:
@@ -22,4 +22,4 @@ jobs:
       - name: Install Modules
         run: npm run add
       - name: Run Tests
-        run: FOUNDRY_PROFILE=ci RPC_URL=$RPC_URL BLOCK_NUMBER=$BLOCK_NUMBER npm test
+        run: FOUNDRY_PROFILE=ci RPC_MAINNET_URL=$RPC_MAINNET_URL BLOCK_NUMBER=$BLOCK_NUMBER npm test
