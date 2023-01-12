@@ -16,7 +16,8 @@
     "*": "npm run lint"
   },
   "scripts": {
-    "setup": "make build",
+    "setup": "make install && make update && make build",
+    "build": "make build",
     "sync": "make update",
     "add": "make install",
     "test": "make test",

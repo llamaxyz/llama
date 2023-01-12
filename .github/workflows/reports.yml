@@ -29,19 +29,19 @@ jobs:
         with:
           version: nightly
 
+      - name: Install Dependencies
+        run: npm install
+        id: install
+
+      - name: Install Modules
+        run: npm run add
+        id: add
+
       - name: Run Forge build
         run: |
           forge --version
           npm run build
         id: build
-
-      - name: Install Dependencies
-        run: npm install
-        id: npmBuild
-
-      - name: Install Modules
-        run: npm run add
-        id: add
 
       - name: Generate gas report
         run: npm run report

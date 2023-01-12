@@ -19,8 +19,7 @@ $ npm -v # v8.12.2 or higher
 $ git clone https://github.com/llama-community/vertex-v1.git
 $ cd vertex-v1
 $ npm install
-$ forge install
-$ forge update
+$ make setup
 $ git submodule update --init --recursive
 ```
 
