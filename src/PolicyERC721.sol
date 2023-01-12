@@ -40,6 +40,8 @@ contract PolicyERC721 is ERC721, Ownable {
     event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
     event RoleRevoked(uint256 tokenId, string role);
     event RoleDeleted(string role);
+    event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
+    event PermissionDeleted(string role, uint256 permissionSignature);
 
     ///@dev returns the permission signatures of a token
     ///@param tokenId the id of the token
@@ -173,6 +175,7 @@ contract PolicyERC721 is ERC721, Ownable {
     function addPermissionToRole(string calldata role, Permission calldata permission) public onlyOwner {
         uint256 permissionSignature = hashPermission(permission);
         rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
+        emit PermissionAdded(role, permission, permissionSignature);
     }
 
     ///@dev deletes a permission from a role
@@ -186,5 +189,6 @@ contract PolicyERC721 is ERC721, Ownable {
                 delete rolePermissionSignatures[i];
             }
         }
+        emit PermissionDeleted(role, permission, permissionSignature);
     }
 }
