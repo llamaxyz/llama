@@ -128,7 +128,7 @@ contract PolicyERC721 is ERC721, Ownable {
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
-    ///@note this is a temporary solution, we will need to conform to a Souldbound standard
+    ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
     function transferFrom(
         address from,
         address to,

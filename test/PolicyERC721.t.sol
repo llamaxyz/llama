@@ -110,4 +110,9 @@ contract PolicyERC721Test is Test {
 
         assertEq(policyERC721.hasPermission(1, hashPermission(permission)), false);
     }
+
+    function testCannotTransferTokenOwnership() public {
+        vm.expectRevert("PolicyERC721: transferFrom is disabled");
+        policyERC721.transferFrom(address(this), address(0xdeadbeef), 1);
+    }
 }
