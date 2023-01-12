@@ -85,4 +85,29 @@ contract PolicyERC721Test is Test {
 
         policyERC721.revokeRole(1, "admin");
     }
+
+    function testAddPermission() public {
+        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+
+        policyERC721.addRole("admin", permissions);
+
+        policyERC721.assignRole(1, "admin");
+
+        Permission memory newPermission = Permission(address(0xbeef), bytes4(0x09090909), address(0xbeefbeef));
+        policyERC721.addPermissionToRole("admin", newPermission);
+
+        assertEq(policyERC721.hasPermission(1, hashPermission(newPermission)), true);
+    }
+
+    function testDeletePermission() public {
+        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+
+        policyERC721.addRole("admin", permissions);
+
+        policyERC721.assignRole(1, "admin");
+
+        policyERC721.deletePermissionFromRole("admin", permission);
+
+        assertEq(policyERC721.hasPermission(1, hashPermission(permission)), false);
+    }
 }
