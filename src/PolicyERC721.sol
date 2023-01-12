@@ -62,6 +62,19 @@ contract PolicyERC721 is ERC721, Ownable {
         return false;
     }
 
+    ///@dev checks if a token has a role
+    ///@param tokenId the id of the token
+    ///@param role the role to check
+    function hasRole(uint256 tokenId, string calldata role) public view returns (bool) {
+        string[] memory userRoles = tokenToRoles[tokenId];
+        for (uint256 i; i < userRoles.length; i++) {
+            if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (uint256) {

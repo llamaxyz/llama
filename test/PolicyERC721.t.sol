@@ -29,6 +29,11 @@ contract PolicyERC721Test is Test {
         assertEq(policyERC721.ownerOf(2), address(this));
     }
 
+    function testBurn() public {
+        policyERC721.burn(1);
+        assertEq(policyERC721.balanceOf(address(this)), 0);
+    }
+
     function testAddRole() public {
         Permission memory permission = Permission(address(0), bytes4(0), address(0));
         Permission[] memory permissions = new Permission[](1);
@@ -38,6 +43,12 @@ contract PolicyERC721Test is Test {
         emit RoleAdded("admin", permissions, hashPermission(permission));
 
         policyERC721.addRole("admin", permissions);
-        // assertEq(policyERC721.tokenToRoles(1)[0], "test");
+    }
+
+    function testAssignRole() public {
+        string[] memory roles = new string[](1);
+        roles[0] = "admin";
+        policyERC721.assignRole(1, "admin");
+        assertEq(policyERC721.hasRole(1, "admin"), true);
     }
 }
