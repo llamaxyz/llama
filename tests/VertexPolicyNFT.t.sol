@@ -8,12 +8,12 @@ import "lib/forge-std/src/console.sol";
 contract VertexPolicyNFTTest is Test {
     VertexPolicyNFT public vertexPolicyNFT;
 
-    event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
+    event RoleAdded(string role, Permission[] permissions, bytes32[] permissionSignatures);
     event RoleRevoked(uint256 tokenId, string role);
     event RoleDeleted(string role);
 
-    function hashPermission(Permission memory permission) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+    function hashPermission(Permission memory permission) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor));
     }
 
     function generateGenericPermissionArray() internal pure returns (Permission[] memory, Permission memory) {
@@ -45,7 +45,7 @@ contract VertexPolicyNFTTest is Test {
 
     function testAddRole() public {
         (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
-        uint256[] memory permissionSignaturesArray = new uint256[](1);
+        bytes32[] memory permissionSignaturesArray = new bytes32[](1);
         permissionSignaturesArray[0] = hashPermission(permission);
 
         vm.expectEmit(true, true, true, true, address(vertexPolicyNFT));
@@ -61,7 +61,7 @@ contract VertexPolicyNFTTest is Test {
 
         vertexPolicyNFT.assignRole(1, "admin");
         assertEq(vertexPolicyNFT.hasRole(1, "admin"), true);
-        uint256[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
+        bytes32[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
         assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
     }
 
