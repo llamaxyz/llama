@@ -4,19 +4,19 @@ pragma solidity ^0.8.17;
 import {IERC165} from "@openzeppelin/interfaces/IERC165.sol";
 import {IGovernor} from "@openzeppelin/governance/IGovernor.sol";
 import {Governor} from "@openzeppelin/governance/Governor.sol";
-import {TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
 import {IGovernorTimelock} from "@openzeppelin/governance/extensions/IGovernorTimelock.sol";
+import {VertexExecutor} from "src/core/VertexExecutor.sol";
 
 /**
- * @dev Extension of {Governor} that binds the execution process to an instance of {TimelockController}. This adds a
- * delay, enforced by the {TimelockController} to all successful proposal (in addition to the voting duration). The
+ * @dev Extension of {Governor} that binds the execution process to an instance of {VertexExecutor}. This adds a
+ * delay, enforced by the {VertexExecutor} to all successful proposal (in addition to the voting duration). The
  * {Governor} needs the proposer (and ideally the executor) roles for the {Governor} to work properly.
  *
- * Using this model means the proposal will be operated by the {TimelockController} and not by the {Governor}. Thus,
- * the assets and permissions must be attached to the {TimelockController}. Any asset sent to the {Governor} will be
+ * Using this model means the proposal will be operated by the {VertexExecutor} and not by the {Governor}. Thus,
+ * the assets and permissions must be attached to the {VertexExecutor}. Any asset sent to the {Governor} will be
  * inaccessible.
  *
- * WARNING: Setting up the TimelockController to have additional proposers besides the governor is very risky, as it
+ * WARNING: Setting up the VertexExecutor to have additional proposers besides the governor is very risky, as it
  * grants them powers that they must be trusted or known not to use: 1) {onlyGovernance} functions like {relay} are
  * available to them through the timelock, and 2) approved governance proposals can be blocked by them, effectively
  * executing a Denial of Service attack. This risk will be mitigated in a future release.
@@ -24,7 +24,7 @@ import {IGovernorTimelock} from "@openzeppelin/governance/extensions/IGovernorTi
  * _Available since v4.3._
  */
 abstract contract VertexExecutorControl is IGovernorTimelock, Governor {
-    TimelockController private _timelock;
+    VertexExecutor private _timelock;
     mapping(uint256 => bytes32) private _timelockIds;
 
     /**
@@ -35,7 +35,7 @@ abstract contract VertexExecutorControl is IGovernorTimelock, Governor {
     /**
      * @dev Set the timelock.
      */
-    constructor(TimelockController timelockAddress) {
+    constructor(VertexExecutor timelockAddress) {
         _updateTimelock(timelockAddress);
     }
 
@@ -124,7 +124,7 @@ abstract contract VertexExecutorControl is IGovernorTimelock, Governor {
      * been queued.
      */
     // This function can reenter through the external call to the timelock, but we assume the timelock is trusted and
-    // well behaved (according to TimelockController) and this will not happen.
+    // well behaved (according to VertexExecutor) and this will not happen.
     // slither-disable-next-line reentrancy-no-eth
     function _cancel(
         address[] memory targets,
@@ -155,11 +155,11 @@ abstract contract VertexExecutorControl is IGovernorTimelock, Governor {
      *
      * CAUTION: It is not recommended to change the timelock while there are other queued governance proposals.
      */
-    function updateTimelock(TimelockController newTimelock) external virtual onlyGovernance {
+    function updateTimelock(VertexExecutor newTimelock) external virtual onlyGovernance {
         _updateTimelock(newTimelock);
     }
 
-    function _updateTimelock(TimelockController newTimelock) private {
+    function _updateTimelock(VertexExecutor newTimelock) private {
         emit TimelockChange(address(_timelock), address(newTimelock));
         _timelock = newTimelock;
     }

@@ -6,14 +6,14 @@ import {GovernorSettings} from "@openzeppelin/governance/extensions/GovernorSett
 import {GovernorCountingSimple} from "@openzeppelin/governance/extensions/GovernorCountingSimple.sol";
 import {GovernorVotes, IVotes} from "@openzeppelin/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from "@openzeppelin/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {TimelockController} from "@openzeppelin/governance/extensions/GovernorTimelockControl.sol";
+import {VertexExecutor} from "src/core/VertexExecutor.sol";
 import {VertexExecutorControl} from "src/core/VertexExecutorControl.sol";
 
 contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, VertexExecutorControl {
     constructor(
         IVotes _token,
-        TimelockController _timelock
-    ) Governor("ProtocolXYZ") GovernorSettings(0, 50400, 1) GovernorVotes(_token) GovernorVotesQuorumFraction(10) VertexExecutorControl(_timelock) {} // solhint-disable-line no-empty-blocks
+        VertexExecutor _timelock
+    ) Governor("ProtocolXYZ") GovernorSettings(0, 50400, 1) GovernorVotes(_token) GovernorVotesQuorumFraction(2) VertexExecutorControl(_timelock) {} // solhint-disable-line no-empty-blocks
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
         return super.votingDelay();
