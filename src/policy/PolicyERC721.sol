@@ -43,6 +43,8 @@ contract PolicyERC721 is ERC721, Ownable {
     event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
     event PermissionDeleted(string role, Permission permission, uint256 permissionSignature);
 
+    error RoleNonExistant(string role);
+
     ///@dev returns the permission signatures of a token
     ///@param tokenId the id of the token
     function getPermissionSignatures(uint256 tokenId) public view returns (uint256[] memory) {
@@ -163,7 +165,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
     function assignRole(uint256 tokenId, string calldata role) public onlyOwner {
-        require(rolesToPermissionSignatures[role].length > 0, "PolicyERC721: role does not exist");
+        if (rolesToPermissionSignatures[role].length == 0) {
+            revert RoleNonExistant(role);
+        }
         tokenToRoles[tokenId].push(role);
     }
 
