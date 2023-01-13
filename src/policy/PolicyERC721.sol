@@ -172,8 +172,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to revoke
     function revokeRole(uint256 tokenId, string calldata role) public onlyOwner {
         string[] storage userRoles = tokenToRoles[tokenId];
+        uint256 userRolesLength = userRoles.length;
         unchecked {
-            for (uint256 i; i < userRoles.length; i++) {
+            for (uint256 i; i < userRolesLength; i++) {
                 if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
                     delete roles[i];
                 }
