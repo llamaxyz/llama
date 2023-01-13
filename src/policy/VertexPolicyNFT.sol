@@ -11,8 +11,8 @@ struct Permission {
     address executor;
 }
 
-///@title PolicyERC721
-///@dev PolicyERC721 is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
+///@title VertexPolicyNFT
+///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
 ///@dev The roles and permissions determine how the token can interact with the vertex administrator contract
 
 /* one behavior with this contract is that if a role is deleted, it will still appear in the tokenToRoles mapping.
@@ -20,7 +20,7 @@ struct Permission {
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
 
-contract PolicyERC721 is ERC721, Ownable {
+contract VertexPolicyNFT is ERC721, Ownable {
     mapping(uint256 => string[]) public tokenToRoles;
     mapping(string => uint256[]) public rolesToPermissionSignatures;
     string[] public roles;
@@ -159,7 +159,7 @@ contract PolicyERC721 is ERC721, Ownable {
         address to,
         uint256 tokenId
     ) public override {
-        revert("PolicyERC721: transferFrom is disabled");
+        revert("VertexPolicyNFT: transferFrom is disabled");
     }
 
     ///@dev hashes a permission
