@@ -154,11 +154,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     ///@dev overriding transferFrom to disable transfers for SBTs
     ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
+    function transferFrom(address from, address to, uint256 tokenId) public override {
         revert("VertexPolicyNFT: transferFrom is disabled");
     }
 
