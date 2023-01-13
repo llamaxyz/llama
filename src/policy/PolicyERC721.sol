@@ -26,16 +26,7 @@ contract PolicyERC721 is ERC721, Ownable {
     string[] public roles;
     uint256 private _totalSupply;
 
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
-        /* potential idea for deployment:
-         * 1: mint initial NFTs with initial roles to users, contributors, etc
-         * 2: deploy the administator contract
-         * 2.5: (in the constructor of the administrator contract will deploy the initial executor contracts)
-         * 3: set administrator contract as owner of PolicyERC721
-         *
-         * now the administrator contract can control the PolicyERC721 contract via governance
-         */
-    }
+    constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
     event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
     event RoleRevoked(uint256 tokenId, string role);
@@ -44,51 +35,6 @@ contract PolicyERC721 is ERC721, Ownable {
     event PermissionDeleted(string role, Permission permission, uint256 permissionSignature);
 
     error RoleNonExistant(string role);
-
-    ///@dev returns the permission signatures of a token
-    ///@param tokenId the id of the token
-    function getPermissionSignatures(uint256 tokenId) public view returns (uint256[] memory) {
-        string[] memory userRoles = tokenToRoles[tokenId];
-        (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
-        uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
-        uint256 psIndex;
-        unchecked {
-            for (uint256 i; i < userRolesLength; i++) {
-                uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
-                for (uint256 j; j < rolePermissionSignatures.length; j++) {
-                    permissionSignatures[psIndex] = rolePermissionSignatures[j];
-                    psIndex++;
-                }
-            }
-        }
-        return permissionSignatures;
-    }
-
-    ///@dev helper fn which returns the total number of roles and permissions of a token
-    function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
-        uint256 userRolesLength;
-        uint256 permissionSignaturesLength;
-        for (uint256 i; i < userRoles.length; i++) {
-            userRolesLength++;
-            permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
-        }
-        return (userRolesLength, permissionSignaturesLength);
-    }
-
-    ///@dev checks if a token has a permission
-    ///@param tokenId the id of the token
-    ///@param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
-        uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
-        unchecked {
-            for (uint256 i; i < permissionSignatures.length; i++) {
-                if (permissionSignatures[i] == permissionSignature) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
 
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
@@ -122,16 +68,6 @@ contract PolicyERC721 is ERC721, Ownable {
     function burn(uint256 tokenId) public onlyOwner {
         delete tokenToRoles[tokenId];
         _burn(tokenId);
-    }
-
-    ///@dev overriding transferFrom to disable transfers for SBTs
-    ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
-        revert("PolicyERC721: transferFrom is disabled");
     }
 
     ///@dev adds a role to the contract
@@ -213,6 +149,16 @@ contract PolicyERC721 is ERC721, Ownable {
         emit PermissionDeleted(role, permission, permissionSignature);
     }
 
+    ///@dev overriding transferFrom to disable transfers for SBTs
+    ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        revert("PolicyERC721: transferFrom is disabled");
+    }
+
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (uint256) {
@@ -222,5 +168,50 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@dev returns the total token supply of the contract
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
+    }
+
+    ///@dev returns the permission signatures of a token
+    ///@param tokenId the id of the token
+    function getPermissionSignatures(uint256 tokenId) public view returns (uint256[] memory) {
+        string[] memory userRoles = tokenToRoles[tokenId];
+        (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
+        uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
+        uint256 psIndex;
+        unchecked {
+            for (uint256 i; i < userRolesLength; i++) {
+                uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
+                for (uint256 j; j < rolePermissionSignatures.length; j++) {
+                    permissionSignatures[psIndex] = rolePermissionSignatures[j];
+                    psIndex++;
+                }
+            }
+        }
+        return permissionSignatures;
+    }
+
+    ///@dev helper fn which returns the total number of roles and permissions of a token
+    function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
+        uint256 userRolesLength;
+        uint256 permissionSignaturesLength;
+        for (uint256 i; i < userRoles.length; i++) {
+            userRolesLength++;
+            permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
+        }
+        return (userRolesLength, permissionSignaturesLength);
+    }
+
+    ///@dev checks if a token has a permission
+    ///@param tokenId the id of the token
+    ///@param permissionSignature the signature of the permission
+    function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
+        uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
+        unchecked {
+            for (uint256 i; i < permissionSignatures.length; i++) {
+                if (permissionSignatures[i] == permissionSignature) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }
