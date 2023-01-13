@@ -86,6 +86,10 @@ contract VertexPolicyNFTTest is Test {
         emit RoleRevoked(1, "admin");
 
         vertexPolicyNFT.revokeRole(1, "admin");
+        assertEq(vertexPolicyNFT.hasRole(1, "admin"), false);
+        string[] memory roles = vertexPolicyNFT.getRoles();
+        assertEq(roles.length, 1);
+        assertEq(roles[0], "admin");
     }
 
     function testAddPermission() public {

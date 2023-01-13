@@ -39,7 +39,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
     ///@param role the role to check
-    function hasRole(uint256 tokenId, string calldata role) public view returns (bool) {
+    function hasRole(uint256 tokenId, string memory role) public view returns (bool) {
         string[] memory userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
         unchecked {
@@ -106,7 +106,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
                 if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
-                    delete roles[i];
+                    delete userRoles[i];
                 }
             }
         }
@@ -217,5 +217,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
             }
             return false;
         }
+    }
+
+    function getRoles() public view returns (string[] memory) {
+        return roles;
     }
 }
