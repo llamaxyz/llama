@@ -81,14 +81,16 @@ contract VertexExecutor is AccessControl, IERC721Receiver, IERC1155Receiver {
             _setupRole(TIMELOCK_ADMIN_ROLE, admin);
         }
 
+        uint256 proposerLength = proposers.length;
         // register proposers and cancellers
-        for (uint256 i = 0; i < proposers.length; ++i) {
+        for (uint256 i = 0; i < proposerLength; ++i) {
             _setupRole(PROPOSER_ROLE, proposers[i]);
             _setupRole(CANCELLER_ROLE, proposers[i]);
         }
 
+        uint256 executorsLength = executors.length;
         // register executors
-        for (uint256 i = 0; i < executors.length; ++i) {
+        for (uint256 i = 0; i < executorsLength; ++i) {
             _setupRole(EXECUTOR_ROLE, executors[i]);
         }
 
