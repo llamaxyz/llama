@@ -43,7 +43,7 @@ contract PolicyERC721 is ERC721, Ownable {
         string[] memory userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
         unchecked {
-            for (uint256 i; i < userRolesLength; i++) {
+            for (uint256 i; i < userRolesLength; ++i) {
                 if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
                     return true;
                 }
@@ -79,7 +79,7 @@ contract PolicyERC721 is ERC721, Ownable {
         uint256 permissionsLength = permissions.length;
         uint256[] memory permissionSignatures = new uint256[](permissionsLength);
         unchecked {
-            for (uint256 i; i < permissionsLength; i++) {
+            for (uint256 i; i < permissionsLength; ++i) {
                 uint256 permissionSignature = hashPermission(permissions[i]);
                 rolesToPermissionSignatures[role].push(permissionSignature);
                 permissionSignatures[i] = permissionSignature;
@@ -104,7 +104,7 @@ contract PolicyERC721 is ERC721, Ownable {
         string[] storage userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
         unchecked {
-            for (uint256 i; i < userRolesLength; i++) {
+            for (uint256 i; i < userRolesLength; ++i) {
                 if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
                     delete roles[i];
                 }
@@ -119,7 +119,7 @@ contract PolicyERC721 is ERC721, Ownable {
         delete rolesToPermissionSignatures[role];
         uint256 rolesLength = roles.length;
         unchecked {
-            for (uint256 i; i < rolesLength; i++) {
+            for (uint256 i; i < rolesLength; ++i) {
                 if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
                     delete roles[i];
                 }
@@ -144,7 +144,7 @@ contract PolicyERC721 is ERC721, Ownable {
         uint256 permissionSignature = hashPermission(permission);
         uint256[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
-        for (uint256 i; i < rolePermissionSignaturesLength; i++) {
+        for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
             if (rolePermissionSignatures[i] == permissionSignature) {
                 delete rolePermissionSignatures[i];
             }
@@ -181,7 +181,7 @@ contract PolicyERC721 is ERC721, Ownable {
         uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
         uint256 psIndex;
         unchecked {
-            for (uint256 i; i < userRolesLength; i++) {
+            for (uint256 i; i < userRolesLength; ++i) {
                 uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
                 for (uint256 j; j < rolePermissionSignatures.length; j++) {
                     permissionSignatures[psIndex] = rolePermissionSignatures[j];
@@ -196,7 +196,7 @@ contract PolicyERC721 is ERC721, Ownable {
     function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
         uint256 permissionSignaturesLength;
         uint256 userRolesLength = userRoles.length;
-        for (uint256 i; i < userRolesLength; i++) {
+        for (uint256 i; i < userRolesLength; ++i) {
             permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
         }
         return (userRolesLength, permissionSignaturesLength);
@@ -208,7 +208,7 @@ contract PolicyERC721 is ERC721, Ownable {
     function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
         uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
         unchecked {
-            for (uint256 i; i < permissionSignatures.length; i++) {
+            for (uint256 i; i < permissionSignatures.length; ++i) {
                 if (permissionSignatures[i] == permissionSignature) {
                     return true;
                 }
