@@ -41,8 +41,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to check
     function hasRole(uint256 tokenId, string calldata role) public view returns (bool) {
         string[] memory userRoles = tokenToRoles[tokenId];
+        uint256 userRolesLength = userRoles.length;
         unchecked {
-            for (uint256 i; i < userRoles.length; i++) {
+            for (uint256 i; i < userRolesLength; i++) {
                 if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
                     return true;
                 }
@@ -116,8 +117,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param role the role to delete
     function deleteRole(string calldata role) public onlyOwner {
         delete rolesToPermissionSignatures[role];
+        uint256 rolesLength = roles.length;
         unchecked {
-            for (uint256 i; i < roles.length; i++) {
+            for (uint256 i; i < rolesLength; i++) {
                 if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
                     delete roles[i];
                 }
@@ -141,7 +143,8 @@ contract PolicyERC721 is ERC721, Ownable {
     function deletePermissionFromRole(string calldata role, Permission calldata permission) public onlyOwner {
         uint256 permissionSignature = hashPermission(permission);
         uint256[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
-        for (uint256 i; i < rolePermissionSignatures.length; i++) {
+        uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
+        for (uint256 i; i < rolePermissionSignaturesLength; i++) {
             if (rolePermissionSignatures[i] == permissionSignature) {
                 delete rolePermissionSignatures[i];
             }
@@ -191,10 +194,9 @@ contract PolicyERC721 is ERC721, Ownable {
 
     ///@dev helper fn which returns the total number of roles and permissions of a token
     function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
-        uint256 userRolesLength;
         uint256 permissionSignaturesLength;
-        for (uint256 i; i < userRoles.length; i++) {
-            userRolesLength++;
+        uint256 userRolesLength = userRoles.length;
+        for (uint256 i; i < userRolesLength; i++) {
             permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
         }
         return (userRolesLength, permissionSignaturesLength);
