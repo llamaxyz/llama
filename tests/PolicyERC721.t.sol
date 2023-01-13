@@ -8,7 +8,7 @@ import "lib/forge-std/src/console.sol";
 contract PolicyERC721Test is Test {
     PolicyERC721 public policyERC721;
 
-    event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
+    event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
     event RoleRevoked(uint256 tokenId, string role);
     event RoleDeleted(string role);
 
@@ -45,9 +45,11 @@ contract PolicyERC721Test is Test {
 
     function testAddRole() public {
         (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+        uint256[] memory permissionSignaturesArray = new uint256[](1);
+        permissionSignaturesArray[0] = hashPermission(permission);
 
         vm.expectEmit(true, true, true, true, address(policyERC721));
-        emit RoleAdded("admin", permissions, hashPermission(permission));
+        emit RoleAdded("admin", permissions, permissionSignaturesArray);
 
         policyERC721.addRole("admin", permissions);
     }

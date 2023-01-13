@@ -37,7 +37,7 @@ contract PolicyERC721 is ERC721, Ownable {
          */
     }
 
-    event RoleAdded(string role, Permission[] permissions, uint256 permissionSignature);
+    event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
     event RoleRevoked(uint256 tokenId, string role);
     event RoleDeleted(string role);
     event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
@@ -149,13 +149,15 @@ contract PolicyERC721 is ERC721, Ownable {
     function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
         roles.push(role);
         uint256 permissionsLength = permissions.length;
+        uint256[] memory permissionSignatures = new uint256[](permissionsLength);
         unchecked {
             for (uint256 i; i < permissionsLength; i++) {
                 uint256 permissionSignature = hashPermission(permissions[i]);
                 rolesToPermissionSignatures[role].push(permissionSignature);
-                emit RoleAdded(role, permissions, permissionSignature);
+                permissionSignatures[i] = permissionSignature;
             }
         }
+        emit RoleAdded(role, permissions, permissionSignatures);
     }
 
     ///@dev assigns a role to a token
