@@ -148,8 +148,9 @@ contract PolicyERC721 is ERC721, Ownable {
     ///@param permissions the permissions of the role
     function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
         roles.push(role);
+        uint256 permissionsLength = permissions.length;
         unchecked {
-            for (uint256 i; i < permissions.length; i++) {
+            for (uint256 i; i < permissionsLength; i++) {
                 uint256 permissionSignature = hashPermission(permissions[i]);
                 rolesToPermissionSignatures[role].push(permissionSignature);
                 emit RoleAdded(role, permissions, permissionSignature);
