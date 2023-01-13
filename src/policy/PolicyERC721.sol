@@ -3,8 +3,6 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/token/ERC721/ERC721.sol";
 import "@openzeppelin/access/Ownable.sol";
-import "lib/forge-std/src/console.sol";
-import "lib/forge-std/src/Test.sol";
 
 ///@dev Struct to define a permission
 struct Permission {
