@@ -105,17 +105,6 @@ contract PolicyERC721 is ERC721, Ownable {
         return false;
     }
 
-    ///@dev hashes a permission
-    ///@param permission the permission to hash
-    function hashPermission(Permission calldata permission) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
-    }
-
-    ///@dev returns the total token supply of the contract
-    function totalSupply() public view returns (uint256) {
-        return _totalSupply;
-    }
-
     ///@dev mints a new token
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
@@ -222,5 +211,16 @@ contract PolicyERC721 is ERC721, Ownable {
             }
         }
         emit PermissionDeleted(role, permission, permissionSignature);
+    }
+
+    ///@dev hashes a permission
+    ///@param permission the permission to hash
+    function hashPermission(Permission calldata permission) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+    }
+
+    ///@dev returns the total token supply of the contract
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
     }
 }
