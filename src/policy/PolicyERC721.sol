@@ -183,7 +183,8 @@ contract PolicyERC721 is ERC721, Ownable {
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
                 uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
-                for (uint256 j; j < rolePermissionSignatures.length; j++) {
+                uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
+                for (uint256 j; j < rolePermissionSignaturesLength; j++) {
                     permissionSignatures[psIndex] = rolePermissionSignatures[j];
                     psIndex++;
                 }
