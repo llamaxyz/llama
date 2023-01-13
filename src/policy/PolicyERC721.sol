@@ -209,7 +209,8 @@ contract PolicyERC721 is ERC721, Ownable {
     function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
         uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
         unchecked {
-            for (uint256 i; i < permissionSignatures.length; ++i) {
+            uint256 permissionSignatureLength = permissionSignatures.length;
+            for (uint256 i; i < permissionSignatureLength; ++i) {
                 if (permissionSignatures[i] == permissionSignature) {
                     return true;
                 }
