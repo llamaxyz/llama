@@ -17,9 +17,9 @@ struct Permission {
 ///@dev PolicyERC721 is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
 ///@dev The roles and permissions determine how the token can interact with the vertex administrator contract
 
-/* one behavior with this contract is that if a role is deleted, it will still appear in the tokenToRoles mapping
- * to solve this, we could run a pre check on all role based access functions that checks if the role exists in the
- * @note roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds gas to every call
+/* one behavior with this contract is that if a role is deleted, it will still appear in the tokenToRoles mapping.
+ * to solve this, we could run a pre check on all role based access functions that checks if the role exists in the...
+ * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
 
 contract PolicyERC721 is ERC721, Ownable {
