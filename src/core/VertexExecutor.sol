@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (governance/TimelockController.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
-import "@openzeppelin/access/AccessControl.sol";
-import "@openzeppelin/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/utils/Address.sol";
+import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
+import {IERC165} from "@openzeppelin/interfaces/IERC165.sol";
+import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
+import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {Address} from "@openzeppelin/utils/Address.sol";
 
 /**
  * @dev Contract module which acts as a timelocked controller. When set as the
@@ -111,7 +112,7 @@ contract VertexExecutor is AccessControl, IERC721Receiver, IERC1155Receiver {
     /**
      * @dev Contract might receive/hold ETH as part of the maintenance process.
      */
-    receive() external payable {}
+    receive() external payable {} // solhint-disable no-empty-blocks
 
     /**
      * @dev See {IERC165-supportsInterface}.
