@@ -6,14 +6,15 @@ import {GovernorSettings} from "@openzeppelin/governance/extensions/GovernorSett
 import {GovernorCountingSimple} from "@openzeppelin/governance/extensions/GovernorCountingSimple.sol";
 import {GovernorVotes, IVotes} from "@openzeppelin/governance/extensions/GovernorVotes.sol";
 import {GovernorVotesQuorumFraction} from "@openzeppelin/governance/extensions/GovernorVotesQuorumFraction.sol";
-import {VertexExecutor} from "src/core/VertexExecutor.sol";
-import {VertexExecutorControl} from "src/core/VertexExecutorControl.sol";
+import {VertexVotingStrategy} from "src/strategies/VertexVotingStrategy.sol";
+import {VertexStrategyControl} from "src/router/VertexStrategyControl.sol";
+import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
 
-contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, VertexExecutorControl {
+contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, VertexStrategyControl {
     constructor(
         IVotes _token,
-        VertexExecutor _timelock
-    ) Governor("ProtocolXYZ") GovernorSettings(0, 50400, 1) GovernorVotes(_token) GovernorVotesQuorumFraction(2) VertexExecutorControl(_timelock) {} // solhint-disable-line no-empty-blocks
+        VertexVotingStrategy _timelock
+    ) Governor("ProtocolXYZ") GovernorSettings(0, 50400, 1) GovernorVotes(_token) GovernorVotesQuorumFraction(2) VertexStrategyControl(_timelock) {} // solhint-disable-line no-empty-blocks
 
     function votingDelay() public view override(IGovernor, GovernorSettings) returns (uint256) {
         return super.votingDelay();
@@ -27,7 +28,7 @@ contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, Gov
         return super.quorum(blockNumber);
     }
 
-    function state(uint256 proposalId) public view override(Governor, VertexExecutorControl) returns (ProposalState) {
+    function state(uint256 proposalId) public view override(Governor, VertexStrategyControl) returns (ProposalState) {
         return super.state(proposalId);
     }
 
@@ -50,7 +51,7 @@ contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, Gov
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal override(Governor, VertexExecutorControl) {
+    ) internal override(Governor, VertexStrategyControl) {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
@@ -59,15 +60,23 @@ contract VertexRouter is Governor, GovernorSettings, GovernorCountingSimple, Gov
         uint256[] memory values,
         bytes[] memory calldatas,
         bytes32 descriptionHash
-    ) internal override(Governor, VertexExecutorControl) returns (uint256) {
+    ) internal override(Governor, VertexStrategyControl) returns (uint256) {
         return super._cancel(targets, values, calldatas, descriptionHash);
     }
 
-    function _executor() internal view override(Governor, VertexExecutorControl) returns (address) {
+    function _executor() internal view override(Governor, VertexStrategyControl) returns (address) {
         return super._executor();
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(Governor, VertexExecutorControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(Governor, VertexStrategyControl) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+
+    function createAction(IVertexStrategy strategy, address target, uint256 value, string signature, bytes callData) public returns (uint256) {
+        // Validation
+        // Create and store Action
+        strategy.initiateAction(target, value, signature, callData);
+        // emit ActionCreated event
+        // return actionId
     }
 }

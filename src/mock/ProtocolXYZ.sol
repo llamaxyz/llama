@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
-import {VertexExecutor} from "src/core/VertexExecutor.sol";
+import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 
 contract ProtocolXYZ is AccessControl {
     event Executed(address indexed executor, uint256 number);

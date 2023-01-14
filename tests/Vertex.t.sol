@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {IVotes} from "@openzeppelin/governance/utils/IVotes.sol";
-import {VertexRouter} from "src/core/VertexRouter.sol";
-import {VertexExecutor} from "src/core/VertexExecutor.sol";
+import {VertexRouter} from "src/router/VertexRouter.sol";
+import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {ProtocolVotingNFT} from "src/mock/ProtocolVotingNFT.sol";
 
