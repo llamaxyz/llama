@@ -23,7 +23,8 @@ interface IVertexRouter {
         uint256 value;
         string signature;
         bytes callData;
-        ActionState state;
+        bool canceled;
+        bool executed;
     }
 
     event ActionCreated(uint256 id, address indexed creator, IVertexStrategy indexed strategy, address target, uint256 value, string signature, bytes callData);

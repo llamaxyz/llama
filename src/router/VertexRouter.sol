@@ -11,6 +11,9 @@ import {VertexStrategyControl} from "src/router/VertexStrategyControl.sol";
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
+error OnlyCancelBeforeExecuted();
+error OnlyCreaterCanCancel();
+
 contract VertexRouter is IVertexRouter {
     uint256 private _actionsCount;
     mapping(uint256 => Action) private _actions;
@@ -30,66 +33,50 @@ contract VertexRouter is IVertexRouter {
         uint256 value,
         string calldata signature,
         bytes calldata callData
-    ) public returns (uint256) {
-        // Validation
-        // Create and store Action
+    ) external override returns (uint256) {
+        if (isStrategyAuthorized(address(strategy))) {
+            revert InvalidStrategy();
+        }
+
+        // TODO: Validate msg.sender's VertexPolicyNFT
+
+        uint256 previousActionCount = _actionsCount;
+
+        Action storage newAction = _actions[previousActionCount];
+        newAction.id = previousActionCount;
+        newAction.creator = msg.sender;
+        newAction.strategy = strategy;
+        newAction.target = target;
+        newAction.value = value;
+        newAction.signature = signature;
+        newAction.callData = callData;
+
+        _actionsCount++;
+
         strategy.initiateAction(target, value, signature, callData);
-        // emit ActionCreated event
-        // return actionId
+
+        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, callData);
+
+        return newAction.id;
     }
 
-    /**
-     * @dev Cancels a Proposal.
-     * - Callable by the _guardian with relaxed conditions, or by anybody if the conditions of
-     *   cancellation on the executor are fulfilled
-     * @param proposalId id of the proposal
-     **/
-    function cancel(uint256 proposalId) external override {
-        ProposalState state = getProposalState(proposalId);
-        require(state != ProposalState.Executed && state != ProposalState.Canceled && state != ProposalState.Expired, "ONLY_BEFORE_EXECUTED");
-
-        Proposal storage proposal = _proposals[proposalId];
-        require(
-            msg.sender == _guardian || IProposalValidator(address(proposal.executor)).validateProposalCancellation(this, proposal.creator, block.number - 1),
-            "PROPOSITION_CANCELLATION_INVALID"
-        );
-        proposal.canceled = true;
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            proposal.executor.cancelTransaction(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                proposal.executionTime,
-                proposal.withDelegatecalls[i]
-            );
+    function cancelAction(uint256 actionId) external override {
+        ActionState state = getActionState(actionId);
+        if (state == ProposalState.Executed || state == ProposalState.Canceled || state == ProposalState.Expired) {
+            revert OnlyCancelBeforeExecuted();
         }
 
-        emit ProposalCanceled(proposalId);
-    }
+        Action storage action = _actions[actionId];
 
-    /**
-     * @dev Queue the proposal (If Proposal Succeeded)
-     * @param proposalId id of the proposal to queue
-     **/
-    function queue(uint256 proposalId) external override {
-        require(getProposalState(proposalId) == ProposalState.Succeeded, "INVALID_STATE_FOR_QUEUE");
-        Proposal storage proposal = _proposals[proposalId];
-        uint256 executionTime = block.timestamp.add(proposal.executor.getDelay());
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            _queueOrRevert(
-                proposal.executor,
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                executionTime,
-                proposal.withDelegatecalls[i]
-            );
+        if (msg.sender != action.creator) {
+            revert OnlyCreaterCanCancel();
         }
-        proposal.executionTime = executionTime;
 
-        emit ProposalQueued(proposalId, executionTime, msg.sender);
+        action.canceled = true;
+
+        action.strategy.cancelAction(action.target, action.value, action.signature, action.callData);
+
+        emit ActionCanceled(proposalId);
     }
 
     /**
@@ -111,54 +98,6 @@ contract VertexRouter is IVertexRouter {
             );
         }
         emit ProposalExecuted(proposalId, msg.sender);
-    }
-
-    /**
-     * @dev Function allowing msg.sender to vote for/against a proposal
-     * @param proposalId id of the proposal
-     * @param support boolean, true = vote for, false = vote against
-     **/
-    function submitVote(uint256 proposalId, bool support) external override {
-        return _submitVote(msg.sender, proposalId, support);
-    }
-
-    /**
-     * @dev Function to register the vote of user that has voted offchain via signature
-     * @param proposalId id of the proposal
-     * @param support boolean, true = vote for, false = vote against
-     * @param v v part of the voter signature
-     * @param r r part of the voter signature
-     * @param s s part of the voter signature
-     **/
-    function submitVoteBySignature(uint256 proposalId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(NAME)), getChainId(), address(this))),
-                keccak256(abi.encode(VOTE_EMITTED_TYPEHASH, proposalId, support))
-            )
-        );
-        address signer = ecrecover(digest, v, r, s);
-        require(signer != address(0), "INVALID_SIGNATURE");
-        return _submitVote(signer, proposalId, support);
-    }
-
-    /**
-     * @dev Set new GovernanceStrategy
-     * Note: owner should be a timelocked executor, so needs to make a proposal
-     * @param governanceStrategy new Address of the GovernanceStrategy contract
-     **/
-    function setGovernanceStrategy(address governanceStrategy) external override onlyOwner {
-        _setGovernanceStrategy(governanceStrategy);
-    }
-
-    /**
-     * @dev Set new Voting Delay (delay before a newly created proposal can be voted on)
-     * Note: owner should be a timelocked executor, so needs to make a proposal
-     * @param votingDelay new voting delay in terms of blocks
-     **/
-    function setVotingDelay(uint256 votingDelay) external override onlyOwner {
-        _setVotingDelay(votingDelay);
     }
 
     /**
@@ -194,15 +133,6 @@ contract VertexRouter is IVertexRouter {
      **/
     function getGovernanceStrategy() external view override returns (address) {
         return _governanceStrategy;
-    }
-
-    /**
-     * @dev Getter of the current Voting Delay (delay before a created proposal can be voted on)
-     * Different from the voting duration
-     * @return The voting delay in number of blocks
-     **/
-    function getVotingDelay() external view override returns (uint256) {
-        return _votingDelay;
     }
 
     /**
