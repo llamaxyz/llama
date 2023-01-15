@@ -13,6 +13,8 @@ import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
 error OnlyCancelBeforeExecuted();
 error OnlyCreaterCanCancel();
+error InvalidActionId();
+error OnlyQueuedActions();
 
 contract VertexRouter is IVertexRouter {
     uint256 private _actionsCount;
@@ -53,7 +55,7 @@ contract VertexRouter is IVertexRouter {
 
         _actionsCount++;
 
-        strategy.initiateAction(target, value, signature, callData);
+        strategy.createAction(target, value, signature, callData);
 
         emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, callData);
 
@@ -80,24 +82,38 @@ contract VertexRouter is IVertexRouter {
     }
 
     /**
-     * @dev Execute the proposal (If Proposal Queued)
-     * @param proposalId id of the proposal to execute
+     * @dev Execute the action (If Action Queued)
+     * @param actionId id of the action to execute
      **/
-    function execute(uint256 proposalId) external payable override {
-        require(getProposalState(proposalId) == ProposalState.Queued, "ONLY_QUEUED_PROPOSALS");
-        Proposal storage proposal = _proposals[proposalId];
-        proposal.executed = true;
-        for (uint256 i = 0; i < proposal.targets.length; i++) {
-            proposal.executor.executeTransaction{value: proposal.values[i]}(
-                proposal.targets[i],
-                proposal.values[i],
-                proposal.signatures[i],
-                proposal.calldatas[i],
-                proposal.executionTime,
-                proposal.withDelegatecalls[i]
-            );
+    function execute(uint256 actionId) external payable override {
+        if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
+        Action storage action = _actions[actionId];
+        action.executed = true;
+        action.strategy.executeAction(action.target, action.value, action.signature, action.callData);
+        emit ActionExecuted(actionId, msg.sender, actionId.strategy, actionId.creator);
+    }
+
+    function getActionState(uint256 actionId) public view override returns (ActionState) {
+        if (actionId >= _actionsCount) revert InvalidActionId();
+        Action storage action = _actions[actionId];
+        if (action.canceled) {
+            return ActionState.Canceled;
         }
-        emit ProposalExecuted(proposalId, msg.sender);
+        // TODO: Complete getActionState logic
+        // else if (block.number <= action.endBlock) {
+        //     return ActionState.Active;
+        // } else if (!IProposalValidator(address(action.executor)).isProposalPassed(this, proposalId)) {
+        //     return ActionState.Failed;
+        // } else if (action.executionTime == 0) {
+        //     return ActionState.Succeeded;
+        // } else if (action.executed) {
+        //     return ActionState.Executed;
+        // } else if (action.executor.isProposalOverGracePeriod(this, proposalId)) {
+        //     return ActionState.Expired;
+        // }
+        else {
+            return ActionState.Queued;
+        }
     }
 
     /**

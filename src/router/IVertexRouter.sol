@@ -5,9 +5,8 @@ import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
 
 interface IVertexRouter {
     enum ActionState {
-        Pending,
-        Canceled,
         Active,
+        Canceled,
         Failed,
         Succeeded,
         Queued,
@@ -31,9 +30,7 @@ interface IVertexRouter {
 
     event ActionCanceled(uint256 id);
 
-    event ActionInitiated(uint256 id, address indexed strategy, address indexed creator);
-
-    event ActionExecuted(uint256 id, address indexed strategy, address indexed creator);
+    event ActionExecuted(uint256 id, address indexed caller, address indexed strategy, address indexed creator);
 
     event VertexStrategyAuthorized(address indexed strategy, address indexed creator);
 
