@@ -38,11 +38,19 @@ interface IVertexStrategy {
 
     function createAction(address target, uint256 value, string calldata signature, bytes calldata callData) external;
 
+    function cancelAction(address creator, uint256 id) external returns (bool);
+
     /**
      * @dev Getter of the router
      * @return The address of the router
      **/
     function getRouter() external view returns (IVertexRouter);
+
+    /**
+     * @dev Getter of the delay between queuing and execution
+     * @return The delay in seconds
+     **/
+    function getDelay() external view returns (uint256);
 
     /**
      * @dev Getter of the delay between queuing and execution

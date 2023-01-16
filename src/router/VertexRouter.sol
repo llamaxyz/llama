@@ -1,29 +1,52 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
+import {IActionValidator} from "src/strategies/IActionValidator.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
+// Errors
 error OnlyCancelBeforeExecuted();
 error OnlyCreaterCanCancel();
 error InvalidActionId();
 error OnlyQueuedActions();
+error InvalidStateForQueue();
+error DuplicateAction();
 
+/// @title VertexRouter
+/// @author Llama (vertex@llama.xyz)
+/// @notice Main point of interaction with a Vertex instance.
 contract VertexRouter is IVertexRouter {
-    uint256 private _actionsCount;
-    mapping(uint256 => Action) private _actions;
-    mapping(IVertexStrategy => bool) private _authorizedStrategies;
-    VertexPolicyNFT private _policies;
-
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+    /// @notice Name of this Vertex instance.
     string public immutable name;
 
-    constructor(address[] memory strategies, string calldata _name) {
+    /// @notice The NFT contract that defines the policies for this Vertex instance.
+    VertexPolicyNFT private _policies;
+
+    /// @notice The current number of actions ever created.
+    uint256 private _actionsCount;
+
+    /// @notice Mapping of action ids to Action structs.
+    mapping(uint256 => Action) private _actions;
+
+    /// @notice Mapping of all authorized strategies.
+    mapping(IVertexStrategy => bool) private _authorizedStrategies;
+
+    /// @notice EIP-712 typehashes.
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+    bytes32 public constant VOTE_EMITTED_TYPEHASH = keccak256("VoteEmitted(uint256 id,bool support)");
+    bytes32 public constant VETO_EMITTED_TYPEHASH = keccak256("VetoEmitted(uint256 id,bool support)");
+
+    constructor(string calldata _name, address[] memory strategies) {
         name = _name;
+
+        // TODO: this assumes strategies have already been deployed.
+        // not sure if this is optimal or the router deploys strategies.
         addStrategies(strategies);
     }
 
+    /// @inheritdoc IVertexRouter
     function createAction(
         IVertexStrategy strategy,
         address target,
@@ -47,6 +70,8 @@ contract VertexRouter is IVertexRouter {
         newAction.value = value;
         newAction.signature = signature;
         newAction.data = data;
+        newAction.votingStartTime = block.timestamp;
+        newAction.votingEndTime = block.timestamp + IActionValidator(strategy).getVotingDuration();
 
         _actionsCount++;
 
@@ -57,6 +82,7 @@ contract VertexRouter is IVertexRouter {
         return newAction.id;
     }
 
+    /// @inheritdoc IVertexRouter
     function cancelAction(uint256 actionId) external override {
         ActionState state = getActionState(actionId);
         if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired) {
@@ -65,15 +91,29 @@ contract VertexRouter is IVertexRouter {
 
         Action storage action = _actions[actionId];
 
-        if (msg.sender != action.creator) {
-            revert OnlyCreaterCanCancel();
+        // TODO: clean up cancellation detection logic
+        if (msg.sender == action.creator) {
+            action.canceled = true;
+        } else {
+            bool isCanceled = action.strategy.cancelAction(msg.sender, actionId);
+            action.canceled = isCanceled;
         }
 
-        action.canceled = true;
-
-        action.strategy.cancelAction(action.target, action.value, action.signature, action.data);
-
         emit ActionCanceled(actionId);
+    }
+
+    /// @inheritdoc IVertexRouter
+    function queueAction(uint256 actionId) external override {
+        if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
+        Action storage action = _actions[actionId];
+        uint256 executionTime = block.timestamp + action.strategy.getDelay();
+
+        if (action.strategy.isActionQueued(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
+        action.strategy.queueTransaction(target, value, signature, data, executionTime);
+
+        action.executionTime = executionTime;
+
+        emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
     }
 
     /**
