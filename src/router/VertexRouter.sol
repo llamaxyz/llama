@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
 error OnlyCancelBeforeExecuted();
 error OnlyCreaterCanCancel();
@@ -12,7 +13,8 @@ error OnlyQueuedActions();
 contract VertexRouter is IVertexRouter {
     uint256 private _actionsCount;
     mapping(uint256 => Action) private _actions;
-    mapping(address => bool) private _authorizedStrategies;
+    mapping(IVertexStrategy => bool) private _authorizedStrategies;
+    VertexPolicyNFT private _policies;
 
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
     string public immutable name;
@@ -27,16 +29,16 @@ contract VertexRouter is IVertexRouter {
         address target,
         uint256 value,
         string calldata signature,
-        bytes calldata callData
+        bytes calldata data
     ) external override returns (uint256) {
-        if (isStrategyAuthorized(address(strategy))) {
-            revert InvalidStrategy();
-        }
+        if (!isStrategyAuthorized(strategy)) revert InvalidStrategy();
 
-        // TODO: Validate msg.sender's VertexPolicyNFT
+        // TODO: @theo insert validation logic here
+        // Eg. is msg.sender a VertexPolicyNFT holder and does
+        //     their policy allow them create an action with this
+        //     strategy, target, signature hash
 
         uint256 previousActionCount = _actionsCount;
-
         Action storage newAction = _actions[previousActionCount];
         newAction.id = previousActionCount;
         newAction.creator = msg.sender;
@@ -44,13 +46,13 @@ contract VertexRouter is IVertexRouter {
         newAction.target = target;
         newAction.value = value;
         newAction.signature = signature;
-        newAction.callData = callData;
+        newAction.data = data;
 
         _actionsCount++;
 
-        strategy.createAction(target, value, signature, callData);
+        strategy.createAction(target, value, signature, data);
 
-        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, callData);
+        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, data);
 
         return newAction.id;
     }
@@ -69,7 +71,7 @@ contract VertexRouter is IVertexRouter {
 
         action.canceled = true;
 
-        action.strategy.cancelAction(action.target, action.value, action.signature, action.callData);
+        action.strategy.cancelAction(action.target, action.value, action.signature, action.data);
 
         emit ActionCanceled(actionId);
     }
@@ -82,7 +84,7 @@ contract VertexRouter is IVertexRouter {
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
         Action storage action = _actions[actionId];
         action.executed = true;
-        action.strategy.executeAction(action.target, action.value, action.signature, action.callData);
+        action.strategy.executeAction(action.target, action.value, action.signature, action.data);
         emit ActionExecuted(actionId, msg.sender, actionId.strategy, actionId.creator);
     }
 
@@ -134,7 +136,7 @@ contract VertexRouter is IVertexRouter {
      * @param strategy address to evaluate as authorized strategy
      * @return true if authorized
      **/
-    function isStrategyAuthorized(address strategy) public view override returns (bool) {
+    function isStrategyAuthorized(IVertexStrategy strategy) public view override returns (bool) {
         return _authorizedStrategies[strategy];
     }
 
@@ -155,12 +157,12 @@ contract VertexRouter is IVertexRouter {
         return _actions[actionId];
     }
 
-    function _authorizeStrategy(address strategy) internal {
+    function _authorizeStrategy(IVertexStrategy strategy) internal {
         _authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy);
     }
 
-    function _unauthorizeStrategy(address strategy) internal {
+    function _unauthorizeStrategy(IVertexStrategy strategy) internal {
         _authorizedStrategies[strategy] = false;
         emit StrategyUnauthorized(strategy);
     }

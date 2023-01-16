@@ -21,12 +21,44 @@ interface IVertexRouter {
         address target;
         uint256 value;
         string signature;
-        bytes callData;
+        bytes data;
         bool canceled;
         bool executed;
+        // Properties for initial voting
+        uint256 votingStartTime;
+        uint256 votingEndTime;
+        uint256 forVotes;
+        uint256 againstVotes;
+        mapping(address => Vote) votes;
+        // Properties for veto voting
+        uint256 queueTime;
+        uint256 executionTime; // Not set until action is queued
+        uint256 forVetoVotes;
+        uint256 againstVetoVotes;
+        mapping(address => Veto) vetoVotes;
     }
 
-    event ActionCreated(uint256 id, address indexed creator, IVertexStrategy indexed strategy, address target, uint256 value, string signature, bytes callData);
+    struct ActionWithoutVotes {
+        uint256 id;
+        address creator;
+        IVertexStrategy strategy;
+        address target;
+        uint256 value;
+        string signature;
+        bytes data;
+        bool executed;
+        bool canceled;
+        uint256 votingStartTime;
+        uint256 votingEndTime;
+        uint256 queueTime;
+        uint256 executionTime;
+        uint256 forVotes;
+        uint256 againstVotes;
+        uint256 forVetoVotes;
+        uint256 againstVetoVotes;
+    }
+
+    event ActionCreated(uint256 id, address indexed creator, IVertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
 
     event ActionCanceled(uint256 id);
 
@@ -38,13 +70,7 @@ interface IVertexRouter {
 
     function name() external view returns (string memory);
 
-    function createAction(
-        IVertexStrategy strategy,
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata callData
-    ) external returns (uint256);
+    function createAction(IVertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
 
     function cancel(uint256 actionId) external;
 
@@ -52,7 +78,7 @@ interface IVertexRouter {
 
     function getStrategies() external view returns (IVertexStrategy[] memory);
 
-    function isStrategyAuthorized(address strategy) external view returns (bool);
+    function isStrategyAuthorized(IVertexStrategy strategy) external view returns (bool);
 
     function getActionsCount() external view returns (uint256);
 

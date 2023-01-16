@@ -23,13 +23,7 @@ contract VertexExecutor {
         string memory signature,
         bytes memory data
     ) external payable onlyStrategy(msg.sender) returns (bytes memory) {
-        bytes memory callData;
-
-        if (bytes(signature).length == 0) {
-            callData = data;
-        } else {
-            callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
-        }
+        bytes memory callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
 
         // solhint-disable avoid-low-level-calls
         (bool success, bytes memory result) = target.call{value: value}(callData);
