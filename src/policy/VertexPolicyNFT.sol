@@ -28,11 +28,15 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
-    event RoleAdded(bytes32 role, string roleString, Permission[] permissions, bytes8[] permissionSignatures);
+    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
+    event RolesAssigned(uint256 tokenId, bytes32[] roles);
     event RoleRevoked(uint256 tokenId, bytes32 role);
-    event RoleDeleted(bytes32 role);
+    event RolesRevoked(uint256 tokenId, bytes32[] roles);
+    event RolesDeleted(bytes32[] role);
     event PermissionAdded(bytes32 role, Permission permission, bytes8 permissionSignature);
+    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
     event PermissionDeleted(bytes32 role, Permission permission, bytes8 permissionSignature);
+    event PermissionsDeleted(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
 
     error RoleNonExistant(bytes32 role);
 
@@ -71,87 +75,121 @@ contract VertexPolicyNFT is ERC721, Ownable {
         _burn(tokenId);
     }
 
-    ///@dev adds a role to the contract
+    ///@dev private function which adds a role to the contract
     ///@param role the role to add
     ///@param permissions the permissions of the role
-    function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner returns (bytes32) {
-        bytes32 roleHash = hashRole(role);
-        roles.push(roleHash);
+    function addRole(bytes32 role, Permission[] calldata permissions) private returns (bytes8[] memory) {
+        roles.push(role);
         uint256 permissionsLength = permissions.length;
         bytes8[] memory permissionSignatures = new bytes8[](permissionsLength);
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 bytes8 permissionSignature = hashPermission(permissions[i]);
-                rolesToPermissionSignatures[roleHash].push(permissionSignature);
+                rolesToPermissionSignatures[role].push(permissionSignature);
                 permissionSignatures[i] = permissionSignature;
             }
         }
-        emit RoleAdded(roleHash, role, permissions, permissionSignatures);
-        return roleHash;
+        return permissionSignatures;
+    }
+
+    ///@dev allows admin to add a roles to the contract
+    ///@dev indexes in rolesArray and permissionsArray must match
+    ///@param rolesArray the roles to add
+    ///@param permissionsArray and array of permissions arrays for each role
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner returns (bytes32) {
+        bytes32[] memory roleHashes = hashRoles(rolesArray);
+        bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArray.length);
+        for (uint256 i; i < rolesArray.length; ++i) {
+            bytes8[] memory permissionsHash = addRole(roleHashes[i], permissionsArray[i]);
+            permissionsHashes[i] = permissionsHash;
+        }
+        emit RolesAdded(roleHashes, rolesArray, permissionsArray, permissionsHashes);
     }
 
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
-    function assignRole(uint256 tokenId, bytes32 role) public onlyOwner {
-        if (rolesToPermissionSignatures[role].length == 0) {
-            revert RoleNonExistant(role);
+    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyOwner {
+        uint256 rolesArrayLength = rolesArray.length;
+        unchecked {
+            for (uint256 i; i < rolesArrayLength; ++i) {
+                bytes32 role = rolesArray[i];
+                if (rolesToPermissionSignatures[role].length == 0) {
+                    revert RoleNonExistant(role);
+                }
+                tokenToRoles[tokenId].push(role);
+            }
         }
-        tokenToRoles[tokenId].push(role);
+        emit RolesAssigned(tokenId, rolesArray);
     }
 
     ///@dev revokes a role from a token
     ///@param tokenId the id of the token
-    ///@param role the role to revoke
-    function revokeRole(uint256 tokenId, bytes32 role) public onlyOwner {
+    ///@param revokeRolesArray the array of roles to revoke
+    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyOwner {
         bytes32[] storage userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
+        uint256 revokeRolesLength = revokeRolesArray.length;
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
-                if (roles[i] == role) {
-                    delete userRoles[i];
+                for (uint256 j; j < revokeRolesLength; ++j) {
+                    if (userRoles[i] == revokeRolesArray[j]) {
+                        delete userRoles[i];
+                    }
                 }
             }
         }
-        emit RoleRevoked(tokenId, role);
+        emit RolesRevoked(tokenId, revokeRolesArray);
     }
 
-    ///@dev deletes a role from the contract
-    ///@param role the role to delete
-    function deleteRole(bytes32 role) public onlyOwner {
-        delete rolesToPermissionSignatures[role];
-        uint256 rolesLength = roles.length;
+    ///@dev deletes multiple roles from the contract
+    ///@param deleteRolesArray the role to delete
+    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyOwner {
         unchecked {
-            for (uint256 i; i < rolesLength; ++i) {
-                if (roles[i] == role) {
-                    delete roles[i];
+            uint256 deleteRolesLength = deleteRolesArray.length;
+            for (uint256 i; i < deleteRolesLength; ++i) {
+                bytes32 role = deleteRolesArray[i];
+                delete rolesToPermissionSignatures[role];
+                uint256 rolesLength = roles.length;
+                for (uint256 j; i < rolesLength; ++i) {
+                    if (roles[j] == role) {
+                        delete roles[j];
+                    }
                 }
             }
         }
-        emit RoleDeleted(role);
+        emit RolesDeleted(deleteRolesArray);
     }
 
-    ///@dev adds a permission to a role
+    ///@dev adds multiple permission to a role
     ///@param role the role to add the permission to
-    ///@param permission the permission to add
-    function addPermissionToRole(bytes32 role, Permission calldata permission) public onlyOwner {
-        bytes8 permissionSignature = hashPermission(permission);
-        rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
-        emit PermissionAdded(role, permission, permissionSignature);
+    ///@param permissions the permission to add
+    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyOwner {
+        bytes8[] memory permissionSignatures = hashPermissions(permissions);
+        uint256 permissionSignaturesLength = permissionSignatures.length;
+        unchecked {
+            for (uint256 i; i < permissionSignaturesLength; ++i) {
+                rolesToPermissionSignatures[role].push(permissionSignatures[i]);
+            }
+        }
+        emit PermissionsAdded(role, permissions, permissionSignatures);
     }
 
-    ///@dev deletes a permission from a role
+    ///@dev deletes multiple permissions from a role
     ///@param role the role to delete the permission from
-    ///@param permission the permission to delete
-    function deletePermissionFromRole(bytes32 role, Permission calldata permission) public onlyOwner {
-        bytes8 permissionSignature = hashPermission(permission);
+    ///@param permissions the array of permissions to delete
+    function deletePermissionsFromRole(bytes32 role, Permission[] calldata permissions) public onlyOwner {
+        require(permissions.length > 0, "VertexPolicyNFT: permissions array must not be empty");
+        bytes8[] memory permissionSignatures = hashPermissions(permissions);
         bytes8[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
-            if (rolePermissionSignatures[i] == permissionSignature) {
-                delete rolePermissionSignatures[i];
+            for (uint256 j; j < permissionSignatures.length; ++j) {
+                if (rolePermissionSignatures[i] == permissionSignatures[j]) {
+                    delete rolePermissionSignatures[i];
+                }
             }
         }
-        emit PermissionDeleted(role, permission, permissionSignature);
+        emit PermissionsDeleted(role, permissions, permissionSignatures);
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
@@ -172,7 +210,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     ///@dev hashes an array of permissions
     ///@param permissions the permissions array to hash
-    function hashPermissions(Permission calldata permissions) internal pure returns (bytes8[]) {
+    function hashPermissions(Permission[] calldata permissions) internal pure returns (bytes8[] memory) {
         bytes8[] memory output = new bytes8[](permissions.length);
         unchecked {
             for (uint256 i; i < permissions.length; ++i) {
