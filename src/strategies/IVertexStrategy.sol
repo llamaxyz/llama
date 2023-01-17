@@ -99,10 +99,9 @@ interface IVertexStrategy {
     function isActionQueued(bytes32 actionHash) external view returns (bool);
 
     /**
-     * @dev Checks whether a proposal is over its grace period
-     * @param governance Governance contract
-     * @param proposalId Id of the proposal against which to test
-     * @return true of proposal is over grace period
+     * @dev Checks whether a proposal is over its expiration delay
+     * @param actionId Id of the action against which to test
+     * @return true of proposal is over its expiration delay
      **/
-    function isActionExpired(IAaveGovernanceV2 governance, uint256 proposalId) external view returns (bool);
+    function isActionExpired(uint256 actionId) external view returns (bool);
 }

@@ -229,4 +229,11 @@ interface IVertexRouter {
      * @return The current state if the action
      **/
     function getActionState(uint256 actionId) external view returns (ActionState);
+
+    /**
+     * @dev Get Action object without voting data
+     * @param actionId id of the action
+     * @return Action object without voting data
+     **/
+    function getActionWithoutVotes(uint256 actionId) external view returns (ActionWithoutVotes memory);
 }

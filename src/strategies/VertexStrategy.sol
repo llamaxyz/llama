@@ -112,4 +112,10 @@ contract VertexStrategy is IVertexStrategy, ActionValidator {
 
         return result;
     }
+
+    function isActionExpired(uint256 actionId) external view override returns (bool) {
+        IVertexRouter.ActionWithoutVotes memory action = router.getActionWithoutVotes(actionId);
+
+        return (block.timestamp > (action.executionTime + votingDuration()));
+    }
 }

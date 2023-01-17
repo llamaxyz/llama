@@ -118,8 +118,7 @@ contract VertexRouter is IVertexRouter {
         Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.delay();
 
-        // TODO: not sure if this duplicate check is needed
-        if (action.strategy.isActionQueued(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
+        if (action.strategy.queuedActions(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
         action.strategy.queueAction(action.target, action.value, action.signature, action.data, executionTime);
 
         action.executionTime = executionTime;
@@ -194,11 +193,36 @@ contract VertexRouter is IVertexRouter {
 
     function _authorizeStrategy(IVertexStrategy strategy) internal {
         authorizedStrategies[strategy] = true;
-        emit StrategyAuthorized(strategy);
+        emit VertexStrategyAuthorized(strategy);
     }
 
     function _unauthorizeStrategy(IVertexStrategy strategy) internal {
         authorizedStrategies[strategy] = false;
-        emit StrategyUnauthorized(strategy);
+        emit VertexStrategyUnauthorized(strategy);
+    }
+
+    function getActionWithoutVotes(uint256 actionId) external view override returns (ActionWithoutVotes memory) {
+        Action storage action = actions[actionId];
+        ActionWithoutVotes memory actionWithoutVotes = ActionWithoutVotes({
+            id: action.id,
+            creator: action.creator,
+            strategy: action.strategy,
+            target: action.target,
+            value: action.value,
+            signature: action.signature,
+            data: action.data,
+            votingStartTime: action.votingStartTime,
+            votingEndTime: action.votingEndTime,
+            executionTime: action.executionTime,
+            queueTime: action.queueTime,
+            forVotes: action.forVotes,
+            againstVotes: action.againstVotes,
+            forVetoVotes: action.forVetoVotes,
+            againstVetoVotes: action.againstVetoVotes,
+            executed: action.executed,
+            canceled: action.canceled
+        });
+
+        return actionWithoutVotes;
     }
 }
