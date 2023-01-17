@@ -206,13 +206,6 @@ interface IVertexRouter {
     function unauthorizeStrategies(address[] memory strategies) external;
 
     /**
-     * @dev Returns whether an address is an authorized strategy
-     * @param strategy address to evaluate as authorized strategy
-     * @return true if authorized
-     **/
-    function isStrategyAuthorized(IVertexStrategy strategy) external view returns (bool);
-
-    /**
      * @dev Getter of the Vote of a voter about an action
      * Note: Vote is a struct: ({bool support, uint248 votingPower})
      * @param actionId id of the action

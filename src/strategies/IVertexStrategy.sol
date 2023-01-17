@@ -11,7 +11,7 @@ interface IVertexStrategy {
     event NewStrategyCreated(string name);
 
     /**
-     * @dev emitted when a new (trans)action is Queued.
+     * @dev emitted when a new action is Queued.
      * @param actionHash hash of the action
      * @param target address of the targeted contract
      * @param value wei value of the transaction
@@ -42,13 +42,41 @@ interface IVertexStrategy {
      **/
     event ExecutedAction(bytes32 actionHash, address indexed target, uint256 value, string signature, bytes data, bytes resultData);
 
-    function cancelAction(address creator, uint256 id) external returns (bool);
+    /**
+     * @dev Function, called by Router, that cancels an action, returns action hash
+     * @param target The contract called by action's associated transaction
+     * @param value The value in wei of the action's associated transaction
+     * @param signature The function signature that will be called by the action's associated transaction
+     * @param data The arguments passed to the function that is called by the action's associated transaction
+     * @param executionTime time when action underlying transactions can be executed
+     **/
+    function cancelAction(address target, uint256 value, string calldata signature, bytes calldata data, uint256 executionTime) external returns (bytes32);
 
     /**
-     * @dev Getter of the router
-     * @return The address of the router
+     * @dev Function, called by Router, that queue an action, returns action hash
+     * @param target The contract called by action's associated transaction
+     * @param value The value in wei of the action's associated transaction
+     * @param signature The function signature that will be called by the action's associated transaction
+     * @param data The arguments passed to the function that is called by the action's associated transaction
+     * @param executionTime time when action underlying transactions can be executed
      **/
-    function getRouter() external view returns (IVertexRouter);
+    function queueAction(address target, uint256 value, string calldata signature, bytes calldata data, uint256 executionTime) external returns (bytes32);
+
+    /**
+     * @dev Function, called by Router, that executes a transaction, returns the callData executed
+     * @param target The contract called by action's associated transaction
+     * @param value The value in wei of the action's associated transaction
+     * @param signature The function signature that will be called by the action's associated transaction
+     * @param data The arguments passed to the function that is called by the action's associated transaction
+     * @param executionTime time when action underlying transactions can be executed
+     **/
+    function executeAction(
+        address target,
+        uint256 value,
+        string calldata signature,
+        bytes calldata data,
+        uint256 executionTime
+    ) external payable returns (bytes memory);
 
     /**
      * @dev Getter of the delay between queuing and execution
@@ -76,59 +104,5 @@ interface IVertexStrategy {
      * @param proposalId Id of the proposal against which to test
      * @return true of proposal is over grace period
      **/
-    function isProposalOverGracePeriod(IAaveGovernanceV2 governance, uint256 proposalId) external view returns (bool);
-
-    /**
-     * @dev Function, called by Governance, that queue a transaction, returns action hash
-     * @param target smart contract target
-     * @param value wei value of the transaction
-     * @param signature function signature of the transaction
-     * @param data function arguments of the transaction or callData if signature empty
-     * @param executionTime time at which to execute the transaction
-     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-     **/
-    function queueTransaction(
-        address target,
-        uint256 value,
-        string memory signature,
-        bytes memory data,
-        uint256 executionTime,
-        bool withDelegatecall
-    ) external returns (bytes32);
-
-    /**
-     * @dev Function, called by Governance, that cancels a transaction, returns the callData executed
-     * @param target smart contract target
-     * @param value wei value of the transaction
-     * @param signature function signature of the transaction
-     * @param data function arguments of the transaction or callData if signature empty
-     * @param executionTime time at which to execute the transaction
-     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-     **/
-    function executeTransaction(
-        address target,
-        uint256 value,
-        string memory signature,
-        bytes memory data,
-        uint256 executionTime,
-        bool withDelegatecall
-    ) external payable returns (bytes memory);
-
-    /**
-     * @dev Function, called by Governance, that cancels a transaction, returns action hash
-     * @param target smart contract target
-     * @param value wei value of the transaction
-     * @param signature function signature of the transaction
-     * @param data function arguments of the transaction or callData if signature empty
-     * @param executionTime time at which to execute the transaction
-     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
-     **/
-    function cancelTransaction(
-        address target,
-        uint256 value,
-        string memory signature,
-        bytes memory data,
-        uint256 executionTime,
-        bool withDelegatecall
-    ) external returns (bytes32);
+    function isActionExpired(IAaveGovernanceV2 governance, uint256 proposalId) external view returns (bool);
 }

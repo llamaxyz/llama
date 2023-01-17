@@ -69,12 +69,13 @@ contract VertexRouter is IVertexRouter {
         string calldata signature,
         bytes calldata data
     ) external override returns (uint256) {
-        if (!isStrategyAuthorized(strategy)) revert InvalidStrategy();
+        if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
         // TODO: @theo insert validation logic here
         // Eg. is msg.sender a VertexPolicyNFT holder and does
         //     their policy allow them create an action with this
-        //     strategy, target, signature hash
+        //     strategy, target, signature hash. You also probably
+        //     want to validate their policy at the previous block number
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];
@@ -86,7 +87,7 @@ contract VertexRouter is IVertexRouter {
         newAction.signature = signature;
         newAction.data = data;
         newAction.votingStartTime = block.timestamp;
-        newAction.votingEndTime = block.timestamp + IActionValidator(strategy).getVotingDuration();
+        newAction.votingEndTime = block.timestamp + IActionValidator(strategy).votingDuration();
 
         actionsCount++;
 
@@ -103,10 +104,10 @@ contract VertexRouter is IVertexRouter {
         }
 
         Action storage action = actions[actionId];
-        if (!IActionValidator(action.strategy).isActionCanceletionValid(action, msg.sender)) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || IActionValidator(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
-        action.strategy.cancelAction(msg.sender, actionId);
+        action.strategy.cancelAction(actionId);
 
         emit ActionCanceled(actionId);
     }
@@ -117,8 +118,9 @@ contract VertexRouter is IVertexRouter {
         Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.delay();
 
+        // TODO: not sure if this duplicate check is needed
         if (action.strategy.isActionQueued(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
-        action.strategy.queueTransaction(target, value, signature, data, executionTime);
+        action.strategy.queueAction(action.target, action.value, action.signature, action.data, executionTime);
 
         action.executionTime = executionTime;
 
@@ -133,7 +135,7 @@ contract VertexRouter is IVertexRouter {
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
         Action storage action = actions[actionId];
         action.executed = true;
-        action.strategy.executeAction(action.target, action.value, action.signature, action.data);
+        action.strategy.executeAction(action.target, action.value, action.signature, action.data, action.executionTime);
         emit ActionExecuted(actionId, msg.sender, actionId.strategy, actionId.creator);
     }
 
@@ -188,15 +190,6 @@ contract VertexRouter is IVertexRouter {
         for (uint256 i = 0; i < strategies.length; i++) {
             _unauthorizeStrategy(strategies[i]);
         }
-    }
-
-    /**
-     * @dev Returns whether an address is an authorized strategy
-     * @param strategy address to evaluate as authorized strategy
-     * @return true if authorized
-     **/
-    function isStrategyAuthorized(IVertexStrategy strategy) public view override returns (bool) {
-        return authorizedStrategies[strategy];
     }
 
     function _authorizeStrategy(IVertexStrategy strategy) internal {

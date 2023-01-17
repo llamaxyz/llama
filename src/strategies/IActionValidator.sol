@@ -6,5 +6,5 @@ interface IActionValidator {
      * @dev Get voting duration constant value
      * @return the voting duration value in seconds
      **/
-    function getVotingDuration() external view returns (uint256);
+    function votingDuration() external view returns (uint256);
 }
