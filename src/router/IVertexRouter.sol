@@ -161,7 +161,7 @@ interface IVertexRouter {
     function executeAction(uint256 actionId) external payable;
 
     /**
-     * @dev Function allowing msg.sender to vote for/against a action
+     * @dev Function allowing msg.sender to vote for/against an action
      * @param actionId id of the action
      * @param support boolean, true = vote for, false = vote against
      **/

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IActionValidator} from "src/strategies/IActionValidator.sol";
+import {IStrategySettings} from "src/strategies/IStrategySettings.sol";
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
 /**
@@ -11,7 +11,7 @@ import {IVertexRouter} from "src/router/IVertexRouter.sol";
  * Veto Power functions: Validates whether an action can be vetoed
  * @author Llama
  **/
-abstract contract ActionValidator is IActionValidator {
+abstract contract StrategySettings is IStrategySettings {
     uint256 public immutable votingDuration;
 
     constructor(uint256 _votingDuration) {

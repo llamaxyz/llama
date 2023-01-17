@@ -3,9 +3,10 @@ pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
-import {IActionValidator} from "src/strategies/IActionValidator.sol";
+import {IStrategySettings} from "src/strategies/IStrategySettings.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexExecutor} from "src/executor/VertexExecutor.sol";
+import {getChainId} from "src/utils/Helpers.sol";
 
 // Errors
 error OnlyCancelBeforeExecuted();
@@ -15,6 +16,10 @@ error InvalidStateForQueue();
 error DuplicateAction();
 error ActionCannotBeCanceled();
 error OnlyExecutor();
+error VotingClosed();
+error VoteAlreadySubmitted();
+error InvalidSignature();
+error VetoAlreadySubmitted();
 
 /// @title VertexRouter
 /// @author Llama (vertex@llama.xyz)
@@ -87,7 +92,7 @@ contract VertexRouter is IVertexRouter {
         newAction.signature = signature;
         newAction.data = data;
         newAction.votingStartTime = block.timestamp;
-        newAction.votingEndTime = block.timestamp + IActionValidator(strategy).votingDuration();
+        newAction.votingEndTime = block.timestamp + IStrategySettings(strategy).votingDuration();
 
         actionsCount++;
 
@@ -104,7 +109,7 @@ contract VertexRouter is IVertexRouter {
         }
 
         Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || IActionValidator(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || IStrategySettings(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
         action.strategy.cancelAction(actionId);
@@ -126,16 +131,76 @@ contract VertexRouter is IVertexRouter {
         emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
     }
 
-    /**
-     * @dev Execute the action (If Action Queued)
-     * @param actionId id of the action to execute
-     **/
+    /// @inheritdoc IVertexRouter
     function executeAction(uint256 actionId) external payable override {
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
         Action storage action = actions[actionId];
         action.executed = true;
         action.strategy.executeAction(action.target, action.value, action.signature, action.data, action.executionTime);
         emit ActionExecuted(actionId, msg.sender, actionId.strategy, actionId.creator);
+    }
+
+    /// @inheritdoc IVertexRouter
+    function submitVote(uint256 actionId, bool support) external override {
+        return _submitVote(msg.sender, actionId, support);
+    }
+
+    /// @inheritdoc IVertexRouter
+    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name())), getChainId(), address(this))),
+                keccak256(abi.encode(VOTE_EMITTED_TYPEHASH, actionId, support))
+            )
+        );
+        address signer = ecrecover(digest, v, r, s);
+        if (signer == address(0)) revert InvalidSignature();
+        return _submitVote(signer, actionId, support);
+    }
+
+    /// @inheritdoc IVertexRouter
+    function submitVeto(uint256 actionId, bool support) external override {
+        return _submitVeto(msg.sender, actionId, support);
+    }
+
+    /// @inheritdoc IVertexRouter
+    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name())), getChainId(), address(this))),
+                keccak256(abi.encode(VETO_EMITTED_TYPEHASH, actionId, support))
+            )
+        );
+        address signer = ecrecover(digest, v, r, s);
+        if (signer == address(0)) revert InvalidSignature();
+        return _submitVeto(signer, actionId, support);
+    }
+
+    function getActionWithoutVotes(uint256 actionId) external view override returns (ActionWithoutVotes memory) {
+        Action storage action = actions[actionId];
+        ActionWithoutVotes memory actionWithoutVotes = ActionWithoutVotes({
+            id: action.id,
+            creator: action.creator,
+            strategy: action.strategy,
+            target: action.target,
+            value: action.value,
+            signature: action.signature,
+            data: action.data,
+            votingStartTime: action.votingStartTime,
+            votingEndTime: action.votingEndTime,
+            executionTime: action.executionTime,
+            queueTime: action.queueTime,
+            forVotes: action.forVotes,
+            againstVotes: action.againstVotes,
+            forVetoVotes: action.forVetoVotes,
+            againstVetoVotes: action.againstVetoVotes,
+            executed: action.executed,
+            canceled: action.canceled
+        });
+
+        return actionWithoutVotes;
     }
 
     function getActionState(uint256 actionId) public view override returns (ActionState) {
@@ -145,12 +210,14 @@ contract VertexRouter is IVertexRouter {
             return ActionState.Canceled;
         }
 
-        if (block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !IActionValidator(action.strategy).isActionPassed(actionId))) {
+        if (
+            block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !IStrategySettings(action.strategy).isActionPassed(actionId))
+        ) {
             return ActionState.Active;
         }
 
         // TODO: do we need to pass the full action object here?
-        if (!IActionValidator(action.strategy).isActionPassed(actionId)) {
+        if (!IStrategySettings(action.strategy).isActionPassed(actionId)) {
             return ActionState.Failed;
         }
 
@@ -201,28 +268,48 @@ contract VertexRouter is IVertexRouter {
         emit VertexStrategyUnauthorized(strategy);
     }
 
-    function getActionWithoutVotes(uint256 actionId) external view override returns (ActionWithoutVotes memory) {
+    function _submitVote(address voter, uint256 actionId, bool support) internal {
+        if (getActionState(actionId) != ActionState.Active) revert VotingClosed();
         Action storage action = actions[actionId];
-        ActionWithoutVotes memory actionWithoutVotes = ActionWithoutVotes({
-            id: action.id,
-            creator: action.creator,
-            strategy: action.strategy,
-            target: action.target,
-            value: action.value,
-            signature: action.signature,
-            data: action.data,
-            votingStartTime: action.votingStartTime,
-            votingEndTime: action.votingEndTime,
-            executionTime: action.executionTime,
-            queueTime: action.queueTime,
-            forVotes: action.forVotes,
-            againstVotes: action.againstVotes,
-            forVetoVotes: action.forVetoVotes,
-            againstVetoVotes: action.againstVetoVotes,
-            executed: action.executed,
-            canceled: action.canceled
-        });
+        Vote storage vote = action.votes[voter];
 
-        return actionWithoutVotes;
+        if (vote.votingPower != 0) revert VoteAlreadySubmitted();
+
+        // TODO: StrategySettings needs to define voting rules by querying policy NFT
+        uint256 votingPower = IStrategySettings(action.strategy).getVotingPowerAt(voter, action.votingStartTime);
+
+        if (support) {
+            action.forVotes += votingPower;
+        } else {
+            action.againstVotes += votingPower;
+        }
+
+        vote.support = support;
+        vote.votingPower = uint248(votingPower);
+
+        emit VoteEmitted(actionId, voter, support, votingPower);
+    }
+
+    function _submitVeto(address vetoer, uint256 actionId, bool support) internal {
+        if (getActionState(actionId) != ActionState.Queued) revert VotingClosed();
+        Action storage action = actions[actionId];
+        // TODO: add check here to see if the action's strategy allows for veto
+        Veto storage veto = action.vetoes[vetoer];
+
+        if (veto.votingPower != 0) revert VetoAlreadySubmitted();
+
+        // TODO: StrategySettings needs to define voting rules by querying policy NFT
+        uint256 vetoPower = IStrategySettings(action.strategy).getVetoPowerAt(vetoer, action.votingStartTime);
+
+        if (support) {
+            action.forVetoVotes += vetoPower;
+        } else {
+            action.againstVetoVotes += vetoPower;
+        }
+
+        veto.support = support;
+        veto.votingPower = uint248(vetoPower);
+
+        emit VoteEmitted(actionId, vetoer, support, vetoPower);
     }
 }

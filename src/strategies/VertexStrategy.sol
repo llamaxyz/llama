@@ -4,14 +4,14 @@ pragma solidity ^0.8.17;
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexExecutor} from "src/executor/IVertexExecutor.sol";
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
-import {ActionValidator} from "src/strategies/ActionValidator.sol";
+import {StrategySettings} from "src/strategies/StrategySettings.sol";
 
 // Errors
 error ActionNotQueued();
 error TimelockNotFinished();
 error ActionHasExpired();
 
-contract VertexStrategy is IVertexStrategy, ActionValidator {
+contract VertexStrategy is IVertexStrategy, StrategySettings {
     /// @notice Name of the strategy.
     string public immutable name;
 
@@ -41,7 +41,7 @@ contract VertexStrategy is IVertexStrategy, ActionValidator {
         uint256 _expirationDelay,
         uint256 _votingDuration,
         bool _isFixedVotingPeriod
-    ) ActionValidator(_votingDuration) {
+    ) StrategySettings(_votingDuration) {
         name = _name;
         router = _router;
         executor = _executor;
