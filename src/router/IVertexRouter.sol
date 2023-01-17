@@ -194,10 +194,10 @@ interface IVertexRouter {
     function submitVetoBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
-     * @dev Add new addresses to the list of authorized strategies
+     * @dev Create new strategies and add them to the list of authorized strategies
      * @param strategies list of new addresses to be authorized strategies
      **/
-    function authorizeStrategies(address[] memory strategies) external;
+    function createAndAuthorizeStrategies(address[] memory strategies) external;
 
     /**
      * @dev Remove addresses to the list of authorized strategies
@@ -206,30 +206,11 @@ interface IVertexRouter {
     function unauthorizeStrategies(address[] memory strategies) external;
 
     /**
-     * @dev Get all authorized strategies
-     * @return list of all authorized strategies
-     **/
-    function getStrategies() external view returns (IVertexStrategy[] memory);
-
-    /**
      * @dev Returns whether an address is an authorized strategy
      * @param strategy address to evaluate as authorized strategy
      * @return true if authorized
      **/
     function isStrategyAuthorized(IVertexStrategy strategy) external view returns (bool);
-
-    /**
-     * @dev Get the action count (the current number of actions ever created)
-     * @return the action count
-     **/
-    function getActionsCount() external view returns (uint256);
-
-    /**
-     * @dev Get an action by id
-     * @param actionId id of the action to get
-     * @return the action as ActionWithoutVotes memory object
-     **/
-    function getActionById(uint256 actionId) external view returns (ActionWithoutVotes memory);
 
     /**
      * @dev Getter of the Vote of a voter about an action
