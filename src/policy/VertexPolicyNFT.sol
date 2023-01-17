@@ -74,7 +74,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev adds a role to the contract
     ///@param role the role to add
     ///@param permissions the permissions of the role
-    function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
+    function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner returns (bytes32) {
         bytes32 roleHash = hashRole(role);
         roles.push(roleHash);
         uint256 permissionsLength = permissions.length;
@@ -87,6 +87,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
             }
         }
         emit RoleAdded(roleHash, role, permissions, permissionSignatures);
+        return roleHash;
     }
 
     ///@dev assigns a role to a token
