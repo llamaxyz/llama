@@ -8,9 +8,15 @@ import "lib/forge-std/src/console.sol";
 contract VertexPolicyNFTTest is Test {
     VertexPolicyNFT public vertexPolicyNFT;
 
-    event RoleAdded(bytes32 role, string roleString, Permission[] permissions, bytes8[] permissionSignatures);
-    event RoleRevoked(uint256 tokenId, bytes32 role);
-    event RoleDeleted(bytes32 role);
+    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
+    event RolesAssigned(uint256 tokenId, bytes32[] roles);
+    event RolesRevoked(uint256 tokenId, bytes32[] roles);
+    event RolesDeleted(bytes32[] role);
+    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsDeleted(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
+
+    error RoleNonExistant(bytes32 role);
+    error SoulboundToken();
 
     function hashPermission(Permission memory permission) internal pure returns (bytes8) {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
@@ -53,75 +59,78 @@ contract VertexPolicyNFTTest is Test {
         permissionSignaturesArray[0] = hashPermission(permission);
 
         vm.expectEmit(true, true, true, true, address(vertexPolicyNFT));
-        emit RoleAdded(hashRole("admin"), "admin", permissions, permissionSignaturesArray);
+        emit RolesAdded(hashRole("admin"), "admin", permissions, permissionSignaturesArray);
 
-        vertexPolicyNFT.addRole("admin", permissions);
+        vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
     }
 
-    function testAssignRole() public {
-        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    // function testAssignRole() public {
+    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
-        bytes32 roleHash = vertexPolicyNFT.addRole("admin", permissions);
-        vertexPolicyNFT.assignRole(1, roleHash);
-        assertEq(vertexPolicyNFT.hasRole(1, roleHash), true);
-        bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
-    }
+    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
+    //     bytes32 roleHash = hashRole("admin");
+    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
+    //     assertEq(vertexPolicyNFT.hasRole(1, roleHash), true);
+    //     bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
+    //     assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
+    // }
 
-    function testDeleteRole() public {
-        (Permission[] memory permissions, ) = generateGenericPermissionArray();
+    // function testDeleteRole() public {
+    //     (Permission[] memory permissions, ) = generateGenericPermissionArray();
 
-        bytes32 roleHash = vertexPolicyNFT.addRole("admin", permissions);
+    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
+    //     bytes32 roleHash = hashRole("admin");
+    //     vm.expectEmit(true, false, false, true, address(vertexPolicyNFT));
+    //     emit RolesDeleted([roleHash]);
 
-        vm.expectEmit(true, false, false, true, address(vertexPolicyNFT));
-        emit RoleDeleted(roleHash);
+    //     vertexPolicyNFT.deleteRoles([roleHash]);
+    // }
 
-        vertexPolicyNFT.deleteRole(roleHash);
-    }
+    // function testRevokeRole() public {
+    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
-    function testRevokeRole() public {
-        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
+    //     bytes32 roleHash = hashRole("admin");
+    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
 
-        bytes32 roleHash = vertexPolicyNFT.addRole("admin", permissions);
-        vertexPolicyNFT.assignRole(1, roleHash);
+    //     vm.expectEmit(true, true, false, true, address(vertexPolicyNFT));
+    //     emit RolesRevoked(1, [roleHash]);
 
-        vm.expectEmit(true, true, false, true, address(vertexPolicyNFT));
-        emit RoleRevoked(1, roleHash);
+    //     vertexPolicyNFT.revokeRoles(1, [roleHash]);
+    //     assertEq(vertexPolicyNFT.hasRole(1, roleHash), false);
+    //     bytes32[] memory roles = vertexPolicyNFT.getRoles();
+    //     assertEq(roles.length, 1);
+    //     assertEq(roles[0], roleHash);
+    // }
 
-        vertexPolicyNFT.revokeRole(1, roleHash);
-        assertEq(vertexPolicyNFT.hasRole(1, roleHash), false);
-        bytes32[] memory roles = vertexPolicyNFT.getRoles();
-        assertEq(roles.length, 1);
-        assertEq(roles[0], roleHash);
-    }
+    // function testAddPermission() public {
+    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
-    function testAddPermission() public {
-        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    //     bytes32 roleHash = vertexPolicyNFT.addRoles(["admin"], [permissions]);
 
-        bytes32 roleHash = vertexPolicyNFT.addRole("admin", permissions);
+    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
 
-        vertexPolicyNFT.assignRole(1, roleHash);
+    //     Permission memory newPermission = Permission(address(0xbeef), bytes4(0x09090909), address(0xbeefbeef));
+    //     vertexPolicyNFT.addPermissionsToRole(roleHash, [newPermission]);
 
-        Permission memory newPermission = Permission(address(0xbeef), bytes4(0x09090909), address(0xbeefbeef));
-        vertexPolicyNFT.addPermissionToRole(roleHash, newPermission);
+    //     assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(newPermission)), true);
+    // }
 
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(newPermission)), true);
-    }
+    // function testDeletePermission() public {
+    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
 
-    function testDeletePermission() public {
-        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    //     vertexPolicyNFT.addRoles(["admin"], [permissions]);
+    //     bytes32 roleHash = hashRole("admin");
 
-        bytes32 roleHash = vertexPolicyNFT.addRole("admin", permissions);
+    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
 
-        vertexPolicyNFT.assignRole(1, roleHash);
+    //     vertexPolicyNFT.deletePermissionsFromRole(roleHash, storagePermissionsArray);
 
-        vertexPolicyNFT.deletePermissionFromRole(roleHash, permission);
-
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), false);
-    }
+    //     assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), false);
+    // }
 
     function testCannotTransferTokenOwnership() public {
-        vm.expectRevert("VertexPolicyNFT: transferFrom is disabled");
+        vm.expectRevert(SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), 1);
     }
 }

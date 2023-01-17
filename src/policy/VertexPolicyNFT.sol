@@ -30,13 +30,10 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
     event RolesAssigned(uint256 tokenId, bytes32[] roles);
-    event RoleRevoked(uint256 tokenId, bytes32 role);
     event RolesRevoked(uint256 tokenId, bytes32[] roles);
     event RolesDeleted(bytes32[] role);
-    event PermissionAdded(bytes32 role, Permission permission, bytes8 permissionSignature);
     event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
-    event PermissionDeleted(bytes32 role, Permission permission, bytes8 permissionSignature);
-    event PermissionsDeleted(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
 
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
@@ -97,7 +94,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev indexes in rolesArray and permissionsArray must match
     ///@param rolesArray the roles to add
     ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner returns (bytes32) {
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner {
         require(rolesArray.length > 0, "VertexPolicyNFT: roles array must not be empty");
         bytes32[] memory roleHashes = hashRoles(rolesArray);
         bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArray.length);
@@ -184,19 +181,18 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev deletes multiple permissions from a role
     ///@param role the role to delete the permission from
     ///@param permissions the array of permissions to delete
-    function deletePermissionsFromRole(bytes32 role, Permission[] calldata permissions) public onlyOwner {
+    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyOwner {
         require(permissions.length > 0, "VertexPolicyNFT: permissions array must not be empty");
-        bytes8[] memory permissionSignatures = hashPermissions(permissions);
         bytes8[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
-            for (uint256 j; j < permissionSignatures.length; ++j) {
-                if (rolePermissionSignatures[i] == permissionSignatures[j]) {
+            for (uint256 j; j < rolePermissionSignaturesLength; ++j) {
+                if (rolePermissionSignatures[i] == permissions[j]) {
                     delete rolePermissionSignatures[i];
                 }
             }
         }
-        emit PermissionsDeleted(role, permissions, permissionSignatures);
+        emit PermissionsDeleted(role, permissions);
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
