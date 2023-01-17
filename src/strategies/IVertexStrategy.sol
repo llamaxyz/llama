@@ -54,13 +54,13 @@ interface IVertexStrategy {
      * @dev Getter of the delay between queuing and execution
      * @return The delay in seconds
      **/
-    function getDelay() external view returns (uint256);
+    function delay() external view returns (uint256);
 
     /**
-     * @dev Getter of the delay between queuing and execution
-     * @return The delay in seconds
+     * @dev Getter of the duration between executionTime and action expiration
+     * @return The expiration delay in seconds
      **/
-    function getDelay() external view returns (uint256);
+    function expirationDelay() external view returns (uint256);
 
     /**
      * @dev Returns whether an action (via actionHash) is queued
@@ -77,24 +77,6 @@ interface IVertexStrategy {
      * @return true of proposal is over grace period
      **/
     function isProposalOverGracePeriod(IAaveGovernanceV2 governance, uint256 proposalId) external view returns (bool);
-
-    /**
-     * @dev Getter of grace period constant
-     * @return grace period in seconds
-     **/
-    function GRACE_PERIOD() external view returns (uint256);
-
-    /**
-     * @dev Getter of minimum delay constant
-     * @return minimum delay in seconds
-     **/
-    function MINIMUM_DELAY() external view returns (uint256);
-
-    /**
-     * @dev Getter of maximum delay constant
-     * @return maximum delay in seconds
-     **/
-    function MAXIMUM_DELAY() external view returns (uint256);
 
     /**
      * @dev Function, called by Governance, that queue a transaction, returns action hash

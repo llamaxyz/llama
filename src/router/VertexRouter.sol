@@ -9,7 +9,6 @@ import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 
 // Errors
 error OnlyCancelBeforeExecuted();
-error OnlyCreaterCanCancel();
 error InvalidActionId();
 error OnlyQueuedActions();
 error InvalidStateForQueue();
@@ -48,7 +47,7 @@ contract VertexRouter is IVertexRouter {
     bytes32 public constant VOTE_EMITTED_TYPEHASH = keccak256("VoteEmitted(uint256 id,bool support)");
     bytes32 public constant VETO_EMITTED_TYPEHASH = keccak256("VetoEmitted(uint256 id,bool support)");
 
-    constructor(string calldata _name, address[] memory strategies) {
+    constructor(string calldata _name) {
         name = _name;
 
         // TODO: We will use CREATE2 to deterministically deploy the VertexPolicyNFT,
@@ -104,15 +103,10 @@ contract VertexRouter is IVertexRouter {
         }
 
         Action storage action = actions[actionId];
+        if (!IActionValidator(action.strategy).isActionCanceletionValid(action, msg.sender)) revert ActionCannotBeCanceled();
 
-        // TODO: clean up cancellation detection logic
-        if (msg.sender == action.creator) {
-            action.canceled = true;
-        } else {
-            if (!IActionValidator(action.strategy).isActionCanceletionValid(action)) revert ActionCannotBeCanceled();
-            action.canceled = true;
-            action.strategy.cancelAction(msg.sender, actionId);
-        }
+        action.canceled = true;
+        action.strategy.cancelAction(msg.sender, actionId);
 
         emit ActionCanceled(actionId);
     }
@@ -121,7 +115,7 @@ contract VertexRouter is IVertexRouter {
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
-        uint256 executionTime = block.timestamp + action.strategy.getDelay();
+        uint256 executionTime = block.timestamp + action.strategy.delay();
 
         if (action.strategy.isActionQueued(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
         action.strategy.queueTransaction(target, value, signature, data, executionTime);
@@ -149,21 +143,29 @@ contract VertexRouter is IVertexRouter {
         if (action.canceled) {
             return ActionState.Canceled;
         }
-        // TODO: Complete getActionState logic
-        // else if (block.number <= action.endBlock) {
-        //     return ActionState.Active;
-        // } else if (!IActionValidator(address(action.strategy)).isActionPassed(this, actionId)) {
-        //     return ActionState.Failed;
-        // } else if (action.executionTime == 0) {
-        //     return ActionState.Succeeded;
-        // } else if (action.executed) {
-        //     return ActionState.Executed;
-        // } else if (action.strategy.isActionOverGracePeriod(this, actionId)) {
-        //     return ActionState.Expired;
-        // }
-        else {
-            return ActionState.Queued;
+
+        if (block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !IActionValidator(action.strategy).isActionPassed(actionId))) {
+            return ActionState.Active;
         }
+
+        // TODO: do we need to pass the full action object here?
+        if (!IActionValidator(action.strategy).isActionPassed(actionId)) {
+            return ActionState.Failed;
+        }
+
+        if (action.executionTime == 0) {
+            return ActionState.Succeeded;
+        }
+
+        if (action.executed) {
+            return ActionState.Executed;
+        }
+
+        if (action.strategy.isActionExpired(actionId)) {
+            return ActionState.Expired;
+        }
+
+        return ActionState.Queued;
     }
 
     /**

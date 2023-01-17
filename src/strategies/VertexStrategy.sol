@@ -18,17 +18,22 @@ contract VertexStrategy is IVertexStrategy, ActionValidator {
     /// @notice Time after delay that action can be executed before permanently expiring.
     uint256 public immutable expirationDelay;
 
+    /// @notice Can action be queued before votingEndTime.
+    bool public immutable isFixedVotingPeriod;
+
     constructor(
         string calldata _name,
         IVertexRouter _router,
         uint256 _delay,
         uint256 _expirationDelay,
-        uint256 votingDuration
+        uint256 votingDuration,
+        bool _isFixedVotingPeriod
     ) ActionValidator(votingDuration) {
         name = _name;
         router = _router;
         delay = _delay;
         expirationDelay = _expirationDelay;
+        isFixedVotingPeriod = _isFixedVotingPeriod;
 
         emit NewStrategyCreated(name);
     }
