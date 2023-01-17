@@ -170,6 +170,18 @@ contract VertexPolicyNFT is ERC721, Ownable {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
     }
 
+    ///@dev hashes an array of permissions
+    ///@param permissions the permissions array to hash
+    function hashPermissions(Permission calldata permissions) internal pure returns (bytes8[]) {
+        bytes8[] memory output = new bytes8[](permissions.length);
+        unchecked {
+            for (uint256 i; i < permissions.length; ++i) {
+                output[i] = hashPermission(permissions[i]);
+            }
+        }
+        return output;
+    }
+
     ///@dev hashes a role
     ///@param role the role to hash
     function hashRole(string calldata role) internal pure returns (bytes32) {
