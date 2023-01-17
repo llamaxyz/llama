@@ -5,6 +5,12 @@ import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
 interface IVertexStrategy {
     /**
+     * @dev emitted when a new strategy is deployed.
+     * @param name Name of the strategy
+     **/
+    event NewStrategyCreated(string name);
+
+    /**
      * @dev emitted when a new (trans)action is Queued.
      * @param actionHash hash of the action
      * @param target address of the targeted contract
@@ -35,8 +41,6 @@ interface IVertexStrategy {
      * @param resultData the actual callData used on the target
      **/
     event ExecutedAction(bytes32 actionHash, address indexed target, uint256 value, string signature, bytes data, bytes resultData);
-
-    function createAction(address target, uint256 value, string calldata signature, bytes calldata callData) external;
 
     function cancelAction(address creator, uint256 id) external returns (bool);
 

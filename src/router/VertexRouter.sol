@@ -13,6 +13,7 @@ error InvalidActionId();
 error OnlyQueuedActions();
 error InvalidStateForQueue();
 error DuplicateAction();
+error ActionCannotBeCanceled();
 
 /// @title VertexRouter
 /// @author Llama (vertex@llama.xyz)
@@ -24,10 +25,10 @@ contract VertexRouter is IVertexRouter {
     /// @notice The NFT contract that defines the policies for this Vertex instance.
     VertexPolicyNFT private _policies;
 
-    /// @notice The current number of actions ever created.
+    /// @notice The current number of actions created.
     uint256 private _actionsCount;
 
-    /// @notice Mapping of action ids to Action structs.
+    /// @notice Mapping of action ids to Actions.
     mapping(uint256 => Action) private _actions;
 
     /// @notice Mapping of all authorized strategies.
@@ -42,7 +43,9 @@ contract VertexRouter is IVertexRouter {
         name = _name;
 
         // TODO: this assumes strategies have already been deployed.
-        // not sure if this is optimal or the router deploys strategies.
+        // not sure if this is optimal or the router should deploy strategies.
+        // update: we'll be able to define a create strategy function on the router that
+        // deploys new strategies and authorizes them.
         addStrategies(strategies);
     }
 
@@ -75,8 +78,6 @@ contract VertexRouter is IVertexRouter {
 
         _actionsCount++;
 
-        strategy.createAction(target, value, signature, data);
-
         emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, data);
 
         return newAction.id;
@@ -96,7 +97,8 @@ contract VertexRouter is IVertexRouter {
             action.canceled = true;
         } else {
             bool isCanceled = action.strategy.cancelAction(msg.sender, actionId);
-            action.canceled = isCanceled;
+            if (!isCanceled) revert ActionCannotBeCanceled();
+            action.canceled = true;
         }
 
         emit ActionCanceled(actionId);

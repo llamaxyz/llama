@@ -1,28 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-error OnlyStrategyCanExecute();
+import {IVertexRouter} from "src/router/IVertexRouter.sol";
+
+error OnlyRouterCanExecute();
 error ActionExecutionFailed();
 
 contract VertexExecutor {
-    mapping(address => bool) public strategies;
+    IVertexRouter public immutable router;
 
-    modifier onlyStrategy(address strategy) {
-        if (!strategies[strategy]) revert OnlyStrategyCanExecute();
-        _;
+    constructor(IVertexRouter _router) {
+        router = _router;
     }
 
-    function updateStrategy(address strategy, bool isStrategy) external {
-        // TODO: add modifier that only allows VertexVotingWithVetoStrategy to update
-        strategies[strategy] = isStrategy;
-    }
-
-    function execute(
-        address target,
-        uint256 value,
-        string memory signature,
-        bytes memory data
-    ) external payable onlyStrategy(msg.sender) returns (bytes memory) {
+    function execute(address target, uint256 value, string memory signature, bytes memory data) external payable returns (bytes memory) {
+        if (msg.sender != router) revert OnlyRouterCanExecute();
         bytes memory callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
 
         // solhint-disable avoid-low-level-calls
