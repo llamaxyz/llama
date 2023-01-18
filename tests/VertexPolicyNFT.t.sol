@@ -39,6 +39,16 @@ contract VertexPolicyNFTTest is Test {
         permissions.push(permission);
     }
 
+    function addGenericRoleSetup() internal {
+        generateGenericPermissionArray();
+        permissionsArray.push(permissions);
+        permissionSignature.push(hashPermission(permission));
+        permissionSignatures.push(permissionSignature);
+        roles.push("admin");
+        roleHashes.push(hashRole(roles[0]));
+        vertexPolicyNFT.addRoles(roles, permissionsArray);
+    }
+
     function setUp() public {
         vertexPolicyNFT = new VertexPolicyNFT("Test", "TST");
         // console.logAddress(address(policyNFT)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
@@ -72,16 +82,13 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.addRoles(roles, permissionsArray);
     }
 
-    // function testAssignRole() public {
-    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
-
-    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
-    //     bytes32 roleHash = hashRole("admin");
-    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
-    //     assertEq(vertexPolicyNFT.hasRole(1, roleHash), true);
-    //     bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
-    //     assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
-    // }
+    function testAssignRole() public {
+        addGenericRoleSetup();
+        vertexPolicyNFT.assignRoles(1, roleHashes);
+        assertEq(vertexPolicyNFT.hasRole(1, roleHashes[0]), true);
+        bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
+        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
+    }
 
     // function testDeleteRole() public {
     //     (Permission[] memory permissions, ) = generateGenericPermissionArray();
