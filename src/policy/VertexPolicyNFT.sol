@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
+import "lib/forge-std/src/console.sol";
 
 ///@dev Struct to define a permission
 struct Permission {
@@ -95,10 +96,13 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param rolesArray the roles to add
     ///@param permissionsArray and array of permissions arrays for each role
     function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner {
-        require(rolesArray.length > 0, "VertexPolicyNFT: roles array must not be empty");
+        uint256 rolesArrayLength = rolesArray.length;
+        uint256 permissionsArrayLength = permissionsArray.length;
+        require(rolesArrayLength > 0, "VertexPolicyNFT: roles array must not be empty");
+        require(rolesArrayLength == permissionsArrayLength, "VertexPolicyNFT: roles array must not be empty");
         bytes32[] memory roleHashes = hashRoles(rolesArray);
-        bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArray.length);
-        for (uint256 i; i < rolesArray.length; ++i) {
+        bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArrayLength);
+        for (uint256 i; i < rolesArrayLength; ++i) {
             require(permissionsArray[i].length > 0, "VertexPolicyNFT: permissions array must not be empty");
             bytes8[] memory permissionsHash = addRole(roleHashes[i], permissionsArray[i]);
             permissionsHashes[i] = permissionsHash;

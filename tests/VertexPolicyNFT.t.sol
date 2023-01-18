@@ -8,6 +8,14 @@ import "lib/forge-std/src/console.sol";
 contract VertexPolicyNFTTest is Test {
     VertexPolicyNFT public vertexPolicyNFT;
 
+    Permission public permission;
+    string[] public roles;
+    Permission[] public permissions;
+    Permission[][] public permissionsArray;
+    bytes8[] public permissionSignature;
+    bytes8[][] public permissionSignatures;
+    bytes32[] public roleHashes;
+
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
     event RolesAssigned(uint256 tokenId, bytes32[] roles);
     event RolesRevoked(uint256 tokenId, bytes32[] roles);
@@ -26,11 +34,9 @@ contract VertexPolicyNFTTest is Test {
         return keccak256(abi.encodePacked(role));
     }
 
-    function generateGenericPermissionArray() internal pure returns (Permission[] memory, Permission memory) {
-        Permission memory permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
-        Permission[] memory permissions = new Permission[](1);
-        permissions[0] = permission;
-        return (permissions, permission);
+    function generateGenericPermissionArray() internal {
+        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
+        permissions.push(permission);
     }
 
     function setUp() public {
@@ -54,14 +60,16 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function testAddRole() public {
-        (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
-        bytes8[] memory permissionSignaturesArray = new bytes8[](1);
-        permissionSignaturesArray[0] = hashPermission(permission);
+        generateGenericPermissionArray();
+        permissionsArray.push(permissions);
+        permissionSignature.push(hashPermission(permission));
+        permissionSignatures.push(permissionSignature);
+        roles.push("admin");
+        roleHashes.push(hashRole(roles[0]));
 
         vm.expectEmit(true, true, true, true, address(vertexPolicyNFT));
-        emit RolesAdded(hashRole("admin"), "admin", permissions, permissionSignaturesArray);
-
-        vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
+        emit RolesAdded(roleHashes, roles, permissionsArray, permissionSignatures);
+        vertexPolicyNFT.addRoles(roles, permissionsArray);
     }
 
     // function testAssignRole() public {
