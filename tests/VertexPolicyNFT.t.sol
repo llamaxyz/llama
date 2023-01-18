@@ -98,22 +98,19 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.deleteRoles(roleHashes);
     }
 
-    // function testRevokeRole() public {
-    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    function testRevokeRole() public {
+        addGenericRoleSetup();
+        vertexPolicyNFT.assignRoles(1, roleHashes);
 
-    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
-    //     bytes32 roleHash = hashRole("admin");
-    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
+        vm.expectEmit(true, true, false, true, address(vertexPolicyNFT));
+        emit RolesRevoked(1, roleHashes);
 
-    //     vm.expectEmit(true, true, false, true, address(vertexPolicyNFT));
-    //     emit RolesRevoked(1, [roleHash]);
-
-    //     vertexPolicyNFT.revokeRoles(1, [roleHash]);
-    //     assertEq(vertexPolicyNFT.hasRole(1, roleHash), false);
-    //     bytes32[] memory roles = vertexPolicyNFT.getRoles();
-    //     assertEq(roles.length, 1);
-    //     assertEq(roles[0], roleHash);
-    // }
+        vertexPolicyNFT.revokeRoles(1, roleHashes);
+        assertEq(vertexPolicyNFT.hasRole(1, roleHashes[0]), false);
+        bytes32[] memory totalRoles = vertexPolicyNFT.getRoles();
+        assertEq(totalRoles.length, 1);
+        assertEq(totalRoles[0], roleHashes[0]);
+    }
 
     // function testAddPermission() public {
     //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
