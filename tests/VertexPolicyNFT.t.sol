@@ -90,16 +90,13 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
     }
 
-    // function testDeleteRole() public {
-    //     (Permission[] memory permissions, ) = generateGenericPermissionArray();
+    function testDeleteRole() public {
+        addGenericRoleSetup();
+        vm.expectEmit(true, false, false, true, address(vertexPolicyNFT));
+        emit RolesDeleted(roleHashes);
 
-    //     vertexPolicyNFT.addRoles(["admin"], [[permissions]]);
-    //     bytes32 roleHash = hashRole("admin");
-    //     vm.expectEmit(true, false, false, true, address(vertexPolicyNFT));
-    //     emit RolesDeleted([roleHash]);
-
-    //     vertexPolicyNFT.deleteRoles([roleHash]);
-    // }
+        vertexPolicyNFT.deleteRoles(roleHashes);
+    }
 
     // function testRevokeRole() public {
     //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
