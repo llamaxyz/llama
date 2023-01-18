@@ -27,13 +27,13 @@ interface IVertexRouter {
     struct Action {
         uint256 id;
         address creator;
+        bool canceled;
+        bool executed;
         IVertexStrategy strategy;
         address target;
         uint256 value;
         string signature;
         bytes data;
-        bool canceled;
-        bool executed;
         // Properties for initial voting
         uint256 votingStartTime;
         uint256 votingEndTime;
@@ -51,13 +51,13 @@ interface IVertexRouter {
     struct ActionWithoutVotes {
         uint256 id;
         address creator;
+        bool executed;
+        bool canceled;
         IVertexStrategy strategy;
         address target;
         uint256 value;
         string signature;
         bytes data;
-        bool executed;
-        bool canceled;
         uint256 votingStartTime;
         uint256 votingEndTime;
         uint256 queueTime;
@@ -182,7 +182,7 @@ interface IVertexRouter {
      * only eligible when action is Queued
      * @param actionId id of the action
      **/
-    function submitVeto(uint256 actionId) external;
+    function submitVeto(uint256 actionId, bool support) external;
 
     /**
      * @dev Function to register the veto of user that has vetoed offchain via signature
@@ -191,7 +191,7 @@ interface IVertexRouter {
      * @param r r part of the voter signature
      * @param s s part of the voter signature
      **/
-    function submitVetoBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
+    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
      * @dev Create new strategies and add them to the list of authorized strategies

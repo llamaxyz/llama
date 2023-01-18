@@ -5,6 +5,9 @@ import {IVertexStrategySettings} from "src/strategies/IVertexStrategySettings.so
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
+// Errors
+error OnlyVertexRouter();
+
 /**
  * @title Action Validator abstract Contract, inherited by  Vertex strategies
  * @dev Validates/Invalidates action state transitions.
@@ -14,7 +17,7 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
  **/
 abstract contract VertexStrategySettings is IVertexStrategySettings {
     /// @notice Router of this Vertex instance.
-    IVertexRouter public immutable router;
+    address public immutable router;
 
     uint256 public immutable votingDuration;
     VertexPolicyNFT public immutable policy;
@@ -26,7 +29,7 @@ abstract contract VertexStrategySettings is IVertexStrategySettings {
     constructor(
         uint256 _votingDuration,
         VertexPolicyNFT _policy,
-        IVertexRouter _router,
+        address _router,
         uint256 _voteDifferential,
         uint256 _vetoVoteDifferential,
         uint256 _minimumVoteQuorum,
@@ -39,6 +42,11 @@ abstract contract VertexStrategySettings is IVertexStrategySettings {
         vetoVoteDifferential = _vetoVoteDifferential;
         minimumVoteQuorum = _minimumVoteQuorum;
         minimumVetoQuorum = _minimumVetoQuorum;
+    }
+
+    modifier onlyVertexRouter() {
+        if (msg.sender != router) revert OnlyVertexRouter();
+        _;
     }
 
     /// @inheritdoc IVertexStrategySettings

@@ -11,10 +11,11 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 error ActionNotQueued();
 error TimelockNotFinished();
 error ActionHasExpired();
+error FailedActionExecution();
 
 contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
     /// @notice Name of the strategy.
-    string public immutable name;
+    string public name;
 
     /// @notice Executor of this Vertex instance.
     IVertexExecutor public immutable executor;
@@ -32,7 +33,7 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
     mapping(bytes32 => bool) public queuedActions;
 
     constructor(
-        string calldata _name,
+        string memory _name,
         IVertexExecutor _executor,
         uint256 _delay,
         uint256 _expirationDelay,
@@ -54,11 +55,6 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         emit NewStrategyCreated(name);
     }
 
-    modifier onlyVertexRouter() {
-        if (msg.sender != router) revert OnlyRouter();
-        _;
-    }
-
     /// @inheritdoc IVertexStrategy
     function queueAction(
         address target,
@@ -66,7 +62,7 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         string calldata signature,
         bytes calldata data,
         uint256 executionTime
-    ) public override onlyRouter returns (bytes32) {
+    ) public override onlyVertexRouter returns (bytes32) {
         bytes32 actionHash = keccak256(abi.encode(target, value, signature, data, executionTime));
         queuedActions[actionHash] = true;
 
@@ -81,11 +77,11 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         string calldata signature,
         bytes calldata data,
         uint256 executionTime
-    ) public override onlyRouter returns (bytes32) {
+    ) public override onlyVertexRouter returns (bytes32) {
         bytes32 actionHash = keccak256(abi.encode(target, value, signature, data, executionTime));
         queuedActions[actionHash] = false;
 
-        emit CanceledAction(actionHash, target, value, signature, data, executionTime);
+        emit CanceledAction(actionHash, target, value, signature, data);
         return actionHash;
     }
 
@@ -96,11 +92,11 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         string calldata signature,
         bytes calldata data,
         uint256 executionTime
-    ) public payable override onlyRouter returns (bytes memory) {
+    ) public payable override onlyVertexRouter returns (bytes memory) {
         bytes32 actionHash = keccak256(abi.encode(target, value, signature, data, executionTime));
         if (!queuedActions[actionHash]) revert ActionNotQueued();
         if (block.timestamp < executionTime) revert TimelockNotFinished();
-        if (block.timestamp > executionTime + expirationDelay()) revert ActionHasExpired();
+        if (block.timestamp > executionTime + expirationDelay) revert ActionHasExpired();
 
         queuedActions[actionHash] = false;
 

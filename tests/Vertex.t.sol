@@ -3,14 +3,14 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {IVotes} from "@openzeppelin/governance/utils/IVotes.sol";
-import {VertexRouter} from "src/router/VertexRouter.sol";
-import {VertexExecutor} from "src/executor/VertexExecutor.sol";
+import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {IVertexExecutor} from "src/executor/IVertexExecutor.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {ProtocolVotingNFT} from "src/mock/ProtocolVotingNFT.sol";
 
 contract VertexTest is Test {
-    VertexRouter public vertexRouter;
-    VertexExecutor public vertexExecutor;
+    IVertexRouter public vertexRouter;
+    IVertexExecutor public vertexExecutor;
     ProtocolXYZ public protocolXYZ;
     ProtocolVotingNFT public protocolVotingNFT;
 
@@ -33,9 +33,9 @@ contract VertexTest is Test {
         address[] memory executors = new address[](1);
         executors[0] = address(0);
 
-        vertexExecutor = new VertexExecutor(0, proposers, executors, address(this));
+        vertexExecutor = new IVertexExecutor(0, proposers, executors, address(this));
 
-        vertexRouter = new VertexRouter(IVotes(protocolVotingNFT), vertexExecutor);
+        vertexRouter = new IVertexRouter(IVotes(protocolVotingNFT), vertexExecutor);
 
         vertexExecutor.grantRole(keccak256("PROPOSER_ROLE"), address(vertexRouter));
         vertexExecutor.revokeRole(keccak256("TIMELOCK_ADMIN_ROLE"), address(this));

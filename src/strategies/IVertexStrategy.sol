@@ -85,12 +85,6 @@ interface IVertexStrategy {
     function delay() external view returns (uint256);
 
     /**
-     * @dev Getter of the duration between executionTime and action expiration
-     * @return The expiration delay in seconds
-     **/
-    function expirationDelay() external view returns (uint256);
-
-    /**
      * @dev Returns whether an action (via actionHash) is queued
      * @param actionHash hash of the action to be checked
      * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))

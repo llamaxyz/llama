@@ -9,6 +9,7 @@ import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 
 // Errors
+error InvalidStrategy();
 error OnlyCancelBeforeExecuted();
 error InvalidActionId();
 error OnlyQueuedActions();
@@ -26,7 +27,7 @@ error VetoAlreadySubmitted();
 /// @notice Main point of interaction with a Vertex instance.
 contract VertexRouter is IVertexRouter {
     /// @notice Name of this Vertex instance.
-    string public immutable name;
+    string public name;
 
     /// @notice The current number of actions created.
     uint256 public actionsCount;
@@ -38,7 +39,7 @@ contract VertexRouter is IVertexRouter {
     VertexPolicyNFT public immutable policy;
 
     /// @notice The NFT contract that defines the policies for this Vertex instance.
-    VertexExecutor public immutable executor;
+    address public immutable executor;
 
     /// @notice Mapping of all authorized strategies.
     mapping(IVertexStrategy => bool) public authorizedStrategies;
@@ -52,7 +53,7 @@ contract VertexRouter is IVertexRouter {
     bytes32 public constant VOTE_EMITTED_TYPEHASH = keccak256("VoteEmitted(uint256 id,bool support)");
     bytes32 public constant VETO_EMITTED_TYPEHASH = keccak256("VetoEmitted(uint256 id,bool support)");
 
-    constructor(string calldata _name) {
+    constructor(string memory _name) {
         name = _name;
 
         // TODO: We will use CREATE2 to deterministically deploy the VertexPolicyNFT,
@@ -94,7 +95,9 @@ contract VertexRouter is IVertexRouter {
         newAction.votingStartTime = block.timestamp;
         newAction.votingEndTime = block.timestamp + IVertexStrategySettings(strategy).votingDuration();
 
-        actionsCount++;
+        unchecked {
+            ++actionsCount;
+        }
 
         emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, data);
 
@@ -245,8 +248,11 @@ contract VertexRouter is IVertexRouter {
     function createAndAuthorizeStrategies(address[] memory strategies) public override onlyVertexExecutor {
         //  TODO: this function needs to accept Strategy[]. Strategy should include all the arguments to deploy a new strategy
         //  It should use create2 to deploy and get all the addresses in an array, loop through them, and authorize them all
-        for (uint256 i = 0; i < strategies.length; i++) {
-            _authorizeStrategy(strategies[i]);
+        uint256 stragiesLength = strategies.length;
+        unchecked {
+            for (uint256 i = 0; i < stragiesLength; ++i) {
+                _authorizeStrategy(strategies[i]);
+            }
         }
     }
 
@@ -255,8 +261,11 @@ contract VertexRouter is IVertexRouter {
      * @param strategies list of addresses to be removed as authorized strategies
      **/
     function unauthorizeStrategies(address[] memory strategies) public override onlyVertexExecutor {
-        for (uint256 i = 0; i < strategies.length; i++) {
-            _unauthorizeStrategy(strategies[i]);
+        uint256 stragiesLength = strategies.length;
+        unchecked {
+            for (uint256 i = 0; i < stragiesLength; ++i) {
+                _unauthorizeStrategy(strategies[i]);
+            }
         }
     }
 
