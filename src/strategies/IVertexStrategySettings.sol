@@ -70,65 +70,24 @@ interface IVertexStrategySettings {
     function isVetoQuorumValid(uint256 actionId) external view returns (bool);
 
     /**
-     * @dev Check whether an action has enough extra FOR-votes than AGAINST-votes
-     * FOR VOTES - AGAINST VOTES > voteDifferential * voting supply
-     * @param actionId Id of the action to verify
-     * @return true if enough For-Votes
-     **/
-    function isVoteDifferentialValid(uint256 actionId) external view returns (bool);
-
-    /**
-     * @dev Check whether an action has enough extra FOR-vetoes than AGAINST-vetoes
-     * FOR VETOVOTES - AGAINST VETOVOTES > vetoVoteDifferential * voting supply
-     * @param actionId Id of the action to verify
-     * @return true if enough For-vetoes
-     **/
-    function isVetoDifferentialValid(uint256 actionId) external view returns (bool);
-
-    /**
      * @dev Calculates the minimum amount of Voting Power needed for a proposal to Pass
      * @param votingSupply Total number of oustanding vote tokens
+     * @param minPercentage Min. percentage needed to pass
      * @return voting power needed for a proposal to pass
      **/
-    function getMinimumVotePowerNeeded(uint256 votingSupply) external view returns (uint256);
-
-    /**
-     * @dev Calculates the minimum amount of Vetoing Power needed for a proposal to be vetoed
-     * @param votingSupply Total number of oustanding veto tokens
-     * @return vetoing power needed for a proposal to pass
-     **/
-    function getMinimumVetoPowerNeeded(uint256 votingSupply) external view returns (uint256);
-
-    /**
-     * @dev Get the vote differential threshold constant value
-     * to compare with % of for votes/total supply - % of against votes/total supply
-     * @return the vote differential threshold value (100 <=> 1%)
-     **/
-    function voteDifferential()
-        external
-        view
-        returns (
-            uint256
-        ); /**
-    
-     * @dev Get the veto differential threshold constant value
-     * to compare with % of for vetoes/total supply - % of against vetoes/total supply
-     * @return the veto differential threshold value (100 <=> 1%)
-     **/
-
-    function vetoVoteDifferential() external view returns (uint256);
+    function getMinimumPowerNeeded(uint256 votingSupply, uint256 minPercentage) external view returns (uint256);
 
     /**
      * @dev Get quorum threshold constant value for voting
      * to compare with % of for votes/total supply
      * @return the quorum threshold value (100 <=> 1%)
      **/
-    function minimumVoteQuorum() external view returns (uint256);
+    function minVotes() external view returns (uint256);
 
     /**
      * @dev Get quorum threshold constant value for vetoing
      * to compare with % of for vetoes/total supply
      * @return the quorum threshold value (100 <=> 1%)
      **/
-    function minimumVetoQuorum() external view returns (uint256);
+    function minVetoVotes() external view returns (uint256);
 }

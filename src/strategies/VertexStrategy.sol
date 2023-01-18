@@ -41,25 +41,12 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         uint256 _votingDuration,
         VertexPolicyNFT _policy,
         IVertexRouter _router,
-        uint256 _voteDifferential,
-        uint256 _vetoVoteDifferential,
-        uint256 _minimumVoteQuorum,
-        uint256 _minimumVetoQuorum,
+        uint256 _minVotes,
+        uint256 _minVetoVotes,
+        // TODO: Order is critical here. Voting power short circuits at the first specific permission match.
         VotePowerByPermission[] memory _votePowerByPermission,
         VetoPowerByPermission[] memory _vetoPowerByPermission
-    )
-        VertexStrategySettings(
-            _votingDuration,
-            _policy,
-            _router,
-            _voteDifferential,
-            _vetoVoteDifferential,
-            _minimumVoteQuorum,
-            _minimumVetoQuorum,
-            _votePowerByPermission,
-            _vetoPowerByPermission
-        )
-    {
+    ) VertexStrategySettings(_votingDuration, _policy, _router, _minVotes, _minVetoVotes, _votePowerByPermission, _vetoPowerByPermission) {
         name = _name;
         executor = _executor;
         delay = _delay;

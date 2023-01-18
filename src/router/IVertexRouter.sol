@@ -38,13 +38,11 @@ interface IVertexRouter {
         uint256 votingStartTime;
         uint256 votingEndTime;
         uint256 forVotes;
-        uint256 againstVotes;
         mapping(address => Vote) votes;
         // Properties for veto voting
         uint256 queueTime;
         uint256 executionTime; // Not set until action is queued
         uint256 forVetoVotes;
-        uint256 againstVetoVotes;
         mapping(address => Veto) vetoVotes;
     }
 
