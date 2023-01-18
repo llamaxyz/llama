@@ -70,12 +70,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function testAddRole() public {
-        generateGenericPermissionArray();
-        permissionsArray.push(permissions);
-        permissionSignature.push(hashPermission(permission));
-        permissionSignatures.push(permissionSignature);
-        roles.push("admin");
-        roleHashes.push(hashRole(roles[0]));
+        addGenericRoleSetup();
 
         vm.expectEmit(true, true, true, true, address(vertexPolicyNFT));
         emit RolesAdded(roleHashes, roles, permissionsArray, permissionSignatures);
@@ -123,18 +118,14 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
     }
 
-    // function testDeletePermission() public {
-    //     (Permission[] memory permissions, Permission memory permission) = generateGenericPermissionArray();
+    function testDeletePermission() public {
+        addGenericRoleSetup();
+        vertexPolicyNFT.assignRoles(1, roleHashes);
 
-    //     vertexPolicyNFT.addRoles(["admin"], [permissions]);
-    //     bytes32 roleHash = hashRole("admin");
+        vertexPolicyNFT.deletePermissionsFromRole(roleHashes[0], permissionSignature);
 
-    //     vertexPolicyNFT.assignRoles(1, [roleHash]);
-
-    //     vertexPolicyNFT.deletePermissionsFromRole(roleHash, storagePermissionsArray);
-
-    //     assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), false);
-    // }
+        assertEq(vertexPolicyNFT.hasPermission(1, permissionSignature[0]), false);
+    }
 
     function testCannotTransferTokenOwnership() public {
         vm.expectRevert(SoulboundToken.selector);
