@@ -59,9 +59,9 @@ contract VertexPolicyNFTTest is Test {
 
     function testMint() public {
         bytes32[] memory roles = new bytes32[](0);
-        vertexPolicyNFT.mint(address(this), roles);
-        assertEq(vertexPolicyNFT.balanceOf(address(this)), 2);
-        assertEq(vertexPolicyNFT.ownerOf(1), address(this));
+        vertexPolicyNFT.mint(address(0xdeadbeef), roles);
+        assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
+        assertEq(vertexPolicyNFT.ownerOf(1), address(0xdeadbeef));
     }
 
     function testBurn() public {
