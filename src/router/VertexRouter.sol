@@ -145,6 +145,7 @@ contract VertexRouter is IVertexRouter {
         return _submitVote(msg.sender, actionId, support);
     }
 
+    // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
     function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
@@ -164,6 +165,7 @@ contract VertexRouter is IVertexRouter {
         return _submitVeto(msg.sender, actionId, support);
     }
 
+    // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
     function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
