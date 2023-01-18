@@ -59,6 +59,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
     function mint(address to, bytes32[] calldata userRoles) public onlyOwner {
+        require(balanceOf(to) == 0, "VertexPolicyNFT: Soulbound token");
         uint256 tokenId = totalSupply();
         unchecked {
             _totalSupply++;
