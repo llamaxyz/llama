@@ -4,6 +4,11 @@ pragma solidity ^0.8.17;
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
 interface IVertexStrategySettings {
+    struct VotePowerByPermission {
+        bytes32 permissionSignature;
+        uint248 votingPower;
+    }
+
     /**
      * @dev Returns the voting power of a policyHolder at a specific block number.
      * @param policyHolder Address of the policyHolder
@@ -19,12 +24,6 @@ interface IVertexStrategySettings {
      * @return Vetoing power number
      **/
     function getVetoPowerAt(address policyHolder, uint256 blockNumber) external view returns (uint256);
-
-    /**
-     * @dev Get voting duration constant value
-     * @return the voting duration value in seconds
-     **/
-    function votingDuration() external view returns (uint256);
 
     /**
      * @dev Determine if an action is eligible for cancelation based on its id

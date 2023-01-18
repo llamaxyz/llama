@@ -2,8 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
-import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
-import {IVertexStrategySettings} from "src/strategies/IVertexStrategySettings.sol";
+import {VertexStrategy} from "src/strategies/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {getChainId} from "src/utils/Helpers.sol";
@@ -42,11 +41,11 @@ contract VertexRouter is IVertexRouter {
     address public immutable executor;
 
     /// @notice Mapping of all authorized strategies.
-    mapping(IVertexStrategy => bool) public authorizedStrategies;
+    mapping(VertexStrategy => bool) public authorizedStrategies;
 
     // TODO: Do we need an onchain way to access all strategies? Ideally not but will keep this as a placeholder.
     /// @notice Array of authorized strategies.
-    // IVertexStrategy[] public strategies;
+    // VertexStrategy[] public strategies;
 
     /// @notice EIP-712 typehashes.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -69,7 +68,7 @@ contract VertexRouter is IVertexRouter {
 
     /// @inheritdoc IVertexRouter
     function createAction(
-        IVertexStrategy strategy,
+        VertexStrategy strategy,
         address target,
         uint256 value,
         string calldata signature,
@@ -93,7 +92,7 @@ contract VertexRouter is IVertexRouter {
         newAction.signature = signature;
         newAction.data = data;
         newAction.votingStartTime = block.timestamp;
-        newAction.votingEndTime = block.timestamp + IVertexStrategySettings(strategy).votingDuration();
+        newAction.votingEndTime = block.timestamp + strategy.votingDuration();
 
         unchecked {
             ++actionsCount;
@@ -112,10 +111,10 @@ contract VertexRouter is IVertexRouter {
         }
 
         Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || IVertexStrategySettings(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
-        action.strategy.cancelAction(actionId);
+        action.strategy.cancelAction(action.target, action.value, action.signature, action.data, action.executionTime);
 
         emit ActionCanceled(actionId);
     }
@@ -140,7 +139,7 @@ contract VertexRouter is IVertexRouter {
         Action storage action = actions[actionId];
         action.executed = true;
         action.strategy.executeAction(action.target, action.value, action.signature, action.data, action.executionTime);
-        emit ActionExecuted(actionId, msg.sender, actionId.strategy, actionId.creator);
+        emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
     }
 
     /// @inheritdoc IVertexRouter
@@ -154,7 +153,7 @@ contract VertexRouter is IVertexRouter {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name())), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
                 keccak256(abi.encode(VOTE_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -174,7 +173,7 @@ contract VertexRouter is IVertexRouter {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name())), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
                 keccak256(abi.encode(VETO_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -215,14 +214,11 @@ contract VertexRouter is IVertexRouter {
             return ActionState.Canceled;
         }
 
-        if (
-            block.timestamp <= action.votingEndTime &&
-            (action.strategy.isFixedVotingPeriod() || !IVertexStrategySettings(action.strategy).isActionPassed(actionId))
-        ) {
+        if (block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
-        if (!IVertexStrategySettings(action.strategy).isActionPassed(actionId)) {
+        if (!action.strategy.isActionPassed(actionId)) {
             return ActionState.Failed;
         }
 
@@ -245,7 +241,7 @@ contract VertexRouter is IVertexRouter {
      * @dev Add new addresses to the list of authorized strategies
      * @param strategies list of new addresses to be authorized strategies
      **/
-    function createAndAuthorizeStrategies(address[] memory strategies) public override onlyVertexExecutor {
+    function createAndAuthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertexExecutor {
         //  TODO: this function needs to accept Strategy[]. Strategy should include all the arguments to deploy a new strategy
         //  It should use create2 to deploy and get all the addresses in an array, loop through them, and authorize them all
         uint256 stragiesLength = strategies.length;
@@ -260,7 +256,7 @@ contract VertexRouter is IVertexRouter {
      * @dev Remove addresses to the list of authorized strategies
      * @param strategies list of addresses to be removed as authorized strategies
      **/
-    function unauthorizeStrategies(address[] memory strategies) public override onlyVertexExecutor {
+    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertexExecutor {
         uint256 stragiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < stragiesLength; ++i) {
@@ -269,12 +265,12 @@ contract VertexRouter is IVertexRouter {
         }
     }
 
-    function _authorizeStrategy(IVertexStrategy strategy) internal {
+    function _authorizeStrategy(VertexStrategy strategy) internal {
         authorizedStrategies[strategy] = true;
         emit VertexStrategyAuthorized(strategy);
     }
 
-    function _unauthorizeStrategy(IVertexStrategy strategy) internal {
+    function _unauthorizeStrategy(VertexStrategy strategy) internal {
         authorizedStrategies[strategy] = false;
         emit VertexStrategyUnauthorized(strategy);
     }
@@ -286,8 +282,8 @@ contract VertexRouter is IVertexRouter {
 
         if (vote.votingPower != 0) revert VoteAlreadySubmitted();
 
-        // TODO: VertexStrategySettings needs to define voting rules by querying policy NFT
-        uint256 votingPower = IVertexStrategySettings(action.strategy).getVotePowerAt(voter, action.votingStartTime);
+        // TODO: VertexStrategy needs to define voting rules by querying policy NFT
+        uint256 votingPower = action.strategy.getVotePowerAt(voter, action.votingStartTime);
 
         if (support) {
             action.forVotes += votingPower;
@@ -305,13 +301,13 @@ contract VertexRouter is IVertexRouter {
         if (getActionState(actionId) != ActionState.Queued) revert VotingClosed();
         Action storage action = actions[actionId];
         // TODO: add check here to see if the action's strategy allows for veto
-        Veto storage veto = action.vetoes[vetoer];
+        Veto storage veto = action.vetoVotes[vetoer];
 
         if (veto.votingPower != 0) revert VetoAlreadySubmitted();
 
-        // TODO: VertexStrategySettings needs to define voting rules by querying policy NFT
+        // TODO: VertexStrategy needs to define voting rules by querying policy NFT
         // TODO: Do we need to base voting on startVoteBlock and endVoteBlock instead of timestamps to support snapshots?
-        uint256 vetoPower = IVertexStrategySettings(action.strategy).getVetoPowerAt(vetoer, action.votingStartTime);
+        uint256 vetoPower = action.strategy.getVetoPowerAt(vetoer, action.votingStartTime);
 
         if (support) {
             action.forVetoVotes += vetoPower;

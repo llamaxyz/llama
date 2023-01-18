@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
+import {VertexStrategy} from "src/strategies/VertexStrategy.sol";
 
 interface IVertexRouter {
     enum ActionState {
@@ -29,7 +29,7 @@ interface IVertexRouter {
         address creator;
         bool canceled;
         bool executed;
-        IVertexStrategy strategy;
+        VertexStrategy strategy;
         address target;
         uint256 value;
         string signature;
@@ -53,7 +53,7 @@ interface IVertexRouter {
         address creator;
         bool executed;
         bool canceled;
-        IVertexStrategy strategy;
+        VertexStrategy strategy;
         address target;
         uint256 value;
         string signature;
@@ -78,7 +78,7 @@ interface IVertexRouter {
      * @param signature The function signature that will be called by the action's associated transaction
      * @param data The arguments passed to the function that is called by the action's associated transaction
      **/
-    event ActionCreated(uint256 id, address indexed creator, IVertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
+    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
 
     /**
      * @dev emitted when an action is canceled
@@ -94,7 +94,7 @@ interface IVertexRouter {
      * @param creator address of the action creator
      * @param executionTime time when action underlying transactions can be executed
      **/
-    event ActionQueued(uint256 id, address indexed caller, address indexed strategy, address indexed creator, uint256 executionTime);
+    event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
 
     /**
      * @dev emitted when an action is executed
@@ -103,7 +103,7 @@ interface IVertexRouter {
      * @param strategy The Strategy contract that will determine how the action is executed
      * @param creator address of the action creator
      **/
-    event ActionExecuted(uint256 id, address indexed caller, address indexed strategy, address indexed creator);
+    event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
 
     /**
      * @dev emitted when a vote is registered
@@ -122,9 +122,9 @@ interface IVertexRouter {
      **/
     event VetoEmitted(uint256 id, address indexed vetoer, uint256 votingVetoPower);
 
-    event VertexStrategyAuthorized(address indexed strategy, address indexed creator);
+    event VertexStrategyAuthorized(VertexStrategy indexed strategy);
 
-    event VertexStrategyUnauthorized(address indexed strategy, address indexed creator);
+    event VertexStrategyUnauthorized(VertexStrategy indexed strategy);
 
     function name() external view returns (string memory);
 
@@ -137,7 +137,7 @@ interface IVertexRouter {
      * @param data The arguments passed to the function that is called by the action's associated transaction
      * @return Id of the action
      **/
-    function createAction(IVertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
+    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
 
     /**
      * @dev Cancels an action,
@@ -197,13 +197,13 @@ interface IVertexRouter {
      * @dev Create new strategies and add them to the list of authorized strategies
      * @param strategies list of new addresses to be authorized strategies
      **/
-    function createAndAuthorizeStrategies(address[] memory strategies) external;
+    function createAndAuthorizeStrategies(VertexStrategy[] memory strategies) external;
 
     /**
      * @dev Remove addresses to the list of authorized strategies
      * @param strategies list of addresses to be removed as authorized strategies
      **/
-    function unauthorizeStrategies(address[] memory strategies) external;
+    function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
     /**
      * @dev Getter of the Vote of a voter about an action

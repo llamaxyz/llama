@@ -44,8 +44,22 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         uint256 _voteDifferential,
         uint256 _vetoVoteDifferential,
         uint256 _minimumVoteQuorum,
-        uint256 _minimumVetoQuorum
-    ) VertexStrategySettings(_votingDuration, _policy, _router, _voteDifferential, _vetoVoteDifferential, _minimumVoteQuorum, _minimumVetoQuorum) {
+        uint256 _minimumVetoQuorum,
+        VotePowerByPermission[] memory _votePowerByPermission,
+        VetoPowerByPermission[] memory _vetoPowerByPermission
+    )
+        VertexStrategySettings(
+            _votingDuration,
+            _policy,
+            _router,
+            _voteDifferential,
+            _vetoVoteDifferential,
+            _minimumVoteQuorum,
+            _minimumVetoQuorum,
+            _votePowerByPermission,
+            _vetoPowerByPermission
+        )
+    {
         name = _name;
         executor = _executor;
         delay = _delay;
@@ -63,6 +77,7 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
         bytes calldata data,
         uint256 executionTime
     ) public override onlyVertexRouter returns (bytes32) {
+        // TODO: should the router just handle the hashing?
         bytes32 actionHash = keccak256(abi.encode(target, value, signature, data, executionTime));
         queuedActions[actionHash] = true;
 
@@ -100,13 +115,14 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
 
         queuedActions[actionHash] = false;
 
-        (bool success, bytes memory result) = executor.delegatecall{value: value}(
+        // solhint-disable avoid-low-level-calls
+        (bool success, bytes memory result) = address(executor).delegatecall(
             abi.encodeWithSelector(IVertexExecutor.execute.selector, target, value, signature, data)
         );
 
         if (!success) revert FailedActionExecution();
 
-        emit ExecutedAction(actionHash, target, value, signature, data, executionTime, result);
+        emit ExecutedAction(actionHash, target, value, signature, data, result);
 
         return result;
     }
@@ -114,6 +130,6 @@ contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
     function isActionExpired(uint256 actionId) external view override returns (bool) {
         IVertexRouter.ActionWithoutVotes memory action = router.getActionWithoutVotes(actionId);
 
-        return (block.timestamp > (action.executionTime + votingDuration()));
+        return (block.timestamp > (action.executionTime + votingDuration));
     }
 }

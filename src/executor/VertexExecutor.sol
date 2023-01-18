@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexExecutor} from "src/executor/IVertexExecutor.sol";
 
 error OnlyRouterCanExecute();
 error ActionExecutionFailed();
 
 contract VertexExecutor is IVertexExecutor {
-    IVertexRouter public immutable router;
+    address public immutable router;
 
-    constructor(IVertexRouter _router) {
+    constructor(address _router) {
         router = _router;
     }
 
