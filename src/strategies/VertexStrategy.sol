@@ -4,19 +4,17 @@ pragma solidity ^0.8.17;
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexExecutor} from "src/executor/IVertexExecutor.sol";
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
-import {StrategySettings} from "src/strategies/StrategySettings.sol";
+import {VertexStrategySettings} from "src/strategies/VertexStrategySettings.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
 // Errors
 error ActionNotQueued();
 error TimelockNotFinished();
 error ActionHasExpired();
 
-contract VertexStrategy is IVertexStrategy, StrategySettings {
+contract VertexStrategy is IVertexStrategy, VertexStrategySettings {
     /// @notice Name of the strategy.
     string public immutable name;
-
-    /// @notice Router of this Vertex instance.
-    IVertexRouter public immutable router;
 
     /// @notice Executor of this Vertex instance.
     IVertexExecutor public immutable executor;
@@ -35,15 +33,19 @@ contract VertexStrategy is IVertexStrategy, StrategySettings {
 
     constructor(
         string calldata _name,
-        IVertexRouter _router,
         IVertexExecutor _executor,
         uint256 _delay,
         uint256 _expirationDelay,
+        bool _isFixedVotingPeriod,
         uint256 _votingDuration,
-        bool _isFixedVotingPeriod
-    ) StrategySettings(_votingDuration) {
+        VertexPolicyNFT _policy,
+        IVertexRouter _router,
+        uint256 _voteDifferential,
+        uint256 _vetoVoteDifferential,
+        uint256 _minimumVoteQuorum,
+        uint256 _minimumVetoQuorum
+    ) VertexStrategySettings(_votingDuration, _policy, _router, _voteDifferential, _vetoVoteDifferential, _minimumVoteQuorum, _minimumVetoQuorum) {
         name = _name;
-        router = _router;
         executor = _executor;
         delay = _delay;
         expirationDelay = _expirationDelay;

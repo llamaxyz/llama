@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexStrategy} from "src/strategies/IVertexStrategy.sol";
-import {IStrategySettings} from "src/strategies/IStrategySettings.sol";
+import {IVertexStrategySettings} from "src/strategies/IVertexStrategySettings.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {getChainId} from "src/utils/Helpers.sol";
@@ -92,7 +92,7 @@ contract VertexRouter is IVertexRouter {
         newAction.signature = signature;
         newAction.data = data;
         newAction.votingStartTime = block.timestamp;
-        newAction.votingEndTime = block.timestamp + IStrategySettings(strategy).votingDuration();
+        newAction.votingEndTime = block.timestamp + IVertexStrategySettings(strategy).votingDuration();
 
         actionsCount++;
 
@@ -109,7 +109,7 @@ contract VertexRouter is IVertexRouter {
         }
 
         Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || IStrategySettings(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || IVertexStrategySettings(action.strategy).isActionCanceletionValid(action))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
         action.strategy.cancelAction(actionId);
@@ -211,13 +211,13 @@ contract VertexRouter is IVertexRouter {
         }
 
         if (
-            block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !IStrategySettings(action.strategy).isActionPassed(actionId))
+            block.timestamp <= action.votingEndTime &&
+            (action.strategy.isFixedVotingPeriod() || !IVertexStrategySettings(action.strategy).isActionPassed(actionId))
         ) {
             return ActionState.Active;
         }
 
-        // TODO: do we need to pass the full action object here?
-        if (!IStrategySettings(action.strategy).isActionPassed(actionId)) {
+        if (!IVertexStrategySettings(action.strategy).isActionPassed(actionId)) {
             return ActionState.Failed;
         }
 
@@ -275,8 +275,8 @@ contract VertexRouter is IVertexRouter {
 
         if (vote.votingPower != 0) revert VoteAlreadySubmitted();
 
-        // TODO: StrategySettings needs to define voting rules by querying policy NFT
-        uint256 votingPower = IStrategySettings(action.strategy).getVotingPowerAt(voter, action.votingStartTime);
+        // TODO: VertexStrategySettings needs to define voting rules by querying policy NFT
+        uint256 votingPower = IVertexStrategySettings(action.strategy).getVotePowerAt(voter, action.votingStartTime);
 
         if (support) {
             action.forVotes += votingPower;
@@ -298,8 +298,9 @@ contract VertexRouter is IVertexRouter {
 
         if (veto.votingPower != 0) revert VetoAlreadySubmitted();
 
-        // TODO: StrategySettings needs to define voting rules by querying policy NFT
-        uint256 vetoPower = IStrategySettings(action.strategy).getVetoPowerAt(vetoer, action.votingStartTime);
+        // TODO: VertexStrategySettings needs to define voting rules by querying policy NFT
+        // TODO: Do we need to base voting on startVoteBlock and endVoteBlock instead of timestamps to support snapshots?
+        uint256 vetoPower = IVertexStrategySettings(action.strategy).getVetoPowerAt(vetoer, action.votingStartTime);
 
         if (support) {
             action.forVetoVotes += vetoPower;
