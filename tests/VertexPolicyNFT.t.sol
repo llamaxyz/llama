@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "lib/forge-std/src/Test.sol";
-import "src/core/VertexPolicyNFT.sol";
+import "src/policy/VertexPolicyNFT.sol";
 import "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
