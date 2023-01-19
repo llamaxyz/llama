@@ -16,10 +16,8 @@ contract VertexExecutor is IVertexExecutor {
     function execute(address target, uint256 value, string memory signature, bytes memory data) external returns (bytes memory) {
         if (msg.sender != router) revert OnlyRouterCanExecute();
 
-        bytes memory callData = abi.encodeWithSignature(signature, data);
-
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = target.call{value: value}(callData);
+        (bool success, bytes memory result) = target.call{value: value}(abi.encodeWithSignature(signature, data));
 
         if (!success) revert ActionExecutionFailed();
         return result;

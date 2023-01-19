@@ -10,8 +10,10 @@ interface IVertexPolicyNFT {
     function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool);
 
     // Total number of policy NFTs at specific block number
+    // TODO: This should queried at action creation time and stored on the Action object
     function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
 
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    // TODO: This should queried at action creation time and stored on the Action object
     function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view returns (uint256);
 }
