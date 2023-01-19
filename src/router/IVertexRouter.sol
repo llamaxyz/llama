@@ -24,6 +24,7 @@ interface IVertexRouter {
         uint248 votingPower;
     }
 
+    // TODO: where should this live?
     struct Action {
         uint256 id;
         address creator;
@@ -35,8 +36,8 @@ interface IVertexRouter {
         string signature;
         bytes data;
         // Properties for initial voting
-        uint256 votingStartTime;
-        uint256 votingEndTime;
+        uint256 startBlockNumber;
+        uint256 endBlockNumber;
         uint256 forVotes;
         mapping(address => Vote) votes;
         // Properties for veto voting
@@ -56,8 +57,8 @@ interface IVertexRouter {
         uint256 value;
         string signature;
         bytes data;
-        uint256 votingStartTime;
-        uint256 votingEndTime;
+        uint256 startBlockNumber;
+        uint256 endBlockNumber;
         uint256 queueTime;
         uint256 executionTime;
         uint256 forVotes;
@@ -135,7 +136,13 @@ interface IVertexRouter {
      * @param data The arguments passed to the function that is called by the action's associated transaction
      * @return Id of the action
      **/
-    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
+    function createAction(
+        VertexStrategy strategy,
+        address target,
+        uint256 value,
+        string calldata signature,
+        bytes calldata data
+    ) external returns (uint256);
 
     /**
      * @dev Cancels an action,
@@ -173,7 +180,13 @@ interface IVertexRouter {
      * @param r r part of the voter signature
      * @param s s part of the voter signature
      **/
-    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitVoteBySignature(
+        uint256 actionId,
+        bool support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
     /**
      * @dev Function allowing msg.sender to veto an action
@@ -189,7 +202,13 @@ interface IVertexRouter {
      * @param r r part of the voter signature
      * @param s s part of the voter signature
      **/
-    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitVetoBySignature(
+        uint256 actionId,
+        bool support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
     /**
      * @dev Create new strategies and add them to the list of authorized strategies
@@ -234,4 +253,11 @@ interface IVertexRouter {
      * @return Action object without voting data
      **/
     function getActionWithoutVotes(uint256 actionId) external view returns (ActionWithoutVotes memory);
+
+    /**
+     * @dev Checks whether a proposal is over its expiration delay
+     * @param actionId Id of the action against which to test
+     * @return true of proposal is over its expiration delay
+     **/
+    function isActionExpired(uint256 actionId) external view returns (bool);
 }

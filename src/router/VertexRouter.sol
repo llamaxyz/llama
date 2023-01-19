@@ -20,6 +20,9 @@ error VotingClosed();
 error VoteAlreadySubmitted();
 error InvalidSignature();
 error VetoAlreadySubmitted();
+error TimelockNotFinished();
+error ActionHasExpired();
+error FailedActionExecution();
 
 /// @title VertexRouter
 /// @author Llama (vertex@llama.xyz)
@@ -42,6 +45,9 @@ contract VertexRouter is IVertexRouter {
 
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
+
+    /// @notice Mapping of action id's and bool that indicates if action is queued.
+    mapping(bytes32 => bool) public queuedActions;
 
     // TODO: Do we need an onchain way to access all strategies? Ideally not but will keep this as a placeholder.
     /// @notice Array of authorized strategies.
@@ -80,7 +86,7 @@ contract VertexRouter is IVertexRouter {
         // Eg. is msg.sender a VertexPolicyNFT holder and does
         //     their policy allow them create an action with this
         //     strategy, target, signature hash. You also probably
-        //     want to validate their policy at the previous block number
+        //     want to validate their policy at the previous or this block number
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];
@@ -91,8 +97,9 @@ contract VertexRouter is IVertexRouter {
         newAction.value = value;
         newAction.signature = signature;
         newAction.data = data;
-        newAction.votingStartTime = block.timestamp;
-        newAction.votingEndTime = block.timestamp + strategy.votingDuration();
+        newAction.startBlockNumber = block.number;
+        // TODO: votingDuration should return a block number
+        newAction.endBlockNumber = block.number + strategy.votingDuration();
 
         unchecked {
             ++actionsCount;
@@ -114,7 +121,7 @@ contract VertexRouter is IVertexRouter {
         if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
-        action.strategy.cancelAction(action.target, action.value, action.signature, action.data, action.executionTime);
+        queuedActions[actionId] = false;
 
         emit ActionCanceled(actionId);
     }
@@ -123,10 +130,10 @@ contract VertexRouter is IVertexRouter {
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
-        uint256 executionTime = block.timestamp + action.strategy.delay();
+        uint256 executionTime = block.timestamp + action.strategy.executionDelay();
 
-        if (action.strategy.queuedActions(keccak256(abi.encode(action.target, action.value, action.signature, action.data)))) revert DuplicateAction();
-        action.strategy.queueAction(action.target, action.value, action.signature, action.data, executionTime);
+        if (queuedActions[actionId]) revert DuplicateAction();
+        queuedActions[actionId] = true;
 
         action.executionTime = executionTime;
 
@@ -135,11 +142,27 @@ contract VertexRouter is IVertexRouter {
 
     /// @inheritdoc IVertexRouter
     function executeAction(uint256 actionId) external payable override {
+        // TODO: Do we need both of these checks?
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
+        if (!queuedActions[actionId]) revert OnlyQueuedActions();
+
         Action storage action = actions[actionId];
+        if (block.timestamp < action.executionTime) revert TimelockNotFinished();
+        if (block.timestamp >= action.executionTime + action.strategy.expirationDelay()) revert ActionHasExpired();
+
         action.executed = true;
-        action.strategy.executeAction(action.target, action.value, action.signature, action.data, action.executionTime);
+        queuedActions[actionId] = false;
+
+        // solhint-disable avoid-low-level-calls
+        (bool success, bytes memory result) = VertexExecutor(executor).delegatecall(
+            abi.encodeWithSelector(VertexExecutor.execute.selector, action.target, action.value, action.signature, action.data)
+        );
+
+        if (!success) revert FailedActionExecution();
+
         emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
+
+        return result;
     }
 
     /// @inheritdoc IVertexRouter
@@ -149,7 +172,13 @@ contract VertexRouter is IVertexRouter {
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitVoteBySignature(
+        uint256 actionId,
+        bool support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -169,7 +198,13 @@ contract VertexRouter is IVertexRouter {
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitVetoBySignature(
+        uint256 actionId,
+        bool support,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -192,8 +227,8 @@ contract VertexRouter is IVertexRouter {
             value: action.value,
             signature: action.signature,
             data: action.data,
-            votingStartTime: action.votingStartTime,
-            votingEndTime: action.votingEndTime,
+            startBlockNumber: action.startBlockNumber,
+            endBlockNumber: action.endBlockNumber,
             executionTime: action.executionTime,
             queueTime: action.queueTime,
             forVotes: action.forVotes,
@@ -214,7 +249,7 @@ contract VertexRouter is IVertexRouter {
             return ActionState.Canceled;
         }
 
-        if (block.timestamp <= action.votingEndTime && (action.strategy.isFixedVotingPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.number <= action.endBlockNumber && (action.strategy.isFixedVotingPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -275,20 +310,23 @@ contract VertexRouter is IVertexRouter {
         emit VertexStrategyUnauthorized(strategy);
     }
 
-    function _submitVote(address voter, uint256 actionId, bool support) internal {
+    function _submitVote(
+        address voter,
+        uint256 actionId,
+        bool support
+    ) internal {
         if (getActionState(actionId) != ActionState.Active) revert VotingClosed();
         Action storage action = actions[actionId];
         Vote storage vote = action.votes[voter];
 
+        // TODO: should we support changing votes?
         if (vote.votingPower != 0) revert VoteAlreadySubmitted();
 
         // TODO: VertexStrategy needs to define voting rules by querying policy NFT
-        uint256 votingPower = action.strategy.getVotePowerAt(voter, action.votingStartTime);
+        uint256 votingPower = action.strategy.getVotePowerAt(voter, action.startBlockNumber);
 
         if (support) {
             action.forVotes += votingPower;
-        } else {
-            action.againstVotes += votingPower;
         }
 
         vote.support = support;
@@ -297,7 +335,11 @@ contract VertexRouter is IVertexRouter {
         emit VoteEmitted(actionId, voter, support, votingPower);
     }
 
-    function _submitVeto(address vetoer, uint256 actionId, bool support) internal {
+    function _submitVeto(
+        address vetoer,
+        uint256 actionId,
+        bool support
+    ) internal {
         if (getActionState(actionId) != ActionState.Queued) revert VotingClosed();
         Action storage action = actions[actionId];
         // TODO: add check here to see if the action's strategy allows for veto
@@ -307,7 +349,7 @@ contract VertexRouter is IVertexRouter {
 
         // TODO: VertexStrategy needs to define voting rules by querying policy NFT
         // TODO: Do we need to base voting on startVoteBlock and endVoteBlock instead of timestamps to support snapshots?
-        uint256 vetoPower = action.strategy.getVetoPowerAt(vetoer, action.votingStartTime);
+        uint256 vetoPower = action.strategy.getVetoPowerAt(vetoer, action.startBlockNumber);
 
         if (support) {
             action.forVetoVotes += vetoPower;
@@ -319,5 +361,10 @@ contract VertexRouter is IVertexRouter {
         veto.votingPower = uint248(vetoPower);
 
         emit VoteEmitted(actionId, vetoer, support, vetoPower);
+    }
+
+    function isActionExpired(uint256 actionId) external view override returns (bool) {
+        Action storage action = actions[actionId];
+        return block.timestamp > (action.executionTime + action.strategy.votingDuration());
     }
 }

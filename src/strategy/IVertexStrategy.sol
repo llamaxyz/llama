@@ -3,7 +3,12 @@ pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 
-interface IVertexStrategySettings {
+interface IVertexStrategy {
+    /**
+     * @dev emitted when a new strategy is deployed.
+     **/
+    event NewStrategyCreated();
+
     struct VotePowerByPermission {
         bytes32 permissionSignature;
         uint248 votingPower;

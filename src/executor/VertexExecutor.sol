@@ -13,7 +13,12 @@ contract VertexExecutor is IVertexExecutor {
         router = _router;
     }
 
-    function execute(address target, uint256 value, string memory signature, bytes memory data) external payable returns (bytes memory) {
+    function execute(
+        address target,
+        uint256 value,
+        string memory signature,
+        bytes memory data
+    ) external returns (bytes memory) {
         if (msg.sender != router) revert OnlyRouterCanExecute();
 
         bytes memory callData = abi.encodeWithSignature(signature, data);
