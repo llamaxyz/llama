@@ -9,9 +9,9 @@ interface IVertexStrategy {
      **/
     event NewStrategyCreated();
 
-    struct VotePowerByPermission {
+    struct WeightByPermission {
         bytes32 permissionSignature;
-        uint248 votingPower;
+        uint248 weight;
     }
 
     /**
@@ -81,18 +81,4 @@ interface IVertexStrategy {
      * @return voting power needed for a proposal to pass
      **/
     function getMinimumPowerNeeded(uint256 votingSupply, uint256 minPercentage) external view returns (uint256);
-
-    /**
-     * @dev Get quorum threshold constant value for voting
-     * to compare with % of for votes/total supply
-     * @return the quorum threshold value (100 <=> 1%)
-     **/
-    function minVotes() external view returns (uint256);
-
-    /**
-     * @dev Get quorum threshold constant value for vetoing
-     * to compare with % of for vetoes/total supply
-     * @return the quorum threshold value (100 <=> 1%)
-     **/
-    function minVetoVotes() external view returns (uint256);
 }

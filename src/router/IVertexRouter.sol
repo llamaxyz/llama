@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexStrategy} from "src/strategies/VertexStrategy.sol";
+import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 
 interface IVertexRouter {
     enum ActionState {
@@ -136,13 +136,7 @@ interface IVertexRouter {
      * @param data The arguments passed to the function that is called by the action's associated transaction
      * @return Id of the action
      **/
-    function createAction(
-        VertexStrategy strategy,
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata data
-    ) external returns (uint256);
+    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
 
     /**
      * @dev Cancels an action,
@@ -180,13 +174,7 @@ interface IVertexRouter {
      * @param r r part of the voter signature
      * @param s s part of the voter signature
      **/
-    function submitVoteBySignature(
-        uint256 actionId,
-        bool support,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
+    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
      * @dev Function allowing msg.sender to veto an action
@@ -202,13 +190,7 @@ interface IVertexRouter {
      * @param r r part of the voter signature
      * @param s s part of the voter signature
      **/
-    function submitVetoBySignature(
-        uint256 actionId,
-        bool support,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
+    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
      * @dev Create new strategies and add them to the list of authorized strategies

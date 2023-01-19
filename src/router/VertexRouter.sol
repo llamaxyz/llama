@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
-import {VertexStrategy} from "src/strategies/VertexStrategy.sol";
+import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {getChainId} from "src/utils/Helpers.sol";
@@ -98,8 +98,8 @@ contract VertexRouter is IVertexRouter {
         newAction.signature = signature;
         newAction.data = data;
         newAction.startBlockNumber = block.number;
-        // TODO: votingDuration should return a block number
-        newAction.endBlockNumber = block.number + strategy.votingDuration();
+        // TODO: approvalDuration should return a block number
+        newAction.endBlockNumber = block.number + strategy.approvalDuration();
 
         unchecked {
             ++actionsCount;
@@ -172,13 +172,7 @@ contract VertexRouter is IVertexRouter {
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVoteBySignature(
-        uint256 actionId,
-        bool support,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external override {
+    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -198,13 +192,7 @@ contract VertexRouter is IVertexRouter {
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVetoBySignature(
-        uint256 actionId,
-        bool support,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external override {
+    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -310,11 +298,7 @@ contract VertexRouter is IVertexRouter {
         emit VertexStrategyUnauthorized(strategy);
     }
 
-    function _submitVote(
-        address voter,
-        uint256 actionId,
-        bool support
-    ) internal {
+    function _submitVote(address voter, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Active) revert VotingClosed();
         Action storage action = actions[actionId];
         Vote storage vote = action.votes[voter];
@@ -335,11 +319,7 @@ contract VertexRouter is IVertexRouter {
         emit VoteEmitted(actionId, voter, support, votingPower);
     }
 
-    function _submitVeto(
-        address vetoer,
-        uint256 actionId,
-        bool support
-    ) internal {
+    function _submitVeto(address vetoer, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Queued) revert VotingClosed();
         Action storage action = actions[actionId];
         // TODO: add check here to see if the action's strategy allows for veto
@@ -365,6 +345,7 @@ contract VertexRouter is IVertexRouter {
 
     function isActionExpired(uint256 actionId) external view override returns (bool) {
         Action storage action = actions[actionId];
-        return block.timestamp > (action.executionTime + action.strategy.votingDuration());
+        // TODO: Should approvalDuration return a block number or timestamp?
+        return block.timestamp > (action.executionTime + action.strategy.approvalDuration());
     }
 }
