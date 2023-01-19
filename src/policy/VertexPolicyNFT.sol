@@ -3,13 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
-
-///@dev Struct to define a permission
-struct Permission {
-    address target;
-    bytes4 signature;
-    address executor;
-}
+import {Permission} from "src/utils/Structs.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions

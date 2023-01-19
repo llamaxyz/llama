@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {Permission} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
