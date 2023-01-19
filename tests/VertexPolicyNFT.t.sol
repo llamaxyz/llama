@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "lib/forge-std/src/Test.sol";
-import "src/policy/VertexPolicyNFT.sol";
-import "lib/forge-std/src/console.sol";
+import {Test} from "lib/forge-std/src/Test.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
     VertexPolicyNFT public vertexPolicyNFT;
