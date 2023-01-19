@@ -16,10 +16,10 @@ error InvalidStateForQueue();
 error DuplicateAction();
 error ActionCannotBeCanceled();
 error OnlyExecutor();
-error VotingClosed();
-error VoteAlreadySubmitted();
+error SignalingClosed();
+error ApprovalAlreadySubmitted();
 error InvalidSignature();
-error VetoAlreadySubmitted();
+error DisapprovalAlreadySubmitted();
 error TimelockNotFinished();
 error ActionHasExpired();
 error FailedActionExecution();
@@ -47,7 +47,7 @@ contract VertexRouter is IVertexRouter {
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
     /// @notice Mapping of action id's and bool that indicates if action is queued.
-    mapping(bytes32 => bool) public queuedActions;
+    mapping(uint256 => bool) public queuedActions;
 
     // TODO: Do we need an onchain way to access all strategies? Ideally not but will keep this as a placeholder.
     /// @notice Array of authorized strategies.
@@ -55,8 +55,8 @@ contract VertexRouter is IVertexRouter {
 
     /// @notice EIP-712 typehashes.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-    bytes32 public constant VOTE_EMITTED_TYPEHASH = keccak256("VoteEmitted(uint256 id,bool support)");
-    bytes32 public constant VETO_EMITTED_TYPEHASH = keccak256("VetoEmitted(uint256 id,bool support)");
+    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalEmitted(uint256 id,bool support)");
+    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalEmitted(uint256 id,bool support)");
 
     constructor(string memory _name) {
         name = _name;
@@ -65,6 +65,8 @@ contract VertexRouter is IVertexRouter {
         // all initial strategies, and the executor. These contracts can be fully confgiured
         // from their constructors. We will then use these addresses to set the policy,
         // authorizedStrategies, and executor.
+        policy = VertexPolicyNFT(address(0x1337));
+        executor = address(0x1338);
     }
 
     modifier onlyVertexExecutor() {
@@ -141,7 +143,7 @@ contract VertexRouter is IVertexRouter {
     }
 
     /// @inheritdoc IVertexRouter
-    function executeAction(uint256 actionId) external payable override {
+    function executeAction(uint256 actionId) external payable override returns (bytes memory) {
         // TODO: Do we need both of these checks?
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
         if (!queuedActions[actionId]) revert OnlyQueuedActions();
@@ -154,7 +156,7 @@ contract VertexRouter is IVertexRouter {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = VertexExecutor(executor).delegatecall(
+        (bool success, bytes memory result) = address(executor).delegatecall(
             abi.encodeWithSelector(VertexExecutor.execute.selector, action.target, action.value, action.signature, action.data)
         );
 
@@ -166,48 +168,48 @@ contract VertexRouter is IVertexRouter {
     }
 
     /// @inheritdoc IVertexRouter
-    function submitVote(uint256 actionId, bool support) external override {
-        return _submitVote(msg.sender, actionId, support);
+    function submitApproval(uint256 actionId, bool support) external override {
+        return _submitApproval(msg.sender, actionId, support);
     }
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
-                keccak256(abi.encode(VOTE_EMITTED_TYPEHASH, actionId, support))
+                keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
         address signer = ecrecover(digest, v, r, s);
         if (signer == address(0)) revert InvalidSignature();
-        return _submitVote(signer, actionId, support);
+        return _submitApproval(signer, actionId, support);
     }
 
     /// @inheritdoc IVertexRouter
-    function submitVeto(uint256 actionId, bool support) external override {
-        return _submitVeto(msg.sender, actionId, support);
+    function submitDisapproval(uint256 actionId, bool support) external override {
+        return _submitDisapproval(msg.sender, actionId, support);
     }
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexRouter
-    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
-                keccak256(abi.encode(VETO_EMITTED_TYPEHASH, actionId, support))
+                keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
         address signer = ecrecover(digest, v, r, s);
         if (signer == address(0)) revert InvalidSignature();
-        return _submitVeto(signer, actionId, support);
+        return _submitDisapproval(signer, actionId, support);
     }
 
-    function getActionWithoutVotes(uint256 actionId) external view override returns (ActionWithoutVotes memory) {
+    function getActionWithoutApprovals(uint256 actionId) external view override returns (ActionWithoutApprovals memory) {
         Action storage action = actions[actionId];
-        ActionWithoutVotes memory actionWithoutVotes = ActionWithoutVotes({
+        ActionWithoutApprovals memory actionWithoutApprovals = ActionWithoutApprovals({
             id: action.id,
             creator: action.creator,
             strategy: action.strategy,
@@ -219,15 +221,13 @@ contract VertexRouter is IVertexRouter {
             endBlockNumber: action.endBlockNumber,
             executionTime: action.executionTime,
             queueTime: action.queueTime,
-            forVotes: action.forVotes,
-            againstVotes: action.againstVotes,
-            forVetoVotes: action.forVetoVotes,
-            againstVetoVotes: action.againstVetoVotes,
+            totalApprovals: action.totalApprovals,
+            totalDisapprovals: action.totalDisapprovals,
             executed: action.executed,
             canceled: action.canceled
         });
 
-        return actionWithoutVotes;
+        return actionWithoutApprovals;
     }
 
     function getActionState(uint256 actionId) public view override returns (ActionState) {
@@ -237,7 +237,7 @@ contract VertexRouter is IVertexRouter {
             return ActionState.Canceled;
         }
 
-        if (block.number <= action.endBlockNumber && (action.strategy.isFixedVotingPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.number <= action.endBlockNumber && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -253,7 +253,7 @@ contract VertexRouter is IVertexRouter {
             return ActionState.Executed;
         }
 
-        if (action.strategy.isActionExpired(actionId)) {
+        if (isActionExpired(actionId)) {
             return ActionState.Expired;
         }
 
@@ -298,52 +298,49 @@ contract VertexRouter is IVertexRouter {
         emit VertexStrategyUnauthorized(strategy);
     }
 
-    function _submitVote(address voter, uint256 actionId, bool support) internal {
-        if (getActionState(actionId) != ActionState.Active) revert VotingClosed();
+    function _submitApproval(address policyHolder, uint256 actionId, bool support) internal {
+        if (getActionState(actionId) != ActionState.Active) revert SignalingClosed();
         Action storage action = actions[actionId];
-        Vote storage vote = action.votes[voter];
+        Approval storage approval = action.approvals[policyHolder];
 
-        // TODO: should we support changing votes?
-        if (vote.votingPower != 0) revert VoteAlreadySubmitted();
+        // TODO: should we support changing approvals?
+        if (approval.weight != 0) revert ApprovalAlreadySubmitted();
 
-        // TODO: VertexStrategy needs to define voting rules by querying policy NFT
-        uint256 votingPower = action.strategy.getVotePowerAt(voter, action.startBlockNumber);
+        uint256 weight = action.strategy.getApprovalWeightAt(policyHolder, action.startBlockNumber);
 
         if (support) {
-            action.forVotes += votingPower;
+            action.totalApprovals += weight;
         }
 
-        vote.support = support;
-        vote.votingPower = uint248(votingPower);
+        approval.support = support;
+        approval.weight = uint248(weight);
 
-        emit VoteEmitted(actionId, voter, support, votingPower);
+        emit ApprovalEmitted(actionId, policyHolder, support, weight);
     }
 
-    function _submitVeto(address vetoer, uint256 actionId, bool support) internal {
-        if (getActionState(actionId) != ActionState.Queued) revert VotingClosed();
+    function _submitDisapproval(address policyHolder, uint256 actionId, bool support) internal {
+        if (getActionState(actionId) != ActionState.Queued) revert SignalingClosed();
         Action storage action = actions[actionId];
-        // TODO: add check here to see if the action's strategy allows for veto
-        Veto storage veto = action.vetoVotes[vetoer];
+        // TODO: add check here to see if the action's strategy allows for disapprovals
+        Disapproval storage disapproval = action.disapprovals[policyHolder];
 
-        if (veto.votingPower != 0) revert VetoAlreadySubmitted();
+        // TODO: should we support changing disapprovals?
+        if (disapproval.weight != 0) revert DisapprovalAlreadySubmitted();
 
-        // TODO: VertexStrategy needs to define voting rules by querying policy NFT
-        // TODO: Do we need to base voting on startVoteBlock and endVoteBlock instead of timestamps to support snapshots?
-        uint256 vetoPower = action.strategy.getVetoPowerAt(vetoer, action.startBlockNumber);
+        // TODO: Do we need to base approvals/disapprovals on startBlockNumber and endBlockNumber instead of timestamps to support snapshots?
+        uint256 weight = action.strategy.getDisapprovalWeightAt(policyHolder, action.startBlockNumber);
 
         if (support) {
-            action.forVetoVotes += vetoPower;
-        } else {
-            action.againstVetoVotes += vetoPower;
+            action.totalDisapprovals += weight;
         }
 
-        veto.support = support;
-        veto.votingPower = uint248(vetoPower);
+        disapproval.support = support;
+        disapproval.weight = uint248(weight);
 
-        emit VoteEmitted(actionId, vetoer, support, vetoPower);
+        emit ApprovalEmitted(actionId, policyHolder, support, weight);
     }
 
-    function isActionExpired(uint256 actionId) external view override returns (bool) {
+    function isActionExpired(uint256 actionId) public view override returns (bool) {
         Action storage action = actions[actionId];
         // TODO: Should approvalDuration return a block number or timestamp?
         return block.timestamp > (action.executionTime + action.strategy.approvalDuration());

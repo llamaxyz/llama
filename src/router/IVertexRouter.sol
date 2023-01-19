@@ -14,40 +14,38 @@ interface IVertexRouter {
         Executed
     }
 
-    struct Vote {
+    struct Approval {
         bool support;
-        uint248 votingPower;
+        uint248 weight;
     }
 
-    struct Veto {
+    struct Disapproval {
         bool support;
-        uint248 votingPower;
+        uint248 weight;
     }
 
     // TODO: where should this live?
     struct Action {
         uint256 id;
         address creator;
-        bool canceled;
         bool executed;
+        bool canceled;
         VertexStrategy strategy;
         address target;
         uint256 value;
         string signature;
         bytes data;
-        // Properties for initial voting
         uint256 startBlockNumber;
         uint256 endBlockNumber;
-        uint256 forVotes;
-        mapping(address => Vote) votes;
-        // Properties for veto voting
         uint256 queueTime;
         uint256 executionTime; // Not set until action is queued
-        uint256 forVetoVotes;
-        mapping(address => Veto) vetoVotes;
+        uint256 totalApprovals;
+        uint256 totalDisapprovals;
+        mapping(address => Approval) approvals;
+        mapping(address => Disapproval) disapprovals;
     }
 
-    struct ActionWithoutVotes {
+    struct ActionWithoutApprovals {
         uint256 id;
         address creator;
         bool executed;
@@ -60,11 +58,9 @@ interface IVertexRouter {
         uint256 startBlockNumber;
         uint256 endBlockNumber;
         uint256 queueTime;
-        uint256 executionTime;
-        uint256 forVotes;
-        uint256 againstVotes;
-        uint256 forVetoVotes;
-        uint256 againstVetoVotes;
+        uint256 executionTime; // Not set until action is queued
+        uint256 totalApprovals;
+        uint256 totalDisapprovals;
     }
 
     /**
@@ -105,21 +101,21 @@ interface IVertexRouter {
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
 
     /**
-     * @dev emitted when a vote is registered
+     * @dev emitted when a approval is registered
      * @param id Id of the action
-     * @param voter address of the voter
-     * @param support boolean, true = vote for, false = vote against
-     * @param votingPower Power of the voter/vote
+     * @param policyHolder address of the policyHolder
+     * @param support boolean, true = supported
+     * @param weight Power of the policyHolder/approval
      **/
-    event VoteEmitted(uint256 id, address indexed voter, bool support, uint256 votingPower);
+    event ApprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
 
     /**
-     * @dev emitted when a vote is registered
+     * @dev emitted when a approval is registered
      * @param id Id of the action
-     * @param vetoer address of the vetoer
-     * @param votingVetoPower Power of the vetoer
+     * @param policyHolder address of the policyHolder
+     * @param weight Weight of the policyHolder
      **/
-    event VetoEmitted(uint256 id, address indexed vetoer, uint256 votingVetoPower);
+    event DisapprovalEmitted(uint256 id, address indexed policyHolder, uint256 weight);
 
     event VertexStrategyAuthorized(VertexStrategy indexed strategy);
 
@@ -156,41 +152,42 @@ interface IVertexRouter {
     /**
      * @dev Execute the action (If Action Queued)
      * @param actionId id of the action to execute
+     # @return the result from the delegatecall
      **/
-    function executeAction(uint256 actionId) external payable;
+    function executeAction(uint256 actionId) external payable returns (bytes memory);
 
     /**
-     * @dev Function allowing msg.sender to vote for/against an action
+     * @dev Function allowing msg.sender to approval for/against an action
      * @param actionId id of the action
-     * @param support boolean, true = vote for, false = vote against
+     * @param support boolean, true = approval for, false = approval against
      **/
-    function submitVote(uint256 actionId, bool support) external;
+    function submitApproval(uint256 actionId, bool support) external;
 
     /**
-     * @dev Function to register the vote of user that has voted offchain via signature
+     * @dev Function to register the approval of user that has approvald offchain via signature
      * @param actionId id of the action
-     * @param support boolean, true = vote for, false = vote against
-     * @param v v part of the voter signature
-     * @param r r part of the voter signature
-     * @param s s part of the voter signature
+     * @param support boolean, true = approval for, false = approval against
+     * @param v v part of the policyHolder signature
+     * @param r r part of the policyHolder signature
+     * @param s s part of the policyHolder signature
      **/
-    function submitVoteBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
-     * @dev Function allowing msg.sender to veto an action
+     * @dev Function allowing msg.sender to disapprove an action
      * only eligible when action is Queued
      * @param actionId id of the action
      **/
-    function submitVeto(uint256 actionId, bool support) external;
+    function submitDisapproval(uint256 actionId, bool support) external;
 
     /**
-     * @dev Function to register the veto of user that has vetoed offchain via signature
+     * @dev Function to register the disapprove of user that has been disapproved offchain via signature
      * @param actionId id of the action
-     * @param v v part of the voter signature
-     * @param r r part of the voter signature
-     * @param s s part of the voter signature
+     * @param v v part of the policyHolder signature
+     * @param r r part of the policyHolder signature
+     * @param s s part of the policyHolder signature
      **/
-    function submitVetoBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
     /**
      * @dev Create new strategies and add them to the list of authorized strategies
@@ -205,24 +202,6 @@ interface IVertexRouter {
     function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
     /**
-     * @dev Getter of the Vote of a voter about an action
-     * Note: Vote is a struct: ({bool support, uint248 votingPower})
-     * @param actionId id of the action
-     * @param voter address of the voter
-     * @return The associated Vote memory object
-     **/
-    function getVoteOnAction(uint256 actionId, address voter) external view returns (Vote memory);
-
-    /**
-     * @dev Getter of the Veto of a vetoer about an action
-     * Note: Veto is a struct: ({bool support, uint248 votingPower})
-     * @param actionId id of the action
-     * @param vetoer address of the vetoer
-     * @return The associated Veto memory object
-     **/
-    function getVetoOnAction(uint256 actionId, address vetoer) external view returns (Veto memory);
-
-    /**
      * @dev Get the current state of a action
      * @param actionId id of the action
      * @return The current state if the action
@@ -230,11 +209,11 @@ interface IVertexRouter {
     function getActionState(uint256 actionId) external view returns (ActionState);
 
     /**
-     * @dev Get Action object without voting data
+     * @dev Get Action object without approval data
      * @param actionId id of the action
-     * @return Action object without voting data
+     * @return Action object without approval data
      **/
-    function getActionWithoutVotes(uint256 actionId) external view returns (ActionWithoutVotes memory);
+    function getActionWithoutApprovals(uint256 actionId) external view returns (ActionWithoutApprovals memory);
 
     /**
      * @dev Checks whether a proposal is over its expiration delay

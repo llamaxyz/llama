@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {IVertexPolicyNFT} from "src/policy/IVertexPolicyNFT.sol";
 
 // Errors
 error OnlyVertexRouter();
@@ -14,7 +14,7 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Equivalent to 100%, but scaled for precision
     uint256 public constant ONE_HUNDRED_WITH_PRECISION = 10000;
 
-    /// @notice Permission signature value that determines power for all undefined voters.
+    /// @notice Permission signature value that determines weight for all unspecified policyholders.
     bytes32 public constant DEFAULT_OPERATOR = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /// @notice Minimum time between queueing and execution of action.
@@ -29,17 +29,17 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Router of this Vertex instance.
     IVertexRouter public immutable router;
 
-    /// @notice Length of voting period.
+    /// @notice Length of approval period.
     uint256 public immutable approvalDuration;
 
     /// @notice Policy NFT for this Vertex Instance.
-    VertexPolicyNFT public immutable policy;
+    IVertexPolicyNFT public immutable policy;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at startBlockNumber of action to pass vote.
-    uint256 public immutable override minApprovalPct;
+    /// @notice Minimum percentage of total approval weight / total approval supply at startBlockNumber of action to be queued.
+    uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at startBlockNumber of action to pass veto.
-    uint256 public immutable override minDisapprovalPct;
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at startBlockNumber of action to be canceled.
+    uint256 public immutable minDisapprovalPct;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
     mapping(bytes32 => uint248) public approvalWeightByPermission;
@@ -59,7 +59,7 @@ contract VertexStrategy is IVertexStrategy {
         uint256 _expirationDelay,
         bool _isFixedLengthApprovalPeriod,
         uint256 _approvalDuration,
-        VertexPolicyNFT _policy,
+        IVertexPolicyNFT _policy,
         IVertexRouter _router,
         uint256 _minApprovalPct,
         uint256 _minDisapprovalPct,
@@ -99,10 +99,6 @@ contract VertexStrategy is IVertexStrategy {
                 // TODO: see if this saves gas
                 WeightByPermission memory weightByPermission = _approvalWeightByPermission[i];
 
-                // TODO: @theo is it possible to have a check to see if a permission signature is in use?
-                // This would return a bool
-                if (!policy.isPermissionSignatureActive(weightByPermission.permissionSignature)) revert InvalidPermissionSignature();
-
                 if (weightByPermission.weight > 0) {
                     approvalPermissions.push(weightByPermission.permissionSignature);
                 }
@@ -114,10 +110,6 @@ contract VertexStrategy is IVertexStrategy {
             for (uint256 i; i < disapprovalPermissionsLength; ++i) {
                 // TODO: see if this saves gas
                 WeightByPermission memory weightByPermission = _disapprovalWeightByPermission[i];
-
-                // TODO: @theo is it possible to have a check to see if a permission signature is in use?
-                // This would return a bool
-                if (!policy.isPermissionSignatureActive(weightByPermission.permissionSignature)) revert InvalidPermissionSignature();
 
                 if (weightByPermission.weight > 0) {
                     disapprovalPermissions.push(weightByPermission.permissionSignature);
@@ -136,32 +128,33 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
-        IVertexRouter.ActionWithoutVotes memory action = router.getActionWithoutVotes(actionId);
-        // TODO: Needs to account for endBlockNumber = 0 (strategies that do not require votes)
-        // TODO: Needs to account for both fixedVotingPeriod's
-        //       if true then action cannot pass before voting period ends
-        //       if false then action can pass before voting period ends
-        // Handle all the math to determine if the vote has passed based on this strategies quorum settings.
-        return isVoteQuorumValid(action.startBlockNumber, action.forVotes);
+        IVertexRouter.ActionWithoutApprovals memory action = router.getActionWithoutApprovals(actionId);
+        // TODO: Needs to account for endBlockNumber = 0 (strategies that do not require an approval period)
+        // TODO: Needs to account for both isFixedLengthApprovalPeriod's
+        //       if true then action cannot pass before approval period ends
+        //       if false then action can pass before approval period ends
+        // Handle all the math to determine if the approval has passed based on this strategies quorum settings.
+        return isApprovalQuorumValid(action.startBlockNumber, action.totalApprovals);
     }
 
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
-        IVertexRouter.ActionWithoutVotes memory action = router.getActionWithoutVotes(actionId);
+        IVertexRouter.ActionWithoutApprovals memory action = router.getActionWithoutApprovals(actionId);
         // TODO: Use this action's properties to determine if it is eligible for cancelation
-        // TODO: Needs to account for strategies that do not allow vetoes
-        // Handle all the math to determine if the veto has passed based on this strategies quorum settings.
-        return isVetoQuorumValid(action.startBlockNumber, action.forVetoVotes);
+        // TODO: Needs to account for strategies that do not allow disapprovals
+        // Handle all the math to determine if the disapproval has passed based on this strategies quorum settings.
+        return isDisapprovalQuorumValid(action.startBlockNumber, action.totalDisapprovals);
     }
 
     /// @inheritdoc IVertexStrategy
-    function getVotePowerAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
-        uint256 voteLength = approvalPermissions.length;
+    function getApprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+        uint256 permissionsLength = approvalPermissions.length;
         unchecked {
-            for (uint256 i; i < voteLength; ++i) {
+            for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use?
+                // We could also get the policyholder's permissions, loop through that and check against the approvalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermission(policyHolder, approvalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyHolder, approvalPermissions[i], blockNumber)) {
                     return approvalWeightByPermission[approvalPermissions[i]];
                 }
             }
@@ -171,13 +164,14 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getVetoPowerAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
-        uint256 vetoLength = disapprovalPermissions.length;
+    function getDisapprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+        uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
-            for (uint256 i; i < vetoLength; ++i) {
+            for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use at a blockNumber?
+                // We could also get the policyholder's permissions, loop through that and check against the disapprovalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermission(policyHolder, disapprovalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyHolder, disapprovalPermissions[i], blockNumber)) {
                     return disapprovalWeightByPermission[disapprovalPermissions[i]];
                 }
             }
@@ -187,44 +181,40 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getTotalVoteSupplyAt(uint256 blockNumber) public view returns (uint256) {
+    function getTotalApprovalSupplyAt(uint256 blockNumber) public view override returns (uint256) {
         if (approvalWeightByPermission[DEFAULT_OPERATOR] > 0) {
-            return policy.totalSupply();
+            return policy.totalSupplyAt(blockNumber);
         }
 
-        // TODO: @theo I'm simplifying things here. We can chat about the best way to actual implement this.
-        // This would return a uint of all the policyholders that have these permissions at a certain block height
-        policy.getSupplyByPermissions(approvalPermissions, blockNumber);
+        return policy.getSupplyByPermissionsAt(approvalPermissions, blockNumber);
     }
 
     /// @inheritdoc IVertexStrategy
-    function getTotalDisapprovalSupplyAt(uint256 blockNumber) public view returns (uint256) {
+    function getTotalDisapprovalSupplyAt(uint256 blockNumber) public view override returns (uint256) {
         if (disapprovalWeightByPermission[DEFAULT_OPERATOR] > 0) {
-            return policy.totalSupply();
+            return policy.totalSupplyAt(blockNumber);
         }
 
-        // TODO: @theo I'm simplifying things here. We can chat about the best way to actual implement this.
-        // This would return a uint of all the policyholders that have these permissions at a certain block height
-        policy.getSupplyByPermissions(disapprovalPermissions, blockNumber);
+        return policy.getSupplyByPermissionsAt(disapprovalPermissions, blockNumber);
     }
 
     /// @inheritdoc IVertexStrategy
-    function isVoteQuorumValid(uint256 blockNumber, uint256 forVotes) public view returns (bool) {
-        uint256 votingSupply = getTotalVoteSupplyAt(blockNumber);
-        return forVotes >= getMinimumWeightNeeded(votingSupply, minApprovalPct);
+    function isApprovalQuorumValid(uint256 blockNumber, uint256 approvals) public view override returns (bool) {
+        uint256 approvalSupply = getTotalApprovalSupplyAt(blockNumber);
+        return approvals >= getMinimumAmountNeeded(approvalSupply, minApprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
-    function isVetoQuorumValid(uint256 blockNumber, uint256 forVotes) public view returns (bool) {
-        uint256 vetoSupply = getTotalDisapprovalSupplyAt(blockNumber);
-        return forVotes >= getMinimumWeightNeeded(vetoSupply, minDisapprovalPct);
+    function isDisapprovalQuorumValid(uint256 blockNumber, uint256 approvals) public view override returns (bool) {
+        uint256 disapprovalSupply = getTotalDisapprovalSupplyAt(blockNumber);
+        return approvals >= getMinimumAmountNeeded(disapprovalSupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
-    function getMinimumWeightNeeded(uint256 voteSupply, uint256 minPercentage) public view returns (uint256) {
+    function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
         // NOTE: Need to actual implement proper floating point math here
-        // minPercentage (will either be minApprovalPct or minDisapprovalPct) is the percent quorum needed and so this returns the votes in number form
+        // minPct (will either be minApprovalPct or minDisapprovalPct) is the percent quorum needed and so this returns the amount in number form
         // we should round this up to the nearest integer
-        return voteSupply.mul(minPercentage).div(ONE_HUNDRED_WITH_PRECISION);
+        return (supply * minPct) / ONE_HUNDRED_WITH_PRECISION;
     }
 }
