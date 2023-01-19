@@ -31,6 +31,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
+    error InvalidInput();
 
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
@@ -52,7 +53,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
     function mint(address to, bytes32[] calldata userRoles) public onlyOwner {
-        require(balanceOf(to) == 0, "VertexPolicyNFT: Soulbound token");
+        if (balanceOf(to) != 0) {
+            revert SoulboundToken();
+        }
         uint256 tokenId = totalSupply();
         unchecked {
             _totalSupply++;
@@ -92,12 +95,15 @@ contract VertexPolicyNFT is ERC721, Ownable {
     function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner {
         uint256 rolesArrayLength = rolesArray.length;
         uint256 permissionsArrayLength = permissionsArray.length;
-        require(rolesArrayLength > 0, "VertexPolicyNFT: roles array must not be empty");
-        require(rolesArrayLength == permissionsArrayLength, "VertexPolicyNFT: roles array must not be empty");
+        if (rolesArrayLength != permissionsArrayLength || rolesArrayLength == 0) {
+            revert InvalidInput();
+        }
         bytes32[] memory roleHashes = hashRoles(rolesArray);
         bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArrayLength);
         for (uint256 i; i < rolesArrayLength; ++i) {
-            require(permissionsArray[i].length > 0, "VertexPolicyNFT: permissions array must not be empty");
+            if (permissionsArray[i].length == 0) {
+                revert InvalidInput();
+            }
             bytes8[] memory permissionsHash = addRole(roleHashes[i], permissionsArray[i]);
             permissionsHashes[i] = permissionsHash;
         }
@@ -107,7 +113,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
     function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyOwner {
-        require(rolesArray.length > 0, "VertexPolicyNFT: roles array must not be empty");
+        if (rolesArray.length == 0) {
+            revert InvalidInput();
+        }
         uint256 rolesArrayLength = rolesArray.length;
         unchecked {
             for (uint256 i; i < rolesArrayLength; ++i) {
@@ -125,7 +133,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param tokenId the id of the token
     ///@param revokeRolesArray the array of roles to revoke
     function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyOwner {
-        require(revokeRolesArray.length > 0, "VertexPolicyNFT: roles array must not be empty");
+        if (revokeRolesArray.length == 0) {
+            revert InvalidInput();
+        }
         bytes32[] storage userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
         uint256 revokeRolesLength = revokeRolesArray.length;
@@ -144,7 +154,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev deletes multiple roles from the contract
     ///@param deleteRolesArray the role to delete
     function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyOwner {
-        require(deleteRolesArray.length > 0, "VertexPolicyNFT: roles array must not be empty");
+        if (deleteRolesArray.length == 0) {
+            revert InvalidInput();
+        }
         unchecked {
             uint256 deleteRolesLength = deleteRolesArray.length;
             for (uint256 i; i < deleteRolesLength; ++i) {
@@ -165,7 +177,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param role the role to add the permission to
     ///@param permissions the permission to add
     function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyOwner {
-        require(permissions.length > 0, "VertexPolicyNFT: permissions array must not be empty");
+        if (permissions.length == 0) {
+            revert InvalidInput();
+        }
         bytes8[] memory permissionSignatures = hashPermissions(permissions);
         uint256 permissionSignaturesLength = permissionSignatures.length;
         unchecked {
@@ -180,7 +194,9 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@param role the role to delete the permission from
     ///@param permissions the array of permissions to delete
     function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyOwner {
-        require(permissions.length > 0, "VertexPolicyNFT: permissions array must not be empty");
+        if (permissions.length == 0) {
+            revert InvalidInput();
+        }
         bytes8[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
