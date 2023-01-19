@@ -156,7 +156,7 @@ contract VertexRouter is IVertexRouter {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = address(executor).delegatecall(
+        (bool success, bytes memory result) = address(executor).call(
             abi.encodeWithSelector(VertexExecutor.execute.selector, action.target, action.value, action.signature, action.data)
         );
 
@@ -164,6 +164,7 @@ contract VertexRouter is IVertexRouter {
 
         emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
 
+        // TODO: should we return arbitrary data?
         return result;
     }
 
