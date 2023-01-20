@@ -219,11 +219,39 @@ contract VertexPolicyNFT is ERC721, Ownable {
         revert SoulboundToken();
     }
 
+    // BEGIN TODO
+
+    // Check if a holder has a permissionSignature at a specific block number
+    function holderHasPermissionAt(
+        address policyHolder,
+        bytes32 permissionSignature,
+        uint256 blockNumber
+    ) external view returns (bool) {
+        // TODO
+        return true;
+    }
+
+    // Total number of policy NFTs at specific block number
+    // TODO: This should queried at action creation time and stored on the Action object
+    function totalSupplyAt(uint256 blockNumber) external view returns (uint256) {
+        // TODO
+        return totalSupply();
+    }
+
+    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    // TODO: This should queried at action creation time and stored on the Action object
+    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view returns (uint256) {
+        // TODO
+        return totalSupply();
+    }
+
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
     }
+
+    // END TODO
 
     ///@dev hashes an array of permissions
     ///@param permissions the permissions array to hash
