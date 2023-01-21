@@ -5,6 +5,13 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {IVertexPolicyNFT} from "src/policy/IVertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 
+///@dev Struct to define a permission
+struct Permission {
+    address target;
+    bytes4 signature;
+    address executor;
+}
+
 struct Approval {
     bool support;
     uint248 weight;
