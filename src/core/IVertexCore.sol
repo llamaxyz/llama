@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 
-interface IVertexRouter {
+interface IVertexCore {
     enum ActionState {
         Active,
         Canceled,
