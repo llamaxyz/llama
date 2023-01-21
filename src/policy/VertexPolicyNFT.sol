@@ -185,22 +185,14 @@ contract VertexPolicyNFT is VertexPolicy {
 
     ///@dev overriding transferFrom to disable transfers for SBTs
     ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
+    function transferFrom(address from, address to, uint256 tokenId) public override {
         revert SoulboundToken();
     }
 
     // BEGIN TODO
 
     // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(
-        address policyHolder,
-        bytes32 permissionSignature,
-        uint256 blockNumber
-    ) external view override returns (bool) {
+    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view override returns (bool) {
         // TODO
         return true;
     }
@@ -219,19 +211,6 @@ contract VertexPolicyNFT is VertexPolicy {
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     // TODO: This should queried at action creation time and stored on the Action object
     function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view override returns (uint256) {
-        // TODO
-        return totalSupply();
-    }
-
-    // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-        // TODO
-        return true;
-    }
-
-    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes32[] memory permissions) external view returns (uint256) {
         // TODO
         return totalSupply();
     }

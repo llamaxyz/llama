@@ -1,4 +1,3 @@
-// Overwrite default and user settings
 {
   "solidity.packageDefaultDependenciesContractsDirectory": "src",
   "solidity.packageDefaultDependenciesDirectory": "lib",
