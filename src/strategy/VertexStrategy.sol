@@ -72,35 +72,39 @@ contract VertexStrategy is IVertexStrategy {
         approvalWeightByPermission[DEFAULT_OPERATOR] = 1;
         disapprovalWeightByPermission[DEFAULT_OPERATOR] = 1;
 
-        if (
-            strategyConfig.approvalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR && strategyConfig.approvalWeightByPermission[0].weight == 0
-                && approvalPermissionsLength == 1
-        ) revert InvalidWeightConfiguration();
+        if (approvalPermissionsLength > 0) {
+            if (
+                strategyConfig.approvalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR && strategyConfig.approvalWeightByPermission[0].weight == 0
+                    && approvalPermissionsLength == 1
+            ) revert InvalidWeightConfiguration();
 
-        if (
-            strategyConfig.disapprovalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR
-                && strategyConfig.disapprovalWeightByPermission[0].weight == 0 && disapprovalPermissionsLength == 1
-        ) revert InvalidWeightConfiguration();
+            unchecked {
+                for (uint256 i; i < approvalPermissionsLength; ++i) {
+                    WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
 
-        unchecked {
-            for (uint256 i; i < approvalPermissionsLength; ++i) {
-                WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
-
-                if (weightByPermission.weight > 0) {
-                    approvalPermissions.push(weightByPermission.permissionSignature);
+                    if (weightByPermission.weight > 0) {
+                        approvalPermissions.push(weightByPermission.permissionSignature);
+                    }
+                    approvalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
                 }
-                approvalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
             }
         }
 
-        unchecked {
-            for (uint256 i; i < disapprovalPermissionsLength; ++i) {
-                WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
+        if (disapprovalPermissionsLength > 0) {
+            if (
+                strategyConfig.disapprovalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR
+                    && strategyConfig.disapprovalWeightByPermission[0].weight == 0 && disapprovalPermissionsLength == 1
+            ) revert InvalidWeightConfiguration();
 
-                if (weightByPermission.weight > 0) {
-                    disapprovalPermissions.push(weightByPermission.permissionSignature);
+            unchecked {
+                for (uint256 i; i < disapprovalPermissionsLength; ++i) {
+                    WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
+
+                    if (weightByPermission.weight > 0) {
+                        disapprovalPermissions.push(weightByPermission.permissionSignature);
+                    }
+                    disapprovalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
                 }
-                disapprovalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
             }
         }
 
