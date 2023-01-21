@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {IVertexCore} from "src/core/IVertexCore.sol";
 
 interface IVertexStrategy {
     /**

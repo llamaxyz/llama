@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {IVertexCore} from "src/core/IVertexCore.sol";
 import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
 import {IVertexPolicyNFT} from "src/policy/IVertexPolicyNFT.sol";
 
 // Errors
-error OnlyVertexRouter();
 error InvalidPermissionSignature();
 error InvalidWeightConfiguration();
 
@@ -26,8 +25,8 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Can action be queued before endBlockNumber.
     bool public immutable isFixedLengthApprovalPeriod;
 
-    /// @notice Router of this Vertex instance.
-    IVertexRouter public immutable router;
+    /// @notice The strategy's Vertex instance.
+    IVertexCore public immutable vertex;
 
     /// @notice Length of approval period.
     uint256 public immutable approvalDuration;
@@ -60,7 +59,7 @@ contract VertexStrategy is IVertexStrategy {
         bool _isFixedLengthApprovalPeriod,
         uint256 _approvalDuration,
         IVertexPolicyNFT _policy,
-        IVertexRouter _router,
+        IVertexCore _vertex,
         uint256 _minApprovalPct,
         uint256 _minDisapprovalPct,
         WeightByPermission[] memory _approvalWeightByPermission,
@@ -71,7 +70,7 @@ contract VertexStrategy is IVertexStrategy {
         isFixedLengthApprovalPeriod = _isFixedLengthApprovalPeriod;
         approvalDuration = _approvalDuration;
         policy = _policy;
-        router = _router;
+        vertex = _vertex;
         minApprovalPct = _minApprovalPct;
         minDisapprovalPct = _minDisapprovalPct;
 
@@ -121,14 +120,9 @@ contract VertexStrategy is IVertexStrategy {
         emit NewStrategyCreated();
     }
 
-    modifier onlyVertexRouter() {
-        if (msg.sender != address(router)) revert OnlyVertexRouter();
-        _;
-    }
-
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
-        IVertexRouter.ActionWithoutApprovals memory action = router.getActionWithoutApprovals(actionId);
+        IVertexCore.ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
         // TODO: Needs to account for endBlockNumber = 0 (strategies that do not require an approval period)
         // TODO: Needs to account for both isFixedLengthApprovalPeriod's
         //       if true then action cannot pass before approval period ends
@@ -139,7 +133,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
-        IVertexRouter.ActionWithoutApprovals memory action = router.getActionWithoutApprovals(actionId);
+        IVertexCore.ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
         // TODO: Use this action's properties to determine if it is eligible for cancelation
         // TODO: Needs to account for strategies that do not allow disapprovals
         // Handle all the math to determine if the disapproval has passed based on this strategies quorum settings.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexRouter} from "src/router/IVertexRouter.sol";
+import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexExecutor} from "src/executor/VertexExecutor.sol";
@@ -24,10 +24,10 @@ error TimelockNotFinished();
 error ActionHasExpired();
 error FailedActionExecution();
 
-/// @title VertexRouter
+/// @title VertexCore
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex instance.
-contract VertexRouter is IVertexRouter {
+contract VertexCore is IVertexCore {
     /// @notice Name of this Vertex instance.
     string public name;
 
@@ -69,12 +69,12 @@ contract VertexRouter is IVertexRouter {
         executor = address(0x1338);
     }
 
-    modifier onlyVertexExecutor() {
+    modifier onlyVertex() {
         if (msg.sender != executor) revert OnlyExecutor();
         _;
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function createAction(
         VertexStrategy strategy,
         address target,
@@ -112,7 +112,7 @@ contract VertexRouter is IVertexRouter {
         return newAction.id;
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function cancelAction(uint256 actionId) external override {
         ActionState state = getActionState(actionId);
         if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired) {
@@ -128,7 +128,7 @@ contract VertexRouter is IVertexRouter {
         emit ActionCanceled(actionId);
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
@@ -142,7 +142,7 @@ contract VertexRouter is IVertexRouter {
         emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function executeAction(uint256 actionId) external payable override returns (bytes memory) {
         // TODO: Do we need both of these checks?
         if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
@@ -156,9 +156,7 @@ contract VertexRouter is IVertexRouter {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = address(executor).call(
-            abi.encodeWithSelector(VertexExecutor.execute.selector, action.target, action.value, action.signature, action.data)
-        );
+        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodeWithSignature(action.signature, action.data));
 
         if (!success) revert FailedActionExecution();
 
@@ -168,13 +166,13 @@ contract VertexRouter is IVertexRouter {
         return result;
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function submitApproval(uint256 actionId, bool support) external override {
         return _submitApproval(msg.sender, actionId, support);
     }
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -188,13 +186,13 @@ contract VertexRouter is IVertexRouter {
         return _submitApproval(signer, actionId, support);
     }
 
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function submitDisapproval(uint256 actionId, bool support) external override {
         return _submitDisapproval(msg.sender, actionId, support);
     }
 
     // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
-    /// @inheritdoc IVertexRouter
+    /// @inheritdoc IVertexCore
     function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -265,7 +263,7 @@ contract VertexRouter is IVertexRouter {
      * @dev Add new addresses to the list of authorized strategies
      * @param strategies list of new addresses to be authorized strategies
      **/
-    function createAndAuthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertexExecutor {
+    function createAndAuthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
         //  TODO: this function needs to accept Strategy[]. Strategy should include all the arguments to deploy a new strategy
         //  It should use create2 to deploy and get all the addresses in an array, loop through them, and authorize them all
         uint256 stragiesLength = strategies.length;
@@ -280,7 +278,8 @@ contract VertexRouter is IVertexRouter {
      * @dev Remove addresses to the list of authorized strategies
      * @param strategies list of addresses to be removed as authorized strategies
      **/
-    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertexExecutor {
+    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
+        // TODO: Need a check that these strategies are not active before removing them
         uint256 stragiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < stragiesLength; ++i) {
