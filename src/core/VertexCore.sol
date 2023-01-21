@@ -58,8 +58,18 @@ contract VertexCore is IVertexCore {
     constructor(string memory _name, string memory _symbol, Strategy[] memory initialStrategies) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol));
-        createAndAuthorizeStrategies(initialStrategies);
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, IVertexCore(address(this))));
+
+        uint256 strategyLength = initialStrategies.length;
+        unchecked {
+            for (uint256 i; i < strategyLength; ++i) {
+                bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
+                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], policy, IVertexCore(address(this))));
+                authorizedStrategies[strategy] = true;
+            }
+        }
+
+        emit VertexStrategiesAuthorized(initialStrategies);
     }
 
     modifier onlyVertex() {

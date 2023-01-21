@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {IVertexCore} from "src/core/IVertexCore.sol";
 import {Permission} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
@@ -51,7 +52,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST");
+        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", IVertexCore(address(this)));
         // console.logAddress(address(policyNFT)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
         // console.logAddress(policyNFT.owner()); //0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
         bytes32[] memory roles = new bytes32[](0);
