@@ -47,18 +47,16 @@ interface IVertexStrategy {
     /**
      * @dev Check whether an action has reached quorum, ie has enough approvals
      * @param approvals total weight of approvals
-     * @param blockNumber action's startBlockNumber
+     * @param blockNumber action's createdBlockNumber
      * @return true if has approval weight needed for action to be queued
-     *
      */
     function isApprovalQuorumValid(uint256 approvals, uint256 blockNumber) external view returns (bool);
 
     /**
      * @dev Check whether an action has reached quorum, ie has enough disapprovals
      * @param disapprovals total weight of disapprovals
-     * @param blockNumber action's startBlockNumber
+     * @param blockNumber action's createdBlockNumber
      * @return true if has disapproval weight needed for action to pass
-     *
      */
     function isDisapprovalQuorumValid(uint256 disapprovals, uint256 blockNumber) external view returns (bool);
 

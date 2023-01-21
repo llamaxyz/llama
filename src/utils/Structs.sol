@@ -25,9 +25,8 @@ struct Action {
     uint256 value;
     string signature;
     bytes data;
-    uint256 startBlockNumber;
-    uint256 endBlockNumber;
-    uint256 queueTime;
+    uint256 createdBlockNumber;
+    uint256 approvalEndTime;
     uint256 executionTime;
     uint256 totalApprovals;
     uint256 totalDisapprovals;
@@ -47,9 +46,8 @@ struct ActionWithoutApprovals {
     uint256 value;
     string signature;
     bytes data;
-    uint256 startBlockNumber;
-    uint256 endBlockNumber;
-    uint256 queueTime;
+    uint256 createdBlockNumber;
+    uint256 approvalEndTime;
     uint256 executionTime;
     uint256 totalApprovals;
     uint256 totalDisapprovals;
@@ -63,10 +61,10 @@ struct WeightByPermission {
 }
 
 struct Strategy {
-    uint256 executionDelay;
+    uint256 approvalDuration;
+    uint256 queuingDuration;
     uint256 expirationDelay;
     bool isFixedLengthApprovalPeriod;
-    uint256 approvalDuration;
     uint256 minApprovalPct;
     uint256 minDisapprovalPct;
     WeightByPermission[] approvalWeightByPermission;

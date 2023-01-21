@@ -96,8 +96,8 @@ contract VertexCore is IVertexCore {
         newAction.value = value;
         newAction.signature = signature;
         newAction.data = data;
-        newAction.startBlockNumber = block.number;
-        newAction.endBlockNumber = block.number + strategy.approvalDuration();
+        newAction.createdBlockNumber = block.number;
+        newAction.approvalEndTime = block.timestamp + strategy.approvalDuration();
         newAction.approvalPolicySupply = approvalPolicySupply;
         newAction.disapprovalPolicySupply = disapprovalPolicySupply;
 
@@ -130,7 +130,7 @@ contract VertexCore is IVertexCore {
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
-        uint256 executionTime = block.timestamp + action.strategy.executionDelay();
+        uint256 executionTime = block.timestamp + action.strategy.queuingDuration();
 
         if (queuedActions[actionId]) revert DuplicateAction();
         queuedActions[actionId] = true;
@@ -211,9 +211,8 @@ contract VertexCore is IVertexCore {
             value: action.value,
             signature: action.signature,
             data: action.data,
-            startBlockNumber: action.startBlockNumber,
-            endBlockNumber: action.endBlockNumber,
-            queueTime: action.queueTime,
+            createdBlockNumber: action.createdBlockNumber,
+            approvalEndTime: action.approvalEndTime,
             executionTime: action.executionTime,
             totalApprovals: action.totalApprovals,
             totalDisapprovals: action.totalDisapprovals,
@@ -231,7 +230,7 @@ contract VertexCore is IVertexCore {
             return ActionState.Canceled;
         }
 
-        if (block.number <= action.endBlockNumber && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.timestamp <= action.approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -294,7 +293,7 @@ contract VertexCore is IVertexCore {
         // TODO: should we support changing approvals?
         if (approval.weight != 0) revert ApprovalAlreadySubmitted();
 
-        uint256 weight = action.strategy.getApprovalWeightAt(policyHolder, action.startBlockNumber);
+        uint256 weight = action.strategy.getApprovalWeightAt(policyHolder, action.createdBlockNumber);
 
         if (support) {
             action.totalApprovals += weight;
@@ -315,8 +314,7 @@ contract VertexCore is IVertexCore {
         // TODO: should we support changing disapprovals?
         if (disapproval.weight != 0) revert DisapprovalAlreadySubmitted();
 
-        // TODO: Do we need to base approvals/disapprovals on startBlockNumber and endBlockNumber instead of timestamps to support snapshots?
-        uint256 weight = action.strategy.getDisapprovalWeightAt(policyHolder, action.startBlockNumber);
+        uint256 weight = action.strategy.getDisapprovalWeightAt(policyHolder, action.createdBlockNumber);
 
         if (support) {
             action.totalDisapprovals += weight;
