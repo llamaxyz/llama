@@ -223,6 +223,19 @@ contract VertexPolicyNFT is VertexPolicy {
         return totalSupply();
     }
 
+    // Check if a holder has a permissionSignature at a specific block number
+    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
+        // TODO
+        return true;
+    }
+
+    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    // TODO: This should queried at action creation time and stored on the Action object
+    function getSupplyByPermissions(bytes32[] memory permissions) external view returns (uint256) {
+        // TODO
+        return totalSupply();
+    }
+
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {

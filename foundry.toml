@@ -1,4 +1,5 @@
 [profile.default]
+solc = "0.8.17"
 src = 'src'
 test = 'tests'
 out = 'out'
@@ -13,5 +14,8 @@ fuzz_runs = 5_000
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET_URL}"
 
+[fmt]
+line_length = 160
+wrap_comments = true
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

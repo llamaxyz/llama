@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 
 import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
-import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 
 contract ProtocolXYZ is AccessControl {
     event Executed(address indexed executor, uint256 number);
@@ -10,8 +9,8 @@ contract ProtocolXYZ is AccessControl {
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    constructor(VertexExecutor executor) {
-        _grantRole(ADMIN_ROLE, address(executor));
+    constructor(address vertex) {
+        _grantRole(ADMIN_ROLE, address(vertex));
     }
 
     function create(uint256 number) external onlyRole(ADMIN_ROLE) {
