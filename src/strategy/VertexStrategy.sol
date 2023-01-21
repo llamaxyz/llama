@@ -18,27 +18,27 @@ contract VertexStrategy is IVertexStrategy {
     bytes32 public constant DEFAULT_OPERATOR = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /// @notice Minimum time between queueing and execution of action.
-    uint256 public immutable executionDelay;
+    uint256 public immutable queuingDuration;
 
     /// @notice Time after delay that action can be executed before permanently expiring.
     uint256 public immutable expirationDelay;
 
-    /// @notice Can action be queued before endBlockNumber.
+    /// @notice Can action be queued before approvalEndTime.
     bool public immutable isFixedLengthApprovalPeriod;
 
     /// @notice The strategy's Vertex instance.
     IVertexCore public immutable vertex;
 
-    /// @notice Length of approval period in blocks.
+    /// @notice Length of approval period.
     uint256 public immutable approvalDuration;
 
     /// @notice Policy NFT for this Vertex Instance.
     VertexPolicyNFT public immutable policy;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at startBlockNumber of action to be queued.
+    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of action to be queued.
     uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at startBlockNumber of action to be canceled.
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of action to be canceled.
     uint256 public immutable minDisapprovalPct;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
@@ -55,7 +55,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
-        executionDelay = strategyConfig.executionDelay;
+        queuingDuration = strategyConfig.queuingDuration;
         expirationDelay = strategyConfig.expirationDelay;
         isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
         approvalDuration = strategyConfig.approvalDuration;
@@ -85,7 +85,6 @@ contract VertexStrategy is IVertexStrategy {
 
         unchecked {
             for (uint256 i; i < approvalPermissionsLength; ++i) {
-                // TODO: see if this saves gas
                 WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
 
                 if (weightByPermission.weight > 0) {
@@ -97,7 +96,6 @@ contract VertexStrategy is IVertexStrategy {
 
         unchecked {
             for (uint256 i; i < disapprovalPermissionsLength; ++i) {
-                // TODO: see if this saves gas
                 WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
 
                 if (weightByPermission.weight > 0) {
@@ -113,21 +111,13 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
         ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
-        // TODO: Needs to account for endBlockNumber = 0 (strategies that do not require an approval period)
-        // TODO: Needs to account for both isFixedLengthApprovalPeriod's
-        //       if true then action cannot pass before approval period ends
-        //       if false then action can pass before approval period ends
-        // Handle all the math to determine if the approval has passed based on this strategies quorum settings.
-        return isApprovalQuorumValid(action.startBlockNumber, action.totalApprovals);
+        return isApprovalQuorumValid(action.createdBlockNumber, action.totalApprovals);
     }
 
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
         ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
-        // TODO: Use this action's properties to determine if it is eligible for cancelation
-        // TODO: Needs to account for strategies that do not allow disapprovals
-        // Handle all the math to determine if the disapproval has passed based on this strategies quorum settings.
-        return isDisapprovalQuorumValid(action.startBlockNumber, action.totalDisapprovals);
+        return isDisapprovalQuorumValid(action.createdBlockNumber, action.totalDisapprovals);
     }
 
     /// @inheritdoc IVertexStrategy
