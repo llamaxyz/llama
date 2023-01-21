@@ -17,12 +17,13 @@ error DuplicateAction();
 error ActionCannotBeCanceled();
 error OnlyVertex();
 error SignalingClosed();
-error ApprovalAlreadySubmitted();
 error InvalidSignature();
-error DisapprovalAlreadySubmitted();
 error TimelockNotFinished();
 error ActionHasExpired();
 error FailedActionExecution();
+error DuplicateApproval();
+error DuplicateDisapproval();
+error DisapproveDisabled();
 
 /// @title VertexCore
 /// @author Llama (vertex@llama.xyz)
@@ -32,6 +33,9 @@ contract VertexCore is IVertexCore {
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
     bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalEmitted(uint256 id,bool support)");
     bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalEmitted(uint256 id,bool support)");
+
+    /// @notice Equivalent to 100%, but scaled for precision
+    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 100_00;
 
     /// @notice The NFT contract that defines the policies for this Vertex instance.
     VertexPolicyNFT public immutable policy;
@@ -230,7 +234,7 @@ contract VertexCore is IVertexCore {
             return ActionState.Canceled;
         }
 
-        if (block.timestamp <= action.approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.timestamp < action.approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -290,17 +294,18 @@ contract VertexCore is IVertexCore {
         Action storage action = actions[actionId];
         Approval storage approval = action.approvals[policyHolder];
 
-        // TODO: should we support changing approvals?
-        if (approval.weight != 0) revert ApprovalAlreadySubmitted();
+        if (support == approval.support) revert DuplicateApproval();
 
         uint256 weight = action.strategy.getApprovalWeightAt(policyHolder, action.createdBlockNumber);
 
         if (support) {
             action.totalApprovals += weight;
+        } else {
+            action.totalApprovals -= weight;
         }
 
         approval.support = support;
-        approval.weight = uint248(weight);
+        approval.weight = uint248(support ? weight : 0);
 
         emit ApprovalEmitted(actionId, policyHolder, support, weight);
     }
@@ -308,20 +313,23 @@ contract VertexCore is IVertexCore {
     function _submitDisapproval(address policyHolder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Queued) revert SignalingClosed();
         Action storage action = actions[actionId];
-        // TODO: add check here to see if the action's strategy allows for disapprovals
+
+        if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_WITH_PRECISION) revert DisapproveDisabled();
+
         Disapproval storage disapproval = action.disapprovals[policyHolder];
 
-        // TODO: should we support changing disapprovals?
-        if (disapproval.weight != 0) revert DisapprovalAlreadySubmitted();
+        if (support == disapproval.support) revert DuplicateDisapproval();
 
         uint256 weight = action.strategy.getDisapprovalWeightAt(policyHolder, action.createdBlockNumber);
 
         if (support) {
             action.totalDisapprovals += weight;
+        } else {
+            action.totalDisapprovals -= weight;
         }
 
         disapproval.support = support;
-        disapproval.weight = uint248(weight);
+        disapproval.weight = uint248(support ? weight : 0);
 
         emit ApprovalEmitted(actionId, policyHolder, support, weight);
     }
