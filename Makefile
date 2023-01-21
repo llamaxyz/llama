@@ -8,18 +8,19 @@ install  :; forge install
 
 # Build & test
 build    :; forge clean && forge build --sizes --via-ir
-test     :; forge clean && forge test --rpc-url ${RPC_MAINNET_URL} --etherscan-api-key ${ETHERSCAN_API_KEY} $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
-match    :; forge clean && forge test --rpc-url ${RPC_MAINNET_URL} --etherscan-api-key ${ETHERSCAN_API_KEY} -m ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
-watch    :; forge clean && forge test --rpc-url ${RPC_MAINNET_URL} --etherscan-api-key ${ETHERSCAN_API_KEY} --watch $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
+test     :; forge clean && forge test --fork-url ${RPC_MAINNET_URL} $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
+match    :; forge clean && forge test --fork-url ${RPC_MAINNET_URL} -m ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
+watch    :; forge clean && forge test --fork-url ${RPC_MAINNET_URL} --watch $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
 report   :; forge clean && forge test --gas-report | sed -e/╭/\{ -e:1 -en\;b1 -e\} -ed | cat > .gas-report
+doc      :; forge doc -b
 
 # Deploy and Verify Payload
-deploy   :; forge script script/Counter.s.sol:CounterScript --rpc-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
-verify   :; forge script script/Counter.s.sol:CounterScript --rpc-url ${RPC_MAINNET_URL} --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
+deploy   :; forge script script/Counter.s.sol:CounterScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
+verify   :; forge script script/Counter.s.sol:CounterScript --fork-url ${RPC_MAINNET_URL} --verify -vvvv
 
 # Clean & lint
 clean    :; forge clean
-lint     :; npx prettier --write src/**/*.sol script/**/*.sol tests/**/*.sol
+lint     :; forge fmt
 
 # Defaults to -v if no V=<{1,2,3,4,5} specified
 define compute_test_verbosity
