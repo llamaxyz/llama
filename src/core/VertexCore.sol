@@ -67,13 +67,11 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(
-        VertexStrategy strategy,
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata data
-    ) external override returns (uint256) {
+    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data)
+        external
+        override
+        returns (uint256)
+    {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
         // TODO: @theo insert validation logic here
@@ -150,7 +148,7 @@ contract VertexCore is IVertexCore {
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
-        if (block.timestamp >= action.executionTime + action.strategy.expirationDelay()) revert ActionHasExpired();
+        if (isActionExpired(actionId)) revert ActionHasExpired();
 
         action.executed = true;
         queuedActions[actionId] = false;
@@ -336,6 +334,6 @@ contract VertexCore is IVertexCore {
 
     function isActionExpired(uint256 actionId) public view override returns (bool) {
         Action storage action = actions[actionId];
-        return block.timestamp > (action.executionTime + action.strategy.expirationDelay());
+        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
     }
 }
