@@ -66,7 +66,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function testDeleteRole() public {
-        (Permission[] memory permissions, ) = generateGenericPermissionArray();
+        (Permission[] memory permissions,) = generateGenericPermissionArray();
 
         vertexPolicyNFT.addRole("admin", permissions);
 
