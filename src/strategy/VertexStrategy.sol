@@ -12,7 +12,7 @@ error InvalidWeightConfiguration();
 
 contract VertexStrategy is IVertexStrategy {
     /// @notice Equivalent to 100%, but scaled for precision
-    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 10000;
+    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 100_00;
 
     /// @notice Permission signature value that determines weight for all unspecified policyholders.
     bytes32 public constant DEFAULT_OPERATOR = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
