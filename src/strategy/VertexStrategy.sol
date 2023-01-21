@@ -35,10 +35,11 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Policy NFT for this Vertex Instance.
     VertexPolicyNFT public immutable policy;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of action to be queued.
+    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of action to be queued. In bps, where 100_00 == 100%.
     uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of action to be canceled.
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of action to be canceled. In bps, where 100_00
+    /// == 100%.
     uint256 public immutable minDisapprovalPct;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
@@ -166,10 +167,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
-        // NOTE: Need to actual implement proper floating point math here
-        // minPct (will either be minApprovalPct or minDisapprovalPct) is the percent quorum needed and so this returns the amount in number form
-        // we should round this up to the nearest integer
-        return (supply * minPct) / ONE_HUNDRED_WITH_PRECISION;
+        return supply * minPct / ONE_HUNDRED_WITH_PRECISION;
     }
 
     function getApprovalPermissions() public view override returns (bytes32[] memory) {
