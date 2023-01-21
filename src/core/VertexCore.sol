@@ -4,8 +4,8 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 import {getChainId} from "src/utils/Helpers.sol";
+import {Action, ActionWithoutApprovals, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
 
 // Errors
 error InvalidStrategy();
@@ -15,7 +15,7 @@ error OnlyQueuedActions();
 error InvalidStateForQueue();
 error DuplicateAction();
 error ActionCannotBeCanceled();
-error OnlyExecutor();
+error OnlyVertex();
 error SignalingClosed();
 error ApprovalAlreadySubmitted();
 error InvalidSignature();
@@ -28,6 +28,14 @@ error FailedActionExecution();
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex instance.
 contract VertexCore is IVertexCore {
+    /// @notice EIP-712 typehashes.
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalEmitted(uint256 id,bool support)");
+    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalEmitted(uint256 id,bool support)");
+
+    /// @notice The NFT contract that defines the policies for this Vertex instance.
+    VertexPolicyNFT public immutable policy;
+
     /// @notice Name of this Vertex instance.
     string public name;
 
@@ -37,40 +45,20 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of action ids to Actions.
     mapping(uint256 => Action) public actions;
 
-    /// @notice The NFT contract that defines the policies for this Vertex instance.
-    VertexPolicyNFT public immutable policy;
-
-    /// @notice The NFT contract that defines the policies for this Vertex instance.
-    address public immutable executor;
-
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
     /// @notice Mapping of action id's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    // TODO: Do we need an onchain way to access all strategies? Ideally not but will keep this as a placeholder.
-    /// @notice Array of authorized strategies.
-    // VertexStrategy[] public strategies;
-
-    /// @notice EIP-712 typehashes.
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalEmitted(uint256 id,bool support)");
-    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalEmitted(uint256 id,bool support)");
-
-    constructor(string memory _name) {
+    constructor(string memory _name, string memory _symbol, bytes32 _salt, Strategy[] memory initialStrategies) {
         name = _name;
-
-        // TODO: We will use CREATE2 to deterministically deploy the VertexPolicyNFT,
-        // all initial strategies, and the executor. These contracts can be fully confgiured
-        // from their constructors. We will then use these addresses to set the policy,
-        // authorizedStrategies, and executor.
-        policy = VertexPolicyNFT(address(0x1337));
-        executor = address(0x1338);
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: _salt}(_name, _symbol));
+        createAndAuthorizeStrategies(initialStrategies);
     }
 
     modifier onlyVertex() {
-        if (msg.sender != executor) revert OnlyExecutor();
+        if (msg.sender != address(this)) revert OnlyVertex();
         _;
     }
 
@@ -92,6 +80,15 @@ contract VertexCore is IVertexCore {
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];
+
+        uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
+            ? policy.totalSupply()
+            : policy.getSupplyByPermissions(strategy.getApprovalPermissions());
+
+        uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
+            ? policy.totalSupply()
+            : policy.getSupplyByPermissions(strategy.getDisapprovalPermissions());
+
         newAction.id = previousActionCount;
         newAction.creator = msg.sender;
         newAction.strategy = strategy;
@@ -100,8 +97,9 @@ contract VertexCore is IVertexCore {
         newAction.signature = signature;
         newAction.data = data;
         newAction.startBlockNumber = block.number;
-        // TODO: approvalDuration should return a block number
         newAction.endBlockNumber = block.number + strategy.approvalDuration();
+        newAction.approvalPolicySupply = approvalPolicySupply;
+        newAction.disapprovalPolicySupply = disapprovalPolicySupply;
 
         unchecked {
             ++actionsCount;
@@ -144,9 +142,7 @@ contract VertexCore is IVertexCore {
 
     /// @inheritdoc IVertexCore
     function executeAction(uint256 actionId) external payable override returns (bytes memory) {
-        // TODO: Do we need both of these checks?
-        if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
-        if (!queuedActions[actionId]) revert OnlyQueuedActions();
+        if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
@@ -162,7 +158,6 @@ contract VertexCore is IVertexCore {
 
         emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
 
-        // TODO: should we return arbitrary data?
         return result;
     }
 
@@ -171,7 +166,6 @@ contract VertexCore is IVertexCore {
         return _submitApproval(msg.sender, actionId, support);
     }
 
-    // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexCore
     function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
@@ -191,7 +185,6 @@ contract VertexCore is IVertexCore {
         return _submitDisapproval(msg.sender, actionId, support);
     }
 
-    // TODO: Is this pattern outdated?? Is there a better way to give our users an optionally gasless UX?
     /// @inheritdoc IVertexCore
     function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
@@ -211,6 +204,8 @@ contract VertexCore is IVertexCore {
         ActionWithoutApprovals memory actionWithoutApprovals = ActionWithoutApprovals({
             id: action.id,
             creator: action.creator,
+            executed: action.executed,
+            canceled: action.canceled,
             strategy: action.strategy,
             target: action.target,
             value: action.value,
@@ -218,12 +213,12 @@ contract VertexCore is IVertexCore {
             data: action.data,
             startBlockNumber: action.startBlockNumber,
             endBlockNumber: action.endBlockNumber,
-            executionTime: action.executionTime,
             queueTime: action.queueTime,
+            executionTime: action.executionTime,
             totalApprovals: action.totalApprovals,
             totalDisapprovals: action.totalDisapprovals,
-            executed: action.executed,
-            canceled: action.canceled
+            approvalPolicySupply: action.approvalPolicySupply,
+            disapprovalPolicySupply: action.disapprovalPolicySupply
         });
 
         return actionWithoutApprovals;
@@ -262,40 +257,33 @@ contract VertexCore is IVertexCore {
     /**
      * @dev Add new addresses to the list of authorized strategies
      * @param strategies list of new addresses to be authorized strategies
-     **/
-    function createAndAuthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
-        //  TODO: this function needs to accept Strategy[]. Strategy should include all the arguments to deploy a new strategy
-        //  It should use create2 to deploy and get all the addresses in an array, loop through them, and authorize them all
-        uint256 stragiesLength = strategies.length;
+     */
+    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
+        uint256 strategyLength = strategies.length;
         unchecked {
-            for (uint256 i = 0; i < stragiesLength; ++i) {
-                _authorizeStrategy(strategies[i]);
+            for (uint256 i; i < strategyLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
+                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
+                authorizedStrategies[strategy] = true;
             }
         }
+
+        emit VertexStrategiesAuthorized(strategies);
     }
 
     /**
      * @dev Remove addresses to the list of authorized strategies
      * @param strategies list of addresses to be removed as authorized strategies
-     **/
+     */
     function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
-        // TODO: Need a check that these strategies are not active before removing them
-        uint256 stragiesLength = strategies.length;
+        uint256 strategiesLength = strategies.length;
         unchecked {
-            for (uint256 i = 0; i < stragiesLength; ++i) {
-                _unauthorizeStrategy(strategies[i]);
+            for (uint256 i = 0; i < strategiesLength; ++i) {
+                authorizedStrategies[strategies[i]] = false;
             }
         }
-    }
 
-    function _authorizeStrategy(VertexStrategy strategy) internal {
-        authorizedStrategies[strategy] = true;
-        emit VertexStrategyAuthorized(strategy);
-    }
-
-    function _unauthorizeStrategy(VertexStrategy strategy) internal {
-        authorizedStrategies[strategy] = false;
-        emit VertexStrategyUnauthorized(strategy);
+        emit VertexStrategiesUnauthorized(strategies);
     }
 
     function _submitApproval(address policyHolder, uint256 actionId, bool support) internal {
@@ -342,7 +330,6 @@ contract VertexCore is IVertexCore {
 
     function isActionExpired(uint256 actionId) public view override returns (bool) {
         Action storage action = actions[actionId];
-        // TODO: Should approvalDuration return a block number or timestamp?
-        return block.timestamp > (action.executionTime + action.strategy.approvalDuration());
+        return block.timestamp > (action.executionTime + action.strategy.expirationDelay());
     }
 }

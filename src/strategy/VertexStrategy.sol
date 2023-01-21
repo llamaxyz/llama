@@ -3,7 +3,8 @@ pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
-import {IVertexPolicyNFT} from "src/policy/IVertexPolicyNFT.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {Action, ActionWithoutApprovals, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 
 // Errors
 error InvalidPermissionSignature();
@@ -28,11 +29,11 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice The strategy's Vertex instance.
     IVertexCore public immutable vertex;
 
-    /// @notice Length of approval period.
+    /// @notice Length of approval period in blocks.
     uint256 public immutable approvalDuration;
 
     /// @notice Policy NFT for this Vertex Instance.
-    IVertexPolicyNFT public immutable policy;
+    VertexPolicyNFT public immutable policy;
 
     /// @notice Minimum percentage of total approval weight / total approval supply at startBlockNumber of action to be queued.
     uint256 public immutable minApprovalPct;
@@ -53,50 +54,39 @@ contract VertexStrategy is IVertexStrategy {
     bytes32[] public disapprovalPermissions;
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
-    constructor(
-        uint256 _executionDelay,
-        uint256 _expirationDelay,
-        bool _isFixedLengthApprovalPeriod,
-        uint256 _approvalDuration,
-        IVertexPolicyNFT _policy,
-        IVertexCore _vertex,
-        uint256 _minApprovalPct,
-        uint256 _minDisapprovalPct,
-        WeightByPermission[] memory _approvalWeightByPermission,
-        WeightByPermission[] memory _disapprovalWeightByPermission
-    ) {
-        executionDelay = _executionDelay;
-        expirationDelay = _expirationDelay;
-        isFixedLengthApprovalPeriod = _isFixedLengthApprovalPeriod;
-        approvalDuration = _approvalDuration;
+    constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
+        executionDelay = strategyConfig.executionDelay;
+        expirationDelay = strategyConfig.expirationDelay;
+        isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
+        approvalDuration = strategyConfig.approvalDuration;
         policy = _policy;
         vertex = _vertex;
-        minApprovalPct = _minApprovalPct;
-        minDisapprovalPct = _minDisapprovalPct;
+        minApprovalPct = strategyConfig.minApprovalPct;
+        minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
-        uint256 approvalPermissionsLength = _approvalWeightByPermission.length;
-        uint256 disapprovalPermissionsLength = _disapprovalWeightByPermission.length;
+        uint256 approvalPermissionsLength = strategyConfig.approvalWeightByPermission.length;
+        uint256 disapprovalPermissionsLength = strategyConfig.disapprovalWeightByPermission.length;
 
         // Initialize to 1, could be overwritten below
         approvalWeightByPermission[DEFAULT_OPERATOR] = 1;
         disapprovalWeightByPermission[DEFAULT_OPERATOR] = 1;
 
         if (
-            _approvalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR &&
-            _approvalWeightByPermission[0].weight == 0 &&
+            strategyConfig.approvalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR &&
+            strategyConfig.approvalWeightByPermission[0].weight == 0 &&
             approvalPermissionsLength == 1
         ) revert InvalidWeightConfiguration();
 
         if (
-            _disapprovalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR &&
-            _disapprovalWeightByPermission[0].weight == 0 &&
+            strategyConfig.disapprovalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR &&
+            strategyConfig.disapprovalWeightByPermission[0].weight == 0 &&
             disapprovalPermissionsLength == 1
         ) revert InvalidWeightConfiguration();
 
         unchecked {
             for (uint256 i; i < approvalPermissionsLength; ++i) {
                 // TODO: see if this saves gas
-                WeightByPermission memory weightByPermission = _approvalWeightByPermission[i];
+                WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
 
                 if (weightByPermission.weight > 0) {
                     approvalPermissions.push(weightByPermission.permissionSignature);
@@ -108,7 +98,7 @@ contract VertexStrategy is IVertexStrategy {
         unchecked {
             for (uint256 i; i < disapprovalPermissionsLength; ++i) {
                 // TODO: see if this saves gas
-                WeightByPermission memory weightByPermission = _disapprovalWeightByPermission[i];
+                WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
 
                 if (weightByPermission.weight > 0) {
                     disapprovalPermissions.push(weightByPermission.permissionSignature);
@@ -122,7 +112,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
-        IVertexCore.ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
         // TODO: Needs to account for endBlockNumber = 0 (strategies that do not require an approval period)
         // TODO: Needs to account for both isFixedLengthApprovalPeriod's
         //       if true then action cannot pass before approval period ends
@@ -133,7 +123,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
-        IVertexCore.ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
         // TODO: Use this action's properties to determine if it is eligible for cancelation
         // TODO: Needs to account for strategies that do not allow disapprovals
         // Handle all the math to determine if the disapproval has passed based on this strategies quorum settings.
@@ -175,33 +165,15 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getTotalApprovalSupplyAt(uint256 blockNumber) public view override returns (uint256) {
-        if (approvalWeightByPermission[DEFAULT_OPERATOR] > 0) {
-            return policy.totalSupplyAt(blockNumber);
-        }
-
-        return policy.getSupplyByPermissionsAt(approvalPermissions, blockNumber);
+    function isApprovalQuorumValid(uint256 actionId, uint256 approvals) public view override returns (bool) {
+        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        return approvals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
-    function getTotalDisapprovalSupplyAt(uint256 blockNumber) public view override returns (uint256) {
-        if (disapprovalWeightByPermission[DEFAULT_OPERATOR] > 0) {
-            return policy.totalSupplyAt(blockNumber);
-        }
-
-        return policy.getSupplyByPermissionsAt(disapprovalPermissions, blockNumber);
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isApprovalQuorumValid(uint256 blockNumber, uint256 approvals) public view override returns (bool) {
-        uint256 approvalSupply = getTotalApprovalSupplyAt(blockNumber);
-        return approvals >= getMinimumAmountNeeded(approvalSupply, minApprovalPct);
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isDisapprovalQuorumValid(uint256 blockNumber, uint256 approvals) public view override returns (bool) {
-        uint256 disapprovalSupply = getTotalDisapprovalSupplyAt(blockNumber);
-        return approvals >= getMinimumAmountNeeded(disapprovalSupply, minDisapprovalPct);
+    function isDisapprovalQuorumValid(uint256 actionId, uint256 disapprovals) public view override returns (bool) {
+        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        return disapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
@@ -210,5 +182,13 @@ contract VertexStrategy is IVertexStrategy {
         // minPct (will either be minApprovalPct or minDisapprovalPct) is the percent quorum needed and so this returns the amount in number form
         // we should round this up to the nearest integer
         return (supply * minPct) / ONE_HUNDRED_WITH_PRECISION;
+    }
+
+    function getApprovalPermissions() public view override returns (bytes32[] memory) {
+        return approvalPermissions;
+    }
+
+    function getDisapprovalPermissions() public view override returns (bytes32[] memory) {
+        return disapprovalPermissions;
     }
 }
