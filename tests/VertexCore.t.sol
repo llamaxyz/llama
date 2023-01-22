@@ -110,6 +110,10 @@ contract VertexCoreTest is Test {
         // _executeAction();
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Action setup helpers
+    //////////////////////////////////////////////////////////////*/
+
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
         emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
