@@ -13,7 +13,7 @@ contract ProtocolXYZ {
     }
 
     modifier onlyVertex() {
-        if (msg.sender != address(this)) revert OnlyVertex();
+        if (msg.sender != address(vertex)) revert OnlyVertex();
         _;
     }
 

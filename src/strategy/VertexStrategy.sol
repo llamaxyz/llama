@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, ActionWithoutApprovals, WeightByPermission, Strategy} from "src/utils/Structs.sol";
+import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 
 // Errors
 error InvalidPermissionSignature();
@@ -113,13 +113,13 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
-        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        Action memory action = vertex.getAction(actionId);
         return isApprovalQuorumValid(action.createdBlockNumber, action.totalApprovals);
     }
 
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
-        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        Action memory action = vertex.getAction(actionId);
         return isDisapprovalQuorumValid(action.createdBlockNumber, action.totalDisapprovals);
     }
 
@@ -159,13 +159,13 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function isApprovalQuorumValid(uint256 actionId, uint256 approvals) public view override returns (bool) {
-        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        Action memory action = vertex.getAction(actionId);
         return approvals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
     function isDisapprovalQuorumValid(uint256 actionId, uint256 disapprovals) public view override returns (bool) {
-        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(actionId);
+        Action memory action = vertex.getAction(actionId);
         return disapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 

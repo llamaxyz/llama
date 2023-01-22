@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {ActionWithoutApprovals, Strategy} from "src/utils/Structs.sol";
+import {Action, Strategy} from "src/utils/Structs.sol";
 
 interface IVertexCore {
     enum ActionState {
@@ -73,7 +73,7 @@ interface IVertexCore {
      * @param weight Weight of the policyHolder
      *
      */
-    event DisapprovalEmitted(uint256 id, address indexed policyHolder, uint256 weight);
+    event DisapprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
 
     event VertexStrategiesAuthorized(Strategy[] strategies);
 
@@ -183,7 +183,7 @@ interface IVertexCore {
      * @return Action object without approval data
      *
      */
-    function getActionWithoutApprovals(uint256 actionId) external view returns (ActionWithoutApprovals memory);
+    function getAction(uint256 actionId) external view returns (Action memory);
 
     /**
      * @dev Checks whether a proposal is over its expiration delay

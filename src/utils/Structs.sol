@@ -39,27 +39,6 @@ struct Action {
     uint256 totalDisapprovals;
     uint256 approvalPolicySupply;
     uint256 disapprovalPolicySupply;
-    mapping(address => Approval) approvals;
-    mapping(address => Disapproval) disapprovals;
-}
-
-struct ActionWithoutApprovals {
-    uint256 id;
-    address creator;
-    bool executed;
-    bool canceled;
-    VertexStrategy strategy;
-    address target;
-    uint256 value;
-    string signature;
-    bytes data;
-    uint256 createdBlockNumber;
-    uint256 approvalEndTime;
-    uint256 executionTime;
-    uint256 totalApprovals;
-    uint256 totalDisapprovals;
-    uint256 approvalPolicySupply;
-    uint256 disapprovalPolicySupply;
 }
 
 struct WeightByPermission {
