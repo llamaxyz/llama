@@ -46,3 +46,12 @@ Duplicate `.env.example` and rename to `.env`:
 - `make deploy` - deploy and verify payload on mainnet
 
 To confirm the deploy was successful, re-run your test suite but use the newly created contract address.
+
+## Documentation
+
+The generate documentation for the project and serve those static files locally, run the following commands:
+
+```sh
+$ make doc
+$ forge doc -s
+```
