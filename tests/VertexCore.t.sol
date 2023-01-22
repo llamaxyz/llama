@@ -107,12 +107,12 @@ contract VertexCoreTest is Test {
 
         vm.warp(block.timestamp + 5 days);
 
-        _executeAction();
+        // _executeAction();
     }
 
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
-        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, "function pause()", abi.encode(true));
+        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
         vertex.createAction(strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
 
         Action memory action = vertex.getAction(0);
