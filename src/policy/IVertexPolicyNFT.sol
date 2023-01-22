@@ -23,7 +23,7 @@ interface IVertexPolicyNFT {
     }
 
     // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool);
+    function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool);
 
     // Total number of policy NFTs
     function totalSupply() external view returns (uint256);

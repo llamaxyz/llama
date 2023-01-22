@@ -11,22 +11,22 @@ interface IVertexStrategy {
     event NewStrategyCreated();
 
     /**
-     * @dev Returns the approval power of a policyHolder at a specific block number.
-     * @param policyHolder Address of the policyHolder
+     * @dev Returns the approval power of a policyholder at a specific block number.
+     * @param policyholder Address of the policyholder
      * @param blockNumber block number at which to fetch approval power
      * @return approval power number
      *
      */
-    function getApprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256);
+    function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256);
 
     /**
-     * @dev Returns the disapproving power of a policyHolder at a specific block number.
-     * @param policyHolder Address of the policyHolder
+     * @dev Returns the disapproving power of a policyholder at a specific block number.
+     * @param policyholder Address of the policyholder
      * @param blockNumber block number at which to fetch disapproving power
      * @return disapproving power number
      *
      */
-    function getDisapprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256);
+    function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256);
 
     /**
      * @dev Determine if an action is eligible for cancelation based on its id

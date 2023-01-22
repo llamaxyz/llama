@@ -227,7 +227,7 @@ contract VertexPolicyNFT is ERC721 {
     // BEGIN TODO
 
     // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
+    function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
         // TODO
         return true;
     }

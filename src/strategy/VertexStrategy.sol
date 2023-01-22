@@ -124,14 +124,14 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getApprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+    function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use?
                 // We could also get the policyholder's permissions, loop through that and check against the approvalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermissionAt(policyHolder, approvalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], blockNumber)) {
                     return approvalWeightByPermission[approvalPermissions[i]];
                 }
             }
@@ -141,14 +141,14 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getDisapprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+    function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use at a blockNumber?
                 // We could also get the policyholder's permissions, loop through that and check against the disapprovalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermissionAt(policyHolder, disapprovalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], blockNumber)) {
                     return disapprovalWeightByPermission[disapprovalPermissions[i]];
                 }
             }

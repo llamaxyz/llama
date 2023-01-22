@@ -15,16 +15,16 @@ contract VertexCoreTest is Test {
     ProtocolXYZ public protocol;
     VertexPolicyNFT public policy;
     address public constant actionCreator = address(0x1337);
-    address public constant policyHolder1 = address(0x1338);
-    address public constant policyHolder2 = address(0x1339);
-    address public constant policyHolder3 = address(0x1340);
-    address public constant policyHolder4 = address(0x1341);
+    address public constant policyholder1 = address(0x1338);
+    address public constant policyholder2 = address(0x1339);
+    address public constant policyholder3 = address(0x1340);
+    address public constant policyholder4 = address(0x1341);
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
-    event ApprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-    event DisapprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
+    event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
 
     function setUp() public {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
@@ -73,10 +73,10 @@ contract VertexCoreTest is Test {
         vm.startPrank(address(vertex));
         bytes32[] memory roles = new bytes32[](0);
         policy.mint(actionCreator, roles);
-        policy.mint(policyHolder1, roles);
-        policy.mint(policyHolder2, roles);
-        policy.mint(policyHolder3, roles);
-        policy.mint(policyHolder4, roles);
+        policy.mint(policyholder1, roles);
+        policy.mint(policyholder2, roles);
+        policy.mint(policyholder3, roles);
+        policy.mint(policyholder4, roles);
         vm.stopPrank();
 
         vm.label(actionCreator, "Action Creator");
@@ -87,12 +87,12 @@ contract VertexCoreTest is Test {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyHolder1);
-        _approveAction(policyHolder1);
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
         vm.stopPrank();
 
-        vm.startPrank(policyHolder2);
-        _approveAction(policyHolder2);
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
@@ -101,8 +101,8 @@ contract VertexCoreTest is Test {
 
         _queueAction();
 
-        vm.startPrank(policyHolder1);
-        _disapproveAction(policyHolder1);
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 5 days);
@@ -126,13 +126,13 @@ contract VertexCoreTest is Test {
 
     function _approveAction(address policyholder) public {
         vm.expectEmit(true, true, true, true);
-        emit ApprovalEmitted(0, policyholder, true, 1);
+        emit PolicyholderApproved(0, policyholder, true, 1);
         vertex.submitApproval(0, true);
     }
 
     function _disapproveAction(address policyholder) public {
         vm.expectEmit(true, true, true, true);
-        emit DisapprovalEmitted(0, policyholder, true, 1);
+        emit PolicyholderDisapproved(0, policyholder, true, 1);
         vertex.submitDisapproval(0, true);
     }
 
