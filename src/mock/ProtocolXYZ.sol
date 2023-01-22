@@ -2,11 +2,10 @@
 pragma solidity ^0.8.17;
 
 contract ProtocolXYZ {
-    event Paused(address indexed executor, bool isPaused);
-
     error OnlyVertex();
 
     address public immutable vertex;
+    bool public paused;
 
     constructor(address _vertex) {
         vertex = _vertex;
@@ -18,6 +17,6 @@ contract ProtocolXYZ {
     }
 
     function pause(bool isPaused) external onlyVertex {
-        emit Paused(msg.sender, isPaused);
+        paused = isPaused;
     }
 }
