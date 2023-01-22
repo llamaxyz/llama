@@ -38,7 +38,7 @@ contract VertexCore is IVertexCore {
     bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,bool support)");
 
     /// @notice Equivalent to 100%, but scaled for precision
-    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 100_00;
+    uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice The NFT contract that defines the policies for this Vertex system.
     VertexPolicyNFT public immutable policy;
@@ -314,7 +314,7 @@ contract VertexCore is IVertexCore {
         if (getActionState(actionId) != ActionState.Queued) revert SignalingClosed();
         Action storage action = actions[actionId];
 
-        if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_WITH_PRECISION) revert DisapproveDisabled();
+        if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
         Disapproval storage disapproval = disapprovals[actionId][policyholder];
 

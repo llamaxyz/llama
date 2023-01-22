@@ -46,78 +46,52 @@ interface IVertexCore {
     /// @return The result returned from the call to the target contract.
     function executeAction(uint256 actionId) external payable returns (bytes memory);
 
-    /**
-     * @dev Function allowing msg.sender to approval for/against an action
-     * @param actionId id of the action
-     * @param support boolean, true = approval for, false = approval against
-     *
-     */
+    /// @notice How policyholders add or remove their support of the approval of an action.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
     function submitApproval(uint256 actionId, bool support) external;
 
-    /**
-     * @dev Function to register the approval of user that has approvald offchain via signature
-     * @param actionId id of the action
-     * @param support boolean, true = approval for, false = approval against
-     * @param v v part of the policyholder signature
-     * @param r r part of the policyholder signature
-     * @param s s part of the policyholder signature
-     *
-     */
+    /// @notice How policyholders add or remove their support of the approval of an action via an offchain signature.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
+    /// @param v v part of the policyholder signature
+    /// @param r r part of the policyholder signature
+    /// @param s s part of the policyholder signature
     function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
-    /**
-     * @dev Function allowing msg.sender to disapprove an action
-     * only eligible when action is Queued
-     * @param actionId id of the action
-     *
-     */
+    /// @notice How policyholders add or remove their support of the disapproval of an action.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
     function submitDisapproval(uint256 actionId, bool support) external;
 
-    /**
-     * @dev Function to register the disapprove of user that has been disapproved offchain via signature
-     * @param actionId id of the action
-     * @param v v part of the policyholder signature
-     * @param r r part of the policyholder signature
-     * @param s s part of the policyholder signature
-     *
-     */
+    /// @notice How policyholders add or remove their support of the disapproval of an action via an offchain signature.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
+    /// @param v v part of the policyholder signature
+    /// @param r r part of the policyholder signature
+    /// @param s s part of the policyholder signature
     function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
-    /**
-     * @dev Create new strategies and add them to the list of authorized strategies
-     * @param strategies list of new addresses to be authorized strategies
-     *
-     */
+    /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
+    /// @param strategies list of new Strategys to be authorized.
     function createAndAuthorizeStrategies(Strategy[] memory strategies) external;
 
-    /**
-     * @dev Remove addresses to the list of authorized strategies
-     * @param strategies list of addresses to be removed as authorized strategies
-     *
-     */
+    /// @notice Remove strategies from the mapping of authorized strategies.
+    /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
     function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
-    /**
-     * @dev Get Action object without approval data
-     * @param actionId id of the action
-     * @return Action object without approval data
-     *
-     */
+    /// @notice Get an Action struct by actionId.
+    /// @param actionId id of the action.
+    /// @return The Action struct.
     function getAction(uint256 actionId) external view returns (Action memory);
 
-    /**
-     * @dev Get the current state of a action
-     * @param actionId id of the action
-     * @return The current state if the action
-     *
-     */
+    /// @notice Get the current ActionState of an action by its actionId.
+    /// @param actionId id of the action.
+    /// @return The current ActionState of the action.
     function getActionState(uint256 actionId) external view returns (ActionState);
 
-    /**
-     * @dev Checks whether a proposal is over its expiration delay
-     * @param actionId Id of the action against which to test
-     * @return true of proposal is over its expiration delay
-     *
-     */
+    /// @notice Get whether an action has expired and can no longer be executed.
+    /// @param actionId id of the action.
+    /// @return Boolean value that is true if the action has expired.
     function isActionExpired(uint256 actionId) external view returns (bool);
 }

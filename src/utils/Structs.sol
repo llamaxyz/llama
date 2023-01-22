@@ -13,21 +13,21 @@ struct Permission {
 }
 
 struct Approval {
-    bool support;
-    uint248 weight;
+    bool support; // is policyholder supporting this approval.
+    uint248 weight; // weight of policyholder's support.
 }
 
 struct Disapproval {
-    bool support;
-    uint248 weight;
+    bool support; // is policyholder supporting this disapproval.
+    uint248 weight; // weight of policyholder's support.
 }
 
 struct Action {
-    uint256 id;
-    address creator;
-    bool executed;
-    bool canceled;
-    VertexStrategy strategy;
+    uint256 id; // an auto incrementing action id.
+    address creator; // msg.sender of createAction.
+    bool executed; // has action executed.
+    bool canceled; // is action canceled.
+    VertexStrategy strategy; // strategy that determines the validation process of this action.
     address target;
     uint256 value;
     string signature;
