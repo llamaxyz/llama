@@ -134,11 +134,11 @@ Running 9 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
 [32m[PASS][0m testDeleteRole() (gas: 460980)
 [32m[PASS][0m testMint() (gas: 63621)
 [32m[PASS][0m testRevokeRole() (gas: 555203)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 3.06ms
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 3.42ms
 
 Running 1 test for tests/VertexCore.t.sol:VertexCoreTest
-[32m[PASS][0m test_HappyActionFlow() (gas: 574931)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 4.41ms
+[32m[PASS][0m test_HappyActionFlow() (gas: 615491)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 4.96ms
 | src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
 |---------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                             | Deployment Size |        |        |        |         |
@@ -146,7 +146,8 @@ Test result: [32mok[0m. 1 passed; 0 failed; finished in 4.41ms
 | Function Name                               | min             | avg    | median | max    | # calls |
 | actionsCount                                | 610             | 610    | 610    | 610    | 1       |
 | createAction                                | 273415          | 273415 | 273415 | 273415 | 1       |
-| getAction                                   | 4619            | 9702   | 5015   | 32619  | 7       |
+| executeAction                               | 39294           | 39294  | 39294  | 39294  | 1       |
+| getAction                                   | 4619            | 8256   | 5015   | 32619  | 10      |
 | policy                                      | 168             | 168    | 168    | 168    | 1       |
 | queueAction                                 | 62368           | 62368  | 62368  | 62368  | 1       |
 | submitApproval                              | 28481           | 39431  | 39431  | 50381  | 2       |
@@ -185,10 +186,10 @@ Test result: [32mok[0m. 1 passed; 0 failed; finished in 4.41ms
 | approvalDuration                                        | 328             | 328   | 328    | 328   | 1       |
 | approvalWeightByPermission                              | 2717            | 2717  | 2717   | 2717  | 1       |
 | disapprovalWeightByPermission                           | 2412            | 2412  | 2412   | 2412  | 1       |
-| expirationDelay                                         | 372             | 372   | 372    | 372   | 1       |
+| expirationDelay                                         | 372             | 372   | 372    | 372   | 3       |
 | getApprovalWeightAt                                     | 851             | 1851  | 1851   | 2851  | 2       |
 | getDisapprovalWeightAt                                  | 3010            | 3010  | 3010   | 3010  | 1       |
-| isActionPassed                                          | 14606           | 23939 | 14606  | 42606 | 3       |
+| isActionPassed                                          | 14606           | 21606 | 14606  | 42606 | 4       |
 | isFixedLengthApprovalPeriod                             | 356             | 356   | 356    | 356   | 2       |
 | minDisapprovalPct                                       | 306             | 306   | 306    | 306   | 1       |
 | queuingDuration                                         | 482             | 482   | 482    | 482   | 2       |
