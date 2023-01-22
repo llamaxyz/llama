@@ -5,7 +5,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {getChainId} from "src/utils/Helpers.sol";
-import {Action, ActionWithoutApprovals, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
 
 // Errors
 error InvalidStrategy();
@@ -48,6 +48,12 @@ contract VertexCore is IVertexCore {
 
     /// @notice Mapping of action ids to Actions.
     mapping(uint256 => Action) public actions;
+
+    /// @notice Mapping of action ids to polcyholders to approvals.
+    mapping(uint256 => mapping(address => Approval)) public approvals;
+
+    /// @notice Mapping of action ids to polcyholders to approvals.
+    mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
@@ -165,7 +171,7 @@ contract VertexCore is IVertexCore {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodeWithSignature(action.signature, action.data));
+        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(bytes4(keccak256(bytes(action.signature))), action.data));
 
         if (!success) revert FailedActionExecution();
 
@@ -212,28 +218,8 @@ contract VertexCore is IVertexCore {
         return _submitDisapproval(signer, actionId, support);
     }
 
-    function getActionWithoutApprovals(uint256 actionId) external view override returns (ActionWithoutApprovals memory) {
-        Action storage action = actions[actionId];
-        ActionWithoutApprovals memory actionWithoutApprovals = ActionWithoutApprovals({
-            id: action.id,
-            creator: action.creator,
-            executed: action.executed,
-            canceled: action.canceled,
-            strategy: action.strategy,
-            target: action.target,
-            value: action.value,
-            signature: action.signature,
-            data: action.data,
-            createdBlockNumber: action.createdBlockNumber,
-            approvalEndTime: action.approvalEndTime,
-            executionTime: action.executionTime,
-            totalApprovals: action.totalApprovals,
-            totalDisapprovals: action.totalDisapprovals,
-            approvalPolicySupply: action.approvalPolicySupply,
-            disapprovalPolicySupply: action.disapprovalPolicySupply
-        });
-
-        return actionWithoutApprovals;
+    function getAction(uint256 actionId) external view override returns (Action memory) {
+        return actions[actionId];
     }
 
     function getActionState(uint256 actionId) public view override returns (ActionState) {
@@ -301,7 +287,7 @@ contract VertexCore is IVertexCore {
     function _submitApproval(address policyHolder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Active) revert SignalingClosed();
         Action storage action = actions[actionId];
-        Approval storage approval = action.approvals[policyHolder];
+        Approval storage approval = approvals[actionId][policyHolder];
 
         if (support == approval.support) revert DuplicateApproval();
 
@@ -325,7 +311,7 @@ contract VertexCore is IVertexCore {
 
         if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_WITH_PRECISION) revert DisapproveDisabled();
 
-        Disapproval storage disapproval = action.disapprovals[policyHolder];
+        Disapproval storage disapproval = disapprovals[actionId][policyHolder];
 
         if (support == disapproval.support) revert DuplicateDisapproval();
 
@@ -340,7 +326,7 @@ contract VertexCore is IVertexCore {
         disapproval.support = support;
         disapproval.weight = uint248(support ? weight : 0);
 
-        emit ApprovalEmitted(actionId, policyHolder, support, weight);
+        emit DisapprovalEmitted(actionId, policyHolder, support, weight);
     }
 
     function isActionExpired(uint256 actionId) public view override returns (bool) {

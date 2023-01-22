@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {ActionWithoutApprovals, Strategy, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     VertexCore public vertex;
@@ -21,6 +21,10 @@ contract VertexCoreTest is Test {
     address public constant policyHolder4 = address(0x1341);
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
+    event ApprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
+    event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
+    event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+    event DisapprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
 
     function setUp() public {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
@@ -65,7 +69,6 @@ contract VertexCoreTest is Test {
             )
         );
         policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
-        console2.log(address(policy));
 
         vm.startPrank(address(vertex));
         bytes32[] memory roles = new bytes32[](0);
@@ -81,18 +84,71 @@ contract VertexCoreTest is Test {
 
     function test_HappyActionFlow() public {
         vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
 
+        vm.startPrank(policyHolder1);
+        _approveAction(policyHolder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyHolder2);
+        _approveAction(policyHolder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+
+        assertEq(strategy.isActionPassed(0), true);
+
+        _queueAction();
+
+        vm.startPrank(policyHolder1);
+        _disapproveAction(policyHolder1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 5 days);
+
+        _executeAction();
+    }
+
+    function _createAction() public {
         vm.expectEmit(true, true, true, true);
         emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, "function pause()", abi.encode(true));
-        vertex.createAction(strategy, address(protocol), 0, "function pause()", abi.encode(true));
+        vertex.createAction(strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
 
-        ActionWithoutApprovals memory action = vertex.getActionWithoutApprovals(0);
-        IVertexCore.ActionState state = vertex.getActionState(0);
+        Action memory action = vertex.getAction(0);
 
         assertEq(vertex.actionsCount(), 1);
         assertEq(action.createdBlockNumber, block.number);
         assertEq(action.approvalEndTime, block.timestamp + 2 days);
         assertEq(action.approvalPolicySupply, 5);
         assertEq(action.disapprovalPolicySupply, 5);
+    }
+
+    function _approveAction(address policyholder) public {
+        vm.expectEmit(true, true, true, true);
+        emit ApprovalEmitted(0, policyholder, true, 1);
+        vertex.submitApproval(0, true);
+    }
+
+    function _disapproveAction(address policyholder) public {
+        vm.expectEmit(true, true, true, true);
+        emit DisapprovalEmitted(0, policyholder, true, 1);
+        vertex.submitDisapproval(0, true);
+    }
+
+    function _queueAction() public {
+        uint256 executionTime = block.timestamp + strategy.queuingDuration();
+        vm.expectEmit(true, true, true, true);
+        emit ActionQueued(0, address(this), strategy, actionCreator, executionTime);
+        vertex.queueAction(0);
+    }
+
+    function _executeAction() public {
+        vm.expectEmit(true, true, true, true);
+        emit ActionExecuted(0, address(this), strategy, actionCreator);
+        vertex.executeAction(0);
+
+        Action memory action = vertex.getAction(0);
+        assertEq(action.executed, true);
     }
 }
