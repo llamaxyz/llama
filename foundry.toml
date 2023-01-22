@@ -3,9 +3,9 @@ src = 'src'
 test = 'tests'
 out = 'out'
 libs = ['lib']
+via_ir = true
 optimizer = true
 optimizer_runs = 200
-via_ir = true
 
 [profile.ci]
 fuzz_runs = 5_000
