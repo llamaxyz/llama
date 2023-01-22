@@ -6,6 +6,9 @@ import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 
+/// @title A strategy definition of a Vertex system.
+/// @author Llama (vertex@llama.xyz)
+/// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is IVertexStrategy {
     /// @notice Equivalent to 100%, but in basis points.
     uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;

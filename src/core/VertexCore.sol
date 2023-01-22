@@ -7,9 +7,9 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
 
-/// @title VertexCore
+/// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
-/// @notice Main point of interaction with a Vertex instance.
+/// @notice Main point of interaction with a Vertex system.
 contract VertexCore is IVertexCore {
     error InvalidStrategy();
     error OnlyCancelBeforeExecuted();
