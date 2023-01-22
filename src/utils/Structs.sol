@@ -28,31 +28,31 @@ struct Action {
     bool executed; // has action executed.
     bool canceled; // is action canceled.
     VertexStrategy strategy; // strategy that determines the validation process of this action.
-    address target;
-    uint256 value;
-    string signature;
-    bytes data;
-    uint256 createdBlockNumber;
-    uint256 approvalEndTime;
-    uint256 executionTime;
-    uint256 totalApprovals;
-    uint256 totalDisapprovals;
-    uint256 approvalPolicySupply;
-    uint256 disapprovalPolicySupply;
+    address target; // The contract called when the action is executed
+    uint256 value; // The value in wei to be sent when the action is executed.
+    string signature; // The function signature that will be called when the action is executed.
+    bytes data; //  The encoded arguments to be passed to the function that is called when the action is executed.
+    uint256 createdBlockNumber; // The block number of action creation (used for policy snapshots).
+    uint256 approvalEndTime; // The timestamp when the approval period ends.
+    uint256 executionTime; // Only set when an action is queued. The timestamp when action exection can begin.
+    uint256 totalApprovals; // The total weight of policyholder approvals.
+    uint256 totalDisapprovals; // The total weight of policyholder disapprovals.
+    uint256 approvalPolicySupply; // The total amount of policyholders eligible to approve.
+    uint256 disapprovalPolicySupply; // The total amount of policyholders eligible to disapprove.
 }
 
 struct WeightByPermission {
-    bytes32 permissionSignature;
-    uint248 weight;
+    bytes32 permissionSignature; // Policyholder's permission signature.
+    uint248 weight; // Approval or disapproval weight of policyholder.
 }
 
 struct Strategy {
-    uint256 approvalDuration;
-    uint256 queuingDuration;
-    uint256 expirationDelay;
-    bool isFixedLengthApprovalPeriod;
-    uint256 minApprovalPct;
-    uint256 minDisapprovalPct;
-    WeightByPermission[] approvalWeightByPermission;
-    WeightByPermission[] disapprovalWeightByPermission;
+    uint256 approvalDuration; // The length of time of the approval period.
+    uint256 queuingDuration; // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
+    uint256 expirationDelay; // The length of time an action can be executed before it expires.
+    bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
+    uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
+    uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
+    WeightByPermission[] approvalWeightByPermission; // List of permissionSignatures and weights that define the validation process for approval.
+    WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the validation process for disapproval.
 }
