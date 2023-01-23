@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexRouter} from "src/router/IVertexRouter.sol";
 import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
-import {IVertexPolicyNFT} from "src/policy/IVertexPolicyNFT.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
 // Errors
 error OnlyVertexRouter();
@@ -33,7 +33,7 @@ contract VertexStrategy is IVertexStrategy {
     uint256 public immutable approvalDuration;
 
     /// @notice Policy NFT for this Vertex Instance.
-    IVertexPolicyNFT public immutable policy;
+    VertexPolicyNFT public immutable policy;
 
     /// @notice Minimum percentage of total approval weight / total approval supply at startBlockNumber of action to be queued.
     uint256 public immutable minApprovalPct;
@@ -59,7 +59,7 @@ contract VertexStrategy is IVertexStrategy {
         uint256 _expirationDelay,
         bool _isFixedLengthApprovalPeriod,
         uint256 _approvalDuration,
-        IVertexPolicyNFT _policy,
+        VertexPolicyNFT _policy,
         IVertexRouter _router,
         uint256 _minApprovalPct,
         uint256 _minDisapprovalPct,
