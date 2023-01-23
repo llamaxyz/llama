@@ -70,7 +70,7 @@ interface IVertexPolicyNFT {
 
     function roles(uint256) external view returns (string memory);
 
-    function rolesToPermissionSignatures(string memory, uint256) external view returns (uint256);
+    function roleToPermissionSignatures(string memory, uint256) external view returns (uint256);
 
     function safeTransferFrom(
         address from,

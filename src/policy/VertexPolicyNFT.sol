@@ -16,7 +16,7 @@ import {Ownable} from "@openzeppelin/access/Ownable.sol";
 
 contract VertexPolicyNFT is ERC721, Ownable {
     mapping(uint256 => bytes32[]) public tokenToRoles;
-    mapping(bytes32 => bytes8[]) public rolesToPermissionSignatures;
+    mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
     bytes32[] public roles;
     uint256 private _totalSupply;
 
@@ -81,7 +81,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 bytes8 permissionSignature = hashPermission(permissions[i]);
-                rolesToPermissionSignatures[role].push(permissionSignature);
+                roleToPermissionSignatures[role].push(permissionSignature);
                 permissionSignatures[i] = permissionSignature;
             }
         }
@@ -120,7 +120,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         unchecked {
             for (uint256 i; i < rolesArrayLength; ++i) {
                 bytes32 role = rolesArray[i];
-                if (rolesToPermissionSignatures[role].length == 0) {
+                if (roleToPermissionSignatures[role].length == 0) {
                     revert RoleNonExistant(role);
                 }
                 tokenToRoles[tokenId].push(role);
@@ -161,7 +161,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
             uint256 deleteRolesLength = deleteRolesArray.length;
             for (uint256 i; i < deleteRolesLength; ++i) {
                 bytes32 role = deleteRolesArray[i];
-                delete rolesToPermissionSignatures[role];
+                delete roleToPermissionSignatures[role];
                 uint256 rolesLength = roles.length;
                 for (uint256 j; i < rolesLength; ++i) {
                     if (roles[j] == role) {
@@ -184,7 +184,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         uint256 permissionSignaturesLength = permissionSignatures.length;
         unchecked {
             for (uint256 i; i < permissionSignaturesLength; ++i) {
-                rolesToPermissionSignatures[role].push(permissionSignatures[i]);
+                roleToPermissionSignatures[role].push(permissionSignatures[i]);
             }
         }
         emit PermissionsAdded(role, permissions, permissionSignatures);
@@ -197,7 +197,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         if (permissions.length == 0) {
             revert InvalidInput();
         }
-        bytes8[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
+        bytes8[] storage rolePermissionSignatures = roleToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
             for (uint256 j; j < rolePermissionSignaturesLength; ++j) {
@@ -297,7 +297,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         uint256 psIndex;
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
-                bytes8[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
+                bytes8[] memory rolePermissionSignatures = roleToPermissionSignatures[userRoles[i]];
                 uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
                 for (uint256 j; j < rolePermissionSignaturesLength; j++) {
                     permissionSignatures[psIndex] = rolePermissionSignatures[j];
@@ -313,7 +313,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
         uint256 permissionSignaturesLength;
         uint256 userRolesLength = userRoles.length;
         for (uint256 i; i < userRolesLength; ++i) {
-            permissionSignaturesLength += rolesToPermissionSignatures[userRoles[i]].length;
+            permissionSignaturesLength += roleToPermissionSignatures[userRoles[i]].length;
         }
         return (userRolesLength, permissionSignaturesLength);
     }
