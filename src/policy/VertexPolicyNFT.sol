@@ -217,7 +217,7 @@ contract VertexPolicyNFT is ERC721 {
         bytes8[] storage rolePermissionSignatures = roleToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
-            for (uint256 j; j < rolePermissionSignaturesLength; ++j) {
+            for (uint256 j; j < permissionsLength; ++j) {
                 if (rolePermissionSignatures[i] == permissions[j]) {
                     delete rolePermissionSignatures[i];
                     delete roleToHasPermissionSignature[role][permissions[j]];
