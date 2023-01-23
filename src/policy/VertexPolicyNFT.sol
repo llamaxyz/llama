@@ -21,16 +21,16 @@ contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => mapping(bytes32 => bool)) public tokenToHasRole;
     bytes32[] public roles;
     uint256 private _totalSupply;
-    address public immutable vertexCore;
+    address public immutable vertex;
     string public baseURI;
 
     modifier onlyVertex() {
-        if (msg.sender != vertexCore) revert OnlyVertex();
+        if (msg.sender != vertex) revert OnlyVertex();
         _;
     }
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {
-        vertexCore = msg.sender;
+        vertex = msg.sender;
     }
 
     ///@dev checks if a token has a role
