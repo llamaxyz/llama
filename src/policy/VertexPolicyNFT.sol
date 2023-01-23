@@ -16,6 +16,7 @@ import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
 contract VertexPolicyNFT is ERC721 {
     mapping(uint256 => bytes32[]) public tokenToRoles;
     mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
+    mapping(bytes32 => mapping(bytes8 => bool)) public roleToHasPermissionSignature;
     bytes32[] public roles;
     uint256 private _totalSupply;
     address public immutable vertexCore;
@@ -34,10 +35,10 @@ contract VertexPolicyNFT is ERC721 {
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
     error InvalidInput();
-    error OnlyVertexCore();
+    error OnlyVertex();
 
-    modifier onlyVertexCore() {
-        if (msg.sender != address(vertexCore)) revert OnlyVertexCore();
+    modifier onlyVertex() {
+        if (msg.sender != address(vertexCore)) revert OnlyVertex();
         _;
     }
 
@@ -60,7 +61,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev mints a new token
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public onlyVertexCore {
+    function mint(address to, bytes32[] calldata userRoles) public onlyVertex {
         if (balanceOf(to) != 0) {
             revert SoulboundToken();
         }
@@ -74,7 +75,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public onlyVertexCore {
+    function burn(uint256 tokenId) public onlyVertex {
         delete tokenToRoles[tokenId];
         _burn(tokenId);
     }
@@ -89,6 +90,7 @@ contract VertexPolicyNFT is ERC721 {
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 bytes8 permissionSignature = hashPermission(permissions[i]);
+                roleToHasPermissionSignature[role][permissionSignature] = true;
                 roleToPermissionSignatures[role].push(permissionSignature);
                 permissionSignatures[i] = permissionSignature;
             }
@@ -100,7 +102,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev indexes in rolesArray and permissionsArray must match
     ///@param rolesArray the roles to add
     ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyVertexCore {
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyVertex {
         uint256 rolesArrayLength = rolesArray.length;
         uint256 permissionsArrayLength = permissionsArray.length;
         if (rolesArrayLength != permissionsArrayLength || rolesArrayLength == 0) {
@@ -120,7 +122,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyVertexCore {
+    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyVertex {
         if (rolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -140,7 +142,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev revokes a role from a token
     ///@param tokenId the id of the token
     ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyVertexCore {
+    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyVertex {
         if (revokeRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -161,7 +163,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev deletes multiple roles from the contract
     ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyVertexCore {
+    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyVertex {
         if (deleteRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -169,11 +171,16 @@ contract VertexPolicyNFT is ERC721 {
             uint256 deleteRolesLength = deleteRolesArray.length;
             for (uint256 i; i < deleteRolesLength; ++i) {
                 bytes32 role = deleteRolesArray[i];
+                bytes8[] storage rolePermissionSignatures = roleToPermissionSignatures[role];
+                uint256 roleToPermissionSignaturesLength = rolePermissionSignatures.length;
+                for (uint256 j; j < roleToPermissionSignaturesLength; ++j) {
+                    delete roleToHasPermissionSignature[role][rolePermissionSignatures[j]];
+                }
                 delete roleToPermissionSignatures[role];
                 uint256 rolesLength = roles.length;
-                for (uint256 j; i < rolesLength; ++i) {
-                    if (roles[j] == role) {
-                        delete roles[j];
+                for (uint256 k; k < rolesLength; ++k) {
+                    if (roles[k] == role) {
+                        delete roles[k];
                     }
                 }
             }
@@ -184,7 +191,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev adds multiple permission to a role
     ///@param role the role to add the permission to
     ///@param permissions the permission to add
-    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyVertexCore {
+    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyVertex {
         if (permissions.length == 0) {
             revert InvalidInput();
         }
@@ -193,6 +200,7 @@ contract VertexPolicyNFT is ERC721 {
         unchecked {
             for (uint256 i; i < permissionSignaturesLength; ++i) {
                 roleToPermissionSignatures[role].push(permissionSignatures[i]);
+                roleToHasPermissionSignature[role][permissionSignatures[i]] = true;
             }
         }
         emit PermissionsAdded(role, permissions, permissionSignatures);
@@ -201,8 +209,9 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev deletes multiple permissions from a role
     ///@param role the role to delete the permission from
     ///@param permissions the array of permissions to delete
-    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyVertexCore {
-        if (permissions.length == 0) {
+    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyVertex {
+        uint256 permissionsLength = permissions.length;
+        if (permissionsLength == 0) {
             revert InvalidInput();
         }
         bytes8[] storage rolePermissionSignatures = roleToPermissionSignatures[role];
@@ -211,6 +220,7 @@ contract VertexPolicyNFT is ERC721 {
             for (uint256 j; j < rolePermissionSignaturesLength; ++j) {
                 if (rolePermissionSignatures[i] == permissions[j]) {
                     delete rolePermissionSignatures[i];
+                    delete roleToHasPermissionSignature[role][permissions[j]];
                 }
             }
         }
@@ -330,11 +340,11 @@ contract VertexPolicyNFT is ERC721 {
     ///@param tokenId the id of the token
     ///@param permissionSignature the signature of the permission
     function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view returns (bool) {
-        bytes8[] memory permissionSignatures = getPermissionSignatures(tokenId);
+        bytes32[] storage tokenRoles = tokenToRoles[tokenId];
         unchecked {
-            uint256 permissionSignatureLength = permissionSignatures.length;
-            for (uint256 i; i < permissionSignatureLength; ++i) {
-                if (permissionSignatures[i] == permissionSignature) {
+            uint256 tokenRolesLength = tokenRoles.length;
+            for (uint256 i; i < tokenRolesLength; ++i) {
+                if (roleToHasPermissionSignature[tokenRoles[i]][permissionSignature]) {
                     return true;
                 }
             }
