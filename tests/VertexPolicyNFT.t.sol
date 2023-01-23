@@ -36,7 +36,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function generateGenericPermissionArray() internal {
-        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
+        permission = Permission(address(0xdeadbeef), address(0xdeadbeefdeadbeef), bytes4(0x08080808));
         permissions.push(permission);
     }
 
@@ -112,7 +112,7 @@ contract VertexPolicyNFTTest is Test {
         addGenericRoleSetup();
         vertexPolicyNFT.assignRoles(1, roleHashes);
 
-        permission = Permission(address(0xbeef), bytes4(0x09090909), address(0xbeefbeef));
+        permission = Permission(address(0xbeef), address(0xbeefbeef), bytes4(0x09090909));
         permissions[0] = permission;
         vertexPolicyNFT.addPermissionsToRole(roleHashes[0], permissions);
 
