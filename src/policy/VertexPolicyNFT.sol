@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
-import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
+import {Permission} from "src/policy/IVertexPolicyNFT.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
