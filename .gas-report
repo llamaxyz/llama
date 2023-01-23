@@ -1,194 +1,51 @@
-   |
-31 |     function hashPermission(Permission memory permission) internal pure returns (bytes8) {
-   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Note: The shadowed declaration is here:
-  --> tests/VertexPolicyNFT.t.sol:13:5:
-   |
-13 |     Permission public permission;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[2519]: [0m[33mWarning: This declaration shadows an existing declaration.
-  --> tests/VertexPolicyNFT.t.sol:58:9:
-   |
-58 |         bytes32[] memory roles = new bytes32[](0);
-   |         ^^^^^^^^^^^^^^^^^^^^^^
-Note: The shadowed declaration is here:
-  --> tests/VertexPolicyNFT.t.sol:14:5:
-   |
-14 |     string[] public roles;
-   |     ^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[2519]: [0m[33mWarning: This declaration shadows an existing declaration.
-  --> tests/VertexPolicyNFT.t.sol:63:9:
-   |
-63 |         bytes32[] memory roles = new bytes32[](0);
-   |         ^^^^^^^^^^^^^^^^^^^^^^
-Note: The shadowed declaration is here:
-  --> tests/VertexPolicyNFT.t.sol:14:5:
-   |
-14 |     string[] public roles;
-   |     ^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:223:27:
-    |
-223 |     function transferFrom(address from, address to, uint256 tokenId) public override {
-    |                           ^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:223:41:
-    |
-223 |     function transferFrom(address from, address to, uint256 tokenId) public override {
-    |                                         ^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:223:53:
-    |
-223 |     function transferFrom(address from, address to, uint256 tokenId) public override {
-    |                                                     ^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:230:36:
-    |
-230 |     function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-    |                                    ^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:230:58:
-    |
-230 |     function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-    |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:230:87:
-    |
-230 |     function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-    |                                                                                       ^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:237:28:
-    |
-237 |     function totalSupplyAt(uint256 blockNumber) external view returns (uint256) {
-    |                            ^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:244:37:
-    |
-244 |     function getSupplyByPermissions(bytes32[] memory permissions) external view returns (uint256) {
-    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[2072]: [0m[33mWarning: Unused local variable.
-  --> tests/VertexPolicyNFT.t.sol:86:9:
-   |
-86 |         bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-[33mwarning[2018]: [0m[33mWarning: Function state mutability can be restricted to pure
-   --> src/policy/VertexPolicyNFT.sol:223:5:
-    |
-223 |     function transferFrom(address from, address to, uint256 tokenId) public override {
-    |     ^ (Relevant source part starts here and spans across multiple lines).
-
-[0m
-
-[33mwarning[2018]: [0m[33mWarning: Function state mutability can be restricted to pure
-   --> src/policy/VertexPolicyNFT.sol:230:5:
-    |
-230 |     function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-    |     ^ (Relevant source part starts here and spans across multiple lines).
-
-[0m
-
-
-Running 9 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
-[32m[PASS][0m testAddPermission() (gas: 573669)
-[32m[PASS][0m testAddRole() (gas: 560478)
-[32m[PASS][0m testAssignRole() (gas: 571228)
-[32m[PASS][0m testBurn() (gas: 15359)
-[32m[PASS][0m testCannotTransferTokenOwnership() (gas: 8741)
-[32m[PASS][0m testDeletePermission() (gas: 549752)
-[32m[PASS][0m testDeleteRole() (gas: 460980)
-[32m[PASS][0m testMint() (gas: 63621)
-[32m[PASS][0m testRevokeRole() (gas: 555203)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 3.03ms
-
-Running 1 test for tests/VertexCore.t.sol:VertexCoreTest
-[32m[PASS][0m test_HappyActionFlow() (gas: 574557)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 4.37ms
 | src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
 |---------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                             | Deployment Size |        |        |        |         |
-| 6254852                                     | 35428           |        |        |        |         |
+| 5947621                                     | 33888           |        |        |        |         |
 | Function Name                               | min             | avg    | median | max    | # calls |
-| actionsCount                                | 610             | 610    | 610    | 610    | 1       |
-| createAction                                | 273349          | 273349 | 273349 | 273349 | 1       |
-| getAction                                   | 4619            | 9702   | 5015   | 32619  | 7       |
+| actionsCount                                | 632             | 632    | 632    | 632    | 1       |
+| createAction                                | 246772          | 246772 | 246772 | 246772 | 1       |
+| executeAction                               | 37229           | 37229  | 37229  | 37229  | 1       |
+| getAction                                   | 3772            | 6959   | 4085   | 27772  | 10      |
 | policy                                      | 168             | 168    | 168    | 168    | 1       |
-| queueAction                                 | 62302           | 62302  | 62302  | 62302  | 1       |
-| submitApproval                              | 28437           | 39387  | 39387  | 50337  | 2       |
-| submitDisapproval                           | 67170           | 67170  | 67170  | 67170  | 1       |
+| queueAction                                 | 60309           | 60309  | 60309  | 60309  | 1       |
+| submitApproval                              | 29145           | 40095  | 40095  | 51045  | 2       |
+| submitDisapproval                           | 65205           | 65205  | 65205  | 65205  | 1       |
 
 
-| src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |       |        |        |         |
-|---------------------------------------------------------|-----------------|-------|--------|--------|---------|
-| Deployment Cost                                         | Deployment Size |       |        |        |         |
-| 2034088                                                 | 11199           |       |        |        |         |
-| Function Name                                           | min             | avg   | median | max    | # calls |
-| addPermissionsToRole                                    | 6427            | 6427  | 6427   | 6427   | 1       |
-| addRoles                                                | 35243           | 91557 | 100943 | 100943 | 7       |
-| assignRoles                                             | 47703           | 47703 | 47703  | 47703  | 4       |
-| balanceOf                                               | 785             | 785   | 785    | 785    | 2       |
-| burn                                                    | 14084           | 14084 | 14084  | 14084  | 1       |
-| deletePermissionsFromRole                               | 3490            | 3490  | 3490   | 3490   | 1       |
-| deleteRoles                                             | 3022            | 3022  | 3022   | 3022   | 1       |
-| getPermissionSignatures                                 | 3661            | 3661  | 3661   | 3661   | 1       |
-| getRoles                                                | 1235            | 1235  | 1235   | 1235   | 1       |
-| hasPermission                                           | 3175            | 3360  | 3214   | 3693   | 3       |
-| hasRole                                                 | 1609            | 1626  | 1626   | 1643   | 2       |
-| mint                                                    | 50559           | 65479 | 72459  | 72459  | 15      |
-| ownerOf                                                 | 753             | 753   | 753    | 753    | 1       |
-| revokeRoles                                             | 3123            | 3123  | 3123   | 3123   | 1       |
-| totalSupply                                             | 390             | 1390  | 1390   | 2390   | 2       |
-| transferFrom                                            | 452             | 452   | 452    | 452    | 1       |
+| src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
+|---------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                         | Deployment Size |        |        |        |         |
+| 1867885                                                 | 10362           |        |        |        |         |
+| Function Name                                           | min             | avg    | median | max    | # calls |
+| addRoles                                                | 35611           | 105691 | 123211 | 123211 | 5       |
+| assignRoles                                             | 70322           | 70322  | 70322  | 70322  | 2       |
+| balanceOf                                               | 851             | 851    | 851    | 851    | 2       |
+| burn                                                    | 14018           | 14018  | 14018  | 14018  | 1       |
+| deleteRoles                                             | 3797            | 3797   | 3797   | 3797   | 1       |
+| getRoles                                                | 1268            | 1268   | 1268   | 1268   | 1       |
+| hasPermission                                           | 1261            | 1261   | 1261   | 1261   | 1       |
+| hasRole                                                 | 1101            | 1101   | 1101   | 1101   | 2       |
+| mint                                                    | 50371           | 64217  | 72271  | 72271  | 13      |
+| ownerOf                                                 | 743             | 743    | 743    | 743    | 1       |
+| revokeRoles                                             | 3406            | 3406   | 3406   | 3406   | 1       |
+| totalSupply                                             | 368             | 1368   | 1368   | 2368   | 2       |
+| transferFrom                                            | 430             | 430    | 430    | 430    | 1       |
 
 
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
 |---------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
-| 797111                                                  | 5662            |       |        |       |         |
+| 783691                                                  | 5595            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
 | DEFAULT_OPERATOR                                        | 243             | 243   | 243    | 243   | 2       |
-| approvalDuration                                        | 306             | 306   | 306    | 306   | 1       |
+| approvalPeriod                                          | 306             | 306   | 306    | 306   | 6       |
 | approvalWeightByPermission                              | 2717            | 2717  | 2717   | 2717  | 1       |
 | disapprovalWeightByPermission                           | 2412            | 2412  | 2412   | 2412  | 1       |
-| expirationDelay                                         | 350             | 350   | 350    | 350   | 1       |
+| expirationDelay                                         | 350             | 350   | 350    | 350   | 3       |
 | getApprovalWeightAt                                     | 829             | 1829  | 1829   | 2829  | 2       |
 | getDisapprovalWeightAt                                  | 3010            | 3010  | 3010   | 3010  | 1       |
-| isActionPassed                                          | 14584           | 23917 | 14584  | 42584 | 3       |
+| isActionPassed                                          | 11863           | 17863 | 11863  | 35863 | 4       |
 | isFixedLengthApprovalPeriod                             | 334             | 334   | 334    | 334   | 2       |
 | minDisapprovalPct                                       | 284             | 284   | 284    | 284   | 1       |
 | queuingDuration                                         | 460             | 460   | 460    | 460   | 2       |
