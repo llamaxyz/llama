@@ -1,103 +1,86 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@solmate/tokens/ERC721.sol";
+
 struct Permission {
     address strategy;
     address target;
     bytes4 signature;
 }
 
-interface IVertexPolicyNFT {
-    event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
-    event PermissionDeleted(string role, Permission permission, uint256 permissionSignature);
-    event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
-    event RoleDeleted(string role);
-    event RoleRevoked(uint256 tokenId, string role);
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+abstract contract IVertexPolicyNFT is ERC721 {
+    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
+    event RolesAssigned(uint256 tokenId, bytes32[] roles);
+    event RolesRevoked(uint256 tokenId, bytes32[] roles);
+    event RolesDeleted(bytes32[] role);
+    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
+
+    error RoleNonExistant(bytes32 role);
+    error SoulboundToken();
+    error InvalidInput();
+    error OnlyVertex();
+
+    ///@dev checks if a token has a role
+    ///@param tokenId the id of the token
+    ///@param role the role to check
+    function hasRole(uint256 tokenId, bytes32 role) public view virtual returns (bool) {}
+
+    ///@dev mints a new token
+    ///@param to the address to mint the token to
+    ///@param userRoles the roles of the token
+    function mint(address to, bytes32[] calldata userRoles) public virtual {}
+
+    ///@dev burns a token
+    ///@param tokenId the id of the token to burn
+    function burn(uint256 tokenId) public virtual {}
+
+    ///@dev allows admin to add a roles to the contract
+    ///@dev indexes in rolesArray and permissionsArray must match
+    ///@param rolesArray the roles to add
+    ///@param permissionsArray and array of permissions arrays for each role
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public virtual {}
+
+    ///@dev assigns a role to a token
+    ///@param tokenId the id of the token
+    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public virtual {}
+
+    ///@dev revokes a role from a token
+    ///@param tokenId the id of the token
+    ///@param revokeRolesArray the array of roles to revoke
+    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public virtual {}
+
+    ///@dev deletes multiple roles from the contract
+    ///@param deleteRolesArray the role to delete
+    function deleteRoles(bytes32[] calldata deleteRolesArray) public virtual {}
 
     // Check if a holder has a permissionSignature at a specific block number
     function holderHasPermissionAt(
         address policyHolder,
         bytes32 permissionSignature,
         uint256 blockNumber
-    ) external view returns (bool);
+    ) external view virtual returns (bool) {}
+
+    function setBaseURI(string memory _baseURI) public virtual {}
 
     // Total number of policy NFTs at specific block number
-    // TODO: This should queried at action creation time and stored on the Action object
-    function totalSupplyAt(uint256 blockNumber) external view returns (uint256);
+    function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256) {}
 
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view returns (uint256);
+    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view virtual returns (uint256) {}
 
-    function addPermissionToRole(string memory role, Permission memory permission) external;
+    ///@dev returns the total token supply of the contract
+    function totalSupply() public view virtual returns (uint256) {}
 
-    function addRole(string memory role, Permission[] memory permissions) external;
+    ///@dev returns the permission signatures of a token
+    ///@param tokenId the id of the token
+    function getPermissionSignatures(uint256 tokenId) public view virtual returns (bytes8[] memory) {}
 
-    function approve(address to, uint256 tokenId) external;
+    ///@dev checks if a token has a permission
+    ///@param tokenId the id of the token
+    ///@param permissionSignature the signature of the permission
+    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view virtual returns (bool) {}
 
-    function assignRole(uint256 tokenId, string memory role) external;
-
-    function balanceOf(address owner) external view returns (uint256);
-
-    function burn(uint256 tokenId) external;
-
-    function deletePermissionFromRole(string memory role, Permission memory permission) external;
-
-    function deleteRole(string memory role) external;
-
-    function getApproved(uint256 tokenId) external view returns (address);
-
-    function getPermissionSignatures(uint256 tokenId) external view returns (uint256[] memory);
-
-    function hasPermission(uint256 tokenId, uint256 permissionSignature) external view returns (bool);
-
-    function hasRole(uint256 tokenId, string memory role) external view returns (bool);
-
-    function isApprovedForAll(address owner, address operator) external view returns (bool);
-
-    function mint(address to, string[] memory userRoles) external;
-
-    function name() external view returns (string memory);
-
-    function ownerOf(uint256 tokenId) external view returns (address);
-
-    function revokeRole(uint256 tokenId, string memory role) external;
-
-    function roles(uint256) external view returns (string memory);
-
-    function roleToPermissionSignatures(string memory, uint256) external view returns (uint256);
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external;
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) external;
-
-    function setApprovalForAll(address operator, bool approved) external;
-
-    function supportsInterface(bytes4 interfaceId) external view returns (bool);
-
-    function symbol() external view returns (string memory);
-
-    function tokenToRoles(uint256, uint256) external view returns (string memory);
-
-    function tokenURI(uint256 tokenId) external view returns (string memory);
-
-    function totalSupply() external view returns (uint256);
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external;
-
-    function transferOwnership(address newOwner) external;
+    function getRoles() public view virtual returns (bytes32[] memory) {}
 }

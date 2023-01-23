@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
-import {Permission} from "src/policy/IVertexPolicyNFT.sol";
+import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
+import {ERC721} from "@solmate/tokens/ERC721.sol";
+import {Strings} from "@openzeppelin/utils/Strings.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
@@ -13,7 +14,7 @@ import {Permission} from "src/policy/IVertexPolicyNFT.sol";
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
 
-contract VertexPolicyNFT is ERC721 {
+contract VertexPolicyNFT is IVertexPolicyNFT {
     mapping(uint256 => bytes32[]) public tokenToRoles;
     mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
     mapping(bytes32 => mapping(bytes8 => bool)) public roleToHasPermissionSignature;
@@ -21,39 +22,28 @@ contract VertexPolicyNFT is ERC721 {
     bytes32[] public roles;
     uint256 private _totalSupply;
     address public immutable vertexCore;
+    string public baseURI;
+
+    modifier onlyVertex() {
+        if (msg.sender != vertexCore) revert OnlyVertex();
+        _;
+    }
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {
         vertexCore = msg.sender;
     }
 
-    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
-    event RolesAssigned(uint256 tokenId, bytes32[] roles);
-    event RolesRevoked(uint256 tokenId, bytes32[] roles);
-    event RolesDeleted(bytes32[] role);
-    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
-    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
-
-    error RoleNonExistant(bytes32 role);
-    error SoulboundToken();
-    error InvalidInput();
-    error OnlyVertex();
-
-    modifier onlyVertex() {
-        if (msg.sender != address(vertexCore)) revert OnlyVertex();
-        _;
-    }
-
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
     ///@param role the role to check
-    function hasRole(uint256 tokenId, bytes32 role) public view returns (bool) {
+    function hasRole(uint256 tokenId, bytes32 role) public view override returns (bool) {
         return tokenToHasRole[tokenId][role];
     }
 
     ///@dev mints a new token
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public onlyVertex {
+    function mint(address to, bytes32[] calldata userRoles) public override onlyVertex {
         if (balanceOf(to) != 0) {
             revert SoulboundToken();
         }
@@ -71,7 +61,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public onlyVertex {
+    function burn(uint256 tokenId) public override onlyVertex {
         bytes32[] storage userRoles = tokenToRoles[tokenId];
         uint256 length = userRoles.length;
         for (uint256 i = 0; i < length; i++) {
@@ -103,7 +93,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev indexes in rolesArray and permissionsArray must match
     ///@param rolesArray the roles to add
     ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyVertex {
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public override onlyVertex {
         uint256 rolesArrayLength = rolesArray.length;
         uint256 permissionsArrayLength = permissionsArray.length;
         if (rolesArrayLength != permissionsArrayLength || rolesArrayLength == 0) {
@@ -123,7 +113,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyVertex {
+    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public override onlyVertex {
         if (rolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -146,7 +136,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev revokes a role from a token
     ///@param tokenId the id of the token
     ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyVertex {
+    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public override onlyVertex {
         if (revokeRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -168,7 +158,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev deletes multiple roles from the contract
     ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyVertex {
+    function deleteRoles(bytes32[] calldata deleteRolesArray) public override onlyVertex {
         if (deleteRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -210,21 +200,25 @@ contract VertexPolicyNFT is ERC721 {
         address policyHolder,
         bytes32 permissionSignature,
         uint256 blockNumber
-    ) external view returns (bool) {
+    ) external view override returns (bool) {
         // TODO
         return true;
     }
 
+    function setBaseURI(string memory _baseURI) public override onlyVertex {
+        baseURI = _baseURI;
+    }
+
     // Total number of policy NFTs at specific block number
     // TODO: This should queried at action creation time and stored on the Action object
-    function totalSupplyAt(uint256 blockNumber) external view returns (uint256) {
+    function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
         // TODO
         return totalSupply();
     }
 
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view returns (uint256) {
+    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view override returns (uint256) {
         // TODO
         return totalSupply();
     }
@@ -262,13 +256,13 @@ contract VertexPolicyNFT is ERC721 {
     }
 
     ///@dev returns the total token supply of the contract
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
     ///@dev returns the permission signatures of a token
     ///@param tokenId the id of the token
-    function getPermissionSignatures(uint256 tokenId) public view returns (bytes8[] memory) {
+    function getPermissionSignatures(uint256 tokenId) public view override returns (bytes8[] memory) {
         bytes32[] memory userRoles = tokenToRoles[tokenId];
         (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
         bytes8[] memory permissionSignatures = new bytes8[](permissionSignaturesLength);
@@ -299,7 +293,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev checks if a token has a permission
     ///@param tokenId the id of the token
     ///@param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view returns (bool) {
+    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view override returns (bool) {
         bytes32[] storage tokenRoles = tokenToRoles[tokenId];
         unchecked {
             uint256 tokenRolesLength = tokenRoles.length;
@@ -312,7 +306,11 @@ contract VertexPolicyNFT is ERC721 {
         }
     }
 
-    function getRoles() public view returns (bytes32[] memory) {
+    function getRoles() public view override returns (bytes32[] memory) {
         return roles;
+    }
+
+    function tokenURI(uint256 id) public view override returns (string memory) {
+        return string(abi.encodePacked(baseURI, Strings.toString(id)));
     }
 }
