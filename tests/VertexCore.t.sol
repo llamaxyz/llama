@@ -20,7 +20,7 @@ contract VertexCoreTest is Test {
     address public constant policyholder3 = address(0x1340);
     address public constant policyholder4 = address(0x1341);
 
-    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
+    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
@@ -31,7 +31,7 @@ contract VertexCoreTest is Test {
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
         Strategy[] memory initialStrategies = new Strategy[](1);
         initialStrategies[0] = Strategy({
-            approvalDuration: 2 days,
+            approvalPeriod: 14400, // 2 days in blocks
             queuingDuration: 4 days,
             expirationDelay: 8 days,
             isFixedLengthApprovalPeriod: true,
@@ -96,9 +96,9 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
 
         assertEq(strategy.isActionPassed(0), true);
-
         _queueAction();
 
         vm.startPrank(policyholder1);
@@ -106,8 +106,9 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
 
         vm.warp(block.timestamp + 5 days);
+        vm.roll(block.number + 36000);
 
-        // _executeAction();
+        _executeAction();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -116,14 +117,15 @@ contract VertexCoreTest is Test {
 
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
-        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
-        vertex.createAction(strategy, address(protocol), 0, "pause(bool)", abi.encode(true));
+        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, 0x02329a29, abi.encode(true));
+        vertex.createAction(strategy, address(protocol), 0, 0x02329a29, abi.encode(true));
 
         Action memory action = vertex.getAction(0);
+        uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
 
         assertEq(vertex.actionsCount(), 1);
         assertEq(action.createdBlockNumber, block.number);
-        assertEq(action.approvalEndTime, block.timestamp + 2 days);
+        assertEq(approvalEndTime, block.number + 14400);
         assertEq(action.approvalPolicySupply, 5);
         assertEq(action.disapprovalPolicySupply, 5);
     }

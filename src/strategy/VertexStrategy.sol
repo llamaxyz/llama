@@ -28,8 +28,8 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice The strategy's Vertex system.
     IVertexCore public immutable vertex;
 
-    /// @notice Length of approval period.
-    uint256 public immutable approvalDuration;
+    /// @notice Length of approval period in blocks.
+    uint256 public immutable approvalPeriod;
 
     /// @notice Policy NFT for this Vertex system.
     VertexPolicyNFT public immutable policy;
@@ -63,7 +63,7 @@ contract VertexStrategy is IVertexStrategy {
         queuingDuration = strategyConfig.queuingDuration;
         expirationDelay = strategyConfig.expirationDelay;
         isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
-        approvalDuration = strategyConfig.approvalDuration;
+        approvalPeriod = strategyConfig.approvalPeriod;
         policy = _policy;
         vertex = _vertex;
         minApprovalPct = strategyConfig.minApprovalPct;

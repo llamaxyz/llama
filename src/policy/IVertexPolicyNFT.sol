@@ -18,7 +18,7 @@ interface IVertexPolicyNFT {
 
     struct Permission {
         address target;
-        bytes4 signature;
+        bytes4 selector;
         address executor;
     }
 

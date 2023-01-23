@@ -87,17 +87,13 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data)
-        external
-        override
-        returns (uint256)
-    {
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
         // TODO: @theo insert validation logic here
         // Eg. is msg.sender a VertexPolicyNFT holder and does
         //     their policy allow them create an action with this
-        //     strategy, target, signature hash. You also probably
+        //     strategy, target, selector hash. You also probably
         //     want to validate their policy at the previous or this block number
 
         uint256 previousActionCount = actionsCount;
@@ -111,15 +107,13 @@ contract VertexCore is IVertexCore {
             ? policy.totalSupply()
             : policy.getSupplyByPermissions(strategy.getDisapprovalPermissions());
 
-        newAction.id = previousActionCount;
         newAction.creator = msg.sender;
         newAction.strategy = strategy;
         newAction.target = target;
         newAction.value = value;
-        newAction.signature = signature;
+        newAction.selector = selector;
         newAction.data = data;
         newAction.createdBlockNumber = block.number;
-        newAction.approvalEndTime = block.timestamp + strategy.approvalDuration();
         newAction.approvalPolicySupply = approvalPolicySupply;
         newAction.disapprovalPolicySupply = disapprovalPolicySupply;
 
@@ -127,9 +121,9 @@ contract VertexCore is IVertexCore {
             ++actionsCount;
         }
 
-        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, data);
+        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, selector, data);
 
-        return newAction.id;
+        return previousActionCount;
     }
 
     /// @inheritdoc IVertexCore
@@ -174,7 +168,7 @@ contract VertexCore is IVertexCore {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(bytes4(keccak256(bytes(action.signature))), action.data));
+        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
         if (!success) revert FailedActionExecution();
 
@@ -230,11 +224,12 @@ contract VertexCore is IVertexCore {
     function getActionState(uint256 actionId) public view override returns (ActionState) {
         if (actionId >= actionsCount) revert InvalidActionId();
         Action storage action = actions[actionId];
+        uint256 approvalEndBlock = action.createdBlockNumber + action.strategy.approvalPeriod();
         if (action.canceled) {
             return ActionState.Canceled;
         }
 
-        if (block.timestamp < action.approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.number < approvalEndBlock && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 

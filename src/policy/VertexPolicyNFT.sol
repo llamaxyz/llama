@@ -249,7 +249,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.executor)));
     }
 
     // END TODO
@@ -289,7 +289,7 @@ contract VertexPolicyNFT is ERC721 {
         return _totalSupply;
     }
 
-    ///@dev returns the permission signatures of a token
+    ///@dev returns the permission selectors of a token
     ///@param tokenId the id of the token
     function getPermissionSignatures(uint256 tokenId) public view returns (bytes8[] memory) {
         bytes32[] memory userRoles = tokenToRoles[tokenId];
@@ -321,7 +321,7 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev checks if a token has a permission
     ///@param tokenId the id of the token
-    ///@param permissionSignature the signature of the permission
+    ///@param permissionSignature the selector of the permission
     function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view returns (bool) {
         bytes8[] memory permissionSignatures = getPermissionSignatures(tokenId);
         unchecked {
