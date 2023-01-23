@@ -8,7 +8,7 @@ import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
 ///@dev The roles and permissions determine how the token can interact with the vertex administrator contract
 
-/* one behavior with this contract is that if a role is deleted, it will still appear in the tokenToRoles mapping.
+/* one behavior with this contract is that if a role is deleted, it will still appear in the tokenToRoles & the tokenToHasRole mapping.
  * to solve this, we could run a pre check on all role based access functions that checks if the role exists in the...
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
@@ -17,6 +17,7 @@ contract VertexPolicyNFT is ERC721 {
     mapping(uint256 => bytes32[]) public tokenToRoles;
     mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
     mapping(bytes32 => mapping(bytes8 => bool)) public roleToHasPermissionSignature;
+    mapping(uint256 => mapping(bytes32 => bool)) public tokenToHasRole;
     bytes32[] public roles;
     uint256 private _totalSupply;
     address public immutable vertexCore;
@@ -46,16 +47,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@param tokenId the id of the token
     ///@param role the role to check
     function hasRole(uint256 tokenId, bytes32 role) public view returns (bool) {
-        bytes32[] memory userRoles = tokenToRoles[tokenId];
-        uint256 userRolesLength = userRoles.length;
-        unchecked {
-            for (uint256 i; i < userRolesLength; ++i) {
-                if (userRoles[i] == role) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return tokenToHasRole[tokenId][role];
     }
 
     ///@dev mints a new token
@@ -70,12 +62,21 @@ contract VertexPolicyNFT is ERC721 {
             _totalSupply++;
         }
         tokenToRoles[tokenId] = userRoles;
+        uint256 length = userRoles.length;
+        for (uint256 i = 0; i < length; i++) {
+            tokenToHasRole[tokenId][userRoles[i]] = true;
+        }
         _mint(to, tokenId);
     }
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
     function burn(uint256 tokenId) public onlyVertex {
+        bytes32[] storage userRoles = tokenToRoles[tokenId];
+        uint256 length = userRoles.length;
+        for (uint256 i = 0; i < length; i++) {
+            delete tokenToHasRole[tokenId][userRoles[i]];
+        }
         delete tokenToRoles[tokenId];
         _burn(tokenId);
     }
@@ -133,7 +134,10 @@ contract VertexPolicyNFT is ERC721 {
                 if (roleToPermissionSignatures[role].length == 0) {
                     revert RoleNonExistant(role);
                 }
-                tokenToRoles[tokenId].push(role);
+                if (!tokenToHasRole[tokenId][role]) {
+                    tokenToHasRole[tokenId][role] = true;
+                    tokenToRoles[tokenId].push(role);
+                }
             }
         }
         emit RolesAssigned(tokenId, rolesArray);
@@ -152,8 +156,9 @@ contract VertexPolicyNFT is ERC721 {
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
                 for (uint256 j; j < revokeRolesLength; ++j) {
-                    if (userRoles[i] == revokeRolesArray[j]) {
+                    if (tokenToHasRole[tokenId][revokeRolesArray[j]]) {
                         delete userRoles[i];
+                        delete tokenToHasRole[tokenId][revokeRolesArray[j]];
                     }
                 }
             }
@@ -186,45 +191,6 @@ contract VertexPolicyNFT is ERC721 {
             }
         }
         emit RolesDeleted(deleteRolesArray);
-    }
-
-    ///@dev adds multiple permission to a role
-    ///@param role the role to add the permission to
-    ///@param permissions the permission to add
-    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyVertex {
-        if (permissions.length == 0) {
-            revert InvalidInput();
-        }
-        bytes8[] memory permissionSignatures = hashPermissions(permissions);
-        uint256 permissionSignaturesLength = permissionSignatures.length;
-        unchecked {
-            for (uint256 i; i < permissionSignaturesLength; ++i) {
-                roleToPermissionSignatures[role].push(permissionSignatures[i]);
-                roleToHasPermissionSignature[role][permissionSignatures[i]] = true;
-            }
-        }
-        emit PermissionsAdded(role, permissions, permissionSignatures);
-    }
-
-    ///@dev deletes multiple permissions from a role
-    ///@param role the role to delete the permission from
-    ///@param permissions the array of permissions to delete
-    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyVertex {
-        uint256 permissionsLength = permissions.length;
-        if (permissionsLength == 0) {
-            revert InvalidInput();
-        }
-        bytes8[] storage rolePermissionSignatures = roleToPermissionSignatures[role];
-        uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
-        for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
-            for (uint256 j; j < permissionsLength; ++j) {
-                if (rolePermissionSignatures[i] == permissions[j]) {
-                    delete rolePermissionSignatures[i];
-                    delete roleToHasPermissionSignature[role][permissions[j]];
-                }
-            }
-        }
-        emit PermissionsDeleted(role, permissions);
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
