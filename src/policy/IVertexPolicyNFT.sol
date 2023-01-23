@@ -60,11 +60,7 @@ interface IVertexPolicyNFT {
 
     function name() external view returns (string memory);
 
-    function owner() external view returns (address);
-
     function ownerOf(uint256 tokenId) external view returns (address);
-
-    function renounceOwnership() external;
 
     function revokeRole(uint256 tokenId, string memory role) external;
 

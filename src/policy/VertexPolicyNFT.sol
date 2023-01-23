@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
 import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
-import {Ownable} from "@openzeppelin/access/Ownable.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
@@ -14,13 +13,16 @@ import {Ownable} from "@openzeppelin/access/Ownable.sol";
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
 
-contract VertexPolicyNFT is ERC721, Ownable {
+contract VertexPolicyNFT is ERC721 {
     mapping(uint256 => bytes32[]) public tokenToRoles;
     mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
     bytes32[] public roles;
     uint256 private _totalSupply;
+    address public immutable vertexCore;
 
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+        vertexCore = msg.sender;
+    }
 
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
     event RolesAssigned(uint256 tokenId, bytes32[] roles);
@@ -32,6 +34,12 @@ contract VertexPolicyNFT is ERC721, Ownable {
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
     error InvalidInput();
+    error OnlyVertexCore();
+
+    modifier onlyVertexCore() {
+        if (msg.sender != address(vertexCore)) revert OnlyVertexCore();
+        _;
+    }
 
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
@@ -52,7 +60,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev mints a new token
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public onlyOwner {
+    function mint(address to, bytes32[] calldata userRoles) public onlyVertexCore {
         if (balanceOf(to) != 0) {
             revert SoulboundToken();
         }
@@ -66,7 +74,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public onlyOwner {
+    function burn(uint256 tokenId) public onlyVertexCore {
         delete tokenToRoles[tokenId];
         _burn(tokenId);
     }
@@ -92,7 +100,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev indexes in rolesArray and permissionsArray must match
     ///@param rolesArray the roles to add
     ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyOwner {
+    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyVertexCore {
         uint256 rolesArrayLength = rolesArray.length;
         uint256 permissionsArrayLength = permissionsArray.length;
         if (rolesArrayLength != permissionsArrayLength || rolesArrayLength == 0) {
@@ -112,7 +120,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyOwner {
+    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyVertexCore {
         if (rolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -132,7 +140,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev revokes a role from a token
     ///@param tokenId the id of the token
     ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyOwner {
+    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyVertexCore {
         if (revokeRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -153,7 +161,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
 
     ///@dev deletes multiple roles from the contract
     ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyOwner {
+    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyVertexCore {
         if (deleteRolesArray.length == 0) {
             revert InvalidInput();
         }
@@ -176,7 +184,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev adds multiple permission to a role
     ///@param role the role to add the permission to
     ///@param permissions the permission to add
-    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyOwner {
+    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyVertexCore {
         if (permissions.length == 0) {
             revert InvalidInput();
         }
@@ -193,7 +201,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev deletes multiple permissions from a role
     ///@param role the role to delete the permission from
     ///@param permissions the array of permissions to delete
-    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyOwner {
+    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyVertexCore {
         if (permissions.length == 0) {
             revert InvalidInput();
         }
