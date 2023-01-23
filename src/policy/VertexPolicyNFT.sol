@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
+import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
-import {Permission} from "src/utils/Structs.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
@@ -248,7 +248,7 @@ contract VertexPolicyNFT is ERC721, Ownable {
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
     }
 
     // END TODO

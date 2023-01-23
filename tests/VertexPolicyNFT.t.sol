@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Permission} from "src/policy/IVertexPolicyNFT.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
@@ -28,7 +28,7 @@ contract VertexPolicyNFTTest is Test {
     error SoulboundToken();
 
     function hashPermission(Permission memory permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
     }
 
     function hashRole(string memory role) internal pure returns (bytes32) {

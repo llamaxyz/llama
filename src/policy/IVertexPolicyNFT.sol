@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-// TODO: I'm just creating this interface so builds will pass.
-// The strategy uses unimplemented view functions on builds will fail otherwise
-// @theo this also where we can track the expected interface between strategy and policy
+struct Permission {
+    address strategy;
+    address target;
+    bytes4 signature;
+}
 
 interface IVertexPolicyNFT {
     event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
@@ -12,12 +14,6 @@ interface IVertexPolicyNFT {
     event RoleDeleted(string role);
     event RoleRevoked(uint256 tokenId, string role);
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
-
-    struct Permission {
-        address strategy;
-        address target;
-        bytes4 signature;
-    }
 
     // Check if a holder has a permissionSignature at a specific block number
     function holderHasPermissionAt(
