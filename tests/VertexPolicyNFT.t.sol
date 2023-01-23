@@ -108,26 +108,6 @@ contract VertexPolicyNFTTest is Test {
         assertEq(totalRoles[0], roleHashes[0]);
     }
 
-    function testAddPermission() public {
-        addGenericRoleSetup();
-        vertexPolicyNFT.assignRoles(1, roleHashes);
-
-        permission = Permission(address(0xbeef), address(0xbeefbeef), bytes4(0x09090909));
-        permissions[0] = permission;
-        vertexPolicyNFT.addPermissionsToRole(roleHashes[0], permissions);
-
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
-    }
-
-    function testDeletePermission() public {
-        addGenericRoleSetup();
-        vertexPolicyNFT.assignRoles(1, roleHashes);
-
-        vertexPolicyNFT.deletePermissionsFromRole(roleHashes[0], permissionSignature);
-
-        assertEq(vertexPolicyNFT.hasPermission(1, permissionSignature[0]), false);
-    }
-
     function testCannotTransferTokenOwnership() public {
         vm.expectRevert(SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), 1);
