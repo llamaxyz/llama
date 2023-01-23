@@ -9,7 +9,7 @@ struct Permission {
     bytes4 signature;
 }
 
-abstract contract IVertexPolicyNFT is ERC721 {
+abstract contract VertexPolicy is ERC721 {
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
     event RolesAssigned(uint256 tokenId, bytes32[] roles);
     event RolesRevoked(uint256 tokenId, bytes32[] roles);

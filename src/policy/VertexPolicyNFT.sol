@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexPolicyNFT, Permission} from "src/policy/IVertexPolicyNFT.sol";
+import {VertexPolicy, Permission} from "src/policy/VertexPolicy.sol";
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 
@@ -14,7 +14,7 @@ import {Strings} from "@openzeppelin/utils/Strings.sol";
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
 
-contract VertexPolicyNFT is IVertexPolicyNFT {
+contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes32[]) public tokenToRoles;
     mapping(bytes32 => bytes8[]) public roleToPermissionSignatures;
     mapping(bytes32 => mapping(bytes8 => bool)) public roleToHasPermissionSignature;
