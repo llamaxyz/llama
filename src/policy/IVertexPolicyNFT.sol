@@ -6,9 +6,6 @@ pragma solidity ^0.8.17;
 // @theo this also where we can track the expected interface between strategy and policy
 
 interface IVertexPolicyNFT {
-    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
     event PermissionDeleted(string role, Permission permission, uint256 permissionSignature);
     event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
@@ -17,9 +14,9 @@ interface IVertexPolicyNFT {
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     struct Permission {
+        address strategy;
         address target;
         bytes4 signature;
-        address executor;
     }
 
     // Check if a holder has a permissionSignature at a specific block number
