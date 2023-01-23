@@ -249,19 +249,13 @@ contract VertexPolicyNFT is ERC721 {
         return output;
     }
 
-    ///@dev hashes a role
-    ///@param role the role to hash
-    function hashRole(string calldata role) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(role));
-    }
-
     ///@dev hashes multiple roles
     ///@param rolesArray the roles to hash
     function hashRoles(string[] calldata rolesArray) internal pure returns (bytes32[] memory) {
         bytes32[] memory output = new bytes32[](rolesArray.length);
         unchecked {
             for (uint256 i; i < rolesArray.length; ++i) {
-                output[i] = hashRole(rolesArray[i]);
+                output[i] = keccak256(abi.encodePacked(rolesArray[i]));
             }
         }
         return output;
