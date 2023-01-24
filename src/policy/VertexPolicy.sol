@@ -3,12 +3,6 @@ pragma solidity ^0.8.17;
 
 import "@solmate/tokens/ERC721.sol";
 
-struct Permission {
-    address strategy;
-    address target;
-    bytes4 signature;
-}
-
 abstract contract VertexPolicy is ERC721 {
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
     event RolesAssigned(uint256 tokenId, bytes32[] roles);

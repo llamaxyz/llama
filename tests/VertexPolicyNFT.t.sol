@@ -29,7 +29,7 @@ contract VertexPolicyNFTTest is Test {
     error SoulboundToken();
 
     function hashPermission(Permission memory _permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.signature, _permission.strategy)));
+        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.selector, _permission.strategy)));
     }
 
     function hashRole(string memory role) internal pure returns (bytes32) {

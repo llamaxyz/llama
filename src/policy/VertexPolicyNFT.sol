@@ -219,7 +219,7 @@ contract VertexPolicyNFT is VertexPolicy {
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
     }
 
     // END TODO
