@@ -5,50 +5,21 @@ import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Permission} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
-    event RolesAssigned(uint256 tokenId, bytes32[] roles);
-    event RolesRevoked(uint256 tokenId, bytes32[] roles);
-    event RolesDeleted(bytes32[] role);
-    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
-    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
+    event PermissionsAdded(uint256[] users, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 
-    error RoleNonExistant(bytes32 role);
     error SoulboundToken();
     error InvalidInput();
     error OnlyVertex();
 
-    ///@dev checks if a token has a role
-    ///@param tokenId the id of the token
-    ///@param role the role to check
-    function hasRole(uint256 tokenId, bytes32 role) public view virtual returns (bool) {}
-
     ///@dev mints a new token
     ///@param to the address to mint the token to
-    ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public virtual {}
+    ///@param userPermissions the permissions to be granted to the token
+    function mint(address to, bytes32[] calldata userPermissions) public virtual {}
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
     function burn(uint256 tokenId) public virtual {}
-
-    ///@dev allows admin to add a roles to the contract
-    ///@dev indexes in rolesArray and permissionsArray must match
-    ///@param rolesArray the roles to add
-    ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public virtual {}
-
-    ///@dev assigns a role to a token
-    ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public virtual {}
-
-    ///@dev revokes a role from a token
-    ///@param tokenId the id of the token
-    ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public virtual {}
-
-    ///@dev deletes multiple roles from the contract
-    ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public virtual {}
 
     // Check if a holder has a permissionSignature at a specific block number
     function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
@@ -72,6 +43,4 @@ abstract contract VertexPolicy is ERC721 {
     ///@param tokenId the id of the token
     ///@param permissionSignature the signature of the permission
     function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view virtual returns (bool) {}
-
-    function getRoles() public view virtual returns (bytes32[] memory) {}
 }
