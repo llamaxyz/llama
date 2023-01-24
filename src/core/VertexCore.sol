@@ -7,64 +7,67 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
 
-// Errors
-error InvalidStrategy();
-error OnlyCancelBeforeExecuted();
-error InvalidActionId();
-error OnlyQueuedActions();
-error InvalidStateForQueue();
-error DuplicateAction();
-error ActionCannotBeCanceled();
-error OnlyVertex();
-error SignalingClosed();
-error InvalidSignature();
-error TimelockNotFinished();
-error ActionHasExpired();
-error FailedActionExecution();
-error DuplicateApproval();
-error DuplicateDisapproval();
-error DisapproveDisabled();
-
-/// @title VertexCore
+/// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
-/// @notice Main point of interaction with a Vertex instance.
+/// @notice Main point of interaction with a Vertex system.
 contract VertexCore is IVertexCore {
-    /// @notice EIP-712 typehashes.
+    error InvalidStrategy();
+    error OnlyCancelBeforeExecuted();
+    error InvalidActionId();
+    error OnlyQueuedActions();
+    error InvalidStateForQueue();
+    error DuplicateAction();
+    error ActionCannotBeCanceled();
+    error OnlyVertex();
+    error SignalingClosed();
+    error InvalidSignature();
+    error TimelockNotFinished();
+    error ActionHasExpired();
+    error FailedActionExecution();
+    error DuplicateApproval();
+    error DuplicateDisapproval();
+    error DisapproveDisabled();
+
+    /// @notice EIP-712 base typehash.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalEmitted(uint256 id,bool support)");
-    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalEmitted(uint256 id,bool support)");
+
+    /// @notice EIP-712 approval typehash.
+    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,bool support)");
+
+    /// @notice EIP-712 disapproval typehash.
+    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,bool support)");
 
     /// @notice Equivalent to 100%, but scaled for precision
-    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 100_00;
+    uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
 
-    /// @notice The NFT contract that defines the policies for this Vertex instance.
+    /// @notice The NFT contract that defines the policies for this Vertex system.
     VertexPolicyNFT public immutable policy;
 
-    /// @notice Name of this Vertex instance.
+    /// @notice Name of this Vertex system.
     string public name;
 
     /// @notice The current number of actions created.
     uint256 public actionsCount;
 
-    /// @notice Mapping of action ids to Actions.
+    /// @notice Mapping of actionIds to Actions.
     mapping(uint256 => Action) public actions;
 
-    /// @notice Mapping of action ids to polcyholders to approvals.
+    /// @notice Mapping of actionIds to polcyholders to approvals.
     mapping(uint256 => mapping(address => Approval)) public approvals;
 
-    /// @notice Mapping of action ids to polcyholders to approvals.
+    /// @notice Mapping of action ids to polcyholders to disapprovals.
     mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
-    /// @notice Mapping of action id's and bool that indicates if action is queued.
+    /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
     constructor(string memory _name, string memory _symbol, Strategy[] memory initialStrategies) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, IVertexCore(address(this))));
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this)));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {
@@ -75,7 +78,7 @@ contract VertexCore is IVertexCore {
             }
         }
 
-        emit VertexStrategiesAuthorized(initialStrategies);
+        emit StrategiesAuthorized(initialStrategies);
     }
 
     modifier onlyVertex() {
@@ -84,17 +87,13 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data)
-        external
-        override
-        returns (uint256)
-    {
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
         // TODO: @theo insert validation logic here
         // Eg. is msg.sender a VertexPolicyNFT holder and does
         //     their policy allow them create an action with this
-        //     strategy, target, signature hash. You also probably
+        //     strategy, target, selector hash. You also probably
         //     want to validate their policy at the previous or this block number
 
         uint256 previousActionCount = actionsCount;
@@ -108,15 +107,13 @@ contract VertexCore is IVertexCore {
             ? policy.totalSupply()
             : policy.getSupplyByPermissions(strategy.getDisapprovalPermissions());
 
-        newAction.id = previousActionCount;
         newAction.creator = msg.sender;
         newAction.strategy = strategy;
         newAction.target = target;
         newAction.value = value;
-        newAction.signature = signature;
+        newAction.selector = selector;
         newAction.data = data;
         newAction.createdBlockNumber = block.number;
-        newAction.approvalEndTime = block.timestamp + strategy.approvalDuration();
         newAction.approvalPolicySupply = approvalPolicySupply;
         newAction.disapprovalPolicySupply = disapprovalPolicySupply;
 
@@ -124,9 +121,9 @@ contract VertexCore is IVertexCore {
             ++actionsCount;
         }
 
-        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, signature, data);
+        emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, selector, data);
 
-        return newAction.id;
+        return previousActionCount;
     }
 
     /// @inheritdoc IVertexCore
@@ -171,7 +168,7 @@ contract VertexCore is IVertexCore {
         queuedActions[actionId] = false;
 
         // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(bytes4(keccak256(bytes(action.signature))), action.data));
+        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
         if (!success) revert FailedActionExecution();
 
@@ -218,18 +215,21 @@ contract VertexCore is IVertexCore {
         return _submitDisapproval(signer, actionId, support);
     }
 
+    /// @inheritdoc IVertexCore
     function getAction(uint256 actionId) external view override returns (Action memory) {
         return actions[actionId];
     }
 
+    /// @inheritdoc IVertexCore
     function getActionState(uint256 actionId) public view override returns (ActionState) {
         if (actionId >= actionsCount) revert InvalidActionId();
         Action storage action = actions[actionId];
+        uint256 approvalEndBlock = action.createdBlockNumber + action.strategy.approvalPeriod();
         if (action.canceled) {
             return ActionState.Canceled;
         }
 
-        if (block.timestamp < action.approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.number < approvalEndBlock && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -252,10 +252,7 @@ contract VertexCore is IVertexCore {
         return ActionState.Queued;
     }
 
-    /**
-     * @dev Add new addresses to the list of authorized strategies
-     * @param strategies list of new addresses to be authorized strategies
-     */
+    /// @inheritdoc IVertexCore
     function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
@@ -266,13 +263,10 @@ contract VertexCore is IVertexCore {
             }
         }
 
-        emit VertexStrategiesAuthorized(strategies);
+        emit StrategiesAuthorized(strategies);
     }
 
-    /**
-     * @dev Remove addresses to the list of authorized strategies
-     * @param strategies list of addresses to be removed as authorized strategies
-     */
+    /// @inheritdoc IVertexCore
     function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
         uint256 strategiesLength = strategies.length;
         unchecked {
@@ -281,17 +275,23 @@ contract VertexCore is IVertexCore {
             }
         }
 
-        emit VertexStrategiesUnauthorized(strategies);
+        emit StrategiesUnauthorized(strategies);
     }
 
-    function _submitApproval(address policyHolder, uint256 actionId, bool support) internal {
+    /// @inheritdoc IVertexCore
+    function isActionExpired(uint256 actionId) public view override returns (bool) {
+        Action storage action = actions[actionId];
+        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
+    }
+
+    function _submitApproval(address policyholder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Active) revert SignalingClosed();
         Action storage action = actions[actionId];
-        Approval storage approval = approvals[actionId][policyHolder];
+        Approval storage approval = approvals[actionId][policyholder];
 
         if (support == approval.support) revert DuplicateApproval();
 
-        uint256 weight = action.strategy.getApprovalWeightAt(policyHolder, action.createdBlockNumber);
+        uint256 weight = action.strategy.getApprovalWeightAt(policyholder, action.createdBlockNumber);
 
         if (support) {
             action.totalApprovals += weight;
@@ -302,20 +302,20 @@ contract VertexCore is IVertexCore {
         approval.support = support;
         approval.weight = uint248(support ? weight : 0);
 
-        emit ApprovalEmitted(actionId, policyHolder, support, weight);
+        emit PolicyholderApproved(actionId, policyholder, support, weight);
     }
 
-    function _submitDisapproval(address policyHolder, uint256 actionId, bool support) internal {
+    function _submitDisapproval(address policyholder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Queued) revert SignalingClosed();
         Action storage action = actions[actionId];
 
-        if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_WITH_PRECISION) revert DisapproveDisabled();
+        if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
-        Disapproval storage disapproval = disapprovals[actionId][policyHolder];
+        Disapproval storage disapproval = disapprovals[actionId][policyholder];
 
         if (support == disapproval.support) revert DuplicateDisapproval();
 
-        uint256 weight = action.strategy.getDisapprovalWeightAt(policyHolder, action.createdBlockNumber);
+        uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, action.createdBlockNumber);
 
         if (support) {
             action.totalDisapprovals += weight;
@@ -326,11 +326,6 @@ contract VertexCore is IVertexCore {
         disapproval.support = support;
         disapproval.weight = uint248(support ? weight : 0);
 
-        emit DisapprovalEmitted(actionId, policyHolder, support, weight);
-    }
-
-    function isActionExpired(uint256 actionId) public view override returns (bool) {
-        Action storage action = actions[actionId];
-        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
+        emit PolicyholderDisapproved(actionId, policyholder, support, weight);
     }
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@solmate/tokens/ERC721.sol";
+import {ERC721} from "@solmate/tokens/ERC721.sol";
+import {Permission} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);

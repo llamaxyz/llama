@@ -8,7 +8,7 @@ import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 struct Permission {
     address target;
     bytes4 selector;
-    address executor;
+    address strategy;
 }
 
 struct Approval {

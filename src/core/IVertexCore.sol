@@ -6,190 +6,92 @@ import {Action, Strategy} from "src/utils/Structs.sol";
 
 interface IVertexCore {
     enum ActionState {
-        Active,
-        Canceled,
-        Failed,
-        Succeeded,
-        Queued,
-        Expired,
-        Executed
+        Active, // Action created and approval period begins.
+        Canceled, // Action canceled by creator or disapproved.
+        Failed, // Action approval failed.
+        Succeeded, // Action approval succeeded and ready to be queued.
+        Queued, // Action queued for queueing duration and disapproval period begins.
+        Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
+        Executed // Action has executed succesfully.
     }
 
-    /**
-     * @dev emitted when a new action is created
-     * @param id Id of the action
-     * @param creator address of the action creator
-     * @param strategy The Strategy contract that will determine how the action is executed
-     * @param target The contract called by action's associated transaction
-     * @param value The value in wei of the action's associated transaction
-     * @param signature The function signature that will be called by the action's associated transaction
-     * @param data The arguments passed to the function that is called by the action's associated transaction
-     *
-     */
-    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, string signature, bytes data);
-
-    /**
-     * @dev emitted when an action is canceled
-     * @param id Id of the action
-     *
-     */
+    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event ActionCanceled(uint256 id);
-
-    /**
-     * @dev emitted when a action is queued
-     * @param id Id of the action
-     * @param caller address of the initiator of the queuing transaction
-     * @param strategy The Strategy contract that will determine how the action is executed
-     * @param creator address of the action creator
-     * @param executionTime time when action underlying transactions can be executed
-     *
-     */
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
-
-    /**
-     * @dev emitted when an action is executed
-     * @param id Id of the action
-     * @param caller address of the initiator of the executing transaction
-     * @param strategy The Strategy contract that will determine how the action is executed
-     * @param creator address of the action creator
-     *
-     */
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event StrategiesAuthorized(Strategy[] strategies);
+    event StrategiesUnauthorized(VertexStrategy[] strategies);
 
-    /**
-     * @dev emitted when a approval is registered
-     * @param id Id of the action
-     * @param policyHolder address of the policyHolder
-     * @param support boolean, true = supported
-     * @param weight Power of the policyHolder/approval
-     *
-     */
-    event ApprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
+    /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
+    /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+    /// @param target The contract called when the action is executed.
+    /// @param value The value in wei to be sent when the action is executed.
+    /// @param selector The function selector that will be called when the action is executed.
+    /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+    /// @return actionId of the newly created action.
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external returns (uint256);
 
-    /**
-     * @dev emitted when a approval is registered
-     * @param id Id of the action
-     * @param policyHolder address of the policyHolder
-     * @param weight Weight of the policyHolder
-     *
-     */
-    event DisapprovalEmitted(uint256 id, address indexed policyHolder, bool support, uint256 weight);
-
-    event VertexStrategiesAuthorized(Strategy[] strategies);
-
-    event VertexStrategiesUnauthorized(VertexStrategy[] strategies);
-
-    function name() external view returns (string memory);
-
-    /**
-     * @dev Creates an action (Creator needs to hold a policy with the permissionSignature of the associated strategy, target, signature)
-     * @param strategy The Strategy contract that will determine how the action is executed
-     * @param target The contract called by action's associated transaction
-     * @param value The value in wei of the action's associated transaction
-     * @param signature The function signature that will be called by the action's associated transaction
-     * @param data The arguments passed to the function that is called by the action's associated transaction
-     * @return Id of the action
-     *
-     */
-    function createAction(VertexStrategy strategy, address target, uint256 value, string calldata signature, bytes calldata data) external returns (uint256);
-
-    /**
-     * @dev Cancels an action,
-     * either at anytime by creator
-     * or when strategy-defined rules are met
-     * or when creator no longer has correct policy at execution time
-     * @param actionId id of the action
-     *
-     */
+    /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
+    /// @param actionId Id of the action to cancel.
     function cancelAction(uint256 actionId) external;
 
-    /**
-     * @dev Queue the action (If Action Succeeded)
-     * @param actionId id of the action to queue
-     *
-     */
+    /// @notice Queue an action by actionId if it's in Succeeded state.
+    /// @param actionId Id of the action to queue.
     function queueAction(uint256 actionId) external;
 
-    /**
-     * @dev Execute the action (If Action Queued)
-     * @param actionId id of the action to execute
-     *  # @return the result from the delegatecall
-     *
-     */
+    /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
+    /// @param actionId Id of the action to execute.
+    /// @return The result returned from the call to the target contract.
     function executeAction(uint256 actionId) external payable returns (bytes memory);
 
-    /**
-     * @dev Function allowing msg.sender to approval for/against an action
-     * @param actionId id of the action
-     * @param support boolean, true = approval for, false = approval against
-     *
-     */
+    /// @notice How policyholders add or remove their support of the approval of an action.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
     function submitApproval(uint256 actionId, bool support) external;
 
-    /**
-     * @dev Function to register the approval of user that has approvald offchain via signature
-     * @param actionId id of the action
-     * @param support boolean, true = approval for, false = approval against
-     * @param v v part of the policyHolder signature
-     * @param r r part of the policyHolder signature
-     * @param s s part of the policyHolder signature
-     *
-     */
+    /// @notice How policyholders add or remove their support of the approval of an action via an offchain selector.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
+    /// @param v v part of the policyholder selector
+    /// @param r r part of the policyholder selector
+    /// @param s s part of the policyholder selector
     function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
-    /**
-     * @dev Function allowing msg.sender to disapprove an action
-     * only eligible when action is Queued
-     * @param actionId id of the action
-     *
-     */
+    /// @notice How policyholders add or remove their support of the disapproval of an action.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
     function submitDisapproval(uint256 actionId, bool support) external;
 
-    /**
-     * @dev Function to register the disapprove of user that has been disapproved offchain via signature
-     * @param actionId id of the action
-     * @param v v part of the policyHolder signature
-     * @param r r part of the policyHolder signature
-     * @param s s part of the policyHolder signature
-     *
-     */
+    /// @notice How policyholders add or remove their support of the disapproval of an action via an offchain selector.
+    /// @param actionId The id of the action.
+    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
+    /// @param v v part of the policyholder selector
+    /// @param r r part of the policyholder selector
+    /// @param s s part of the policyholder selector
     function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
 
-    /**
-     * @dev Create new strategies and add them to the list of authorized strategies
-     * @param strategies list of new addresses to be authorized strategies
-     *
-     */
+    /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
+    /// @param strategies list of new Strategys to be authorized.
     function createAndAuthorizeStrategies(Strategy[] memory strategies) external;
 
-    /**
-     * @dev Remove addresses to the list of authorized strategies
-     * @param strategies list of addresses to be removed as authorized strategies
-     *
-     */
+    /// @notice Remove strategies from the mapping of authorized strategies.
+    /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
     function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
-    /**
-     * @dev Get the current state of a action
-     * @param actionId id of the action
-     * @return The current state if the action
-     *
-     */
-    function getActionState(uint256 actionId) external view returns (ActionState);
-
-    /**
-     * @dev Get Action object without approval data
-     * @param actionId id of the action
-     * @return Action object without approval data
-     *
-     */
+    /// @notice Get an Action struct by actionId.
+    /// @param actionId id of the action.
+    /// @return The Action struct.
     function getAction(uint256 actionId) external view returns (Action memory);
 
-    /**
-     * @dev Checks whether a proposal is over its expiration delay
-     * @param actionId Id of the action against which to test
-     * @return true of proposal is over its expiration delay
-     *
-     */
+    /// @notice Get the current ActionState of an action by its actionId.
+    /// @param actionId id of the action.
+    /// @return The current ActionState of the action.
+    function getActionState(uint256 actionId) external view returns (ActionState);
+
+    /// @notice Get whether an action has expired and can no longer be executed.
+    /// @param actionId id of the action.
+    /// @return Boolean value that is true if the action has expired.
     function isActionExpired(uint256 actionId) external view returns (bool);
 }
