@@ -24,7 +24,6 @@
     "snapshot": "make snapshot",
     "report": "make report",
     "lint": "make lint",
-    "doc": "make doc",
     "prepare": "husky install"
   },
   "repository": {

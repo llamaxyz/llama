@@ -43,7 +43,7 @@ jobs:
         id: build
 
       - name: Generate gas report
-        run: FOUNDRY_PROFILE=$FOUNDRY_PROFILE npm run report
+        run: npm run report
 
       - name: Add & Commit
         uses: EndBug/add-and-commit@v9.0.0

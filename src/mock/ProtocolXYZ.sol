@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-contract ProtocolXYZ {
-    error OnlyVertex();
+import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
+import {VertexExecutor} from "src/executor/VertexExecutor.sol";
 
-    address public immutable vertex;
-    bool public paused;
+contract ProtocolXYZ is AccessControl {
+    event Executed(address indexed executor, uint256 number);
+    event Paused(address indexed executor, bool isPaused);
 
-    constructor(address _vertex) {
-        vertex = _vertex;
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
+    constructor(VertexExecutor executor) {
+        _grantRole(ADMIN_ROLE, address(executor));
     }
 
-    modifier onlyVertex() {
-        if (msg.sender != address(vertex)) revert OnlyVertex();
-        _;
+    function create(uint256 number) external onlyRole(ADMIN_ROLE) {
+        emit Executed(msg.sender, number);
     }
 
-    function pause(bool isPaused) external onlyVertex {
-        paused = isPaused;
+    function pause(bool isPaused) external onlyRole(ADMIN_ROLE) {
+        emit Paused(msg.sender, isPaused);
     }
 }
