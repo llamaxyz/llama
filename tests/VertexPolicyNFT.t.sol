@@ -2,8 +2,9 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "lib/forge-std/src/Test.sol";
+import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Permission} from "src/policy/VertexPolicy.sol";
+import {Permission} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
@@ -27,8 +28,8 @@ contract VertexPolicyNFTTest is Test {
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
 
-    function hashPermission(Permission memory permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
+    function hashPermission(Permission memory _permission) internal pure returns (bytes8) {
+        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.selector, _permission.strategy)));
     }
 
     function hashRole(string memory role) internal pure returns (bytes32) {
@@ -36,7 +37,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function generateGenericPermissionArray() internal {
-        permission = Permission(address(0xdeadbeef), address(0xdeadbeefdeadbeef), bytes4(0x08080808));
+        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
         permissions.push(permission);
     }
 
@@ -51,16 +52,16 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST");
+        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this));
         // console.logAddress(address(policyNFT)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
         // console.logAddress(policyNFT.owner()); //0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
-        bytes32[] memory roles = new bytes32[](0);
-        vertexPolicyNFT.mint(address(this), roles);
+        bytes32[] memory _roles = new bytes32[](0);
+        vertexPolicyNFT.mint(address(this), _roles);
     }
 
     function testMint() public {
-        bytes32[] memory roles = new bytes32[](0);
-        vertexPolicyNFT.mint(address(0xdeadbeef), roles);
+        bytes32[] memory _roles = new bytes32[](0);
+        vertexPolicyNFT.mint(address(0xdeadbeef), _roles);
         assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
         assertEq(vertexPolicyNFT.ownerOf(1), address(0xdeadbeef));
     }
@@ -82,7 +83,6 @@ contract VertexPolicyNFTTest is Test {
         addGenericRoleSetup();
         vertexPolicyNFT.assignRoles(1, roleHashes);
         assertEq(vertexPolicyNFT.hasRole(1, roleHashes[0]), true);
-        bytes8[] memory tokenPermissions = vertexPolicyNFT.getPermissionSignatures(1);
         assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
     }
 

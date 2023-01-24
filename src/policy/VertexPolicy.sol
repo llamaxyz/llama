@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@solmate/tokens/ERC721.sol";
-
-struct Permission {
-    address strategy;
-    address target;
-    bytes4 signature;
-}
+import {ERC721} from "@solmate/tokens/ERC721.sol";
+import {Permission} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
@@ -64,7 +59,7 @@ abstract contract VertexPolicy is ERC721 {
     function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256) {}
 
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view virtual returns (uint256) {}
+    function getSupplyByPermissions(bytes32[] memory permissions) external view virtual returns (uint256) {}
 
     ///@dev returns the total token supply of the contract
     function totalSupply() public view virtual returns (uint256) {}
