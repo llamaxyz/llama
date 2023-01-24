@@ -5,7 +5,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {getChainId} from "src/utils/Helpers.sol";
-import {Action, Approval, Disapproval, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -27,6 +27,8 @@ contract VertexCore is IVertexCore {
     error DuplicateApproval();
     error DuplicateDisapproval();
     error DisapproveDisabled();
+    error InvalidPolicyholder();
+    error PolicyholderDoesNotHavePermission();
 
     /// @notice EIP-712 base typehash.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -87,14 +89,17 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
+    function createAction(uint256 policyId, VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
+        external
+        override
+        returns (uint256)
+    {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+        if (policy.ownerOf(policyId) != msg.sender) revert InvalidPolicyholder();
 
-        // TODO: @theo insert validation logic here
-        // Eg. is msg.sender a VertexPolicyNFT holder and does
-        //     their policy allow them create an action with this
-        //     strategy, target, selector hash. You also probably
-        //     want to validate their policy at the previous or this block number
+        Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
+        bytes8 permissionSignature = policy.hashPermission(permission);
+        if (!policy.hasPermission(policyId, permissionSignature)) revert PolicyholderDoesNotHavePermission();
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];
@@ -225,6 +230,7 @@ contract VertexCore is IVertexCore {
         if (actionId >= actionsCount) revert InvalidActionId();
         Action storage action = actions[actionId];
         uint256 approvalEndBlock = action.createdBlockNumber + action.strategy.approvalPeriod();
+
         if (action.canceled) {
             return ActionState.Canceled;
         }

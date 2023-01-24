@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexPolicy, Permission} from "src/policy/VertexPolicy.sol";
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
+import {VertexPolicy} from "src/policy/VertexPolicy.sol";
+import {Permission} from "src/utils/Structs.sol";
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
@@ -217,7 +218,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     ///@dev hashes a permission
     ///@param permission the permission to hash
-    function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
+    function hashPermission(Permission memory permission) public pure returns (bytes8) {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
     }
 

@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     VertexCore public vertex;
@@ -19,12 +19,25 @@ contract VertexCoreTest is Test {
     address public constant policyholder2 = address(0x1339);
     address public constant policyholder3 = address(0x1340);
     address public constant policyholder4 = address(0x1341);
+    bytes4 public constant pauseSelector = 0x02329a29;
+
+    Permission public permission;
+    string[] public roles;
+    Permission[] public permissions;
+    Permission[][] public permissionsArray;
+    bytes8[] public permissionSignature;
+    bytes8[][] public permissionSignatures;
+    bytes32[] public roleHashes;
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+
+    function hashRole(string memory role) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(role));
+    }
 
     function setUp() public {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
@@ -71,12 +84,22 @@ contract VertexCoreTest is Test {
         policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
 
         vm.startPrank(address(vertex));
-        bytes32[] memory roles = new bytes32[](0);
-        policy.mint(actionCreator, roles);
-        policy.mint(policyholder1, roles);
-        policy.mint(policyholder2, roles);
-        policy.mint(policyholder3, roles);
-        policy.mint(policyholder4, roles);
+        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategy});
+        permissions.push(permission);
+        permissionsArray.push(permissions);
+        permissionSignature.push(policy.hashPermission(permission));
+        permissionSignatures.push(permissionSignature);
+        roles.push("admin");
+        roleHashes.push(hashRole(roles[0]));
+        policy.addRoles(roles, permissionsArray);
+        bytes32[] memory _roles = new bytes32[](0);
+        policy.mint(actionCreator, _roles);
+        policy.mint(policyholder1, _roles);
+        policy.mint(policyholder2, _roles);
+        policy.mint(policyholder3, _roles);
+        policy.mint(policyholder4, _roles);
+        policy.assignRoles(0, roleHashes);
+
         vm.stopPrank();
 
         vm.label(actionCreator, "Action Creator");
@@ -117,8 +140,8 @@ contract VertexCoreTest is Test {
 
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
-        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, 0x02329a29, abi.encode(true));
-        vertex.createAction(strategy, address(protocol), 0, 0x02329a29, abi.encode(true));
+        emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(0, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(0);
         uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();

@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Test} from "lib/forge-std/src/Test.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {Permission} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
@@ -28,23 +29,19 @@ contract VertexPolicyNFTTest is Test {
     error RoleNonExistant(bytes32 role);
     error SoulboundToken();
 
-    function hashPermission(Permission memory _permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.selector, _permission.strategy)));
-    }
-
     function hashRole(string memory role) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(role));
     }
 
     function generateGenericPermissionArray() internal {
-        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
+        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
         permissions.push(permission);
     }
 
     function addGenericRoleSetup() internal {
         generateGenericPermissionArray();
         permissionsArray.push(permissions);
-        permissionSignature.push(hashPermission(permission));
+        permissionSignature.push(vertexPolicyNFT.hashPermission(permission));
         permissionSignatures.push(permissionSignature);
         roles.push("admin");
         roleHashes.push(hashRole(roles[0]));
@@ -83,7 +80,7 @@ contract VertexPolicyNFTTest is Test {
         addGenericRoleSetup();
         vertexPolicyNFT.assignRoles(1, roleHashes);
         assertEq(vertexPolicyNFT.hasRole(1, roleHashes[0]), true);
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
+        assertEq(vertexPolicyNFT.hasPermission(1, vertexPolicyNFT.hashPermission(permission)), true);
     }
 
     function testDeleteRole() public {
