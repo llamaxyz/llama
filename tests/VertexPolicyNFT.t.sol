@@ -3,8 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {IVertexCore} from "src/core/IVertexCore.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Permission} from "src/policy/VertexPolicy.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
@@ -29,7 +28,7 @@ contract VertexPolicyNFTTest is Test {
     error SoulboundToken();
 
     function hashPermission(Permission memory permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
     }
 
     function hashRole(string memory role) internal pure returns (bytes32) {
@@ -37,7 +36,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function generateGenericPermissionArray() internal {
-        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), address(0xdeadbeefdeadbeef));
+        permission = Permission(address(0xdeadbeef), address(0xdeadbeefdeadbeef), bytes4(0x08080808));
         permissions.push(permission);
     }
 
@@ -52,7 +51,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", IVertexCore(address(this)));
+        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST");
         // console.logAddress(address(policyNFT)); //0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
         // console.logAddress(policyNFT.owner()); //0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496
         bytes32[] memory roles = new bytes32[](0);
@@ -107,26 +106,6 @@ contract VertexPolicyNFTTest is Test {
         bytes32[] memory totalRoles = vertexPolicyNFT.getRoles();
         assertEq(totalRoles.length, 1);
         assertEq(totalRoles[0], roleHashes[0]);
-    }
-
-    function testAddPermission() public {
-        addGenericRoleSetup();
-        vertexPolicyNFT.assignRoles(1, roleHashes);
-
-        permission = Permission(address(0xbeef), bytes4(0x09090909), address(0xbeefbeef));
-        permissions[0] = permission;
-        vertexPolicyNFT.addPermissionsToRole(roleHashes[0], permissions);
-
-        assertEq(vertexPolicyNFT.hasPermission(1, hashPermission(permission)), true);
-    }
-
-    function testDeletePermission() public {
-        addGenericRoleSetup();
-        vertexPolicyNFT.assignRoles(1, roleHashes);
-
-        vertexPolicyNFT.deletePermissionsFromRole(roleHashes[0], permissionSignature);
-
-        assertEq(vertexPolicyNFT.hasPermission(1, permissionSignature[0]), false);
     }
 
     function testCannotTransferTokenOwnership() public {

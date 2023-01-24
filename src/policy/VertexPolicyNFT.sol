@@ -2,10 +2,14 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@openzeppelin/token/ERC721/ERC721.sol";
-import {IVertexCore} from "src/core/IVertexCore.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Ownable} from "@openzeppelin/access/Ownable.sol";
 
-error OnlyVertex();
+///@dev Struct to define a permission
+struct Permission {
+    address target;
+    bytes4 signature;
+    address executor;
+}
 
 ///@title VertexPolicyNFT
 ///@dev VertexPolicyNFT is a (TODO: soulbound) ERC721 contract where each token has roles and permissions
@@ -15,42 +19,32 @@ error OnlyVertex();
  * to solve this, we could run a pre check on all role based access functions that checks if the role exists in the...
  * roles array, and if not we delete that role from the tokenToRoles mapping, however, this adds extra gas to every call.
  */
-contract VertexPolicyNFT is ERC721 {
-    IVertexCore public immutable vertex;
-    mapping(uint256 => bytes32[]) public tokenToRoles;
-    mapping(bytes32 => bytes8[]) public rolesToPermissionSignatures;
-    bytes32[] public roles;
+
+contract VertexPolicyNFT is ERC721, Ownable {
+    mapping(uint256 => string[]) public tokenToRoles;
+    mapping(string => uint256[]) public rolesToPermissionSignatures;
+    string[] public roles;
     uint256 private _totalSupply;
 
-    constructor(string memory name, string memory symbol, IVertexCore _vertex) ERC721(name, symbol) {
-        vertex = _vertex;
-    }
+    constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
-    modifier onlyVertex() {
-        if (msg.sender != address(vertex)) revert OnlyVertex();
-        _;
-    }
+    event RoleAdded(string role, Permission[] permissions, uint256[] permissionSignatures);
+    event RoleRevoked(uint256 tokenId, string role);
+    event RoleDeleted(string role);
+    event PermissionAdded(string role, Permission permission, uint256 permissionSignature);
+    event PermissionDeleted(string role, Permission permission, uint256 permissionSignature);
 
-    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
-    event RolesAssigned(uint256 tokenId, bytes32[] roles);
-    event RolesRevoked(uint256 tokenId, bytes32[] roles);
-    event RolesDeleted(bytes32[] role);
-    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
-    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
-
-    error RoleNonExistant(bytes32 role);
-    error SoulboundToken();
-    error InvalidInput();
+    error RoleNonExistant(string role);
 
     ///@dev checks if a token has a role
     ///@param tokenId the id of the token
     ///@param role the role to check
-    function hasRole(uint256 tokenId, bytes32 role) public view returns (bool) {
-        bytes32[] memory userRoles = tokenToRoles[tokenId];
+    function hasRole(uint256 tokenId, string memory role) public view returns (bool) {
+        string[] memory userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
-                if (userRoles[i] == role) {
+                if (keccak256(abi.encodePacked(userRoles[i])) == keccak256(abi.encodePacked(role))) {
                     return true;
                 }
             }
@@ -61,10 +55,7 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev mints a new token
     ///@param to the address to mint the token to
     ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public onlyVertex {
-        if (balanceOf(to) != 0) {
-            revert SoulboundToken();
-        }
+    function mint(address to, string[] memory userRoles) public onlyOwner {
         uint256 tokenId = totalSupply();
         unchecked {
             _totalSupply++;
@@ -75,213 +66,102 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev burns a token
     ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public onlyVertex {
+    function burn(uint256 tokenId) public onlyOwner {
         delete tokenToRoles[tokenId];
         _burn(tokenId);
     }
 
-    ///@dev private function which adds a role to the contract
+    ///@dev adds a role to the contract
     ///@param role the role to add
     ///@param permissions the permissions of the role
-    function addRole(bytes32 role, Permission[] calldata permissions) private returns (bytes8[] memory) {
+    function addRole(string calldata role, Permission[] calldata permissions) public onlyOwner {
         roles.push(role);
         uint256 permissionsLength = permissions.length;
-        bytes8[] memory permissionSignatures = new bytes8[](permissionsLength);
+        uint256[] memory permissionSignatures = new uint256[](permissionsLength);
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
-                bytes8 permissionSignature = hashPermission(permissions[i]);
+                uint256 permissionSignature = hashPermission(permissions[i]);
                 rolesToPermissionSignatures[role].push(permissionSignature);
                 permissionSignatures[i] = permissionSignature;
             }
         }
-        return permissionSignatures;
-    }
-
-    ///@dev allows admin to add a roles to the contract
-    ///@dev indexes in rolesArray and permissionsArray must match
-    ///@param rolesArray the roles to add
-    ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public onlyVertex {
-        uint256 rolesArrayLength = rolesArray.length;
-        uint256 permissionsArrayLength = permissionsArray.length;
-        if (rolesArrayLength != permissionsArrayLength || rolesArrayLength == 0) {
-            revert InvalidInput();
-        }
-        bytes32[] memory roleHashes = hashRoles(rolesArray);
-        bytes8[][] memory permissionsHashes = new bytes8[][](permissionsArrayLength);
-        for (uint256 i; i < rolesArrayLength; ++i) {
-            if (permissionsArray[i].length == 0) {
-                revert InvalidInput();
-            }
-            bytes8[] memory permissionsHash = addRole(roleHashes[i], permissionsArray[i]);
-            permissionsHashes[i] = permissionsHash;
-        }
-        emit RolesAdded(roleHashes, rolesArray, permissionsArray, permissionsHashes);
+        emit RoleAdded(role, permissions, permissionSignatures);
     }
 
     ///@dev assigns a role to a token
     ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public onlyVertex {
-        if (rolesArray.length == 0) {
-            revert InvalidInput();
+    function assignRole(uint256 tokenId, string calldata role) public onlyOwner {
+        if (rolesToPermissionSignatures[role].length == 0) {
+            revert RoleNonExistant(role);
         }
-        uint256 rolesArrayLength = rolesArray.length;
-        unchecked {
-            for (uint256 i; i < rolesArrayLength; ++i) {
-                bytes32 role = rolesArray[i];
-                if (rolesToPermissionSignatures[role].length == 0) {
-                    revert RoleNonExistant(role);
-                }
-                tokenToRoles[tokenId].push(role);
-            }
-        }
-        emit RolesAssigned(tokenId, rolesArray);
+        tokenToRoles[tokenId].push(role);
     }
 
     ///@dev revokes a role from a token
     ///@param tokenId the id of the token
-    ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public onlyVertex {
-        if (revokeRolesArray.length == 0) {
-            revert InvalidInput();
-        }
-        bytes32[] storage userRoles = tokenToRoles[tokenId];
+    ///@param role the role to revoke
+    function revokeRole(uint256 tokenId, string calldata role) public onlyOwner {
+        string[] storage userRoles = tokenToRoles[tokenId];
         uint256 userRolesLength = userRoles.length;
-        uint256 revokeRolesLength = revokeRolesArray.length;
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
-                for (uint256 j; j < revokeRolesLength; ++j) {
-                    if (userRoles[i] == revokeRolesArray[j]) {
-                        delete userRoles[i];
-                    }
+                if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
+                    delete userRoles[i];
                 }
             }
         }
-        emit RolesRevoked(tokenId, revokeRolesArray);
+        emit RoleRevoked(tokenId, role);
     }
 
-    ///@dev deletes multiple roles from the contract
-    ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public onlyVertex {
-        if (deleteRolesArray.length == 0) {
-            revert InvalidInput();
-        }
+    ///@dev deletes a role from the contract
+    ///@param role the role to delete
+    function deleteRole(string calldata role) public onlyOwner {
+        delete rolesToPermissionSignatures[role];
+        uint256 rolesLength = roles.length;
         unchecked {
-            uint256 deleteRolesLength = deleteRolesArray.length;
-            for (uint256 i; i < deleteRolesLength; ++i) {
-                bytes32 role = deleteRolesArray[i];
-                delete rolesToPermissionSignatures[role];
-                uint256 rolesLength = roles.length;
-                for (uint256 j; i < rolesLength; ++i) {
-                    if (roles[j] == role) {
-                        delete roles[j];
-                    }
+            for (uint256 i; i < rolesLength; ++i) {
+                if (keccak256(abi.encodePacked(roles[i])) == keccak256(abi.encodePacked(role))) {
+                    delete roles[i];
                 }
             }
         }
-        emit RolesDeleted(deleteRolesArray);
+        emit RoleDeleted(role);
     }
 
-    ///@dev adds multiple permission to a role
+    ///@dev adds a permission to a role
     ///@param role the role to add the permission to
-    ///@param permissions the permission to add
-    function addPermissionsToRole(bytes32 role, Permission[] calldata permissions) public onlyVertex {
-        if (permissions.length == 0) {
-            revert InvalidInput();
-        }
-        bytes8[] memory permissionSignatures = hashPermissions(permissions);
-        uint256 permissionSignaturesLength = permissionSignatures.length;
-        unchecked {
-            for (uint256 i; i < permissionSignaturesLength; ++i) {
-                rolesToPermissionSignatures[role].push(permissionSignatures[i]);
-            }
-        }
-        emit PermissionsAdded(role, permissions, permissionSignatures);
+    ///@param permission the permission to add
+    function addPermissionToRole(string calldata role, Permission calldata permission) public onlyOwner {
+        uint256 permissionSignature = hashPermission(permission);
+        rolesToPermissionSignatures[role][rolesToPermissionSignatures[role].length - 1] = permissionSignature;
+        emit PermissionAdded(role, permission, permissionSignature);
     }
 
-    ///@dev deletes multiple permissions from a role
+    ///@dev deletes a permission from a role
     ///@param role the role to delete the permission from
-    ///@param permissions the array of permissions to delete
-    function deletePermissionsFromRole(bytes32 role, bytes8[] calldata permissions) public onlyVertex {
-        if (permissions.length == 0) {
-            revert InvalidInput();
-        }
-        bytes8[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
+    ///@param permission the permission to delete
+    function deletePermissionFromRole(string calldata role, Permission calldata permission) public onlyOwner {
+        uint256 permissionSignature = hashPermission(permission);
+        uint256[] storage rolePermissionSignatures = rolesToPermissionSignatures[role];
         uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
         for (uint256 i; i < rolePermissionSignaturesLength; ++i) {
-            for (uint256 j; j < rolePermissionSignaturesLength; ++j) {
-                if (rolePermissionSignatures[i] == permissions[j]) {
-                    delete rolePermissionSignatures[i];
-                }
+            if (rolePermissionSignatures[i] == permissionSignature) {
+                delete rolePermissionSignatures[i];
             }
         }
-        emit PermissionsDeleted(role, permissions);
+        emit PermissionDeleted(role, permission, permissionSignature);
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
     ///@dev this is a temporary solution, we will need to conform to a Souldbound standard
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        revert SoulboundToken();
-    }
-
-    // BEGIN TODO
-
-    // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(address policyholder, bytes32 permissionSignature, uint256 blockNumber) external view returns (bool) {
-        // TODO
-        return true;
-    }
-
-    // Total number of policy NFTs at specific block number
-    // TODO: This should queried at action creation time and stored on the Action object
-    function totalSupplyAt(uint256 blockNumber) external view returns (uint256) {
-        // TODO
-        return totalSupply();
-    }
-
-    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes32[] memory permissions) external view returns (uint256) {
-        // TODO
-        return totalSupply();
+        revert("VertexPolicyNFT: transferFrom is disabled");
     }
 
     ///@dev hashes a permission
     ///@param permission the permission to hash
-    function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
-    }
-
-    // END TODO
-
-    ///@dev hashes an array of permissions
-    ///@param permissions the permissions array to hash
-    function hashPermissions(Permission[] calldata permissions) internal pure returns (bytes8[] memory) {
-        bytes8[] memory output = new bytes8[](permissions.length);
-        unchecked {
-            for (uint256 i; i < permissions.length; ++i) {
-                output[i] = hashPermission(permissions[i]);
-            }
-        }
-        return output;
-    }
-
-    ///@dev hashes a role
-    ///@param role the role to hash
-    function hashRole(string calldata role) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(role));
-    }
-
-    ///@dev hashes multiple roles
-    ///@param rolesArray the roles to hash
-    function hashRoles(string[] calldata rolesArray) internal pure returns (bytes32[] memory) {
-        bytes32[] memory output = new bytes32[](rolesArray.length);
-        unchecked {
-            for (uint256 i; i < rolesArray.length; ++i) {
-                output[i] = hashRole(rolesArray[i]);
-            }
-        }
-        return output;
+    function hashPermission(Permission calldata permission) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(permission.target, permission.signature, permission.executor)));
     }
 
     ///@dev returns the total token supply of the contract
@@ -291,14 +171,14 @@ contract VertexPolicyNFT is ERC721 {
 
     ///@dev returns the permission signatures of a token
     ///@param tokenId the id of the token
-    function getPermissionSignatures(uint256 tokenId) public view returns (bytes8[] memory) {
-        bytes32[] memory userRoles = tokenToRoles[tokenId];
+    function getPermissionSignatures(uint256 tokenId) public view returns (uint256[] memory) {
+        string[] memory userRoles = tokenToRoles[tokenId];
         (uint256 userRolesLength, uint256 permissionSignaturesLength) = getTotalPermissions(userRoles);
-        bytes8[] memory permissionSignatures = new bytes8[](permissionSignaturesLength);
+        uint256[] memory permissionSignatures = new uint256[](permissionSignaturesLength);
         uint256 psIndex;
         unchecked {
             for (uint256 i; i < userRolesLength; ++i) {
-                bytes8[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
+                uint256[] memory rolePermissionSignatures = rolesToPermissionSignatures[userRoles[i]];
                 uint256 rolePermissionSignaturesLength = rolePermissionSignatures.length;
                 for (uint256 j; j < rolePermissionSignaturesLength; j++) {
                     permissionSignatures[psIndex] = rolePermissionSignatures[j];
@@ -310,7 +190,7 @@ contract VertexPolicyNFT is ERC721 {
     }
 
     ///@dev helper fn which returns the total number of roles and permissions of a token
-    function getTotalPermissions(bytes32[] memory userRoles) internal view returns (uint256, uint256) {
+    function getTotalPermissions(string[] memory userRoles) internal view returns (uint256, uint256) {
         uint256 permissionSignaturesLength;
         uint256 userRolesLength = userRoles.length;
         for (uint256 i; i < userRolesLength; ++i) {
@@ -322,8 +202,8 @@ contract VertexPolicyNFT is ERC721 {
     ///@dev checks if a token has a permission
     ///@param tokenId the id of the token
     ///@param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view returns (bool) {
-        bytes8[] memory permissionSignatures = getPermissionSignatures(tokenId);
+    function hasPermission(uint256 tokenId, uint256 permissionSignature) public view returns (bool) {
+        uint256[] memory permissionSignatures = getPermissionSignatures(tokenId);
         unchecked {
             uint256 permissionSignatureLength = permissionSignatures.length;
             for (uint256 i; i < permissionSignatureLength; ++i) {
@@ -335,7 +215,7 @@ contract VertexPolicyNFT is ERC721 {
         }
     }
 
-    function getRoles() public view returns (bytes32[] memory) {
+    function getRoles() public view returns (string[] memory) {
         return roles;
     }
 }

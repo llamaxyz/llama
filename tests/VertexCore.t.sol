@@ -107,7 +107,7 @@ contract VertexCoreTest is Test {
 
         vm.warp(block.timestamp + 5 days);
 
-        // _executeAction();
+        _executeAction();
     }
 
     function _createAction() public {
