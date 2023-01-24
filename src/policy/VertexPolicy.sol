@@ -56,11 +56,7 @@ abstract contract VertexPolicy is ERC721 {
     function deleteRoles(bytes32[] calldata deleteRolesArray) public virtual {}
 
     // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(
-        address policyHolder,
-        bytes32 permissionSignature,
-        uint256 blockNumber
-    ) external view virtual returns (bool) {}
+    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
 
     function setBaseURI(string memory _baseURI) public virtual {}
 

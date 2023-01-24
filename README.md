@@ -1,17 +1,21 @@
 # Vertex v1
 
-Vertex: smart contract access control and administration
+Vertex v1 is a smart contract access control and administration framework.
 
 ## Prerequisites
 
 It requires [Foundry](https://github.com/gakonst/foundry) installed to run. You can find instructions here [Foundry installation](https://github.com/gakonst/foundry#installation).
 
-Until [forge lint](https://github.com/foundry-rs/foundry/issues/1970) is released, this project depends on Node.js packages to handle linting. MacOS users can follow [this guide](https://tecadmin.net/install-nvm-macos-with-homebrew/) to install Node.js and NPM. Once installed, ensure you're running the correct versions:
+MacOS users can follow [this guide](https://tecadmin.net/install-nvm-macos-with-homebrew/) to install Node.js and NPM. Once installed, ensure you're running the correct versions:
 
 ```sh
 $ node -v # v16.15.1 or higher
 $ npm -v # v8.12.2 or higher
 ```
+
+### VS Code
+
+You can get Solidity support for Visual Studio Code by installing the [VSCode Solidity extension](https://github.com/juanfranblanco/vscode-solidity).
 
 ## Installation
 
