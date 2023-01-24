@@ -1,0 +1,54 @@
+| src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
+|---------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                             | Deployment Size |        |        |        |         |
+| 5947221                                     | 33886           |        |        |        |         |
+| Function Name                               | min             | avg    | median | max    | # calls |
+| actionsCount                                | 632             | 632    | 632    | 632    | 1       |
+| createAction                                | 246772          | 246772 | 246772 | 246772 | 1       |
+| executeAction                               | 37229           | 37229  | 37229  | 37229  | 1       |
+| getAction                                   | 3772            | 6959   | 4085   | 27772  | 10      |
+| policy                                      | 168             | 168    | 168    | 168    | 1       |
+| queueAction                                 | 60309           | 60309  | 60309  | 60309  | 1       |
+| submitApproval                              | 29145           | 40095  | 40095  | 51045  | 2       |
+| submitDisapproval                           | 65205           | 65205  | 65205  | 65205  | 1       |
+
+
+| src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
+|---------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                         | Deployment Size |        |        |        |         |
+| 1867485                                                 | 10360           |        |        |        |         |
+| Function Name                                           | min             | avg    | median | max    | # calls |
+| addRoles                                                | 35699           | 105779 | 123299 | 123299 | 5       |
+| assignRoles                                             | 70322           | 70322  | 70322  | 70322  | 2       |
+| balanceOf                                               | 851             | 851    | 851    | 851    | 2       |
+| burn                                                    | 14000           | 14000  | 14000  | 14000  | 1       |
+| deleteRoles                                             | 3797            | 3797   | 3797   | 3797   | 1       |
+| getRoles                                                | 1268            | 1268   | 1268   | 1268   | 1       |
+| hasPermission                                           | 1261            | 1261   | 1261   | 1261   | 1       |
+| hasRole                                                 | 1101            | 1101   | 1101   | 1101   | 2       |
+| mint                                                    | 50371           | 64217  | 72271  | 72271  | 13      |
+| ownerOf                                                 | 743             | 743    | 743    | 743    | 1       |
+| revokeRoles                                             | 3406            | 3406   | 3406   | 3406   | 1       |
+| totalSupply                                             | 368             | 1368   | 1368   | 2368   | 2       |
+| transferFrom                                            | 430             | 430    | 430    | 430    | 1       |
+
+
+| src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
+|---------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                         | Deployment Size |       |        |       |         |
+| 783691                                                  | 5595            |       |        |       |         |
+| Function Name                                           | min             | avg   | median | max   | # calls |
+| DEFAULT_OPERATOR                                        | 243             | 243   | 243    | 243   | 2       |
+| approvalPeriod                                          | 306             | 306   | 306    | 306   | 6       |
+| approvalWeightByPermission                              | 2717            | 2717  | 2717   | 2717  | 1       |
+| disapprovalWeightByPermission                           | 2412            | 2412  | 2412   | 2412  | 1       |
+| expirationDelay                                         | 350             | 350   | 350    | 350   | 3       |
+| getApprovalWeightAt                                     | 829             | 1829  | 1829   | 2829  | 2       |
+| getDisapprovalWeightAt                                  | 3010            | 3010  | 3010   | 3010  | 1       |
+| isActionPassed                                          | 11863           | 17863 | 11863  | 35863 | 4       |
+| isFixedLengthApprovalPeriod                             | 334             | 334   | 334    | 334   | 2       |
+| minDisapprovalPct                                       | 284             | 284   | 284    | 284   | 1       |
+| queuingDuration                                         | 460             | 460   | 460    | 460   | 2       |
+
+
+
