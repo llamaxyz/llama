@@ -6,39 +6,40 @@ import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 
-// Errors
-error InvalidPermissionSignature();
-error InvalidWeightConfiguration();
-
+/// @title A strategy definition of a Vertex system.
+/// @author Llama (vertex@llama.xyz)
+/// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is IVertexStrategy {
-    /// @notice Equivalent to 100%, but scaled for precision
-    uint256 public constant ONE_HUNDRED_WITH_PRECISION = 100_00;
+    /// @notice Equivalent to 100%, but in basis points.
+    uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
 
-    /// @notice Permission signature value that determines weight for all unspecified policyholders.
+    /// @notice Permission signature value that determines weight of all unspecified policyholders.
     bytes32 public constant DEFAULT_OPERATOR = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     /// @notice Minimum time between queueing and execution of action.
     uint256 public immutable queuingDuration;
 
-    /// @notice Time after delay that action can be executed before permanently expiring.
+    /// @notice Time after executionTime that action can be executed before permanently expiring.
     uint256 public immutable expirationDelay;
 
     /// @notice Can action be queued before approvalEndTime.
     bool public immutable isFixedLengthApprovalPeriod;
 
-    /// @notice The strategy's Vertex instance.
+    /// @notice The strategy's Vertex system.
     IVertexCore public immutable vertex;
 
     /// @notice Length of approval period.
     uint256 public immutable approvalDuration;
 
-    /// @notice Policy NFT for this Vertex Instance.
+    /// @notice Policy NFT for this Vertex system.
     VertexPolicyNFT public immutable policy;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of action to be queued. In bps, where 100_00 == 100%.
+    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of the action for it to be queued. In bps, where
+    /// 100_00 == 100%.
     uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of action to be canceled. In bps, where 100_00
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of the action for it to be canceled. In bps,
+    /// where 100_00
     /// == 100%.
     uint256 public immutable minDisapprovalPct;
 
@@ -53,6 +54,9 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @notice List of all permission signatures that are eligible for disapprovals.
     bytes32[] public disapprovalPermissions;
+
+    error InvalidPermissionSignature();
+    error InvalidWeightConfiguration();
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
@@ -124,14 +128,14 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getApprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+    function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use?
                 // We could also get the policyholder's permissions, loop through that and check against the approvalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermissionAt(policyHolder, approvalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], blockNumber)) {
                     return approvalWeightByPermission[approvalPermissions[i]];
                 }
             }
@@ -141,14 +145,14 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getDisapprovalWeightAt(address policyHolder, uint256 blockNumber) external view returns (uint256) {
+    function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
                 // TODO: @theo is it possible to have a check to see if a permission signature is in use at a blockNumber?
                 // We could also get the policyholder's permissions, loop through that and check against the disapprovalWeightByPermission mapping
                 // This would return a bool
-                if (policy.holderHasPermissionAt(policyHolder, disapprovalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], blockNumber)) {
                     return disapprovalWeightByPermission[disapprovalPermissions[i]];
                 }
             }
@@ -171,13 +175,15 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
-        return supply * minPct / ONE_HUNDRED_WITH_PRECISION;
+        return supply * minPct / ONE_HUNDRED_IN_BPS;
     }
 
+    /// @inheritdoc IVertexStrategy
     function getApprovalPermissions() public view override returns (bytes32[] memory) {
         return approvalPermissions;
     }
 
+    /// @inheritdoc IVertexStrategy
     function getDisapprovalPermissions() public view override returns (bytes32[] memory) {
         return disapprovalPermissions;
     }
