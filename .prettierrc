@@ -3,17 +3,5 @@
   "printWidth": 160,
   "trailingComma": "es5",
   "semi": false,
-  "singleQuote": false,
-  "overrides": [
-    {
-      "files": "*.sol",
-      "options": {
-        "printWidth": 160,
-        "tabWidth": 4,
-        "useTabs": false,
-        "singleQuote": false,
-        "bracketSpacing": false
-      }
-    }
-  ]
+  "singleQuote": false
 }
