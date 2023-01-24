@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy, Permission} from "src/policy/VertexPolicy.sol";
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
@@ -22,16 +21,16 @@ contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => mapping(bytes32 => bool)) public tokenToHasRole;
     bytes32[] public roles;
     uint256 private _totalSupply;
-    IVertexCore public immutable vertex;
+    address public immutable vertex;
     string public baseURI;
 
     modifier onlyVertex() {
-        if (msg.sender != address(vertex)) revert OnlyVertex();
+        if (msg.sender != vertex) revert OnlyVertex();
         _;
     }
 
-    constructor(string memory name, string memory symbol, IVertexCore _vertex) ERC721(name, symbol) {
-        vertex = _vertex;
+    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+        vertex = msg.sender;
     }
 
     ///@dev checks if a token has a role
@@ -211,7 +210,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes32[] memory permissions) external view override returns (uint256) {
+    function getSupplyByPermissionsAt(bytes32[] memory permissions, uint256 blockNumber) external view override returns (uint256) {
         // TODO
         return totalSupply();
     }
@@ -219,7 +218,7 @@ contract VertexPolicyNFT is VertexPolicy {
     ///@dev hashes a permission
     ///@param permission the permission to hash
     function hashPermission(Permission calldata permission) internal pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.signature, permission.strategy)));
     }
 
     // END TODO
