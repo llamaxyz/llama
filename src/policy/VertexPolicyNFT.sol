@@ -131,11 +131,12 @@ contract VertexPolicyNFT is VertexPolicy {
     // END TODO
 
     ///@dev hashes an array of permissions
-    ///@param permissions the permissions array to hash
-    function hashPermissions(Permission[] calldata permissions) internal pure returns (bytes8[] memory) {
-        bytes8[] memory output = new bytes8[](permissions.length);
+    ///@param permissionToHash the permissions array to hash
+    function hashPermissions(Permission[] calldata permissionToHash) internal pure returns (bytes8[] memory) {
+        uint256 length = permissionToHash.length;
+        bytes8[] memory output = new bytes8[](length);
         unchecked {
-            for (uint256 i; i < permissions.length; ++i) {
+            for (uint256 i; i < length; ++i) {
                 output[i] = hashPermission(permissions[i]);
             }
         }
