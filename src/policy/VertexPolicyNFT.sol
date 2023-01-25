@@ -98,7 +98,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     ///@dev hashes an array of permissions
     ///@param _permissions the permissions array to hash
-    function hashPermissions(Permission[] calldata _permissions) internal pure returns (bytes8[] memory) {
+    function hashPermissions(Permission[] calldata _permissions) public pure returns (bytes8[] memory) {
         uint256 length = _permissions.length;
         bytes8[] memory output = new bytes8[](length);
         unchecked {
@@ -139,7 +139,6 @@ contract VertexPolicyNFT is VertexPolicy {
         if (ownerOf(tokenId) == address(0)) revert InvalidInput();
         bytes8[] storage userPermissions = tokenToPermissionSignatures[tokenId];
         uint256 userPermissionslength = userPermissions.length;
-        delete tokenToPermissionSignatures[tokenId];
         unchecked {
             _totalSupply--;
             for (uint256 i; i < userPermissionslength; ++i) {
@@ -147,6 +146,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 tokenToHasPermissionSignature[tokenId][userPermissions[i]] = false;
             }
         }
+        delete tokenToPermissionSignatures[tokenId];
         _burn(tokenId);
     }
 
