@@ -13,3 +13,5 @@ out/
 # Build dependencies
 node_modules/
 bin/
+
+docs/
