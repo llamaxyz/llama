@@ -52,6 +52,17 @@ contract VertexPolicyNFT is VertexPolicy {
         }
     }
 
+    ///@notice mints multiple policy token with the given permissions
+    ///@param to the addresses to mint the policy token to
+    ///@param userPermissions the permissions to be granted to the policy token
+    function batchGrantPermissions(address[] to, bytes8[][] calldata userPermissions) public override onlyVertex {
+        uint256 length = userPermissions.length;
+        if (length == 0 || length != to.length) revert InvalidInput();
+        for (uint256 i = 0; i < length; i++) {
+            grantPermissions(to[i], userPermissions[i]);
+        }
+    }
+
     ///@notice revokes all permissions from a policy token
     ///@param tokenId the id of the policy token to revoke permissions from
     function revokePermissions(uint256 tokenId) public override onlyVertex {
@@ -67,6 +78,16 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         _burn(tokenId);
+    }
+
+    ///@notice revokes all permissions from multiple policy tokens
+    ///@param tokenIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] tokenIds) public override onlyVertex {
+        uint256 length = tokenIds.length;
+        if (length == 0) revert InvalidInput();
+        for (uint256 i = 0; i < length; i++) {
+            revokePermissions(tokenIds[i]);
+        }
     }
 
     ///@dev overriding transferFrom to disable transfers for SBTs
