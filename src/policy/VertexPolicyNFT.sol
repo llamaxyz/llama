@@ -24,12 +24,12 @@ contract VertexPolicyNFT is VertexPolicy {
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertex, address[] calldata initialPolicyHolders, bytes8[][] calldata initialPermissions)
+    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyHolders, bytes8[][] memory initialPermissions)
         ERC721(name, symbol)
     {
         vertex = _vertex;
-        if (initialPolicies.length > 0) {
-            if (initialPolicies.length != initialPermissions.length) revert InvalidInput();
+        if (initialPolicyHolders.length > 0) {
+            if (initialPolicyHolders.length != initialPermissions.length) revert InvalidInput();
             batchGrantPermissions(initialPolicyHolders, initialPermissions);
         }
     }
@@ -37,7 +37,7 @@ contract VertexPolicyNFT is VertexPolicy {
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] calldata to, bytes8[][] calldata userPermissions) public override onlyVertex {
+    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex {
         uint256 length = userPermissions.length;
         if (length == 0 || length != to.length) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
@@ -118,7 +118,7 @@ contract VertexPolicyNFT is VertexPolicy {
     ///@notice mints a new policy token with the given permissions
     ///@param to the address to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
-    function grantPermissions(address to, bytes8[] calldata userPermissions) private {
+    function grantPermissions(address to, bytes8[] memory userPermissions) private {
         if (balanceOf(to) != 0) revert SoulboundToken();
         uint256 length = userPermissions.length;
         if (length == 0) revert InvalidInput();

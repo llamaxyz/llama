@@ -15,7 +15,7 @@ abstract contract VertexPolicy is ERC721 {
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] calldata to, bytes8[][] calldata userPermissions) public virtual {}
+    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual {}
 
     ///@notice revokes all permissions from multiple policy tokens
     ///@param tokenIds the ids of the policy tokens to revoke permissions from

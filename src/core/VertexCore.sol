@@ -66,10 +66,16 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    constructor(string memory _name, string memory _symbol, Strategy[] memory initialStrategies) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        Strategy[] memory initialStrategies,
+        address[] memory initialPolicyHolders,
+        bytes8[][] memory initialPermissions
+    ) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this)));
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyHolders, initialPermissions));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {

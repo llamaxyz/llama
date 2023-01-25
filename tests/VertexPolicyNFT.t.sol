@@ -20,6 +20,9 @@ contract VertexPolicyNFTTest is Test {
     address[] public addresses;
     uint256[] public tokenIds;
 
+    address[] public initialPolicies;
+    bytes8[][] public initialPermissions;
+
     uint256 ADDRESS_THIS_TOKEN_ID;
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
@@ -33,7 +36,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this));
+        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this), initialPolicies, initialPermissions);
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);

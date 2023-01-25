@@ -24,10 +24,12 @@ contract VertexCoreTest is Test {
 
     Permission public permission;
     Permission[] public permissions;
-    Permission[][] public permissionsArray;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
+
+    address[] public initialPolicies;
+    bytes8[][] public initialPermissions;
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
@@ -53,10 +55,8 @@ contract VertexCoreTest is Test {
             approvalWeightByPermission: approvalWeightByPermission,
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
-
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies);
+        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
         protocol = new ProtocolXYZ(address(vertex));
-
         // Use create2 to get strategy's address
         bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[0])));
         bytes memory bytecode = type(VertexStrategy).creationCode;
@@ -82,28 +82,12 @@ contract VertexCoreTest is Test {
             )
         );
         policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
-
-        vm.startPrank(address(vertex));
-        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategy});
-        permissions.push(permission);
-        permissionsArray.push(permissions);
-        permissionSignature.push(policy.hashPermission(permission));
-        for (uint256 i; i < 5; i++) {
-            permissionSignatures.push(permissionSignature);
-        }
-        addresses.push(actionCreator);
-        addresses.push(policyholder1);
-        addresses.push(policyholder2);
-        addresses.push(policyholder3);
-        addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
-
-        vm.stopPrank();
-
         vm.label(actionCreator, "Action Creator");
     }
 
     function test_HappyActionFlow() public {
+        _createPolicies();
+
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -151,6 +135,25 @@ contract VertexCoreTest is Test {
         assertEq(action.disapprovalPolicySupply, 5);
     }
 
+    function _createPolicies() public {
+        vm.startPrank(address(vertex));
+        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategy});
+        permissions.push(permission);
+        permissionSignature.push(hashPermission(permission));
+        for (uint256 i; i < 5; i++) {
+            permissionSignatures.push(permissionSignature);
+        }
+        addresses.push(actionCreator);
+        addresses.push(policyholder1);
+        addresses.push(policyholder2);
+        addresses.push(policyholder3);
+        addresses.push(policyholder4);
+
+        policy.batchGrantPermissions(addresses, permissionSignatures);
+
+        vm.stopPrank();
+    }
+
     function _approveAction(address policyholder) public {
         vm.expectEmit(true, true, true, true);
         emit PolicyholderApproved(0, policyholder, true, 1);
@@ -177,5 +180,20 @@ contract VertexCoreTest is Test {
 
         Action memory action = vertex.getAction(0);
         assertEq(action.executed, true);
+    }
+
+    function hashPermission(Permission memory permission) public pure returns (bytes8) {
+        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
+    }
+
+    function hashPermissions(Permission[] calldata _permissions) public pure returns (bytes8[] memory) {
+        uint256 length = _permissions.length;
+        bytes8[] memory output = new bytes8[](length);
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                output[i] = hashPermission(_permissions[i]);
+            }
+        }
+        return output;
     }
 }
