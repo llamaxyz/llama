@@ -12,19 +12,10 @@ abstract contract VertexPolicy is ERC721 {
     error InvalidInput();
     error OnlyVertex();
 
-    ///@notice mints a new policy token with the given permissions
-    ///@param to the address to mint the policy token to
-    ///@param userPermissions the permissions to be granted to the policy token
-    function grantPermissions(address to, bytes8[] calldata userPermissions) public virtual {}
-
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
     function batchGrantPermissions(address[] to, bytes8[][] calldata userPermissions) public virtual {}
-
-    ///@notice revokes all permissions from a policy token
-    ///@param tokenId the id of the policy token to revoke permissions from
-    function revokePermissions(uint256 tokenId) public virtual {}
 
     ///@notice revokes all permissions from multiple policy tokens
     ///@param tokenIds the ids of the policy tokens to revoke permissions from

@@ -28,30 +28,6 @@ contract VertexPolicyNFT is VertexPolicy {
         vertex = _vertex;
     }
 
-    ///@notice mints a new policy token with the given permissions
-    ///@param to the address to mint the policy token to
-    ///@param userPermissions the permissions to be granted to the policy token
-    function grantPermissions(address to, bytes8[] calldata userPermissions) public override onlyVertex {
-        if (balanceOf(to) != 0) revert SoulboundToken();
-        uint256 length = userPermissions.length;
-        if (length == 0) revert InvalidInput();
-        uint256 userId = uint256(to);
-        unchecked {
-            _totalSupply++;
-            tokenToPermissionSignatures[userId] = userPermissions;
-            for (uint256 i = 0; i < length; i++) {
-                if (permissionSupply[userPermissions[i]] == 0) {
-                    permissions.push(userPermissions[i]);
-                    ++permissionSupply[userPermissions[i]];
-                }
-                if (!tokenToHasPermissionSignature[userId][userPermissions[i]]) {
-                    tokenToHasPermissionSignature[userId][userPermissions[i]] = true;
-                }
-            }
-            _mint(to, userId);
-        }
-    }
-
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
@@ -61,23 +37,6 @@ contract VertexPolicyNFT is VertexPolicy {
         for (uint256 i = 0; i < length; i++) {
             grantPermissions(to[i], userPermissions[i]);
         }
-    }
-
-    ///@notice revokes all permissions from a policy token
-    ///@param tokenId the id of the policy token to revoke permissions from
-    function revokePermissions(uint256 tokenId) public override onlyVertex {
-        if (ownerOf(tokenId) == address(0)) revert InvalidInput();
-        bytes8[] storage userPermissions = tokenToPermissionSignatures[tokenId];
-        uint256 userPermissionslength = userPermissions.length;
-        delete tokenToPermissionSignatures[tokenId];
-        unchecked {
-            _totalSupply--;
-            for (uint256 i; i < userPermissionslength; ++i) {
-                permissionSupply[userPermissions[i]]--;
-                tokenToHasPermissionSignature[tokenId][userPermissions[i]] = false;
-            }
-        }
-        _burn(tokenId);
     }
 
     ///@notice revokes all permissions from multiple policy tokens
@@ -148,6 +107,47 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         return output;
+    }
+
+    ///@notice mints a new policy token with the given permissions
+    ///@param to the address to mint the policy token to
+    ///@param userPermissions the permissions to be granted to the policy token
+    function grantPermissions(address to, bytes8[] calldata userPermissions) private {
+        if (balanceOf(to) != 0) revert SoulboundToken();
+        uint256 length = userPermissions.length;
+        if (length == 0) revert InvalidInput();
+        uint256 userId = uint256(to);
+        unchecked {
+            _totalSupply++;
+            tokenToPermissionSignatures[userId] = userPermissions;
+            for (uint256 i = 0; i < length; i++) {
+                if (permissionSupply[userPermissions[i]] == 0) {
+                    permissions.push(userPermissions[i]);
+                    ++permissionSupply[userPermissions[i]];
+                }
+                if (!tokenToHasPermissionSignature[userId][userPermissions[i]]) {
+                    tokenToHasPermissionSignature[userId][userPermissions[i]] = true;
+                }
+            }
+            _mint(to, userId);
+        }
+    }
+
+    ///@notice revokes all permissions from a policy token
+    ///@param tokenId the id of the policy token to revoke permissions from
+    function revokePermissions(uint256 tokenId) private {
+        if (ownerOf(tokenId) == address(0)) revert InvalidInput();
+        bytes8[] storage userPermissions = tokenToPermissionSignatures[tokenId];
+        uint256 userPermissionslength = userPermissions.length;
+        delete tokenToPermissionSignatures[tokenId];
+        unchecked {
+            _totalSupply--;
+            for (uint256 i; i < userPermissionslength; ++i) {
+                permissionSupply[userPermissions[i]]--;
+                tokenToHasPermissionSignature[tokenId][userPermissions[i]] = false;
+            }
+        }
+        _burn(tokenId);
     }
 
     ///@dev returns the total token supply of the contract
