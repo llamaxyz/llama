@@ -39,7 +39,7 @@ struct Action {
 }
 
 struct WeightByPermission {
-    bytes32 permissionSignature; // Policyholder's permission signature.
+    bytes8 permissionSignature; // Policyholder's permission signature.
     uint248 weight; // Approval or disapproval weight of policyholder.
 }
 

@@ -15,17 +15,17 @@ abstract contract VertexPolicy is ERC721 {
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] to, bytes8[][] calldata userPermissions) public virtual {}
+    function batchGrantPermissions(address[] calldata to, bytes8[][] calldata userPermissions) public virtual {}
 
     ///@notice revokes all permissions from multiple policy tokens
     ///@param tokenIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] tokenIds) public virtual {}
+    function batchRevokePermissions(uint256[] calldata tokenIds) public virtual {}
 
     ///@notice Check if a holder has a permissionSignature at a specific block number
     ///@param policyHolder the address of the policy holder
     ///@param permissionSignature the signature of the permission
     ///@param blockNumber the block number to query
-    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
+    function holderHasPermissionAt(address policyHolder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
 
     ///@notice sets the base URI for the contract
     ///@param _baseURI the base URI string to set
@@ -37,7 +37,7 @@ abstract contract VertexPolicy is ERC721 {
 
     ///@notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     ///@param permissions the permissions we are querying for
-    function getSupplyByPermissions(bytes32[] memory permissions) external view virtual returns (uint256) {}
+    function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256) {}
 
     ///@dev returns the total token supply of the contract
     function totalSupply() public view virtual returns (uint256) {}

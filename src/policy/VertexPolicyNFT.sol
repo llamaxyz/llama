@@ -31,7 +31,7 @@ contract VertexPolicyNFT is VertexPolicy {
     ///@notice mints multiple policy token with the given permissions
     ///@param to the addresses to mint the policy token to
     ///@param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] to, bytes8[][] calldata userPermissions) public override onlyVertex {
+    function batchGrantPermissions(address[] calldata to, bytes8[][] calldata userPermissions) public override onlyVertex {
         uint256 length = userPermissions.length;
         if (length == 0 || length != to.length) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
@@ -41,7 +41,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     ///@notice revokes all permissions from multiple policy tokens
     ///@param tokenIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] tokenIds) public override onlyVertex {
+    function batchRevokePermissions(uint256[] calldata tokenIds) public override onlyVertex {
         uint256 length = tokenIds.length;
         if (length == 0) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
@@ -81,9 +81,9 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     ///@notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    ///@param permissions the permissions we are querying for
+    ///@param _permissions the permissions we are querying for
     // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes8[] memory permissions) external view override returns (uint256) {
+    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
         // TODO
         return totalSupply();
     }
@@ -97,13 +97,13 @@ contract VertexPolicyNFT is VertexPolicy {
     // END TODO
 
     ///@dev hashes an array of permissions
-    ///@param permissionToHash the permissions array to hash
-    function hashPermissions(Permission[] calldata permissionToHash) internal pure returns (bytes8[] memory) {
-        uint256 length = permissionToHash.length;
+    ///@param _permissions the permissions array to hash
+    function hashPermissions(Permission[] calldata _permissions) internal pure returns (bytes8[] memory) {
+        uint256 length = _permissions.length;
         bytes8[] memory output = new bytes8[](length);
         unchecked {
             for (uint256 i; i < length; ++i) {
-                output[i] = hashPermission(permissions[i]);
+                output[i] = hashPermission(_permissions[i]);
             }
         }
         return output;
@@ -116,7 +116,7 @@ contract VertexPolicyNFT is VertexPolicy {
         if (balanceOf(to) != 0) revert SoulboundToken();
         uint256 length = userPermissions.length;
         if (length == 0) revert InvalidInput();
-        uint256 userId = uint256(to);
+        uint256 userId = uint256(uint160(to));
         unchecked {
             _totalSupply++;
             tokenToPermissionSignatures[userId] = userPermissions;

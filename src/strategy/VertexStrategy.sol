@@ -14,7 +14,7 @@ contract VertexStrategy is IVertexStrategy {
     uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice Permission signature value that determines weight of all unspecified policyholders.
-    bytes32 public constant DEFAULT_OPERATOR = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
 
     /// @notice Minimum time between queueing and execution of action.
     uint256 public immutable queuingDuration;
@@ -44,16 +44,16 @@ contract VertexStrategy is IVertexStrategy {
     uint256 public immutable minDisapprovalPct;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes32 => uint248) public approvalWeightByPermission;
+    mapping(bytes8 => uint248) public approvalWeightByPermission;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes32 => uint248) public disapprovalWeightByPermission;
+    mapping(bytes8 => uint248) public disapprovalWeightByPermission;
 
     /// @notice List of all permission signatures that are eligible for approvals.
-    bytes32[] public approvalPermissions;
+    bytes8[] public approvalPermissions;
 
     /// @notice List of all permission signatures that are eligible for disapprovals.
-    bytes32[] public disapprovalPermissions;
+    bytes8[] public disapprovalPermissions;
 
     error InvalidPermissionSignature();
     error InvalidWeightConfiguration();
@@ -179,12 +179,12 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getApprovalPermissions() public view override returns (bytes32[] memory) {
+    function getApprovalPermissions() public view override returns (bytes8[] memory) {
         return approvalPermissions;
     }
 
     /// @inheritdoc IVertexStrategy
-    function getDisapprovalPermissions() public view override returns (bytes32[] memory) {
+    function getDisapprovalPermissions() public view override returns (bytes8[] memory) {
         return disapprovalPermissions;
     }
 }
