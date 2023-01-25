@@ -12,24 +12,40 @@ abstract contract VertexPolicy is ERC721 {
     error InvalidInput();
     error OnlyVertex();
 
-    ///@dev mints a new token
-    ///@param to the address to mint the token to
-    ///@param userPermissions the permissions to be granted to the token
-    function mint(address to, bytes32[] calldata userPermissions) public virtual {}
+    ///@notice mints a new policy token with the given permissions
+    ///@param to the address to mint the policy token to
+    ///@param userPermissions the permissions to be granted to the policy token
+    function grantPermissions(address to, bytes8[] calldata userPermissions) public virtual {}
 
-    ///@dev burns a token
-    ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public virtual {}
+    ///@notice mints multiple policy token with the given permissions
+    ///@param to the addresses to mint the policy token to
+    ///@param userPermissions the permissions to be granted to the policy token
+    function batchGrantPermissions(address[] to, bytes8[][] calldata userPermissions) public virtual {}
 
-    // Check if a holder has a permissionSignature at a specific block number
+    ///@notice revokes all permissions from a policy token
+    ///@param tokenId the id of the policy token to revoke permissions from
+    function revokePermissions(uint256 tokenId) public virtual {}
+
+    ///@notice revokes all permissions from multiple policy tokens
+    ///@param tokenIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] tokenIds) public virtual {}
+
+    ///@notice Check if a holder has a permissionSignature at a specific block number
+    ///@param policyHolder the address of the policy holder
+    ///@param permissionSignature the signature of the permission
+    ///@param blockNumber the block number to query
     function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
 
+    ///@notice sets the base URI for the contract
+    ///@param _baseURI the base URI string to set
     function setBaseURI(string memory _baseURI) public virtual {}
 
-    // Total number of policy NFTs at specific block number
+    ///@notice Total number of policy NFTs at specific block number
+    ///@param blockNumber the block number to query
     function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256) {}
 
-    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    ///@notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    ///@param permissions the permissions we are querying for
     function getSupplyByPermissions(bytes32[] memory permissions) external view virtual returns (uint256) {}
 
     ///@dev returns the total token supply of the contract
