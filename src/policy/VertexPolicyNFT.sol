@@ -98,24 +98,31 @@ contract VertexPolicyNFT is VertexPolicy {
 
     // BEGIN TODO
 
-    // Check if a holder has a permissionSignature at a specific block number
+    ///@notice Check if a holder has a permissionSignature at a specific block number
+    ///@param policyHolder the address of the policy holder
+    ///@param permissionSignature the signature of the permission
+    ///@param blockNumber the block number to query
     function holderHasPermissionAt(address policyHolder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
         // TODO
         return true;
     }
 
+    ///@notice sets the base URI for the contract
+    ///@param _baseURI the base URI string to set
     function setBaseURI(string memory _baseURI) public override onlyVertex {
         baseURI = _baseURI;
     }
 
-    // Total number of policy NFTs at specific block number
+    ///@notice Total number of policy NFTs at specific block number
+    ///@param blockNumber the block number to query
     // TODO: This should queried at action creation time and stored on the Action object
     function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
         // TODO
         return totalSupply();
     }
 
-    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    ///@notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    ///@param permissions the permissions we are querying for
     // TODO: This should queried at action creation time and stored on the Action object
     function getSupplyByPermissions(bytes8[] memory permissions) external view override returns (uint256) {
         // TODO
@@ -161,6 +168,8 @@ contract VertexPolicyNFT is VertexPolicy {
         return tokenToHasPermissionSignature[tokenId][permissionSignature];
     }
 
+    ///@notice returns the location of the policy metadata
+    ///@param id the id of the policy token
     function tokenURI(uint256 id) public view override returns (string memory) {
         return string(abi.encodePacked(baseURI, Strings.toString(id)));
     }
