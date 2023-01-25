@@ -15,6 +15,7 @@ contract VertexCoreTest is Test {
     ProtocolXYZ public protocol;
     VertexPolicyNFT public policy;
     address public constant actionCreator = address(0x1337);
+    uint256 public constant actionCreatorTokenID = uint256(uint160(address(0x1337)));
     address public constant policyholder1 = address(0x1338);
     address public constant policyholder2 = address(0x1339);
     address public constant policyholder3 = address(0x1340);
@@ -22,12 +23,11 @@ contract VertexCoreTest is Test {
     bytes4 public constant pauseSelector = 0x02329a29;
 
     Permission public permission;
-    string[] public roles;
     Permission[] public permissions;
     Permission[][] public permissionsArray;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
-    bytes32[] public roleHashes;
+    address[] public addresses;
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
@@ -88,17 +88,15 @@ contract VertexCoreTest is Test {
         permissions.push(permission);
         permissionsArray.push(permissions);
         permissionSignature.push(policy.hashPermission(permission));
-        permissionSignatures.push(permissionSignature);
-        roles.push("admin");
-        roleHashes.push(hashRole(roles[0]));
-        policy.addRoles(roles, permissionsArray);
-        bytes32[] memory _roles = new bytes32[](0);
-        policy.mint(actionCreator, _roles);
-        policy.mint(policyholder1, _roles);
-        policy.mint(policyholder2, _roles);
-        policy.mint(policyholder3, _roles);
-        policy.mint(policyholder4, _roles);
-        policy.assignRoles(0, roleHashes);
+        for (uint256 i; i < 5; i++) {
+            permissionSignatures.push(permissionSignature);
+        }
+        addresses.push(actionCreator);
+        addresses.push(policyholder1);
+        addresses.push(policyholder2);
+        addresses.push(policyholder3);
+        addresses.push(policyholder4);
+        policy.batchGrantPermissions(addresses, permissionSignatures);
 
         vm.stopPrank();
 
@@ -141,7 +139,7 @@ contract VertexCoreTest is Test {
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
         emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
-        vertex.createAction(0, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(actionCreatorTokenID, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(0);
         uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
