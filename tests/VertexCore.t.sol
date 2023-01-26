@@ -46,10 +46,13 @@ contract VertexCoreTest is Test {
 
     // Events
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
-    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event ActionCanceled(uint256 id);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event StrategiesAuthorized(Strategy[] strategies);
+    event StrategiesUnauthorized(VertexStrategy[] strategies);
 
     function hashRole(string memory role) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(role));
@@ -175,6 +178,141 @@ contract VertexCoreTest is Test {
         vm.roll(block.number + 36000);
 
         _executeAction();
+    }
+
+    function test_InvalidCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+        vertex.cancelAction(0);
+    }
+
+    function test_CreatorCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_DuplicateCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyCanceledCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vertex.cancelAction(0);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyExecutedCancelFlow() public {
+        test_HappyActionFlow();
+
+        vm.startPrank(actionCreator);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyExpiredCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 15 days);
+        vm.roll(block.number + 108000);
+
+        vm.startPrank(actionCreator);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_CancelationThroughDisapproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _disapproveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder3);
+        _disapproveAction(policyholder3);
+        vm.stopPrank();
+
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+    }
+
+    function test_CancelationFailsThroughDisapproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+        vertex.cancelAction(0);
     }
 
     function test_InvalidStrategy() public {

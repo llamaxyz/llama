@@ -113,7 +113,7 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isDisapprovalQuorumValid(action.createdBlockNumber, action.totalDisapprovals);
+        return isDisapprovalQuorumValid(actionId, action.totalDisapprovals);
     }
 
     /// @inheritdoc IVertexStrategy
