@@ -22,10 +22,10 @@ abstract contract VertexPolicy is ERC721 {
     function batchRevokePermissions(uint256[] calldata tokenIds) public virtual {}
 
     ///@notice Check if a holder has a permissionSignature at a specific block number
-    ///@param policyHolder the address of the policy holder
+    ///@param policyholder the address of the policy holder
     ///@param permissionSignature the signature of the permission
     ///@param blockNumber the block number to query
-    function holderHasPermissionAt(address policyHolder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
 
     ///@notice sets the base URI for the contract
     ///@param _baseURI the base URI string to set

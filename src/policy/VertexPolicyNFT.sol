@@ -24,13 +24,13 @@ contract VertexPolicyNFT is VertexPolicy {
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyHolders, bytes8[][] memory initialPermissions)
+    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
         ERC721(name, symbol)
     {
         vertex = _vertex;
-        if (initialPolicyHolders.length > 0) {
-            if (initialPolicyHolders.length != initialPermissions.length) revert InvalidInput();
-            batchGrantPermissions(initialPolicyHolders, initialPermissions);
+        if (initialPolicyholders.length > 0) {
+            if (initialPolicyholders.length != initialPermissions.length) revert InvalidInput();
+            batchGrantPermissions(initialPolicyholders, initialPermissions);
         }
     }
 
@@ -64,10 +64,10 @@ contract VertexPolicyNFT is VertexPolicy {
     // BEGIN TODO
 
     ///@notice Check if a holder has a permissionSignature at a specific block number
-    ///@param policyHolder the address of the policy holder
+    ///@param policyholder the address of the policy holder
     ///@param permissionSignature the signature of the permission
     ///@param blockNumber the block number to query
-    function holderHasPermissionAt(address policyHolder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
         // TODO
         return true;
     }

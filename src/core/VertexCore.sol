@@ -70,12 +70,12 @@ contract VertexCore is IVertexCore {
         string memory _name,
         string memory _symbol,
         Strategy[] memory initialStrategies,
-        address[] memory initialPolicyHolders,
+        address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions
     ) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyHolders, initialPermissions));
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {
