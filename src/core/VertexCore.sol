@@ -221,6 +221,38 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
+    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
+        uint256 strategyLength = strategies.length;
+        unchecked {
+            for (uint256 i; i < strategyLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
+                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
+                authorizedStrategies[strategy] = true;
+            }
+        }
+
+        emit StrategiesAuthorized(strategies);
+    }
+
+    /// @inheritdoc IVertexCore
+    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
+        uint256 strategiesLength = strategies.length;
+        unchecked {
+            for (uint256 i = 0; i < strategiesLength; ++i) {
+                authorizedStrategies[strategies[i]] = false;
+            }
+        }
+
+        emit StrategiesUnauthorized(strategies);
+    }
+
+    /// @inheritdoc IVertexCore
+    function isActionExpired(uint256 actionId) public view override returns (bool) {
+        Action storage action = actions[actionId];
+        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
+    }
+
+    /// @inheritdoc IVertexCore
     function getAction(uint256 actionId) external view override returns (Action memory) {
         return actions[actionId];
     }
@@ -256,38 +288,6 @@ contract VertexCore is IVertexCore {
         }
 
         return ActionState.Queued;
-    }
-
-    /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
-        uint256 strategyLength = strategies.length;
-        unchecked {
-            for (uint256 i; i < strategyLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
-                authorizedStrategies[strategy] = true;
-            }
-        }
-
-        emit StrategiesAuthorized(strategies);
-    }
-
-    /// @inheritdoc IVertexCore
-    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
-        uint256 strategiesLength = strategies.length;
-        unchecked {
-            for (uint256 i = 0; i < strategiesLength; ++i) {
-                authorizedStrategies[strategies[i]] = false;
-            }
-        }
-
-        emit StrategiesUnauthorized(strategies);
-    }
-
-    /// @inheritdoc IVertexCore
-    function isActionExpired(uint256 actionId) public view override returns (bool) {
-        Action storage action = actions[actionId];
-        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
     }
 
     function _submitApproval(address policyholder, uint256 actionId, bool support) internal {
