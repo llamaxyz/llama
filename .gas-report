@@ -1,37 +1,3 @@
-    |
-378 |     function hashPermission(Permission memory permission) public pure returns (bytes8) {
-    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Note: The shadowed declaration is here:
-  --> tests/VertexCore.t.sol:35:5:
-   |
-35 |     Permission public permission;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[0m
-
-
-Running 3 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
-[32m[PASS][0m testBurn() (gas: 38620)
-[32m[PASS][0m testCannotTransferTokenOwnership() (gas: 10792)
-[32m[PASS][0m testGrantPermission() (gas: 146677)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 1.41ms
-
-Running 14 tests for tests/VertexCore.t.sol:VertexCoreTest
-[32m[PASS][0m test_AlreadyCanceledCancelFlow() (gas: 299111)
-[32m[PASS][0m test_AlreadyExecutedCancelFlow() (gas: 600917)
-[32m[PASS][0m test_AlreadyExpiredCancelFlow() (gas: 565601)
-[32m[PASS][0m test_CancelationFailsThroughDisapproval() (gas: 509010)
-[32m[PASS][0m test_CancelationThroughDisapproval() (gas: 654887)
-[32m[PASS][0m test_CreatorCancelFlow() (gas: 296625)
-[32m[PASS][0m test_DuplicateCancelFlow() (gas: 296999)
-[32m[PASS][0m test_HappyActionFlow() (gas: 584818)
-[32m[PASS][0m test_InvalidCancelFlow() (gas: 305554)
-[32m[PASS][0m test_InvalidPolicyholder() (gas: 22941)
-[32m[PASS][0m test_InvalidStrategy() (gas: 15218)
-[32m[PASS][0m test_NoSelectorPermission() (gas: 27896)
-[32m[PASS][0m test_NoStrategyPermission() (gas: 16553)
-[32m[PASS][0m test_NoTargetPermission() (gas: 25636)
-Test result: [32mok[0m. 14 passed; 0 failed; finished in 9.40ms
 | src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
 |---------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                             | Deployment Size |        |        |        |         |
@@ -57,7 +23,7 @@ Test result: [32mok[0m. 14 passed; 0 failed; finished in 9.40ms
 | batchGrantPermissions                                   | 124109          | 561806 | 669316 | 669316 | 18      |
 | batchRevokePermissions                                  | 33901           | 33901  | 33901  | 33901  | 1       |
 | hasPermission                                           | 2675            | 2675   | 2675   | 2675   | 11      |
-| hashPermission                                          | 1363            | 1363   | 1363   | 1363   | 11      |
+| hashPermission                                          | 1363            | 1363   | 1363   | 1363   | 25      |
 | hashPermissions                                         | 2273            | 2273   | 2273   | 2273   | 3       |
 | ownerOf                                                 | 775             | 2621   | 2775   | 2775   | 13      |
 | totalSupply                                             | 368             | 1368   | 1368   | 2368   | 18      |
