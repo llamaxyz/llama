@@ -7,6 +7,7 @@ import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {Permission} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
+/// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicyNFT is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 
