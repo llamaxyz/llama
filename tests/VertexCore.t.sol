@@ -60,10 +60,6 @@ contract VertexCoreTest is Test {
     event StrategiesAuthorized(Strategy[] strategies);
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
-    function hashRole(string memory role) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(role));
-    }
-
     function setUp() public {
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
