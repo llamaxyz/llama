@@ -14,7 +14,7 @@ Running 3 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
 [32m[PASS][0m testBurn() (gas: 38620)
 [32m[PASS][0m testCannotTransferTokenOwnership() (gas: 10792)
 [32m[PASS][0m testGrantPermission() (gas: 146677)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 1.42ms
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 1.43ms
 
 Running 14 tests for tests/VertexCore.t.sol:VertexCoreTest
 [32m[PASS][0m test_AlreadyCanceledCancelFlow() (gas: 299111)
@@ -31,7 +31,7 @@ Running 14 tests for tests/VertexCore.t.sol:VertexCoreTest
 [32m[PASS][0m test_NoSelectorPermission() (gas: 27896)
 [32m[PASS][0m test_NoStrategyPermission() (gas: 16553)
 [32m[PASS][0m test_NoTargetPermission() (gas: 25636)
-Test result: [32mok[0m. 14 passed; 0 failed; finished in 10.50ms
+Test result: [32mok[0m. 14 passed; 0 failed; finished in 9.01ms
 | src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
 |---------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                             | Deployment Size |        |        |        |         |
