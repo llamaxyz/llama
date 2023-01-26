@@ -17,16 +17,22 @@ contract VertexCoreTest is Test {
     address public constant actionCreator = address(0x1337);
     uint256 public constant actionCreatorTokenID = uint256(uint160(address(0x1337)));
     address public constant policyholder1 = address(0x1338);
+    uint256 public constant policyholder1TokenID = uint256(uint160(address(0x1338)));
     address public constant policyholder2 = address(0x1339);
+    uint256 public constant policyholder2TokenID = uint256(uint160(address(0x1339)));
     address public constant policyholder3 = address(0x1340);
+    uint256 public constant policyholder3TokenID = uint256(uint160(address(0x1340)));
     address public constant policyholder4 = address(0x1341);
+    uint256 public constant policyholder34TokenID = uint256(uint160(address(0x1341)));
     bytes4 public constant pauseSelector = 0x02329a29;
 
     Permission public permission;
     Permission[] public permissions;
+    Permission[][] public permissionsArray;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
+    uint256[] public tokenIds;
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
@@ -36,10 +42,6 @@ contract VertexCoreTest is Test {
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-
-    function hashRole(string memory role) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(role));
-    }
 
     function setUp() public {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
@@ -70,18 +72,19 @@ contract VertexCoreTest is Test {
         );
         strategy = VertexStrategy(address(uint160(uint256(hash))));
 
-        // Use create2 to get policy's address
-        bytes32 policySalt = bytes32(keccak256(abi.encode("ProtocolXYZ", "VXP")));
-        bytes memory policyBytecode = type(VertexPolicyNFT).creationCode;
-        bytes32 policyHash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(vertex),
-                policySalt,
-                keccak256(abi.encodePacked(policyBytecode, abi.encode("ProtocolXYZ", "VXP", IVertexCore(address(vertex)))))
-            )
-        );
-        policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
+        // // Use create2 to get policy's address
+        // bytes32 policySalt = bytes32(keccak256(abi.encode("ProtocolXYZ", "VXP")));
+        // bytes memory policyBytecode = type(VertexPolicyNFT).creationCode;
+        // bytes32 policyHash = keccak256(
+        //     abi.encodePacked(
+        //         bytes1(0xff),
+        //         address(vertex),
+        //         policySalt,
+        //         keccak256(abi.encodePacked(policyBytecode, abi.encode("ProtocolXYZ", "VXP", IVertexCore(address(vertex)))))
+        //     )
+        // );
+        // policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
+        policy = vertex.policy();
         vm.label(actionCreator, "Action Creator");
     }
 
@@ -148,7 +151,6 @@ contract VertexCoreTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-
         policy.batchGrantPermissions(addresses, permissionSignatures);
 
         vm.stopPrank();
