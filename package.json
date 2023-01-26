@@ -4,11 +4,6 @@
   "author": "Llama <team@llama.xyz>",
   "private": true,
   "version": "0.0.1",
-  "release": {
-    "branches": [
-      "main"
-    ]
-  },
   "license": "MIT",
   "files": [
     "src/**/*.sol"
@@ -46,7 +41,6 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.1.0",
     "prettier": "^2.8.2",
-    "prettier-plugin-solidity": "^1.1.1",
-    "semantic-release": "^20.1.0"
+    "prettier-plugin-solidity": "^1.1.1"
   }
 }
