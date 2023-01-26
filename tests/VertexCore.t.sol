@@ -329,7 +329,7 @@ contract VertexCoreTest is Test {
         vm.startPrank(address(vertex));
         permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategy});
         permissions.push(permission);
-        permissionSignature.push(hashPermission(permission));
+        permissionSignature.push(policy.hashPermission(permission));
         for (uint256 i; i < 5; i++) {
             permissionSignatures.push(permissionSignature);
         }
@@ -369,20 +369,5 @@ contract VertexCoreTest is Test {
 
         Action memory action = vertex.getAction(0);
         assertEq(action.executed, true);
-    }
-
-    function hashPermission(Permission memory permission) public pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
-    }
-
-    function hashPermissions(Permission[] calldata _permissions) public pure returns (bytes8[] memory) {
-        uint256 length = _permissions.length;
-        bytes8[] memory output = new bytes8[](length);
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                output[i] = hashPermission(_permissions[i]);
-            }
-        }
-        return output;
     }
 }
