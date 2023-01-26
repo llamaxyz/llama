@@ -56,7 +56,6 @@ contract VertexStrategy is IVertexStrategy {
     bytes32[] public disapprovalPermissions;
 
     error InvalidPermissionSignature();
-    error InvalidWeightConfiguration();
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
@@ -77,11 +76,6 @@ contract VertexStrategy is IVertexStrategy {
         disapprovalWeightByPermission[DEFAULT_OPERATOR] = 1;
 
         if (approvalPermissionsLength > 0) {
-            if (
-                strategyConfig.approvalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR && strategyConfig.approvalWeightByPermission[0].weight == 0
-                    && approvalPermissionsLength == 1
-            ) revert InvalidWeightConfiguration();
-
             unchecked {
                 for (uint256 i; i < approvalPermissionsLength; ++i) {
                     WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
@@ -95,11 +89,6 @@ contract VertexStrategy is IVertexStrategy {
         }
 
         if (disapprovalPermissionsLength > 0) {
-            if (
-                strategyConfig.disapprovalWeightByPermission[0].permissionSignature == DEFAULT_OPERATOR
-                    && strategyConfig.disapprovalWeightByPermission[0].weight == 0 && disapprovalPermissionsLength == 1
-            ) revert InvalidWeightConfiguration();
-
             unchecked {
                 for (uint256 i; i < disapprovalPermissionsLength; ++i) {
                     WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
@@ -112,7 +101,7 @@ contract VertexStrategy is IVertexStrategy {
             }
         }
 
-        emit NewStrategyCreated();
+        emit NewStrategyCreated(_vertex, _policy);
     }
 
     /// @inheritdoc IVertexStrategy
@@ -124,7 +113,7 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isDisapprovalQuorumValid(action.createdBlockNumber, action.totalDisapprovals);
+        return isDisapprovalQuorumValid(actionId, action.totalDisapprovals);
     }
 
     /// @inheritdoc IVertexStrategy
@@ -132,9 +121,6 @@ contract VertexStrategy is IVertexStrategy {
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
-                // TODO: @theo is it possible to have a check to see if a permission signature is in use?
-                // We could also get the policyholder's permissions, loop through that and check against the approvalWeightByPermission mapping
-                // This would return a bool
                 if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], blockNumber)) {
                     return approvalWeightByPermission[approvalPermissions[i]];
                 }
@@ -149,9 +135,6 @@ contract VertexStrategy is IVertexStrategy {
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
-                // TODO: @theo is it possible to have a check to see if a permission signature is in use at a blockNumber?
-                // We could also get the policyholder's permissions, loop through that and check against the disapprovalWeightByPermission mapping
-                // This would return a bool
                 if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], blockNumber)) {
                     return disapprovalWeightByPermission[disapprovalPermissions[i]];
                 }

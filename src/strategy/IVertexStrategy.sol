@@ -2,9 +2,10 @@
 pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/core/IVertexCore.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 
 interface IVertexStrategy {
-    event NewStrategyCreated();
+    event NewStrategyCreated(IVertexCore vertex, VertexPolicyNFT policy);
 
     /// @notice Get whether an action has passed the approval process.
     /// @param actionId id of the action.
