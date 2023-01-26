@@ -46,18 +46,18 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @notice revokes all permissions from multiple policy tokens
-    /// @param tokenIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] calldata tokenIds) public override onlyVertex {
-        uint256 length = tokenIds.length;
+    /// @param policyIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] calldata policyIds) public override onlyVertex {
+        uint256 length = policyIds.length;
         if (length == 0) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
-            revokePermissions(tokenIds[i]);
+            revokePermissions(policyIds[i]);
         }
     }
 
     /// @dev overriding transferFrom to disable transfers for SBTs
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address from, address to, uint256 tokenId) public override {
+    function transferFrom(address from, address to, uint256 policyId) public override {
         revert SoulboundToken();
     }
 
@@ -140,20 +140,20 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @notice revokes all permissions from a policy token
-    /// @param tokenId the id of the policy token to revoke permissions from
-    function revokePermissions(uint256 tokenId) private {
-        if (ownerOf(tokenId) == address(0)) revert InvalidInput();
-        bytes8[] storage userPermissions = tokenToPermissionSignatures[tokenId];
+    /// @param policyId the id of the policy token to revoke permissions from
+    function revokePermissions(uint256 policyId) private {
+        if (ownerOf(policyId) == address(0)) revert InvalidInput();
+        bytes8[] storage userPermissions = tokenToPermissionSignatures[policyId];
         uint256 userPermissionslength = userPermissions.length;
         unchecked {
             _totalSupply--;
             for (uint256 i; i < userPermissionslength; ++i) {
                 permissionSupply[userPermissions[i]]--;
-                tokenToHasPermissionSignature[tokenId][userPermissions[i]] = false;
+                tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
             }
         }
-        delete tokenToPermissionSignatures[tokenId];
-        _burn(tokenId);
+        delete tokenToPermissionSignatures[policyId];
+        _burn(policyId);
     }
 
     /// @dev returns the total token supply of the contract
@@ -168,10 +168,10 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @dev checks if a token has a permission
-    /// @param tokenId the id of the token
+    /// @param policyId the id of the token
     /// @param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view override returns (bool) {
-        return tokenToHasPermissionSignature[tokenId][permissionSignature];
+    function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
+        return tokenToHasPermissionSignature[policyId][permissionSignature];
     }
 
     /// @notice returns the location of the policy metadata

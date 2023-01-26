@@ -18,7 +18,7 @@ contract VertexPolicyNFTTest is Test {
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
-    uint256[] public tokenIds;
+    uint256[] public policyIds;
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
@@ -40,7 +40,7 @@ contract VertexPolicyNFTTest is Test {
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
-        tokenIds.push(ADDRESS_THIS_TOKEN_ID);
+        policyIds.push(ADDRESS_THIS_TOKEN_ID);
     }
 
     function testGrantPermission() public {
@@ -51,7 +51,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function testBurn() public {
-        vertexPolicyNFT.batchRevokePermissions(tokenIds);
+        vertexPolicyNFT.batchRevokePermissions(policyIds);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
 

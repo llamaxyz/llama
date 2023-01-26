@@ -18,8 +18,8 @@ abstract contract VertexPolicy is ERC721 {
     function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
 
     ///@notice revokes all permissions from multiple policy tokens
-    ///@param tokenIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] calldata tokenIds) public virtual;
+    ///@param policyIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] calldata policyIds) public virtual;
 
     ///@notice Check if a holder has a permissionSignature at a specific block number
     ///@param policyholder the address of the policy holder
@@ -43,11 +43,11 @@ abstract contract VertexPolicy is ERC721 {
     function totalSupply() public view virtual returns (uint256);
 
     ///@dev returns the permission signatures of a token
-    ///@param tokenId the id of the token
-    function getPermissionSignatures(uint256 tokenId) public view virtual returns (bytes8[] memory);
+    ///@param policyId the id of the token
+    function getPermissionSignatures(uint256 policyId) public view virtual returns (bytes8[] memory);
 
     ///@dev checks if a token has a permission
-    ///@param tokenId the id of the token
+    ///@param policyId the id of the token
     ///@param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view virtual returns (bool);
+    function hasPermission(uint256 policyId, bytes8 permissionSignature) public view virtual returns (bool);
 }

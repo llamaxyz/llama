@@ -21,15 +21,15 @@ contract VertexCoreTest is Test {
 
     // Testing agents
     address public constant actionCreator = address(0x1337);
-    uint256 public constant actionCreatorTokenID = uint256(uint160(address(0x1337)));
+    uint256 public constant actionCreatorpolicyId = uint256(uint160(address(0x1337)));
     address public constant policyholder1 = address(0x1338);
-    uint256 public constant policyholder1TokenID = uint256(uint160(address(0x1338)));
+    uint256 public constant policyholder1policyId = uint256(uint160(address(0x1338)));
     address public constant policyholder2 = address(0x1339);
-    uint256 public constant policyholder2TokenID = uint256(uint160(address(0x1339)));
+    uint256 public constant policyholder2policyId = uint256(uint160(address(0x1339)));
     address public constant policyholder3 = address(0x1340);
-    uint256 public constant policyholder3TokenID = uint256(uint160(address(0x1340)));
+    uint256 public constant policyholder3policyId = uint256(uint160(address(0x1340)));
     address public constant policyholder4 = address(0x1341);
-    uint256 public constant policyholder34TokenID = uint256(uint160(address(0x1341)));
+    uint256 public constant policyholder34policyId = uint256(uint160(address(0x1341)));
     bytes4 public constant pauseSelector = 0x02329a29;
 
     Permission public permission;
@@ -38,7 +38,7 @@ contract VertexCoreTest is Test {
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
-    uint256[] public tokenIds;
+    uint256[] public policyIds;
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
@@ -281,33 +281,33 @@ contract VertexCoreTest is Test {
     function test_InvalidStrategy() public {
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.InvalidStrategy.selector);
-        vertex.createAction(actionCreatorTokenID, VertexStrategy(address(0xdead)), address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(actionCreatorpolicyId, VertexStrategy(address(0xdead)), address(protocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_InvalidPolicyholder() public {
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-        vertex.createAction(policyholder1TokenID, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(policyholder1policyId, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_NoStrategyPermission() public {
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.InvalidStrategy.selector);
-        vertex.createAction(actionCreatorTokenID, strategy2, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(actionCreatorpolicyId, strategy2, address(protocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_NoTargetPermission() public {
         address fakeTarget = address(0xdead);
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(actionCreatorTokenID, strategy, fakeTarget, 0, pauseSelector, abi.encode(true));
+        vertex.createAction(actionCreatorpolicyId, strategy, fakeTarget, 0, pauseSelector, abi.encode(true));
     }
 
     function test_NoSelectorPermission() public {
         bytes4 fakeSelector = 0x02222222;
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(actionCreatorTokenID, strategy, address(protocol), 0, fakeSelector, abi.encode(true));
+        vertex.createAction(actionCreatorpolicyId, strategy, address(protocol), 0, fakeSelector, abi.encode(true));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -317,7 +317,7 @@ contract VertexCoreTest is Test {
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
         emit ActionCreated(0, actionCreator, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
-        vertex.createAction(actionCreatorTokenID, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(actionCreatorpolicyId, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(0);
         uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
