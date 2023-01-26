@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, Permission, Permission, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
+    // Vertex system
     VertexCore public vertex;
     VertexStrategy public strategy;
-    ProtocolXYZ public protocol;
+    VertexStrategy public strategy2;
     VertexPolicyNFT public policy;
+
+    // Mock protocol
+    ProtocolXYZ public protocol;
+
+    // Testing agents
     address public constant actionCreator = address(0x1337);
     uint256 public constant actionCreatorTokenID = uint256(uint160(address(0x1337)));
     address public constant policyholder1 = address(0x1338);
@@ -36,30 +42,62 @@ contract VertexCoreTest is Test {
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
+    // Strategy config
+    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
+    uint256 public constant queuingDuration = 4 days;
+    uint256 public constant expirationDelay = 8 days;
+    bool public constant isFixedLengthApprovalPeriod = true;
+    uint256 public constant minApprovalPct = 40_00;
+    uint256 public constant minDisapprovalPct = 20_00;
 
+    // Events
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
-    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event ActionCanceled(uint256 id);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event StrategiesAuthorized(Strategy[] strategies);
+    event StrategiesUnauthorized(VertexStrategy[] strategies);
+
+    function hashRole(string memory role) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(role));
+    }
 
     function setUp() public {
+        // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
-        Strategy[] memory initialStrategies = new Strategy[](1);
+        Strategy[] memory initialStrategies = new Strategy[](2);
         initialStrategies[0] = Strategy({
-            approvalPeriod: 14400, // 2 days in blocks
-            queuingDuration: 4 days,
-            expirationDelay: 8 days,
-            isFixedLengthApprovalPeriod: true,
-            minApprovalPct: 40_00,
-            minDisapprovalPct: 20_00,
+            approvalPeriod: approvalPeriod,
+            queuingDuration: queuingDuration,
+            expirationDelay: expirationDelay,
+            isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
+            minApprovalPct: minApprovalPct,
+            minDisapprovalPct: minDisapprovalPct,
             approvalWeightByPermission: approvalWeightByPermission,
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
+
+        // Use create2 to get strategy's address
+
+        initialStrategies[1] = Strategy({
+            approvalPeriod: approvalPeriod,
+            queuingDuration: 0,
+            expirationDelay: 1 days,
+            isFixedLengthApprovalPeriod: false,
+            minApprovalPct: 80_00,
+            minDisapprovalPct: 10001,
+            approvalWeightByPermission: approvalWeightByPermission,
+            disapprovalWeightByPermission: disapprovalWeightByPermission
+        });
+
+        // Deploy vertex and mock protocol
         vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
         protocol = new ProtocolXYZ(address(vertex));
-        // Use create2 to get strategy's address
+
+        // Use create2 to get vertex strategy's address
         bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[0])));
         bytes memory bytecode = type(VertexStrategy).creationCode;
         bytes32 hash = keccak256(
@@ -71,26 +109,12 @@ contract VertexCoreTest is Test {
             )
         );
         strategy = VertexStrategy(address(uint160(uint256(hash))));
-
-        // // Use create2 to get policy's address
-        // bytes32 policySalt = bytes32(keccak256(abi.encode("ProtocolXYZ", "VXP")));
-        // bytes memory policyBytecode = type(VertexPolicyNFT).creationCode;
-        // bytes32 policyHash = keccak256(
-        //     abi.encodePacked(
-        //         bytes1(0xff),
-        //         address(vertex),
-        //         policySalt,
-        //         keccak256(abi.encodePacked(policyBytecode, abi.encode("ProtocolXYZ", "VXP", IVertexCore(address(vertex)))))
-        //     )
-        // );
-        // policy = VertexPolicyNFT(address(uint160(uint256(policyHash))));
         policy = vertex.policy();
         vm.label(actionCreator, "Action Creator");
+        _createPolicies();
     }
 
     function test_HappyActionFlow() public {
-        _createPolicies();
-
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -117,6 +141,173 @@ contract VertexCoreTest is Test {
         vm.roll(block.number + 36000);
 
         _executeAction();
+    }
+
+    function test_InvalidCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+        vertex.cancelAction(0);
+    }
+
+    function test_CreatorCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_DuplicateCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyCanceledCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vertex.cancelAction(0);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyExecutedCancelFlow() public {
+        test_HappyActionFlow();
+
+        vm.startPrank(actionCreator);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_AlreadyExpiredCancelFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 15 days);
+        vm.roll(block.number + 108000);
+
+        vm.startPrank(actionCreator);
+        vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
+        vertex.cancelAction(0);
+        vm.stopPrank();
+    }
+
+    function test_CancelationThroughDisapproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _disapproveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder3);
+        _disapproveAction(policyholder3);
+        vm.stopPrank();
+
+        vm.expectEmit(true, true, true, true);
+        emit ActionCanceled(0);
+        vertex.cancelAction(0);
+    }
+
+    function test_CancelationFailsThroughDisapproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+        vertex.cancelAction(0);
+    }
+
+    function test_InvalidStrategy() public {
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.InvalidStrategy.selector);
+        vertex.createAction(actionCreatorTokenID, VertexStrategy(address(0xdead)), address(protocol), 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_InvalidPolicyholder() public {
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
+        vertex.createAction(policyholder1TokenID, strategy, address(protocol), 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_NoStrategyPermission() public {
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.InvalidStrategy.selector);
+        vertex.createAction(actionCreatorTokenID, strategy2, address(protocol), 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_NoTargetPermission() public {
+        address fakeTarget = address(0xdead);
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+        vertex.createAction(actionCreatorTokenID, strategy, fakeTarget, 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_NoSelectorPermission() public {
+        bytes4 fakeSelector = 0x02222222;
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+        vertex.createAction(actionCreatorTokenID, strategy, address(protocol), 0, fakeSelector, abi.encode(true));
     }
 
     /*///////////////////////////////////////////////////////////////

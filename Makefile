@@ -15,8 +15,8 @@ report   :; forge clean && forge test --gas-report | sed -e/\|/\{ -e:1 -en\;b1 -
 doc      :; forge doc -b
 
 # Deploy and Verify Payload
-deploy   :; forge script script/Counter.s.sol:CounterScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
-verify   :; forge script script/Counter.s.sol:CounterScript --fork-url ${RPC_MAINNET_URL} --verify -vvvv
+deploy   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
+verify   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --verify -vvvv
 
 # Clean & lint
 clean    :; forge clean
