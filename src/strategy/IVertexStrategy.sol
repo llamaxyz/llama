@@ -49,9 +49,9 @@ interface IVertexStrategy {
 
     /// @notice Get the list of all permission signatures that are eligible for approvals.
     /// @return The list of all permission signatures that are eligible for approvals.
-    function getApprovalPermissions() external view returns (bytes32[] memory);
+    function getApprovalPermissions() external view returns (bytes8[] memory);
 
     /// @notice Get the list of all permission signatures that are eligible for disapprovals.
     /// @return The list of all permission signatures that are eligible for disapprovals.
-    function getDisapprovalPermissions() external view returns (bytes32[] memory);
+    function getDisapprovalPermissions() external view returns (bytes8[] memory);
 }

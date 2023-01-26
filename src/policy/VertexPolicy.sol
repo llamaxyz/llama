@@ -5,73 +5,49 @@ import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Permission} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event RolesAdded(bytes32[] roles, string[] roleStrings, Permission[][] permissions, bytes8[][] permissionSignatures);
-    event RolesAssigned(uint256 tokenId, bytes32[] roles);
-    event RolesRevoked(uint256 tokenId, bytes32[] roles);
-    event RolesDeleted(bytes32[] role);
-    event PermissionsAdded(bytes32 role, Permission[] permissions, bytes8[] permissionSignatures);
-    event PermissionsDeleted(bytes32 role, bytes8[] permissionSignatures);
+    event PermissionsAdded(uint256[] users, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 
-    error RoleNonExistant(bytes32 role);
     error SoulboundToken();
     error InvalidInput();
     error OnlyVertex();
 
-    ///@dev checks if a token has a role
-    ///@param tokenId the id of the token
-    ///@param role the role to check
-    function hasRole(uint256 tokenId, bytes32 role) public view virtual returns (bool) {}
+    /// @notice mints multiple policy token with the given permissions
+    /// @param to the addresses to mint the policy token to
+    /// @param userPermissions the permissions to be granted to the policy token
+    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
 
-    ///@dev mints a new token
-    ///@param to the address to mint the token to
-    ///@param userRoles the roles of the token
-    function mint(address to, bytes32[] calldata userRoles) public virtual {}
+    /// @notice revokes all permissions from multiple policy tokens
+    /// @param policyIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] calldata policyIds) public virtual;
 
-    ///@dev burns a token
-    ///@param tokenId the id of the token to burn
-    function burn(uint256 tokenId) public virtual {}
+    /// @notice Check if a holder has a permissionSignature at a specific block number
+    /// @param policyholder the address of the policy holder
+    /// @param permissionSignature the signature of the permission
+    /// @param blockNumber the block number to query
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool);
 
-    ///@dev allows admin to add a roles to the contract
-    ///@dev indexes in rolesArray and permissionsArray must match
-    ///@param rolesArray the roles to add
-    ///@param permissionsArray and array of permissions arrays for each role
-    function addRoles(string[] calldata rolesArray, Permission[][] calldata permissionsArray) public virtual {}
+    /// @notice sets the base URI for the contract
+    /// @param _baseURI the base URI string to set
+    function setBaseURI(string memory _baseURI) public virtual;
 
-    ///@dev assigns a role to a token
-    ///@param tokenId the id of the token
-    function assignRoles(uint256 tokenId, bytes32[] calldata rolesArray) public virtual {}
+    /// @notice Total number of policy NFTs at specific block number
+    /// @param blockNumber the block number to query
+    function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
 
-    ///@dev revokes a role from a token
-    ///@param tokenId the id of the token
-    ///@param revokeRolesArray the array of roles to revoke
-    function revokeRoles(uint256 tokenId, bytes32[] calldata revokeRolesArray) public virtual {}
+    /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
+    /// @param permissions the permissions we are querying for
+    function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);
 
-    ///@dev deletes multiple roles from the contract
-    ///@param deleteRolesArray the role to delete
-    function deleteRoles(bytes32[] calldata deleteRolesArray) public virtual {}
+    /// @dev returns the total token supply of the contract
+    function totalSupply() public view virtual returns (uint256);
 
-    // Check if a holder has a permissionSignature at a specific block number
-    function holderHasPermissionAt(address policyHolder, bytes32 permissionSignature, uint256 blockNumber) external view virtual returns (bool) {}
+    /// @dev returns the permission signatures of a token
+    /// @param policyId the id of the token
+    function getPermissionSignatures(uint256 policyId) public view virtual returns (bytes8[] memory);
 
-    function setBaseURI(string memory _baseURI) public virtual {}
-
-    // Total number of policy NFTs at specific block number
-    function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256) {}
-
-    // Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    function getSupplyByPermissions(bytes32[] memory permissions) external view virtual returns (uint256) {}
-
-    ///@dev returns the total token supply of the contract
-    function totalSupply() public view virtual returns (uint256) {}
-
-    ///@dev returns the permission signatures of a token
-    ///@param tokenId the id of the token
-    function getPermissionSignatures(uint256 tokenId) public view virtual returns (bytes8[] memory) {}
-
-    ///@dev checks if a token has a permission
-    ///@param tokenId the id of the token
-    ///@param permissionSignature the signature of the permission
-    function hasPermission(uint256 tokenId, bytes8 permissionSignature) public view virtual returns (bool) {}
-
-    function getRoles() public view virtual returns (bytes32[] memory) {}
+    /// @dev checks if a token has a permission
+    /// @param policyId the id of the token
+    /// @param permissionSignature the signature of the permission
+    function hasPermission(uint256 policyId, bytes8 permissionSignature) public view virtual returns (bool);
 }
