@@ -109,36 +109,40 @@ contract VertexCoreTest is Test {
         _createPolicies();
     }
 
-    function test_HappyActionFlow() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
+    /*///////////////////////////////////////////////////////////////
+                            Unit tests
+    //////////////////////////////////////////////////////////////*/
 
-        vm.startPrank(policyholder1);
-        _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
-        _approveAction(policyholder2);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
-
-        assertEq(strategy.isActionPassed(0), true);
-        _queueAction();
-
-        vm.startPrank(policyholder1);
-        _disapproveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
-
-        _executeAction();
+    // createAction unit tests
+    function test_createAction_RevertIfStrategyUnauthorized() public {
+        VertexStrategy unauthorizedStrategy = VertexStrategy(address(0xdead));
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.InvalidStrategy.selector);
+        vertex.createAction(unauthorizedStrategy, address(protocol), 0, pauseSelector, abi.encode(true));
     }
 
-    function test_InvalidCancelFlow() public {
+    function test_createAction_RevertIfInvalidStrategy() public {
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.InvalidStrategy.selector);
+        vertex.createAction(strategy2, address(protocol), 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_createAction_RevertIfNoPermissionForTarget() public {
+        address fakeTarget = address(0xdead);
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+        vertex.createAction(strategy, fakeTarget, 0, pauseSelector, abi.encode(true));
+    }
+
+    function test_createAction_RevertIfNoPermissionForSelector() public {
+        bytes4 fakeSelector = 0x02222222;
+        vm.prank(actionCreator);
+        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+        vertex.createAction(strategy, address(protocol), 0, fakeSelector, abi.encode(true));
+    }
+
+    // cancelAction unit tests
+    function test_cancelAction_RevertIfNotCreator() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -146,7 +150,7 @@ contract VertexCoreTest is Test {
         vertex.cancelAction(0);
     }
 
-    function test_CreatorCancelFlow() public {
+    function test_cancelAction_CreatorCancelFlow() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.expectEmit(true, true, true, true);
@@ -155,7 +159,7 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
-    function test_AlreadyCanceledCancelFlow() public {
+    function test_cancelAction_RevertIfAlreadyCanceled() public {
         vm.startPrank(actionCreator);
         _createAction();
         vertex.cancelAction(0);
@@ -164,8 +168,8 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
-    function test_AlreadyExecutedCancelFlow() public {
-        test_HappyActionFlow();
+    function test_cancelAction_RevertIfActionAlreadyExecuted() public {
+        test_VertexCore_CompleteActionFlow();
 
         vm.startPrank(actionCreator);
         vm.expectRevert(VertexCore.OnlyCancelBeforeExecuted.selector);
@@ -173,7 +177,7 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
-    function test_AlreadyExpiredCancelFlow() public {
+    function test_cancelAction_RevertIfActionExpired() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -205,7 +209,7 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
-    function test_CancelationThroughDisapproval() public {
+    function test_cancelAction_CancelIfDisapproved() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -241,7 +245,7 @@ contract VertexCoreTest is Test {
         vertex.cancelAction(0);
     }
 
-    function test_CancelationFailsThroughDisapproval() public {
+    function test_cancelAction_RevertIfDisapprovalDoesNotReachQuorum() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -264,30 +268,37 @@ contract VertexCoreTest is Test {
         vertex.cancelAction(0);
     }
 
-    function test_InvalidStrategy() public {
-        vm.prank(actionCreator);
-        vm.expectRevert(VertexCore.InvalidStrategy.selector);
-        vertex.createAction(VertexStrategy(address(0xdead)), address(protocol), 0, pauseSelector, abi.encode(true));
-    }
+    /*///////////////////////////////////////////////////////////////
+                        Integration tests
+    //////////////////////////////////////////////////////////////*/
 
-    function test_NoStrategyPermission() public {
-        vm.prank(actionCreator);
-        vm.expectRevert(VertexCore.InvalidStrategy.selector);
-        vertex.createAction(strategy2, address(protocol), 0, pauseSelector, abi.encode(true));
-    }
+    function test_VertexCore_CompleteActionFlow() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
 
-    function test_NoTargetPermission() public {
-        address fakeTarget = address(0xdead);
-        vm.prank(actionCreator);
-        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategy, fakeTarget, 0, pauseSelector, abi.encode(true));
-    }
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
 
-    function test_NoSelectorPermission() public {
-        bytes4 fakeSelector = 0x02222222;
-        vm.prank(actionCreator);
-        vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategy, address(protocol), 0, fakeSelector, abi.encode(true));
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategy.isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 5 days);
+        vm.roll(block.number + 36000);
+
+        _executeAction();
     }
 
     /*///////////////////////////////////////////////////////////////
