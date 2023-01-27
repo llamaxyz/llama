@@ -1,7 +1,7 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
 |---------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                             | Deployment Size |        |        |        |         |
-| 6893412                                     | 36697           |        |        |        |         |
+| 6892603                                     | 36620           |        |        |        |         |
 | Function Name                               | min             | avg    | median | max    | # calls |
 | actionsCount                                | 610             | 610    | 610    | 610    | 9       |
 | cancelAction                                | 2164            | 13629  | 14621  | 29175  | 9       |
@@ -17,7 +17,7 @@
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
 |---------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                         | Deployment Size |        |        |        |         |
-| 1464092                                                 | 10157           |        |        |        |         |
+| 1463743                                                 | 10149           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 829             | 829    | 829    | 829    | 2       |
 | batchGrantPermissions                                   | 124109          | 561806 | 669316 | 669316 | 18      |
