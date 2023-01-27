@@ -12,7 +12,7 @@ import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Str
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is IVertexCore {
     error InvalidStrategy();
-    error OnlyCancelBeforeExecuted();
+    error InvalidCancelation();
     error InvalidActionId();
     error OnlyQueuedActions();
     error InvalidStateForQueue();
@@ -27,7 +27,6 @@ contract VertexCore is IVertexCore {
     error DuplicateApproval();
     error DuplicateDisapproval();
     error DisapproveDisabled();
-    error InvalidPolicyholder();
     error PolicyholderDoesNotHavePermission();
 
     /// @notice EIP-712 base typehash.
@@ -97,7 +96,6 @@ contract VertexCore is IVertexCore {
     /// @inheritdoc IVertexCore
     function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
-        if (policy.ownerOf(uint256(uint160(msg.sender))) != msg.sender) revert InvalidPolicyholder();
 
         Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
@@ -136,8 +134,8 @@ contract VertexCore is IVertexCore {
     /// @inheritdoc IVertexCore
     function cancelAction(uint256 actionId) external override {
         ActionState state = getActionState(actionId);
-        if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired) {
-            revert OnlyCancelBeforeExecuted();
+        if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired || state == ActionState.Failed) {
+            revert InvalidCancelation();
         }
 
         Action storage action = actions[actionId];
@@ -151,7 +149,7 @@ contract VertexCore is IVertexCore {
 
     /// @inheritdoc IVertexCore
     function queueAction(uint256 actionId) external override {
-        if (getActionState(actionId) != ActionState.Succeeded) revert InvalidStateForQueue();
+        if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.queuingDuration();
 
@@ -278,7 +276,7 @@ contract VertexCore is IVertexCore {
         }
 
         if (action.executionTime == 0) {
-            return ActionState.Succeeded;
+            return ActionState.Approved;
         }
 
         if (action.executed) {

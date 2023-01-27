@@ -9,7 +9,7 @@ interface IVertexCore {
         Active, // Action created and approval period begins.
         Canceled, // Action canceled by creator or disapproved.
         Failed, // Action approval failed.
-        Succeeded, // Action approval succeeded and ready to be queued.
+        Approved, // Action approval succeeded and ready to be queued.
         Queued, // Action queued for queueing duration and disapproval period begins.
         Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
         Executed // Action has executed succesfully.
@@ -37,7 +37,7 @@ interface IVertexCore {
     /// @param actionId Id of the action to cancel.
     function cancelAction(uint256 actionId) external;
 
-    /// @notice Queue an action by actionId if it's in Succeeded state.
+    /// @notice Queue an action by actionId if it's in Approved state.
     /// @param actionId Id of the action to queue.
     function queueAction(uint256 actionId) external;
 
