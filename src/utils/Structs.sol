@@ -10,11 +10,6 @@ struct Permission {
     VertexStrategy strategy;
 }
 
-struct PolicyholderPermissions {
-    address policyholder; // Policyholder's address.
-    bytes8[] permissionSignatures; // List of policyholder's permission signatures.
-}
-
 struct Approval {
     bool support; // is policyholder supporting this approval.
     uint248 weight; // weight of policyholder's support.

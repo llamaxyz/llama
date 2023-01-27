@@ -5,7 +5,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {getChainId} from "src/utils/Helpers.sol";
-import {Action, Approval, Disapproval, Permission, PolicyholderPermissions, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -66,10 +66,16 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    constructor(string memory _name, string memory _symbol, Strategy[] memory initialStrategies, PolicyholderPermissions[] memory initialPolicies) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        Strategy[] memory initialStrategies,
+        address[] memory initialPolicyholders,
+        bytes8[][] memory initialPermissions
+    ) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicies));
+        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {

@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, Permission, PolicyholderPermissions, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -38,8 +38,9 @@ contract VertexCoreTest is Test {
     bytes8[][] public permissionSignatures;
     address[] public addresses;
     uint256[] public policyIds;
-    PolicyholderPermissions[] public initialPolicies;
 
+    address[] public initialPolicies;
+    bytes8[][] public initialPermissions;
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -88,7 +89,7 @@ contract VertexCoreTest is Test {
         });
 
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies);
+        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy's address

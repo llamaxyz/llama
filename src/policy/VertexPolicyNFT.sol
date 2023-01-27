@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {Permission, PolicyholderPermissions} from "src/utils/Structs.sol";
+import {Permission} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -25,14 +25,16 @@ contract VertexPolicyNFT is VertexPolicy {
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertex, PolicyholderPermissions[] memory initialPolicies) ERC721(name, symbol) {
+    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
+        ERC721(name, symbol)
+    {
         vertex = _vertex;
-        if (initialPolicies.length > 0) {
-            uint256 length = initialPolicies.length;
-            unchecked {
-                for (uint256 i; i < length; ++i) {
-                    grantPermissions(initialPolicies[i].policyholder, initialPolicies[i].permissionSignatures);
-                }
+        if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
+            uint256 policyholderLength = initialPolicyholders.length;
+            uint256 permissionsLength = initialPermissions.length;
+            if (policyholderLength != permissionsLength) revert InvalidInput();
+            for (uint256 i = 0; i < policyholderLength; i++) {
+                grantPermissions(initialPolicyholders[i], initialPermissions[i]);
             }
         }
     }
