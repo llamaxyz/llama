@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 contract ProtocolXYZ {
     error OnlyVertex();
+    error Failed();
 
     address public immutable vertex;
     bool public paused;
@@ -18,5 +19,9 @@ contract ProtocolXYZ {
 
     function pause(bool isPaused) external onlyVertex {
         paused = isPaused;
+    }
+
+    function fail() external view onlyVertex {
+        revert Failed();
     }
 }

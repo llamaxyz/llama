@@ -25,6 +25,7 @@ contract VertexCoreTest is Test {
     address public constant policyholder3 = address(0x1340);
     address public constant policyholder4 = address(0x1341);
     bytes4 public constant pauseSelector = 0x02329a29;
+    bytes4 public constant failSelector = 0xa9cc4718;
 
     Permission public permission;
     Permission[] public permissions;
@@ -164,6 +165,14 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
+    function test_cancelAction_RevertIfInvalidActionId() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.expectRevert(VertexCore.InvalidActionId.selector);
+        vertex.cancelAction(1);
+        vm.stopPrank();
+    }
+
     function test_cancelAction_RevertIfAlreadyCanceled() public {
         vm.startPrank(actionCreator);
         _createAction();
@@ -291,6 +300,151 @@ contract VertexCoreTest is Test {
         vertex.cancelAction(0);
     }
 
+    // queueAction unit tests
+    function test_queueAction_RevertIfNotApproved() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
+        vertex.queueAction(0);
+    }
+
+    function test_queueAction_RevertIfInvalidActionId() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder3);
+        _approveAction(policyholder3);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        vm.expectRevert(VertexCore.InvalidActionId.selector);
+        vertex.queueAction(1);
+    }
+
+    // executeAction unit tests
+    function test_executeAction_RevertIfNotQueued() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+
+        vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
+        vertex.executeAction(0);
+    }
+
+    function test_executeAction_RevertIfInvalidActionId() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+
+        vertex.queueAction(0);
+
+        vm.warp(block.timestamp + 5 days);
+        vm.roll(block.number + 36000);
+
+        vm.expectRevert(VertexCore.InvalidActionId.selector);
+        vertex.executeAction(1);
+    }
+
+    function test_executeAction_RevertIfTimelockNotFinished() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+
+        vertex.queueAction(0);
+
+        vm.warp(block.timestamp + 6 hours);
+        vm.roll(block.number + 1800);
+
+        vm.expectRevert(VertexCore.TimelockNotFinished.selector);
+        vertex.executeAction(0);
+    }
+
+    function test_executeAction_RevertIfFailedActionExecution() public {
+        vm.startPrank(actionCreator);
+        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+
+        vertex.queueAction(0);
+
+        vm.warp(block.timestamp + 5 days);
+        vm.roll(block.number + 36000);
+
+        vm.expectRevert(VertexCore.FailedActionExecution.selector);
+        vertex.executeAction(0);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Integration tests
     //////////////////////////////////////////////////////////////*/
@@ -349,7 +503,15 @@ contract VertexCoreTest is Test {
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
         for (uint256 i; i < 5; i++) {
-            permissionSignatures.push(permissionSignature);
+            if (i == 0) {
+                bytes8[] memory creatorPermissions = new bytes8[](2);
+                Permission memory failPermission = Permission({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+                creatorPermissions[0] = policy.hashPermission(failPermission);
+                creatorPermissions[1] = policy.hashPermission(permission);
+                permissionSignatures.push(creatorPermissions);
+            } else {
+                permissionSignatures.push(permissionSignature);
+            }
         }
         addresses.push(actionCreator);
         addresses.push(policyholder1);

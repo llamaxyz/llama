@@ -16,13 +16,11 @@ contract VertexCore is IVertexCore {
     error InvalidActionId();
     error OnlyQueuedActions();
     error InvalidStateForQueue();
-    error DuplicateAction();
     error ActionCannotBeCanceled();
     error OnlyVertex();
     error SignalingClosed();
     error InvalidSignature();
     error TimelockNotFinished();
-    error ActionHasExpired();
     error FailedActionExecution();
     error DuplicateApproval();
     error DuplicateDisapproval();
@@ -153,9 +151,7 @@ contract VertexCore is IVertexCore {
         Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.queuingDuration();
 
-        if (queuedActions[actionId]) revert DuplicateAction();
         queuedActions[actionId] = true;
-
         action.executionTime = executionTime;
 
         emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
@@ -167,7 +163,6 @@ contract VertexCore is IVertexCore {
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
-        if (isActionExpired(actionId)) revert ActionHasExpired();
 
         action.executed = true;
         queuedActions[actionId] = false;
