@@ -21,15 +21,10 @@ contract VertexCoreTest is Test {
 
     // Testing agents
     address public constant actionCreator = address(0x1337);
-    uint256 public constant actionCreatorpolicyId = uint256(uint160(address(0x1337)));
     address public constant policyholder1 = address(0x1338);
-    uint256 public constant policyholder1policyId = uint256(uint160(address(0x1338)));
     address public constant policyholder2 = address(0x1339);
-    uint256 public constant policyholder2policyId = uint256(uint160(address(0x1339)));
     address public constant policyholder3 = address(0x1340);
-    uint256 public constant policyholder3policyId = uint256(uint160(address(0x1340)));
     address public constant policyholder4 = address(0x1341);
-    uint256 public constant policyholder34policyId = uint256(uint160(address(0x1341)));
     bytes4 public constant pauseSelector = 0x02329a29;
 
     Permission public permission;
