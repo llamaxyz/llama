@@ -18,7 +18,8 @@ contract VertexCore is IVertexCore {
     error InvalidStateForQueue();
     error ActionCannotBeCanceled();
     error OnlyVertex();
-    error SignalingClosed();
+    error ActionNotActive();
+    error ActionNotQueued();
     error InvalidSignature();
     error TimelockNotFinished();
     error FailedActionExecution();
@@ -286,7 +287,7 @@ contract VertexCore is IVertexCore {
     }
 
     function _submitApproval(address policyholder, uint256 actionId, bool support) internal {
-        if (getActionState(actionId) != ActionState.Active) revert SignalingClosed();
+        if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
         Action storage action = actions[actionId];
         Approval storage approval = approvals[actionId][policyholder];
 
@@ -307,7 +308,7 @@ contract VertexCore is IVertexCore {
     }
 
     function _submitDisapproval(address policyholder, uint256 actionId, bool support) internal {
-        if (getActionState(actionId) != ActionState.Queued) revert SignalingClosed();
+        if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
         Action storage action = actions[actionId];
 
         if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();

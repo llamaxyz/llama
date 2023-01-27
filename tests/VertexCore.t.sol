@@ -445,6 +445,124 @@ contract VertexCoreTest is Test {
         vertex.executeAction(0);
     }
 
+    // submitApproval unit tests
+    function test_submitApproval_RevertIfActionNotActive() public {
+        vm.startPrank(actionCreator);
+        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        vertex.queueAction(0);
+
+        vm.expectRevert(VertexCore.ActionNotActive.selector);
+        vertex.submitApproval(0, true);
+    }
+
+    function test_submitApproval_RevertIfDuplicateApproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+
+        vm.expectRevert(VertexCore.DuplicateApproval.selector);
+        vertex.submitApproval(0, true);
+    }
+
+    function test_submitApproval_ChangeApprovalSupport() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        vertex.submitApproval(0, true);
+
+        vm.expectEmit(true, true, true, true);
+        emit PolicyholderApproved(0, policyholder1, false, 1);
+        vertex.submitApproval(0, false);
+
+        Action memory action = vertex.getAction(0);
+
+        assertEq(action.totalApprovals, 0);
+    }
+
+    // submitDisapproval unit tests
+    function test_submitDisapproval_RevertIfActionNotQueued() public {
+        vm.startPrank(actionCreator);
+        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vm.stopPrank();
+
+        vm.expectRevert(VertexCore.ActionNotQueued.selector);
+        vertex.submitDisapproval(0, true);
+    }
+
+    function test_submitDisapproval_RevertIfDuplicateDisapproval() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        _disapproveAction(policyholder1);
+
+        vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
+        vertex.submitDisapproval(0, true);
+    }
+
+    function test_submitDisapproval_ChangeDisapprovalSupport() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        _queueAction();
+
+        vm.startPrank(policyholder1);
+        vertex.submitDisapproval(0, true);
+
+        vm.expectEmit(true, true, true, true);
+        emit PolicyholderDisapproved(0, policyholder1, false, 1);
+        vertex.submitDisapproval(0, false);
+
+        Action memory action = vertex.getAction(0);
+
+        assertEq(action.totalDisapprovals, 0);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Integration tests
     //////////////////////////////////////////////////////////////*/
