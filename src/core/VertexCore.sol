@@ -95,17 +95,13 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(uint256 policyId, VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
-        external
-        override
-        returns (uint256)
-    {
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
-        if (policy.ownerOf(policyId) != msg.sender) revert InvalidPolicyholder();
+        if (policy.ownerOf(uint256(uint160(msg.sender))) != msg.sender) revert InvalidPolicyholder();
 
         Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
-        if (!policy.hasPermission(policyId, permissionSignature)) revert PolicyholderDoesNotHavePermission();
+        if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];

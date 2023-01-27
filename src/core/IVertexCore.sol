@@ -25,16 +25,13 @@ interface IVertexCore {
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
-    /// @param policyId The tokenId of the policy NFT owned by the policyholder.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.
     /// @param target The contract called when the action is executed.
     /// @param value The value in wei to be sent when the action is executed.
     /// @param selector The function selector that will be called when the action is executed.
     /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
     /// @return actionId of the newly created action.
-    function createAction(uint256 policyId, VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
-        external
-        returns (uint256);
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external returns (uint256);
 
     /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
     /// @param actionId Id of the action to cancel.
