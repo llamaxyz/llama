@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 
-///@dev Struct to define a permission
 struct Permission {
     address target;
     bytes4 selector;

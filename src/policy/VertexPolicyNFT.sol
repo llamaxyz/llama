@@ -29,8 +29,14 @@ contract VertexPolicyNFT is VertexPolicy {
         ERC721(name, symbol)
     {
         vertex = _vertex;
-        if (initialPolicyholders.length != initialPermissions.length) revert InvalidInput();
-        batchGrantPermissions(initialPolicyholders, initialPermissions);
+        if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
+            uint256 policyholderLength = initialPolicyholders.length;
+            uint256 permissionsLength = initialPermissions.length;
+            if (policyholderLength != permissionsLength) revert InvalidInput();
+            for (uint256 i = 0; i < policyholderLength; i++) {
+                grantPermissions(initialPolicyholders[i], initialPermissions[i]);
+            }
+        }
     }
 
     /// @notice mints multiple policy token with the given permissions
@@ -116,25 +122,28 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @notice mints a new policy token with the given permissions
     /// @param to the address to mint the policy token to
-    /// @param userPermissions the permissions to be granted to the policy token
-    function grantPermissions(address to, bytes8[] memory userPermissions) private {
-        if (balanceOf(to) != 0) revert SoulboundToken();
-        uint256 length = userPermissions.length;
+    /// @param permissionSignatures the permission signature's to be granted to the policyholder
+    function grantPermissions(address to, bytes8[] memory permissionSignatures) private {
+        if (balanceOf(to) != 0) revert OnlyOnePolicyPerHolder();
+        uint256 length = permissionSignatures.length;
         if (length == 0) revert InvalidInput();
-        uint256 userId = uint256(uint160(to));
+        uint256 policyId = uint256(uint160(to));
+
         unchecked {
             _totalSupply++;
-            tokenToPermissionSignatures[userId] = userPermissions;
+            tokenToPermissionSignatures[policyId] = permissionSignatures;
             for (uint256 i = 0; i < length; i++) {
-                if (permissionSupply[userPermissions[i]] == 0) {
-                    permissions.push(userPermissions[i]);
-                    ++permissionSupply[userPermissions[i]];
+                if (permissionSupply[permissionSignatures[i]] == 0) {
+                    permissions.push(permissionSignatures[i]);
+                    ++permissionSupply[permissionSignatures[i]];
                 }
-                if (!tokenToHasPermissionSignature[userId][userPermissions[i]]) {
-                    tokenToHasPermissionSignature[userId][userPermissions[i]] = true;
+
+                if (!tokenToHasPermissionSignature[policyId][permissionSignatures[i]]) {
+                    tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
                 }
             }
-            _mint(to, userId);
+
+            _mint(to, policyId);
         }
     }
 

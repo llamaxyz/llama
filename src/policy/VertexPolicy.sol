@@ -11,6 +11,7 @@ abstract contract VertexPolicy is ERC721 {
     error SoulboundToken();
     error InvalidInput();
     error OnlyVertex();
+    error OnlyOnePolicyPerHolder();
 
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
