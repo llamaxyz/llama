@@ -29,8 +29,10 @@ contract VertexPolicyNFT is VertexPolicy {
         ERC721(name, symbol)
     {
         vertex = _vertex;
-        if (initialPolicyholders.length != initialPermissions.length) revert InvalidInput();
-        batchGrantPermissions(initialPolicyholders, initialPermissions);
+        if (initialPolicyholders.length > 0) {
+            if (initialPolicyholders.length != initialPermissions.length) revert InvalidInput();
+            batchGrantPermissions(initialPolicyholders, initialPermissions);
+        }
     }
 
     /// @notice mints multiple policy token with the given permissions
