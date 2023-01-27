@@ -1,17 +1,20 @@
-| src/core/VertexCore.sol:VertexCore contract |                 |        |        |        |         |
-|---------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                             | Deployment Size |        |        |        |         |
-| 6806095                                     | 36228           |        |        |        |         |
-| Function Name                               | min             | avg    | median | max    | # calls |
-| actionsCount                                | 632             | 632    | 632    | 632    | 19      |
-| cancelAction                                | 826             | 13364  | 15014  | 29624  | 10      |
-| createAction                                | 3066            | 207660 | 252407 | 254982 | 27      |
-| executeAction                               | 758             | 20471  | 17054  | 36540  | 6       |
-| getAction                                   | 4085            | 5149   | 4085   | 10085  | 117     |
-| policy                                      | 168             | 168    | 168    | 168    | 81      |
-| queueAction                                 | 449             | 52711  | 60453  | 65146  | 13      |
-| submitApproval                              | 2908            | 38325  | 40035  | 52985  | 34      |
-| submitDisapproval                           | 2939            | 47061  | 65482  | 65482  | 11      |
+| src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
+|---------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                             | Deployment Size |         |         |         |         |
+| 6807104                                     | 36233           |         |         |         |         |
+| Function Name                               | min             | avg     | median  | max     | # calls |
+| actionsCount                                | 632             | 632     | 632     | 632     | 19      |
+| authorizedStrategies                        | 575             | 1775    | 2575    | 2575    | 5       |
+| cancelAction                                | 826             | 13364   | 15014   | 29624   | 10      |
+| createAction                                | 3066            | 207660  | 252407  | 254982  | 27      |
+| createAndAuthorizeStrategies                | 2894178         | 2894178 | 2894178 | 2894178 | 1       |
+| executeAction                               | 758             | 20471   | 17054   | 36540   | 6       |
+| getAction                                   | 4085            | 5149    | 4085    | 10085   | 117     |
+| policy                                      | 168             | 168     | 168     | 168     | 87      |
+| queueAction                                 | 449             | 52711   | 60453   | 65146   | 13      |
+| submitApproval                              | 2908            | 38325   | 40035   | 52985   | 34      |
+| submitDisapproval                           | 2939            | 47061   | 65482   | 65482   | 11      |
+| unauthorizeStrategies                       | 10715           | 10715   | 10715   | 10715   | 1       |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
@@ -20,10 +23,10 @@
 | 1464118                                                 | 10112           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 829             | 829    | 829    | 829    | 2       |
-| batchGrantPermissions                                   | 124109          | 647233 | 715635 | 715635 | 31      |
+| batchGrantPermissions                                   | 124109          | 651379 | 715635 | 715635 | 33      |
 | batchRevokePermissions                                  | 33901           | 33901  | 33901  | 33901  | 1       |
 | hasPermission                                           | 2675            | 2675   | 2675   | 2675   | 26      |
-| hashPermission                                          | 1363            | 1363   | 1363   | 1363   | 107     |
+| hashPermission                                          | 1363            | 1363   | 1363   | 1363   | 113     |
 | hashPermissions                                         | 2273            | 2273   | 2273   | 2273   | 3       |
 | ownerOf                                                 | 775             | 775    | 775    | 775    | 1       |
 | totalSupply                                             | 368             | 1368   | 1368   | 2368   | 44      |
@@ -50,3 +53,9 @@
 
 
 
+
+Failing tests:
+Encountered 1 failing test in tests/VertexCore.t.sol:VertexCoreTest
+[31m[FAIL. Reason: Assertion failed.][0m test_createAndAuthorizeStrategies_CreateNewStrategies() (gas: 2960529)
+
+Encountered a total of [31m1[0m failing tests, [32m31[0m tests succeeded
