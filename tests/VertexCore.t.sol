@@ -563,6 +563,70 @@ contract VertexCoreTest is Test {
         assertEq(action.totalDisapprovals, 0);
     }
 
+    // createAndAuthorizeStrategies unit tests
+    function test_createAndAuthorizeStrategies_CreateNewStrategies() public {
+        Strategy[] memory newStrategies = new Strategy[](3);
+        WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
+        WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
+
+        newStrategies[0] = Strategy({
+            approvalPeriod: 5 days,
+            queuingDuration: 14 days,
+            expirationDelay: 3 days,
+            isFixedLengthApprovalPeriod: false,
+            minApprovalPct: 0,
+            minDisapprovalPct: 20_00,
+            approvalWeightByPermission: approvalWeightByPermission,
+            disapprovalWeightByPermission: disapprovalWeightByPermission
+        });
+
+        newStrategies[1] = Strategy({
+            approvalPeriod: 5 days,
+            queuingDuration: 14 days,
+            expirationDelay: 3 days,
+            isFixedLengthApprovalPeriod: false,
+            minApprovalPct: 0,
+            minDisapprovalPct: 20_00,
+            approvalWeightByPermission: approvalWeightByPermission,
+            disapprovalWeightByPermission: disapprovalWeightByPermission
+        });
+
+        newStrategies[2] = Strategy({
+            approvalPeriod: 5 days,
+            queuingDuration: 14 days,
+            expirationDelay: 3 days,
+            isFixedLengthApprovalPeriod: false,
+            minApprovalPct: 0,
+            minDisapprovalPct: 20_00,
+            approvalWeightByPermission: approvalWeightByPermission,
+            disapprovalWeightByPermission: disapprovalWeightByPermission
+        });
+        vm.startPrank(address(vertex));
+
+        VertexStrategy newStrategy1 = VertexStrategy(0xf941b19bEE7638274569B002257E4b48D3B13328);
+        VertexStrategy newStrategy2 = VertexStrategy(0xaC46A8C2C463a9B268D68E653b94A002888cc412);
+        VertexStrategy newStrategy3 = VertexStrategy(0x5aBe1b5AE0e9EA3387a490626310C04190F69eAb);
+
+        vm.expectEmit(true, true, true, true);
+        emit StrategiesAuthorized(newStrategies);
+        vertex.createAndAuthorizeStrategies(newStrategies);
+
+        assertEq(vertex.authorizedStrategies(newStrategy1), true);
+        assertEq(vertex.authorizedStrategies(newStrategy2), true);
+        assertEq(vertex.authorizedStrategies(newStrategy3), true);
+    }
+
+    // unauthorizeStrategies unit tests
+    function test_unauthorizeStrategies_UnauthorizeStrategies() public {
+        vm.startPrank(address(vertex));
+        vm.expectEmit(true, true, true, true);
+        emit StrategiesUnauthorized(strategies);
+        vertex.unauthorizeStrategies(strategies);
+
+        assertEq(vertex.authorizedStrategies(strategies[0]), false);
+        assertEq(vertex.authorizedStrategies(strategies[1]), false);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Integration tests
     //////////////////////////////////////////////////////////////*/

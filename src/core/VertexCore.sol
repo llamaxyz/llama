@@ -220,8 +220,8 @@ contract VertexCore is IVertexCore {
     function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
-            for (uint256 i; i < strategyLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
+            for (uint256 i; i < strategyLength; i++) {
+                bytes32 salt = bytes32(keccak256(abi.encode(i, strategies[i])));
                 VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
                 authorizedStrategies[strategy] = true;
             }
