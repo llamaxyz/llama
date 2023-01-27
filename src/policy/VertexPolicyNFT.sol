@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Permission, PolicyholderPermissions} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -25,13 +25,15 @@ contract VertexPolicyNFT is VertexPolicy {
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
-        ERC721(name, symbol)
-    {
+    constructor(string memory name, string memory symbol, address _vertex, PolicyholderPermissions[] memory initialPolicies) ERC721(name, symbol) {
         vertex = _vertex;
-        if (initialPolicyholders.length > 0) {
-            if (initialPolicyholders.length != initialPermissions.length) revert InvalidInput();
-            batchGrantPermissions(initialPolicyholders, initialPermissions);
+        if (initialPolicies.length > 0) {
+            uint256 length = initialPolicies.length;
+            unchecked {
+                for (uint256 i; i < length; ++i) {
+                    grantPermissions(initialPolicies[i].policyholder, initialPolicies[i].permissionSignatures);
+                }
+            }
         }
     }
 
@@ -118,25 +120,28 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @notice mints a new policy token with the given permissions
     /// @param to the address to mint the policy token to
-    /// @param userPermissions the permissions to be granted to the policy token
-    function grantPermissions(address to, bytes8[] memory userPermissions) private {
-        if (balanceOf(to) != 0) revert SoulboundToken();
-        uint256 length = userPermissions.length;
+    /// @param permissionSignatures the permission signature's to be granted to the policyholder
+    function grantPermissions(address to, bytes8[] memory permissionSignatures) private {
+        if (balanceOf(to) != 0) revert OnlyOnePolicyPerHolder();
+        uint256 length = permissionSignatures.length;
         if (length == 0) revert InvalidInput();
-        uint256 userId = uint256(uint160(to));
+        uint256 policyId = uint256(uint160(to));
+
         unchecked {
             _totalSupply++;
-            tokenToPermissionSignatures[userId] = userPermissions;
+            tokenToPermissionSignatures[policyId] = permissionSignatures;
             for (uint256 i = 0; i < length; i++) {
-                if (permissionSupply[userPermissions[i]] == 0) {
-                    permissions.push(userPermissions[i]);
-                    ++permissionSupply[userPermissions[i]];
+                if (permissionSupply[permissionSignatures[i]] == 0) {
+                    permissions.push(permissionSignatures[i]);
+                    ++permissionSupply[permissionSignatures[i]];
                 }
-                if (!tokenToHasPermissionSignature[userId][userPermissions[i]]) {
-                    tokenToHasPermissionSignature[userId][userPermissions[i]] = true;
+
+                if (!tokenToHasPermissionSignature[policyId][permissionSignatures[i]]) {
+                    tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
                 }
             }
-            _mint(to, userId);
+
+            _mint(to, policyId);
         }
     }
 

@@ -6,7 +6,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Permission, PolicyholderPermissions} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
@@ -20,8 +20,7 @@ contract VertexPolicyNFTTest is Test {
     address[] public addresses;
     uint256[] public policyIds;
 
-    address[] public initialPolicies;
-    bytes8[][] public initialPermissions;
+    PolicyholderPermissions[] public initialPolicies;
 
     uint256 ADDRESS_THIS_TOKEN_ID;
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
@@ -36,7 +35,7 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this), initialPolicies, initialPermissions);
+        vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this), initialPolicies);
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
