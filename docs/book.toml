@@ -1,0 +1,11 @@
+[book]
+src = 'src'
+title = 'Vertex v1 Documentation'
+[output.html]
+no-section-label = true
+additional-js = ['solidity.min.js']
+additional-css = ['book.css']
+git-repository-url = 'https://github.com/llama-community/vertex-v1'
+
+[output.html.fold]
+enable = true
