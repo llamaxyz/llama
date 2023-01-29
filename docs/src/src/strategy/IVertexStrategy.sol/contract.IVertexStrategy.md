@@ -1,5 +1,5 @@
 # IVertexStrategy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b9be9bc31164da407ed5af3d8e0d2bcfd09559e6/src/strategy/IVertexStrategy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/strategy/IVertexStrategy.sol)
 
 
 ## Functions
