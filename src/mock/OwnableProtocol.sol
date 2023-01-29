@@ -2,11 +2,8 @@
 pragma solidity ^0.8.17;
 
 import {Ownable2Step} from "@openzeppelin/access/Ownable2Step.sol";
+import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 
-contract ProtocolXYZ is Ownable2Step {
-    bool public paused;
-
-    function pause(bool isPaused) external onlyOwner {
-        paused = isPaused;
-    }
+contract OwnableProtocol is Ownable2Step, ProtocolXYZ {
+    constructor(address _vertex) ProtocolXYZ(_vertex) {}
 }
