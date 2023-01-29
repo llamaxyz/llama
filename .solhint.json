@@ -10,6 +10,7 @@
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "max-line-length": ["warn", 160],
     "not-rely-on-time": "off",
+    "func-name-mixedcase": "off",
     "prettier/prettier": [
       "error",
       {

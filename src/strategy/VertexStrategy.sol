@@ -107,7 +107,7 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isApprovalQuorumValid(action.createdBlockNumber, action.totalApprovals);
+        return isApprovalQuorumValid(actionId, action.totalApprovals);
     }
 
     /// @inheritdoc IVertexStrategy
