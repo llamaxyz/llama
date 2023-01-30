@@ -109,7 +109,22 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param _permissions the permissions we are querying for
     // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {}
+    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
+        uint256 policyLength = policyIds.length;
+        uint256 permissionLength = _permissions.length;
+        uint256 supply;
+        unchecked {
+            for (uint256 i; i < policyLength; ++i) {
+                for (uint256 j; j < permissionLength; ++j) {
+                    if (tokenToHasPermissionSignature[policyIds[i]][_permissions[j]]) {
+                        supply++;
+                        break;
+                    }
+                }
+            }
+        }
+        return supply;
+    }
 
     /// @dev hashes a permission
     /// @param permission the permission to hash
