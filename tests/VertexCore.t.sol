@@ -603,9 +603,9 @@ contract VertexCoreTest is Test {
         });
         vm.startPrank(address(vertex));
 
-        VertexStrategy newStrategy1 = VertexStrategy(0xf941b19bEE7638274569B002257E4b48D3B13328);
-        VertexStrategy newStrategy2 = VertexStrategy(0xaC46A8C2C463a9B268D68E653b94A002888cc412);
-        VertexStrategy newStrategy3 = VertexStrategy(0x5aBe1b5AE0e9EA3387a490626310C04190F69eAb);
+        VertexStrategy newStrategy1 = VertexStrategy(0x258184EE7746D32EC2dB06912cf55fC4784154F1);
+        VertexStrategy newStrategy2 = VertexStrategy(0xfD64e45C3AAb6EFC5905716eD0E5afbF04348410);
+        VertexStrategy newStrategy3 = VertexStrategy(0x9bC261F67Ad758bD9dD1a49e529AD7D3C0446Dcd);
 
         vm.expectEmit(true, true, true, true);
         emit StrategiesAuthorized(newStrategies);
