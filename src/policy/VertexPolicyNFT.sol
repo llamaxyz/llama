@@ -155,6 +155,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 }
             }
             policyIds.push(policyId);
+            checkpoints[policyId].checkpoints.push(Checkpoint(uint32(block.number), permissionSignatures));
             _mint(to, policyId);
         }
     }
@@ -170,7 +171,7 @@ contract VertexPolicyNFT is VertexPolicy {
             for (uint256 i; i < userPermissionslength; ++i) {
                 tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
             }
-            policyIdsLength = policyIds.length;
+            uint256 policyIdsLength = policyIds.length;
             for (uint256 j = 0; j < policyIdsLength; j++) {
                 if (policyIds[j] == policyId) {
                     policyIds[j] = policyIds[policyIdsLength - 1];
@@ -180,6 +181,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         delete tokenToPermissionSignatures[policyId];
+        checkpoints[policyId].checkpoints.push(Checkpoint({blockNumber: uint32(block.number), permissionSignatures: new bytes8[](0)}));
         _burn(policyId);
     }
 
@@ -201,7 +203,7 @@ contract VertexPolicyNFT is VertexPolicy {
         return tokenToHasPermissionSignature[policyId][permissionSignature];
     }
 
-    function permissionIsInPermissionsArray(bytes8[] policyPermissionSignatures, bytes8 permissionSignature) internal view override returns (bool) {
+    function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
         uint256 length = policyPermissionSignatures.length;
         unchecked {
             for (uint256 i; i < length; ++i) {
