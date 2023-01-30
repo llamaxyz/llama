@@ -21,3 +21,5 @@
     - [Action](src/utils/Structs.sol/struct.Action.md)
     - [WeightByPermission](src/utils/Structs.sol/struct.WeightByPermission.md)
     - [Strategy](src/utils/Structs.sol/struct.Strategy.md)
+    - [History](src/utils/Structs.sol/struct.History.md)
+    - [Checkpoint](src/utils/Structs.sol/struct.Checkpoint.md)

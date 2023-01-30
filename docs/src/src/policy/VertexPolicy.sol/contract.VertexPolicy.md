@@ -1,5 +1,5 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/83b309a51fc2f6da39eb1375052e39a13b1b0915/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
@@ -67,21 +67,6 @@ function setBaseURI(string memory _baseURI) public virtual;
 |Name|Type|Description|
 |----|----|-----------|
 |`_baseURI`|`string`|the base URI string to set|
-
-
-### totalSupplyAt
-
-Total number of policy NFTs at specific block number
-
-
-```solidity
-function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`blockNumber`|`uint256`|the block number to query|
 
 
 ### getSupplyByPermissions

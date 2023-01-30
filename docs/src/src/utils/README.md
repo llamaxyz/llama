@@ -8,3 +8,5 @@
 - [Action](Structs.sol/struct.Action.md)
 - [WeightByPermission](Structs.sol/struct.WeightByPermission.md)
 - [Strategy](Structs.sol/struct.Strategy.md)
+- [History](Structs.sol/struct.History.md)
+- [Checkpoint](Structs.sol/struct.Checkpoint.md)
