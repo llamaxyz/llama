@@ -58,6 +58,6 @@ struct History {
 }
 
 struct Checkpoint {
-    uint32 blockNumber;
+    uint256 blockNumber;
     bytes8[] permissionSignatures;
 }

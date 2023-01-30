@@ -155,7 +155,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 }
             }
             policyIds.push(policyId);
-            checkpoints[policyId].checkpoints.push(Checkpoint(uint32(block.number), permissionSignatures));
+            checkpoints[policyId].checkpoints.push(Checkpoint(block.number, permissionSignatures));
             _mint(to, policyId);
         }
     }
@@ -181,7 +181,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         delete tokenToPermissionSignatures[policyId];
-        checkpoints[policyId].checkpoints.push(Checkpoint({blockNumber: uint32(block.number), permissionSignatures: new bytes8[](0)}));
+        checkpoints[policyId].checkpoints.push(Checkpoint({blockNumber: block.number, permissionSignatures: new bytes8[](0)}));
         _burn(policyId);
     }
 
