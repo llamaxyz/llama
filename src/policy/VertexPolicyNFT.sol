@@ -15,9 +15,10 @@ contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
     mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
     mapping(uint256 => History) private checkpoints;
+    uint256[] public policyIds;
+    string public baseURI;
     uint256 private _totalSupply;
     address public immutable vertex;
-    string public baseURI;
 
     modifier onlyVertex() {
         if (msg.sender != vertex) revert OnlyVertex();
@@ -108,10 +109,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param _permissions the permissions we are querying for
     // TODO: This should queried at action creation time and stored on the Action object
-    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
-        // TODO
-        return totalSupply();
-    }
+    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {}
 
     /// @dev hashes a permission
     /// @param permission the permission to hash
@@ -151,7 +149,7 @@ contract VertexPolicyNFT is VertexPolicy {
                     tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
                 }
             }
-
+            policyIds.push(policyId);
             _mint(to, policyId);
         }
     }
@@ -166,6 +164,14 @@ contract VertexPolicyNFT is VertexPolicy {
             _totalSupply--;
             for (uint256 i; i < userPermissionslength; ++i) {
                 tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
+            }
+            policyIdsLength = policyIds.length;
+            for (uint256 j = 0; j < policyIdsLength; j++) {
+                if (policyIds[j] == policyId) {
+                    policyIds[j] = policyIds[policyIdsLength - 1];
+                    policyIds.pop();
+                    break;
+                }
             }
         }
         delete tokenToPermissionSignatures[policyId];
