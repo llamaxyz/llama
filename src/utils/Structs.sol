@@ -54,11 +54,10 @@ struct Strategy {
 }
 
 struct History {
-    Checkpoint[] _checkpoints;
+    Checkpoint[] checkpoints;
 }
 
 struct Checkpoint {
-    uint256 policyId;
-    uint32 _blockNumber;
-    bytes8 _permissionSignature;
+    uint32 blockNumber;
+    bytes8[] permissionSignature;
 }
