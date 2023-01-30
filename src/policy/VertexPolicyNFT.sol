@@ -66,8 +66,6 @@ contract VertexPolicyNFT is VertexPolicy {
         revert SoulboundToken();
     }
 
-    // BEGIN TODO
-
     /// @notice Check if a holder has a permissionSignature at a specific block number
     /// @param policyholder the address of the policy holder
     /// @param permissionSignature the signature of the permission
@@ -98,14 +96,6 @@ contract VertexPolicyNFT is VertexPolicy {
         baseURI = _baseURI;
     }
 
-    /// @notice Total number of policy NFTs at specific block number
-    /// @param blockNumber the block number to query
-    // TODO: This should queried at action creation time and stored on the Action object
-    function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
-        // TODO
-        return totalSupply();
-    }
-
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param _permissions the permissions we are querying for
     // TODO: This should queried at action creation time and stored on the Action object
@@ -131,8 +121,6 @@ contract VertexPolicyNFT is VertexPolicy {
     function hashPermission(Permission memory permission) public pure returns (bytes8) {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
     }
-
-    // END TODO
 
     /// @dev hashes an array of permissions
     /// @param _permissions the permissions array to hash
