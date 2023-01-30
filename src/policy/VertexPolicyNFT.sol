@@ -75,7 +75,9 @@ contract VertexPolicyNFT is VertexPolicy {
         History storage history = checkpoints[policyId];
         uint256 length = history.checkpoints.length;
         if (length == 0) return false;
-        if (blockNumber >= history.checkpoints[length - 1].blockNumber) return history.checkpoints[length - 1].hasPermissionSignature[permissionSignature];
+        if (blockNumber >= history.checkpoints[length - 1].blockNumber) {
+            return permissionIsInPermissionsArray(history.checkpoints[length - 1].permissionSignatures, permissionSignature);
+        }
         if (blockNumber < history.checkpoints[0].blockNumber) return false;
         uint256 min = 0;
         uint256 max = length - 1;
@@ -87,7 +89,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 max = mid - 1;
             }
         }
-        return history.checkpoints[min].hasPermissionSignature[permissionSignature];
+        return permissionIsInPermissionsArray(history.checkpoints[min].permissionSignatures, permissionSignature);
     }
 
     /// @notice sets the base URI for the contract
@@ -197,6 +199,15 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param permissionSignature the signature of the permission
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
         return tokenToHasPermissionSignature[policyId][permissionSignature];
+    }
+
+    function permissionIsInPermissionsArray(bytes8[] policyPermissionSignatures, bytes8 permissionSignature) internal view override returns (bool) {
+        uint256 length = policyPermissionSignatures.length;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                if (policyPermissionSignatures[i] == permissionSignature) return true;
+            }
+        }
     }
 
     /// @notice returns the location of the policy metadata
