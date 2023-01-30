@@ -51,12 +51,12 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @notice revokes all permissions from multiple policy tokens
-    /// @param policyIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] calldata policyIds) public override onlyVertex {
-        uint256 length = policyIds.length;
+    /// @param _policyIds the ids of the policy tokens to revoke permissions from
+    function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
+        uint256 length = _policyIds.length;
         if (length == 0) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
-            revokePermissions(policyIds[i]);
+            revokePermissions(_policyIds[i]);
         }
     }
 
