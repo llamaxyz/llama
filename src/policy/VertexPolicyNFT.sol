@@ -210,6 +210,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 if (policyPermissionSignatures[i] == permissionSignature) return true;
             }
         }
+        return false;
     }
 
     /// @notice returns the location of the policy metadata
