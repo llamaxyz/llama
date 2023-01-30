@@ -52,3 +52,13 @@ struct Strategy {
     WeightByPermission[] approvalWeightByPermission; // List of permissionSignatures and weights that define the validation process for approval.
     WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the validation process for disapproval.
 }
+
+struct History {
+    Checkpoint[] _checkpoints;
+}
+
+struct Checkpoint {
+    uint256 policyId;
+    uint32 _blockNumber;
+    bytes8 _permissionSignature;
+}

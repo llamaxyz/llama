@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {Permission, Checkpoint, History} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -14,7 +14,8 @@ import {Permission} from "src/utils/Structs.sol";
 contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
     mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
-    mapping(bytes8 => uint256) public permissionSupply;
+    mapping(address => History) private checkpoints;
+    Checkpoints.History private _totalCheckpoints;
     bytes8[] public permissions;
     uint256 private _totalSupply;
     address public immutable vertex;
