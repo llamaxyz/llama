@@ -43,14 +43,14 @@ contract VertexPolicyNFTTest is Test {
         policyIds.push(ADDRESS_THIS_TOKEN_ID);
     }
 
-    function testGrantPermission() public {
+    function test_grantPermission() public {
         addresses[0] = address(0xdeadbeef);
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
         assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
         assertEq(vertexPolicyNFT.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));
     }
 
-    function testBurn() public {
+    function test_burn() public {
         vertexPolicyNFT.batchRevokePermissions(policyIds);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
@@ -58,5 +58,21 @@ contract VertexPolicyNFTTest is Test {
     function testCannotTransferTokenOwnership() public {
         vm.expectRevert(VertexPolicy.SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
+    }
+
+    function test_holderHasPermissionAt() public {
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
+        addresses[0] = address(0xdeadbeef);
+
+        vm.roll(100);
+
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
+        vertexPolicyNFT.batchRevokePermissions(policyIds);
+
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), false);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), true);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number - 99), true);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number - 99), false);
     }
 }
