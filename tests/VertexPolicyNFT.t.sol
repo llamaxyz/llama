@@ -75,4 +75,13 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number - 99), true);
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number - 99), false);
     }
+
+    function test_getSupplyByPermissions() public {
+        assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
+        addresses[0] = address(0xdeadbeef);
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
+        assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 2);
+        vertexPolicyNFT.batchRevokePermissions(policyIds);
+        assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
+    }
 }
