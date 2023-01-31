@@ -65,7 +65,7 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
         addresses[0] = address(0xdeadbeef);
 
-        vm.roll(100);
+        vm.roll(block.number + 100);
 
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
         vertexPolicyNFT.batchRevokePermissions(policyIds);
