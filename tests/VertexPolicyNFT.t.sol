@@ -136,4 +136,10 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number - 1), false);
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
     }
+
+    function test_batchUpdatePermissions_revertIfArraysLengthMismatch() public {
+        policyIds.push(uint256(uint160(address(0xdeadbeef))));
+        vm.expectRevert(VertexPolicy.InvalidInput.selector);
+        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures);
+    }
 }
