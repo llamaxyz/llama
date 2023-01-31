@@ -84,4 +84,26 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.batchRevokePermissions(policyIds);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
     }
+
+    function test_alterPolicyPermissions() public {
+        bytes8 oldPermissionSignature = permissionSignature[0];
+        assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
+
+        permission = Permission(address(0xdeadbeefdeadbeef), bytes4(0x09090909), VertexStrategy(address(0xdeadbeefdeadbeefdeafbeef)));
+        permissions[0] = permission;
+        permissionsArray[0] = permissions;
+        permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];
+        permissionSignatures[0] = permissionSignature;
+
+        vm.roll(block.number + 1);
+
+        vertexPolicyNFT.batchAlterPolicyPermissions(policyIds, permissionSignatures);
+
+        assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), false);
+        assertEq(vertexPolicyNFT.hasPermission(policyIds[0], permissionSignature[0]), true);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.number - 1), true);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.number), false);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number - 1), false);
+        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
+    }
 }

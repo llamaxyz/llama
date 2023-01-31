@@ -13,6 +13,11 @@ abstract contract VertexPolicy is ERC721 {
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
 
+    /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+    /// @param policyIds the policy token id being altered
+    /// @param permissions the new permissions array to be set
+    function batchAlterPolicyPermissions(uint256[] memory policyIds, bytes8[][] memory permissions) public virtual;
+
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
     /// @param userPermissions the permissions to be granted to the policy token
