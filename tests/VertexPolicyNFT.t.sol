@@ -142,4 +142,10 @@ contract VertexPolicyNFTTest is Test {
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures);
     }
+
+    function test_tokenURI() public {
+        string memory baseURI = "https://vertex.link/policy/";
+        vertexPolicyNFT.setBaseURI(baseURI);
+        assertEq(vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(baseURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
+    }
 }
