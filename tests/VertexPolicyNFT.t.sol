@@ -148,4 +148,13 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.setBaseURI(baseURI);
         assertEq(vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(baseURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
     }
+
+    function test_totalSupply() public {
+        assertEq(vertexPolicyNFT.totalSupply(), 1);
+        addresses[0] = address(0xdeadbeef);
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
+        assertEq(vertexPolicyNFT.totalSupply(), 2);
+        vertexPolicyNFT.batchRevokePermissions(policyIds);
+        assertEq(vertexPolicyNFT.totalSupply(), 1);
+    }
 }
