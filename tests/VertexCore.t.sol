@@ -566,11 +566,12 @@ contract VertexCoreTest is Test {
     // createAndAuthorizeStrategies unit tests
     function test_createAndAuthorizeStrategies_CreateNewStrategies() public {
         Strategy[] memory newStrategies = new Strategy[](3);
+        VertexStrategy[] memory strategyAddresses = new VertexStrategy[](3);
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
 
         newStrategies[0] = Strategy({
-            approvalPeriod: 5 days,
+            approvalPeriod: 4 days,
             queuingDuration: 14 days,
             expirationDelay: 3 days,
             isFixedLengthApprovalPeriod: false,
@@ -592,7 +593,7 @@ contract VertexCoreTest is Test {
         });
 
         newStrategies[2] = Strategy({
-            approvalPeriod: 5 days,
+            approvalPeriod: 6 days,
             queuingDuration: 14 days,
             expirationDelay: 3 days,
             isFixedLengthApprovalPeriod: false,
@@ -601,20 +602,30 @@ contract VertexCoreTest is Test {
             approvalWeightByPermission: approvalWeightByPermission,
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
-        vm.startPrank(address(vertex));
 
-        // hardcoded values for new strategies, set to dynamic values in the future
-        VertexStrategy newStrategy1 = VertexStrategy(0x8F5d839fc66198B2f0D9b8d832b3128B0efF9e42);
-        VertexStrategy newStrategy2 = VertexStrategy(0x916228ffD5E07855df51Ee1043356C5614A9e60A);
-        VertexStrategy newStrategy3 = VertexStrategy(0x006B25F7374000d249783Ca4a91202853603183a);
+        for (uint256 i; i < newStrategies.length; i++) {
+            bytes32 strategySalt = bytes32(keccak256(abi.encode(i, newStrategies[i])));
+            bytes memory bytecode = type(VertexStrategy).creationCode;
+            bytes32 hash = keccak256(
+                abi.encodePacked(
+                    bytes1(0xff),
+                    address(vertex),
+                    strategySalt,
+                    keccak256(abi.encodePacked(bytecode, abi.encode(newStrategies[i], vertex.policy(), address(vertex))))
+                )
+            );
+            strategyAddresses[i] = VertexStrategy(address(uint160(uint256(hash))));
+        }
+
+        vm.startPrank(address(vertex));
 
         vm.expectEmit(true, true, true, true);
         emit StrategiesAuthorized(newStrategies);
         vertex.createAndAuthorizeStrategies(newStrategies);
 
-        assertEq(vertex.authorizedStrategies(newStrategy1), true);
-        assertEq(vertex.authorizedStrategies(newStrategy2), true);
-        assertEq(vertex.authorizedStrategies(newStrategy3), true);
+        assertEq(vertex.authorizedStrategies(strategyAddresses[0]), true);
+        assertEq(vertex.authorizedStrategies(strategyAddresses[1]), true);
+        assertEq(vertex.authorizedStrategies(strategyAddresses[2]), true);
     }
 
     // unauthorizeStrategies unit tests
