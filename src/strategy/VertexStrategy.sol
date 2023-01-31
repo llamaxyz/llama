@@ -10,6 +10,8 @@ import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is IVertexStrategy {
+    error InvalidPermissionSignature();
+
     /// @notice Equivalent to 100%, but in basis points.
     uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
 
@@ -54,8 +56,6 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @notice List of all permission signatures that are eligible for disapprovals.
     bytes8[] public disapprovalPermissions;
-
-    error InvalidPermissionSignature();
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
