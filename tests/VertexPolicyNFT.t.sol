@@ -85,7 +85,7 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
     }
 
-    function test_alterPolicyPermissions() public {
+    function test_batchUpdatePermissions() public {
         bytes8 oldPermissionSignature = permissionSignature[0];
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
 
@@ -97,7 +97,7 @@ contract VertexPolicyNFTTest is Test {
 
         vm.roll(block.number + 1);
 
-        vertexPolicyNFT.batchAlterPolicyPermissions(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures);
 
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), false);
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], permissionSignature[0]), true);

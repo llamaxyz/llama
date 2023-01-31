@@ -40,13 +40,13 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
-    /// @param _policyIds the policy token id being altered
+    /// @param _policyIds the policy token id being updated
     /// @param permissions the new permissions array to be set
-    function batchAlterPolicyPermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex {
+    function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex {
         uint256 length = _policyIds.length;
         if (length != permissions.length) revert InvalidInput();
         for (uint256 i = 0; i < length; i++) {
-            alterPolicyPermissions(_policyIds[i], permissions[i]);
+            updatePermissions(_policyIds[i], permissions[i]);
         }
     }
 
@@ -214,9 +214,9 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
-    /// @param policyId the policy token id being altered
+    /// @param policyId the policy token id being updated
     /// @param permissions the new permissions array to be set
-    function alterPolicyPermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
+    function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
         revokePermissions(policyId);
         grantPermissions(address(uint160(policyId)), permissions);
     }
