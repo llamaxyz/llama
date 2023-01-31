@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c91dcfe1cc3faee5ceeb6ad3b852e507caf8911a/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/70bca1f277bc850b978430124f30f78eafae28bf/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -30,7 +30,7 @@ mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature
 ### checkpoints
 
 ```solidity
-mapping(uint256 => History) private checkpoints;
+mapping(uint256 => Checkpoint[]) private checkpoints;
 ```
 
 
