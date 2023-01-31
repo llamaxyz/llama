@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c439ebd3966a0311d4b5f0be7550cd124e20dad2/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/1f84b899cb64edff9bc5bc06a6870e26d69dd1a0/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -165,21 +165,6 @@ function createAction(VertexStrategy strategy, address target, uint256 value, by
 |`<none>`|`uint256`|actionId of the newly created action.|
 
 
-### cancelAction
-
-Cancels an action. Can be called anytime by the creator or if action is disapproved.
-
-
-```solidity
-function cancelAction(uint256 actionId) external override;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`actionId`|`uint256`|Id of the action to cancel.|
-
-
 ### queueAction
 
 Queue an action by actionId if it's in Approved state.
@@ -214,6 +199,21 @@ function executeAction(uint256 actionId) external payable override returns (byte
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`bytes`|The result returned from the call to the target contract.|
+
+
+### cancelAction
+
+Cancels an action. Can be called anytime by the creator or if action is disapproved.
+
+
+```solidity
+function cancelAction(uint256 actionId) external override;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`actionId`|`uint256`|Id of the action to cancel.|
 
 
 ### submitApproval
