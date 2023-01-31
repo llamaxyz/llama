@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/64d94f3b3e5e54452476181455805161b89717d8/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c439ebd3966a0311d4b5f0be7550cd124e20dad2/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -77,6 +77,22 @@ modifier onlyVertex();
 constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
     ERC721(name, symbol);
 ```
+
+### batchAlterPolicyPermissions
+
+burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+
+
+```solidity
+function batchAlterPolicyPermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_policyIds`|`uint256[]`|the policy token id being altered|
+|`permissions`|`bytes8[][]`|the new permissions array to be set|
+
 
 ### batchGrantPermissions
 
@@ -266,6 +282,22 @@ function hasPermission(uint256 policyId, bytes8 permissionSignature) public view
 |----|----|-----------|
 |`policyId`|`uint256`|the id of the token|
 |`permissionSignature`|`bytes8`|the signature of the permission|
+
+
+### alterPolicyPermissions
+
+burns and then mints a token with the same policy ID to the same address with a new set of permissions
+
+
+```solidity
+function alterPolicyPermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the policy token id being altered|
+|`permissions`|`bytes8[]`|the new permissions array to be set|
 
 
 ### permissionIsInPermissionsArray
