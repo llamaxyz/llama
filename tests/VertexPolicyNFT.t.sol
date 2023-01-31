@@ -50,12 +50,42 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));
     }
 
-    function test_burn() public {
+    function test_grantPermission_revertIfArraysLengthMismatch() public {
+        addresses.push(address(0xdeadbeef));
+        vm.expectRevert(VertexPolicy.InvalidInput.selector);
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
+    }
+
+    function test_grantPermission_revertIfPolicyAlreadyGranted() public {
+        vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);
+    }
+
+    function test_grantPermission_revertIfPermissionsArrayEmpty() public {
+        addresses[0] = address(0xdeadbeef);
+        vm.expectRevert(VertexPolicy.InvalidInput.selector);
+        vertexPolicyNFT.batchGrantPermissions(addresses, new bytes8[][](0));
+    }
+
+    function test_revoke() public {
         vertexPolicyNFT.batchRevokePermissions(policyIds);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
 
-    function testCannotTransferTokenOwnership() public {
+    function test_revoke_revertIfNoPolicySpecified() public {
+        vm.expectRevert(VertexPolicy.InvalidInput.selector);
+        vertexPolicyNFT.batchRevokePermissions(new uint256[](0));
+    }
+
+    function test_revoke_revertIfPolicyNotGranted() public {
+        uint256 mockPolicyId = uint256(uint160(address(0xdeadbeef)));
+        policyIds[0] = mockPolicyId;
+
+        vm.expectRevert("NOT_MINTED");
+        vertexPolicyNFT.batchRevokePermissions(policyIds);
+    }
+
+    function test_cannotTransferTokenOwnership() public {
         vm.expectRevert(VertexPolicy.SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
     }
