@@ -32,10 +32,6 @@ abstract contract VertexPolicy is ERC721 {
     /// @param _baseURI the base URI string to set
     function setBaseURI(string memory _baseURI) public virtual;
 
-    /// @notice Total number of policy NFTs at specific block number
-    /// @param blockNumber the block number to query
-    function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
-
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param permissions the permissions we are querying for
     function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);

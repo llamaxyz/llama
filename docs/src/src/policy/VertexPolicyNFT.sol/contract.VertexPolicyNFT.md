@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/64d94f3b3e5e54452476181455805161b89717d8/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -27,17 +27,24 @@ mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature
 ```
 
 
-### permissionSupply
+### checkpoints
 
 ```solidity
-mapping(bytes8 => uint256) public permissionSupply;
+mapping(uint256 => Checkpoint[]) private checkpoints;
 ```
 
 
-### permissions
+### policyIds
 
 ```solidity
-bytes8[] public permissions;
+uint256[] public policyIds;
+```
+
+
+### baseURI
+
+```solidity
+string public baseURI;
 ```
 
 
@@ -52,13 +59,6 @@ uint256 private _totalSupply;
 
 ```solidity
 address public immutable vertex;
-```
-
-
-### baseURI
-
-```solidity
-string public baseURI;
 ```
 
 
@@ -100,13 +100,13 @@ revokes all permissions from multiple policy tokens
 
 
 ```solidity
-function batchRevokePermissions(uint256[] calldata policyIds) public override onlyVertex;
+function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`policyIds`|`uint256[]`|the ids of the policy tokens to revoke permissions from|
+|`_policyIds`|`uint256[]`|the ids of the policy tokens to revoke permissions from|
 
 
 ### transferFrom
@@ -150,21 +150,6 @@ function setBaseURI(string memory _baseURI) public override onlyVertex;
 |Name|Type|Description|
 |----|----|-----------|
 |`_baseURI`|`string`|the base URI string to set|
-
-
-### totalSupplyAt
-
-Total number of policy NFTs at specific block number
-
-
-```solidity
-function totalSupplyAt(uint256 blockNumber) external view override returns (uint256);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`blockNumber`|`uint256`|the block number to query|
 
 
 ### getSupplyByPermissions
@@ -282,6 +267,13 @@ function hasPermission(uint256 policyId, bytes8 permissionSignature) public view
 |`policyId`|`uint256`|the id of the token|
 |`permissionSignature`|`bytes8`|the signature of the permission|
 
+
+### permissionIsInPermissionsArray
+
+
+```solidity
+function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
+```
 
 ### tokenURI
 

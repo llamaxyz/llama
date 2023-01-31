@@ -1,11 +1,11 @@
-# Disapproval
+# Checkpoint
 [Git Source](https://github.com/llama-community/vertex-v1/blob/64d94f3b3e5e54452476181455805161b89717d8/src/utils/Structs.sol)
 
 
 ```solidity
-struct Disapproval {
-    bool support;
-    uint248 weight;
+struct Checkpoint {
+    uint256 blockNumber;
+    bytes8[] permissionSignatures;
 }
 ```
 
