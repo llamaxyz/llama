@@ -53,10 +53,6 @@ struct Strategy {
     WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the validation process for disapproval.
 }
 
-struct History {
-    Checkpoint[] checkpoints;
-}
-
 struct Checkpoint {
     uint256 blockNumber;
     bytes8[] permissionSignatures;

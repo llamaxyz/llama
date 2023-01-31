@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {Permission, Checkpoint, History} from "src/utils/Structs.sol";
+import {Permission, Checkpoint} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -14,7 +14,7 @@ import {Permission, Checkpoint, History} from "src/utils/Structs.sol";
 contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
     mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
-    mapping(uint256 => History) private checkpoints;
+    mapping(uint256 => Checkpoint[]) private checkpoints;
     uint256[] public policyIds;
     string public baseURI;
     uint256 private _totalSupply;
@@ -72,24 +72,24 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param blockNumber the block number to query
     function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
         uint256 policyId = uint256(uint160(policyholder));
-        History storage history = checkpoints[policyId];
-        uint256 length = history.checkpoints.length;
+        Checkpoint[] storage _checkpoints = checkpoints[policyId];
+        uint256 length = _checkpoints.length;
         if (length == 0) return false;
-        if (blockNumber >= history.checkpoints[length - 1].blockNumber) {
-            return permissionIsInPermissionsArray(history.checkpoints[length - 1].permissionSignatures, permissionSignature);
+        if (blockNumber >= _checkpoints[length - 1].blockNumber) {
+            return permissionIsInPermissionsArray(_checkpoints[length - 1].permissionSignatures, permissionSignature);
         }
-        if (blockNumber < history.checkpoints[0].blockNumber) return false;
+        if (blockNumber < _checkpoints[0].blockNumber) return false;
         uint256 min = 0;
         uint256 max = length - 1;
         while (max > min) {
             uint256 mid = (max + min + 1) / 2;
-            if (history.checkpoints[mid].blockNumber <= blockNumber) {
+            if (_checkpoints[mid].blockNumber <= blockNumber) {
                 min = mid;
             } else {
                 max = mid - 1;
             }
         }
-        return permissionIsInPermissionsArray(history.checkpoints[min].permissionSignatures, permissionSignature);
+        return permissionIsInPermissionsArray(_checkpoints[min].permissionSignatures, permissionSignature);
     }
 
     /// @notice sets the base URI for the contract
@@ -100,7 +100,6 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param _permissions the permissions we are querying for
-    // TODO: This should queried at action creation time and stored on the Action object
     function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
         uint256 policyLength = policyIds.length;
         uint256 permissionLength = _permissions.length;
@@ -155,7 +154,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 }
             }
             policyIds.push(policyId);
-            checkpoints[policyId].checkpoints.push(Checkpoint(block.number, permissionSignatures));
+            checkpoints[policyId].push(Checkpoint(block.number, permissionSignatures));
             _mint(to, policyId);
         }
     }
@@ -181,7 +180,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         delete tokenToPermissionSignatures[policyId];
-        checkpoints[policyId].checkpoints.push(Checkpoint({blockNumber: block.number, permissionSignatures: new bytes8[](0)}));
+        checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: new bytes8[](0)}));
         _burn(policyId);
     }
 
