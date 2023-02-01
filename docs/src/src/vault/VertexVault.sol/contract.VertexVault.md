@@ -1,5 +1,5 @@
 # VertexVault
-[Git Source](https://github.com/llama-community/vertex-v1/blob/cc88cdb8bad11e53bd46d72467d70a467b8b1b95/src/vault/VertexVault.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/8f0c32f021139cdafca13c86e5a5d1185dab4c15/src/vault/VertexVault.sol)
 
 **Inherits:**
 [IVertexVault](/src/vault/IVertexVault.sol/contract.IVertexVault.md)

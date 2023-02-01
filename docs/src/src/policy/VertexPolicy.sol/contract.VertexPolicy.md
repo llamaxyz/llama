@@ -1,103 +1,109 @@
 # VertexPolicy
-
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7b69542e87e2655dea74dab5779f3939de9641f7/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/8f0c32f021139cdafca13c86e5a5d1185dab4c15/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
 
-## Functions
 
+## Functions
 ### batchUpdatePermissions
 
 burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
 
+
 ```solidity
 function batchUpdatePermissions(uint256[] memory policyIds, bytes8[][] memory permissions) public virtual;
 ```
-
 **Parameters**
 
-| Name          | Type         | Description                         |
-| ------------- | ------------ | ----------------------------------- |
-| `policyIds`   | `uint256[]`  | the policy token id being altered   |
-| `permissions` | `bytes8[][]` | the new permissions array to be set |
+|Name|Type|Description|
+|----|----|-----------|
+|`policyIds`|`uint256[]`|the policy token id being altered|
+|`permissions`|`bytes8[][]`|the new permissions array to be set|
+
 
 ### batchGrantPermissions
 
 mints multiple policy token with the given permissions
 
+
 ```solidity
 function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
 ```
-
 **Parameters**
 
-| Name              | Type         | Description                                       |
-| ----------------- | ------------ | ------------------------------------------------- |
-| `to`              | `address[]`  | the addresses to mint the policy token to         |
-| `userPermissions` | `bytes8[][]` | the permissions to be granted to the policy token |
+|Name|Type|Description|
+|----|----|-----------|
+|`to`|`address[]`|the addresses to mint the policy token to|
+|`userPermissions`|`bytes8[][]`|the permissions to be granted to the policy token|
+
 
 ### batchRevokePermissions
 
 revokes all permissions from multiple policy tokens
 
+
 ```solidity
 function batchRevokePermissions(uint256[] calldata policyIds) public virtual;
 ```
-
 **Parameters**
 
-| Name        | Type        | Description                                             |
-| ----------- | ----------- | ------------------------------------------------------- |
-| `policyIds` | `uint256[]` | the ids of the policy tokens to revoke permissions from |
+|Name|Type|Description|
+|----|----|-----------|
+|`policyIds`|`uint256[]`|the ids of the policy tokens to revoke permissions from|
+
 
 ### holderHasPermissionAt
 
 Check if a holder has a permissionSignature at a specific block number
 
+
 ```solidity
 function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool);
 ```
-
 **Parameters**
 
-| Name                  | Type      | Description                      |
-| --------------------- | --------- | -------------------------------- |
-| `policyholder`        | `address` | the address of the policy holder |
-| `permissionSignature` | `bytes8`  | the signature of the permission  |
-| `blockNumber`         | `uint256` | the block number to query        |
+|Name|Type|Description|
+|----|----|-----------|
+|`policyholder`|`address`|the address of the policy holder|
+|`permissionSignature`|`bytes8`|the signature of the permission|
+|`blockNumber`|`uint256`|the block number to query|
+
 
 ### setBaseURI
 
 sets the base URI for the contract
 
+
 ```solidity
 function setBaseURI(string memory _baseURI) public virtual;
 ```
-
 **Parameters**
 
-| Name       | Type     | Description                |
-| ---------- | -------- | -------------------------- |
-| `_baseURI` | `string` | the base URI string to set |
+|Name|Type|Description|
+|----|----|-----------|
+|`_baseURI`|`string`|the base URI string to set|
+
 
 ### getSupplyByPermissions
 
 Total number of policy NFTs at that have at least 1 of these permissions at specific block number
 
+
 ```solidity
 function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);
 ```
-
 **Parameters**
 
-| Name          | Type       | Description                         |
-| ------------- | ---------- | ----------------------------------- |
-| `permissions` | `bytes8[]` | the permissions we are querying for |
+|Name|Type|Description|
+|----|----|-----------|
+|`permissions`|`bytes8[]`|the permissions we are querying for|
+
 
 ### totalSupply
 
-_returns the total token supply of the contract_
+*returns the total token supply of the contract*
+
 
 ```solidity
 function totalSupply() public view virtual returns (uint256);
@@ -105,35 +111,36 @@ function totalSupply() public view virtual returns (uint256);
 
 ### getPermissionSignatures
 
-_returns the permission signatures of a token_
+*returns the permission signatures of a token*
+
 
 ```solidity
 function getPermissionSignatures(uint256 policyId) public view virtual returns (bytes8[] memory);
 ```
-
 **Parameters**
 
-| Name       | Type      | Description         |
-| ---------- | --------- | ------------------- |
-| `policyId` | `uint256` | the id of the token |
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the id of the token|
+
 
 ### hasPermission
 
-_checks if a token has a permission_
+*checks if a token has a permission*
+
 
 ```solidity
 function hasPermission(uint256 policyId, bytes8 permissionSignature) public view virtual returns (bool);
 ```
-
 **Parameters**
 
-| Name                  | Type      | Description                     |
-| --------------------- | --------- | ------------------------------- |
-| `policyId`            | `uint256` | the id of the token             |
-| `permissionSignature` | `bytes8`  | the signature of the permission |
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the id of the token|
+|`permissionSignature`|`bytes8`|the signature of the permission|
+
 
 ## Events
-
 ### PermissionsAdded
 
 ```solidity
@@ -147,7 +154,6 @@ event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 ```
 
 ## Errors
-
 ### SoulboundToken
 
 ```solidity
@@ -171,3 +177,4 @@ error OnlyVertex();
 ```solidity
 error OnlyOnePolicyPerHolder();
 ```
+
