@@ -22,3 +22,6 @@
     - [WeightByPermission](src/utils/Structs.sol/struct.WeightByPermission.md)
     - [Strategy](src/utils/Structs.sol/struct.Strategy.md)
     - [Checkpoint](src/utils/Structs.sol/struct.Checkpoint.md)
+  - [❱ vault](src/vault/README.md)
+    - [IVertexVault](src/vault/IVertexVault.sol/contract.IVertexVault.md)
+    - [VertexVault](src/vault/VertexVault.sol/contract.VertexVault.md)

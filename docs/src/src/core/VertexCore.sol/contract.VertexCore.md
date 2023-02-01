@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c439ebd3966a0311d4b5f0be7550cd124e20dad2/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/cc88cdb8bad11e53bd46d72467d70a467b8b1b95/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -53,6 +53,15 @@ The NFT contract that defines the policies for this Vertex system.
 
 ```solidity
 VertexPolicyNFT public immutable policy;
+```
+
+
+### vault
+The Vertex Vault contract that holds the assets for this Vertex system.
+
+
+```solidity
+VertexVault public immutable vault;
 ```
 
 
