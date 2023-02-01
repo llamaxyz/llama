@@ -78,9 +78,7 @@ contract VertexCore is IVertexCore {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
         policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
-
-        bytes32 vaultSalt = bytes32(keccak256(abi.encode("Let me know if you can think of a better salt for this")));
-        vault = VertexVault(new VertexVault{salt: vaultSalt}(address(this)));
+        vault = VertexVault(new VertexVault{salt: salt}(address(this)));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {
