@@ -1,5 +1,6 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/3feb9e8a0ba73bc3a932244e1fa6880b4ebeac04/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/7b69542e87e2655dea74dab5779f3939de9641f7/src/policy/VertexPolicyNFT.sol)
+
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -78,63 +79,6 @@ constructor(string memory name, string memory symbol, address _vertex, address[]
     ERC721(name, symbol);
 ```
 
-### batchUpdatePermissions
-
-burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
-
-
-```solidity
-function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_policyIds`|`uint256[]`|the policy token id being updated|
-|`permissions`|`bytes8[][]`|the new permissions array to be set|
-
-
-### batchGrantPermissions
-
-mints multiple policy token with the given permissions
-
-
-```solidity
-function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`to`|`address[]`|the addresses to mint the policy token to|
-|`userPermissions`|`bytes8[][]`|the permissions to be granted to the policy token|
-
-
-### batchRevokePermissions
-
-revokes all permissions from multiple policy tokens
-
-
-```solidity
-function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_policyIds`|`uint256[]`|the ids of the policy tokens to revoke permissions from|
-
-
-### transferFrom
-
-*overriding transferFrom to disable transfers for SBTs*
-
-*this is a temporary solution, we will need to conform to a Souldbound standard*
-
-
-```solidity
-function transferFrom(address from, address to, uint256 policyId) public override;
-```
 
 ### holderHasPermissionAt
 
@@ -153,21 +97,6 @@ function holderHasPermissionAt(address policyholder, bytes8 permissionSignature,
 |`blockNumber`|`uint256`|the block number to query|
 
 
-### setBaseURI
-
-sets the base URI for the contract
-
-
-```solidity
-function setBaseURI(string memory _baseURI) public override onlyVertex;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`_baseURI`|`string`|the base URI string to set|
-
-
 ### getSupplyByPermissions
 
 Total number of policy NFTs at that have at least 1 of these permissions at specific block number
@@ -180,7 +109,54 @@ function getSupplyByPermissions(bytes8[] memory _permissions) external view over
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_permissions`|`bytes8[]`|the permissions we are querying for|
+|`_permissions`|`bytes8[]`||
+
+
+### batchGrantPermissions
+
+mints multiple policy token with the given permissions
+
+
+```solidity
+function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`to`|`address[]`|the addresses to mint the policy token to|
+|`userPermissions`|`bytes8[][]`|the permissions to be granted to the policy token|
+
+
+### batchUpdatePermissions
+
+burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+
+
+```solidity
+function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_policyIds`|`uint256[]`||
+|`permissions`|`bytes8[][]`|the new permissions array to be set|
+
+
+### batchRevokePermissions
+
+revokes all permissions from multiple policy tokens
+
+
+```solidity
+function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_policyIds`|`uint256[]`||
 
 
 ### hashPermission
@@ -211,6 +187,22 @@ function hashPermissions(Permission[] calldata _permissions) public pure returns
 |Name|Type|Description|
 |----|----|-----------|
 |`_permissions`|`Permission[]`|the permissions array to hash|
+
+
+### hasPermission
+
+*checks if a token has a permission*
+
+
+```solidity
+function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the id of the token|
+|`permissionSignature`|`bytes8`|the signature of the permission|
 
 
 ### grantPermissions
@@ -244,46 +236,6 @@ function revokePermissions(uint256 policyId) private;
 |`policyId`|`uint256`|the id of the policy token to revoke permissions from|
 
 
-### totalSupply
-
-*returns the total token supply of the contract*
-
-
-```solidity
-function totalSupply() public view override returns (uint256);
-```
-
-### getPermissionSignatures
-
-returns the permission signatures of a token
-
-
-```solidity
-function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`userId`|`uint256`|the id of the policy token|
-
-
-### hasPermission
-
-*checks if a token has a permission*
-
-
-```solidity
-function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`policyId`|`uint256`|the id of the token|
-|`permissionSignature`|`bytes8`|the signature of the permission|
-
-
 ### updatePermissions
 
 burns and then mints a token with the same policy ID to the same address with a new set of permissions
@@ -300,11 +252,61 @@ function updatePermissions(uint256 policyId, bytes8[] memory permissions) privat
 |`permissions`|`bytes8[]`|the new permissions array to be set|
 
 
+### setBaseURI
+
+sets the base URI for the contract
+
+
+```solidity
+function setBaseURI(string memory _baseURI) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`_baseURI`|`string`|the base URI string to set|
+
+
+### transferFrom
+
+*overriding transferFrom to disable transfers for SBTs*
+
+*this is a temporary solution, we will need to conform to a Souldbound standard*
+
+
+```solidity
+function transferFrom(address from, address to, uint256 policyId) public override;
+```
+
+### getPermissionSignatures
+
+*returns the permission signatures of a token*
+
+
+```solidity
+function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`userId`|`uint256`||
+
+
 ### permissionIsInPermissionsArray
 
 
 ```solidity
 function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
+```
+
+### totalSupply
+
+*returns the total token supply of the contract*
+
+
+```solidity
+function totalSupply() public view override returns (uint256);
 ```
 
 ### tokenURI
