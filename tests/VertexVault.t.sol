@@ -19,6 +19,7 @@ contract VertexVaultTest is Test {
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
+
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -85,6 +86,102 @@ contract VertexVaultTest is Test {
         vm.startPrank(USDC_WHALE);
         USDC.transfer(address(vault), amount);
         assertEq(USDC.balanceOf(address(vault)), amount);
+        vm.stopPrank();
+    }
+
+    // Test that VertexVault can transfer ETH
+    function test_vertexVault_transferETH() public {
+        uint256 amount = 1000e18;
+        assertEq(address(vault).balance, 0);
+
+        // Transfer ETH to vault
+        vm.startPrank(ETH_WHALE);
+        (bool success,) = address(vault).call{value: amount}("");
+        assertTrue(success);
+        assertEq(address(vault).balance, amount);
+        vm.stopPrank();
+
+        uint256 vaultETHBalance = address(vault).balance;
+        uint256 whaleETHBalance = ETH_WHALE.balance;
+
+        // Transfer ETH from vault to whale
+        vm.startPrank(address(vertex));
+        vault.transfer(IERC20(vault.ETH_MOCK_ADDRESS()), ETH_WHALE, amount);
+        assertEq(address(vault).balance, 0);
+        assertEq(address(vault).balance, vaultETHBalance - amount);
+        assertEq(ETH_WHALE.balance, whaleETHBalance + amount);
+        vm.stopPrank();
+    }
+
+    // Test that VertexVault can transfer ERC20 tokens
+    function test_vertexVault_transferERC20() public {
+        uint256 amount = 1000e6;
+        assertEq(USDC.balanceOf(address(vault)), 0);
+
+        // Transfer USDC to vault
+        vm.startPrank(USDC_WHALE);
+        USDC.transfer(address(vault), amount);
+        assertEq(USDC.balanceOf(address(vault)), amount);
+        vm.stopPrank();
+
+        uint256 vaultUSDCBalance = USDC.balanceOf(address(vault));
+        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
+
+        // Transfer USDC from vault to whale
+        vm.startPrank(address(vertex));
+        vault.transfer(USDC, USDC_WHALE, amount);
+        assertEq(USDC.balanceOf(address(vault)), 0);
+        assertEq(USDC.balanceOf(address(vault)), vaultUSDCBalance - amount);
+        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
+        vm.stopPrank();
+    }
+
+    // Test that VertexVault can approve ERC20 tokens
+    function test_vertexVault_approveERC20() public {
+        uint256 amount = 1000e6;
+        assertEq(USDC.balanceOf(address(vault)), 0);
+
+        // Transfer USDC to vault
+        vm.startPrank(USDC_WHALE);
+        USDC.transfer(address(vault), amount);
+        assertEq(USDC.balanceOf(address(vault)), amount);
+        vm.stopPrank();
+
+        uint256 vaultUSDCBalance = USDC.balanceOf(address(vault));
+        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
+
+        // Approve USDC to whale
+        vm.startPrank(address(vertex));
+        vault.approve(USDC, USDC_WHALE, amount);
+        assertEq(USDC.allowance(address(vault), USDC_WHALE), amount);
+        vm.stopPrank();
+
+        // Transfer USDC from vault to whale
+        vm.startPrank(USDC_WHALE);
+        USDC.transferFrom(address(vault), USDC_WHALE, amount);
+        assertEq(USDC.balanceOf(address(vault)), 0);
+        assertEq(USDC.balanceOf(address(vault)), vaultUSDCBalance - amount);
+        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
+        vm.stopPrank();
+    }
+
+    function test_vertexVault_approveNotVertexMsgSender() public {
+        uint256 amount = 1000e6;
+        vm.expectRevert(VertexVault.OnlyVertex.selector);
+        vault.approve(USDC, USDC_WHALE, amount);
+    }
+
+    function test_vertexVault_transferNotVertexMsgSender() public {
+        uint256 amount = 1000e6;
+        vm.expectRevert(VertexVault.OnlyVertex.selector);
+        vault.transfer(USDC, USDC_WHALE, amount);
+    }
+
+    function test_vertexVault_transferToZeroAddress() public {
+        uint256 amount = 1000e6;
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexVault.Invalid0xRecipient.selector);
+        vault.transfer(USDC, address(0), amount);
         vm.stopPrank();
     }
 }
