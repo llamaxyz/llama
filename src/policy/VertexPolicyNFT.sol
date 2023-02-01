@@ -10,7 +10,6 @@ import {Permission, Checkpoint} from "src/utils/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicyNFT is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
-
 contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
     mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
@@ -33,54 +32,13 @@ contract VertexPolicyNFT is VertexPolicy {
             uint256 policyholderLength = initialPolicyholders.length;
             uint256 permissionsLength = initialPermissions.length;
             if (policyholderLength != permissionsLength) revert InvalidInput();
-            for (uint256 i = 0; i < policyholderLength; i++) {
+            for (uint256 i = 0; i < policyholderLength; ++i) {
                 grantPermissions(initialPolicyholders[i], initialPermissions[i]);
             }
         }
     }
 
-    /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
-    /// @param _policyIds the policy token id being updated
-    /// @param permissions the new permissions array to be set
-    function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex {
-        uint256 length = _policyIds.length;
-        if (length != permissions.length) revert InvalidInput();
-        for (uint256 i = 0; i < length; i++) {
-            updatePermissions(_policyIds[i], permissions[i]);
-        }
-    }
-
-    /// @notice mints multiple policy token with the given permissions
-    /// @param to the addresses to mint the policy token to
-    /// @param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex {
-        uint256 length = userPermissions.length;
-        if (length == 0 || length != to.length) revert InvalidInput();
-        for (uint256 i = 0; i < length; i++) {
-            grantPermissions(to[i], userPermissions[i]);
-        }
-    }
-
-    /// @notice revokes all permissions from multiple policy tokens
-    /// @param _policyIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
-        uint256 length = _policyIds.length;
-        if (length == 0) revert InvalidInput();
-        for (uint256 i = 0; i < length; i++) {
-            revokePermissions(_policyIds[i]);
-        }
-    }
-
-    /// @dev overriding transferFrom to disable transfers for SBTs
-    /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address from, address to, uint256 policyId) public override {
-        revert SoulboundToken();
-    }
-
-    /// @notice Check if a holder has a permissionSignature at a specific block number
-    /// @param policyholder the address of the policy holder
-    /// @param permissionSignature the signature of the permission
-    /// @param blockNumber the block number to query
+    /// @inheritdoc VertexPolicy
     function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
         uint256 policyId = uint256(uint160(policyholder));
         Checkpoint[] storage _checkpoints = checkpoints[policyId];
@@ -103,14 +61,7 @@ contract VertexPolicyNFT is VertexPolicy {
         return permissionIsInPermissionsArray(_checkpoints[min].permissionSignatures, permissionSignature);
     }
 
-    /// @notice sets the base URI for the contract
-    /// @param _baseURI the base URI string to set
-    function setBaseURI(string memory _baseURI) public override onlyVertex {
-        baseURI = _baseURI;
-    }
-
-    /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-    /// @param _permissions the permissions we are querying for
+    /// @inheritdoc VertexPolicy
     function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
         uint256 policyLength = policyIds.length;
         uint256 permissionLength = _permissions.length;
@@ -119,13 +70,40 @@ contract VertexPolicyNFT is VertexPolicy {
             for (uint256 i; i < policyLength; ++i) {
                 for (uint256 j; j < permissionLength; ++j) {
                     if (tokenToHasPermissionSignature[policyIds[i]][_permissions[j]]) {
-                        supply++;
+                        ++supply;
                         break;
                     }
                 }
             }
         }
         return supply;
+    }
+
+    /// @inheritdoc VertexPolicy
+    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex {
+        uint256 length = userPermissions.length;
+        if (length == 0 || length != to.length) revert InvalidInput();
+        for (uint256 i = 0; i < length; ++i) {
+            grantPermissions(to[i], userPermissions[i]);
+        }
+    }
+
+    /// @inheritdoc VertexPolicy
+    function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex {
+        uint256 length = _policyIds.length;
+        if (length != permissions.length) revert InvalidInput();
+        for (uint256 i = 0; i < length; ++i) {
+            updatePermissions(_policyIds[i], permissions[i]);
+        }
+    }
+
+    /// @inheritdoc VertexPolicy
+    function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
+        uint256 length = _policyIds.length;
+        if (length == 0) revert InvalidInput();
+        for (uint256 i = 0; i < length; ++i) {
+            revokePermissions(_policyIds[i]);
+        }
     }
 
     /// @dev hashes a permission
@@ -147,6 +125,11 @@ contract VertexPolicyNFT is VertexPolicy {
         return output;
     }
 
+    /// @inheritdoc VertexPolicy
+    function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
+        return tokenToHasPermissionSignature[policyId][permissionSignature];
+    }
+
     /// @notice mints a new policy token with the given permissions
     /// @param to the address to mint the policy token to
     /// @param permissionSignatures the permission signature's to be granted to the policyholder
@@ -157,9 +140,9 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 policyId = uint256(uint160(to));
 
         unchecked {
-            _totalSupply++;
+            ++_totalSupply;
             tokenToPermissionSignatures[policyId] = permissionSignatures;
-            for (uint256 i = 0; i < length; i++) {
+            for (uint256 i = 0; i < length; ++i) {
                 if (!tokenToHasPermissionSignature[policyId][permissionSignatures[i]]) {
                     tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
                 }
@@ -182,7 +165,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
             }
             uint256 policyIdsLength = policyIds.length;
-            for (uint256 j = 0; j < policyIdsLength; j++) {
+            for (uint256 j = 0; j < policyIdsLength; ++j) {
                 if (policyIds[j] == policyId) {
                     policyIds[j] = policyIds[policyIdsLength - 1];
                     policyIds.pop();
@@ -195,30 +178,29 @@ contract VertexPolicyNFT is VertexPolicy {
         _burn(policyId);
     }
 
-    /// @dev returns the total token supply of the contract
-    function totalSupply() public view override returns (uint256) {
-        return _totalSupply;
-    }
-
-    /// @notice returns the permission signatures of a token
-    /// @param userId the id of the policy token
-    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
-        return tokenToPermissionSignatures[userId];
-    }
-
-    /// @dev checks if a token has a permission
-    /// @param policyId the id of the token
-    /// @param permissionSignature the signature of the permission
-    function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
-        return tokenToHasPermissionSignature[policyId][permissionSignature];
-    }
-
     /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
     /// @param policyId the policy token id being updated
     /// @param permissions the new permissions array to be set
     function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
         revokePermissions(policyId);
         grantPermissions(address(uint160(policyId)), permissions);
+    }
+
+    /// @notice sets the base URI for the contract
+    /// @param _baseURI the base URI string to set
+    function setBaseURI(string memory _baseURI) public override onlyVertex {
+        baseURI = _baseURI;
+    }
+
+    /// @dev overriding transferFrom to disable transfers for SBTs
+    /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
+    function transferFrom(address from, address to, uint256 policyId) public override {
+        revert SoulboundToken();
+    }
+
+    /// @inheritdoc VertexPolicy
+    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
+        return tokenToPermissionSignatures[userId];
     }
 
     function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
@@ -229,6 +211,11 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         return false;
+    }
+
+    /// @inheritdoc VertexPolicy
+    function totalSupply() public view override returns (uint256) {
+        return _totalSupply;
     }
 
     /// @notice returns the location of the policy metadata

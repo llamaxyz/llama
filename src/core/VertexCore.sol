@@ -131,22 +131,6 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function cancelAction(uint256 actionId) external override {
-        ActionState state = getActionState(actionId);
-        if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired || state == ActionState.Failed) {
-            revert InvalidCancelation();
-        }
-
-        Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
-
-        action.canceled = true;
-        queuedActions[actionId] = false;
-
-        emit ActionCanceled(actionId);
-    }
-
-    /// @inheritdoc IVertexCore
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
@@ -176,6 +160,22 @@ contract VertexCore is IVertexCore {
         emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
 
         return result;
+    }
+
+    /// @inheritdoc IVertexCore
+    function cancelAction(uint256 actionId) external override {
+        ActionState state = getActionState(actionId);
+        if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired || state == ActionState.Failed) {
+            revert InvalidCancelation();
+        }
+
+        Action storage action = actions[actionId];
+        if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
+
+        action.canceled = true;
+        queuedActions[actionId] = false;
+
+        emit ActionCanceled(actionId);
     }
 
     /// @inheritdoc IVertexCore
@@ -220,7 +220,7 @@ contract VertexCore is IVertexCore {
     function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
-            for (uint256 i; i < strategyLength; i++) {
+            for (uint256 i; i < strategyLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(i, strategies[i])));
                 VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
                 authorizedStrategies[strategy] = true;

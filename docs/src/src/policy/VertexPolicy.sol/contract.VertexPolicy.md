@@ -1,18 +1,18 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c439ebd3966a0311d4b5f0be7550cd124e20dad2/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/7b69542e87e2655dea74dab5779f3939de9641f7/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
 
 
 ## Functions
-### batchAlterPolicyPermissions
+### batchUpdatePermissions
 
 burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
 
 
 ```solidity
-function batchAlterPolicyPermissions(uint256[] memory policyIds, bytes8[][] memory permissions) public virtual;
+function batchUpdatePermissions(uint256[] memory policyIds, bytes8[][] memory permissions) public virtual;
 ```
 **Parameters**
 
