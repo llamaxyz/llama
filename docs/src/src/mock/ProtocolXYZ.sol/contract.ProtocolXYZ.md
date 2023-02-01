@@ -1,14 +1,14 @@
 # ProtocolXYZ
-[Git Source](https://github.com/llama-community/vertex-v1/blob/1f84b899cb64edff9bc5bc06a6870e26d69dd1a0/src/mock/ProtocolXYZ.sol)
 
+[Git Source](https://github.com/llama-community/vertex-v1/blob/693b03f6823cb240f992102042b3702c0c97cf44/src/mock/ProtocolXYZ.sol)
 
 ## State Variables
+
 ### vertex
 
 ```solidity
 address public immutable vertex;
 ```
-
 
 ### paused
 
@@ -16,10 +16,9 @@ address public immutable vertex;
 bool public paused;
 ```
 
-
 ## Functions
-### constructor
 
+### constructor
 
 ```solidity
 constructor(address _vertex);
@@ -27,13 +26,11 @@ constructor(address _vertex);
 
 ### onlyVertex
 
-
 ```solidity
 modifier onlyVertex();
 ```
 
 ### pause
-
 
 ```solidity
 function pause(bool isPaused) external onlyVertex;
@@ -41,12 +38,12 @@ function pause(bool isPaused) external onlyVertex;
 
 ### fail
 
-
 ```solidity
 function fail() external view onlyVertex;
 ```
 
 ## Errors
+
 ### OnlyVertex
 
 ```solidity
@@ -58,4 +55,3 @@ error OnlyVertex();
 ```solidity
 error Failed();
 ```
-
