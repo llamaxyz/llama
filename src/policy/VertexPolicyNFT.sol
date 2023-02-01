@@ -62,7 +62,7 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256) {
+    function getSupplyByPermissions(bytes8[] calldata _permissions) external view override returns (uint256) {
         uint256 policyLength = policyIds.length;
         uint256 permissionLength = _permissions.length;
         uint256 supply;
@@ -80,7 +80,7 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex {
+    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public override onlyVertex {
         uint256 length = userPermissions.length;
         if (length == 0 || length != to.length) revert InvalidInput();
         for (uint256 i = 0; i < length; ++i) {
@@ -89,11 +89,13 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex {
+    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions) public override onlyVertex {
         uint256 length = _policyIds.length;
         if (length != permissions.length) revert InvalidInput();
-        for (uint256 i = 0; i < length; ++i) {
-            updatePermissions(_policyIds[i], permissions[i]);
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                updatePermissions(_policyIds[i], permissions[i]);
+            }
         }
     }
 
@@ -101,14 +103,16 @@ contract VertexPolicyNFT is VertexPolicy {
     function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
         uint256 length = _policyIds.length;
         if (length == 0) revert InvalidInput();
-        for (uint256 i = 0; i < length; ++i) {
-            revokePermissions(_policyIds[i]);
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                revokePermissions(_policyIds[i]);
+            }
         }
     }
 
     /// @dev hashes a permission
     /// @param permission the permission to hash
-    function hashPermission(Permission memory permission) public pure returns (bytes8) {
+    function hashPermission(Permission calldata permission) public pure returns (bytes8) {
         return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
     }
 
@@ -181,14 +185,14 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
     /// @param policyId the policy token id being updated
     /// @param permissions the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
+    function updatePermissions(uint256 policyId, bytes8[] calldata permissions) private onlyVertex {
         revokePermissions(policyId);
         grantPermissions(address(uint160(policyId)), permissions);
     }
 
     /// @notice sets the base URI for the contract
     /// @param _baseURI the base URI string to set
-    function setBaseURI(string memory _baseURI) public override onlyVertex {
+    function setBaseURI(string calldata _baseURI) public override onlyVertex {
         baseURI = _baseURI;
     }
 
