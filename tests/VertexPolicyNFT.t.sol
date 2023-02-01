@@ -157,4 +157,11 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.batchRevokePermissions(policyIds);
         assertEq(vertexPolicyNFT.totalSupply(), 1);
     }
+
+    function test_onlyVertexPolicyManagerCanCall() public {
+        string memory baseURI = "https://vertex.link/policy/";
+        vm.prank(address(0xdeadbeef));
+        vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+        vertexPolicyNFT.setBaseURI(baseURI);
+    }
 }
