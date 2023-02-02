@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {VertexVault} from "src/vault/VertexVault.sol";
+import {VertexCollector} from "src/vault/VertexCollector.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
 
@@ -44,8 +44,8 @@ contract VertexCore is IVertexCore {
     /// @notice The NFT contract that defines the policies for this Vertex system.
     VertexPolicyNFT public immutable policy;
 
-    /// @notice The Vertex Vault contract that holds the assets for this Vertex system.
-    VertexVault public immutable vault;
+    /// @notice The Vertex Collector contract that holds the assets for this Vertex system.
+    VertexCollector public immutable collector;
 
     /// @notice Name of this Vertex system.
     string public name;
@@ -78,7 +78,7 @@ contract VertexCore is IVertexCore {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
         policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
-        vault = VertexVault(new VertexVault{salt: salt}(address(this)));
+        collector = VertexCollector(new VertexCollector{salt: salt}(address(this)));
 
         uint256 strategyLength = initialStrategies.length;
         unchecked {

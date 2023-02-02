@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexVault} from "src/vault/IVertexVault.sol";
+import {IVertexCollector} from "src/vault/IVertexCollector.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
-/// @title Vertex Vault
+/// @title Vertex Collector
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexVault is IVertexVault {
+contract VertexCollector is IVertexCollector {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -33,12 +33,12 @@ contract VertexVault is IVertexVault {
     /// @notice Function for Vertex Vault to receive ETH
     receive() external payable {}
 
-    /// @inheritdoc IVertexVault
+    /// @inheritdoc IVertexCollector
     function approve(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         token.safeApprove(recipient, amount);
     }
 
-    /// @inheritdoc IVertexVault
+    /// @inheritdoc IVertexCollector
     function transfer(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
 

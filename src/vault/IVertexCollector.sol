@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-interface IVertexVault {
+interface IVertexCollector {
     /// @notice Function for Vertex to give ERC20 allowance to other parties
     /// @param token The address of the token to give allowance from
     /// @param recipient Allowance's recipient
