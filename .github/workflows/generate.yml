@@ -7,9 +7,6 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -55,6 +52,8 @@ jobs:
     needs: docs
     name: Gas report
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
 
     steps:
       - uses: actions/checkout@v3
