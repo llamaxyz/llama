@@ -1,5 +1,5 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/693b03f6823cb240f992102042b3702c0c97cf44/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c724f2e3c8bf0276a5a63bd3771b9426ad7e487d/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
@@ -12,7 +12,7 @@ burns and then mints tokens with the same policy IDs to the same addressed with 
 
 
 ```solidity
-function batchUpdatePermissions(uint256[] memory policyIds, bytes8[][] memory permissions) public virtual;
+function batchUpdatePermissions(uint256[] calldata policyIds, bytes8[][] calldata permissions) public virtual;
 ```
 **Parameters**
 
@@ -28,7 +28,7 @@ mints multiple policy token with the given permissions
 
 
 ```solidity
-function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
+function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public virtual;
 ```
 **Parameters**
 
@@ -76,7 +76,7 @@ sets the base URI for the contract
 
 
 ```solidity
-function setBaseURI(string memory _baseURI) public virtual;
+function setBaseURI(string calldata _baseURI) public virtual;
 ```
 **Parameters**
 
@@ -91,7 +91,7 @@ Total number of policy NFTs at that have at least 1 of these permissions at spec
 
 
 ```solidity
-function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);
+function getSupplyByPermissions(bytes8[] calldata permissions) external view virtual returns (uint256);
 ```
 **Parameters**
 

@@ -38,7 +38,7 @@ contract VertexCore is IVertexCore {
     bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,bool support)");
 
     /// @notice Equivalent to 100%, but scaled for precision
-    uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
+    uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice The NFT contract that defines the policies for this Vertex system.
     VertexPolicyNFT public immutable policy;
@@ -217,7 +217,7 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
@@ -231,7 +231,7 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
-    function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex {
+    function unauthorizeStrategies(VertexStrategy[] calldata strategies) public override onlyVertex {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {

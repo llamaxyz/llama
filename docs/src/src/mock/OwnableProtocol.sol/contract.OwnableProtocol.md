@@ -1,5 +1,5 @@
 # OwnableProtocol
-[Git Source](https://github.com/llama-community/vertex-v1/blob/693b03f6823cb240f992102042b3702c0c97cf44/src/mock/OwnableProtocol.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c724f2e3c8bf0276a5a63bd3771b9426ad7e487d/src/mock/OwnableProtocol.sol)
 
 **Inherits:**
 Ownable2Step, [ProtocolXYZ](/src/mock/ProtocolXYZ.sol/contract.ProtocolXYZ.md)

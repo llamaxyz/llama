@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/693b03f6823cb240f992102042b3702c0c97cf44/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c724f2e3c8bf0276a5a63bd3771b9426ad7e487d/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -101,7 +101,7 @@ Total number of policy NFTs at that have at least 1 of these permissions at spec
 
 
 ```solidity
-function getSupplyByPermissions(bytes8[] memory _permissions) external view override returns (uint256);
+function getSupplyByPermissions(bytes8[] calldata _permissions) external view override returns (uint256);
 ```
 **Parameters**
 
@@ -116,7 +116,7 @@ mints multiple policy token with the given permissions
 
 
 ```solidity
-function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public override onlyVertex;
+function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public override onlyVertex;
 ```
 **Parameters**
 
@@ -132,7 +132,7 @@ burns and then mints tokens with the same policy IDs to the same addressed with 
 
 
 ```solidity
-function batchUpdatePermissions(uint256[] memory _policyIds, bytes8[][] memory permissions) public override onlyVertex;
+function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions) public override onlyVertex;
 ```
 **Parameters**
 
@@ -163,7 +163,7 @@ function batchRevokePermissions(uint256[] calldata _policyIds) public override o
 
 
 ```solidity
-function hashPermission(Permission memory permission) public pure returns (bytes8);
+function hashPermission(Permission calldata permission) public pure returns (bytes8);
 ```
 **Parameters**
 
@@ -240,7 +240,7 @@ burns and then mints a token with the same policy ID to the same address with a 
 
 
 ```solidity
-function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex;
+function updatePermissions(uint256 policyId, bytes8[] calldata permissions) private onlyVertex;
 ```
 **Parameters**
 
@@ -256,7 +256,7 @@ sets the base URI for the contract
 
 
 ```solidity
-function setBaseURI(string memory _baseURI) public override onlyVertex;
+function setBaseURI(string calldata _baseURI) public override onlyVertex;
 ```
 **Parameters**
 
