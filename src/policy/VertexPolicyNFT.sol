@@ -147,6 +147,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param policyId the policy token id being updated
     /// @param newPermissionSignatures the new permissions array to be set
     function updatePermissions(uint256 policyId, bytes8[] memory newPermissionSignatures) private onlyVertex {
+        if (ownerOf(policyId) == address(0)) revert InvalidInput();
         bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
         uint256 permissionSignaturesLength = permissionSignatures.length;
         uint256 newPermissionSignaturesLength = newPermissionSignatures.length;
