@@ -7,7 +7,7 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  job2:
+  docs:
     name: Generate documentation
     runs-on: ubuntu-latest
 
@@ -48,10 +48,7 @@ jobs:
           add: "docs"
           message: Generate updated docs
           default_author: github_actions
-  job1:
-    check:
-      strategy:
-        fail-fast: true
+  reports:
     name: Generate gas report
     runs-on: ubuntu-latest
 
