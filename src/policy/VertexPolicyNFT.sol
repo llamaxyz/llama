@@ -223,7 +223,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     function sortedPermissionInsert(bytes8[] storage signatures, bytes8 value) internal {
         uint256 length = signatures.length;
-        if (length == 0) {
+        if (length == 0 || value > signatures[length - 1]) {
             signatures.push(value);
             return;
         }
