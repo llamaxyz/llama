@@ -1,5 +1,5 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/aff9e10125efc8222ae7400ab76a0949cc7ded22/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/d7dd2da306ac7c0c69abcf35670479b85386e80d/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
