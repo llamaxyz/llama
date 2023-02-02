@@ -150,7 +150,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice will delete and add permissions as needed
     /// @param policyId the policy token id being updated
     /// @param newPermissionSignatures the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] memory newPermissionSignatures) private onlyVertex {
+    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures) private onlyVertex {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
         bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
         uint256 permissionSignaturesLength = permissionSignatures.length;
@@ -159,7 +159,7 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 permissionsToRemoveIndex;
         unchecked {
             for (uint256 i; i < permissionSignaturesLength; ++i) {
-                if (!permissionIsInPermissionsArrayMemory(newPermissionSignatures, permissionSignatures[i])) {
+                if (!permissionIsInPermissionsArrayCalldata(newPermissionSignatures, permissionSignatures[i])) {
                     permissionsToRemove[permissionsToRemoveIndex] = permissionSignatures[i];
                     ++permissionsToRemoveIndex;
                 }
@@ -276,7 +276,7 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function permissionIsInPermissionsArrayMemory(bytes8[] memory policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
+    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
         uint256 length = policyPermissionSignatures.length;
         if (length == 0) return false;
         uint256 min;
