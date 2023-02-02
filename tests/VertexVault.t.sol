@@ -67,32 +67,9 @@ contract VertexCollectorTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     // approve unit tests
-    function test_VertexCollector_approve() public {
+    function test_VertexCollector_approve_ApproveERC20() public {
         uint256 amount = 1000e6;
-        assertEq(USDC.balanceOf(address(collector)), 0);
-
-        // Transfer USDC to collector
-        vm.startPrank(USDC_WHALE);
-        USDC.transfer(address(collector), amount);
-        assertEq(USDC.balanceOf(address(collector)), amount);
-        vm.stopPrank();
-
-        uint256 vaultUSDCBalance = USDC.balanceOf(address(collector));
-        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
-
-        // Approve USDC to whale
-        vm.startPrank(address(vertex));
-        collector.approve(USDC, USDC_WHALE, amount);
-        assertEq(USDC.allowance(address(collector), USDC_WHALE), amount);
-        vm.stopPrank();
-
-        // Transfer USDC from collector to whale
-        vm.startPrank(USDC_WHALE);
-        USDC.transferFrom(address(collector), USDC_WHALE, amount);
-        assertEq(USDC.balanceOf(address(collector)), 0);
-        assertEq(USDC.balanceOf(address(collector)), vaultUSDCBalance - amount);
-        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
-        vm.stopPrank();
+        _approveUSDCToRecipient(amount);
     }
 
     function test_VertexCollector_approve_RevertIfNotVertexMsgSender() public {
@@ -104,14 +81,7 @@ contract VertexCollectorTest is Test {
     // transfer unit tests
     function test_VertexCollector_transfer_TransferETH() public {
         uint256 amount = 1000e18;
-        assertEq(address(collector).balance, 0);
-
-        // Transfer ETH to collector
-        vm.startPrank(ETH_WHALE);
-        (bool success,) = address(collector).call{value: amount}("");
-        assertTrue(success);
-        assertEq(address(collector).balance, amount);
-        vm.stopPrank();
+        _transferETHToCollector(amount);
 
         uint256 vaultETHBalance = address(collector).balance;
         uint256 whaleETHBalance = ETH_WHALE.balance;
@@ -127,13 +97,7 @@ contract VertexCollectorTest is Test {
 
     function test_VertexCollector_transfer_TransferERC20() public {
         uint256 amount = 1000e6;
-        assertEq(USDC.balanceOf(address(collector)), 0);
-
-        // Transfer USDC to collector
-        vm.startPrank(USDC_WHALE);
-        USDC.transfer(address(collector), amount);
-        assertEq(USDC.balanceOf(address(collector)), amount);
-        vm.stopPrank();
+        _transferUSDCToCollector(amount);
 
         uint256 vaultUSDCBalance = USDC.balanceOf(address(collector));
         uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
@@ -168,6 +132,45 @@ contract VertexCollectorTest is Test {
     // Test that VertexCollector can receive ETH
     function test_VertexCollector_ReceiveETH() public {
         uint256 amount = 1000e18;
+        _transferETHToCollector(amount);
+    }
+
+    // Test that VertexCollector can receive ERC20 tokens
+    function test_VertexCollector_ReceiveERC20() public {
+        uint256 amount = 1000e6;
+        _transferUSDCToCollector(amount);
+    }
+
+    // Test that approved ERC20 tokens can be transferred from VertexCollector to a recipient
+    function test_VertexCollector_TransferApprovedERC20() public {
+        uint256 amount = 1000e6;
+        _transferUSDCToCollector(amount);
+        _approveUSDCToRecipient(amount);
+
+        uint256 vaultUSDCBalance = USDC.balanceOf(address(collector));
+        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
+
+        // Transfer USDC from collector to whale
+        vm.startPrank(USDC_WHALE);
+        USDC.transferFrom(address(collector), USDC_WHALE, amount);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(USDC.balanceOf(address(collector)), vaultUSDCBalance - amount);
+        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
+        vm.stopPrank();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Helpers
+    //////////////////////////////////////////////////////////////*/
+
+    function _approveUSDCToRecipient(uint256 amount) public {
+        vm.startPrank(address(vertex));
+        collector.approve(USDC, USDC_WHALE, amount);
+        assertEq(USDC.allowance(address(collector), USDC_WHALE), amount);
+        vm.stopPrank();
+    }
+
+    function _transferETHToCollector(uint256 amount) public {
         assertEq(address(collector).balance, 0);
 
         vm.startPrank(ETH_WHALE);
@@ -177,9 +180,7 @@ contract VertexCollectorTest is Test {
         vm.stopPrank();
     }
 
-    // Test that VertexCollector can receive ERC20 tokens
-    function test_VertexCollector_ReceiveERC20() public {
-        uint256 amount = 1000e6;
+    function _transferUSDCToCollector(uint256 amount) public {
         assertEq(USDC.balanceOf(address(collector)), 0);
 
         vm.startPrank(USDC_WHALE);
@@ -187,8 +188,4 @@ contract VertexCollectorTest is Test {
         assertEq(USDC.balanceOf(address(collector)), amount);
         vm.stopPrank();
     }
-
-    /*///////////////////////////////////////////////////////////////
-                            Helpers
-    //////////////////////////////////////////////////////////////*/
 }
