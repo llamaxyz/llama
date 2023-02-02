@@ -184,14 +184,11 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 length = permissionSignatures.length;
         if (length == 0) revert InvalidInput();
         uint256 policyId = uint256(uint160(to));
-        checkpoints[policyId].push(Checkpoint(block.number, new bytes8[](0)));
-        Checkpoint storage newCheckpoint = checkpoints[policyId][checkpoints[policyId].length - 1];
         unchecked {
             ++_totalSupply;
             for (uint256 i = 0; i < length; ++i) {
                 if (!hasPermission(policyId, permissionSignatures[i])) {
                     sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
-                    sortedPermissionInsert(newCheckpoint.permissionSignatures, permissionSignatures[i]);
                 }
             }
             policyIds.push(policyId);
