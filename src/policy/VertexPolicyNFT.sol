@@ -12,7 +12,6 @@ import {Permission, Checkpoint} from "src/utils/Structs.sol";
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
-    mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
     mapping(uint256 => Checkpoint[]) private checkpoints;
     uint256[] public policyIds;
     string public baseURI;
@@ -69,7 +68,7 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i; i < policyLength; ++i) {
                 for (uint256 j; j < permissionLength; ++j) {
-                    if (tokenToHasPermissionSignature[policyIds[i]][_permissions[j]]) {
+                    if (hasPermission(policyIds[i], _permissions[j])) {
                         ++supply;
                         break;
                     }
@@ -127,7 +126,21 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @inheritdoc VertexPolicy
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
-        return tokenToHasPermissionSignature[policyId][permissionSignature];
+        // binary search the sorted array
+        bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
+        uint256 length = permissionSignatures.length;
+        if (length == 0) return false;
+        uint256 min;
+        uint256 max = length - 1;
+        while (max > min) {
+            uint256 mid = (max + min + 1) / 2;
+            if (permissionSignatures[mid] <= permissionSignature) {
+                min = mid;
+            } else {
+                max = mid - 1;
+            }
+        }
+        return permissionSignatures[min] == permissionSignature;
     }
 
     /// @notice mints a new policy token with the given permissions
@@ -142,8 +155,7 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             ++_totalSupply;
             for (uint256 i = 0; i < length; ++i) {
-                if (!tokenToHasPermissionSignature[policyId][permissionSignatures[i]]) {
-                    tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
+                if (!hasPermission(policyId, permissionSignatures[i])) {
                     sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
                 }
             }
@@ -162,7 +174,6 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             _totalSupply--;
             for (uint256 i; i < userPermissionslength; ++i) {
-                tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
                 sortedPermissionRemove(userPermissions, userPermissions[i]);
             }
             uint256 policyIdsLength = policyIds.length;
