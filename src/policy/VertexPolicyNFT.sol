@@ -141,10 +141,10 @@ contract VertexPolicyNFT is VertexPolicy {
 
         unchecked {
             ++_totalSupply;
-            tokenToPermissionSignatures[policyId] = permissionSignatures;
             for (uint256 i = 0; i < length; ++i) {
                 if (!tokenToHasPermissionSignature[policyId][permissionSignatures[i]]) {
                     tokenToHasPermissionSignature[policyId][permissionSignatures[i]] = true;
+                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
                 }
             }
             policyIds.push(policyId);
@@ -163,6 +163,7 @@ contract VertexPolicyNFT is VertexPolicy {
             _totalSupply--;
             for (uint256 i; i < userPermissionslength; ++i) {
                 tokenToHasPermissionSignature[policyId][userPermissions[i]] = false;
+                sortedPermissionRemove(userPermissions, userPermissions[i]);
             }
             uint256 policyIdsLength = policyIds.length;
             for (uint256 j = 0; j < policyIdsLength; ++j) {
@@ -173,7 +174,6 @@ contract VertexPolicyNFT is VertexPolicy {
                 }
             }
         }
-        delete tokenToPermissionSignatures[policyId];
         checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: new bytes8[](0)}));
         _burn(policyId);
     }
@@ -222,5 +222,44 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param id the id of the policy token
     function tokenURI(uint256 id) public view override returns (string memory) {
         return string(abi.encodePacked(baseURI, Strings.toString(id)));
+    }
+
+    function sortedPermissionInsert(bytes8[] storage array, bytes8 value) internal {
+        uint256 length = array.length;
+        if (length == 0) {
+            array.push(value);
+            return;
+        }
+        uint256 i;
+        unchecked {
+            while (i < length && array[i] < value) {
+                ++i;
+            }
+            if (i == length) {
+                array.push(value);
+            } else {
+                array.push(array[length - 1]);
+                for (uint256 j = length - 1; j > i; --j) {
+                    array[j] = array[j - 1];
+                }
+                array[i] = value;
+            }
+        }
+    }
+
+    function sortedPermissionRemove(bytes8[] storage array, bytes8 value) internal {
+        uint256 length = array.length;
+        if (length == 0) return;
+        uint256 i;
+        unchecked {
+            while (i < length && array[i] < value) {
+                ++i;
+            }
+            if (i == length) return;
+            for (uint256 j = i; j < length - 1; ++j) {
+                array[j] = array[j + 1];
+            }
+            array.pop();
+        }
     }
 }
