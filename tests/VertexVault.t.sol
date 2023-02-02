@@ -66,78 +66,8 @@ contract VertexCollectorTest is Test {
                             Unit tests
     //////////////////////////////////////////////////////////////*/
 
-    // Test that VertexCollector can receive ETH
-    function test_vertexVault_receiveETH() public {
-        uint256 amount = 1000e18;
-        assertEq(address(collector).balance, 0);
-
-        vm.startPrank(ETH_WHALE);
-        (bool success,) = address(collector).call{value: amount}("");
-        assertTrue(success);
-        assertEq(address(collector).balance, amount);
-        vm.stopPrank();
-    }
-
-    // Test that VertexCollector can receive ERC20 tokens
-    function test_vertexVault_receiveERC20() public {
-        uint256 amount = 1000e6;
-        assertEq(USDC.balanceOf(address(collector)), 0);
-
-        vm.startPrank(USDC_WHALE);
-        USDC.transfer(address(collector), amount);
-        assertEq(USDC.balanceOf(address(collector)), amount);
-        vm.stopPrank();
-    }
-
-    // Test that VertexCollector can transfer ETH
-    function test_vertexVault_transferETH() public {
-        uint256 amount = 1000e18;
-        assertEq(address(collector).balance, 0);
-
-        // Transfer ETH to collector
-        vm.startPrank(ETH_WHALE);
-        (bool success,) = address(collector).call{value: amount}("");
-        assertTrue(success);
-        assertEq(address(collector).balance, amount);
-        vm.stopPrank();
-
-        uint256 vaultETHBalance = address(collector).balance;
-        uint256 whaleETHBalance = ETH_WHALE.balance;
-
-        // Transfer ETH from collector to whale
-        vm.startPrank(address(vertex));
-        collector.transfer(IERC20(collector.ETH_MOCK_ADDRESS()), ETH_WHALE, amount);
-        assertEq(address(collector).balance, 0);
-        assertEq(address(collector).balance, vaultETHBalance - amount);
-        assertEq(ETH_WHALE.balance, whaleETHBalance + amount);
-        vm.stopPrank();
-    }
-
-    // Test that VertexCollector can transfer ERC20 tokens
-    function test_vertexVault_transferERC20() public {
-        uint256 amount = 1000e6;
-        assertEq(USDC.balanceOf(address(collector)), 0);
-
-        // Transfer USDC to collector
-        vm.startPrank(USDC_WHALE);
-        USDC.transfer(address(collector), amount);
-        assertEq(USDC.balanceOf(address(collector)), amount);
-        vm.stopPrank();
-
-        uint256 vaultUSDCBalance = USDC.balanceOf(address(collector));
-        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
-
-        // Transfer USDC from collector to whale
-        vm.startPrank(address(vertex));
-        collector.transfer(USDC, USDC_WHALE, amount);
-        assertEq(USDC.balanceOf(address(collector)), 0);
-        assertEq(USDC.balanceOf(address(collector)), vaultUSDCBalance - amount);
-        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
-        vm.stopPrank();
-    }
-
-    // Test that VertexCollector can approve ERC20 tokens
-    function test_vertexVault_approveERC20() public {
+    // approve unit tests
+    function test_VertexCollector_approve() public {
         uint256 amount = 1000e6;
         assertEq(USDC.balanceOf(address(collector)), 0);
 
@@ -165,23 +95,100 @@ contract VertexCollectorTest is Test {
         vm.stopPrank();
     }
 
-    function test_vertexVault_approveNotVertexMsgSender() public {
+    function test_VertexCollector_approve_RevertIfNotVertexMsgSender() public {
         uint256 amount = 1000e6;
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
         collector.approve(USDC, USDC_WHALE, amount);
     }
 
-    function test_vertexVault_transferNotVertexMsgSender() public {
+    // transfer unit tests
+    function test_VertexCollector_transfer_TransferETH() public {
+        uint256 amount = 1000e18;
+        assertEq(address(collector).balance, 0);
+
+        // Transfer ETH to collector
+        vm.startPrank(ETH_WHALE);
+        (bool success,) = address(collector).call{value: amount}("");
+        assertTrue(success);
+        assertEq(address(collector).balance, amount);
+        vm.stopPrank();
+
+        uint256 vaultETHBalance = address(collector).balance;
+        uint256 whaleETHBalance = ETH_WHALE.balance;
+
+        // Transfer ETH from collector to whale
+        vm.startPrank(address(vertex));
+        collector.transfer(IERC20(collector.ETH_MOCK_ADDRESS()), ETH_WHALE, amount);
+        assertEq(address(collector).balance, 0);
+        assertEq(address(collector).balance, vaultETHBalance - amount);
+        assertEq(ETH_WHALE.balance, whaleETHBalance + amount);
+        vm.stopPrank();
+    }
+
+    function test_VertexCollector_transfer_TransferERC20() public {
+        uint256 amount = 1000e6;
+        assertEq(USDC.balanceOf(address(collector)), 0);
+
+        // Transfer USDC to collector
+        vm.startPrank(USDC_WHALE);
+        USDC.transfer(address(collector), amount);
+        assertEq(USDC.balanceOf(address(collector)), amount);
+        vm.stopPrank();
+
+        uint256 vaultUSDCBalance = USDC.balanceOf(address(collector));
+        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
+
+        // Transfer USDC from collector to whale
+        vm.startPrank(address(vertex));
+        collector.transfer(USDC, USDC_WHALE, amount);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(USDC.balanceOf(address(collector)), vaultUSDCBalance - amount);
+        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + amount);
+        vm.stopPrank();
+    }
+
+    function test_VertexCollector_transfer_RevertIfNotVertexMsgSender() public {
         uint256 amount = 1000e6;
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
         collector.transfer(USDC, USDC_WHALE, amount);
     }
 
-    function test_vertexVault_transferToZeroAddress() public {
+    function test_VertexCollector_transfer_RevertIfToZeroAddress() public {
         uint256 amount = 1000e6;
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexCollector.Invalid0xRecipient.selector);
         collector.transfer(USDC, address(0), amount);
         vm.stopPrank();
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Integration tests
+    //////////////////////////////////////////////////////////////*/
+
+    // Test that VertexCollector can receive ETH
+    function test_VertexCollector_ReceiveETH() public {
+        uint256 amount = 1000e18;
+        assertEq(address(collector).balance, 0);
+
+        vm.startPrank(ETH_WHALE);
+        (bool success,) = address(collector).call{value: amount}("");
+        assertTrue(success);
+        assertEq(address(collector).balance, amount);
+        vm.stopPrank();
+    }
+
+    // Test that VertexCollector can receive ERC20 tokens
+    function test_VertexCollector_ReceiveERC20() public {
+        uint256 amount = 1000e6;
+        assertEq(USDC.balanceOf(address(collector)), 0);
+
+        vm.startPrank(USDC_WHALE);
+        USDC.transfer(address(collector), amount);
+        assertEq(USDC.balanceOf(address(collector)), amount);
+        vm.stopPrank();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Helpers
+    //////////////////////////////////////////////////////////////*/
 }
