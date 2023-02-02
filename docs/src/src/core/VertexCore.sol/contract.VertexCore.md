@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/693b03f6823cb240f992102042b3702c0c97cf44/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c724f2e3c8bf0276a5a63bd3771b9426ad7e487d/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -43,7 +43,7 @@ Equivalent to 100%, but scaled for precision
 
 
 ```solidity
-uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
+uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 ```
 
 
@@ -292,7 +292,7 @@ Deploy new strategies and add them to the mapping of authorized strategies.
 
 
 ```solidity
-function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex;
+function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex;
 ```
 **Parameters**
 
@@ -307,7 +307,7 @@ Remove strategies from the mapping of authorized strategies.
 
 
 ```solidity
-function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex;
+function unauthorizeStrategies(VertexStrategy[] calldata strategies) public override onlyVertex;
 ```
 **Parameters**
 
