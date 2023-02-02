@@ -221,42 +221,42 @@ contract VertexPolicyNFT is VertexPolicy {
         _burn(policyId);
     }
 
-    function sortedPermissionInsert(bytes8[] storage array, bytes8 value) internal {
-        uint256 length = array.length;
+    function sortedPermissionInsert(bytes8[] storage signatures, bytes8 value) internal {
+        uint256 length = signatures.length;
         if (length == 0) {
-            array.push(value);
+            signatures.push(value);
             return;
         }
         uint256 i;
         unchecked {
-            while (i < length && array[i] < value) {
+            while (i < length && signatures[i] < value) {
                 ++i;
             }
             if (i == length) {
-                array.push(value);
+                signatures.push(value);
             } else {
-                array.push(array[length - 1]);
+                signatures.push(signatures[length - 1]);
                 for (uint256 j = length - 1; j > i; --j) {
-                    array[j] = array[j - 1];
+                    signatures[j] = signatures[j - 1];
                 }
-                array[i] = value;
+                signatures[i] = value;
             }
         }
     }
 
-    function sortedPermissionRemove(bytes8[] storage array, bytes8 value) internal {
-        uint256 length = array.length;
+    function sortedPermissionRemove(bytes8[] storage signatures, bytes8 value) internal {
+        uint256 length = signatures.length;
         if (length == 0) return;
         uint256 i;
         unchecked {
-            while (i < length && array[i] < value) {
+            while (i < length && signatures[i] < value) {
                 ++i;
             }
             if (i == length) return;
             for (uint256 j = i; j < length - 1; ++j) {
-                array[j] = array[j + 1];
+                signatures[j] = signatures[j + 1];
             }
-            array.pop();
+            signatures.pop();
         }
     }
 
