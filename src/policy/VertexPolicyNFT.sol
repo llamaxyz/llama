@@ -126,7 +126,6 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @inheritdoc VertexPolicy
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
-        // binary search the sorted array
         bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
         uint256 length = permissionSignatures.length;
         if (length == 0) return false;
@@ -141,6 +140,35 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         return permissionSignatures[min] == permissionSignature;
+    }
+
+    /// @notice updates a policyID with a new set of permissions
+    /// @notice will delete and add permissions as needed
+    /// @param policyId the policy token id being updated
+    /// @param newPermissionSignatures the new permissions array to be set
+    function updatePermissions(uint256 policyId, bytes8[] memory newPermissionSignatures) private onlyVertex {
+        bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
+        uint256 permissionSignaturesLength = permissionSignatures.length;
+        uint256 newPermissionSignaturesLength = newPermissionSignatures.length;
+        bytes8[] memory permissionsToRemove = new bytes8[](permissionSignaturesLength);
+        uint256 permissionsToRemoveIndex;
+        unchecked {
+            for (uint256 i; i < permissionSignaturesLength; ++i) {
+                if (!permissionIsInPermissionsArrayMemory(newPermissionSignatures, permissionSignatures[i])) {
+                    permissionsToRemove[permissionsToRemoveIndex] = permissionSignatures[i];
+                    ++permissionsToRemoveIndex;
+                }
+            }
+            for (uint256 j; j < permissionsToRemoveIndex; ++j) {
+                sortedPermissionRemove(permissionSignatures, permissionsToRemove[j]);
+            }
+            for (uint256 k; k < newPermissionSignaturesLength; ++k) {
+                if (!permissionIsInPermissionsArray(permissionSignatures, newPermissionSignatures[k])) {
+                    sortedPermissionInsert(permissionSignatures, newPermissionSignatures[k]);
+                }
+            }
+        }
+        checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: permissionSignatures}));
     }
 
     /// @notice mints a new policy token with the given permissions
@@ -246,12 +274,20 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
-    /// @param policyId the policy token id being updated
-    /// @param permissions the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
-        revokePermissions(policyId);
-        grantPermissions(address(uint160(policyId)), permissions);
+    function permissionIsInPermissionsArrayMemory(bytes8[] memory policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
+        uint256 length = policyPermissionSignatures.length;
+        if (length == 0) return false;
+        uint256 min;
+        uint256 max = length - 1;
+        while (max > min) {
+            uint256 mid = (max + min + 1) / 2;
+            if (policyPermissionSignatures[mid] <= permissionSignature) {
+                min = mid;
+            } else {
+                max = mid - 1;
+            }
+        }
+        return policyPermissionSignatures[min] == permissionSignature;
     }
 
     /// @notice sets the base URI for the contract
