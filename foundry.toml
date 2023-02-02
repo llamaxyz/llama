@@ -5,6 +5,7 @@ out = 'out'
 libs = ['lib']
 solc = "0.8.17"
 ignored_error_codes = ["unreachable", "unused-param", "func-mutability"] # Ignore build errors due to unimplemented policy functions
+solc_version = '0.8.17'
 
 [profile.ci]
 fuzz_runs = 5_000

@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/d7dd2da306ac7c0c69abcf35670479b85386e80d/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -17,13 +17,6 @@ The permissions determine how the token can interact with the vertex administrat
 
 ```solidity
 mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
-```
-
-
-### tokenToHasPermissionSignature
-
-```solidity
-mapping(uint256 => mapping(bytes8 => bool)) public tokenToHasPermissionSignature;
 ```
 
 
@@ -203,6 +196,24 @@ function hasPermission(uint256 policyId, bytes8 permissionSignature) public view
 |`permissionSignature`|`bytes8`|the signature of the permission|
 
 
+### updatePermissions
+
+updates a policyID with a new set of permissions
+
+will delete and add permissions as needed
+
+
+```solidity
+function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures) private onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the policy token id being updated|
+|`newPermissionSignatures`|`bytes8[]`|the new permissions array to be set|
+
+
 ### grantPermissions
 
 mints a new policy token with the given permissions
@@ -234,21 +245,33 @@ function revokePermissions(uint256 policyId) private;
 |`policyId`|`uint256`|the id of the policy token to revoke permissions from|
 
 
-### updatePermissions
-
-burns and then mints a token with the same policy ID to the same address with a new set of permissions
+### sortedPermissionInsert
 
 
 ```solidity
-function updatePermissions(uint256 policyId, bytes8[] calldata permissions) private onlyVertex;
+function sortedPermissionInsert(bytes8[] storage signatures, bytes8 value) internal;
 ```
-**Parameters**
 
-|Name|Type|Description|
-|----|----|-----------|
-|`policyId`|`uint256`|the policy token id being updated|
-|`permissions`|`bytes8[]`|the new permissions array to be set|
+### sortedPermissionRemove
 
+
+```solidity
+function sortedPermissionRemove(bytes8[] storage signatures, bytes8 value) internal;
+```
+
+### permissionIsInPermissionsArray
+
+
+```solidity
+function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
+```
+
+### permissionIsInPermissionsArrayCalldata
+
+
+```solidity
+function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
+```
 
 ### setBaseURI
 
@@ -290,13 +313,6 @@ function getPermissionSignatures(uint256 userId) public view override returns (b
 |----|----|-----------|
 |`userId`|`uint256`||
 
-
-### permissionIsInPermissionsArray
-
-
-```solidity
-function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
-```
 
 ### totalSupply
 
