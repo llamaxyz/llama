@@ -7,6 +7,9 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
+  check:
+    strategy:
+      fail-fast: true
   docs:
     name: Documentation
     runs-on: ubuntu-latest
