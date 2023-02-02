@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/faea9bd20f973747444212669d4eae4abb997d5f/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/aff9e10125efc8222ae7400ab76a0949cc7ded22/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -249,14 +249,14 @@ function revokePermissions(uint256 policyId) private;
 
 
 ```solidity
-function sortedPermissionInsert(bytes8[] storage array, bytes8 value) internal;
+function sortedPermissionInsert(bytes8[] storage signatures, bytes8 value) internal;
 ```
 
 ### sortedPermissionRemove
 
 
 ```solidity
-function sortedPermissionRemove(bytes8[] storage array, bytes8 value) internal;
+function sortedPermissionRemove(bytes8[] storage signatures, bytes8 value) internal;
 ```
 
 ### permissionIsInPermissionsArray
