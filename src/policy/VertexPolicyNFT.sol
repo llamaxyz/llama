@@ -191,58 +191,6 @@ contract VertexPolicyNFT is VertexPolicy {
         _burn(policyId);
     }
 
-    /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
-    /// @param policyId the policy token id being updated
-    /// @param permissions the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
-        revokePermissions(policyId);
-        grantPermissions(address(uint160(policyId)), permissions);
-    }
-
-    /// @notice sets the base URI for the contract
-    /// @param _baseURI the base URI string to set
-    function setBaseURI(string memory _baseURI) public override onlyVertex {
-        baseURI = _baseURI;
-    }
-
-    /// @dev overriding transferFrom to disable transfers for SBTs
-    /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address from, address to, uint256 policyId) public override {
-        revert SoulboundToken();
-    }
-
-    /// @inheritdoc VertexPolicy
-    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
-        return tokenToPermissionSignatures[userId];
-    }
-
-    function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
-        uint256 length = policyPermissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (policyPermissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        return policyPermissionSignatures[min] == permissionSignature;
-    }
-
-    /// @inheritdoc VertexPolicy
-    function totalSupply() public view override returns (uint256) {
-        return _totalSupply;
-    }
-
-    /// @notice returns the location of the policy metadata
-    /// @param id the id of the policy token
-    function tokenURI(uint256 id) public view override returns (string memory) {
-        return string(abi.encodePacked(baseURI, Strings.toString(id)));
-    }
-
     function sortedPermissionInsert(bytes8[] storage array, bytes8 value) internal {
         uint256 length = array.length;
         if (length == 0) {
@@ -280,5 +228,57 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             array.pop();
         }
+    }
+
+    function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
+        uint256 length = policyPermissionSignatures.length;
+        if (length == 0) return false;
+        uint256 min;
+        uint256 max = length - 1;
+        while (max > min) {
+            uint256 mid = (max + min + 1) / 2;
+            if (policyPermissionSignatures[mid] <= permissionSignature) {
+                min = mid;
+            } else {
+                max = mid - 1;
+            }
+        }
+        return policyPermissionSignatures[min] == permissionSignature;
+    }
+
+    /// @notice burns and then mints a token with the same policy ID to the same address with a new set of permissions
+    /// @param policyId the policy token id being updated
+    /// @param permissions the new permissions array to be set
+    function updatePermissions(uint256 policyId, bytes8[] memory permissions) private onlyVertex {
+        revokePermissions(policyId);
+        grantPermissions(address(uint160(policyId)), permissions);
+    }
+
+    /// @notice sets the base URI for the contract
+    /// @param _baseURI the base URI string to set
+    function setBaseURI(string memory _baseURI) public override onlyVertex {
+        baseURI = _baseURI;
+    }
+
+    /// @dev overriding transferFrom to disable transfers for SBTs
+    /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
+    function transferFrom(address from, address to, uint256 policyId) public override {
+        revert SoulboundToken();
+    }
+
+    /// @inheritdoc VertexPolicy
+    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
+        return tokenToPermissionSignatures[userId];
+    }
+
+    /// @inheritdoc VertexPolicy
+    function totalSupply() public view override returns (uint256) {
+        return _totalSupply;
+    }
+
+    /// @notice returns the location of the policy metadata
+    /// @param id the id of the policy token
+    function tokenURI(uint256 id) public view override returns (string memory) {
+        return string(abi.encodePacked(baseURI, Strings.toString(id)));
     }
 }
