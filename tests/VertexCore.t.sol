@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Test, console2} from "forge-std/Test.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
+import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
@@ -12,6 +13,8 @@ import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Struct
 contract VertexCoreTest is Test {
     // Vertex system
     VertexCore public vertex;
+    VertexCore public vertexCore;
+    VertexFactory public vertexFactory;
     VertexStrategy[] public strategies;
     VertexPolicyNFT public policy;
 
@@ -83,7 +86,9 @@ contract VertexCoreTest is Test {
         });
 
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
+        vertexCore = new VertexCore();
+        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
+        vertex = VertexCore(vertexFactory.owner());
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses

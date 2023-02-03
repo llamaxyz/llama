@@ -24,6 +24,20 @@ interface IVertexCore {
     event StrategiesAuthorized(Strategy[] strategies);
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
+    /// @notice Initializes a new VertexCore clone.
+    /// @param name The name of the VertexCore clone.
+    /// @param symbol The symbol of the policy NFT contract.
+    /// @param initialStrategies The configuration of the initial strategies.
+    /// @param initialPolicyholders The initial policyholders.
+    /// @param initialPermissions The initial permissions to be granted to the policy token.
+    function initialize(
+        string memory name,
+        string memory symbol,
+        Strategy[] memory initialStrategies,
+        address[] memory initialPolicyholders,
+        bytes8[][] memory initialPermissions
+    ) external;
+
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.
     /// @param target The contract called when the action is executed.

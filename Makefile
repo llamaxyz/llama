@@ -13,6 +13,7 @@ match    :; forge test --fork-url ${RPC_MAINNET_URL} -m ${MATCH} $(call compute_
 watch    :; forge test --fork-url ${RPC_MAINNET_URL} --watch $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
 report   :; forge clean && forge test --gas-report | sed -e/\|/\{ -e:1 -en\;b1 -e\} -ed | cat > .gas-report
 doc      :; forge doc -b
+yul      :; forge clean && forge build --via-ir --extra-output ir-optimized && cat ./out/${CONTRACT}.sol/${CONTRACT}.json | jq -r .irOptimized | perl -pe 's/\\n/\n/g' > ${CONTRACT}-yul.sol
 
 # Deploy and Verify Payload
 deploy   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
