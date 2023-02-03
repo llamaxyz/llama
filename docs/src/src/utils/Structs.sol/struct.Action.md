@@ -1,5 +1,5 @@
 # Action
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/utils/Structs.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/utils/Structs.sol)
 
 
 ```solidity
@@ -7,11 +7,11 @@ struct Action {
     address creator;
     bool executed;
     bool canceled;
+    bytes4 selector;
     VertexStrategy strategy;
     address target;
-    uint256 value;
-    bytes4 selector;
     bytes data;
+    uint256 value;
     uint256 createdBlockNumber;
     uint256 executionTime;
     uint256 totalApprovals;

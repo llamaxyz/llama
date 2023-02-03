@@ -10,17 +10,13 @@ import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is IVertexStrategy {
+    error InvalidPermissionSignature();
+
     /// @notice Equivalent to 100%, but in basis points.
-    uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
+    uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice Permission signature value that determines weight of all unspecified policyholders.
     bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
-
-    /// @notice Minimum time between queueing and execution of action.
-    uint256 public immutable queuingDuration;
-
-    /// @notice Time after executionTime that action can be executed before permanently expiring.
-    uint256 public immutable expirationDelay;
 
     /// @notice Can action be queued before approvalEndTime.
     bool public immutable isFixedLengthApprovalPeriod;
@@ -28,11 +24,17 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice The strategy's Vertex system.
     IVertexCore public immutable vertex;
 
-    /// @notice Length of approval period in blocks.
-    uint256 public immutable approvalPeriod;
-
     /// @notice Policy NFT for this Vertex system.
     VertexPolicyNFT public immutable policy;
+
+    /// @notice Minimum time between queueing and execution of action.
+    uint256 public immutable queuingDuration;
+
+    /// @notice Time after executionTime that action can be executed before permanently expiring.
+    uint256 public immutable expirationDelay;
+
+    /// @notice Length of approval period in blocks.
+    uint256 public immutable approvalPeriod;
 
     /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of the action for it to be queued. In bps, where
     /// 100_00 == 100%.
@@ -43,19 +45,17 @@ contract VertexStrategy is IVertexStrategy {
     /// == 100%.
     uint256 public immutable minDisapprovalPct;
 
-    /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public approvalWeightByPermission;
-
-    /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public disapprovalWeightByPermission;
-
     /// @notice List of all permission signatures that are eligible for approvals.
     bytes8[] public approvalPermissions;
 
     /// @notice List of all permission signatures that are eligible for disapprovals.
     bytes8[] public disapprovalPermissions;
 
-    error InvalidPermissionSignature();
+    /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
+    mapping(bytes8 => uint248) public approvalWeightByPermission;
+
+    /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
+    mapping(bytes8 => uint248) public disapprovalWeightByPermission;
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {

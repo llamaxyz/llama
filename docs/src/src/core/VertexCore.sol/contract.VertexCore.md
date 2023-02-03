@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -43,7 +43,7 @@ Equivalent to 100%, but scaled for precision
 
 
 ```solidity
-uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
+uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 ```
 
 
@@ -165,21 +165,6 @@ function createAction(VertexStrategy strategy, address target, uint256 value, by
 |`<none>`|`uint256`|actionId of the newly created action.|
 
 
-### cancelAction
-
-Cancels an action. Can be called anytime by the creator or if action is disapproved.
-
-
-```solidity
-function cancelAction(uint256 actionId) external override;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`actionId`|`uint256`|Id of the action to cancel.|
-
-
 ### queueAction
 
 Queue an action by actionId if it's in Approved state.
@@ -214,6 +199,21 @@ function executeAction(uint256 actionId) external payable override returns (byte
 |Name|Type|Description|
 |----|----|-----------|
 |`<none>`|`bytes`|The result returned from the call to the target contract.|
+
+
+### cancelAction
+
+Cancels an action. Can be called anytime by the creator or if action is disapproved.
+
+
+```solidity
+function cancelAction(uint256 actionId) external override;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`actionId`|`uint256`|Id of the action to cancel.|
 
 
 ### submitApproval
@@ -292,7 +292,7 @@ Deploy new strategies and add them to the mapping of authorized strategies.
 
 
 ```solidity
-function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex;
+function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex;
 ```
 **Parameters**
 
@@ -307,7 +307,7 @@ Remove strategies from the mapping of authorized strategies.
 
 
 ```solidity
-function unauthorizeStrategies(VertexStrategy[] memory strategies) public override onlyVertex;
+function unauthorizeStrategies(VertexStrategy[] calldata strategies) public override onlyVertex;
 ```
 **Parameters**
 

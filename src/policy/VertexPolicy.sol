@@ -13,10 +13,15 @@ abstract contract VertexPolicy is ERC721 {
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
 
+    /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+    /// @param policyIds the policy token id being altered
+    /// @param permissions the new permissions array to be set
+    function batchUpdatePermissions(uint256[] calldata policyIds, bytes8[][] calldata permissions) public virtual;
+
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
     /// @param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
+    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
     /// @param policyIds the ids of the policy tokens to revoke permissions from
@@ -30,15 +35,11 @@ abstract contract VertexPolicy is ERC721 {
 
     /// @notice sets the base URI for the contract
     /// @param _baseURI the base URI string to set
-    function setBaseURI(string memory _baseURI) public virtual;
-
-    /// @notice Total number of policy NFTs at specific block number
-    /// @param blockNumber the block number to query
-    function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
+    function setBaseURI(string calldata _baseURI) public virtual;
 
     /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
     /// @param permissions the permissions we are querying for
-    function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);
+    function getSupplyByPermissions(bytes8[] calldata permissions) external view virtual returns (uint256);
 
     /// @dev returns the total token supply of the contract
     function totalSupply() public view virtual returns (uint256);

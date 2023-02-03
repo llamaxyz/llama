@@ -1,18 +1,34 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
 
 
 ## Functions
+### batchUpdatePermissions
+
+burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+
+
+```solidity
+function batchUpdatePermissions(uint256[] calldata policyIds, bytes8[][] calldata permissions) public virtual;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyIds`|`uint256[]`|the policy token id being altered|
+|`permissions`|`bytes8[][]`|the new permissions array to be set|
+
+
 ### batchGrantPermissions
 
 mints multiple policy token with the given permissions
 
 
 ```solidity
-function batchGrantPermissions(address[] memory to, bytes8[][] memory userPermissions) public virtual;
+function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public virtual;
 ```
 **Parameters**
 
@@ -60,7 +76,7 @@ sets the base URI for the contract
 
 
 ```solidity
-function setBaseURI(string memory _baseURI) public virtual;
+function setBaseURI(string calldata _baseURI) public virtual;
 ```
 **Parameters**
 
@@ -69,28 +85,13 @@ function setBaseURI(string memory _baseURI) public virtual;
 |`_baseURI`|`string`|the base URI string to set|
 
 
-### totalSupplyAt
-
-Total number of policy NFTs at specific block number
-
-
-```solidity
-function totalSupplyAt(uint256 blockNumber) external view virtual returns (uint256);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`blockNumber`|`uint256`|the block number to query|
-
-
 ### getSupplyByPermissions
 
 Total number of policy NFTs at that have at least 1 of these permissions at specific block number
 
 
 ```solidity
-function getSupplyByPermissions(bytes8[] memory permissions) external view virtual returns (uint256);
+function getSupplyByPermissions(bytes8[] calldata permissions) external view virtual returns (uint256);
 ```
 **Parameters**
 

@@ -1,5 +1,5 @@
 # VertexStrategy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/7aa68098b2ce738ab9dd3c6970d253d02689b4d9/src/strategy/VertexStrategy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/strategy/VertexStrategy.sol)
 
 **Inherits:**
 [IVertexStrategy](/src/strategy/IVertexStrategy.sol/contract.IVertexStrategy.md)
@@ -16,7 +16,7 @@ Equivalent to 100%, but in basis points.
 
 
 ```solidity
-uint256 public constant ONE_HUNDRED_IN_BPS = 100_00;
+uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 ```
 
 
@@ -26,24 +26,6 @@ Permission signature value that determines weight of all unspecified policyholde
 
 ```solidity
 bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
-```
-
-
-### queuingDuration
-Minimum time between queueing and execution of action.
-
-
-```solidity
-uint256 public immutable queuingDuration;
-```
-
-
-### expirationDelay
-Time after executionTime that action can be executed before permanently expiring.
-
-
-```solidity
-uint256 public immutable expirationDelay;
 ```
 
 
@@ -65,21 +47,39 @@ IVertexCore public immutable vertex;
 ```
 
 
-### approvalPeriod
-Length of approval period in blocks.
-
-
-```solidity
-uint256 public immutable approvalPeriod;
-```
-
-
 ### policy
 Policy NFT for this Vertex system.
 
 
 ```solidity
 VertexPolicyNFT public immutable policy;
+```
+
+
+### queuingDuration
+Minimum time between queueing and execution of action.
+
+
+```solidity
+uint256 public immutable queuingDuration;
+```
+
+
+### expirationDelay
+Time after executionTime that action can be executed before permanently expiring.
+
+
+```solidity
+uint256 public immutable expirationDelay;
+```
+
+
+### approvalPeriod
+Length of approval period in blocks.
+
+
+```solidity
+uint256 public immutable approvalPeriod;
 ```
 
 
@@ -104,24 +104,6 @@ uint256 public immutable minDisapprovalPct;
 ```
 
 
-### approvalWeightByPermission
-Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-
-
-```solidity
-mapping(bytes8 => uint248) public approvalWeightByPermission;
-```
-
-
-### disapprovalWeightByPermission
-Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-
-
-```solidity
-mapping(bytes8 => uint248) public disapprovalWeightByPermission;
-```
-
-
 ### approvalPermissions
 List of all permission signatures that are eligible for approvals.
 
@@ -137,6 +119,24 @@ List of all permission signatures that are eligible for disapprovals.
 
 ```solidity
 bytes8[] public disapprovalPermissions;
+```
+
+
+### approvalWeightByPermission
+Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
+
+
+```solidity
+mapping(bytes8 => uint248) public approvalWeightByPermission;
+```
+
+
+### disapprovalWeightByPermission
+Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
+
+
+```solidity
+mapping(bytes8 => uint248) public disapprovalWeightByPermission;
 ```
 
 
