@@ -1,10 +1,11 @@
 # Approval
+[Git Source](https://github.com/llama-community/vertex-v1/blob/1010800eca40d89a7523a4694106df66636f891a/src/utils/Structs.sol)
 
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/utils/Structs.sol)
 
 ```solidity
 struct Approval {
-  bool support;
-  uint248 weight;
+    bool support;
+    uint248 weight;
 }
 ```
+

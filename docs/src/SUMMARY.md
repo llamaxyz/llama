@@ -23,5 +23,5 @@
     - [Strategy](src/utils/Structs.sol/struct.Strategy.md)
     - [Checkpoint](src/utils/Structs.sol/struct.Checkpoint.md)
   - [❱ vault](src/vault/README.md)
-    - [IVertexVault](src/vault/IVertexVault.sol/contract.IVertexVault.md)
-    - [VertexVault](src/vault/VertexVault.sol/contract.VertexVault.md)
+    - [IVertexCollector](src/vault/IVertexCollector.sol/contract.IVertexCollector.md)
+    - [VertexCollector](src/vault/VertexCollector.sol/contract.VertexCollector.md)
