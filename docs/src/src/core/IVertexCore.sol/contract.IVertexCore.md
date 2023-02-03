@@ -1,8 +1,26 @@
 # IVertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/core/IVertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/IVertexCore.sol)
 
 
 ## Functions
+### initialize
+
+Initializes a new VertexCore clone.
+
+
+```solidity
+function initialize(string memory name, string memory symbol, Strategy[] memory initialStrategies, VertexPolicyNFT policy) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`name`|`string`|The name of the VertexCore clone.|
+|`symbol`|`string`|The symbol of the policy NFT contract.|
+|`initialStrategies`|`Strategy[]`|The configuration of the initial strategies.|
+|`policy`|`VertexPolicyNFT`|This Vertex instance's policy contract.|
+
+
 ### createAction
 
 Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.

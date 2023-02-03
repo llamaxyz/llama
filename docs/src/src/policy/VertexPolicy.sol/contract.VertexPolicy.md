@@ -1,5 +1,5 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
@@ -176,5 +176,17 @@ error OnlyVertex();
 
 ```solidity
 error OnlyOnePolicyPerHolder();
+```
+
+### OnlyVertexFactory
+
+```solidity
+error OnlyVertexFactory();
+```
+
+### AlreadyInitialized
+
+```solidity
+error AlreadyInitialized();
 ```
 

@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -48,10 +48,17 @@ uint256 private _totalSupply;
 ```
 
 
+### vertexFactory
+
+```solidity
+address public immutable vertexFactory;
+```
+
+
 ### vertex
 
 ```solidity
-address public immutable vertex;
+address public vertex;
 ```
 
 
@@ -67,8 +74,15 @@ modifier onlyVertex();
 
 
 ```solidity
-constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
+constructor(string memory name, string memory symbol, address _vertexFactory, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
     ERC721(name, symbol);
+```
+
+### setVertex
+
+
+```solidity
+function setVertex(address _vertex) external;
 ```
 
 ### holderHasPermissionAt

@@ -2,6 +2,7 @@
 
 # Contents
 - [core](/src/core)
+- [factory](/src/factory)
 - [mock](/src/mock)
 - [policy](/src/policy)
 - [strategy](/src/strategy)
