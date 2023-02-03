@@ -664,6 +664,17 @@ contract VertexCoreTest is Test {
         assertEq(vertex.authorizedStrategies(strategyAddresses[2]), true);
     }
 
+    // unauthorizeStrategies unit tests
+    function test_unauthorizeStrategies_UnauthorizeStrategies() public {
+        vm.startPrank(address(vertex));
+        vm.expectEmit(true, true, true, true);
+        emit StrategiesUnauthorized(strategies);
+        vertex.unauthorizeStrategies(strategies);
+
+        assertEq(vertex.authorizedStrategies(strategies[0]), false);
+        assertEq(vertex.authorizedStrategies(strategies[1]), false);
+    }
+
     // createAndAuthorizeCollectors unit tests
     function test_createAndAuthorizeCollectors_CreateNewCollectors() public {
         string[] memory newCollectors = new string[](3);
@@ -697,17 +708,6 @@ contract VertexCoreTest is Test {
         assertEq(vertex.authorizedCollectors(collectorAddresses[0]), true);
         assertEq(vertex.authorizedCollectors(collectorAddresses[1]), true);
         assertEq(vertex.authorizedCollectors(collectorAddresses[2]), true);
-    }
-
-    // unauthorizeStrategies unit tests
-    function test_unauthorizeStrategies_UnauthorizeStrategies() public {
-        vm.startPrank(address(vertex));
-        vm.expectEmit(true, true, true, true);
-        emit StrategiesUnauthorized(strategies);
-        vertex.unauthorizeStrategies(strategies);
-
-        assertEq(vertex.authorizedStrategies(strategies[0]), false);
-        assertEq(vertex.authorizedStrategies(strategies[1]), false);
     }
 
     /*///////////////////////////////////////////////////////////////

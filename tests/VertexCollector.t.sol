@@ -83,17 +83,7 @@ contract VertexCollectorTest is Test {
                             Unit tests
     //////////////////////////////////////////////////////////////*/
 
-    // approve unit tests
-    function test_VertexCollector_approve_ApproveERC20() public {
-        _approveUSDCToRecipient(USDC_AMOUNT);
-    }
-
-    function test_VertexCollector_approve_RevertIfNotVertexMsgSender() public {
-        vm.expectRevert(VertexCollector.OnlyVertex.selector);
-        collectors[0].approve(USDC, USDC_WHALE, USDC_AMOUNT);
-    }
-
-    // transfer unit tests
+    // transfer Native unit tests
     function test_VertexCollector_transfer_TransferETH() public {
         _transferETHToCollector(ETH_AMOUNT);
 
@@ -102,14 +92,27 @@ contract VertexCollectorTest is Test {
 
         // Transfer ETH from collector to whale
         vm.startPrank(address(vertex));
-        collectors[0].transfer(IERC20(collectors[0].ETH_MOCK_ADDRESS()), ETH_WHALE, ETH_AMOUNT);
+        collectors[0].transfer(ETH_WHALE, ETH_AMOUNT);
         assertEq(address(collectors[0]).balance, 0);
         assertEq(address(collectors[0]).balance, collectorETHBalance - ETH_AMOUNT);
         assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
         vm.stopPrank();
     }
 
-    function test_VertexCollector_transfer_TransferERC20() public {
+    function test_VertexCollector_transfer_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexCollector.OnlyVertex.selector);
+        collectors[0].transfer(ETH_WHALE, ETH_AMOUNT);
+    }
+
+    function test_VertexCollector_transfer_RevertIfToZeroAddress() public {
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexCollector.Invalid0xRecipient.selector);
+        collectors[0].transfer(address(0), ETH_AMOUNT);
+        vm.stopPrank();
+    }
+
+    // transfer ERC20 unit tests
+    function test_VertexCollector_transferERC20_TransferUSDC() public {
         _transferUSDCToCollector(USDC_AMOUNT);
 
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collectors[0]));
@@ -117,23 +120,33 @@ contract VertexCollectorTest is Test {
 
         // Transfer USDC from collector to whale
         vm.startPrank(address(vertex));
-        collectors[0].transfer(USDC, USDC_WHALE, USDC_AMOUNT);
+        collectors[0].transferERC20(USDC, USDC_WHALE, USDC_AMOUNT);
         assertEq(USDC.balanceOf(address(collectors[0])), 0);
         assertEq(USDC.balanceOf(address(collectors[0])), collectorUSDCBalance - USDC_AMOUNT);
         assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
         vm.stopPrank();
     }
 
-    function test_VertexCollector_transfer_RevertIfNotVertexMsgSender() public {
+    function test_VertexCollector_transferERC20_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
-        collectors[0].transfer(USDC, USDC_WHALE, USDC_AMOUNT);
+        collectors[0].transferERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
-    function test_VertexCollector_transfer_RevertIfToZeroAddress() public {
+    function test_VertexCollector_transferERC20_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexCollector.Invalid0xRecipient.selector);
-        collectors[0].transfer(USDC, address(0), USDC_AMOUNT);
+        collectors[0].transferERC20(USDC, address(0), USDC_AMOUNT);
         vm.stopPrank();
+    }
+
+    // approve ERC20 unit tests
+    function test_VertexCollector_approveERC20_ApproveUSDC() public {
+        _approveUSDCToRecipient(USDC_AMOUNT);
+    }
+
+    function test_VertexCollector_approveERC20_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexCollector.OnlyVertex.selector);
+        collectors[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -173,7 +186,7 @@ contract VertexCollectorTest is Test {
 
     function _approveUSDCToRecipient(uint256 amount) public {
         vm.startPrank(address(vertex));
-        collectors[0].approve(USDC, USDC_WHALE, amount);
+        collectors[0].approveERC20(USDC, USDC_WHALE, amount);
         assertEq(USDC.allowance(address(collectors[0]), USDC_WHALE), amount);
         vm.stopPrank();
     }

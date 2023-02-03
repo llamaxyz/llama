@@ -16,8 +16,6 @@ contract VertexCollector is IVertexCollector {
     error OnlyVertex();
     error Invalid0xRecipient();
 
-    /// @notice Mock address for ETH
-    address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     /// @notice Name of this Vertex Collector.
     string public name;
     /// @notice Vertex system
@@ -37,18 +35,19 @@ contract VertexCollector is IVertexCollector {
     receive() external payable {}
 
     /// @inheritdoc IVertexCollector
-    function approve(IERC20 token, address recipient, uint256 amount) external onlyVertex {
-        token.safeApprove(recipient, amount);
+    function transfer(address recipient, uint256 amount) external onlyVertex {
+        if (recipient == address(0)) revert Invalid0xRecipient();
+        payable(recipient).sendValue(amount);
     }
 
     /// @inheritdoc IVertexCollector
-    function transfer(IERC20 token, address recipient, uint256 amount) external onlyVertex {
+    function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
+        token.safeTransfer(recipient, amount);
+    }
 
-        if (address(token) == ETH_MOCK_ADDRESS) {
-            payable(recipient).sendValue(amount);
-        } else {
-            token.safeTransfer(recipient, amount);
-        }
+    /// @inheritdoc IVertexCollector
+    function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
+        token.safeApprove(recipient, amount);
     }
 }
