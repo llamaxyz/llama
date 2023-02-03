@@ -82,6 +82,10 @@ interface IVertexCore {
     /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
     function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
+    /// @notice Deploy new collectors and add them to the mapping of authorized collectors.
+    /// @param collectors list of new collectors to be authorized.
+    function createAndAuthorizeCollectors(string[] memory collectors) external;
+
     /// @notice Get an Action struct by actionId.
     /// @param actionId id of the action.
     /// @return The Action struct.

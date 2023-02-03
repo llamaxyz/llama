@@ -256,6 +256,19 @@ contract VertexCore is IVertexCore {
     }
 
     /// @inheritdoc IVertexCore
+    function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex {
+        uint256 collectorLength = collectors.length;
+        unchecked {
+            for (uint256 i; i < collectorLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(collectors[i])));
+                VertexCollector collector = VertexCollector(new VertexCollector{salt: salt}(collectors[i], address(this)));
+                authorizedCollectors[collector] = true;
+                emit CollectorAuthorized(collector, collectors[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IVertexCore
     function isActionExpired(uint256 actionId) public view override returns (bool) {
         Action storage action = actions[actionId];
         return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
