@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/1010800eca40d89a7523a4694106df66636f891a/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/1a5b9d40afe2b86db921cb268a555e6bb0a0a840/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -53,15 +53,6 @@ The NFT contract that defines the policies for this Vertex system.
 
 ```solidity
 VertexPolicyNFT public immutable policy;
-```
-
-
-### collector
-The Vertex Collector contract that holds the assets for this Vertex system.
-
-
-```solidity
-VertexCollector public immutable collector;
 ```
 
 
@@ -119,6 +110,15 @@ mapping(VertexStrategy => bool) public authorizedStrategies;
 ```
 
 
+### authorizedCollectors
+Mapping of all authorized collectors.
+
+
+```solidity
+mapping(VertexCollector => bool) public authorizedCollectors;
+```
+
+
 ### queuedActions
 Mapping of actionId's and bool that indicates if action is queued.
 
@@ -138,7 +138,8 @@ constructor(
     string memory _symbol,
     Strategy[] memory initialStrategies,
     address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions
+    bytes8[][] memory initialPermissions,
+    string[] memory initialCollectors
 );
 ```
 

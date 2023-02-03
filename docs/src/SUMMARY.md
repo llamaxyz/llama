@@ -1,6 +1,9 @@
 # Summary
 - [Home](README.md)
 # src
+  - [❱ collector](src/collector/README.md)
+    - [IVertexCollector](src/collector/IVertexCollector.sol/contract.IVertexCollector.md)
+    - [VertexCollector](src/collector/VertexCollector.sol/contract.VertexCollector.md)
   - [❱ core](src/core/README.md)
     - [IVertexCore](src/core/IVertexCore.sol/contract.IVertexCore.md)
     - [VertexCore](src/core/VertexCore.sol/contract.VertexCore.md)
@@ -22,6 +25,3 @@
     - [WeightByPermission](src/utils/Structs.sol/struct.WeightByPermission.md)
     - [Strategy](src/utils/Structs.sol/struct.Strategy.md)
     - [Checkpoint](src/utils/Structs.sol/struct.Checkpoint.md)
-  - [❱ vault](src/vault/README.md)
-    - [IVertexCollector](src/vault/IVertexCollector.sol/contract.IVertexCollector.md)
-    - [VertexCollector](src/vault/VertexCollector.sol/contract.VertexCollector.md)
