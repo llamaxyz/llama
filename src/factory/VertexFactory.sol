@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {IVertexFactory} from "src/factory/IVertexFactory.sol";
 import {Strategy} from "src/utils/Structs.sol";
 
@@ -42,8 +43,13 @@ contract VertexFactory is Ownable, IVertexFactory {
             ++vertexCount;
         }
 
+        bytes32 salt = bytes32(keccak256(abi.encode(name, policySymbol)));
+        VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, policySymbol, address(this), initialPolicyholders, initialPermissions));
+
         vertex = VertexCore(Clones.clone(address(vertexCore)));
-        vertex.initialize(name, policySymbol, initialStrategies, initialPolicyholders, initialPermissions);
+        vertex.initialize(name, policySymbol, initialStrategies, policy);
+
+        policy.setVertex(address(vertex));
 
         emit VertexCreated(previousVertexCount, name);
     }

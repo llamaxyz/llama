@@ -16,17 +16,18 @@ contract VertexPolicyNFT is VertexPolicy {
     uint256[] public policyIds;
     string public baseURI;
     uint256 private _totalSupply;
-    address public immutable vertex;
+    address public immutable vertexFactory;
+    address public vertex;
 
     modifier onlyVertex() {
         if (msg.sender != vertex) revert OnlyVertex();
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertex, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
+    constructor(string memory name, string memory symbol, address _vertexFactory, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
         ERC721(name, symbol)
     {
-        vertex = _vertex;
+        vertexFactory = _vertexFactory;
         if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
             uint256 policyholderLength = initialPolicyholders.length;
             uint256 permissionsLength = initialPermissions.length;
@@ -35,6 +36,12 @@ contract VertexPolicyNFT is VertexPolicy {
                 grantPermissions(initialPolicyholders[i], initialPermissions[i]);
             }
         }
+    }
+
+    function setVertex(address _vertex) external {
+        if (msg.sender != vertexFactory) revert OnlyVertexFactory();
+        if (vertex != address(0)) revert AlreadyInitialized();
+        vertex = _vertex;
     }
 
     /// @inheritdoc VertexPolicy
