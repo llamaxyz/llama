@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
-import {VertexCollector} from "src/vault/VertexCollector.sol";
+import {VertexCollector} from "src/collector/VertexCollector.sol";
 import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
@@ -18,7 +18,7 @@ contract VertexCollectorTest is Test {
 
     // Vertex system
     VertexCore public vertex;
-    VertexCollector public collector;
+    VertexCollector[] public collectors;
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
@@ -36,6 +36,7 @@ contract VertexCollectorTest is Test {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
         Strategy[] memory initialStrategies = new Strategy[](2);
+        string[] memory initialCollectors = new string[](2);
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
@@ -59,10 +60,23 @@ contract VertexCollectorTest is Test {
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
 
+        initialCollectors[0] = "VertexCollector0";
+        initialCollectors[1] = "VertexCollector1";
+
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
-        // Set Vertex's collector
-        collector = vertex.collector();
+        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions, initialCollectors);
+
+        // Use create2 to get vertex collector addresses
+        for (uint256 i; i < initialCollectors.length; i++) {
+            bytes32 collectorSalt = bytes32(keccak256(abi.encode(initialCollectors[i])));
+            bytes memory bytecode = type(VertexCollector).creationCode;
+            bytes32 hash = keccak256(
+                abi.encodePacked(
+                    bytes1(0xff), address(vertex), collectorSalt, keccak256(abi.encodePacked(bytecode, abi.encode(initialCollectors[i], address(vertex))))
+                )
+            );
+            collectors.push(VertexCollector(payable(address(uint160(uint256(hash))))));
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -76,21 +90,21 @@ contract VertexCollectorTest is Test {
 
     function test_VertexCollector_approve_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
-        collector.approve(USDC, USDC_WHALE, USDC_AMOUNT);
+        collectors[0].approve(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
     // transfer unit tests
     function test_VertexCollector_transfer_TransferETH() public {
         _transferETHToCollector(ETH_AMOUNT);
 
-        uint256 collectorETHBalance = address(collector).balance;
+        uint256 collectorETHBalance = address(collectors[0]).balance;
         uint256 whaleETHBalance = ETH_WHALE.balance;
 
         // Transfer ETH from collector to whale
         vm.startPrank(address(vertex));
-        collector.transfer(IERC20(collector.ETH_MOCK_ADDRESS()), ETH_WHALE, ETH_AMOUNT);
-        assertEq(address(collector).balance, 0);
-        assertEq(address(collector).balance, collectorETHBalance - ETH_AMOUNT);
+        collectors[0].transfer(IERC20(collectors[0].ETH_MOCK_ADDRESS()), ETH_WHALE, ETH_AMOUNT);
+        assertEq(address(collectors[0]).balance, 0);
+        assertEq(address(collectors[0]).balance, collectorETHBalance - ETH_AMOUNT);
         assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
         vm.stopPrank();
     }
@@ -98,27 +112,27 @@ contract VertexCollectorTest is Test {
     function test_VertexCollector_transfer_TransferERC20() public {
         _transferUSDCToCollector(USDC_AMOUNT);
 
-        uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
+        uint256 collectorUSDCBalance = USDC.balanceOf(address(collectors[0]));
         uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
 
         // Transfer USDC from collector to whale
         vm.startPrank(address(vertex));
-        collector.transfer(USDC, USDC_WHALE, USDC_AMOUNT);
-        assertEq(USDC.balanceOf(address(collector)), 0);
-        assertEq(USDC.balanceOf(address(collector)), collectorUSDCBalance - USDC_AMOUNT);
+        collectors[0].transfer(USDC, USDC_WHALE, USDC_AMOUNT);
+        assertEq(USDC.balanceOf(address(collectors[0])), 0);
+        assertEq(USDC.balanceOf(address(collectors[0])), collectorUSDCBalance - USDC_AMOUNT);
         assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
         vm.stopPrank();
     }
 
     function test_VertexCollector_transfer_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
-        collector.transfer(USDC, USDC_WHALE, USDC_AMOUNT);
+        collectors[0].transfer(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
     function test_VertexCollector_transfer_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexCollector.Invalid0xRecipient.selector);
-        collector.transfer(USDC, address(0), USDC_AMOUNT);
+        collectors[0].transfer(USDC, address(0), USDC_AMOUNT);
         vm.stopPrank();
     }
 
@@ -141,14 +155,14 @@ contract VertexCollectorTest is Test {
         _transferUSDCToCollector(USDC_AMOUNT);
         _approveUSDCToRecipient(USDC_AMOUNT);
 
-        uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
+        uint256 collectorUSDCBalance = USDC.balanceOf(address(collectors[0]));
         uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
 
         // Transfer USDC from collector to whale
         vm.startPrank(USDC_WHALE);
-        USDC.transferFrom(address(collector), USDC_WHALE, USDC_AMOUNT);
-        assertEq(USDC.balanceOf(address(collector)), 0);
-        assertEq(USDC.balanceOf(address(collector)), collectorUSDCBalance - USDC_AMOUNT);
+        USDC.transferFrom(address(collectors[0]), USDC_WHALE, USDC_AMOUNT);
+        assertEq(USDC.balanceOf(address(collectors[0])), 0);
+        assertEq(USDC.balanceOf(address(collectors[0])), collectorUSDCBalance - USDC_AMOUNT);
         assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
         vm.stopPrank();
     }
@@ -159,27 +173,27 @@ contract VertexCollectorTest is Test {
 
     function _approveUSDCToRecipient(uint256 amount) public {
         vm.startPrank(address(vertex));
-        collector.approve(USDC, USDC_WHALE, amount);
-        assertEq(USDC.allowance(address(collector), USDC_WHALE), amount);
+        collectors[0].approve(USDC, USDC_WHALE, amount);
+        assertEq(USDC.allowance(address(collectors[0]), USDC_WHALE), amount);
         vm.stopPrank();
     }
 
     function _transferETHToCollector(uint256 amount) public {
-        assertEq(address(collector).balance, 0);
+        assertEq(address(collectors[0]).balance, 0);
 
         vm.startPrank(ETH_WHALE);
-        (bool success,) = address(collector).call{value: amount}("");
+        (bool success,) = address(collectors[0]).call{value: amount}("");
         assertTrue(success);
-        assertEq(address(collector).balance, amount);
+        assertEq(address(collectors[0]).balance, amount);
         vm.stopPrank();
     }
 
     function _transferUSDCToCollector(uint256 amount) public {
-        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(USDC.balanceOf(address(collectors[0])), 0);
 
         vm.startPrank(USDC_WHALE);
-        USDC.transfer(address(collector), amount);
-        assertEq(USDC.balanceOf(address(collector)), amount);
+        USDC.transfer(address(collectors[0]), amount);
+        assertEq(USDC.balanceOf(address(collectors[0])), amount);
         vm.stopPrank();
     }
 }

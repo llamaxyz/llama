@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexCollector} from "src/vault/IVertexCollector.sol";
+import {IVertexCollector} from "src/collector/IVertexCollector.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
@@ -18,10 +18,13 @@ contract VertexCollector is IVertexCollector {
 
     /// @notice Mock address for ETH
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    /// @notice Name of this Vertex Collector.
+    string public name;
     /// @notice Vertex system
     address public immutable vertex;
 
-    constructor(address _vertex) {
+    constructor(string memory _name, address _vertex) {
+        name = _name;
         vertex = _vertex;
     }
 
@@ -30,7 +33,7 @@ contract VertexCollector is IVertexCollector {
         _;
     }
 
-    /// @notice Function for Vertex Vault to receive ETH
+    /// @notice Function for Vertex Collector to receive ETH
     receive() external payable {}
 
     /// @inheritdoc IVertexCollector

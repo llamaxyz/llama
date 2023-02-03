@@ -59,6 +59,7 @@ contract VertexCoreTest is Test {
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
         Strategy[] memory initialStrategies = new Strategy[](2);
+        string[] memory initialCollectors = new string[](2);
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
@@ -82,8 +83,11 @@ contract VertexCoreTest is Test {
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
 
+        initialCollectors[0] = "VertexCollector0";
+        initialCollectors[1] = "VertexCollector1";
+
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
+        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions, initialCollectors);
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses
