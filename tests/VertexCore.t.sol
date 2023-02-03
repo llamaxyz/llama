@@ -688,7 +688,9 @@ contract VertexCoreTest is Test {
 
         vm.expectEmit(true, true, true, true);
         emit CollectorAuthorized(collectorAddresses[0], newCollectors[0]);
+        vm.expectEmit(true, true, true, true);
         emit CollectorAuthorized(collectorAddresses[1], newCollectors[1]);
+        vm.expectEmit(true, true, true, true);
         emit CollectorAuthorized(collectorAddresses[2], newCollectors[2]);
         vertex.createAndAuthorizeCollectors(newCollectors);
 
