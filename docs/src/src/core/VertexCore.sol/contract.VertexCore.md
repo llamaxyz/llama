@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/1a5b9d40afe2b86db921cb268a555e6bb0a0a840/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/8146b0e9a9ffa7cd971f2eedb0f6b4018cc535f8/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -324,6 +324,21 @@ function unauthorizeStrategies(VertexStrategy[] calldata strategies) public over
 |Name|Type|Description|
 |----|----|-----------|
 |`strategies`|`VertexStrategy[]`|list of Strategys to be removed from the mapping of authorized strategies.|
+
+
+### createAndAuthorizeCollectors
+
+Deploy new collectors and add them to the mapping of authorized collectors.
+
+
+```solidity
+function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`collectors`|`string[]`|list of new collectors to be authorized.|
 
 
 ### isActionExpired
