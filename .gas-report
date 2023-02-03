@@ -1,14 +1,24 @@
+| src/collector/VertexCollector.sol:VertexCollector contract |                 |      |        |      |         |
+|------------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                            | Deployment Size |      |        |      |         |
+| 421201                                                     | 2712            |      |        |      |         |
+| Function Name                                              | min             | avg  | median | max  | # calls |
+| ETH_MOCK_ADDRESS                                           | 220             | 220  | 220    | 220  | 1       |
+| approve                                                    | 433             | 1899 | 1899   | 3366 | 2       |
+| receive                                                    | 0               | 0    | 0      | 0    | 2       |
+| transfer                                                   | 427             | 483  | 458    | 565  | 3       |
+
+
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 7522633                                     | 40646           |         |         |         |         |
+| 8107984                                     | 41990           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 632             | 632     | 632     | 632     | 19      |
-| authorizedStrategies                        | 553             | 553     | 553     | 553     | 5       |
+| authorizedStrategies                        | 575             | 575     | 575     | 575     | 5       |
 | cancelAction                                | 826             | 13220   | 14832   | 29238   | 10      |
-| collector                                   | 528             | 528     | 528     | 528     | 9       |
-| createAction                                | 3035            | 192339  | 233236  | 235776  | 27      |
-| createAndAuthorizeStrategies                | 2824302         | 2824302 | 2824302 | 2824302 | 1       |
+| createAction                                | 3057            | 192340  | 233223  | 235833  | 27      |
+| createAndAuthorizeStrategies                | 2824324         | 2824324 | 2824324 | 2824324 | 1       |
 | executeAction                               | 758             | 20335   | 16888   | 36389   | 6       |
 | getAction                                   | 3997            | 5061    | 3997    | 9997    | 117     |
 | policy                                      | 168             | 168     | 168     | 168     | 90      |
@@ -24,11 +34,11 @@
 | 1927259                                                 | 13051           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 785             | 785    | 785     | 785     | 2       |
-| batchGrantPermissions                                   | 1271            | 702539 | 1076083 | 1076083 | 51      |
+| batchGrantPermissions                                   | 1271            | 701717 | 1074638 | 1074638 | 51      |
 | batchRevokePermissions                                  | 967             | 35406  | 48502   | 59382   | 6       |
 | batchUpdatePermissions                                  | 1011            | 42713  | 42713   | 84416   | 2       |
 | getSupplyByPermissions                                  | 2172            | 5257   | 3429    | 10172   | 3       |
-| hasPermission                                           | 1104            | 5276   | 5729    | 5729    | 29      |
+| hasPermission                                           | 1104            | 5257   | 5694    | 5729    | 29      |
 | hashPermission                                          | 1108            | 1108   | 1108    | 1108    | 113     |
 | hashPermissions                                         | 2003            | 2003   | 2003    | 2003    | 16      |
 | holderHasPermissionAt                                   | 1263            | 3546   | 2327    | 9963    | 10      |
@@ -58,26 +68,15 @@
 | queuingDuration                                         | 438             | 438   | 438    | 438   | 18      |
 
 
-| src/vault/VertexCollector.sol:VertexCollector contract |                 |      |        |      |         |
-|--------------------------------------------------------|-----------------|------|--------|------|---------|
-| Deployment Cost                                        | Deployment Size |      |        |      |         |
-| 342233                                                 | 1887            |      |        |      |         |
-| Function Name                                          | min             | avg  | median | max  | # calls |
-| ETH_MOCK_ADDRESS                                       | 198             | 198  | 198    | 198  | 1       |
-| approve                                                | 411             | 1877 | 1877   | 3344 | 2       |
-| receive                                                | 0               | 0    | 0      | 0    | 2       |
-| transfer                                               | 405             | 461  | 436    | 543  | 3       |
-
-
 
 
 Failing tests:
-Encountered 6 failing tests in tests/VertexVault.t.sol:VertexCollectorTest
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_ReceiveERC20() (gas: 5448)
-[31m[FAIL. Reason: Assertion failed.][0m test_VertexCollector_ReceiveETH() (gas: 30498)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_TransferApprovedERC20() (gas: 5646)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_approve_ApproveERC20() (gas: 13572)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_transfer_TransferERC20() (gas: 5294)
-[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexCollector_transfer_TransferETH() (gas: 37427)
+Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexCollectorTest
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_ReceiveERC20() (gas: 7627)
+[31m[FAIL. Reason: Assertion failed.][0m test_VertexCollector_ReceiveETH() (gas: 33053)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_TransferApprovedERC20() (gas: 7803)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_approve_ApproveERC20() (gas: 15770)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_transfer_TransferERC20() (gas: 7473)
+[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexCollector_transfer_TransferETH() (gas: 40669)
 
 Encountered a total of [31m6[0m failing tests, [32m47[0m tests succeeded
