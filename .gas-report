@@ -1,19 +1,20 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 7130813                                     | 38593           |         |         |         |         |
+| 7522633                                     | 40646           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
-| actionsCount                                | 610             | 610     | 610     | 610     | 19      |
+| actionsCount                                | 632             | 632     | 632     | 632     | 19      |
 | authorizedStrategies                        | 553             | 553     | 553     | 553     | 5       |
-| cancelAction                                | 804             | 13165   | 14766   | 29128   | 10      |
+| cancelAction                                | 826             | 13220   | 14832   | 29238   | 10      |
+| collector                                   | 528             | 528     | 528     | 528     | 9       |
 | createAction                                | 3035            | 192339  | 233236  | 235776  | 27      |
 | createAndAuthorizeStrategies                | 2824302         | 2824302 | 2824302 | 2824302 | 1       |
-| executeAction                               | 736             | 20283   | 16828   | 36336   | 6       |
-| getAction                                   | 3975            | 5039    | 3975    | 9975    | 117     |
+| executeAction                               | 758             | 20335   | 16888   | 36389   | 6       |
+| getAction                                   | 3997            | 5061    | 3997    | 9997    | 117     |
 | policy                                      | 168             | 168     | 168     | 168     | 90      |
-| queueAction                                 | 427             | 52480   | 60205   | 64898   | 13      |
-| submitApproval                              | 2886            | 38347   | 40067   | 53017   | 34      |
-| submitDisapproval                           | 2917            | 46830   | 65224   | 65224   | 11      |
+| queueAction                                 | 427             | 52521   | 60249   | 64942   | 13      |
+| submitApproval                              | 2886            | 38348   | 40067   | 53017   | 34      |
+| submitDisapproval                           | 2939            | 46891   | 65290   | 65290   | 11      |
 | unauthorizeStrategies                       | 10382           | 10382   | 10382   | 10382   | 1       |
 
 
@@ -50,11 +51,33 @@
 | expirationDelay                                         | 328             | 328   | 328    | 328   | 18      |
 | getApprovalWeightAt                                     | 867             | 1929  | 2867   | 2867  | 32      |
 | getDisapprovalWeightAt                                  | 981             | 2314  | 2981   | 2981  | 9       |
-| isActionCanceletionValid                                | 12241           | 12241 | 12241  | 12241 | 3       |
-| isActionPassed                                          | 11999           | 12259 | 11999  | 16692 | 44      |
+| isActionCanceletionValid                                | 12285           | 12285 | 12285  | 12285 | 3       |
+| isActionPassed                                          | 12043           | 12303 | 12043  | 16736 | 44      |
 | isFixedLengthApprovalPeriod                             | 312             | 312   | 312    | 312   | 37      |
 | minDisapprovalPct                                       | 262             | 262   | 262    | 262   | 10      |
 | queuingDuration                                         | 438             | 438   | 438    | 438   | 18      |
 
 
+| src/vault/VertexCollector.sol:VertexCollector contract |                 |      |        |      |         |
+|--------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                        | Deployment Size |      |        |      |         |
+| 342233                                                 | 1887            |      |        |      |         |
+| Function Name                                          | min             | avg  | median | max  | # calls |
+| ETH_MOCK_ADDRESS                                       | 198             | 198  | 198    | 198  | 1       |
+| approve                                                | 411             | 1877 | 1877   | 3344 | 2       |
+| receive                                                | 0               | 0    | 0      | 0    | 2       |
+| transfer                                               | 405             | 461  | 436    | 543  | 3       |
 
+
+
+
+Failing tests:
+Encountered 6 failing tests in tests/VertexVault.t.sol:VertexCollectorTest
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_ReceiveERC20() (gas: 5448)
+[31m[FAIL. Reason: Assertion failed.][0m test_VertexCollector_ReceiveETH() (gas: 30498)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_TransferApprovedERC20() (gas: 5646)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_approve_ApproveERC20() (gas: 13572)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_transfer_TransferERC20() (gas: 5294)
+[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexCollector_transfer_TransferETH() (gas: 37427)
+
+Encountered a total of [31m6[0m failing tests, [32m47[0m tests succeeded
