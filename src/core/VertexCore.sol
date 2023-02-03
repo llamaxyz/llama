@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
@@ -11,7 +12,7 @@ import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Str
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
-contract VertexCore is IVertexCore {
+contract VertexCore is IVertexCore, Initializable {
     error InvalidStrategy();
     error InvalidCancelation();
     error InvalidActionId();
@@ -42,7 +43,7 @@ contract VertexCore is IVertexCore {
     uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice The NFT contract that defines the policies for this Vertex system.
-    VertexPolicyNFT public immutable policy;
+    VertexPolicyNFT public policy;
 
     /// @notice Name of this Vertex system.
     string public name;
@@ -68,7 +69,15 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    constructor(
+    // solhint-disable-next-line no-empty-blocks
+    constructor() initializer {}
+
+    modifier onlyVertex() {
+        if (msg.sender != address(this)) revert OnlyVertex();
+        _;
+    }
+
+    function initialize(
         string memory _name,
         string memory _symbol,
         Strategy[] memory initialStrategies,
@@ -98,11 +107,6 @@ contract VertexCore is IVertexCore {
         }
 
         emit StrategiesAuthorized(initialStrategies);
-    }
-
-    modifier onlyVertex() {
-        if (msg.sender != address(this)) revert OnlyVertex();
-        _;
     }
 
     /// @inheritdoc IVertexCore
