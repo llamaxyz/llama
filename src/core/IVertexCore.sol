@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexCollector} from "src/collector/VertexCollector.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, Strategy} from "src/utils/Structs.sol";
 
 interface IVertexCore {
@@ -30,15 +31,8 @@ interface IVertexCore {
     /// @param name The name of the VertexCore clone.
     /// @param symbol The symbol of the policy NFT contract.
     /// @param initialStrategies The configuration of the initial strategies.
-    /// @param initialPolicyholders The initial policyholders.
-    /// @param initialPermissions The initial permissions to be granted to the policy token.
-    function initialize(
-        string memory name,
-        string memory symbol,
-        Strategy[] memory initialStrategies,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
-    ) external;
+    /// @param policy This Vertex instance's policy contract.
+    function initialize(string memory name, string memory symbol, Strategy[] memory initialStrategies, VertexPolicyNFT policy) external;
 
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.

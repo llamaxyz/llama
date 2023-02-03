@@ -12,6 +12,8 @@ abstract contract VertexPolicy is ERC721 {
     error InvalidInput();
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
+    error OnlyVertexFactory();
+    error AlreadyInitialized();
 
     /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
     /// @param policyIds the policy token id being altered
