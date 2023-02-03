@@ -1,32 +1,31 @@
 # IVertexCollector
-[Git Source](https://github.com/llama-community/vertex-v1/blob/8146b0e9a9ffa7cd971f2eedb0f6b4018cc535f8/src/collector/IVertexCollector.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/5b218a8dd0bc635c09c9b3b94d2fdd2e8abeb7c2/src/collector/IVertexCollector.sol)
 
 
 ## Functions
-### approve
+### transfer
 
-Function for Vertex to give ERC20 allowance to other parties
+Function for Vertex to transfer native tokens to other parties
 
 
 ```solidity
-function approve(IERC20 token, address recipient, uint256 amount) external;
+function transfer(address recipient, uint256 amount) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`token`|`IERC20`|The address of the token to give allowance from|
-|`recipient`|`address`|Allowance's recipient|
-|`amount`|`uint256`|Allowance to approve|
+|`recipient`|`address`|Transfer's recipient|
+|`amount`|`uint256`|Amount to transfer|
 
 
-### transfer
+### transferERC20
 
 Function for Vertex to transfer ERC20 tokens to other parties
 
 
 ```solidity
-function transfer(IERC20 token, address recipient, uint256 amount) external;
+function transferERC20(IERC20 token, address recipient, uint256 amount) external;
 ```
 **Parameters**
 
@@ -35,5 +34,22 @@ function transfer(IERC20 token, address recipient, uint256 amount) external;
 |`token`|`IERC20`|The address of the token to transfer|
 |`recipient`|`address`|Transfer's recipient|
 |`amount`|`uint256`|Amount to transfer|
+
+
+### approveERC20
+
+Function for Vertex to give ERC20 allowance to other parties
+
+
+```solidity
+function approveERC20(IERC20 token, address recipient, uint256 amount) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`token`|`IERC20`|The address of the token to give allowance from|
+|`recipient`|`address`|Allowance's recipient|
+|`amount`|`uint256`|Allowance to approve|
 
 
