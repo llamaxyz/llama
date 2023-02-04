@@ -1,5 +1,5 @@
 # IVertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/core/IVertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/IVertexCore.sol)
 
 
 ## Functions
@@ -179,6 +179,21 @@ function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 |`strategies`|`VertexStrategy[]`|list of Strategys to be removed from the mapping of authorized strategies.|
 
 
+### createAndAuthorizeCollectors
+
+Deploy new collectors and add them to the mapping of authorized collectors.
+
+
+```solidity
+function createAndAuthorizeCollectors(string[] memory collectors) external;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`collectors`|`string[]`|list of new collectors to be authorized.|
+
+
 ### getAction
 
 Get an Action struct by actionId.
@@ -289,6 +304,12 @@ event StrategiesAuthorized(Strategy[] strategies);
 
 ```solidity
 event StrategiesUnauthorized(VertexStrategy[] strategies);
+```
+
+### CollectorAuthorized
+
+```solidity
+event CollectorAuthorized(VertexCollector indexed collector, string name);
 ```
 
 ## Enums

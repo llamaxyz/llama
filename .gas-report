@@ -1,19 +1,33 @@
+| src/collector/VertexCollector.sol:VertexCollector contract |                 |      |        |      |         |
+|------------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                            | Deployment Size |      |        |      |         |
+| 429822                                                     | 2794            |      |        |      |         |
+| Function Name                                              | min             | avg  | median | max  | # calls |
+| approveERC20                                               | 423             | 1889 | 1889   | 3356 | 2       |
+| receive                                                    | 0               | 0    | 0      | 0    | 2       |
+| transfer                                                   | 347             | 387  | 366    | 449  | 3       |
+| transferERC20                                              | 413             | 423  | 423    | 433  | 2       |
+
+
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 7130813                                     | 38593           |         |         |         |         |
+| 8714267                                     | 45013           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
-| actionsCount                                | 610             | 610     | 610     | 610     | 19      |
-| authorizedStrategies                        | 553             | 553     | 553     | 553     | 5       |
-| cancelAction                                | 804             | 13165   | 14766   | 29128   | 10      |
-| createAction                                | 3035            | 192339  | 233236  | 235776  | 27      |
-| createAndAuthorizeStrategies                | 2824302         | 2824302 | 2824302 | 2824302 | 1       |
-| executeAction                               | 736             | 20283   | 16828   | 36336   | 6       |
-| getAction                                   | 3975            | 5039    | 3975    | 9975    | 117     |
-| policy                                      | 168             | 168     | 168     | 168     | 90      |
-| queueAction                                 | 427             | 52480   | 60205   | 64898   | 13      |
-| submitApproval                              | 2886            | 38347   | 40067   | 53017   | 34      |
-| submitDisapproval                           | 2917            | 46830   | 65224   | 65224   | 11      |
+| actionsCount                                | 632             | 632     | 632     | 632     | 19      |
+| authorizedCollectors                        | 514             | 1314    | 514     | 2514    | 5       |
+| authorizedStrategies                        | 575             | 1146    | 575     | 2575    | 7       |
+| cancelAction                                | 848             | 13275   | 14898   | 29348   | 10      |
+| createAction                                | 3066            | 192137  | 232989  | 235584  | 27      |
+| createAndAuthorizeCollectors                | 1465517         | 1465517 | 1465517 | 1465517 | 1       |
+| createAndAuthorizeStrategies                | 2824324         | 2824324 | 2824324 | 2824324 | 1       |
+| executeAction                               | 780             | 20387   | 16947   | 36442   | 6       |
+| getAction                                   | 4019            | 5083    | 4019    | 10019   | 117     |
+| name                                        | 2921            | 2921    | 2921    | 2921    | 1       |
+| policy                                      | 168             | 168     | 168     | 168     | 96      |
+| queueAction                                 | 427             | 52561   | 60293   | 64986   | 13      |
+| submitApproval                              | 2886            | 38349   | 40067   | 53017   | 34      |
+| submitDisapproval                           | 2961            | 46952   | 65356   | 65356   | 11      |
 | unauthorizeStrategies                       | 10382           | 10382   | 10382   | 10382   | 1       |
 
 
@@ -23,12 +37,12 @@
 | 1927259                                                 | 13051           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 785             | 785    | 785     | 785     | 2       |
-| batchGrantPermissions                                   | 1271            | 702539 | 1076083 | 1076083 | 51      |
+| batchGrantPermissions                                   | 1271            | 715790 | 1074638 | 1074638 | 53      |
 | batchRevokePermissions                                  | 967             | 35406  | 48502   | 59382   | 6       |
 | batchUpdatePermissions                                  | 1011            | 42713  | 42713   | 84416   | 2       |
 | getSupplyByPermissions                                  | 2172            | 5257   | 3429    | 10172   | 3       |
-| hasPermission                                           | 1104            | 5276   | 5729    | 5729    | 29      |
-| hashPermission                                          | 1108            | 1108   | 1108    | 1108    | 113     |
+| hasPermission                                           | 1104            | 5255   | 5694    | 5729    | 29      |
+| hashPermission                                          | 1108            | 1108   | 1108    | 1108    | 119     |
 | hashPermissions                                         | 2003            | 2003   | 2003    | 2003    | 16      |
 | holderHasPermissionAt                                   | 1263            | 3546   | 2327    | 9963    | 10      |
 | ownerOf                                                 | 731             | 731    | 731     | 731     | 1       |
@@ -50,11 +64,22 @@
 | expirationDelay                                         | 328             | 328   | 328    | 328   | 18      |
 | getApprovalWeightAt                                     | 867             | 1929  | 2867   | 2867  | 32      |
 | getDisapprovalWeightAt                                  | 981             | 2314  | 2981   | 2981  | 9       |
-| isActionCanceletionValid                                | 12241           | 12241 | 12241  | 12241 | 3       |
-| isActionPassed                                          | 11999           | 12259 | 11999  | 16692 | 44      |
+| isActionCanceletionValid                                | 12329           | 12329 | 12329  | 12329 | 3       |
+| isActionPassed                                          | 12087           | 12347 | 12087  | 16780 | 44      |
 | isFixedLengthApprovalPeriod                             | 312             | 312   | 312    | 312   | 37      |
 | minDisapprovalPct                                       | 262             | 262   | 262    | 262   | 10      |
 | queuingDuration                                         | 438             | 438   | 438    | 438   | 18      |
 
 
 
+
+Failing tests:
+Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexCollectorTest
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_ReceiveERC20() (gas: 7561)
+[31m[FAIL. Reason: Assertion failed.][0m test_VertexCollector_ReceiveETH() (gas: 33097)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_TransferApprovedERC20() (gas: 7781)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_approveERC20_ApproveUSDC() (gas: 16200)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_transferERC20_TransferUSDC() (gas: 7979)
+[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexCollector_transfer_TransferETH() (gas: 39633)
+
+Encountered a total of [31m6[0m failing tests, [32m51[0m tests succeeded

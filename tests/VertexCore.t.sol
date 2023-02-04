@@ -6,6 +6,7 @@ import {VertexCore} from "src/core/VertexCore.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
+import {VertexCollector} from "src/collector/VertexCollector.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
 
@@ -13,6 +14,7 @@ contract VertexCoreTest is Test {
     // Vertex system
     VertexCore public vertex;
     VertexStrategy[] public strategies;
+    VertexCollector[] public collectors;
     VertexPolicyNFT public policy;
 
     // Mock protocol
@@ -53,12 +55,14 @@ contract VertexCoreTest is Test {
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event StrategiesAuthorized(Strategy[] strategies);
     event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event CollectorAuthorized(VertexCollector indexed collector, string name);
 
     function setUp() public {
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
         Strategy[] memory initialStrategies = new Strategy[](2);
+        string[] memory initialCollectors = new string[](2);
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
@@ -82,8 +86,11 @@ contract VertexCoreTest is Test {
             disapprovalWeightByPermission: disapprovalWeightByPermission
         });
 
+        initialCollectors[0] = "VertexCollector0";
+        initialCollectors[1] = "VertexCollector1";
+
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions);
+        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions, initialCollectors);
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses
@@ -100,6 +107,19 @@ contract VertexCoreTest is Test {
             );
             strategies.push(VertexStrategy(address(uint160(uint256(hash)))));
         }
+
+        // Use create2 to get vertex collector addresses
+        for (uint256 i; i < initialCollectors.length; i++) {
+            bytes32 collectorSalt = bytes32(keccak256(abi.encode(initialCollectors[i])));
+            bytes memory bytecode = type(VertexCollector).creationCode;
+            bytes32 hash = keccak256(
+                abi.encodePacked(
+                    bytes1(0xff), address(vertex), collectorSalt, keccak256(abi.encodePacked(bytecode, abi.encode(initialCollectors[i], address(vertex))))
+                )
+            );
+            collectors.push(VertexCollector(payable(address(uint160(uint256(hash))))));
+        }
+
         // Set vertex's policy
         policy = vertex.policy();
 
@@ -107,6 +127,22 @@ contract VertexCoreTest is Test {
         _createPolicies();
 
         vm.label(actionCreator, "Action Creator");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Setup tests
+    //////////////////////////////////////////////////////////////*/
+
+    function test_setUp() public {
+        assertEq(vertex.name(), "ProtocolXYZ");
+
+        assertTrue(vertex.authorizedStrategies(strategies[0]));
+        assertTrue(vertex.authorizedStrategies(strategies[1]));
+        assertEq(strategies.length, 2);
+
+        assertTrue(vertex.authorizedCollectors(collectors[0]));
+        assertTrue(vertex.authorizedCollectors(collectors[1]));
+        assertEq(collectors.length, 2);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -637,6 +673,41 @@ contract VertexCoreTest is Test {
 
         assertEq(vertex.authorizedStrategies(strategies[0]), false);
         assertEq(vertex.authorizedStrategies(strategies[1]), false);
+    }
+
+    // createAndAuthorizeCollectors unit tests
+    function test_createAndAuthorizeCollectors_CreateNewCollectors() public {
+        string[] memory newCollectors = new string[](3);
+        VertexCollector[] memory collectorAddresses = new VertexCollector[](3);
+
+        newCollectors[0] = "VertexCollector2";
+        newCollectors[1] = "VertexCollector3";
+        newCollectors[2] = "VertexCollector4";
+
+        for (uint256 i; i < newCollectors.length; i++) {
+            bytes32 collectorSalt = bytes32(keccak256(abi.encode(newCollectors[i])));
+            bytes memory bytecode = type(VertexCollector).creationCode;
+            bytes32 hash = keccak256(
+                abi.encodePacked(
+                    bytes1(0xff), address(vertex), collectorSalt, keccak256(abi.encodePacked(bytecode, abi.encode(newCollectors[i], address(vertex))))
+                )
+            );
+            collectorAddresses[i] = VertexCollector(payable(address(uint160(uint256(hash)))));
+        }
+
+        vm.startPrank(address(vertex));
+
+        vm.expectEmit(true, true, true, true);
+        emit CollectorAuthorized(collectorAddresses[0], newCollectors[0]);
+        vm.expectEmit(true, true, true, true);
+        emit CollectorAuthorized(collectorAddresses[1], newCollectors[1]);
+        vm.expectEmit(true, true, true, true);
+        emit CollectorAuthorized(collectorAddresses[2], newCollectors[2]);
+        vertex.createAndAuthorizeCollectors(newCollectors);
+
+        assertEq(vertex.authorizedCollectors(collectorAddresses[0]), true);
+        assertEq(vertex.authorizedCollectors(collectorAddresses[1]), true);
+        assertEq(vertex.authorizedCollectors(collectorAddresses[2]), true);
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
+import {VertexCollector} from "src/collector/VertexCollector.sol";
 import {Action, Strategy} from "src/utils/Structs.sol";
 
 interface IVertexCore {
@@ -23,6 +24,7 @@ interface IVertexCore {
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event StrategiesAuthorized(Strategy[] strategies);
     event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event CollectorAuthorized(VertexCollector indexed collector, string name);
 
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.
@@ -79,6 +81,10 @@ interface IVertexCore {
     /// @notice Remove strategies from the mapping of authorized strategies.
     /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
     function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
+
+    /// @notice Deploy new collectors and add them to the mapping of authorized collectors.
+    /// @param collectors list of new collectors to be authorized.
+    function createAndAuthorizeCollectors(string[] memory collectors) external;
 
     /// @notice Get an Action struct by actionId.
     /// @param actionId id of the action.

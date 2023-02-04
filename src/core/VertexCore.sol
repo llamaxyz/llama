@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {VertexCollector} from "src/collector/VertexCollector.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
 
@@ -61,6 +62,9 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
+    /// @notice Mapping of all authorized collectors.
+    mapping(VertexCollector => bool) public authorizedCollectors;
+
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
@@ -69,18 +73,27 @@ contract VertexCore is IVertexCore {
         string memory _symbol,
         Strategy[] memory initialStrategies,
         address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
+        bytes8[][] memory initialPermissions,
+        string[] memory initialCollectors
     ) {
         name = _name;
         bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
         policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
 
         uint256 strategyLength = initialStrategies.length;
+        uint256 collectorsLength = initialCollectors.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
                 VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], policy, IVertexCore(address(this))));
                 authorizedStrategies[strategy] = true;
+            }
+
+            for (uint256 i; i < collectorsLength; ++i) {
+                bytes32 collectorSalt = bytes32(keccak256(abi.encode(initialCollectors[i])));
+                VertexCollector collector = VertexCollector(new VertexCollector{salt: collectorSalt}(initialCollectors[i], address(this)));
+                authorizedCollectors[collector] = true;
+                emit CollectorAuthorized(collector, initialCollectors[i]);
             }
         }
 
@@ -240,6 +253,19 @@ contract VertexCore is IVertexCore {
         }
 
         emit StrategiesUnauthorized(strategies);
+    }
+
+    /// @inheritdoc IVertexCore
+    function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex {
+        uint256 collectorLength = collectors.length;
+        unchecked {
+            for (uint256 i; i < collectorLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(collectors[i])));
+                VertexCollector collector = VertexCollector(new VertexCollector{salt: salt}(collectors[i], address(this)));
+                authorizedCollectors[collector] = true;
+                emit CollectorAuthorized(collector, collectors[i]);
+            }
+        }
     }
 
     /// @inheritdoc IVertexCore

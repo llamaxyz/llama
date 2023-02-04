@@ -1,6 +1,7 @@
 
 
 # Contents
+- [collector](/src/collector)
 - [core](/src/core)
 - [mock](/src/mock)
 - [policy](/src/policy)

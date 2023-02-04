@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/28b1b0e095ba3c46d62387b2c29c8768bc213a6c/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
@@ -110,6 +110,15 @@ mapping(VertexStrategy => bool) public authorizedStrategies;
 ```
 
 
+### authorizedCollectors
+Mapping of all authorized collectors.
+
+
+```solidity
+mapping(VertexCollector => bool) public authorizedCollectors;
+```
+
+
 ### queuedActions
 Mapping of actionId's and bool that indicates if action is queued.
 
@@ -129,7 +138,8 @@ constructor(
     string memory _symbol,
     Strategy[] memory initialStrategies,
     address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions
+    bytes8[][] memory initialPermissions,
+    string[] memory initialCollectors
 );
 ```
 
@@ -314,6 +324,21 @@ function unauthorizeStrategies(VertexStrategy[] calldata strategies) public over
 |Name|Type|Description|
 |----|----|-----------|
 |`strategies`|`VertexStrategy[]`|list of Strategys to be removed from the mapping of authorized strategies.|
+
+
+### createAndAuthorizeCollectors
+
+Deploy new collectors and add them to the mapping of authorized collectors.
+
+
+```solidity
+function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex;
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`collectors`|`string[]`|list of new collectors to be authorized.|
 
 
 ### isActionExpired
