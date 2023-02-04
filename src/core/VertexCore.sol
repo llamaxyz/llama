@@ -73,11 +73,7 @@ contract VertexCore is IVertexCore, Initializable {
         _;
     }
 
-    function initialize(string memory _name, string memory _symbol, Strategy[] memory initialStrategies, VertexPolicyNFT _policy)
-        external
-        override
-        initializer
-    {
+    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies) external override initializer {
         name = _name;
         policy = _policy;
 
