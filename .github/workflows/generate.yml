@@ -93,3 +93,4 @@ jobs:
         with:
           add: ".gas-report"
           message: Generate updated gas report
+          default_author: user_info
