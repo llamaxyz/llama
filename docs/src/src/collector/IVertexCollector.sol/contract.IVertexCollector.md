@@ -1,5 +1,5 @@
 # IVertexCollector
-[Git Source](https://github.com/llama-community/vertex-v1/blob/5b218a8dd0bc635c09c9b3b94d2fdd2e8abeb7c2/src/collector/IVertexCollector.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/collector/IVertexCollector.sol)
 
 
 ## Functions
@@ -9,13 +9,13 @@ Function for Vertex to transfer native tokens to other parties
 
 
 ```solidity
-function transfer(address recipient, uint256 amount) external;
+function transfer(address payable recipient, uint256 amount) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`recipient`|`address`|Transfer's recipient|
+|`recipient`|`address payable`|Transfer's recipient|
 |`amount`|`uint256`|Amount to transfer|
 
 
