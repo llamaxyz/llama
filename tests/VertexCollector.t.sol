@@ -92,7 +92,7 @@ contract VertexCollectorTest is Test {
 
         // Transfer ETH from collector to whale
         vm.startPrank(address(vertex));
-        collectors[0].transfer(ETH_WHALE, ETH_AMOUNT);
+        collectors[0].transfer(payable(ETH_WHALE), ETH_AMOUNT);
         assertEq(address(collectors[0]).balance, 0);
         assertEq(address(collectors[0]).balance, collectorETHBalance - ETH_AMOUNT);
         assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -101,13 +101,13 @@ contract VertexCollectorTest is Test {
 
     function test_VertexCollector_transfer_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexCollector.OnlyVertex.selector);
-        collectors[0].transfer(ETH_WHALE, ETH_AMOUNT);
+        collectors[0].transfer(payable(ETH_WHALE), ETH_AMOUNT);
     }
 
     function test_VertexCollector_transfer_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexCollector.Invalid0xRecipient.selector);
-        collectors[0].transfer(address(0), ETH_AMOUNT);
+        collectors[0].transfer(payable(address(0)), ETH_AMOUNT);
         vm.stopPrank();
     }
 

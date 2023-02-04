@@ -35,9 +35,9 @@ contract VertexCollector is IVertexCollector {
     receive() external payable {}
 
     /// @inheritdoc IVertexCollector
-    function transfer(address recipient, uint256 amount) external onlyVertex {
+    function transfer(address payable recipient, uint256 amount) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
-        payable(recipient).sendValue(amount);
+        recipient.sendValue(amount);
     }
 
     /// @inheritdoc IVertexCollector

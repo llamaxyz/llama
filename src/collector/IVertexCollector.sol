@@ -7,7 +7,7 @@ interface IVertexCollector {
     /// @notice Function for Vertex to transfer native tokens to other parties
     /// @param recipient Transfer's recipient
     /// @param amount Amount to transfer
-    function transfer(address recipient, uint256 amount) external;
+    function transfer(address payable recipient, uint256 amount) external;
 
     /// @notice Function for Vertex to transfer ERC20 tokens to other parties
     /// @param token The address of the token to transfer
