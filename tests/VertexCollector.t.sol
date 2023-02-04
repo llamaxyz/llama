@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Test, console2} from "forge-std/Test.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexCollector} from "src/collector/VertexCollector.sol";
+import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
@@ -18,6 +19,8 @@ contract VertexCollectorTest is Test {
 
     // Vertex system
     VertexCore public vertex;
+    VertexCore public vertexCore;
+    VertexFactory public vertexFactory;
     VertexCollector[] public collectors;
 
     address[] public initialPolicies;
@@ -64,7 +67,9 @@ contract VertexCollectorTest is Test {
         initialCollectors[1] = "VertexCollector1";
 
         // Deploy vertex and mock protocol
-        vertex = new VertexCore("ProtocolXYZ", "VXP", initialStrategies, initialPolicies, initialPermissions, initialCollectors);
+        vertexCore = new VertexCore();
+        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialCollectors, initialPolicies, initialPermissions);
+        vertex = VertexCore(vertexFactory.initialVertex());
 
         // Use create2 to get vertex collector addresses
         for (uint256 i; i < initialCollectors.length; i++) {

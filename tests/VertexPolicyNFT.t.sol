@@ -37,6 +37,7 @@ contract VertexPolicyNFTTest is Test {
 
     function setUp() public {
         vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", address(this), initialPolicies, initialPermissions);
+        vertexPolicyNFT.setVertex(address(this));
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures);

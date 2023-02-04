@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
@@ -11,7 +12,7 @@ import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Str
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
-contract VertexCore is IVertexCore {
+contract VertexCore is IVertexCore, Initializable {
     error InvalidStrategy();
     error InvalidCancelation();
     error InvalidActionId();
@@ -42,7 +43,7 @@ contract VertexCore is IVertexCore {
     uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 
     /// @notice The NFT contract that defines the policies for this Vertex system.
-    VertexPolicyNFT public immutable policy;
+    VertexPolicyNFT public policy;
 
     /// @notice Name of this Vertex system.
     string public name;
@@ -68,24 +69,28 @@ contract VertexCore is IVertexCore {
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        Strategy[] memory initialStrategies,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions,
-        string[] memory initialCollectors
-    ) {
+    // solhint-disable-next-line no-empty-blocks
+    constructor() initializer {}
+
+    modifier onlyVertex() {
+        if (msg.sender != address(this)) revert OnlyVertex();
+        _;
+    }
+
+    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialCollectors)
+        external
+        override
+        initializer
+    {
         name = _name;
-        bytes32 salt = bytes32(keccak256(abi.encode(_name, _symbol)));
-        policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(_name, _symbol, address(this), initialPolicyholders, initialPermissions));
+        policy = _policy;
 
         uint256 strategyLength = initialStrategies.length;
         uint256 collectorsLength = initialCollectors.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], policy, IVertexCore(address(this))));
+                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this))));
                 authorizedStrategies[strategy] = true;
             }
 
@@ -98,11 +103,6 @@ contract VertexCore is IVertexCore {
         }
 
         emit StrategiesAuthorized(initialStrategies);
-    }
-
-    modifier onlyVertex() {
-        if (msg.sender != address(this)) revert OnlyVertex();
-        _;
     }
 
     /// @inheritdoc IVertexCore

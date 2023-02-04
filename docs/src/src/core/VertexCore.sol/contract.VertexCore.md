@@ -1,8 +1,8 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/core/VertexCore.sol)
 
 **Inherits:**
-[IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md)
+[IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
 
 **Author:**
 Llama (vertex@llama.xyz)
@@ -52,7 +52,7 @@ The NFT contract that defines the policies for this Vertex system.
 
 
 ```solidity
-VertexPolicyNFT public immutable policy;
+VertexPolicyNFT public policy;
 ```
 
 
@@ -133,14 +133,7 @@ mapping(uint256 => bool) public queuedActions;
 
 
 ```solidity
-constructor(
-    string memory _name,
-    string memory _symbol,
-    Strategy[] memory initialStrategies,
-    address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions,
-    string[] memory initialCollectors
-);
+constructor() initializer;
 ```
 
 ### onlyVertex
@@ -148,6 +141,16 @@ constructor(
 
 ```solidity
 modifier onlyVertex();
+```
+
+### initialize
+
+
+```solidity
+function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialCollectors)
+    external
+    override
+    initializer;
 ```
 
 ### createAction
