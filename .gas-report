@@ -13,6 +13,7 @@
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
 <<<<<<< HEAD
+<<<<<<< HEAD
 | 8714267                                     | 45013           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 632             | 632     | 632     | 632     | 19      |
@@ -34,6 +35,11 @@
 | 4759838                                     | 23954           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 632             | 632     | 632     | 632     | 19      |
+=======
+| 4759838                                     | 23954           |         |         |         |         |
+| Function Name                               | min             | avg     | median  | max     | # calls |
+| actionsCount                                | 632             | 632     | 632     | 632     | 19      |
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 | authorizedStrategies                        | 575             | 575     | 575     | 575     | 5       |
 | cancelAction                                | 826             | 13622   | 15362   | 30298   | 10      |
 | createAction                                | 3063            | 194403  | 235359  | 237969  | 27      |
@@ -54,7 +60,10 @@
 | 7269955                                              | 33023           |     |        |     |         |
 | Function Name                                        | min             | avg | median | max | # calls |
 | owner                                                | 298             | 298 | 298    | 298 | 29      |
+<<<<<<< HEAD
 >>>>>>> 50dc686 (Generate updated gas report)
+=======
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
@@ -62,6 +71,7 @@
 | Deployment Cost                                         | Deployment Size |        |         |         |         |
 | 1938813                                                 | 13081           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
+<<<<<<< HEAD
 <<<<<<< HEAD
 | balanceOf                                               | 785             | 785    | 785     | 785     | 2       |
 | batchGrantPermissions                                   | 1271            | 715790 | 1074638 | 1074638 | 53      |
@@ -72,6 +82,8 @@
 | hashPermission                                          | 1108            | 1108   | 1108    | 1108    | 119     |
 | hashPermissions                                         | 2003            | 2003   | 2003    | 2003    | 16      |
 =======
+=======
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 | balanceOf                                               | 807             | 807    | 807     | 807     | 2       |
 | batchGrantPermissions                                   | 3393            | 702114 | 1074760 | 1074760 | 51      |
 | batchRevokePermissions                                  | 3092            | 36448  | 48602   | 61082   | 6       |
@@ -80,7 +92,10 @@
 | hasPermission                                           | 1126            | 5279   | 5716    | 5751    | 29      |
 | hashPermission                                          | 1152            | 1152   | 1152    | 1152    | 113     |
 | hashPermissions                                         | 2025            | 2025   | 2025    | 2025    | 16      |
+<<<<<<< HEAD
 >>>>>>> 50dc686 (Generate updated gas report)
+=======
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 | holderHasPermissionAt                                   | 1263            | 3546   | 2327    | 9963    | 10      |
 | ownerOf                                                 | 753             | 753    | 753     | 753     | 1       |
 | setBaseURI                                              | 2778            | 13964  | 13964   | 25151   | 2       |
@@ -103,12 +118,17 @@
 | getApprovalWeightAt                                     | 867             | 1929  | 2867   | 2867  | 32      |
 | getDisapprovalWeightAt                                  | 981             | 2314  | 2981   | 2981  | 9       |
 <<<<<<< HEAD
+<<<<<<< HEAD
 | isActionCanceletionValid                                | 12329           | 12329 | 12329  | 12329 | 3       |
 | isActionPassed                                          | 12087           | 12347 | 12087  | 16780 | 44      |
 =======
 | isActionCanceletionValid                                | 12815           | 12815 | 12815  | 12815 | 3       |
 | isActionPassed                                          | 12573           | 12834 | 12573  | 17278 | 44      |
 >>>>>>> 50dc686 (Generate updated gas report)
+=======
+| isActionCanceletionValid                                | 12815           | 12815 | 12815  | 12815 | 3       |
+| isActionPassed                                          | 12573           | 12834 | 12573  | 17278 | 44      |
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 | isFixedLengthApprovalPeriod                             | 312             | 312   | 312    | 312   | 37      |
 | minDisapprovalPct                                       | 262             | 262   | 262    | 262   | 10      |
 | queuingDuration                                         | 438             | 438   | 438    | 438   | 18      |

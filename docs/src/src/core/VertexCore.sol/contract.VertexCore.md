@@ -1,9 +1,13 @@
 # VertexCore
 <<<<<<< HEAD
+<<<<<<< HEAD
 [Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/VertexCore.sol)
 =======
 [Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/VertexCore.sol)
 >>>>>>> a2cac96 (Generate updated docs)
+=======
+[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/VertexCore.sol)
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -138,6 +142,7 @@ mapping(uint256 => bool) public queuedActions;
 
 ```solidity
 <<<<<<< HEAD
+<<<<<<< HEAD
 constructor(
     string memory _name,
     string memory _symbol,
@@ -149,6 +154,9 @@ constructor(
 =======
 constructor() initializer;
 >>>>>>> a2cac96 (Generate updated docs)
+=======
+constructor() initializer;
+>>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 ```
 
 ### onlyVertex
