@@ -27,6 +27,7 @@ contract VertexFactory is IVertexFactory {
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
+        string[] memory initialCollectors,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions
     ) {
@@ -40,7 +41,7 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
 
         initialVertex = VertexCore(Clones.clone(address(vertexCore)));
-        initialVertex.initialize(name, policy, initialStrategies);
+        initialVertex.initialize(name, policy, initialStrategies, initialCollectors);
 
         policy.setVertex(address(initialVertex));
 
@@ -56,6 +57,7 @@ contract VertexFactory is IVertexFactory {
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
+        string[] memory initialCollectors,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions
     ) public onlyInitialVertex returns (VertexCore) {
@@ -68,7 +70,7 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
 
         VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
-        vertex.initialize(name, policy, initialStrategies);
+        vertex.initialize(name, policy, initialStrategies, initialCollectors);
 
         policy.setVertex(address(vertex));
         emit VertexCreated(previousVertexCount, name);
