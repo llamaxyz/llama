@@ -7,7 +7,7 @@ update   :; forge update
 install  :; forge install
 
 # Build & test
-build    :; forge clean && forge build --sizes --via-ir
+build    :; forge clean && forge build --sizes
 test     :; forge test --fork-url ${RPC_MAINNET_URL} $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
 match    :; forge test --fork-url ${RPC_MAINNET_URL} -m ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
 watch    :; forge test --fork-url ${RPC_MAINNET_URL} --watch $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
