@@ -1,13 +1,5 @@
 # VertexCore
-<<<<<<< HEAD
-<<<<<<< HEAD
-[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/VertexCore.sol)
-=======
-[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/VertexCore.sol)
->>>>>>> a2cac96 (Generate updated docs)
-=======
-[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/VertexCore.sol)
->>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -141,22 +133,7 @@ mapping(uint256 => bool) public queuedActions;
 
 
 ```solidity
-<<<<<<< HEAD
-<<<<<<< HEAD
-constructor(
-    string memory _name,
-    string memory _symbol,
-    Strategy[] memory initialStrategies,
-    address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions,
-    string[] memory initialCollectors
-);
-=======
 constructor() initializer;
->>>>>>> a2cac96 (Generate updated docs)
-=======
-constructor() initializer;
->>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
 ```
 
 ### onlyVertex
@@ -170,7 +147,10 @@ modifier onlyVertex();
 
 
 ```solidity
-function initialize(string memory _name, string memory _symbol, Strategy[] memory initialStrategies, VertexPolicyNFT _policy) external override initializer;
+function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialCollectors)
+    external
+    override
+    initializer;
 ```
 
 ### createAction

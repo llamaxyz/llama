@@ -1,13 +1,5 @@
 # IVertexCore
-<<<<<<< HEAD
-<<<<<<< HEAD
-[Git Source](https://github.com/llama-community/vertex-v1/blob/61ef774889dd82e8f91f589d8c7893861f840536/src/core/IVertexCore.sol)
-=======
-[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/IVertexCore.sol)
->>>>>>> a2cac96 (Generate updated docs)
-=======
-[Git Source](https://github.com/llama-community/vertex-v1/blob/273c5d72ad31cc2754f7da37333566f14375808b/src/core/IVertexCore.sol)
->>>>>>> b75ab96f95c20c97992964be967cc575cc176f07
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/core/IVertexCore.sol)
 
 
 ## Functions
@@ -17,16 +9,16 @@ Initializes a new VertexCore clone.
 
 
 ```solidity
-function initialize(string memory name, string memory symbol, Strategy[] memory initialStrategies, VertexPolicyNFT policy) external;
+function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memory initialStrategies, string[] memory initialCollectors) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`name`|`string`|The name of the VertexCore clone.|
-|`symbol`|`string`|The symbol of the policy NFT contract.|
-|`initialStrategies`|`Strategy[]`|The configuration of the initial strategies.|
 |`policy`|`VertexPolicyNFT`|This Vertex instance's policy contract.|
+|`initialStrategies`|`Strategy[]`|The configuration of the initial strategies.|
+|`initialCollectors`|`string[]`|The configuration of the initial strategies.|
 
 
 ### createAction
