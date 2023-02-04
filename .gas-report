@@ -18,7 +18,7 @@
 | authorizedCollectors                        | 514             | 1314    | 514     | 2514    | 5       |
 | authorizedStrategies                        | 575             | 1146    | 575     | 2575    | 7       |
 | cancelAction                                | 848             | 13275   | 14898   | 29348   | 10      |
-| createAction                                | 3066            | 192161  | 233024  | 235549  | 27      |
+| createAction                                | 3066            | 192137  | 232989  | 235584  | 27      |
 | createAndAuthorizeCollectors                | 1465517         | 1465517 | 1465517 | 1465517 | 1       |
 | createAndAuthorizeStrategies                | 2824324         | 2824324 | 2824324 | 2824324 | 1       |
 | executeAction                               | 780             | 20387   | 16947   | 36442   | 6       |
@@ -37,11 +37,11 @@
 | 1927259                                                 | 13051           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 785             | 785    | 785     | 785     | 2       |
-| batchGrantPermissions                                   | 1271            | 716635 | 1076083 | 1076083 | 53      |
+| batchGrantPermissions                                   | 1271            | 715790 | 1074638 | 1074638 | 53      |
 | batchRevokePermissions                                  | 967             | 35406  | 48502   | 59382   | 6       |
 | batchUpdatePermissions                                  | 1011            | 42713  | 42713   | 84416   | 2       |
 | getSupplyByPermissions                                  | 2172            | 5257   | 3429    | 10172   | 3       |
-| hasPermission                                           | 1104            | 5277   | 5729    | 5729    | 29      |
+| hasPermission                                           | 1104            | 5255   | 5694    | 5729    | 29      |
 | hashPermission                                          | 1108            | 1108   | 1108    | 1108    | 119     |
 | hashPermissions                                         | 2003            | 2003   | 2003    | 2003    | 16      |
 | holderHasPermissionAt                                   | 1263            | 3546   | 2327    | 9963    | 10      |
