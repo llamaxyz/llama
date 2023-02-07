@@ -1,5 +1,5 @@
 # IVertexFactory
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/factory/IVertexFactory.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/factory/IVertexFactory.sol)
 
 
 ## Functions
@@ -40,6 +40,6 @@ function deploy(
 ### VertexCreated
 
 ```solidity
-event VertexCreated(uint256 indexed id, string indexed name);
+event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
 ```
 
