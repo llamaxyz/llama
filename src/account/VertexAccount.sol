@@ -4,12 +4,14 @@ pragma solidity ^0.8.17;
 import {IVertexAccount} from "src/account/IVertexAccount.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
+import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexAccount is IVertexAccount {
+contract VertexAccount is IVertexAccount, ERC721Holder {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
