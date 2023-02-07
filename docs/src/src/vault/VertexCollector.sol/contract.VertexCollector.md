@@ -1,8 +1,8 @@
-# VertexCollector
-[Git Source](https://github.com/llama-community/vertex-v1/blob/1010800eca40d89a7523a4694106df66636f891a/src/vault/VertexCollector.sol)
+# VertexAccount
+[Git Source](https://github.com/llama-community/vertex-v1/blob/1010800eca40d89a7523a4694106df66636f891a/src/vault/VertexAccount.sol)
 
 **Inherits:**
-[IVertexCollector](/src/vault/IVertexCollector.sol/contract.IVertexCollector.md)
+[IVertexAccount](/src/vault/IVertexAccount.sol/contract.IVertexAccount.md)
 
 **Author:**
 Llama (vertex@llama.xyz)

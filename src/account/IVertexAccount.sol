@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-interface IVertexCollector {
+interface IVertexAccount {
     /// @notice Function for Vertex to transfer native tokens to other parties
     /// @param recipient Transfer's recipient
     /// @param amount Amount to transfer

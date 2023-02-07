@@ -1,9 +1,9 @@
 # Summary
 - [Home](README.md)
 # src
-  - [❱ collector](src/collector/README.md)
-    - [IVertexCollector](src/collector/IVertexCollector.sol/contract.IVertexCollector.md)
-    - [VertexCollector](src/collector/VertexCollector.sol/contract.VertexCollector.md)
+  - [❱ account](src/account/README.md)
+    - [IVertexAccount](src/account/IVertexAccount.sol/contract.IVertexAccount.md)
+    - [VertexAccount](src/account/VertexAccount.sol/contract.VertexAccount.md)
   - [❱ core](src/core/README.md)
     - [IVertexCore](src/core/IVertexCore.sol/contract.IVertexCore.md)
     - [VertexCore](src/core/VertexCore.sol/contract.VertexCore.md)

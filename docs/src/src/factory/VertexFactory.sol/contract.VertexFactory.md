@@ -48,7 +48,7 @@ constructor(
     string memory name,
     string memory symbol,
     Strategy[] memory initialStrategies,
-    string[] memory initialCollectors,
+    string[] memory initialAccounts,
     address[] memory initialPolicyholders,
     bytes8[][] memory initialPermissions
 );
@@ -69,7 +69,7 @@ function deploy(
     string memory name,
     string memory symbol,
     Strategy[] memory initialStrategies,
-    string[] memory initialCollectors,
+    string[] memory initialAccounts,
     address[] memory initialPolicyholders,
     bytes8[][] memory initialPermissions
 ) public onlyInitialVertex returns (VertexCore);

@@ -1,4 +1,4 @@
-| src/collector/VertexCollector.sol:VertexCollector contract |                 |      |        |      |         |
+| src/account/VertexAccount.sol:VertexAccount contract |                 |      |        |      |         |
 |------------------------------------------------------------|-----------------|------|--------|------|---------|
 | Deployment Cost                                            | Deployment Size |      |        |      |         |
 | 526199                                                     | 3404            |      |        |      |         |
@@ -15,11 +15,11 @@
 | 4929764                                     | 24848           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 362             | 362     | 362     | 362     | 19      |
-| authorizedCollectors                        | 571             | 1371    | 571     | 2571    | 5       |
+| authorizedAccounts                        | 571             | 1371    | 571     | 2571    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
 | createAction                                | 3026            | 195149  | 236271  | 238806  | 27      |
-| createAndAuthorizeCollectors                | 1755850         | 1755850 | 1755850 | 1755850 | 1       |
+| createAndAuthorizeAccounts                | 1755850         | 1755850 | 1755850 | 1755850 | 1       |
 | createAndAuthorizeStrategies                | 2661945         | 2661945 | 2661945 | 2661945 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
@@ -85,12 +85,12 @@
 
 
 Failing tests:
-Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexCollectorTest
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_ReceiveERC20() (gas: 7458)
-[31m[FAIL. Reason: Assertion failed.][0m test_VertexCollector_ReceiveETH() (gas: 33497)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_TransferApprovedERC20() (gas: 7413)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_approveERC20_ApproveUSDC() (gas: 15993)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCollector_transferERC20_TransferUSDC() (gas: 7434)
-[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexCollector_transfer_TransferETH() (gas: 40271)
+Encountered 6 failing tests in tests/VertexAccount.t.sol:VertexAccountTest
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_ReceiveERC20() (gas: 7458)
+[31m[FAIL. Reason: Assertion failed.][0m test_VertexAccount_ReceiveETH() (gas: 33497)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_TransferApprovedERC20() (gas: 7413)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_approveERC20_ApproveUSDC() (gas: 15993)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 7434)
+[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40271)
 
 Encountered a total of [31m6[0m failing tests, [32m54[0m tests succeeded

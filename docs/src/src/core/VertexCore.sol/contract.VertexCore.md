@@ -110,12 +110,12 @@ mapping(VertexStrategy => bool) public authorizedStrategies;
 ```
 
 
-### authorizedCollectors
-Mapping of all authorized collectors.
+### authorizedAccounts
+Mapping of all authorized accounts.
 
 
 ```solidity
-mapping(VertexCollector => bool) public authorizedCollectors;
+mapping(VertexAccount => bool) public authorizedAccounts;
 ```
 
 
@@ -147,7 +147,7 @@ modifier onlyVertex();
 
 
 ```solidity
-function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialCollectors)
+function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialAccounts)
     external
     override
     initializer;
@@ -329,19 +329,19 @@ function unauthorizeStrategies(VertexStrategy[] calldata strategies) public over
 |`strategies`|`VertexStrategy[]`|list of Strategys to be removed from the mapping of authorized strategies.|
 
 
-### createAndAuthorizeCollectors
+### createAndAuthorizeAccounts
 
-Deploy new collectors and add them to the mapping of authorized collectors.
+Deploy new accounts and add them to the mapping of authorized accounts.
 
 
 ```solidity
-function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex;
+function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`collectors`|`string[]`|list of new collectors to be authorized.|
+|`accounts`|`string[]`|list of new accounts to be authorized.|
 
 
 ### isActionExpired

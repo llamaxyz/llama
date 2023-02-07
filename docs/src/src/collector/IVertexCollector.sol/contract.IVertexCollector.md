@@ -1,5 +1,5 @@
-# IVertexCollector
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/collector/IVertexCollector.sol)
+# IVertexAccount
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/account/IVertexAccount.sol)
 
 
 ## Functions

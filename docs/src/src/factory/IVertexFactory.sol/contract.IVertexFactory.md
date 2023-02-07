@@ -13,7 +13,7 @@ function deploy(
     string memory name,
     string memory policySymbol,
     Strategy[] memory initialStrategies,
-    string[] memory initialCollectors,
+    string[] memory initialAccounts,
     address[] memory initialPolicyholders,
     bytes8[][] memory initialPermissions
 ) external returns (VertexCore);
@@ -25,7 +25,7 @@ function deploy(
 |`name`|`string`|The name of this Vertex system.|
 |`policySymbol`|`string`|The token symbol for the policy NFT.|
 |`initialStrategies`|`Strategy[]`|The list of initial strategies.|
-|`initialCollectors`|`string[]`|The list of initial collectors.|
+|`initialAccounts`|`string[]`|The list of initial accounts.|
 |`initialPolicyholders`|`address[]`|The list of initial policyholders.|
 |`initialPermissions`|`bytes8[][]`|The list of permissions granted to each initial policyholder.|
 

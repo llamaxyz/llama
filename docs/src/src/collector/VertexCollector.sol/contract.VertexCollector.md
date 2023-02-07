@@ -1,8 +1,8 @@
-# VertexCollector
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/collector/VertexCollector.sol)
+# VertexAccount
+[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/account/VertexAccount.sol)
 
 **Inherits:**
-[IVertexCollector](/src/collector/IVertexCollector.sol/contract.IVertexCollector.md)
+[IVertexAccount](/src/account/IVertexAccount.sol/contract.IVertexAccount.md)
 
 **Author:**
 Llama (vertex@llama.xyz)
@@ -12,7 +12,7 @@ The contract that holds the Vertex system's assets.
 
 ## State Variables
 ### name
-Name of this Vertex Collector.
+Name of this Vertex Account.
 
 
 ```solidity
@@ -46,7 +46,7 @@ modifier onlyVertex();
 
 ### receive
 
-Function for Vertex Collector to receive ETH
+Function for Vertex Account to receive ETH
 
 
 ```solidity

@@ -5,7 +5,7 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {VertexCollector} from "src/collector/VertexCollector.sol";
+import {VertexAccount} from "src/account/VertexAccount.sol";
 import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
 
@@ -63,8 +63,8 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
-    /// @notice Mapping of all authorized collectors.
-    mapping(VertexCollector => bool) public authorizedCollectors;
+    /// @notice Mapping of all authorized accounts.
+    mapping(VertexAccount => bool) public authorizedAccounts;
 
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
@@ -77,7 +77,7 @@ contract VertexCore is IVertexCore, Initializable {
         _;
     }
 
-    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialCollectors)
+    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialAccounts)
         external
         override
         initializer
@@ -86,7 +86,7 @@ contract VertexCore is IVertexCore, Initializable {
         policy = _policy;
 
         uint256 strategyLength = initialStrategies.length;
-        uint256 collectorsLength = initialCollectors.length;
+        uint256 accountsLength = initialAccounts.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
@@ -94,11 +94,11 @@ contract VertexCore is IVertexCore, Initializable {
                 authorizedStrategies[strategy] = true;
             }
 
-            for (uint256 i; i < collectorsLength; ++i) {
-                bytes32 collectorSalt = bytes32(keccak256(abi.encode(initialCollectors[i])));
-                VertexCollector collector = VertexCollector(new VertexCollector{salt: collectorSalt}(initialCollectors[i], address(this)));
-                authorizedCollectors[collector] = true;
-                emit CollectorAuthorized(collector, initialCollectors[i]);
+            for (uint256 i; i < accountsLength; ++i) {
+                bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
+                VertexAccount account = VertexAccount(new VertexAccount{salt: accountSalt}(initialAccounts[i], address(this)));
+                authorizedAccounts[account] = true;
+                emit AccountAuthorized(account, initialAccounts[i]);
             }
         }
 
@@ -256,14 +256,14 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeCollectors(string[] calldata collectors) public override onlyVertex {
-        uint256 collectorLength = collectors.length;
+    function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex {
+        uint256 accountLength = accounts.length;
         unchecked {
-            for (uint256 i; i < collectorLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(collectors[i])));
-                VertexCollector collector = VertexCollector(new VertexCollector{salt: salt}(collectors[i], address(this)));
-                authorizedCollectors[collector] = true;
-                emit CollectorAuthorized(collector, collectors[i]);
+            for (uint256 i; i < accountLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+                VertexAccount account = VertexAccount(new VertexAccount{salt: salt}(accounts[i], address(this)));
+                authorizedAccounts[account] = true;
+                emit AccountAuthorized(account, accounts[i]);
             }
         }
     }
