@@ -199,6 +199,15 @@ contract VertexAccountTest is Test {
         accounts[0].approveERC721(BAYC, BAYC_WHALE, BAYC_ID);
     }
 
+    // approve Operator ERC721 unit tests
+    function test_VertexAccount_approveOperatorERC721_ApproveBAYC() public {
+        _approveOperatorBAYCToRecipient(true);
+    }
+
+    function test_VertexAccount_approveOperatorERC721_DisapproveBAYC() public {
+        _approveOperatorBAYCToRecipient(false);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Integration tests
     //////////////////////////////////////////////////////////////*/
@@ -310,6 +319,13 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveERC721(BAYC, BAYC_WHALE, id);
         assertEq(BAYC.getApproved(id), BAYC_WHALE);
+        vm.stopPrank();
+    }
+
+    function _approveOperatorBAYCToRecipient(bool approved) public {
+        vm.startPrank(address(vertex));
+        accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, approved);
+        assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), approved);
         vm.stopPrank();
     }
 }
