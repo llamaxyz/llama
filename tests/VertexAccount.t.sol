@@ -21,6 +21,7 @@ contract VertexAccountTest is Test {
     IERC721 public constant BAYC = IERC721(0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D);
     address public constant BAYC_WHALE = 0x619866736a3a101f65cfF3A8c3d2602fC54Fd749;
     uint256 public constant BAYC_ID = 27;
+    uint256 public constant BAYC_ID_2 = 8885;
 
     // Vertex system
     VertexCore public vertex;
@@ -276,6 +277,29 @@ contract VertexAccountTest is Test {
         assertEq(BAYC.balanceOf(address(accounts[0])), accountNFTBalance - 1);
         assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 1);
         assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+        vm.stopPrank();
+    }
+
+    // Test that approved Operator ERC721 tokens can be transferred from VertexAccount to a recipient
+    function test_VertexAccount_TransferApprovedOperatorERC721() public {
+        vm.startPrank(BAYC_WHALE);
+        BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), BAYC_ID);
+        BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), BAYC_ID_2);
+        vm.stopPrank();
+        _approveOperatorBAYCToRecipient(true);
+
+        uint256 accountNFTBalance = BAYC.balanceOf(address(accounts[0]));
+        uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
+
+        // Transfer NFT from account to whale
+        vm.startPrank(BAYC_WHALE);
+        BAYC.transferFrom(address(accounts[0]), BAYC_WHALE, BAYC_ID);
+        BAYC.transferFrom(address(accounts[0]), BAYC_WHALE, BAYC_ID_2);
+        assertEq(BAYC.balanceOf(address(accounts[0])), 0);
+        assertEq(BAYC.balanceOf(address(accounts[0])), accountNFTBalance - 2);
+        assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 2);
+        assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+        assertEq(BAYC.ownerOf(BAYC_ID_2), BAYC_WHALE);
         vm.stopPrank();
     }
 
