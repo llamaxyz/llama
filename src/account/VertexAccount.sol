@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexCollector} from "src/collector/IVertexCollector.sol";
+import {IVertexAccount} from "src/account/IVertexAccount.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
-/// @title Vertex Collector
+/// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexCollector is IVertexCollector {
+contract VertexAccount is IVertexAccount {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
     error OnlyVertex();
     error Invalid0xRecipient();
 
-    /// @notice Name of this Vertex Collector.
+    /// @notice Name of this Vertex Account.
     string public name;
     /// @notice Vertex system
     address public immutable vertex;
@@ -31,22 +31,22 @@ contract VertexCollector is IVertexCollector {
         _;
     }
 
-    /// @notice Function for Vertex Collector to receive ETH
+    /// @notice Function for Vertex Account to receive ETH
     receive() external payable {}
 
-    /// @inheritdoc IVertexCollector
+    /// @inheritdoc IVertexAccount
     function transfer(address payable recipient, uint256 amount) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
         recipient.sendValue(amount);
     }
 
-    /// @inheritdoc IVertexCollector
+    /// @inheritdoc IVertexAccount
     function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
         token.safeTransfer(recipient, amount);
     }
 
-    /// @inheritdoc IVertexCollector
+    /// @inheritdoc IVertexAccount
     function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         token.safeApprove(recipient, amount);
     }

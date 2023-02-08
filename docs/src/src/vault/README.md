@@ -1,5 +1,5 @@
 
 
 # Contents
-- [IVertexCollector](IVertexCollector.sol/contract.IVertexCollector.md)
-- [VertexCollector](VertexCollector.sol/contract.VertexCollector.md)
+- [IVertexAccount](IVertexAccount.sol/contract.IVertexAccount.md)
+- [VertexAccount](VertexAccount.sol/contract.VertexAccount.md)

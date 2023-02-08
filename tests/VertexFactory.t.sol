@@ -11,7 +11,7 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
-    event VertexCreated(uint256 indexed id, string indexed name);
+    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
 
     // Vertex system
     VertexCore public vertex;
@@ -63,10 +63,10 @@ contract VertexFactoryTest is Test {
         vertexCore = new VertexCore();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = _createInitialStrategies();
-        string[] memory initialCollectors = _createInitialCollectors();
+        string[] memory initialAccounts = _createInitialAccounts();
 
         // Deploy vertex and mock protocol
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialCollectors, initialPolicies, initialPermissions);
+        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -95,33 +95,34 @@ contract VertexFactoryTest is Test {
 
     function test_deploy_DeployIfInitialVertex() public {
         Strategy[] memory initialStrategies = _createInitialStrategies();
-        string[] memory initialCollectors = _createInitialCollectors();
+        string[] memory initialAccounts = _createInitialAccounts();
+        address deployedVertex = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
-        emit VertexCreated(1, "NewProject");
-        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialCollectors, initialPolicies, initialPermissions);
+        emit VertexCreated(1, "NewProject", deployedVertex);
+        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
     }
 
     function testFuzz_deploy_RevertIfNotInitialVertex(address notInitialVertex) public {
         vm.assume(notInitialVertex != address(vertex));
         Strategy[] memory initialStrategies = _createInitialStrategies();
-        string[] memory initialCollectors = _createInitialCollectors();
+        string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(notInitialVertex));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialCollectors, initialPolicies, initialPermissions);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
     }
 
     function test_deploy_RevertIfReinitialized() public {
         Strategy[] memory initialStrategies = _createInitialStrategies();
-        string[] memory initialCollectors = _createInitialCollectors();
+        string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(vertex));
-        VertexCore newVertex = vertexFactory.deploy("NewProject", "NP", initialStrategies, initialCollectors, initialPolicies, initialPermissions);
+        VertexCore newVertex = vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
         VertexPolicyNFT _policy = newVertex.policy();
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
-        newVertex.initialize("NewProject", _policy, initialStrategies, initialCollectors);
+        newVertex.initialize("NewProject", _policy, initialStrategies, initialAccounts);
 
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
-        vertexCore.initialize("NewProject", _policy, initialStrategies, initialCollectors);
+        vertexCore.initialize("NewProject", _policy, initialStrategies, initialAccounts);
     }
 
     function _createPolicies() public {
@@ -185,10 +186,10 @@ contract VertexFactoryTest is Test {
         return initialStrategies;
     }
 
-    function _createInitialCollectors() public pure returns (string[] memory) {
-        string[] memory initialCollectors = new string[](2);
-        initialCollectors[0] = "VertexCollector0";
-        initialCollectors[1] = "VertexCollector1";
-        return initialCollectors;
+    function _createInitialAccounts() public pure returns (string[] memory) {
+        string[] memory initialAccounts = new string[](2);
+        initialAccounts[0] = "VertexAccount0";
+        initialAccounts[1] = "VertexAccount1";
+        return initialAccounts;
     }
 }

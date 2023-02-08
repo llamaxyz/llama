@@ -1,5 +1,5 @@
 # IVertexFactory
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/factory/IVertexFactory.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/factory/IVertexFactory.sol)
 
 
 ## Functions
@@ -13,7 +13,7 @@ function deploy(
     string memory name,
     string memory policySymbol,
     Strategy[] memory initialStrategies,
-    string[] memory initialCollectors,
+    string[] memory initialAccounts,
     address[] memory initialPolicyholders,
     bytes8[][] memory initialPermissions
 ) external returns (VertexCore);
@@ -25,7 +25,7 @@ function deploy(
 |`name`|`string`|The name of this Vertex system.|
 |`policySymbol`|`string`|The token symbol for the policy NFT.|
 |`initialStrategies`|`Strategy[]`|The list of initial strategies.|
-|`initialCollectors`|`string[]`|The list of initial collectors.|
+|`initialAccounts`|`string[]`|The list of initial accounts.|
 |`initialPolicyholders`|`address[]`|The list of initial policyholders.|
 |`initialPermissions`|`bytes8[][]`|The list of permissions granted to each initial policyholder.|
 
@@ -40,6 +40,6 @@ function deploy(
 ### VertexCreated
 
 ```solidity
-event VertexCreated(uint256 indexed id, string indexed name);
+event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
 ```
 

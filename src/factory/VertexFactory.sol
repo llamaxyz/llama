@@ -27,7 +27,7 @@ contract VertexFactory is IVertexFactory {
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
-        string[] memory initialCollectors,
+        string[] memory initialAccounts,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions
     ) {
@@ -41,11 +41,11 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
 
         initialVertex = VertexCore(Clones.clone(address(vertexCore)));
-        initialVertex.initialize(name, policy, initialStrategies, initialCollectors);
+        initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(initialVertex));
 
-        emit VertexCreated(0, name);
+        emit VertexCreated(0, name, address(initialVertex));
     }
 
     modifier onlyInitialVertex() {
@@ -57,7 +57,7 @@ contract VertexFactory is IVertexFactory {
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
-        string[] memory initialCollectors,
+        string[] memory initialAccounts,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions
     ) public onlyInitialVertex returns (VertexCore) {
@@ -70,10 +70,10 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
 
         VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
-        vertex.initialize(name, policy, initialStrategies, initialCollectors);
+        vertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
-        emit VertexCreated(previousVertexCount, name);
+        emit VertexCreated(previousVertexCount, name, address(vertex));
 
         return vertex;
     }

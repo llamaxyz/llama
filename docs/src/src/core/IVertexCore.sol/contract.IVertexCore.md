@@ -1,5 +1,5 @@
 # IVertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/c0a7c9f04e342708f9be1f47af1a4e805eea767d/src/core/IVertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/core/IVertexCore.sol)
 
 
 ## Functions
@@ -9,7 +9,7 @@ Initializes a new VertexCore clone.
 
 
 ```solidity
-function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memory initialStrategies, string[] memory initialCollectors) external;
+function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memory initialStrategies, string[] memory initialAccounts) external;
 ```
 **Parameters**
 
@@ -18,7 +18,7 @@ function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memor
 |`name`|`string`|The name of the VertexCore clone.|
 |`policy`|`VertexPolicyNFT`|This Vertex instance's policy contract.|
 |`initialStrategies`|`Strategy[]`|The configuration of the initial strategies.|
-|`initialCollectors`|`string[]`|The configuration of the initial strategies.|
+|`initialAccounts`|`string[]`|The configuration of the initial strategies.|
 
 
 ### createAction
@@ -197,19 +197,19 @@ function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 |`strategies`|`VertexStrategy[]`|list of Strategys to be removed from the mapping of authorized strategies.|
 
 
-### createAndAuthorizeCollectors
+### createAndAuthorizeAccounts
 
-Deploy new collectors and add them to the mapping of authorized collectors.
+Deploy new accounts and add them to the mapping of authorized accounts.
 
 
 ```solidity
-function createAndAuthorizeCollectors(string[] memory collectors) external;
+function createAndAuthorizeAccounts(string[] memory accounts) external;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`collectors`|`string[]`|list of new collectors to be authorized.|
+|`accounts`|`string[]`|list of new accounts to be authorized.|
 
 
 ### getAction
@@ -324,10 +324,10 @@ event StrategiesAuthorized(Strategy[] strategies);
 event StrategiesUnauthorized(VertexStrategy[] strategies);
 ```
 
-### CollectorAuthorized
+### AccountAuthorized
 
 ```solidity
-event CollectorAuthorized(VertexCollector indexed collector, string name);
+event AccountAuthorized(VertexAccount indexed account, string name);
 ```
 
 ## Enums

@@ -1,7 +1,7 @@
 
 
 # Contents
-- [collector](/src/collector)
+- [account](/src/account)
 - [core](/src/core)
 - [factory](/src/factory)
 - [mock](/src/mock)
