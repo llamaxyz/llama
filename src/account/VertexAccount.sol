@@ -48,6 +48,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
         token.safeTransfer(recipient, amount);
     }
 
+    // TODO Look into using safeIncreaseallowance and safeDecreaseallowance instead
     /// @inheritdoc IVertexAccount
     function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         token.safeApprove(recipient, amount);
@@ -57,5 +58,15 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
     function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
         token.transferFrom(address(this), recipient, tokenId);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
+        token.approve(recipient, tokenId);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
+        token.setApprovalForAll(recipient, approved);
     }
 }

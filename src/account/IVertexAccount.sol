@@ -28,4 +28,16 @@ interface IVertexAccount is IERC721Receiver {
     /// @param recipient Transfer's recipient
     /// @param tokenId Token ID to transfer
     function transferERC721(IERC721 token, address recipient, uint256 tokenId) external;
+
+    /// @notice Function for Vertex to give ERC721 allowance to other parties
+    /// @param token The address of the token to give allowance from
+    /// @param recipient Allowance's recipient
+    /// @param tokenId Token ID to give allowance for
+    function approveERC721(IERC721 token, address recipient, uint256 tokenId) external;
+
+    /// @notice Function for Vertex to give ERC721 operator allowance to other parties
+    /// @param token The address of the token to give allowance from
+    /// @param recipient Allowance's recipient
+    /// @param approved Whether to approve or revoke allowance
+    function approveOperatorERC721(IERC721 token, address recipient, bool approved) external;
 }
