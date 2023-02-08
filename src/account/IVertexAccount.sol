@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
 
 interface IVertexAccount is IERC721Receiver {
@@ -21,4 +22,10 @@ interface IVertexAccount is IERC721Receiver {
     /// @param recipient Allowance's recipient
     /// @param amount Allowance to approve
     function approveERC20(IERC20 token, address recipient, uint256 amount) external;
+
+    /// @notice Function for Vertex to transfer ERC721 tokens to other parties
+    /// @param token The address of the token to transfer
+    /// @param recipient Transfer's recipient
+    /// @param tokenId Token ID to transfer
+    function transferERC721(IERC721 token, address recipient, uint256 tokenId) external;
 }
