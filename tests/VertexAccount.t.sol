@@ -7,6 +7,7 @@ import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 
 contract VertexAccountTest is Test {
     // Testing Parameters
@@ -16,6 +17,10 @@ contract VertexAccountTest is Test {
 
     address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
     uint256 public constant ETH_AMOUNT = 1000e18;
+
+    IERC721 public constant BAYC = IERC721(0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D);
+    address public constant BAYC_WHALE = 0x619866736a3a101f65cfF3A8c3d2602fC54Fd749;
+    uint256 public constant BAYC_ID = 27;
 
     // Vertex system
     VertexCore public vertex;
@@ -154,6 +159,22 @@ contract VertexAccountTest is Test {
         accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
+    // // transfer ERC721 unit tests
+    // function test_VertexAccount_transferERC721_TransferBAYC() public {
+    //     _transferNFTToAccount(NFT_ID);
+
+    //     uint256 accountNFTBalance = NFT.balanceOf(address(accounts[0]));
+    //     uint256 whaleNFTBalance = NFT.balanceOf(NFT_WHALE);
+
+    //     // Transfer NFT from account to whale
+    //     vm.startPrank(address(vertex));
+    //     accounts[0].transferERC721(NFT, NFT_WHALE, NFT_ID);
+    //     assertEq(NFT.balanceOf(address(accounts[0])), 0);
+    //     assertEq(NFT.balanceOf(address(accounts[0])), accountNFTBalance - 1);
+    //     assertEq(NFT.balanceOf(NFT_WHALE), whaleNFTBalance + 1);
+    //     vm.stopPrank();
+    // }
+
     /*///////////////////////////////////////////////////////////////
                             Integration tests
     //////////////////////////////////////////////////////////////*/
@@ -185,6 +206,11 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // Test that VertexAccount can receive ERC721 tokens
+    function test_VertexAccount_ReceiveERC721() public {
+        _transferBAYCToAccount(BAYC_ID);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Helpers
     //////////////////////////////////////////////////////////////*/
@@ -212,6 +238,17 @@ contract VertexAccountTest is Test {
         vm.startPrank(USDC_WHALE);
         USDC.transfer(address(accounts[0]), amount);
         assertEq(USDC.balanceOf(address(accounts[0])), amount);
+        vm.stopPrank();
+    }
+
+    function _transferBAYCToAccount(uint256 id) public {
+        assertEq(BAYC.balanceOf(address(accounts[0])), 0);
+        assertEq(BAYC.ownerOf(id), BAYC_WHALE);
+
+        vm.startPrank(BAYC_WHALE);
+        BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), id);
+        assertEq(BAYC.balanceOf(address(accounts[0])), 1);
+        assertEq(BAYC.ownerOf(id), address(accounts[0]));
         vm.stopPrank();
     }
 }
