@@ -208,6 +208,11 @@ contract VertexAccountTest is Test {
         _approveOperatorBAYCToRecipient(false);
     }
 
+    function test_VertexAccount_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Integration tests
     //////////////////////////////////////////////////////////////*/
