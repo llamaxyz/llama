@@ -247,6 +247,24 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // Test that approved ERC721 tokens can be transferred from VertexAccount to a recipient
+    function test_VertexAccount_TransferApprovedERC721() public {
+        _transferBAYCToAccount(BAYC_ID);
+        _approveBAYCToRecipient(BAYC_ID);
+
+        uint256 accountNFTBalance = BAYC.balanceOf(address(accounts[0]));
+        uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
+
+        // Transfer NFT from account to whale
+        vm.startPrank(BAYC_WHALE);
+        BAYC.transferFrom(address(accounts[0]), BAYC_WHALE, BAYC_ID);
+        assertEq(BAYC.balanceOf(address(accounts[0])), 0);
+        assertEq(BAYC.balanceOf(address(accounts[0])), accountNFTBalance - 1);
+        assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 1);
+        assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+        vm.stopPrank();
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Helpers
     //////////////////////////////////////////////////////////////*/
