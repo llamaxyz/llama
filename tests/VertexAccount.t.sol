@@ -159,21 +159,34 @@ contract VertexAccountTest is Test {
         accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
-    // // transfer ERC721 unit tests
-    // function test_VertexAccount_transferERC721_TransferBAYC() public {
-    //     _transferNFTToAccount(NFT_ID);
+    // transfer ERC721 unit tests
+    function test_VertexAccount_transferERC721_TransferBAYC() public {
+        _transferBAYCToAccount(BAYC_ID);
 
-    //     uint256 accountNFTBalance = NFT.balanceOf(address(accounts[0]));
-    //     uint256 whaleNFTBalance = NFT.balanceOf(NFT_WHALE);
+        uint256 accountNFTBalance = BAYC.balanceOf(address(accounts[0]));
+        uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
 
-    //     // Transfer NFT from account to whale
-    //     vm.startPrank(address(vertex));
-    //     accounts[0].transferERC721(NFT, NFT_WHALE, NFT_ID);
-    //     assertEq(NFT.balanceOf(address(accounts[0])), 0);
-    //     assertEq(NFT.balanceOf(address(accounts[0])), accountNFTBalance - 1);
-    //     assertEq(NFT.balanceOf(NFT_WHALE), whaleNFTBalance + 1);
-    //     vm.stopPrank();
-    // }
+        // Transfer NFT from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].transferERC721(BAYC, BAYC_WHALE, BAYC_ID);
+        assertEq(BAYC.balanceOf(address(accounts[0])), 0);
+        assertEq(BAYC.balanceOf(address(accounts[0])), accountNFTBalance - 1);
+        assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 1);
+        assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+        vm.stopPrank();
+    }
+
+    function test_VertexAccount_transferERC721_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].transferERC721(BAYC, BAYC_WHALE, BAYC_ID);
+    }
+
+    function test_VertexAccount_transferERC721_RevertIfToZeroAddress() public {
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+        accounts[0].transferERC721(BAYC, payable(address(0)), BAYC_ID);
+        vm.stopPrank();
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Integration tests
