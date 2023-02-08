@@ -7,7 +7,7 @@ import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {getChainId} from "src/utils/Helpers.sol";
-import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -109,7 +109,7 @@ contract VertexCore is IVertexCore, Initializable {
     function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
-        Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
+        PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
         if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
 

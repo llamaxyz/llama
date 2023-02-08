@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {Permission, Checkpoint} from "src/utils/Structs.sol";
+import {PermissionData, Checkpoint} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -117,14 +117,14 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @dev hashes a permission
-    /// @param permission the permission to hash
-    function hashPermission(Permission calldata permission) public pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(permission.target, permission.selector, permission.strategy)));
+    /// @param _permission the permission to hash
+    function hashPermission(PermissionData calldata _permission) public pure returns (bytes8) {
+        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.selector, _permission.strategy)));
     }
 
     /// @dev hashes an array of permissions
     /// @param _permissions the permissions array to hash
-    function hashPermissions(Permission[] calldata _permissions) public pure returns (bytes8[] memory) {
+    function hashPermissions(PermissionData[] calldata _permissions) public pure returns (bytes8[] memory) {
         uint256 length = _permissions.length;
         bytes8[] memory output = new bytes8[](length);
         unchecked {

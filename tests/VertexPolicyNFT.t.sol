@@ -6,15 +6,15 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {PermissionData} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
     VertexPolicyNFT public vertexPolicyNFT;
 
-    Permission public permission;
-    Permission[] public permissions;
-    Permission[][] public permissionsArray;
+    PermissionData public permission;
+    PermissionData[] public permissions;
+    PermissionData[][] public permissionsArray;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
@@ -27,7 +27,7 @@ contract VertexPolicyNFTTest is Test {
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
     function generateGenericPermissionArray() internal {
-        permission = Permission(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
+        permission = PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
         permissions.push(permission);
         permissionsArray.push(permissions);
         permissionSignature.push(vertexPolicyNFT.hashPermissions(permissions)[0]);
@@ -120,7 +120,7 @@ contract VertexPolicyNFTTest is Test {
         bytes8 oldPermissionSignature = permissionSignature[0];
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
 
-        permission = Permission(address(0xdeadbeefdeadbeef), bytes4(0x09090909), VertexStrategy(address(0xdeadbeefdeadbeefdeafbeef)));
+        permission = PermissionData(address(0xdeadbeefdeadbeef), bytes4(0x09090909), VertexStrategy(address(0xdeadbeefdeadbeefdeafbeef)));
         permissions[0] = permission;
         permissionsArray[0] = permissions;
         permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];

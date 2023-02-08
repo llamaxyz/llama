@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {Permission} from "src/utils/Structs.sol";
+import {PermissionData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PermissionsAdded(uint256[] users, Permission[] permissions, bytes8[] permissionSignatures);
+    event PermissionsAdded(uint256[] users, PermissionData[] permissions, bytes8[] permissionSignatures);
     event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 
     error SoulboundToken();
