@@ -188,6 +188,17 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // approve ERC721 unit tests
+    function test_VertexAccount_approveERC721_ApproveBAYC() public {
+        _transferBAYCToAccount(BAYC_ID);
+        _approveBAYCToRecipient(BAYC_ID);
+    }
+
+    function test_VertexAccount_approveERC721_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].approveERC721(BAYC, BAYC_WHALE, BAYC_ID);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Integration tests
     //////////////////////////////////////////////////////////////*/
@@ -240,13 +251,6 @@ contract VertexAccountTest is Test {
                             Helpers
     //////////////////////////////////////////////////////////////*/
 
-    function _approveUSDCToRecipient(uint256 amount) public {
-        vm.startPrank(address(vertex));
-        accounts[0].approveERC20(USDC, USDC_WHALE, amount);
-        assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), amount);
-        vm.stopPrank();
-    }
-
     function _transferETHToAccount(uint256 amount) public {
         assertEq(address(accounts[0]).balance, 0);
 
@@ -266,6 +270,13 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    function _approveUSDCToRecipient(uint256 amount) public {
+        vm.startPrank(address(vertex));
+        accounts[0].approveERC20(USDC, USDC_WHALE, amount);
+        assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), amount);
+        vm.stopPrank();
+    }
+
     function _transferBAYCToAccount(uint256 id) public {
         assertEq(BAYC.balanceOf(address(accounts[0])), 0);
         assertEq(BAYC.ownerOf(id), BAYC_WHALE);
@@ -274,6 +285,13 @@ contract VertexAccountTest is Test {
         BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), id);
         assertEq(BAYC.balanceOf(address(accounts[0])), 1);
         assertEq(BAYC.ownerOf(id), address(accounts[0]));
+        vm.stopPrank();
+    }
+
+    function _approveBAYCToRecipient(uint256 id) public {
+        vm.startPrank(address(vertex));
+        accounts[0].approveERC721(BAYC, BAYC_WHALE, id);
+        assertEq(BAYC.getApproved(id), BAYC_WHALE);
         vm.stopPrank();
     }
 }
