@@ -211,6 +211,18 @@ contract VertexAccountTest is Test {
         _transferBAYCToAccount(BAYC_ID);
     }
 
+    // Test that VertexAccount can safe receive ERC721 tokens
+    function test_VertexAccount_SafeReceiveERC721() public {
+        assertEq(BAYC.balanceOf(address(accounts[0])), 0);
+        assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+
+        vm.startPrank(BAYC_WHALE);
+        BAYC.safeTransferFrom(BAYC_WHALE, address(accounts[0]), BAYC_ID);
+        assertEq(BAYC.balanceOf(address(accounts[0])), 1);
+        assertEq(BAYC.ownerOf(BAYC_ID), address(accounts[0]));
+        vm.stopPrank();
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Helpers
     //////////////////////////////////////////////////////////////*/
