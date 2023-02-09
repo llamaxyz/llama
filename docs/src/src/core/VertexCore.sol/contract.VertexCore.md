@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/6c2711ddcfd18478ed9aaa1452683c650813cd72/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
