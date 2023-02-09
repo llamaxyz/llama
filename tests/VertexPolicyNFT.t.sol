@@ -193,4 +193,15 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
         assertEq(vertexPolicyNFT.checkExpiration(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
     }
+
+    function test_grantPermissions_GrantsTokenWithExpiration() public {
+        uint256[] memory newExpirationTimestamp = new uint256[](1);
+        newExpirationTimestamp[0] = block.timestamp + 1 days;
+        expirationTimestamps.push(newExpirationTimestamp);
+        address[] memory newAddresses = new address[](1);
+        newAddresses[0] = address(0xdeadbeef);
+        addresses = newAddresses;
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(address(0xdeadbeef))), permissionSignature[0]), newExpirationTimestamp[0]);
+    }
 }
