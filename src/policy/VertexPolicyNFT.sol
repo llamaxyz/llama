@@ -12,6 +12,7 @@ import {PermissionData, Checkpoint} from "src/utils/Structs.sol";
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 contract VertexPolicyNFT is VertexPolicy {
     mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
+    mapping(uint256 => mapping(bytes8 => uint256)) public tokenToPermissionExpirationTimestamp;
     mapping(uint256 => Checkpoint[]) private checkpoints;
     uint256[] public policyIds;
     string public baseURI;
@@ -24,16 +25,24 @@ contract VertexPolicyNFT is VertexPolicy {
         _;
     }
 
-    constructor(string memory name, string memory symbol, address _vertexFactory, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
-        ERC721(name, symbol)
-    {
+    constructor(
+        string memory name,
+        string memory symbol,
+        address _vertexFactory,
+        address[] memory initialPolicyholders,
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
+    ) ERC721(name, symbol) {
         vertexFactory = _vertexFactory;
         if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
             uint256 policyholderLength = initialPolicyholders.length;
             uint256 permissionsLength = initialPermissions.length;
-            if (policyholderLength != permissionsLength) revert InvalidInput();
+            uint256 expirationsLength = initialExpirationTimestamps.length;
+            if (policyholderLength != permissionsLength && (expirationsLength == 0 || expirationsLength != policyholderLength)) revert InvalidInput();
             for (uint256 i = 0; i < policyholderLength; ++i) {
-                grantPermissions(initialPolicyholders[i], initialPermissions[i]);
+                uint256[] memory expiration;
+                if (expirationsLength > 0) expiration = initialExpirationTimestamps[i];
+                grantPermissions(initialPolicyholders[i], initialPermissions[i], expiration);
             }
         }
     }
@@ -86,21 +95,35 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public override onlyVertex {
+    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps)
+        public
+        override
+        onlyVertex
+    {
         uint256 length = userPermissions.length;
-        if (length == 0 || length != to.length) revert InvalidInput();
+        if (length == 0 || length != to.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) {
+            revert InvalidInput();
+        }
         for (uint256 i = 0; i < length; ++i) {
-            grantPermissions(to[i], userPermissions[i]);
+            uint256[] memory expiration;
+            if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
+            grantPermissions(to[i], userPermissions[i], expiration);
         }
     }
 
     /// @inheritdoc VertexPolicy
-    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions) public override onlyVertex {
+    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps)
+        public
+        override
+        onlyVertex
+    {
         uint256 length = _policyIds.length;
-        if (length != permissions.length) revert InvalidInput();
+        if (length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                updatePermissions(_policyIds[i], permissions[i]);
+                uint256[] memory expiration;
+                if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
+                updatePermissions(_policyIds[i], permissions[i], expiration);
             }
         }
     }
@@ -150,18 +173,21 @@ contract VertexPolicyNFT is VertexPolicy {
                 max = mid - 1;
             }
         }
-        return permissionSignatures[min] == permissionSignature;
+        bool notExpired = checkExpiration(policyId, permissionSignatures[min]);
+        return permissionSignatures[min] == permissionSignature && notExpired;
     }
 
     /// @notice updates a policyID with a new set of permissions
     /// @notice will delete and add permissions as needed
     /// @param policyId the policy token id being updated
     /// @param newPermissionSignatures the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures) private onlyVertex {
+    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures, uint256[] calldata expirationTimestamps) private onlyVertex {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
         bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
         uint256 permissionSignaturesLength = permissionSignatures.length;
         uint256 newPermissionSignaturesLength = newPermissionSignatures.length;
+        uint256 expirationTimestampsLength = expirationTimestamps.length;
+        if (expirationTimestampsLength != 0 && newPermissionSignaturesLength != expirationTimestampsLength) revert InvalidInput();
         bytes8[] memory permissionsToRemove = new bytes8[](permissionSignaturesLength);
         uint256 permissionsToRemoveIndex;
         unchecked {
@@ -176,6 +202,10 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             for (uint256 k; k < newPermissionSignaturesLength; ++k) {
                 if (!permissionIsInPermissionsArray(permissionSignatures, newPermissionSignatures[k])) {
+                    uint256 expiration = expirationTimestamps.length > 0 ? expirationTimestamps[k] : 0;
+                    if (expiration > 0) {
+                        tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]] = expiration;
+                    }
                     sortedPermissionInsert(permissionSignatures, newPermissionSignatures[k]);
                 }
             }
@@ -186,18 +216,23 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice mints a new policy token with the given permissions
     /// @param to the address to mint the policy token to
     /// @param permissionSignatures the permission signature's to be granted to the policyholder
-    function grantPermissions(address to, bytes8[] memory permissionSignatures) private {
+    /// @param expirationTimestamp the expiration timestamp for each permission signature in the permissionSignatures array
+    function grantPermissions(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private {
         if (balanceOf(to) != 0) revert OnlyOnePolicyPerHolder();
         uint256 length = permissionSignatures.length;
-        if (length == 0) revert InvalidInput();
+        if (length == 0 || (expirationTimestamp.length != 0 && expirationTimestamp.length != length)) revert InvalidInput();
         uint256 policyId = uint256(uint160(to));
         unchecked {
-            ++_totalSupply;
             for (uint256 i = 0; i < length; ++i) {
                 if (!hasPermission(policyId, permissionSignatures[i])) {
-                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
+                    uint256 expiration = expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
+                    if (expiration > 0) {
+                        tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[i]] = expiration;
+                    }
+                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i], expiration);
                 }
             }
+            ++_totalSupply;
             policyIds.push(policyId);
             checkpoints[policyId].push(Checkpoint(block.number, permissionSignatures));
             _mint(to, policyId);
@@ -297,6 +332,15 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         return policyPermissionSignatures[min] == permissionSignature;
+    }
+
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) internal returns (bool) {
+        uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
+        if (expiration == 0 || expiration > block.timestamp) return true;
+        if (block.timestamp > expiration) {
+            revokePermissions(policyId, permissionSignature);
+            return false;
+        }
     }
 
     /// @notice sets the base URI for the contract
