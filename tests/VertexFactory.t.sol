@@ -41,6 +41,7 @@ contract VertexFactoryTest is Test {
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
+    uint256[][] public initialExpirationTimestamps;
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -116,7 +117,8 @@ contract VertexFactoryTest is Test {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(vertex));
-        VertexCore newVertex = vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        VertexCore newVertex =
+            vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         VertexPolicyNFT _policy = newVertex.policy();
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
         newVertex.initialize("NewProject", _policy, initialStrategies, initialAccounts);

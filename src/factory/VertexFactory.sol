@@ -29,7 +29,8 @@ contract VertexFactory is IVertexFactory {
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
         address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
     ) {
         vertexCore = _vertexCore;
 
@@ -38,7 +39,8 @@ contract VertexFactory is IVertexFactory {
         }
 
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
+        VertexPolicyNFT policy =
+            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
         initialVertex = VertexCore(Clones.clone(address(vertexCore)));
         initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
@@ -59,7 +61,8 @@ contract VertexFactory is IVertexFactory {
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
         address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
     ) public onlyInitialVertex returns (VertexCore) {
         uint256 previousVertexCount = vertexCount;
         unchecked {
@@ -67,7 +70,8 @@ contract VertexFactory is IVertexFactory {
         }
 
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy = VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions));
+        VertexPolicyNFT policy =
+            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
         VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
         vertex.initialize(name, policy, initialStrategies, initialAccounts);
