@@ -106,7 +106,9 @@ contract VertexPolicyNFT is VertexPolicy {
         }
         for (uint256 i = 0; i < length; ++i) {
             uint256[] memory expiration;
-            if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
+            if (expirationTimestamps.length > 0) {
+                expiration = expirationTimestamps[i];
+            }
             grantPermissions(to[i], userPermissions[i], expiration);
         }
     }
@@ -122,7 +124,9 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 uint256[] memory expiration;
-                if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
+                if (expirationTimestamps.length > 0) {
+                    expiration = expirationTimestamps[i];
+                }
                 updatePermissions(_policyIds[i], permissions[i], expiration);
             }
         }
@@ -335,17 +339,18 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public returns (bool) {
-        bool expired = _checkExpiration(policyId, permissionSignature);
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public returns (bool expired) {
+        expired = _checkExpiration(policyId, permissionSignature);
         if (expired) {
             sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);
         }
+        return expired;
     }
 
     ///@notice checks if a permission has expired
     ///@param policyId the id of the policy token to check
     ///@param permissionSignature the signature of the permission to check
-    function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool) {
+    function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool expired) {
         uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
         if (expiration == 0 || expiration > block.timestamp) return false;
         if (block.timestamp > expiration) {
