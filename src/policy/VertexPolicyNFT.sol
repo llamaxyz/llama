@@ -205,13 +205,18 @@ contract VertexPolicyNFT is VertexPolicy {
                 sortedPermissionRemove(permissionSignatures, permissionsToRemove[j]);
             }
             for (uint256 k; k < newPermissionSignaturesLength; ++k) {
-                if (!permissionIsInPermissionsArray(permissionSignatures, newPermissionSignatures[k])) {
-                    uint256 expiration = expirationTimestamps.length > 0 ? expirationTimestamps[k] : 0;
+                bool permissionIsInArray = permissionIsInPermissionsArray(permissionSignatures, newPermissionSignatures[k]);
+                uint256 expiration = expirationTimestamps.length > 0 ? expirationTimestamps[k] : 0;
+                if (!permissionIsInArray) {
                     if (expiration > 0) {
                         tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]] = expiration;
                     }
                     sortedPermissionInsert(permissionSignatures, newPermissionSignatures[k]);
                 }
+                if (permissionIsInArray && expiration != tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]]) {
+                    tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]] = expiration;
+                }
+                tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[k]] = expiration;
             }
         }
         checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: permissionSignatures}));

@@ -17,6 +17,7 @@ contract VertexPolicyNFTTest is Test {
     PermissionData[][] public permissionsArray;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
+    uint256[][] public expirationTimestamps;
     address[] public addresses;
     uint256[] public policyIds;
 
@@ -145,6 +146,15 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, initialExpirationTimestamps);
     }
 
+    function test_batchUpdatePermissions_updatesTimeStamp() public {
+        uint256[] memory newExpirationTimestamp = new uint256[](1);
+        newExpirationTimestamp[0] = block.timestamp + 1 days;
+        expirationTimestamps.push(newExpirationTimestamp);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
+        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, expirationTimestamps);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
+    }
+
     function test_tokenURI_ReturnsCorrectURI() public {
         string memory baseURI = "https://vertex.link/policy/";
         vertexPolicyNFT.setBaseURI(baseURI);
@@ -165,5 +175,22 @@ contract VertexPolicyNFTTest is Test {
         vm.prank(address(0xdeadbeef));
         vm.expectRevert(VertexPolicy.OnlyVertex.selector);
         vertexPolicyNFT.setBaseURI(baseURI);
+    }
+
+    function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
+        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
+
+        uint256[] memory newExpirationTimestamp = new uint256[](1);
+        newExpirationTimestamp[0] = block.timestamp + 1 days;
+        expirationTimestamps.push(newExpirationTimestamp);
+        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, expirationTimestamps);
+
+        vm.warp(block.timestamp + 2 days);
+
+        assertEq(newExpirationTimestamp[0] < block.timestamp, true);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
+        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
+        assertEq(vertexPolicyNFT.checkExpiration(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
     }
 }
