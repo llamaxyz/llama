@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/f39460fcaaa81cdf1a41d9edafc15a0f0252faef/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -17,6 +17,13 @@ The permissions determine how the token can interact with the vertex administrat
 
 ```solidity
 mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
+```
+
+
+### tokenToPermissionExpirationTimestamp
+
+```solidity
+mapping(uint256 => mapping(bytes8 => uint256)) public tokenToPermissionExpirationTimestamp;
 ```
 
 
@@ -74,8 +81,14 @@ modifier onlyVertex();
 
 
 ```solidity
-constructor(string memory name, string memory symbol, address _vertexFactory, address[] memory initialPolicyholders, bytes8[][] memory initialPermissions)
-    ERC721(name, symbol);
+constructor(
+    string memory name,
+    string memory symbol,
+    address _vertexFactory,
+    address[] memory initialPolicyholders,
+    bytes8[][] memory initialPermissions,
+    uint256[][] memory initialExpirationTimestamps
+) ERC721(name, symbol);
 ```
 
 ### setVertex
@@ -123,7 +136,7 @@ mints multiple policy token with the given permissions
 
 
 ```solidity
-function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public override onlyVertex;
+function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public override onlyVertex;
 ```
 **Parameters**
 
@@ -131,22 +144,27 @@ function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPerm
 |----|----|-----------|
 |`to`|`address[]`|the addresses to mint the policy token to|
 |`userPermissions`|`bytes8[][]`|the permissions to be granted to the policy token|
+|`expirationTimestamps`|`uint256[][]`|the expiration timestamps to be set for the policy token|
 
 
 ### batchUpdatePermissions
 
-burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+updates the permissions for a policy token
 
 
 ```solidity
-function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions) public override onlyVertex;
+function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps)
+    public
+    override
+    onlyVertex;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_policyIds`|`uint256[]`||
+|`_policyIds`|`uint256[]`|the policy token id being altered|
 |`permissions`|`bytes8[][]`|the new permissions array to be set|
+|`expirationTimestamps`|`uint256[][]`|the new expiration timestamps array to be set|
 
 
 ### batchRevokePermissions
@@ -170,13 +188,13 @@ function batchRevokePermissions(uint256[] calldata _policyIds) public override o
 
 
 ```solidity
-function hashPermission(Permission calldata permission) public pure returns (bytes8);
+function hashPermission(PermissionData calldata _permission) public pure returns (bytes8);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`permission`|`Permission`|the permission to hash|
+|`_permission`|`PermissionData`|the permission to hash|
 
 
 ### hashPermissions
@@ -185,13 +203,13 @@ function hashPermission(Permission calldata permission) public pure returns (byt
 
 
 ```solidity
-function hashPermissions(Permission[] calldata _permissions) public pure returns (bytes8[] memory);
+function hashPermissions(PermissionData[] calldata _permissions) public pure returns (bytes8[] memory);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`_permissions`|`Permission[]`|the permissions array to hash|
+|`_permissions`|`PermissionData[]`|the permissions array to hash|
 
 
 ### hasPermission
@@ -218,7 +236,7 @@ will delete and add permissions as needed
 
 
 ```solidity
-function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures) private onlyVertex;
+function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures, uint256[] memory expirationTimestamps) private onlyVertex;
 ```
 **Parameters**
 
@@ -226,6 +244,7 @@ function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSign
 |----|----|-----------|
 |`policyId`|`uint256`|the policy token id being updated|
 |`newPermissionSignatures`|`bytes8[]`|the new permissions array to be set|
+|`expirationTimestamps`|`uint256[]`||
 
 
 ### grantPermissions
@@ -234,7 +253,7 @@ mints a new policy token with the given permissions
 
 
 ```solidity
-function grantPermissions(address to, bytes8[] memory permissionSignatures) private;
+function grantPermissions(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private;
 ```
 **Parameters**
 
@@ -242,6 +261,7 @@ function grantPermissions(address to, bytes8[] memory permissionSignatures) priv
 |----|----|-----------|
 |`to`|`address`|the address to mint the policy token to|
 |`permissionSignatures`|`bytes8[]`|the permission signature's to be granted to the policyholder|
+|`expirationTimestamp`|`uint256[]`|the expiration timestamp for each permission signature in the permissionSignatures array|
 
 
 ### revokePermissions
@@ -286,6 +306,38 @@ function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatu
 ```solidity
 function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
 ```
+
+### checkExpiration
+
+Check if a holder has an expired permissionSignature and removes their permission if it is expired
+
+
+```solidity
+function checkExpiration(uint256 policyId, bytes8 permissionSignature) public override returns (bool expired);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the address of the policy holder|
+|`permissionSignature`|`bytes8`|the signature of the permission|
+
+
+### _checkExpiration
+
+checks if a permission has expired
+
+
+```solidity
+function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool expired);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the id of the policy token to check|
+|`permissionSignature`|`bytes8`|the signature of the permission to check|
+
 
 ### setBaseURI
 

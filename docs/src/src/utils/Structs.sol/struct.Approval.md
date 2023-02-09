@@ -1,5 +1,5 @@
 # Approval
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/utils/Structs.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/f39460fcaaa81cdf1a41d9edafc15a0f0252faef/src/utils/Structs.sol)
 
 
 ```solidity
