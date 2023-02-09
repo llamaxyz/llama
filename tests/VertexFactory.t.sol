@@ -67,7 +67,8 @@ contract VertexFactoryTest is Test {
         string[] memory initialAccounts = _createInitialAccounts();
 
         // Deploy vertex and mock protocol
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -101,7 +102,7 @@ contract VertexFactoryTest is Test {
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
         emit VertexCreated(1, "NewProject", deployedVertex);
-        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
     function testFuzz_deploy_RevertIfNotInitialVertex(address notInitialVertex) public {
@@ -110,7 +111,7 @@ contract VertexFactoryTest is Test {
         string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(notInitialVertex));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
     function test_deploy_RevertIfReinitialized() public {
@@ -148,7 +149,7 @@ contract VertexFactoryTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
+        policy.batchGrantPermissions(addresses, permissionSignatures, initialExpirationTimestamps);
         vm.stopPrank();
     }
 

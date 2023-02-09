@@ -25,6 +25,7 @@ contract VertexAccountTest is Test {
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
+    uint256[][] public initialExpirationTimestamps;
 
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
@@ -68,7 +69,8 @@ contract VertexAccountTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
 
         // Use create2 to get vertex account addresses

@@ -21,6 +21,7 @@ interface IVertexFactory {
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
         address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
     ) external returns (VertexCore);
 }

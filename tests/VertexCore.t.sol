@@ -36,6 +36,7 @@ contract VertexCoreTest is Test {
     PermissionData[] public permissions;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
+    uint256[][] public expirationTimestamps;
     address[] public addresses;
     uint256[] public policyIds;
 
@@ -94,7 +95,8 @@ contract VertexCoreTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+            new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -786,7 +788,7 @@ contract VertexCoreTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
+        policy.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
         vm.stopPrank();
     }
 

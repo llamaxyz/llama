@@ -121,7 +121,7 @@ contract VertexPolicyNFT is VertexPolicy {
         if (length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                uint256[] calldata expiration;
+                uint256[] memory expiration;
                 if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
                 updatePermissions(_policyIds[i], permissions[i], expiration);
             }
@@ -173,15 +173,15 @@ contract VertexPolicyNFT is VertexPolicy {
                 max = mid - 1;
             }
         }
-        bool notExpired = checkExpiration(policyId, permissionSignatures[min]);
-        return permissionSignatures[min] == permissionSignature && notExpired;
+        bool expired = _checkExpiration(policyId, permissionSignatures[min]);
+        return permissionSignatures[min] == permissionSignature && !expired;
     }
 
     /// @notice updates a policyID with a new set of permissions
     /// @notice will delete and add permissions as needed
     /// @param policyId the policy token id being updated
     /// @param newPermissionSignatures the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures, uint256[] calldata expirationTimestamps) private onlyVertex {
+    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures, uint256[] memory expirationTimestamps) private onlyVertex {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
         bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
         uint256 permissionSignaturesLength = permissionSignatures.length;
@@ -224,6 +224,7 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 policyId = uint256(uint160(to));
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
+                checkExpiration(policyId, permissionSignatures[i]);
                 if (!hasPermission(policyId, permissionSignatures[i])) {
                     uint256 expiration = expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
                     if (expiration > 0) {
@@ -334,12 +335,21 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) private returns (bool) {
-        uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
-        if (expiration == 0 || expiration > block.timestamp) return true;
-        if (block.timestamp > expiration) {
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public returns (bool) {
+        bool expired = _checkExpiration(policyId, permissionSignature);
+        if (expired) {
             sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);
-            return false;
+        }
+    }
+
+    ///@notice checks if a permission has expired
+    ///@param policyId the id of the policy token to check
+    ///@param permissionSignature the signature of the permission to check
+    function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool) {
+        uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
+        if (expiration == 0 || expiration > block.timestamp) return false;
+        if (block.timestamp > expiration) {
+            return true;
         }
     }
 
