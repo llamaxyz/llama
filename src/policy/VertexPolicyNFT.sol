@@ -344,7 +344,8 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public returns (bool expired) {
+    /// @inheritdoc VertexPolicy
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public override returns (bool expired) {
         expired = _checkExpiration(policyId, permissionSignature);
         if (expired) {
             sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);

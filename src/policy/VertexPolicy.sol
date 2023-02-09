@@ -37,6 +37,11 @@ abstract contract VertexPolicy is ERC721 {
     /// @param blockNumber the block number to query
     function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool);
 
+    /// @notice Check if a holder has an expired permissionSignature and removes their permission if it is expired
+    /// @param policyId the address of the policy holder
+    /// @param permissionSignature the signature of the permission
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public virtual returns (bool expired);
+
     /// @notice sets the base URI for the contract
     /// @param _baseURI the base URI string to set
     function setBaseURI(string calldata _baseURI) public virtual;
