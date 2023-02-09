@@ -231,7 +231,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
