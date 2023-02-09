@@ -14,6 +14,7 @@ abstract contract VertexPolicy is ERC721 {
     error OnlyOnePolicyPerHolder();
     error OnlyVertexFactory();
     error AlreadyInitialized();
+    error Expired();
 
     /// @notice updates the permissions for a policy token
     /// @param _policyIds the policy token id being altered

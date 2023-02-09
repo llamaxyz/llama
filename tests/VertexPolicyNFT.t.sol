@@ -204,4 +204,23 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(address(0xdeadbeef))), permissionSignature[0]), newExpirationTimestamp[0]);
     }
+
+    function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
+        uint256[] memory newExpirationTimestamp = new uint256[](1);
+        newExpirationTimestamp[0] = block.timestamp;
+        expirationTimestamps.push(newExpirationTimestamp);
+        address[] memory newAddresses = new address[](1);
+        newAddresses[0] = address(0xdeadbeef);
+        addresses = newAddresses;
+
+        vm.warp(block.timestamp + 1 days);
+
+        vm.expectRevert(VertexPolicy.Expired.selector);
+        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
+        newExpirationTimestamp[0] = block.timestamp - 1 seconds;
+        expirationTimestamps[0] = newExpirationTimestamp;
+        assertEq(block.timestamp > newExpirationTimestamp[0], true);
+        vm.expectRevert(VertexPolicy.Expired.selector);
+        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, expirationTimestamps);
+    }
 }
