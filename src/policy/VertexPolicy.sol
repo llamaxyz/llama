@@ -15,15 +15,17 @@ abstract contract VertexPolicy is ERC721 {
     error OnlyVertexFactory();
     error AlreadyInitialized();
 
-    /// @notice burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
-    /// @param policyIds the policy token id being altered
+    /// @notice updates the permissions for a policy token
+    /// @param _policyIds the policy token id being altered
     /// @param permissions the new permissions array to be set
-    function batchUpdatePermissions(uint256[] calldata policyIds, bytes8[][] calldata permissions) public virtual;
+    /// @param expirationTimestamps the new expiration timestamps array to be set
+    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
     /// @param userPermissions the permissions to be granted to the policy token
-    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public virtual;
+    /// @param expirationTimestamps the expiration timestamps to be set for the policy token
+    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
     /// @param policyIds the ids of the policy tokens to revoke permissions from

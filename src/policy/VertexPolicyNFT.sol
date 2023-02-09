@@ -121,7 +121,7 @@ contract VertexPolicyNFT is VertexPolicy {
         if (length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                uint256[] memory expiration;
+                uint256[] calldata expiration;
                 if (expirationTimestamps[i].length > 0) expiration = expirationTimestamps[i];
                 updatePermissions(_policyIds[i], permissions[i], expiration);
             }
@@ -229,7 +229,7 @@ contract VertexPolicyNFT is VertexPolicy {
                     if (expiration > 0) {
                         tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[i]] = expiration;
                     }
-                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i], expiration);
+                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
                 }
             }
             ++_totalSupply;
@@ -334,11 +334,11 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) internal returns (bool) {
+    function checkExpiration(uint256 policyId, bytes8 permissionSignature) private returns (bool) {
         uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
         if (expiration == 0 || expiration > block.timestamp) return true;
         if (block.timestamp > expiration) {
-            revokePermissions(policyId, permissionSignature);
+            sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);
             return false;
         }
     }
