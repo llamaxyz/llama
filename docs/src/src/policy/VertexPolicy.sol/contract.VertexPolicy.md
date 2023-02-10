@@ -1,5 +1,5 @@
 # VertexPolicy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/policy/VertexPolicy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/policy/VertexPolicy.sol)
 
 **Inherits:**
 ERC721
@@ -8,18 +8,19 @@ ERC721
 ## Functions
 ### batchUpdatePermissions
 
-burns and then mints tokens with the same policy IDs to the same addressed with a new set of permissions for each
+updates the permissions for a policy token
 
 
 ```solidity
-function batchUpdatePermissions(uint256[] calldata policyIds, bytes8[][] calldata permissions) public virtual;
+function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps) public virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`policyIds`|`uint256[]`|the policy token id being altered|
+|`_policyIds`|`uint256[]`|the policy token id being altered|
 |`permissions`|`bytes8[][]`|the new permissions array to be set|
+|`expirationTimestamps`|`uint256[][]`|the new expiration timestamps array to be set|
 
 
 ### batchGrantPermissions
@@ -28,7 +29,7 @@ mints multiple policy token with the given permissions
 
 
 ```solidity
-function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions) public virtual;
+function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
 ```
 **Parameters**
 
@@ -36,6 +37,7 @@ function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPerm
 |----|----|-----------|
 |`to`|`address[]`|the addresses to mint the policy token to|
 |`userPermissions`|`bytes8[][]`|the permissions to be granted to the policy token|
+|`expirationTimestamps`|`uint256[][]`|the expiration timestamps to be set for the policy token|
 
 
 ### batchRevokePermissions
@@ -68,6 +70,22 @@ function holderHasPermissionAt(address policyholder, bytes8 permissionSignature,
 |`policyholder`|`address`|the address of the policy holder|
 |`permissionSignature`|`bytes8`|the signature of the permission|
 |`blockNumber`|`uint256`|the block number to query|
+
+
+### checkExpiration
+
+Check if a holder has an expired permissionSignature and removes their permission if it is expired
+
+
+```solidity
+function checkExpiration(uint256 policyId, bytes8 permissionSignature) public virtual returns (bool expired);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`policyId`|`uint256`|the address of the policy holder|
+|`permissionSignature`|`bytes8`|the signature of the permission|
 
 
 ### setBaseURI
@@ -144,7 +162,7 @@ function hasPermission(uint256 policyId, bytes8 permissionSignature) public view
 ### PermissionsAdded
 
 ```solidity
-event PermissionsAdded(uint256[] users, Permission[] permissions, bytes8[] permissionSignatures);
+event PermissionsAdded(uint256[] users, PermissionData[] permissions, bytes8[] permissionSignatures);
 ```
 
 ### PermissionsDeleted
@@ -188,5 +206,11 @@ error OnlyVertexFactory();
 
 ```solidity
 error AlreadyInitialized();
+```
+
+### Expired
+
+```solidity
+error Expired();
 ```
 

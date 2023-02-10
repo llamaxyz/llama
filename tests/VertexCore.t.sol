@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -32,10 +32,11 @@ contract VertexCoreTest is Test {
     bytes4 public constant pauseSelector = 0x02329a29;
     bytes4 public constant failSelector = 0xa9cc4718;
 
-    Permission public permission;
-    Permission[] public permissions;
+    PermissionData public permission;
+    PermissionData[] public permissions;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
+    uint256[][] public expirationTimestamps;
     address[] public addresses;
     uint256[] public policyIds;
 
@@ -94,7 +95,8 @@ contract VertexCoreTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+            new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -767,13 +769,13 @@ contract VertexCoreTest is Test {
 
     function _createPolicies() public {
         vm.startPrank(address(vertex));
-        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
+        permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
         for (uint256 i; i < 5; i++) {
             if (i == 0) {
                 bytes8[] memory creatorPermissions = new bytes8[](2);
-                Permission memory failPermission = Permission({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
                 creatorPermissions[0] = policy.hashPermission(failPermission);
                 creatorPermissions[1] = policy.hashPermission(permission);
                 permissionSignatures.push(creatorPermissions);
@@ -786,7 +788,7 @@ contract VertexCoreTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
+        policy.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
         vm.stopPrank();
     }
 

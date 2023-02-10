@@ -12,18 +12,18 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4929764                                     | 24848           |         |         |         |         |
+| 4864074                                     | 24520           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 384             | 384     | 384     | 384     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-| createAction                                | 2981            | 195096  | 236214  | 238773  | 27      |
+| createAction                                | 2981            | 199351  | 240433  | 242942  | 27      |
 | createAndAuthorizeAccounts                  | 1755851         | 1755851 | 1755851 | 1755851 | 1       |
-| createAndAuthorizeStrategies                | 2661967         | 2661967 | 2661967 | 2661967 | 1       |
+| createAndAuthorizeStrategies                | 2662148         | 2662148 | 2662148 | 2662148 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 9223            | 2892316 | 2993309 | 3196820 | 49      |
+| initialize                                  | 9330            | 2892423 | 2993416 | 3196927 | 49      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
@@ -35,32 +35,34 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 9379368                                              | 38797           |         |         |         |         |
+| 10265552                                             | 44925           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9422            | 3768052 | 5647367 | 5647367 | 3       |
-| initialVertex                                        | 183             | 183     | 183     | 183     | 45      |
+| deploy                                               | 9832            | 3954319 | 5926563 | 5926563 | 3       |
+| initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
 |---------------------------------------------------------|-----------------|--------|---------|---------|---------|
 | Deployment Cost                                         | Deployment Size |        |         |         |         |
-| 2322554                                                 | 15393           |        |         |         |         |
+| 2599796                                                 | 18060           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 651             | 651    | 651     | 651     | 2       |
-| batchGrantPermissions                                   | 3197            | 736709 | 1076780 | 1076780 | 56      |
+| batchGrantPermissions                                   | 3683            | 696367 | 1093884 | 1095282 | 62      |
 | batchRevokePermissions                                  | 2789            | 35701  | 47640   | 60120   | 6       |
-| batchUpdatePermissions                                  | 2975            | 44999  | 44999   | 87024   | 2       |
-| getSupplyByPermissions                                  | 2145            | 5267   | 3513    | 10145   | 3       |
-| hasPermission                                           | 1174            | 5499   | 5970    | 5982    | 29      |
+| batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
+| checkExpiration                                         | 2895            | 3020   | 2895    | 6284    | 27      |
+| getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
+| hasPermission                                           | 1913            | 6422   | 6759    | 8751    | 31      |
 | hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 128     |
-| hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 16      |
-| holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
+| hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
+| holderHasPermissionAt                                   | 1518            | 3807   | 2476    | 10149   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22687           | 22687  | 22687   | 22687   | 62      |
+| setVertex                                               | 22687           | 22687  | 22687   | 22687   | 66      |
+| tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
-| totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
-| transferFrom                                            | 504             | 504    | 504     | 504     | 1       |
+| totalSupply                                             | 327             | 1305   | 327     | 2327    | 47      |
+| transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
 
 
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
@@ -87,10 +89,10 @@
 Failing tests:
 Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexAccountTest
 [31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_ReceiveERC20() (gas: 7412)
-[31m[FAIL. Reason: Assertion failed.][0m test_VertexAccount_ReceiveETH() (gas: 33476)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_TransferApprovedERC20() (gas: 7435)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_approveERC20_ApproveUSDC() (gas: 15972)
+[31m[FAIL. Reason: Assertion failed.][0m test_VertexAccount_ReceiveETH() (gas: 33498)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_TransferApprovedERC20() (gas: 7457)
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_approveERC20_ApproveUSDC() (gas: 15994)
 [31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 7414)
 [31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40292)
 
-Encountered a total of [31m6[0m failing tests, [32m54[0m tests succeeded
+Encountered a total of [31m6[0m failing tests, [32m58[0m tests succeeded

@@ -6,8 +6,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {getChainId} from "src/utils/Helpers.sol";
-import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -109,8 +108,9 @@ contract VertexCore is IVertexCore, Initializable {
     function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
-        Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
+        PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
+        policy.checkExpiration(uint256(uint160(msg.sender)), permissionSignature);
         if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
 
         uint256 previousActionCount = actionsCount;
@@ -201,7 +201,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -220,7 +220,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -230,7 +230,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
         uint256 strategyLength = strategies.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {

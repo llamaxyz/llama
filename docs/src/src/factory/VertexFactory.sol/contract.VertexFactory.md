@@ -1,5 +1,5 @@
 # VertexFactory
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/factory/VertexFactory.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/factory/VertexFactory.sol)
 
 **Inherits:**
 [IVertexFactory](/src/factory/IVertexFactory.sol/contract.IVertexFactory.md)
@@ -50,7 +50,8 @@ constructor(
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions
+    bytes8[][] memory initialPermissions,
+    uint256[][] memory initialExpirationTimestamps
 );
 ```
 
@@ -71,7 +72,8 @@ function deploy(
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     address[] memory initialPolicyholders,
-    bytes8[][] memory initialPermissions
+    bytes8[][] memory initialPermissions,
+    uint256[][] memory initialExpirationTimestamps
 ) public onlyInitialVertex returns (VertexCore);
 ```
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 
-struct Permission {
+struct PermissionData {
     address target;
     bytes4 selector;
     VertexStrategy strategy;

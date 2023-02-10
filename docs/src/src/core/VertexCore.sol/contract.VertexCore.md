@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/416df8aad48508d953bede09eabbf60be08e551c/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -305,7 +305,7 @@ Deploy new strategies and add them to the mapping of authorized strategies.
 
 
 ```solidity
-function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex;
+function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex;
 ```
 **Parameters**
 
