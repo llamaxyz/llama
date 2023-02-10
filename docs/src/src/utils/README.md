@@ -1,7 +1,6 @@
 
 
 # Contents
-- [getChainId](Helpers.sol/function.getChainId.md)
 - [PermissionData](Structs.sol/struct.PermissionData.md)
 - [Approval](Structs.sol/struct.Approval.md)
 - [Disapproval](Structs.sol/struct.Disapproval.md)

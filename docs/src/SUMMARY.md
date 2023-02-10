@@ -20,7 +20,6 @@
     - [IVertexStrategy](src/strategy/IVertexStrategy.sol/contract.IVertexStrategy.md)
     - [VertexStrategy](src/strategy/VertexStrategy.sol/contract.VertexStrategy.md)
   - [❱ utils](src/utils/README.md)
-    - [getChainId](src/utils/Helpers.sol/function.getChainId.md)
     - [PermissionData](src/utils/Structs.sol/struct.PermissionData.md)
     - [Approval](src/utils/Structs.sol/struct.Approval.md)
     - [Disapproval](src/utils/Structs.sol/struct.Disapproval.md)
