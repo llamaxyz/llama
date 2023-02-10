@@ -12,7 +12,7 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4867674                                     | 24538           |         |         |         |         |
+| 4864074                                     | 24520           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 384             | 384     | 384     | 384     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
