@@ -574,6 +574,33 @@ contract VertexCoreTest is Test {
         vertex.submitDisapproval(0, true);
     }
 
+    function test_submitDisapproval_RevertIfCalledByNonPolicyHolder() public {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        vm.startPrank(policyholder1);
+        _approveAction(policyholder1);
+        vm.stopPrank();
+
+        vm.startPrank(policyholder2);
+        _approveAction(policyholder2);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+        _queueAction();
+
+        vm.prank(makeAddr("this person doesn't hold a policy"));
+        // TODO this should revert
+        vertex.submitDisapproval(0, true);
+
+        Action memory action = vertex.getAction(0);
+        assertEq(action.totalDisapprovals, 0);
+    }
+
     function test_submitDisapproval_ChangeDisapprovalSupport() public {
         vm.startPrank(actionCreator);
         _createAction();
