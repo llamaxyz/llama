@@ -6,7 +6,6 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {getChainId} from "src/utils/Helpers.sol";
 import {Action, Approval, Disapproval, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
@@ -202,7 +201,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -221,7 +220,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
