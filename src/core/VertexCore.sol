@@ -52,7 +52,8 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @notice Mapping of actionIds to Actions.
     /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
-    /// accessed with the `getAction` function so this is ok.
+    /// accessed with the `getAction` function so this is ok. We want the contracts to compile
+    /// without the optimizer so `forge coverage` can be used.
     mapping(uint256 => Action) internal actions;
 
     /// @notice Mapping of actionIds to polcyholders to approvals.
