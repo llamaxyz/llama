@@ -1,5 +1,5 @@
 # VertexStrategy
-[Git Source](https://github.com/llama-community/vertex-v1/blob/779be5e26a5346bb2af4c028d4918886f373d88e/src/strategy/VertexStrategy.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/2b4c40ed6cdda43993291a41c7d34f36f381c58a/src/strategy/VertexStrategy.sol)
 
 **Inherits:**
 [IVertexStrategy](/src/strategy/IVertexStrategy.sol/contract.IVertexStrategy.md)
