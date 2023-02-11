@@ -327,7 +327,7 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
+    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal pure returns (bool) {
         uint256 length = policyPermissionSignatures.length;
         if (length == 0) return false;
         uint256 min;
@@ -371,7 +371,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @dev overriding transferFrom to disable transfers for SBTs
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address from, address to, uint256 policyId) public override {
+    function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public override {
         revert SoulboundToken();
     }
 
