@@ -50,8 +50,10 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice The current number of actions created.
     uint256 public actionsCount;
 
-    // /// @notice Mapping of actionIds to Actions.
-    // mapping(uint256 => Action) public actions;
+    /// @notice Mapping of actionIds to Actions.
+    /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
+    /// accessed with the `getAction` function so this is ok.
+    mapping(uint256 => Action) internal actions;
 
     /// @notice Mapping of actionIds to polcyholders to approvals.
     mapping(uint256 => mapping(address => Approval)) public approvals;
@@ -114,8 +116,7 @@ contract VertexCore is IVertexCore, Initializable {
         if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
 
         uint256 previousActionCount = actionsCount;
-        // Action storage newAction = actions[previousActionCount];
-        Action memory newAction;
+        Action storage newAction = actions[previousActionCount];
 
         uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
             ? policy.totalSupply()
@@ -147,8 +148,7 @@ contract VertexCore is IVertexCore, Initializable {
     /// @inheritdoc IVertexCore
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.queuingDuration();
 
         queuedActions[actionId] = true;
@@ -161,8 +161,7 @@ contract VertexCore is IVertexCore, Initializable {
     function executeAction(uint256 actionId) external payable override returns (bytes memory) {
         if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
 
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
 
         action.executed = true;
@@ -185,8 +184,7 @@ contract VertexCore is IVertexCore, Initializable {
             revert InvalidCancelation();
         }
 
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
@@ -274,8 +272,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function isActionExpired(uint256 actionId) public view override returns (bool) {
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
     }
 
@@ -287,8 +284,7 @@ contract VertexCore is IVertexCore, Initializable {
     /// @inheritdoc IVertexCore
     function getActionState(uint256 actionId) public view override returns (ActionState) {
         if (actionId >= actionsCount) revert InvalidActionId();
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         uint256 approvalEndBlock = action.createdBlockNumber + action.strategy.approvalPeriod();
 
         if (action.canceled) {
@@ -320,8 +316,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     function _submitApproval(address policyholder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
         Approval storage approval = approvals[actionId][policyholder];
 
         if (support == approval.support) revert DuplicateApproval();
@@ -342,8 +337,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     function _submitDisapproval(address policyholder, uint256 actionId, bool support) internal {
         if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
-        // Action storage action = actions[actionId];
-        Action memory action;
+        Action storage action = actions[actionId];
 
         if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
