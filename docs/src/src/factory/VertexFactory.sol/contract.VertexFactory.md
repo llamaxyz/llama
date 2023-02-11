@@ -1,5 +1,5 @@
 # VertexFactory
-[Git Source](https://github.com/llama-community/vertex-v1/blob/27980926cf0c0e8a1878ad1969b27067a6a9bef5/src/factory/VertexFactory.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/779be5e26a5346bb2af4c028d4918886f373d88e/src/factory/VertexFactory.sol)
 
 **Inherits:**
 [IVertexFactory](/src/factory/IVertexFactory.sol/contract.IVertexFactory.md)
