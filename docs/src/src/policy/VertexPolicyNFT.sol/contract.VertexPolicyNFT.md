@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/2b4c40ed6cdda43993291a41c7d34f36f381c58a/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/e34741a8cdaa6c1dda28570d75bad71cc5c1aa21/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
