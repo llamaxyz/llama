@@ -12,23 +12,19 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4864074                                     | 24520           |         |         |         |         |
+| 4619136                                     | 23297           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
-| actionsCount                                | 384             | 384     | 384     | 384     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
-| cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-| createAction                                | 2981            | 199351  | 240433  | 242942  | 27      |
-| createAndAuthorizeAccounts                  | 1755851         | 1755851 | 1755851 | 1755851 | 1       |
-| createAndAuthorizeStrategies                | 2662148         | 2662148 | 2662148 | 2662148 | 1       |
-| executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
-| getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
+| createAction                                | 3003            | 52815   | 60899   | 61129   | 27      |
+| createAndAuthorizeAccounts                  | 1755828         | 1755828 | 1755828 | 1755828 | 1       |
+| createAndAuthorizeStrategies                | 2662170         | 2662170 | 2662170 | 2662170 | 1       |
+| getAction                                   | 1546            | 1546    | 1546    | 1546    | 19      |
 | initialize                                  | 9330            | 2892423 | 2993416 | 3196927 | 49      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
-| queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
-| submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
-| submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
+| submitApproval                              | 3797            | 3797    | 3797    | 3797    | 2       |
+| submitDisapproval                           | 3751            | 3751    | 3751    | 3751    | 1       |
 | unauthorizeStrategies                       | 10944           | 10944   | 10944   | 10944   | 1       |
 
 
@@ -65,23 +61,14 @@
 | transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
 
 
-| src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
-|---------------------------------------------------------|-----------------|-------|--------|-------|---------|
-| Deployment Cost                                         | Deployment Size |       |        |       |         |
-| 919861                                                  | 6242            |       |        |       |         |
-| Function Name                                           | min             | avg   | median | max   | # calls |
-| DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 44      |
-| approvalPeriod                                          | 218             | 218   | 218    | 218   | 90      |
-| approvalWeightByPermission                              | 2593            | 2593  | 2593   | 2593  | 22      |
-| disapprovalWeightByPermission                           | 2592            | 2592  | 2592   | 2592  | 22      |
-| expirationDelay                                         | 262             | 262   | 262    | 262   | 18      |
-| getApprovalWeightAt                                     | 788             | 1850  | 2788   | 2788  | 32      |
-| getDisapprovalWeightAt                                  | 702             | 2035  | 2702   | 2702  | 9       |
-| isActionCanceletionValid                                | 13141           | 13141 | 13141  | 13141 | 3       |
-| isActionPassed                                          | 13142           | 13395 | 13142  | 17777 | 44      |
-| isFixedLengthApprovalPeriod                             | 246             | 246   | 246    | 246   | 37      |
-| minDisapprovalPct                                       | 307             | 307   | 307    | 307   | 10      |
-| queuingDuration                                         | 240             | 240   | 240    | 240   | 18      |
+| src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |      |        |      |         |
+|---------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                         | Deployment Size |      |        |      |         |
+| 919861                                                  | 6242            |      |        |      |         |
+| Function Name                                           | min             | avg  | median | max  | # calls |
+| DEFAULT_OPERATOR                                        | 302             | 302  | 302    | 302  | 44      |
+| approvalWeightByPermission                              | 2593            | 2593 | 2593   | 2593 | 22      |
+| disapprovalWeightByPermission                           | 2592            | 2592 | 2592   | 2592 | 22      |
 
 
 
@@ -95,4 +82,28 @@ Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexAccountTest
 [31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 7414)
 [31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40292)
 
-Encountered a total of [31m6[0m failing tests, [32m58[0m tests succeeded
+Encountered 22 failing tests in tests/VertexCore.t.sol:VertexCoreTest
+[31m[FAIL. Reason: EvmError: Revert][0m test_VertexCore_CompleteActionFlow() (gas: 90146)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_CancelIfDisapproved() (gas: 90170)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_CreatorCancelFlow() (gas: 90214)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfActionExecuted() (gas: 90205)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfActionExpired() (gas: 90147)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfActionFailed() (gas: 90190)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfAlreadyCanceled() (gas: 90147)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfDisapprovalDoesNotReachQuorum() (gas: 90171)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfInvalidActionId() (gas: 90168)
+[31m[FAIL. Reason: EvmError: Revert][0m test_cancelAction_RevertIfNotCreator() (gas: 90147)
+[31m[FAIL. Reason: Log != expected log][0m test_executeAction_RevertIfFailedActionExecution() (gas: 86728)
+[31m[FAIL. Reason: EvmError: Revert][0m test_executeAction_RevertIfInvalidActionId() (gas: 90170)
+[31m[FAIL. Reason: EvmError: Revert][0m test_executeAction_RevertIfNotQueued() (gas: 90212)
+[31m[FAIL. Reason: EvmError: Revert][0m test_executeAction_RevertIfTimelockNotFinished() (gas: 90213)
+[31m[FAIL. Reason: EvmError: Revert][0m test_queueAction_RevertIfInvalidActionId() (gas: 90148)
+[31m[FAIL. Reason: EvmError: Revert][0m test_queueAction_RevertIfNotApproved() (gas: 90191)
+[31m[FAIL. Reason: EvmError: Revert][0m test_submitApproval_ChangeApprovalSupport() (gas: 90213)
+[31m[FAIL. Reason: Log != expected log][0m test_submitApproval_RevertIfActionNotActive() (gas: 86705)
+[31m[FAIL. Reason: EvmError: Revert][0m test_submitApproval_RevertIfDuplicateApproval() (gas: 90169)
+[31m[FAIL. Reason: EvmError: Revert][0m test_submitDisapproval_ChangeDisapprovalSupport() (gas: 90167)
+[31m[FAIL. Reason: Call reverted as expected, but without data][0m test_submitDisapproval_RevertIfActionNotQueued() (gas: 84304)
+[31m[FAIL. Reason: EvmError: Revert][0m test_submitDisapproval_RevertIfDuplicateDisapproval() (gas: 90191)
+
+Encountered a total of [31m28[0m failing tests, [32m36[0m tests succeeded
