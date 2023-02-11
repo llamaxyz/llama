@@ -1,4 +1,4 @@
-name: Generate docs and gas report
+name: Generate gas report
 
 on: [pull_request]
 
