@@ -248,7 +248,7 @@ contract VertexCore is IVertexCore, Initializable {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
-                authorizedStrategies[strategies[i]] = false;
+                delete authorizedStrategies[strategies[i]];
             }
         }
 
