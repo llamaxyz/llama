@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/27980926cf0c0e8a1878ad1969b27067a6a9bef5/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -71,15 +71,6 @@ The current number of actions created.
 
 ```solidity
 uint256 public actionsCount;
-```
-
-
-### actions
-Mapping of actionIds to Actions.
-
-
-```solidity
-mapping(uint256 => Action) public actions;
 ```
 
 
