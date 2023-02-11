@@ -278,7 +278,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function getAction(uint256 actionId) external view override returns (Action memory) {
-        // return actions[actionId];
+        return actions[actionId];
     }
 
     /// @inheritdoc IVertexCore
