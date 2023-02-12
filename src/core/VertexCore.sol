@@ -53,10 +53,10 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Mapping of actionIds to Actions.
     mapping(uint256 => Action) public actions;
 
-    /// @notice Mapping of actionIds to polcyholders to approvals.
+    /// @notice Mapping of actionIds to policyholders to approvals.
     mapping(uint256 => mapping(address => Approval)) public approvals;
 
-    /// @notice Mapping of action ids to polcyholders to disapprovals.
+    /// @notice Mapping of action ids to policyholders to disapprovals.
     mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.

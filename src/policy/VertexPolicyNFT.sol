@@ -26,13 +26,13 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     constructor(
-        string memory name,
-        string memory symbol,
+        string memory _name,
+        string memory _symbol,
         address _vertexFactory,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
-    ) ERC721(name, symbol) {
+    ) ERC721(_name, _symbol) {
         vertexFactory = _vertexFactory;
         if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
             uint256 policyholderLength = initialPolicyholders.length;
