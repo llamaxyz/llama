@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/033c40b70aa1582a65b241654f3eda785898e17e/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -84,7 +84,7 @@ mapping(uint256 => Action) public actions;
 
 
 ### approvals
-Mapping of actionIds to polcyholders to approvals.
+Mapping of actionIds to policyholders to approvals.
 
 
 ```solidity
@@ -93,7 +93,7 @@ mapping(uint256 => mapping(address => Approval)) public approvals;
 
 
 ### disapprovals
-Mapping of action ids to polcyholders to disapprovals.
+Mapping of action ids to policyholders to disapprovals.
 
 
 ```solidity

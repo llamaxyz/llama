@@ -1,5 +1,5 @@
 # VertexPolicyNFT
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/policy/VertexPolicyNFT.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/033c40b70aa1582a65b241654f3eda785898e17e/src/policy/VertexPolicyNFT.sol)
 
 **Inherits:**
 [VertexPolicy](/src/policy/VertexPolicy.sol/contract.VertexPolicy.md)
@@ -55,13 +55,6 @@ uint256 private _totalSupply;
 ```
 
 
-### vertexFactory
-
-```solidity
-address public immutable vertexFactory;
-```
-
-
 ### vertex
 
 ```solidity
@@ -82,13 +75,12 @@ modifier onlyVertex();
 
 ```solidity
 constructor(
-    string memory name,
-    string memory symbol,
-    address _vertexFactory,
+    string memory _name,
+    string memory _symbol,
     address[] memory initialPolicyholders,
     bytes8[][] memory initialPermissions,
     uint256[][] memory initialExpirationTimestamps
-) ERC721(name, symbol);
+) ERC721(_name, _symbol);
 ```
 
 ### setVertex
@@ -304,7 +296,7 @@ function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatu
 
 
 ```solidity
-function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool);
+function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal pure returns (bool);
 ```
 
 ### checkExpiration
@@ -362,7 +354,7 @@ function setBaseURI(string calldata _baseURI) public override onlyVertex;
 
 
 ```solidity
-function transferFrom(address from, address to, uint256 policyId) public override;
+function transferFrom(address, address, uint256) public override;
 ```
 
 ### getPermissionSignatures
