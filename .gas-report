@@ -12,13 +12,13 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4756322                                     | 23982           |         |         |         |         |
+| 4754522                                     | 23973           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-| createAction                                | 3003            | 199373  | 240455  | 242964  | 27      |
+| createAction                                | 3003            | 199407  | 240499  | 243008  | 27      |
 | createAndAuthorizeAccounts                  | 1755828         | 1755828 | 1755828 | 1755828 | 1       |
 | createAndAuthorizeStrategies                | 2662170         | 2662170 | 2662170 | 2662170 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
@@ -29,22 +29,22 @@
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
 | submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
 | submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
-| unauthorizeStrategies                       | 10944           | 10944   | 10944   | 10944   | 1       |
+| unauthorizeStrategies                       | 10905           | 10905   | 10905   | 10905   | 1       |
 
 
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10265552                                             | 44925           |         |         |         |         |
+| 10198086                                             | 44501           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3954319 | 5926563 | 5926563 | 3       |
+| deploy                                               | 9832            | 3937624 | 5901521 | 5901521 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
 |---------------------------------------------------------|-----------------|--------|---------|---------|---------|
 | Deployment Cost                                         | Deployment Size |        |         |         |         |
-| 2599796                                                 | 18060           |        |         |         |         |
+| 2575005                                                 | 17841           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 651             | 651    | 651     | 651     | 2       |
 | batchGrantPermissions                                   | 3683            | 696367 | 1093884 | 1095282 | 62      |
@@ -52,16 +52,16 @@
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
 | checkExpiration                                         | 2895            | 3020   | 2895    | 6284    | 27      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
-| hasPermission                                           | 1913            | 6422   | 6759    | 8751    | 31      |
+| hasPermission                                           | 1913            | 6420   | 6759    | 8751    | 31      |
 | hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 128     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
-| holderHasPermissionAt                                   | 1518            | 3807   | 2476    | 10149   | 10      |
+| holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22687           | 22687  | 22687   | 22687   | 66      |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 66      |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
-| totalSupply                                             | 327             | 1305   | 327     | 2327    | 47      |
+| totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
 | transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
 
 

@@ -40,7 +40,7 @@ contract VertexFactory is IVertexFactory {
 
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
         VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions, initialExpirationTimestamps));
+            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
         initialVertex = VertexCore(Clones.clone(address(vertexCore)));
         initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
@@ -71,7 +71,7 @@ contract VertexFactory is IVertexFactory {
 
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
         VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, address(this), initialPolicyholders, initialPermissions, initialExpirationTimestamps));
+            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
         VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
         vertex.initialize(name, policy, initialStrategies, initialAccounts);

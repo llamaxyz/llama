@@ -17,7 +17,6 @@ contract VertexPolicyNFT is VertexPolicy {
     uint256[] public policyIds;
     string public baseURI;
     uint256 private _totalSupply;
-    address public immutable vertexFactory;
     address public vertex;
 
     modifier onlyVertex() {
@@ -26,14 +25,12 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     constructor(
-        string memory name,
-        string memory symbol,
-        address _vertexFactory,
+        string memory _name,
+        string memory _symbol,
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
-    ) ERC721(name, symbol) {
-        vertexFactory = _vertexFactory;
+    ) ERC721(_name, _symbol) {
         if (initialPolicyholders.length > 0 && initialPermissions.length > 0) {
             uint256 policyholderLength = initialPolicyholders.length;
             uint256 permissionsLength = initialPermissions.length;
@@ -48,7 +45,6 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     function setVertex(address _vertex) external {
-        if (msg.sender != vertexFactory) revert OnlyVertexFactory();
         if (vertex != address(0)) revert AlreadyInitialized();
         vertex = _vertex;
     }
@@ -327,7 +323,7 @@ contract VertexPolicyNFT is VertexPolicy {
         return policyPermissionSignatures[min] == permissionSignature;
     }
 
-    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
+    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal pure returns (bool) {
         uint256 length = policyPermissionSignatures.length;
         if (length == 0) return false;
         uint256 min;
@@ -371,7 +367,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @dev overriding transferFrom to disable transfers for SBTs
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address from, address to, uint256 policyId) public override {
+    function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public override {
         revert SoulboundToken();
     }
 
