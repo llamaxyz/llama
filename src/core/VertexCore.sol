@@ -51,12 +51,15 @@ contract VertexCore is IVertexCore, Initializable {
     uint256 public actionsCount;
 
     /// @notice Mapping of actionIds to Actions.
-    mapping(uint256 => Action) public actions;
+    /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
+    /// accessed with the `getAction` function so this is ok. We want the contracts to compile
+    /// without the optimizer so `forge coverage` can be used.
+    mapping(uint256 => Action) internal actions;
 
-    /// @notice Mapping of actionIds to polcyholders to approvals.
+    /// @notice Mapping of actionIds to policyholders to approvals.
     mapping(uint256 => mapping(address => Approval)) public approvals;
 
-    /// @notice Mapping of action ids to polcyholders to disapprovals.
+    /// @notice Mapping of action ids to policyholders to disapprovals.
     mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.
@@ -248,7 +251,7 @@ contract VertexCore is IVertexCore, Initializable {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
-                authorizedStrategies[strategies[i]] = false;
+                delete authorizedStrategies[strategies[i]];
             }
         }
 
