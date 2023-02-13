@@ -23,8 +23,8 @@ interface IVertexCore {
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event StrategiesAuthorized(Strategy[] strategies);
-    event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+    event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
     /// @notice Initializes a new VertexCore clone.
