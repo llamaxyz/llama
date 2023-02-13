@@ -23,7 +23,7 @@ You can get Solidity support for Visual Studio Code by installing the [VSCode So
 $ git clone https://github.com/llama-community/vertex-v1.git
 $ cd vertex-v1
 $ npm install
-$ make setup
+$ make install
 $ git submodule update --init --recursive
 ```
 

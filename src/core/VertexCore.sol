@@ -92,13 +92,13 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this))));
+                VertexStrategy strategy = new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this)));
                 authorizedStrategies[strategy] = true;
             }
 
             for (uint256 i; i < accountsLength; ++i) {
                 bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-                VertexAccount account = VertexAccount(new VertexAccount{salt: accountSalt}(initialAccounts[i], address(this)));
+                VertexAccount account = new VertexAccount{salt: accountSalt}(initialAccounts[i], address(this));
                 authorizedAccounts[account] = true;
                 emit AccountAuthorized(account, initialAccounts[i]);
             }
@@ -238,7 +238,7 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(i, strategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
+                VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this)));
                 authorizedStrategies[strategy] = true;
             }
         }
@@ -264,7 +264,7 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < accountLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-                VertexAccount account = VertexAccount(new VertexAccount{salt: salt}(accounts[i], address(this)));
+                VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
                 authorizedAccounts[account] = true;
                 emit AccountAuthorized(account, accounts[i]);
             }
