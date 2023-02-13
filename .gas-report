@@ -1,12 +1,12 @@
-| src/account/VertexAccount.sol:VertexAccount contract |                 |      |        |      |         |
-|------------------------------------------------------|-----------------|------|--------|------|---------|
-| Deployment Cost                                      | Deployment Size |      |        |      |         |
-| 526199                                               | 3404            |      |        |      |         |
-| Function Name                                        | min             | avg  | median | max  | # calls |
-| approveERC20                                         | 541             | 1986 | 1986   | 3431 | 2       |
-| receive                                              | 0               | 0    | 0      | 0    | 2       |
-| transfer                                             | 464             | 531  | 499    | 632  | 3       |
-| transferERC20                                        | 519             | 536  | 536    | 554  | 2       |
+| src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
+|------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                      | Deployment Size |       |        |       |         |
+| 526199                                               | 3404            |       |        |       |         |
+| Function Name                                        | min             | avg   | median | max   | # calls |
+| approveERC20                                         | 541             | 24929 | 29623  | 44623 | 3       |
+| receive                                              | 55              | 55    | 55     | 55    | 2       |
+| transfer                                             | 464             | 2813  | 499    | 7478  | 3       |
+| transferERC20                                        | 519             | 2177  | 554    | 5460  | 3       |
 
 
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
@@ -87,15 +87,7 @@
 
 
 Failing tests:
-Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexAccountTest
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_ReceiveERC20() (gas: 7412)
-[31m[FAIL. Reason: Assertion failed.][0m test_VertexAccount_ReceiveETH() (gas: 33498)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_TransferApprovedERC20() (gas: 7457)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_approveERC20_ApproveUSDC() (gas: 15994)
-[31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 7414)
-[31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40292)
-
 Encountered 1 failing test in tests/VertexFactory.t.sol:VertexFactoryTest
 [31m[FAIL. Reason: Log != expected log][0m test_deploy_DeployIfInitialVertex() (gas: 6008689)
 
-Encountered a total of [31m7[0m failing tests, [32m57[0m tests succeeded
+Encountered a total of [31m1[0m failing tests, [32m63[0m tests succeeded
