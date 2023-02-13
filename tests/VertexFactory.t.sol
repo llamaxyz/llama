@@ -11,7 +11,7 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
-    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
+    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
 
     // Vertex system
     VertexCore public vertex;
@@ -99,9 +99,10 @@ contract VertexFactoryTest is Test {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
         address deployedVertex = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
+        address deployedPolicy = 0xdDef23060880B20b442cf3cE7f0E949A0f04872B;
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
-        emit VertexCreated(1, "NewProject", deployedVertex);
+        emit VertexCreated(1, "NewProject", deployedVertex, deployedPolicy);
         vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
