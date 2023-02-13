@@ -1,5 +1,5 @@
 # VertexAccount
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/account/VertexAccount.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/e34741a8cdaa6c1dda28570d75bad71cc5c1aa21/src/account/VertexAccount.sol)
 
 **Inherits:**
 [IVertexAccount](/src/account/IVertexAccount.sol/contract.IVertexAccount.md)

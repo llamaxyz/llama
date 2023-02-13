@@ -1,5 +1,5 @@
 # VertexCore
-[Git Source](https://github.com/llama-community/vertex-v1/blob/b136bbc451b50fe1a9f96f39dbd8b8a1e42c7f72/src/core/VertexCore.sol)
+[Git Source](https://github.com/llama-community/vertex-v1/blob/e34741a8cdaa6c1dda28570d75bad71cc5c1aa21/src/core/VertexCore.sol)
 
 **Inherits:**
 [IVertexCore](/src/core/IVertexCore.sol/contract.IVertexCore.md), Initializable
@@ -77,9 +77,13 @@ uint256 public actionsCount;
 ### actions
 Mapping of actionIds to Actions.
 
+*Making this `public` results in stack too deep with no optimizer, but this data can be
+accessed with the `getAction` function so this is ok. We want the contracts to compile
+without the optimizer so `forge coverage` can be used.*
+
 
 ```solidity
-mapping(uint256 => Action) public actions;
+mapping(uint256 => Action) internal actions;
 ```
 
 
