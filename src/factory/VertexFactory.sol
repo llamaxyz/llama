@@ -47,7 +47,7 @@ contract VertexFactory is IVertexFactory {
 
         policy.setVertex(address(initialVertex));
 
-        emit VertexCreated(0, name, address(initialVertex));
+        emit VertexCreated(0, name, address(initialVertex), address(policy));
     }
 
     modifier onlyInitialVertex() {
@@ -77,7 +77,7 @@ contract VertexFactory is IVertexFactory {
         vertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
-        emit VertexCreated(previousVertexCount, name, address(vertex));
+        emit VertexCreated(previousVertexCount, name, address(vertex), address(policy));
 
         return vertex;
     }
