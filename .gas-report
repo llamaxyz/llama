@@ -35,9 +35,9 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10198951                                             | 44501           |         |         |         |         |
+| 10200631                                             | 44516           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3938201 | 5902386 | 5902386 | 3       |
+| deploy                                               | 9832            | 3938386 | 5902663 | 5902663 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
@@ -95,4 +95,7 @@ Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexAccountTest
 [31m[FAIL. Reason: EvmError: Revert][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 7414)
 [31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40292)
 
-Encountered a total of [31m6[0m failing tests, [32m58[0m tests succeeded
+Encountered 1 failing test in tests/VertexFactory.t.sol:VertexFactoryTest
+[31m[FAIL. Reason: Log != expected log][0m test_deploy_DeployIfInitialVertex() (gas: 6008404)
+
+Encountered a total of [31m7[0m failing tests, [32m57[0m tests succeeded
