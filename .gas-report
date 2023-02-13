@@ -96,6 +96,6 @@ Encountered 6 failing tests in tests/VertexCollector.t.sol:VertexAccountTest
 [31m[FAIL. Reason: Address: insufficient balance][0m test_VertexAccount_transfer_TransferETH() (gas: 40292)
 
 Encountered 1 failing test in tests/VertexFactory.t.sol:VertexFactoryTest
-[31m[FAIL. Reason: Log != expected log][0m test_deploy_DeployIfInitialVertex() (gas: 6008404)
+[31m[FAIL. Reason: Log != expected log][0m test_deploy_DeployIfInitialVertex() (gas: 6008689)
 
 Encountered a total of [31m7[0m failing tests, [32m57[0m tests succeeded
