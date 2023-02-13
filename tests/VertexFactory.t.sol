@@ -61,6 +61,8 @@ contract VertexFactoryTest is Test {
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
+
         vertexCore = new VertexCore();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = _createInitialStrategies();
