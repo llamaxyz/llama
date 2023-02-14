@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
 
-contract VertexScript is Script {
+contract Deploy is Script {
     function setUp() public {}
 
     function run() public {
