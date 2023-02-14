@@ -12,7 +12,7 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4754522                                     | 23973           |         |         |         |         |
+| 4677616                                     | 23589           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
@@ -20,10 +20,10 @@
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
 | createAction                                | 3003            | 199407  | 240499  | 243008  | 27      |
 | createAndAuthorizeAccounts                  | 1755828         | 1755828 | 1755828 | 1755828 | 1       |
-| createAndAuthorizeStrategies                | 2662170         | 2662170 | 2662170 | 2662170 | 1       |
+| createAndAuthorizeStrategies                | 2661781         | 2661781 | 2661781 | 2661781 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 9330            | 2892423 | 2993416 | 3196927 | 49      |
+| initialize                                  | 9330            | 2892539 | 2993537 | 3197048 | 49      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
@@ -35,9 +35,9 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10198086                                             | 44501           |         |         |         |         |
+| 10198207                                             | 44501           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3937624 | 5901521 | 5901521 | 3       |
+| deploy                                               | 9832            | 3937705 | 5901642 | 5901642 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
