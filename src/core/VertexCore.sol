@@ -353,8 +353,8 @@ contract VertexCore is IVertexCore, Initializable {
     function _deployStrategies(Strategy[] memory initialStrategies, VertexPolicyNFT _policy) internal {
         uint256 strategyLength = initialStrategies.length;
         for (uint256 i; i < strategyLength; ++i) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-            VertexStrategy strategy = new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this)));
+            bytes32 salt = bytes32(keccak256(abi.encode(initialStrategies[i])));
+            VertexStrategy strategy = new VertexStrategy{salt: salt}(initialStrategies[i], _policy, IVertexCore(address(this)));
             authorizedStrategies[strategy] = true;
         }
     }

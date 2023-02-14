@@ -647,7 +647,7 @@ contract VertexCoreTest is Test {
         });
 
         for (uint256 i; i < newStrategies.length; i++) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(i, newStrategies[i])));
+            bytes32 strategySalt = bytes32(keccak256(abi.encode(newStrategies[i])));
             bytes memory bytecode = type(VertexStrategy).creationCode;
             bytes32 hash = keccak256(
                 abi.encodePacked(
