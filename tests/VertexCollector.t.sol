@@ -36,6 +36,8 @@ contract VertexAccountTest is Test {
     uint256 public constant minDisapprovalPct = 20_00;
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
+
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);

@@ -57,11 +57,13 @@ contract VertexCoreTest is Test {
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event StrategiesAuthorized(Strategy[] strategies);
-    event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+    event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
+
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
@@ -663,7 +665,11 @@ contract VertexCoreTest is Test {
         vm.startPrank(address(vertex));
 
         vm.expectEmit(true, true, true, true);
-        emit StrategiesAuthorized(newStrategies);
+        emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
         vertex.createAndAuthorizeStrategies(newStrategies);
 
         assertEq(vertex.authorizedStrategies(strategyAddresses[0]), true);
@@ -674,8 +680,11 @@ contract VertexCoreTest is Test {
     // unauthorizeStrategies unit tests
     function test_unauthorizeStrategies_UnauthorizeStrategies() public {
         vm.startPrank(address(vertex));
+
         vm.expectEmit(true, true, true, true);
-        emit StrategiesUnauthorized(strategies);
+        emit StrategyUnauthorized(strategies[0]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyUnauthorized(strategies[1]);
         vertex.unauthorizeStrategies(strategies);
 
         assertEq(vertex.authorizedStrategies(strategies[0]), false);

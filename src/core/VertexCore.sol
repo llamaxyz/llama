@@ -98,8 +98,6 @@ contract VertexCore is IVertexCore, Initializable {
                 emit AccountAuthorized(account, initialAccounts[i]);
             }
         }
-
-        emit StrategiesAuthorized(initialStrategies);
     }
 
     /// @inheritdoc IVertexCore
@@ -232,8 +230,6 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             _deployStrategies(strategies, policy);
         }
-
-        emit StrategiesAuthorized(strategies);
     }
 
     /// @inheritdoc IVertexCore
@@ -242,10 +238,9 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
                 delete authorizedStrategies[strategies[i]];
+                emit StrategyUnauthorized(strategies[i]);
             }
         }
-
-        emit StrategiesUnauthorized(strategies);
     }
 
     /// @inheritdoc IVertexCore
