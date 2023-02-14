@@ -101,7 +101,7 @@ contract VertexFactoryTest is Test {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
         address deployedVertex = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
-        address deployedPolicy = 0xdDef23060880B20b442cf3cE7f0E949A0f04872B;
+        address deployedPolicy = 0x525F3daaB67189A2763B96A1518aaE34292a4f0b;
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
         emit VertexCreated(1, "NewProject", deployedVertex, deployedPolicy);
