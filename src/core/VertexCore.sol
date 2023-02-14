@@ -94,6 +94,7 @@ contract VertexCore is IVertexCore, Initializable {
                 bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
                 VertexStrategy strategy = new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this)));
                 authorizedStrategies[strategy] = true;
+                emit StrategyAuthorized(strategy, initialStrategies[i]);
             }
 
             for (uint256 i; i < accountsLength; ++i) {
@@ -103,8 +104,6 @@ contract VertexCore is IVertexCore, Initializable {
                 emit AccountAuthorized(account, initialAccounts[i]);
             }
         }
-
-        emit StrategiesAuthorized(initialStrategies);
     }
 
     /// @inheritdoc IVertexCore
@@ -237,13 +236,12 @@ contract VertexCore is IVertexCore, Initializable {
         uint256 strategyLength = strategies.length;
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(i, strategies[i])));
+                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
                 VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this)));
                 authorizedStrategies[strategy] = true;
+                emit StrategyAuthorized(strategy, strategies[i]);
             }
         }
-
-        emit StrategiesAuthorized(strategies);
     }
 
     /// @inheritdoc IVertexCore
@@ -252,10 +250,9 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
                 delete authorizedStrategies[strategies[i]];
+                emit StrategyUnauthorized(strategies[i]);
             }
         }
-
-        emit StrategiesUnauthorized(strategies);
     }
 
     /// @inheritdoc IVertexCore
