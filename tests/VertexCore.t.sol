@@ -256,6 +256,10 @@ contract Setup is VertexCoreTest {
     }
 }
 
+contract Initialize is VertexCoreTest {
+  // TODO add tests
+}
+
 contract CreateAction is VertexCoreTest {
     function test_RevertIfStrategyUnauthorized() public {
         VertexStrategy unauthorizedStrategy = VertexStrategy(address(0xdead));
@@ -645,6 +649,10 @@ contract SubmitApproval is VertexCoreTest {
     }
 }
 
+contract SubmitApprovalBySignature is VertexCoreTest {
+  // TODO add tests
+}
+
 contract SubmitDisapproval is VertexCoreTest {
     function test_submitDisapproval_RevertIfActionNotQueued() public {
         vm.startPrank(actionCreator);
@@ -710,6 +718,10 @@ contract SubmitDisapproval is VertexCoreTest {
 
         assertEq(action.totalDisapprovals, 0);
     }
+}
+
+contract SubmitDisapprovalBySignature is VertexCoreTest {
+  // TODO add tests
 }
 
 contract CreateAndAuthorizeStrategies is VertexCoreTest {
@@ -847,4 +859,8 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
         accountAddresses[2].initialize(newAccounts[2], address(vertex));
     }
+}
+
+contract GetActionState is VertexCoreTest {
+  // TODO add tests
 }
