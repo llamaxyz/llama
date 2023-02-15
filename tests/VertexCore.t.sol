@@ -862,5 +862,34 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 }
 
 contract GetActionState is VertexCoreTest {
-  // TODO add tests
+  function test_RevertsOnInvalidAction() public {} // TODO
+  function test_CanceledActionsHaveStateCanceled() public {} // TODO
+  function test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() public {
+    // TODO
+    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+    // confirm its state begins at Active
+  }
+  function test_ApprovedActionsWithFixedLengthHaveStateActive() public {
+    // TODO
+    // create an action such that action.strategy.isFixedLengthApprovalPeriod == true
+    // have enough accounts approve it before the end of the approvalEndBlock so that it will succeed
+    // confirm its state is still Active, not Approved
+  }
+  function test_PassedActionsPriorToApprovalEndBlockHaveStateApproved() public {
+    // TODO
+    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+    // confirm its state begins at Active
+  }
+  function testFuzz_ApprovedActionsHaveStateApproved(uint256 _blocksSinceCreation) public {
+    // TODO
+    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+    // have enough accounts approve it so that it will pass
+    // bound(_blocksSinceCreation, 0, approvalPeriod * 2);
+    // vm.roll(_blocksSinceCreation)
+    // if _blocksSinceCreation => approvalPeriod --> expect Approved
+    // if _blocksSinceCreation < approvalPeriod --> expect Active
+  }
+  function test_QueuedActionsHaveStateQueued() public {} // TODO
+  function test_ExecutedActionsHaveStateExecuted() public {} // TODO
+  function test_RejectedActionsHaveStateFailed() public {} // TODO
 }
