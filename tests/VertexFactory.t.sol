@@ -199,3 +199,20 @@ contract VertexFactoryTest is Test {
         return initialAccounts;
     }
 }
+
+contract Constructor is VertexFactoryTest {
+    function test_SetsVertexCoreLogicAddress() public {
+        assertEq(address(vertexFactory.vertexCoreLogic()), address(vertexCore));
+    }
+
+    function test_SetsRootVertexAddress() public {
+        assertEq(address(vertexFactory.rootVertex()), address(vertex));
+    }
+
+    function test_DeploysRootVertexViaInternalDeployMethod() public {
+        // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
+        // one side effect of that method as a sanity check it was called. If it was called, the
+        // vertex count should no longer be zero.
+        assertEq(vertexFactory.vertexCount(), 1);
+    }
+}
