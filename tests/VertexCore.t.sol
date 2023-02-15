@@ -105,17 +105,13 @@ contract VertexCoreTest is Test {
 
         // Use create2 to get vertex strategy addresses
         for (uint256 i; i < initialStrategies.length; i++) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
             bytes memory bytecode = type(VertexStrategy).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    bytes1(0xff),
-                    address(vertex),
-                    strategySalt,
-                    keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], vertex.policy(), address(vertex))))
-                )
+            address _strategy = computeCreate2Address(
+              keccak256(abi.encode(initialStrategies[i])), // salt
+              keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], vertex.policy(), address(vertex)))),
+              address(vertex) // deployer
             );
-            strategies.push(VertexStrategy(address(uint160(uint256(hash)))));
+            strategies.push(VertexStrategy(_strategy));
         }
 
         // Use create2 to get vertex account addresses
