@@ -14,8 +14,8 @@ contract VertexFactoryTest is Test {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
 
     // Vertex system
-    VertexCore public vertex;
-    VertexCore public vertexCore;
+    VertexCore public rootVertex;
+    VertexCore public vertexCoreLogic;
     VertexFactory public vertexFactory;
     VertexStrategy[] public strategies;
     VertexPolicyNFT public policy;
@@ -63,16 +63,16 @@ contract VertexFactoryTest is Test {
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("mainnet"));
 
-        vertexCore = new VertexCore();
+        vertexCoreLogic = new VertexCore();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
 
         // Deploy vertex and mock protocol
         vertexFactory =
-        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
-        vertex = VertexCore(vertexFactory.rootVertex());
-        protocol = new ProtocolXYZ(address(vertex));
+        new VertexFactory(vertexCoreLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        rootVertex = VertexCore(vertexFactory.rootVertex());
+        protocol = new ProtocolXYZ(address(rootVertex));
 
         // Use create2 to get vertex strategy addresses
         for (uint256 i; i < initialStrategies.length; i++) {
@@ -81,15 +81,15 @@ contract VertexFactoryTest is Test {
             bytes32 hash = keccak256(
                 abi.encodePacked(
                     bytes1(0xff),
-                    address(vertex),
+                    address(rootVertex),
                     strategySalt,
-                    keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], vertex.policy(), address(vertex))))
+                    keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], rootVertex.policy(), address(rootVertex))))
                 )
             );
             strategies.push(VertexStrategy(address(uint160(uint256(hash)))));
         }
         // Set vertex's policy
-        policy = vertex.policy();
+        policy = rootVertex.policy();
 
         // Create and assign policies
         createPolicies();
@@ -98,7 +98,7 @@ contract VertexFactoryTest is Test {
     }
 
     function createPolicies() internal {
-        vm.startPrank(address(vertex));
+        vm.startPrank(address(rootVertex));
         permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
@@ -168,11 +168,11 @@ contract VertexFactoryTest is Test {
 
 contract Constructor is VertexFactoryTest {
     function test_SetsVertexCoreLogicAddress() public {
-        assertEq(address(vertexFactory.vertexCoreLogic()), address(vertexCore));
+        assertEq(address(vertexFactory.vertexCoreLogic()), address(vertexCoreLogic));
     }
 
     function test_SetsRootVertexAddress() public {
-        assertEq(address(vertexFactory.rootVertex()), address(vertex));
+        assertEq(address(vertexFactory.rootVertex()), address(rootVertex));
     }
 
     function test_DeploysRootVertexViaInternalDeployMethod() public {
@@ -191,12 +191,12 @@ contract Deploy is VertexFactoryTest {
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
-        vm.prank(address(vertex));
+        vm.prank(address(rootVertex));
         return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
     function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
-        vm.assume(caller != address(vertex));
+        vm.assume(caller != address(rootVertex));
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
 
