@@ -16,7 +16,7 @@ contract VertexFactory is IVertexFactory {
     /// @notice The VertexCore implementation (logic) contract.
     VertexCore public immutable vertexCoreLogic;
 
-    /// @notice The initially deployed Vertex system.
+    /// @notice The Vertex instance responsible for deploying new Vertex instances.
     VertexCore public immutable rootVertex;
 
     /// @notice The current number of vertex systems created.
