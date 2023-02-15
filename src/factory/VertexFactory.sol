@@ -49,7 +49,7 @@ contract VertexFactory is IVertexFactory {
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
-    ) public onlyRootVertex returns (VertexCore) {
+    ) external onlyRootVertex returns (VertexCore) {
         return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
