@@ -71,7 +71,7 @@ contract VertexFactoryTest is Test {
         // Deploy vertex and mock protocol
         vertexFactory =
         new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
-        vertex = VertexCore(vertexFactory.initialVertex());
+        vertex = VertexCore(vertexFactory.rootVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses

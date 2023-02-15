@@ -17,7 +17,7 @@ contract VertexFactory is IVertexFactory {
     VertexCore public immutable vertexCoreLogic;
 
     /// @notice The initially deployed Vertex system.
-    VertexCore public immutable initialVertex;
+    VertexCore public immutable rootVertex;
 
     /// @notice The current number of vertex systems created.
     uint256 public vertexCount;
@@ -33,11 +33,11 @@ contract VertexFactory is IVertexFactory {
         uint256[][] memory initialExpirationTimestamps
     ) {
         vertexCoreLogic = _vertexCoreLogic;
-        initialVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
-    modifier onlyInitialVertex() {
-        if (msg.sender != address(initialVertex)) revert OnlyVertex();
+    modifier onlyRootVertex() {
+        if (msg.sender != address(rootVertex)) revert OnlyVertex();
         _;
     }
 
@@ -49,7 +49,7 @@ contract VertexFactory is IVertexFactory {
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
-    ) public onlyInitialVertex returns (VertexCore) {
+    ) public onlyRootVertex returns (VertexCore) {
         return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
