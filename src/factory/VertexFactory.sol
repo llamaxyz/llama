@@ -33,21 +33,7 @@ contract VertexFactory is IVertexFactory {
         uint256[][] memory initialExpirationTimestamps
     ) {
         vertexCoreLogic = _vertexCoreLogic;
-
-        unchecked {
-            ++vertexCount;
-        }
-
-        bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
-
-        initialVertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
-        initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
-
-        policy.setVertex(address(initialVertex));
-
-        emit VertexCreated(0, name, address(initialVertex), address(policy));
+        initialVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
     modifier onlyInitialVertex() {
@@ -64,21 +50,27 @@ contract VertexFactory is IVertexFactory {
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
     ) public onlyInitialVertex returns (VertexCore) {
-        uint256 previousVertexCount = vertexCount;
-        unchecked {
-            ++vertexCount;
-        }
+        return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+    }
 
+    function _deploy(
+        string memory name,
+        string memory symbol,
+        Strategy[] memory initialStrategies,
+        string[] memory initialAccounts,
+        address[] memory initialPolicyholders,
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
+    ) internal returns (VertexCore vertex) {
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
+        VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
 
-        VertexCore vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
+        vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
         vertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
-        emit VertexCreated(previousVertexCount, name, address(vertex), address(policy));
-
-        return vertex;
+        unchecked {
+            emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
+        }
     }
 }
