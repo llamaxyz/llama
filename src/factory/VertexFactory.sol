@@ -13,8 +13,8 @@ import {Strategy} from "src/utils/Structs.sol";
 contract VertexFactory is IVertexFactory {
     error OnlyVertex();
 
-    /// @notice The VertexCore implementation contract.
-    VertexCore public immutable vertexCore;
+    /// @notice The VertexCore implementation (logic) contract.
+    VertexCore public immutable vertexCoreLogic;
 
     /// @notice The initially deployed Vertex system.
     VertexCore public immutable initialVertex;
@@ -23,7 +23,7 @@ contract VertexFactory is IVertexFactory {
     uint256 public vertexCount;
 
     constructor(
-        VertexCore _vertexCore,
+        VertexCore _vertexCoreLogic,
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
@@ -32,7 +32,7 @@ contract VertexFactory is IVertexFactory {
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
     ) {
-        vertexCore = _vertexCore;
+        vertexCoreLogic = _vertexCoreLogic;
 
         unchecked {
             ++vertexCount;
@@ -42,7 +42,7 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy =
             VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
-        initialVertex = VertexCore(Clones.clone(address(vertexCore)));
+        initialVertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
         initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(initialVertex));
@@ -73,7 +73,7 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy =
             VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
-        VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
+        VertexCore vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
         vertex.initialize(name, policy, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
