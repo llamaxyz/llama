@@ -64,8 +64,6 @@ contract VertexCoreTest is Test {
     event AccountAuthorized(VertexAccount indexed account, string name);
 
     function setUp() public {
-        vm.createSelectFork(vm.rpcUrl("mainnet"));
-
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
