@@ -22,8 +22,8 @@ contract VertexCoreTest is Test {
     VertexAccount[] public accounts;
     VertexPolicyNFT public policy;
 
-    // Mock protocol
-    ProtocolXYZ public protocol;
+    // Mock protocol for action targets.
+    ProtocolXYZ public targetProtocol;
 
     // Testing agents
     address public constant actionCreator = address(0x1337);
@@ -96,9 +96,9 @@ contract VertexCoreTest is Test {
         vertexCore = new VertexCore();
         vertexAccountImplementation = new VertexAccount();
         vertexFactory =
-          new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
+            new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.rootVertex());
-        protocol = new ProtocolXYZ(address(vertex));
+        targetProtocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses
         for (uint256 i; i < initialStrategies.length; i++) {
@@ -132,8 +132,8 @@ contract VertexCoreTest is Test {
 
     function _createAction() public {
         vm.expectEmit(true, true, true, true);
-        emit ActionCreated(0, actionCreator, strategies[0], address(protocol), 0, pauseSelector, abi.encode(true));
-        vertex.createAction(strategies[0], address(protocol), 0, pauseSelector, abi.encode(true));
+        emit ActionCreated(0, actionCreator, strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(0);
         uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
@@ -280,19 +280,19 @@ contract CreateAction is VertexCoreTest {
         VertexStrategy unauthorizedStrategy = VertexStrategy(address(0xdead));
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.InvalidStrategy.selector);
-        vertex.createAction(unauthorizedStrategy, address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(unauthorizedStrategy, address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_RevertIfPolicyholderNotMinted() public {
         vm.prank(address(0xdead));
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategies[1], address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(strategies[1], address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_RevertIfNoPermissionForStrategy() public {
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategies[1], address(protocol), 0, pauseSelector, abi.encode(true));
+        vertex.createAction(strategies[1], address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
 
     function test_RevertIfNoPermissionForTarget() public {
@@ -306,7 +306,7 @@ contract CreateAction is VertexCoreTest {
         bytes4 fakeSelector = 0x02222222;
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategies[0], address(protocol), 0, fakeSelector, abi.encode(true));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, fakeSelector, abi.encode(true));
     }
 }
 
@@ -585,7 +585,7 @@ contract ExecuteAction is VertexCoreTest {
 
     function test_RevertIfFailedActionExecution() public {
         vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
 
         vm.startPrank(policyholder1);
@@ -614,7 +614,7 @@ contract ExecuteAction is VertexCoreTest {
 contract SubmitApproval is VertexCoreTest {
     function test_RevertIfActionNotActive() public {
         vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
 
         vm.startPrank(policyholder1);
@@ -671,7 +671,7 @@ contract SubmitApprovalBySignature is VertexCoreTest {
 contract SubmitDisapproval is VertexCoreTest {
     function test_submitDisapproval_RevertIfActionNotQueued() public {
         vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(protocol), 0, failSelector, abi.encode(""));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
 
         vm.expectRevert(VertexCore.ActionNotQueued.selector);
