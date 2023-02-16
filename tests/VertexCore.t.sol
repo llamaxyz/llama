@@ -332,14 +332,6 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CancelAction is VertexCoreTest {
-    function test_RevertIfNotCreator() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
-        vertex.cancelAction(0);
-    }
-
     function test_CreatorCancelFlow() public {
         vm.startPrank(actionCreator);
         _createAction();
@@ -347,8 +339,20 @@ contract CancelAction is VertexCoreTest {
         emit ActionCanceled(0);
         vertex.cancelAction(0);
         vm.stopPrank();
+        // TODO confirm storage changes, e.g. action.canceled, queuedActions
     }
 
+    function testFuzz_RevertIfNotCreator(address _randomCaller) public {
+        vm.assume(_randomCaller != actionCreator);
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+        vm.prank(_randomCaller);
+        vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+        vertex.cancelAction(0);
+    }
+
+    // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
         vm.startPrank(actionCreator);
         _createAction();
