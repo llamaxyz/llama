@@ -276,15 +276,29 @@ contract Initialize is VertexCoreTest {
 }
 
 contract CreateAction is VertexCoreTest {
+    function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
+      // TODO
+      // createAction should succeed
+      // assert that ActionCreated is emitted
+      // assert that the returned ID is correct
+      // get the new action using the returned ID
+      // assert against the action properties, e.g. creator, strategy, target
+    }
+
     function test_RevertIfStrategyUnauthorized() public {
-        VertexStrategy unauthorizedStrategy = VertexStrategy(address(0xdead));
+        VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.InvalidStrategy.selector);
         vertex.createAction(unauthorizedStrategy, address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
 
-    function test_RevertIfPolicyholderNotMinted() public {
-        vm.prank(address(0xdead));
+    function test_RevertIfStrategyIsFromAnotherVertex() public {
+        // TODO like the previous test, but deploy a real strategy and use that as unauthorizedStrategy
+    }
+
+    function testFuzz_RevertIfPolicyholderNotMinted(address _notActionCreator) public {
+        vm.assume(_notActionCreator != actionCreator);
+        vm.prank(_notActionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
         vertex.createAction(strategies[1], address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
@@ -295,18 +309,25 @@ contract CreateAction is VertexCoreTest {
         vertex.createAction(strategies[1], address(targetProtocol), 0, pauseSelector, abi.encode(true));
     }
 
-    function test_RevertIfNoPermissionForTarget() public {
-        address fakeTarget = address(0xdead);
+    function testFuzz_RevertIfNoPermissionForTarget(address _incorrectTarget) public {
+        vm.assume(_incorrectTarget != address(targetProtocol));
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategies[0], fakeTarget, 0, pauseSelector, abi.encode(true));
+        vertex.createAction(strategies[0], _incorrectTarget, 0, pauseSelector, abi.encode(true));
     }
 
-    function test_RevertIfNoPermissionForSelector() public {
-        bytes4 fakeSelector = 0x02222222;
+    function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
+        vm.assume(_badSelector != pauseSelector && _badSelector != failSelector);
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-        vertex.createAction(strategies[0], address(targetProtocol), 0, fakeSelector, abi.encode(true));
+        vertex.createAction(strategies[0], address(targetProtocol), 0, _badSelector, abi.encode(true));
+    }
+
+    function testFuzz_RevertIfPermissionExpired(uint256 _expirationTimestamp) public {
+        // TODO
+        // issue a policy NFT to a user which expires at _expirationTimestamp
+        // vm.warp to that timestamp
+        // try to createAction, expect it to revert
     }
 }
 
