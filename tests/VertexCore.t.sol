@@ -251,7 +251,23 @@ contract Setup is VertexCoreTest {
 }
 
 contract Initialize is VertexCoreTest {
-  // TODO add tests
+  // TODO might want a new setup function here which deploys a VertexCore
+  // without initializing it, then allows the test functions below to initialize
+
+  function test_DeploysStrategies() public {
+    // TODO
+    // confirm strateges have been deployed at expected addresses
+    // confirm events are emitted
+    // confirm strategies have expected storage, e.g. vertex + policy are set properly
+    // confirm deployed strategies are authorized by vertexcore contract
+  }
+  function test_DeploysAccounts() public {
+    // TODO
+    // confirm accounts have been deployed at expected addresses
+    // confirm events are emitted
+    // confirm accounts have expected storage, e.g. vertex + name are set properly
+    // confirm deployed accounts are authorized by vertexcore contract
+  }
 }
 
 contract CreateAction is VertexCoreTest {
