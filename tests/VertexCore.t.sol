@@ -130,9 +130,9 @@ contract VertexCoreTest is Test {
                         Action setup helpers
     //////////////////////////////////////////////////////////////*/
 
-    function _createAction() public {
+    function _createAction() public returns (uint256 actionId) {
         vm.prank(actionCreator);
-        vertex.createAction(
+        actionId = vertex.createAction(
             strategies[0],
             address(targetProtocol),
             0, // value
@@ -175,11 +175,16 @@ contract VertexCoreTest is Test {
         vm.stopPrank();
     }
 
-    function _approveAction(address policyholder) public {
+    function _approveAction(address _policyholder, uint256 _actionId) public {
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderApproved(0, policyholder, true, 1);
-        vm.prank(policyholder);
-        vertex.submitApproval(0, true);
+        emit PolicyholderApproved(_actionId, _policyholder, true, 1);
+        vm.prank(_policyholder);
+        vertex.submitApproval(_actionId, true);
+    }
+
+    function _approveAction(address _policyholder) public {
+        uint256 _assumedActionId = 0;
+        _approveAction(_policyholder, _assumedActionId);
     }
 
     function _disapproveAction(address policyholder) public {
@@ -472,78 +477,73 @@ contract QueueAction is VertexCoreTest {
 }
 
 contract ExecuteAction is VertexCoreTest {
-    function test_RevertIfNotQueued() public {
-        _createAction();
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
+    uint256 actionId;
+
+    function setUp() override public {
+        VertexCoreTest.setUp();
+
+        actionId = _createAction();
+        _approveAction(policyholder1, actionId);
+        _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
 
-        assertEq(strategies[0].isActionPassed(0), true);
-
-        vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
-        vertex.executeAction(0);
+        assertEq(strategies[0].isActionPassed(actionId), true);
     }
 
+    function test_RevertIfNotQueued() public {
+        vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
+        vertex.executeAction(actionId);
+    }
+
+
+    // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
-        _createAction();
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
-
-        vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
-
-        assertEq(strategies[0].isActionPassed(0), true);
-
-        vertex.queueAction(0);
+        vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
         vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.InvalidActionId.selector);
-        vertex.executeAction(1);
+        vertex.executeAction(actionId + 1);
     }
 
     function test_RevertIfTimelockNotFinished() public {
-        _createAction();
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
-
-        vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
-
-        assertEq(strategies[0].isActionPassed(0), true);
-
-        vertex.queueAction(0);
+        vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 6 hours);
         vm.roll(block.number + 1800);
 
         vm.expectRevert(VertexCore.TimelockNotFinished.selector);
-        vertex.executeAction(0);
+        vertex.executeAction(actionId);
     }
 
     function test_RevertIfFailedActionExecution() public {
-        vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
-        vm.stopPrank();
+        vm.prank(actionCreator);
+        actionId = vertex.createAction(
+            strategies[0],
+            address(targetProtocol),
+            0, // value
+            failSelector,
+            abi.encode("")
+        );
 
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
+        _approveAction(policyholder1, actionId);
+        _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
 
-        assertEq(strategies[0].isActionPassed(0), true);
+        assertEq(strategies[0].isActionPassed(actionId), true);
 
-        vertex.queueAction(0);
+        vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
         vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.FailedActionExecution.selector);
-        vertex.executeAction(0);
+        vertex.executeAction(actionId);
     }
 }
 
