@@ -492,7 +492,16 @@ contract ExecuteAction is VertexCoreTest {
         assertEq(strategies[0].isActionPassed(actionId), true);
     }
 
+    function test_ActionExecution() public {
+      // TODO
+      // This is a happy path test.
+      // Execute the queued action, confirm the call was performed.
+      // Assert that ActionExecuted was emitted.
+      // Assert that the call result was returned.
+    }
+
     function test_RevertIfNotQueued() public {
+        // TODO assert action state
         vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
         vertex.executeAction(actionId);
     }
@@ -509,6 +518,7 @@ contract ExecuteAction is VertexCoreTest {
         vertex.executeAction(actionId + 1);
     }
 
+    // TODO fuzz over seconds jumped forward, only assert the revert if < exectionTime
     function test_RevertIfTimelockNotFinished() public {
         vertex.queueAction(actionId);
 
@@ -544,6 +554,18 @@ contract ExecuteAction is VertexCoreTest {
 
         vm.expectRevert(VertexCore.FailedActionExecution.selector);
         vertex.executeAction(actionId);
+    }
+
+    function test_HandlesReentrancy() public {
+      // TODO
+      // What happens if somone queues an action to call vertex.executeAction?
+      // Calling executeAction on that action should revert with OnlyQueuedActions.
+      // We should confirm that nothing weird happens if this is done
+    }
+
+    function test_RevertsIfExternalCallIsUnsuccessful() public {
+      // TODO
+      // expect the call to revert with FailedActionExecution
     }
 }
 
