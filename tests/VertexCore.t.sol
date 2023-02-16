@@ -35,11 +35,7 @@ contract VertexCoreTest is Test {
     bytes4 public constant failSelector = 0xa9cc4718;
 
     PermissionData public permission;
-    PermissionData[] public permissions;
-    bytes8[] public permissionSignature;
-    bytes8[][] public permissionSignatures;
     uint256[][] public expirationTimestamps;
-    address[] public addresses;
     uint256[] public policyIds;
 
     address[] public initialPolicies;
@@ -125,7 +121,7 @@ contract VertexCoreTest is Test {
         policy = vertex.policy();
 
         // Create and assign policies
-        _createPolicies();
+        _grantPermissions();
 
         vm.label(actionCreator, "Action Creator");
     }
@@ -149,28 +145,37 @@ contract VertexCoreTest is Test {
         assertEq(action.disapprovalPolicySupply, 5);
     }
 
-    function _createPolicies() public {
+    function _grantPermissions() public {
         vm.startPrank(address(vertex));
-        permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
-        permissions.push(permission);
-        permissionSignature.push(policy.hashPermission(permission));
-        for (uint256 i; i < 5; i++) {
-            if (i == 0) {
-                bytes8[] memory creatorPermissions = new bytes8[](2);
-                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
-                creatorPermissions[0] = policy.hashPermission(failPermission);
-                creatorPermissions[1] = policy.hashPermission(permission);
-                permissionSignatures.push(creatorPermissions);
-            } else {
-                permissionSignatures.push(permissionSignature);
-            }
-        }
-        addresses.push(actionCreator);
-        addresses.push(policyholder1);
-        addresses.push(policyholder2);
-        addresses.push(policyholder3);
-        addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
+
+        bytes8[] memory pauserPermissions = new bytes8[](1);
+        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
+        pauserPermissions[0] = policy.hashPermission(pausePermission);
+
+        bytes8[] memory creatorPermissions = new bytes8[](2);
+        PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
+        creatorPermissions[0] = policy.hashPermission(failPermission);
+        creatorPermissions[1] = policy.hashPermission(pausePermission);
+
+        address[] memory batchedAddresses = new address[](5);
+        bytes8[][] memory batchedSignatures = new bytes8[][](5);
+
+        batchedAddresses[0] = actionCreator;
+        batchedSignatures[0] = creatorPermissions;
+
+        batchedAddresses[1] = policyholder1;
+        batchedSignatures[1] = pauserPermissions;
+
+        batchedAddresses[2] = policyholder2;
+        batchedSignatures[2] = pauserPermissions;
+
+        batchedAddresses[3] = policyholder3;
+        batchedSignatures[3] = pauserPermissions;
+
+        batchedAddresses[4] = policyholder4;
+        batchedSignatures[4] = pauserPermissions;
+
+        policy.batchGrantPermissions(batchedAddresses, batchedSignatures, expirationTimestamps);
         vm.stopPrank();
     }
 
