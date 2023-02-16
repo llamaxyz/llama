@@ -202,13 +202,7 @@ contract VertexCoreTest is Test {
         assertEq(action.executed, true);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Integration tests
-    //////////////////////////////////////////////////////////////*/
-
-    // TODO abstract this behavior into a helper and move this test to its own
-    // Integration contract. Currently this will run in all child contracts.
-    function test_VertexCore_CompleteActionFlow() public {
+    function _executeCompleteActionFlow() internal {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
@@ -331,7 +325,7 @@ contract CancelAction is VertexCoreTest {
     }
 
     function test_RevertIfActionExecuted() public {
-        test_VertexCore_CompleteActionFlow();
+        _executeCompleteActionFlow();
 
         vm.startPrank(actionCreator);
         vm.expectRevert(VertexCore.InvalidCancelation.selector);
@@ -892,4 +886,10 @@ contract GetActionState is VertexCoreTest {
   function test_QueuedActionsHaveStateQueued() public {} // TODO
   function test_ExecutedActionsHaveStateExecuted() public {} // TODO
   function test_RejectedActionsHaveStateFailed() public {} // TODO
+}
+
+contract Integration is VertexCoreTest {
+    function test_CompleteActionFlow() public {
+      _executeCompleteActionFlow();
+    }
 }
