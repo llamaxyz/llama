@@ -79,7 +79,7 @@ contract VertexCore is IVertexCore, Initializable {
         _;
     }
 
-    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialAccounts)
+    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] calldata initialStrategies, string[] calldata initialAccounts)
         external
         override
         initializer
@@ -87,17 +87,8 @@ contract VertexCore is IVertexCore, Initializable {
         name = _name;
         policy = _policy;
 
-        uint256 accountsLength = initialAccounts.length;
-        unchecked {
-            _deployStrategies(initialStrategies, _policy);
-
-            for (uint256 i; i < accountsLength; ++i) {
-                bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-                VertexAccount account = new VertexAccount{salt: accountSalt}(initialAccounts[i], address(this));
-                authorizedAccounts[account] = true;
-                emit AccountAuthorized(account, initialAccounts[i]);
-            }
-        }
+        _deployStrategies(initialStrategies, _policy);
+        _deployAccounts(initialAccounts);
     }
 
     /// @inheritdoc IVertexCore
@@ -226,7 +217,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] memory strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
         unchecked {
             _deployStrategies(strategies, policy);
         }
@@ -245,15 +236,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex {
-        uint256 accountLength = accounts.length;
-        unchecked {
-            for (uint256 i; i < accountLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-                VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
-                authorizedAccounts[account] = true;
-                emit AccountAuthorized(account, accounts[i]);
-            }
-        }
+        _deployAccounts(accounts);
     }
 
     /// @inheritdoc IVertexCore
@@ -345,12 +328,27 @@ contract VertexCore is IVertexCore, Initializable {
         emit PolicyholderDisapproved(actionId, policyholder, support, weight);
     }
 
-    function _deployStrategies(Strategy[] memory initialStrategies, VertexPolicyNFT _policy) internal {
-        uint256 strategyLength = initialStrategies.length;
-        for (uint256 i; i < strategyLength; ++i) {
-            bytes32 salt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-            VertexStrategy strategy = new VertexStrategy{salt: salt}(initialStrategies[i], _policy, IVertexCore(address(this)));
-            authorizedStrategies[strategy] = true;
+    function _deployAccounts(string[] calldata accounts) internal {
+        uint256 accountLength = accounts.length;
+        unchecked {
+            for (uint256 i; i < accountLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+                VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
+                authorizedAccounts[account] = true;
+                emit AccountAuthorized(account, accounts[i]);
+            }
+        }
+    }
+
+    function _deployStrategies(Strategy[] calldata strategies, VertexPolicyNFT _policy) internal {
+        uint256 strategyLength = strategies.length;
+        unchecked {
+            for (uint256 i; i < strategyLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
+                VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
+                authorizedStrategies[strategy] = true;
+                emit StrategyAuthorized(strategy, strategies[i]);
+            }
         }
     }
 
