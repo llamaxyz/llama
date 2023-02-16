@@ -218,9 +218,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
-        unchecked {
-            _deployStrategies(strategies, policy);
-        }
+        _deployStrategies(strategies, policy);
     }
 
     /// @inheritdoc IVertexCore
