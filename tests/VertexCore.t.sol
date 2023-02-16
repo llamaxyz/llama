@@ -182,12 +182,14 @@ contract VertexCoreTest is Test {
     function _approveAction(address policyholder) public {
         vm.expectEmit(true, true, true, true);
         emit PolicyholderApproved(0, policyholder, true, 1);
+        vm.prank(policyholder);
         vertex.submitApproval(0, true);
     }
 
     function _disapproveAction(address policyholder) public {
         vm.expectEmit(true, true, true, true);
         emit PolicyholderDisapproved(0, policyholder, true, 1);
+        vm.prank(policyholder);
         vertex.submitDisapproval(0, true);
     }
 
@@ -212,13 +214,8 @@ contract VertexCoreTest is Test {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -226,9 +223,7 @@ contract VertexCoreTest is Test {
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
 
-        vm.startPrank(policyholder1);
         _disapproveAction(policyholder1);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 5 days);
         vm.roll(block.number + 36000);
@@ -384,13 +379,8 @@ contract CancelAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -398,9 +388,7 @@ contract CancelAction is VertexCoreTest {
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
 
-        vm.startPrank(policyholder1);
         _disapproveAction(policyholder1);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 15 days);
         vm.roll(block.number + 108000);
@@ -416,9 +404,7 @@ contract CancelAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -434,13 +420,8 @@ contract CancelAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -448,17 +429,9 @@ contract CancelAction is VertexCoreTest {
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
 
-        vm.startPrank(policyholder1);
         _disapproveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _disapproveAction(policyholder2);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder3);
         _disapproveAction(policyholder3);
-        vm.stopPrank();
 
         vm.expectEmit(true, true, true, true);
         emit ActionCanceled(0);
@@ -470,13 +443,8 @@ contract CancelAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -495,9 +463,7 @@ contract QueueAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -506,22 +472,15 @@ contract QueueAction is VertexCoreTest {
         vertex.queueAction(0);
     }
 
+    // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
         vm.startPrank(actionCreator);
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder3);
         _approveAction(policyholder3);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -537,13 +496,8 @@ contract ExecuteAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -559,13 +513,8 @@ contract ExecuteAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -586,13 +535,8 @@ contract ExecuteAction is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -613,13 +557,8 @@ contract ExecuteAction is VertexCoreTest {
         vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -642,13 +581,8 @@ contract SubmitApproval is VertexCoreTest {
         vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
         _approveAction(policyholder2);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
@@ -664,10 +598,10 @@ contract SubmitApproval is VertexCoreTest {
         _createAction();
         vm.stopPrank();
 
-        vm.startPrank(policyholder1);
         _approveAction(policyholder1);
 
         vm.expectRevert(VertexCore.DuplicateApproval.selector);
+        vm.prank(policyholder1);
         vertex.submitApproval(0, true);
     }
 
@@ -694,7 +628,22 @@ contract SubmitApprovalBySignature is VertexCoreTest {
 }
 
 contract SubmitDisapproval is VertexCoreTest {
-    function test_submitDisapproval_RevertIfActionNotQueued() public {
+    function _createApproveAndQueueAction() internal {
+        vm.startPrank(actionCreator);
+        _createAction();
+        vm.stopPrank();
+
+        _approveAction(policyholder1);
+        _approveAction(policyholder2);
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        assertEq(strategies[0].isActionPassed(0), true);
+        _queueAction();
+    }
+
+    function test_RevertIfActionNotQueued() public {
         vm.startPrank(actionCreator);
         vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
         vm.stopPrank();
@@ -703,49 +652,18 @@ contract SubmitDisapproval is VertexCoreTest {
         vertex.submitDisapproval(0, true);
     }
 
-    function test_submitDisapproval_RevertIfDuplicateDisapproval() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
+    function test_RevertIfDuplicateDisapproval() public {
+        _createApproveAndQueueAction();
 
-        vm.startPrank(policyholder1);
-        _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
-        _approveAction(policyholder2);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
-
-        assertEq(strategies[0].isActionPassed(0), true);
-        _queueAction();
-
-        vm.startPrank(policyholder1);
         _disapproveAction(policyholder1);
 
         vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
+        vm.prank(policyholder1);
         vertex.submitDisapproval(0, true);
     }
 
-    function test_submitDisapproval_ChangeDisapprovalSupport() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-
-        vm.startPrank(policyholder1);
-        _approveAction(policyholder1);
-        vm.stopPrank();
-
-        vm.startPrank(policyholder2);
-        _approveAction(policyholder2);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
-
-        _queueAction();
+    function test_ChangeDisapprovalSupport() public {
+        _createApproveAndQueueAction();
 
         vm.startPrank(policyholder1);
         vertex.submitDisapproval(0, true);
