@@ -12,32 +12,32 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4603910                                     | 23221           |         |         |         |         |
+| 4428074                                     | 22343           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-| createAction                                | 3003            | 199406  | 240499  | 243008  | 27      |
-| createAndAuthorizeAccounts                  | 1731177         | 1731177 | 1731177 | 1731177 | 1       |
-| createAndAuthorizeStrategies                | 2625295         | 2625295 | 2625295 | 2625295 | 1       |
+| createAction                                | 2991            | 199384  | 240475  | 242984  | 27      |
+| createAndAuthorizeAccounts                  | 1731079         | 1731079 | 1731079 | 1731079 | 1       |
+| createAndAuthorizeStrategies                | 2638741         | 2638741 | 2638741 | 2638741 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 9330            | 2852436 | 2952289 | 3150519 | 49      |
+| initialize                                  | 1849            | 2860496 | 2960412 | 3164269 | 49      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
 | submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
 | submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
-| unauthorizeStrategies                       | 11288           | 11288   | 11288   | 11288   | 1       |
+| unauthorizeStrategies                       | 11269           | 11269   | 11269   | 11269   | 1       |
 
 
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10128731                                             | 44393           |         |         |         |         |
+| 10142481                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3901389 | 5847168 | 5847168 | 3       |
+| deploy                                               | 9832            | 3910556 | 5860918 | 5860918 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
@@ -85,9 +85,3 @@
 
 
 
-
-Failing tests:
-Encountered 1 failing test in tests/VertexCore.t.sol:VertexCoreTest
-[31m[FAIL. Reason: Log != expected log][0m test_createAndAuthorizeStrategies_CreateNewStrategies() (gas: 2722719)
-
-Encountered a total of [31m1[0m failing tests, [32m63[0m tests succeeded
