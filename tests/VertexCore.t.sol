@@ -60,7 +60,7 @@ contract VertexCoreTest is Test {
     event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
-    function setUp() public {
+    function setUp() virtual public {
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
@@ -131,18 +131,14 @@ contract VertexCoreTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function _createAction() public {
-        vm.expectEmit(true, true, true, true);
-        emit ActionCreated(0, actionCreator, strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
-        vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
-
-        Action memory action = vertex.getAction(0);
-        uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
-
-        assertEq(vertex.actionsCount(), 1);
-        assertEq(action.createdBlockNumber, block.number);
-        assertEq(approvalEndTime, block.number + 14400);
-        assertEq(action.approvalPolicySupply, 5);
-        assertEq(action.disapprovalPolicySupply, 5);
+        vm.prank(actionCreator);
+        vertex.createAction(
+            strategies[0],
+            address(targetProtocol),
+            0, // value
+            pauseSelector,
+            abi.encode(true)
+        );
     }
 
     function _grantPermissions() public {
@@ -210,9 +206,7 @@ contract VertexCoreTest is Test {
     }
 
     function _executeCompleteActionFlow() internal {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
 
         _approveAction(policyholder1);
         _approveAction(policyholder2);
@@ -271,13 +265,23 @@ contract Initialize is VertexCoreTest {
 }
 
 contract CreateAction is VertexCoreTest {
-    function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
-      // TODO
-      // createAction should succeed
-      // assert that ActionCreated is emitted
-      // assert that the returned ID is correct
-      // get the new action using the returned ID
-      // assert against the action properties, e.g. creator, strategy, target
+    // TODO fuzz
+    // function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data)
+    function test_CreatesAnAction() public {
+        vm.expectEmit(true, true, true, true);
+        emit ActionCreated(0, actionCreator, strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
+        vm.prank(actionCreator);
+        uint256 _actionId = vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
+
+        Action memory action = vertex.getAction(_actionId);
+        uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
+
+        assertEq(_actionId, 0);
+        assertEq(vertex.actionsCount(), 1);
+        assertEq(action.createdBlockNumber, block.number);
+        assertEq(approvalEndTime, block.number + 14400);
+        assertEq(action.approvalPolicySupply, 5);
+        assertEq(action.disapprovalPolicySupply, 5);
     }
 
     function test_RevertIfStrategyUnauthorized() public {
@@ -327,9 +331,13 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CancelAction is VertexCoreTest {
+    function setUp() override public {
+      VertexCoreTest.setUp();
+      _createAction();
+    }
+
     function test_CreatorCancelFlow() public {
         vm.startPrank(actionCreator);
-        _createAction();
         vm.expectEmit(true, true, true, true);
         emit ActionCanceled(0);
         vertex.cancelAction(0);
@@ -339,9 +347,6 @@ contract CancelAction is VertexCoreTest {
 
     function testFuzz_RevertIfNotCreator(address _randomCaller) public {
         vm.assume(_randomCaller != actionCreator);
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
         vm.prank(_randomCaller);
         vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
         vertex.cancelAction(0);
@@ -350,7 +355,6 @@ contract CancelAction is VertexCoreTest {
     // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
         vm.startPrank(actionCreator);
-        _createAction();
         vm.expectRevert(VertexCore.InvalidActionId.selector);
         vertex.cancelAction(1);
         vm.stopPrank();
@@ -358,7 +362,6 @@ contract CancelAction is VertexCoreTest {
 
     function test_RevertIfAlreadyCanceled() public {
         vm.startPrank(actionCreator);
-        _createAction();
         vertex.cancelAction(0);
         vm.expectRevert(VertexCore.InvalidCancelation.selector);
         vertex.cancelAction(0);
@@ -375,10 +378,6 @@ contract CancelAction is VertexCoreTest {
     }
 
     function test_RevertIfActionExpired() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -400,10 +399,6 @@ contract CancelAction is VertexCoreTest {
     }
 
     function test_RevertIfActionFailed() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
@@ -416,10 +411,6 @@ contract CancelAction is VertexCoreTest {
     }
 
     function test_CancelIfDisapproved() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -439,10 +430,6 @@ contract CancelAction is VertexCoreTest {
     }
 
     function test_RevertIfDisapprovalDoesNotReachQuorum() public {
-        vm.startPrank(actionCreator);
-        _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -459,10 +446,7 @@ contract CancelAction is VertexCoreTest {
 
 contract QueueAction is VertexCoreTest {
     function test_RevertIfNotApproved() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
@@ -474,10 +458,7 @@ contract QueueAction is VertexCoreTest {
 
     // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
         _approveAction(policyholder3);
@@ -492,10 +473,7 @@ contract QueueAction is VertexCoreTest {
 
 contract ExecuteAction is VertexCoreTest {
     function test_RevertIfNotQueued() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -509,10 +487,7 @@ contract ExecuteAction is VertexCoreTest {
     }
 
     function test_RevertIfInvalidActionId() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -531,10 +506,7 @@ contract ExecuteAction is VertexCoreTest {
     }
 
     function test_RevertIfTimelockNotFinished() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
@@ -594,10 +566,7 @@ contract SubmitApproval is VertexCoreTest {
     }
 
     function test_RevertIfDuplicateApproval() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
 
         vm.expectRevert(VertexCore.DuplicateApproval.selector);
@@ -606,9 +575,7 @@ contract SubmitApproval is VertexCoreTest {
     }
 
     function test_ChangeApprovalSupport() public {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
 
         vm.startPrank(policyholder1);
         vertex.submitApproval(0, true);
@@ -629,10 +596,7 @@ contract SubmitApprovalBySignature is VertexCoreTest {
 
 contract SubmitDisapproval is VertexCoreTest {
     function _createApproveAndQueueAction() internal {
-        vm.startPrank(actionCreator);
         _createAction();
-        vm.stopPrank();
-
         _approveAction(policyholder1);
         _approveAction(policyholder2);
 
