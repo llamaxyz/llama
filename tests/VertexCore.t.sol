@@ -570,50 +570,79 @@ contract ExecuteAction is VertexCoreTest {
 }
 
 contract SubmitApproval is VertexCoreTest {
-    function test_RevertIfActionNotActive() public {
-        vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
-        vm.stopPrank();
+    uint256 actionId;
 
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
+    function test_SuccessfulApproval() public {
+      // TODO
+      // This is a happy path test.
+      // Assert changes to Action storage.
+      // Assert changes to Approval storage.
+      // Assert event emission.
+    }
+
+    function test_RevertIfActionNotActive() public {
+        actionId = _createAction();
+        _approveAction(policyholder1, actionId);
+        _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
 
-        vertex.queueAction(0);
+        vertex.queueAction(actionId);
 
         vm.expectRevert(VertexCore.ActionNotActive.selector);
-        vertex.submitApproval(0, true);
+        vertex.submitApproval(actionId, true);
     }
 
     function test_RevertIfDuplicateApproval() public {
-        _createAction();
-        _approveAction(policyholder1);
+        actionId = _createAction();
+        _approveAction(policyholder1, actionId);
 
         vm.expectRevert(VertexCore.DuplicateApproval.selector);
         vm.prank(policyholder1);
-        vertex.submitApproval(0, true);
+        vertex.submitApproval(actionId, true);
     }
 
-    function test_ChangeApprovalSupport() public {
-        _createAction();
+    function test_ChangeApprovalSupportToFalse() public {
+        actionId = _createAction();
 
         vm.startPrank(policyholder1);
-        vertex.submitApproval(0, true);
+        vertex.submitApproval(actionId, true);
+        Action memory action = vertex.getAction(actionId);
+        assertEq(action.totalApprovals, 1);
 
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderApproved(0, policyholder1, false, 1);
-        vertex.submitApproval(0, false);
-
-        Action memory action = vertex.getAction(0);
+        emit PolicyholderApproved(actionId, policyholder1, false, 1);
+        vertex.submitApproval(actionId, false);
+        action = vertex.getAction(actionId);
 
         assertEq(action.totalApprovals, 0);
+    }
+
+    function test_ChangeApprovalSupportToTrue() public {
+      // TODO
+      // Just like the previous test, but go from false -> true
+    }
+
+    function test_RevertsIfCallerIsNotPolicyHolder() public {
+      // TODO
+      // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
 contract SubmitApprovalBySignature is VertexCoreTest {
-  // TODO add tests
+    function test_SuccessfulApprovalBySignature() public {
+      // TODO
+      // This is a happy path test.
+      // Assert changes to Action storage.
+      // Assert changes to Approval storage.
+      // Assert event emission.
+    }
+
+    function test_RevertsIfCallerIsNotPolicyHolder() public {
+      // TODO
+      // https://github.com/llama-community/vertex-v1/issues/62
+    }
 }
 
 contract SubmitDisapproval is VertexCoreTest {
