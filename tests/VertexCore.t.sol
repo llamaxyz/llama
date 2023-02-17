@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -32,10 +32,11 @@ contract VertexCoreTest is Test {
     bytes4 public constant pauseSelector = 0x02329a29;
     bytes4 public constant failSelector = 0xa9cc4718;
 
-    Permission public permission;
-    Permission[] public permissions;
+    PermissionData public permission;
+    PermissionData[] public permissions;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
+    uint256[][] public expirationTimestamps;
     address[] public addresses;
     uint256[] public policyIds;
 
@@ -56,11 +57,13 @@ contract VertexCoreTest is Test {
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event StrategiesAuthorized(Strategy[] strategies);
-    event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+    event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
+
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
@@ -94,7 +97,8 @@ contract VertexCoreTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+            new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -645,7 +649,7 @@ contract VertexCoreTest is Test {
         });
 
         for (uint256 i; i < newStrategies.length; i++) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(i, newStrategies[i])));
+            bytes32 strategySalt = bytes32(keccak256(abi.encode(newStrategies[i])));
             bytes memory bytecode = type(VertexStrategy).creationCode;
             bytes32 hash = keccak256(
                 abi.encodePacked(
@@ -661,7 +665,11 @@ contract VertexCoreTest is Test {
         vm.startPrank(address(vertex));
 
         vm.expectEmit(true, true, true, true);
-        emit StrategiesAuthorized(newStrategies);
+        emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
         vertex.createAndAuthorizeStrategies(newStrategies);
 
         assertEq(vertex.authorizedStrategies(strategyAddresses[0]), true);
@@ -672,8 +680,11 @@ contract VertexCoreTest is Test {
     // unauthorizeStrategies unit tests
     function test_unauthorizeStrategies_UnauthorizeStrategies() public {
         vm.startPrank(address(vertex));
+
         vm.expectEmit(true, true, true, true);
-        emit StrategiesUnauthorized(strategies);
+        emit StrategyUnauthorized(strategies[0]);
+        vm.expectEmit(true, true, true, true);
+        emit StrategyUnauthorized(strategies[1]);
         vertex.unauthorizeStrategies(strategies);
 
         assertEq(vertex.authorizedStrategies(strategies[0]), false);
@@ -767,13 +778,13 @@ contract VertexCoreTest is Test {
 
     function _createPolicies() public {
         vm.startPrank(address(vertex));
-        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
+        permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
         for (uint256 i; i < 5; i++) {
             if (i == 0) {
                 bytes8[] memory creatorPermissions = new bytes8[](2);
-                Permission memory failPermission = Permission({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
                 creatorPermissions[0] = policy.hashPermission(failPermission);
                 creatorPermissions[1] = policy.hashPermission(permission);
                 permissionSignatures.push(creatorPermissions);
@@ -786,7 +797,7 @@ contract VertexCoreTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
+        policy.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
         vm.stopPrank();
     }
 

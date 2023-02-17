@@ -6,8 +6,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {getChainId} from "src/utils/Helpers.sol";
-import {Action, Approval, Disapproval, Permission, Strategy} from "src/utils/Structs.sol";
+import {Action, Approval, Disapproval, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -52,12 +51,15 @@ contract VertexCore is IVertexCore, Initializable {
     uint256 public actionsCount;
 
     /// @notice Mapping of actionIds to Actions.
-    mapping(uint256 => Action) public actions;
+    /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
+    /// accessed with the `getAction` function so this is ok. We want the contracts to compile
+    /// without the optimizer so `forge coverage` can be used.
+    mapping(uint256 => Action) internal actions;
 
-    /// @notice Mapping of actionIds to polcyholders to approvals.
+    /// @notice Mapping of actionIds to policyholders to approvals.
     mapping(uint256 => mapping(address => Approval)) public approvals;
 
-    /// @notice Mapping of action ids to polcyholders to disapprovals.
+    /// @notice Mapping of action ids to policyholders to disapprovals.
     mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.
@@ -77,7 +79,7 @@ contract VertexCore is IVertexCore, Initializable {
         _;
     }
 
-    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] memory initialStrategies, string[] memory initialAccounts)
+    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] calldata initialStrategies, string[] calldata initialAccounts)
         external
         override
         initializer
@@ -85,32 +87,17 @@ contract VertexCore is IVertexCore, Initializable {
         name = _name;
         policy = _policy;
 
-        uint256 strategyLength = initialStrategies.length;
-        uint256 accountsLength = initialAccounts.length;
-        unchecked {
-            for (uint256 i; i < strategyLength; ++i) {
-                bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: strategySalt}(initialStrategies[i], _policy, IVertexCore(address(this))));
-                authorizedStrategies[strategy] = true;
-            }
-
-            for (uint256 i; i < accountsLength; ++i) {
-                bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-                VertexAccount account = VertexAccount(new VertexAccount{salt: accountSalt}(initialAccounts[i], address(this)));
-                authorizedAccounts[account] = true;
-                emit AccountAuthorized(account, initialAccounts[i]);
-            }
-        }
-
-        emit StrategiesAuthorized(initialStrategies);
+        _deployStrategies(initialStrategies, _policy);
+        _deployAccounts(initialAccounts);
     }
 
     /// @inheritdoc IVertexCore
     function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
-        Permission memory permission = Permission({target: target, selector: selector, strategy: strategy});
+        PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
+        policy.checkExpiration(uint256(uint160(msg.sender)), permissionSignature);
         if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
 
         uint256 previousActionCount = actionsCount;
@@ -118,11 +105,11 @@ contract VertexCore is IVertexCore, Initializable {
 
         uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
             ? policy.totalSupply()
-            : policy.getSupplyByPermissions(strategy.getApprovalPermissions());
+            : _getSupplyByPermissions(strategy.getApprovalPermissions());
 
         uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
             ? policy.totalSupply()
-            : policy.getSupplyByPermissions(strategy.getDisapprovalPermissions());
+            : _getSupplyByPermissions(strategy.getDisapprovalPermissions());
 
         newAction.creator = msg.sender;
         newAction.strategy = strategy;
@@ -201,7 +188,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -220,7 +207,7 @@ contract VertexCore is IVertexCore, Initializable {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this))),
+                keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
                 keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, support))
             )
         );
@@ -231,16 +218,7 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
-        uint256 strategyLength = strategies.length;
-        unchecked {
-            for (uint256 i; i < strategyLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(i, strategies[i])));
-                VertexStrategy strategy = VertexStrategy(new VertexStrategy{salt: salt}(strategies[i], policy, IVertexCore(address(this))));
-                authorizedStrategies[strategy] = true;
-            }
-        }
-
-        emit StrategiesAuthorized(strategies);
+        _deployStrategies(strategies, policy);
     }
 
     /// @inheritdoc IVertexCore
@@ -248,24 +226,15 @@ contract VertexCore is IVertexCore, Initializable {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
-                authorizedStrategies[strategies[i]] = false;
+                delete authorizedStrategies[strategies[i]];
+                emit StrategyUnauthorized(strategies[i]);
             }
         }
-
-        emit StrategiesUnauthorized(strategies);
     }
 
     /// @inheritdoc IVertexCore
     function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex {
-        uint256 accountLength = accounts.length;
-        unchecked {
-            for (uint256 i; i < accountLength; ++i) {
-                bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-                VertexAccount account = VertexAccount(new VertexAccount{salt: salt}(accounts[i], address(this)));
-                authorizedAccounts[account] = true;
-                emit AccountAuthorized(account, accounts[i]);
-            }
-        }
+        _deployAccounts(accounts);
     }
 
     /// @inheritdoc IVertexCore
@@ -355,5 +324,33 @@ contract VertexCore is IVertexCore, Initializable {
         disapproval.weight = uint248(support ? weight : 0);
 
         emit PolicyholderDisapproved(actionId, policyholder, support, weight);
+    }
+
+    function _deployAccounts(string[] calldata accounts) internal {
+        uint256 accountLength = accounts.length;
+        unchecked {
+            for (uint256 i; i < accountLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+                VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
+                authorizedAccounts[account] = true;
+                emit AccountAuthorized(account, accounts[i]);
+            }
+        }
+    }
+
+    function _deployStrategies(Strategy[] calldata strategies, VertexPolicyNFT _policy) internal {
+        uint256 strategyLength = strategies.length;
+        unchecked {
+            for (uint256 i; i < strategyLength; ++i) {
+                bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
+                VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
+                authorizedStrategies[strategy] = true;
+                emit StrategyAuthorized(strategy, strategies[i]);
+            }
+        }
+    }
+
+    function _getSupplyByPermissions(bytes8[] memory permissions) internal view returns (uint256) {
+        return policy.getSupplyByPermissions(permissions);
     }
 }

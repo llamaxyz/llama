@@ -5,7 +5,7 @@ import {VertexCore} from "src/core/VertexCore.sol";
 import {Strategy} from "src/utils/Structs.sol";
 
 interface IVertexFactory {
-    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
+    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
 
     /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
     /// @param name The name of this Vertex system.
@@ -21,6 +21,7 @@ interface IVertexFactory {
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
         address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
     ) external returns (VertexCore);
 }

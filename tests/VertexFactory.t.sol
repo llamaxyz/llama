@@ -8,10 +8,10 @@ import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, Permission, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
-    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore);
+    event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
 
     // Vertex system
     VertexCore public vertex;
@@ -32,8 +32,8 @@ contract VertexFactoryTest is Test {
     bytes4 public constant pauseSelector = 0x02329a29;
     bytes4 public constant failSelector = 0xa9cc4718;
 
-    Permission public permission;
-    Permission[] public permissions;
+    PermissionData public permission;
+    PermissionData[] public permissions;
     bytes8[] public permissionSignature;
     bytes8[][] public permissionSignatures;
     address[] public addresses;
@@ -41,6 +41,7 @@ contract VertexFactoryTest is Test {
 
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
+    uint256[][] public initialExpirationTimestamps;
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -60,13 +61,16 @@ contract VertexFactoryTest is Test {
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("mainnet"));
+
         vertexCore = new VertexCore();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
 
         // Deploy vertex and mock protocol
-        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory =
+        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -97,10 +101,11 @@ contract VertexFactoryTest is Test {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
         address deployedVertex = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
+        address deployedPolicy = 0x525F3daaB67189A2763B96A1518aaE34292a4f0b;
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
-        emit VertexCreated(1, "NewProject", deployedVertex);
-        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        emit VertexCreated(1, "NewProject", deployedVertex, deployedPolicy);
+        vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
     function testFuzz_deploy_RevertIfNotInitialVertex(address notInitialVertex) public {
@@ -109,14 +114,15 @@ contract VertexFactoryTest is Test {
         string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(notInitialVertex));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
     }
 
     function test_deploy_RevertIfReinitialized() public {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
         vm.prank(address(vertex));
-        VertexCore newVertex = vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions);
+        VertexCore newVertex =
+            vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         VertexPolicyNFT _policy = newVertex.policy();
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
         newVertex.initialize("NewProject", _policy, initialStrategies, initialAccounts);
@@ -127,13 +133,13 @@ contract VertexFactoryTest is Test {
 
     function _createPolicies() public {
         vm.startPrank(address(vertex));
-        permission = Permission({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
+        permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
         for (uint256 i; i < 5; i++) {
             if (i == 0) {
                 bytes8[] memory creatorPermissions = new bytes8[](2);
-                Permission memory failPermission = Permission({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
                 creatorPermissions[0] = policy.hashPermission(failPermission);
                 creatorPermissions[1] = policy.hashPermission(permission);
                 permissionSignatures.push(creatorPermissions);
@@ -146,7 +152,7 @@ contract VertexFactoryTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPermissions(addresses, permissionSignatures);
+        policy.batchGrantPermissions(addresses, permissionSignatures, initialExpirationTimestamps);
         vm.stopPrank();
     }
 
