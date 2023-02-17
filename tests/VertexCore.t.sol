@@ -892,6 +892,24 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
         accountAddresses[2].initialize(newAccounts[2], address(vertex));
     }
+
+    function test_UniquenessOfInput() public {
+      // TODO
+      // What happens if duplicate account names are in the input array?
+    }
+
+    function test_Idempotency() public {
+      // TODO
+      // What happens if it is called twice with the same inputs?
+    }
+
+    function test_CanBeCalledByASuccessfulAction() public {
+      // TODO
+      // Submit an action to call this function and authorize a new Account.
+      // Approve and queue the action.
+      // Execute the action.
+      // Ensure that the account is now authorized.
+    }
 }
 
 contract GetActionState is VertexCoreTest {
