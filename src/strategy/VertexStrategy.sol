@@ -118,6 +118,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+        if (policy.balanceOf(policyHolder) == 0) revert NoPolicy();
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
@@ -132,6 +133,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+        if (policy.balanceOf(policyHolder) == 0) revert NoPolicy();
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
