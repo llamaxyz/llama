@@ -100,22 +100,11 @@ contract VertexCoreTest is Test {
         vertex = VertexCore(vertexFactory.rootVertex());
         targetProtocol = new ProtocolXYZ(address(vertex));
 
-        // Use create2 to get vertex strategy addresses
-        for (uint256 i; i < initialStrategies.length; i++) {
-            bytes memory bytecode = type(VertexStrategy).creationCode;
-            address _strategy = computeCreate2Address(
-              keccak256(abi.encode(initialStrategies[i])), // salt
-              keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], vertex.policy(), address(vertex)))),
-              address(vertex) // deployer
-            );
-            strategies.push(VertexStrategy(_strategy));
-        }
+        strategies.push(_computeVertexStrategyAddress(initialStrategies[0]));
+        strategies.push(_computeVertexStrategyAddress(initialStrategies[1]));
 
-        // Use create2 to get vertex account addresses
-        for (uint256 i; i < initialAccounts.length; i++) {
-            bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-            accounts.push(VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex)))));
-        }
+        accounts.push(_computeVertexAccountAddress(initialAccounts[0]));
+        accounts.push(_computeVertexAccountAddress(initialAccounts[1]));
 
         // Set vertex's policy
         policy = vertex.policy();
@@ -127,7 +116,7 @@ contract VertexCoreTest is Test {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Action setup helpers
+                        Helpers
     //////////////////////////////////////////////////////////////*/
 
     function _createAction() public returns (uint256 actionId) {
@@ -239,6 +228,27 @@ contract VertexCoreTest is Test {
 
         _executeAction();
     }
+
+    function _computeVertexStrategyAddress(Strategy memory _strategy) internal returns (VertexStrategy) {
+      bytes memory bytecode = type(VertexStrategy).creationCode;
+      return VertexStrategy(
+          computeCreate2Address(
+              keccak256(abi.encode(_strategy)), // salt
+              keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, vertex.policy(), address(vertex)))),
+              address(vertex) // deployer
+          )
+      );
+    }
+
+    function _computeVertexAccountAddress(string memory _name) internal returns (VertexAccount) {
+        address _computedAddress = Clones.predictDeterministicAddress(
+            address(vertexAccountImplementation),
+            keccak256(abi.encode(_name)), // salt
+            address(vertex) // deployer
+        );
+        return VertexAccount(payable(_computedAddress));
+    }
+
 }
 
 contract Setup is VertexCoreTest {
@@ -774,17 +784,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
         });
 
         for (uint256 i; i < newStrategies.length; i++) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(newStrategies[i])));
-            bytes memory bytecode = type(VertexStrategy).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    bytes1(0xff),
-                    address(vertex),
-                    strategySalt,
-                    keccak256(abi.encodePacked(bytecode, abi.encode(newStrategies[i], vertex.policy(), address(vertex))))
-                )
-            );
-            strategyAddresses[i] = VertexStrategy(address(uint160(uint256(hash))));
+            strategyAddresses[i] = _computeVertexStrategyAddress(newStrategies[i]);
         }
 
         vm.startPrank(address(vertex));
@@ -828,8 +828,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
         newAccounts[2] = "VertexAccount4";
 
         for (uint256 i; i < newAccounts.length; i++) {
-            bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
-            accountAddresses[i] = VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex))));
+            accountAddresses[i] = _computeVertexAccountAddress(newAccounts[i]);
         }
 
         vm.startPrank(address(vertex));
