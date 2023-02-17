@@ -149,8 +149,6 @@ contract VertexCoreTest is Test {
         assertTrue(vertex.authorizedStrategies(strategies[1]));
         assertEq(strategies.length, 2);
 
-        assertTrue(vertex.authorizedAccounts(accounts[0]));
-        assertTrue(vertex.authorizedAccounts(accounts[1]));
         assertEq(accounts.length, 2);
     }
 
@@ -718,10 +716,6 @@ contract VertexCoreTest is Test {
         vm.expectEmit(true, true, true, true);
         emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
         vertex.createAndAuthorizeAccounts(newAccounts);
-
-        assertEq(vertex.authorizedAccounts(accountAddresses[0]), true);
-        assertEq(vertex.authorizedAccounts(accountAddresses[1]), true);
-        assertEq(vertex.authorizedAccounts(accountAddresses[2]), true);
     }
 
     /*///////////////////////////////////////////////////////////////

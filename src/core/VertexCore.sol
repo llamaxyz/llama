@@ -65,9 +65,6 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
-    /// @notice Mapping of all authorized accounts.
-    mapping(VertexAccount => bool) public authorizedAccounts;
-
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
@@ -332,7 +329,6 @@ contract VertexCore is IVertexCore, Initializable {
             for (uint256 i; i < accountLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
                 VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
-                authorizedAccounts[account] = true;
                 emit AccountAuthorized(account, accounts[i]);
             }
         }
