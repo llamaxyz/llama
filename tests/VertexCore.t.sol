@@ -831,16 +831,25 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 contract UnauthorizeStrategies is VertexCoreTest {
     function test_UnauthorizeStrategies() public {
         vm.startPrank(address(vertex));
+        assertEq(vertex.authorizedStrategies(strategies[0]), true);
+        assertEq(vertex.authorizedStrategies(strategies[1]), true);
 
         vm.expectEmit(true, true, true, true);
         emit StrategyUnauthorized(strategies[0]);
         vm.expectEmit(true, true, true, true);
         emit StrategyUnauthorized(strategies[1]);
+
         vertex.unauthorizeStrategies(strategies);
 
         assertEq(vertex.authorizedStrategies(strategies[0]), false);
         assertEq(vertex.authorizedStrategies(strategies[1]), false);
+
+        // TODO assert that calling createAction on a freshly unauthorized
+        // strategy will revert with InvalidStrategy.
     }
+
+    // TODO decide what should happen to actions attached to strategies that
+    // have been unauthorized and test that behavior (if any).
 }
 
 contract CreateAndAuthorizeAccounts is VertexCoreTest {
@@ -948,5 +957,26 @@ contract GetActionState is VertexCoreTest {
 contract Integration is VertexCoreTest {
     function test_CompleteActionFlow() public {
       _executeCompleteActionFlow();
+    }
+
+    function testFuzz_NewVertexInstancesCanBeDeployed() public {
+      // TODO
+      // Test that the root/llama VertexCore can deploy new client VertexCore
+      // instances by creating an action to call VertexFactory.deploy.
+    }
+
+    function testFuzz_ETHSendFromAccountViaActionApproval(uint256 _ethAmount) public {
+      // TODO test that funds can be moved from VertexAccounts via actions
+      // submitted and approved through VertextCore
+    }
+
+    function testFuzz_ERC20SendFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
+      // TODO test that funds can be moved from VertexAccounts via actions
+      // submitted and approved through VertextCore
+    }
+
+    function testFuzz_ERC20ApprovalFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
+      // TODO test that funds can be approved + transferred from VertexAccounts via actions
+      // submitted and approved through VertextCore
     }
 }
