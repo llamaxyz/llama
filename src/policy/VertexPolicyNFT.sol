@@ -162,7 +162,10 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @inheritdoc VertexPolicy
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
         PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];
-        return _permissionIdCheckpoint[_permissionIdCheckpoint.length - 1].quantity > 0;
+        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < block.timestamp
+            && tokenToPermissionExpirationTimestamp[policyId][permissionSignature] != 0;
+        bool hasQuantity = _permissionIdCheckpoint[_permissionIdCheckpoint.length - 1].quantity > 0;
+        return hasQuantity && !expired;
     }
 
     /// @notice updates a policyID with a new set of permissions
