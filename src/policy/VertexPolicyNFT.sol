@@ -50,26 +50,28 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 timestamp) external view override returns (bool) {
         uint256 policyId = uint256(uint160(policyholder));
-        PermissionIdCheckpoint[] storage _checkpoints = checkpoints[policyId];
+        PermissionIdCheckpoint[] storage _checkpoints = tokenPermissionCheckpoints[policyId][permissionSignature];
         uint256 length = _checkpoints.length;
         if (length == 0) return false;
-        if (blockNumber >= _checkpoints[length - 1].blockNumber) {
-            return permissionIsInPermissionsArray(_checkpoints[length - 1].permissionSignatures, permissionSignature);
+        if (timestamp >= _checkpoints[length - 1].timestamp) {
+            return hasPermission(policyId, permissionSignature);
         }
-        if (blockNumber < _checkpoints[0].blockNumber) return false;
+        if (timestamp < _checkpoints[0].timestamp) return false;
         uint256 min = 0;
         uint256 max = length - 1;
         while (max > min) {
             uint256 mid = (max + min + 1) / 2;
-            if (_checkpoints[mid].blockNumber <= blockNumber) {
+            if (_checkpoints[mid].timestamp <= timestamp) {
                 min = mid;
             } else {
                 max = mid - 1;
             }
         }
-        return permissionIsInPermissionsArray(_checkpoints[min].permissionSignatures, permissionSignature);
+        bool hasQuantity = _checkpoints[min].quantity > 0;
+        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < timestamp;
+        return hasQuantity && !expired;
     }
 
     /// @inheritdoc VertexPolicy
