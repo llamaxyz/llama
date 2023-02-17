@@ -12,32 +12,32 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4428074                                     | 22343           |         |         |         |         |
+| 4505579                                     | 22730           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-| createAction                                | 2991            | 199384  | 240475  | 242984  | 27      |
+| createAction                                | 2991            | 199360  | 240437  | 243022  | 27      |
 | createAndAuthorizeAccounts                  | 1731079         | 1731079 | 1731079 | 1731079 | 1       |
-| createAndAuthorizeStrategies                | 2638741         | 2638741 | 2638741 | 2638741 | 1       |
+| createAndAuthorizeStrategies                | 2863236         | 2863236 | 2863236 | 2863236 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 2860496 | 2960412 | 3164269 | 49      |
+| initialize                                  | 1849            | 3004065 | 3110090 | 3313949 | 49      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
-| submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
-| submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
+| submitApproval                              | 3028            | 41281   | 43210   | 56160   | 34      |
+| submitDisapproval                           | 2622            | 48552   | 67076   | 67076   | 11      |
 | unauthorizeStrategies                       | 11269           | 11269   | 11269   | 11269   | 1       |
 
 
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10142481                                             | 44393           |         |         |         |         |
+| 10292161                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3910556 | 5860918 | 5860918 | 3       |
+| deploy                                               | 9832            | 4010342 | 6010598 | 6010598 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
 
 
@@ -46,13 +46,13 @@
 | Deployment Cost                                         | Deployment Size |        |         |         |         |
 | 2566798                                                 | 17800           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
-| balanceOf                                               | 651             | 651    | 651     | 651     | 2       |
-| batchGrantPermissions                                   | 3683            | 696367 | 1093884 | 1095282 | 62      |
+| balanceOf                                               | 651             | 2139   | 2651    | 2651    | 43      |
+| batchGrantPermissions                                   | 3683            | 696998 | 1094583 | 1095282 | 62      |
 | batchRevokePermissions                                  | 2789            | 35701  | 47640   | 60120   | 6       |
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
 | checkExpiration                                         | 2895            | 3020   | 2895    | 6284    | 27      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
-| hasPermission                                           | 1913            | 6419   | 6759    | 8751    | 31      |
+| hasPermission                                           | 1913            | 6398   | 6721    | 8713    | 31      |
 | hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 128     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
@@ -68,17 +68,20 @@
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
 |---------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
-| 911648                                                  | 6201            |       |        |       |         |
+| 986356                                                  | 6588            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
 | DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 44      |
 | approvalPeriod                                          | 218             | 218   | 218    | 218   | 90      |
 | approvalWeightByPermission                              | 2593            | 2593  | 2593   | 2593  | 22      |
 | disapprovalWeightByPermission                           | 2592            | 2592  | 2592   | 2592  | 22      |
 | expirationDelay                                         | 262             | 262   | 262    | 262   | 18      |
-| getApprovalWeightAt                                     | 788             | 1850  | 2788   | 2788  | 32      |
-| getDisapprovalWeightAt                                  | 702             | 2035  | 2702   | 2702  | 9       |
+| getApprovalWeightAt                                     | 1839            | 4839  | 5839   | 5839  | 32      |
+| getDisapprovalWeightAt                                  | 1747            | 3302  | 3747   | 3747  | 9       |
 | isActionCanceletionValid                                | 13141           | 13141 | 13141  | 13141 | 3       |
 | isActionPassed                                          | 13142           | 13395 | 13142  | 17777 | 44      |
 | isFixedLengthApprovalPeriod                             | 246             | 246   | 246    | 246   | 37      |
 | minDisapprovalPct                                       | 307             | 307   | 307    | 307   | 10      |
 | queuingDuration                                         | 240             | 240   | 240    | 240   | 18      |
+
+
+
