@@ -76,16 +76,14 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @inheritdoc VertexPolicy
     function getSupplyByPermissions(bytes8[] calldata _permissions) external view override returns (uint256) {
-        uint256 policyLength = policyIds.length;
         uint256 permissionLength = _permissions.length;
         uint256 supply;
         unchecked {
-            for (uint256 i; i < policyLength; ++i) {
-                for (uint256 j; j < permissionLength; ++j) {
-                    if (hasPermission(policyIds[i], _permissions[j])) {
-                        ++supply;
-                        break;
-                    }
+            for (uint256 i; i < permissionLength; ++i) {
+                PermissionIdCheckpoint[] storage _checkpoints = permissionSupplyCheckpoints[_permissions[i]];
+                uint256 length = _checkpoints.length;
+                if (length != 0) {
+                    supply += _checkpoints[length - 1].quantity;
                 }
             }
         }
@@ -252,55 +250,13 @@ contract VertexPolicyNFT is VertexPolicy {
         }
     }
 
-    function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
-        uint256 length = policyPermissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (policyPermissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        return policyPermissionSignatures[min] == permissionSignature;
-    }
-
-    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal pure returns (bool) {
-        uint256 length = policyPermissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (policyPermissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        return policyPermissionSignatures[min] == permissionSignature;
-    }
-
     /// @inheritdoc VertexPolicy
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public override returns (bool expired) {
-        expired = _checkExpiration(policyId, permissionSignature);
+    function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
+        expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < block.timestamp;
         if (expired) {
-            sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);
-        }
-        return expired;
-    }
-
-    ///@notice checks if a permission has expired
-    ///@param policyId the id of the policy token to check
-    ///@param permissionSignature the signature of the permission to check
-    function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool expired) {
-        uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
-        if (expiration == 0 || expiration > block.timestamp) return false;
-        if (block.timestamp > expiration) {
-            return true;
+            tokenPermissionCheckpoints[policyId][permissionSignature].push(PermissionIdCheckpoint(block.timestamp, 0));
+            bytes8[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionSignature];
+            supplyCheckpoint.push(PermissionIdCheckpoint(block.timestamp, supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1));
         }
     }
 
