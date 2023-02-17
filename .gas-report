@@ -1,29 +1,32 @@
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
-| 517992                                               | 3363            |       |        |       |         |
+| 703222                                               | 4310            |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
-| approveERC20                                         | 541             | 24929 | 29623  | 44623 | 3       |
+| approveERC20                                         | 563             | 24943 | 29634  | 44634 | 3       |
+| approveERC721                                        | 498             | 498   | 498    | 498   | 1       |
+| approveOperatorERC721                                | 578             | 12334 | 8262   | 28162 | 3       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
-| transfer                                             | 464             | 2813  | 499    | 7478  | 3       |
-| transferERC20                                        | 519             | 2177  | 554    | 5460  | 3       |
+| transfer                                             | 486             | 2835  | 521    | 7500  | 3       |
+| transferERC20                                        | 541             | 2195  | 576    | 5469  | 3       |
+| transferERC721                                       | 564             | 581   | 581    | 599   | 2       |
 
 
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4428074                                     | 22343           |         |         |         |         |
+| 4617728                                     | 23290           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
 | authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
 | createAction                                | 2991            | 199384  | 240475  | 242984  | 27      |
-| createAndAuthorizeAccounts                  | 1731079         | 1731079 | 1731079 | 1731079 | 1       |
+| createAndAuthorizeAccounts                  | 2287658         | 2287658 | 2287658 | 2287658 | 1       |
 | createAndAuthorizeStrategies                | 2638741         | 2638741 | 2638741 | 2638741 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 2860496 | 2960412 | 3164269 | 49      |
+| initialize                                  | 1849            | 3238970 | 3331394 | 3535251 | 61      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
@@ -35,10 +38,10 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10142481                                             | 44393           |         |         |         |         |
+| 10513463                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 3910556 | 5860918 | 5860918 | 3       |
-| initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
+| deploy                                               | 9832            | 4157877 | 6231900 | 6231900 | 3       |
+| initialVertex                                        | 205             | 205     | 205     | 205     | 57      |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
@@ -58,7 +61,7 @@
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 66      |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 78      |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
 | totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
@@ -85,3 +88,14 @@
 
 
 
+
+Failing tests:
+Encountered 6 failing tests in tests/VertexAccount.t.sol:VertexAccountTest
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_ReceiveERC721() (gas: 40959)
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_SafeReceiveERC721() (gas: 40999)
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_TransferApprovedERC721() (gas: 41046)
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_TransferApprovedOperatorERC721() (gas: 23412)
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_approveERC721_ApproveBAYC() (gas: 40982)
+[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_transferERC721_TransferBAYC() (gas: 41023)
+
+Encountered a total of [31m6[0m failing tests, [32m70[0m tests succeeded
