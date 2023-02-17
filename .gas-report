@@ -4,32 +4,32 @@
 | 703222                                               | 4310            |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
 | approveERC20                                         | 563             | 24943 | 29634  | 44634 | 3       |
-| approveERC721                                        | 498             | 498   | 498    | 498   | 1       |
-| approveOperatorERC721                                | 578             | 12334 | 8262   | 28162 | 3       |
+| approveERC721                                        | 498             | 16890 | 25087  | 25087 | 3       |
+| approveOperatorERC721                                | 578             | 15666 | 16962  | 28162 | 4       |
+| onERC721Received                                     | 895             | 895   | 895    | 895   | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
 | transfer                                             | 486             | 2835  | 521    | 7500  | 3       |
 | transferERC20                                        | 541             | 2195  | 576    | 5469  | 3       |
-| transferERC721                                       | 564             | 581   | 581    | 599   | 2       |
+| transferERC721                                       | 564             | 3757  | 599    | 10109 | 3       |
 
 
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4617728                                     | 23290           |         |         |         |         |
+| 4596301                                     | 23183           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
-| authorizedAccounts                          | 659             | 1459    | 659     | 2659    | 5       |
-| authorizedStrategies                        | 593             | 1164    | 593     | 2593    | 7       |
+| authorizedStrategies                        | 548             | 1119    | 548     | 2548    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
 | createAction                                | 2991            | 199384  | 240475  | 242984  | 27      |
-| createAndAuthorizeAccounts                  | 2287658         | 2287658 | 2287658 | 2287658 | 1       |
+| createAndAuthorizeAccounts                  | 2221079         | 2221079 | 2221079 | 2221079 | 1       |
 | createAndAuthorizeStrategies                | 2638741         | 2638741 | 2638741 | 2638741 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 3238970 | 3331394 | 3535251 | 61      |
+| initialize                                  | 1849            | 3196040 | 3287008 | 3490865 | 61      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
-| queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
+| queueAction                                 | 543             | 53564   | 61369   | 66004   | 13      |
 | submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
 | submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
 | unauthorizeStrategies                       | 11269           | 11269   | 11269   | 11269   | 1       |
@@ -38,9 +38,9 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10513463                                             | 44393           |         |         |         |         |
+| 10469077                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 4157877 | 6231900 | 6231900 | 3       |
+| deploy                                               | 9832            | 4128286 | 6187514 | 6187514 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 57      |
 
 
@@ -88,14 +88,3 @@
 
 
 
-
-Failing tests:
-Encountered 6 failing tests in tests/VertexAccount.t.sol:VertexAccountTest
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_ReceiveERC721() (gas: 40959)
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_SafeReceiveERC721() (gas: 40999)
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_TransferApprovedERC721() (gas: 41046)
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_TransferApprovedOperatorERC721() (gas: 23412)
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_approveERC721_ApproveBAYC() (gas: 40982)
-[31m[FAIL. Reason: ERC721: transfer caller is not owner nor approved][0m test_VertexAccount_transferERC721_TransferBAYC() (gas: 41023)
-
-Encountered a total of [31m6[0m failing tests, [32m70[0m tests succeeded
