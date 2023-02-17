@@ -33,9 +33,9 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
         _;
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            Native Token
-    //////////////////////////////////////////////////////////////*/
+    // -------------------------------------------------------------------------
+    // Native Token
+    // -------------------------------------------------------------------------
 
     /// @notice Function for Vertex Account to receive ETH
     receive() external payable {}
@@ -46,9 +46,9 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
         recipient.sendValue(amount);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            ERC20 Token
-    //////////////////////////////////////////////////////////////*/
+    // -------------------------------------------------------------------------
+    // ERC20 Token
+    // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
     function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
@@ -62,9 +62,9 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
         token.safeApprove(recipient, amount);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            ERC721 Token
-    //////////////////////////////////////////////////////////////*/
+    // -------------------------------------------------------------------------
+    // ERC721 Token
+    // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
     function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
