@@ -187,18 +187,28 @@ contract VertexCoreTest is Test {
         _approveAction(_policyholder, _assumedActionId);
     }
 
-    function _disapproveAction(address policyholder) public {
+    function _disapproveAction(address _policyholder, uint256 _actionId) public {
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderDisapproved(0, policyholder, true, 1);
-        vm.prank(policyholder);
-        vertex.submitDisapproval(0, true);
+        emit PolicyholderDisapproved(_actionId, _policyholder, true, 1);
+        vm.prank(_policyholder);
+        vertex.submitDisapproval(_actionId, true);
+    }
+
+    function _disapproveAction(address _policyholder) public {
+        uint256 _assumedActionId = 0;
+        _disapproveAction(_policyholder, _assumedActionId);
+    }
+
+    function _queueAction(uint256 _actionId) public {
+        uint256 executionTime = block.timestamp + strategies[0].queuingDuration();
+        vm.expectEmit(true, true, true, true);
+        emit ActionQueued(_actionId, address(this), strategies[0], actionCreator, executionTime);
+        vertex.queueAction(_actionId);
     }
 
     function _queueAction() public {
-        uint256 executionTime = block.timestamp + strategies[0].queuingDuration();
-        vm.expectEmit(true, true, true, true);
-        emit ActionQueued(0, address(this), strategies[0], actionCreator, executionTime);
-        vertex.queueAction(0);
+        uint256 _assumedActionId = 0;
+        _queueAction(_assumedActionId);
     }
 
     function _executeAction() public {
@@ -646,55 +656,81 @@ contract SubmitApprovalBySignature is VertexCoreTest {
 }
 
 contract SubmitDisapproval is VertexCoreTest {
-    function _createApproveAndQueueAction() internal {
-        _createAction();
-        _approveAction(policyholder1);
-        _approveAction(policyholder2);
+    uint256 actionId;
+
+    function _createApproveAndQueueAction() internal returns (uint256 _actionId){
+        _actionId = _createAction();
+        _approveAction(policyholder1, _actionId);
+        _approveAction(policyholder2, _actionId);
 
         vm.warp(block.timestamp + 6 days);
         vm.roll(block.number + 43200);
 
-        assertEq(strategies[0].isActionPassed(0), true);
-        _queueAction();
+        assertEq(strategies[0].isActionPassed(_actionId), true);
+        _queueAction(_actionId);
+    }
+
+    function test_SuccessfulDisapproval() public {
+      // TODO
+      // This is a happy path test.
+      // Assert changes to Action storage.
+      // Assert changes to Disapproval storage.
+      // Assert event emission.
     }
 
     function test_RevertIfActionNotQueued() public {
-        vm.startPrank(actionCreator);
-        vertex.createAction(strategies[0], address(targetProtocol), 0, failSelector, abi.encode(""));
-        vm.stopPrank();
+        actionId = _createAction();
 
         vm.expectRevert(VertexCore.ActionNotQueued.selector);
-        vertex.submitDisapproval(0, true);
+        vertex.submitDisapproval(actionId, true);
     }
 
     function test_RevertIfDuplicateDisapproval() public {
-        _createApproveAndQueueAction();
+        actionId = _createApproveAndQueueAction();
 
-        _disapproveAction(policyholder1);
+        _disapproveAction(policyholder1, actionId);
 
         vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
         vm.prank(policyholder1);
-        vertex.submitDisapproval(0, true);
+        vertex.submitDisapproval(actionId, true);
     }
 
     function test_ChangeDisapprovalSupport() public {
-        _createApproveAndQueueAction();
+        actionId = _createApproveAndQueueAction();
 
-        vm.startPrank(policyholder1);
-        vertex.submitDisapproval(0, true);
+        _disapproveAction(policyholder1, actionId);
+        Action memory action = vertex.getAction(actionId);
+        assertEq(action.totalDisapprovals, 1);
 
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderDisapproved(0, policyholder1, false, 1);
-        vertex.submitDisapproval(0, false);
+        emit PolicyholderDisapproved(actionId, policyholder1, false, 1);
+        vm.prank(policyholder1);
+        vertex.submitDisapproval(actionId, false);
 
-        Action memory action = vertex.getAction(0);
-
+        action = vertex.getAction(actionId);
         assertEq(action.totalDisapprovals, 0);
+    }
+
+    function test_RevertsIfCallerIsNotPolicyHolder() public {
+      // TODO
+      // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
 contract SubmitDisapprovalBySignature is VertexCoreTest {
-  // TODO add tests
+    function test_SuccessfulDisapprovalBySignature() public {
+      // TODO
+      // This is a happy path test.
+      // Sign a message and have one account submit disapproval on behalf of another.
+      // Assert changes to Action storage.
+      // Assert changes to Dispproval storage.
+      // Assert event emission.
+    }
+
+    function test_RevertsIfCallerIsNotPolicyHolder() public {
+      // TODO
+      // https://github.com/llama-community/vertex-v1/issues/62
+    }
 }
 
 contract CreateAndAuthorizeStrategies is VertexCoreTest {
