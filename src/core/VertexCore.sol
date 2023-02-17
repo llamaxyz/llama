@@ -221,12 +221,12 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
         _deployStrategies(strategies, policy);
     }
 
     /// @inheritdoc IVertexCore
-    function unauthorizeStrategies(VertexStrategy[] calldata strategies) public override onlyVertex {
+    function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyVertex {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
@@ -237,7 +237,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex {
+    function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
         _deployAccounts(accounts);
     }
 
