@@ -15,6 +15,10 @@ contract VertexAccountTest is Test {
     address public constant USDC_WHALE = 0x55FE002aefF02F77364de339a1292923A15844B8;
     uint256 public constant USDC_AMOUNT = 1000e6;
 
+    IERC20 public constant USDT = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    address public constant USDT_WHALE = 0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06;
+    uint256 public constant USDT_AMOUNT = 1000e6;
+
     address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
     uint256 public constant ETH_AMOUNT = 1000e18;
 
@@ -157,6 +161,26 @@ contract VertexAccountTest is Test {
     // approve ERC20 unit tests
     function test_VertexAccount_approveERC20_ApproveUSDC() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
+    }
+
+    function test_VertexAccount_approveERC20_IncreaseUSDCAllowance() public {
+        _approveUSDCToRecipient(USDC_AMOUNT);
+        _approveUSDCToRecipient(USDC_AMOUNT + 1);
+    }
+
+    function test_VertexAccount_approveERC20_DecreaseUSDCAllowance() public {
+        _approveUSDCToRecipient(USDC_AMOUNT);
+        _approveUSDCToRecipient(USDC_AMOUNT - 1);
+    }
+
+    function test_VertexAccount_approveERC20_IncreaseUSDTAllowance() public {
+        _approveUSDTToRecipient(USDT_AMOUNT);
+        _approveUSDTToRecipient(USDT_AMOUNT + 1);
+    }
+
+    function test_VertexAccount_approveERC20_DecreaseUSDTAllowance() public {
+        _approveUSDTToRecipient(USDT_AMOUNT);
+        _approveUSDTToRecipient(USDT_AMOUNT - 1);
     }
 
     function test_VertexAccount_approveERC20_RevertIfNotVertexMsgSender() public {
@@ -334,6 +358,13 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveERC20(USDC, USDC_WHALE, amount);
         assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), amount);
+        vm.stopPrank();
+    }
+
+    function _approveUSDTToRecipient(uint256 amount) public {
+        vm.startPrank(address(vertex));
+        accounts[0].approveERC20(USDT, USDT_WHALE, amount);
+        assertEq(USDT.allowance(address(accounts[0]), USDT_WHALE), amount);
         vm.stopPrank();
     }
 
