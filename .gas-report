@@ -35,7 +35,7 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10089523                                             | 43947           |         |         |         |         |
+| 10297655                                             | 44459           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9854            | 5343702 | 6010683 | 6010683 | 9       |
 | rootVertex                                           | 183             | 183     | 183     | 183     | 57      |
@@ -72,7 +72,7 @@
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
 |---------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
-| 890110                                                  | 6332            |       |        |       |         |
+| 986356                                                  | 6588            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
 | DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 44      |
 | approvalPeriod                                          | 218             | 218   | 218    | 218   | 90      |
