@@ -171,21 +171,25 @@ contract VertexAccountTest is Test {
 
     function test_VertexAccount_approveERC20_IncreaseUSDCAllowance() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
+        _approveUSDCToRecipient(0);
         _approveUSDCToRecipient(USDC_AMOUNT + 1);
     }
 
     function test_VertexAccount_approveERC20_DecreaseUSDCAllowance() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
+        _approveUSDCToRecipient(0);
         _approveUSDCToRecipient(USDC_AMOUNT - 1);
     }
 
     function test_VertexAccount_approveERC20_IncreaseUSDTAllowance() public {
         _approveUSDTToRecipient(USDT_AMOUNT);
+        _approveUSDTToRecipient(0);
         _approveUSDTToRecipient(USDT_AMOUNT + 1);
     }
 
     function test_VertexAccount_approveERC20_DecreaseUSDTAllowance() public {
         _approveUSDTToRecipient(USDT_AMOUNT);
+        _approveUSDTToRecipient(0);
         _approveUSDTToRecipient(USDT_AMOUNT - 1);
     }
 

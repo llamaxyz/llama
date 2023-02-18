@@ -65,7 +65,6 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
     /// @inheritdoc IVertexAccount
     function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
-        token.safeApprove(recipient, 0);
         token.safeApprove(recipient, amount);
     }
 
