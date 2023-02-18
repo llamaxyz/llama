@@ -8,6 +8,7 @@ import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {VertexAccount} from "src/account/VertexAccount.sol";
 import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
@@ -16,6 +17,7 @@ contract VertexFactoryTest is Test {
     // Vertex system
     VertexCore public vertex;
     VertexCore public vertexCore;
+    VertexAccount public vertexAccountImplementation;
     VertexFactory public vertexFactory;
     VertexStrategy[] public strategies;
     VertexPolicyNFT public policy;
@@ -64,13 +66,14 @@ contract VertexFactoryTest is Test {
         vm.createSelectFork(vm.rpcUrl("mainnet"));
 
         vertexCore = new VertexCore();
+        vertexAccountImplementation = new VertexAccount();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
 
         // Deploy vertex and mock protocol
         vertexFactory =
-        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -100,8 +103,8 @@ contract VertexFactoryTest is Test {
     function test_deploy_DeployIfInitialVertex() public {
         Strategy[] memory initialStrategies = _createInitialStrategies();
         string[] memory initialAccounts = _createInitialAccounts();
-        address deployedVertex = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
-        address deployedPolicy = 0x525F3daaB67189A2763B96A1518aaE34292a4f0b;
+        address deployedVertex = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
+        address deployedPolicy = 0x8f2CEb22F71F5a88d04Ebd0122ab306aC789B6a0;
         vm.startPrank(address(vertex));
         vm.expectEmit(true, true, true, true);
         emit VertexCreated(1, "NewProject", deployedVertex, deployedPolicy);
@@ -125,10 +128,10 @@ contract VertexFactoryTest is Test {
             vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         VertexPolicyNFT _policy = newVertex.policy();
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
-        newVertex.initialize("NewProject", _policy, initialStrategies, initialAccounts);
+        newVertex.initialize("NewProject", _policy, vertexAccountImplementation, initialStrategies, initialAccounts);
 
         vm.expectRevert(bytes("Initializable: contract is already initialized"));
-        vertexCore.initialize("NewProject", _policy, initialStrategies, initialAccounts);
+        vertexCore.initialize("NewProject", _policy, vertexAccountImplementation, initialStrategies, initialAccounts);
     }
 
     function _createPolicies() public {

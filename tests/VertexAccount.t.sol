@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
@@ -39,6 +40,7 @@ contract VertexAccountTest is Test {
     // Vertex system
     VertexCore public vertex;
     VertexCore public vertexCore;
+    VertexAccount public vertexAccountImplementation;
     VertexFactory public vertexFactory;
     VertexAccount[] public accounts;
 
@@ -90,20 +92,15 @@ contract VertexAccountTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
+        vertexAccountImplementation = new VertexAccount();
         vertexFactory =
-        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
 
         // Use create2 to get vertex account addresses
         for (uint256 i; i < initialAccounts.length; i++) {
             bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-            bytes memory bytecode = type(VertexAccount).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    bytes1(0xff), address(vertex), accountSalt, keccak256(abi.encodePacked(bytecode, abi.encode(initialAccounts[i], address(vertex))))
-                )
-            );
-            accounts.push(VertexAccount(payable(address(uint160(uint256(hash))))));
+            accounts.push(VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex)))));
         }
     }
 

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
@@ -15,6 +16,7 @@ contract VertexCoreTest is Test {
     // Vertex system
     VertexCore public vertex;
     VertexCore public vertexCore;
+    VertexAccount public vertexAccountImplementation;
     VertexFactory public vertexFactory;
     VertexStrategy[] public strategies;
     VertexAccount[] public accounts;
@@ -97,8 +99,9 @@ contract VertexCoreTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
+        vertexAccountImplementation = new VertexAccount();
         vertexFactory =
-            new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
+        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
@@ -120,13 +123,7 @@ contract VertexCoreTest is Test {
         // Use create2 to get vertex account addresses
         for (uint256 i; i < initialAccounts.length; i++) {
             bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-            bytes memory bytecode = type(VertexAccount).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    bytes1(0xff), address(vertex), accountSalt, keccak256(abi.encodePacked(bytecode, abi.encode(initialAccounts[i], address(vertex))))
-                )
-            );
-            accounts.push(VertexAccount(payable(address(uint160(uint256(hash))))));
+            accounts.push(VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex)))));
         }
 
         // Set vertex's policy
@@ -700,11 +697,7 @@ contract VertexCoreTest is Test {
 
         for (uint256 i; i < newAccounts.length; i++) {
             bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
-            bytes memory bytecode = type(VertexAccount).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(bytes1(0xff), address(vertex), accountSalt, keccak256(abi.encodePacked(bytecode, abi.encode(newAccounts[i], address(vertex)))))
-            );
-            accountAddresses[i] = VertexAccount(payable(address(uint160(uint256(hash)))));
+            accountAddresses[i] = VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex))));
         }
 
         vm.startPrank(address(vertex));

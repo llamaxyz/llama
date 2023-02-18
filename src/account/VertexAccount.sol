@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexAccount} from "src/account/IVertexAccount.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
@@ -13,7 +14,7 @@ import {Address} from "@openzeppelin/utils/Address.sol";
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder {
+contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializable {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -24,9 +25,12 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder {
     /// @notice Name of this Vertex Account.
     string public name;
     /// @notice Vertex system
-    address public immutable vertex;
+    address public vertex;
 
-    constructor(string memory _name, address _vertex) {
+    // solhint-disable-next-line no-empty-blocks
+    constructor() initializer {}
+
+    function initialize(string memory _name, address _vertex) external override initializer {
         name = _name;
         vertex = _vertex;
     }

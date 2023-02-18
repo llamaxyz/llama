@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
+import {VertexAccount} from "src/account/VertexAccount.sol";
 import {IVertexFactory} from "src/factory/IVertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Strategy} from "src/utils/Structs.sol";
@@ -14,7 +15,10 @@ contract VertexFactory is IVertexFactory {
     error OnlyVertex();
 
     /// @notice The VertexCore implementation contract.
-    VertexCore public immutable vertexCore;
+    VertexCore public immutable vertexCoreImplementation;
+
+    /// @notice The Vertex Account implementation contract.
+    VertexAccount public immutable vertexAccountImplementation;
 
     /// @notice The initially deployed Vertex system.
     VertexCore public immutable initialVertex;
@@ -23,7 +27,8 @@ contract VertexFactory is IVertexFactory {
     uint256 public vertexCount;
 
     constructor(
-        VertexCore _vertexCore,
+        VertexCore _vertexCoreImplementation,
+        VertexAccount _vertexAccountImplementation,
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
@@ -32,7 +37,8 @@ contract VertexFactory is IVertexFactory {
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
     ) {
-        vertexCore = _vertexCore;
+        vertexCoreImplementation = _vertexCoreImplementation;
+        vertexAccountImplementation = _vertexAccountImplementation;
 
         unchecked {
             ++vertexCount;
@@ -42,8 +48,8 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy =
             VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
-        initialVertex = VertexCore(Clones.clone(address(vertexCore)));
-        initialVertex.initialize(name, policy, initialStrategies, initialAccounts);
+        initialVertex = VertexCore(Clones.clone(address(vertexCoreImplementation)));
+        initialVertex.initialize(name, policy, vertexAccountImplementation, initialStrategies, initialAccounts);
 
         policy.setVertex(address(initialVertex));
 
@@ -73,8 +79,8 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy =
             VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
 
-        VertexCore vertex = VertexCore(Clones.clone(address(vertexCore)));
-        vertex.initialize(name, policy, initialStrategies, initialAccounts);
+        VertexCore vertex = VertexCore(Clones.clone(address(vertexCoreImplementation)));
+        vertex.initialize(name, policy, vertexAccountImplementation, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
         emit VertexCreated(previousVertexCount, name, address(vertex), address(policy));

@@ -8,6 +8,11 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
 interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
+    /// @notice Initializes a new VertexAccount clone.
+    /// @param name The name of the VertexAccount clone.
+    /// @param vertex This Vertex instance's core contract
+    function initialize(string memory name, address vertex) external;
+
     // -------------------------------------------------------------------------
     // Native Token
     // -------------------------------------------------------------------------
