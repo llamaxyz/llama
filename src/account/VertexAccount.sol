@@ -17,6 +17,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
 
     error OnlyVertex();
     error Invalid0xRecipient();
+    error FailedExecution();
 
     /// @notice Name of this Vertex Account.
     string public name;
@@ -80,5 +81,16 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
     /// @inheritdoc IVertexAccount
     function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
         token.setApprovalForAll(recipient, approved);
+    }
+
+    // -------------------------------------------------------------------------
+    // Generic Execution
+    // -------------------------------------------------------------------------
+
+    function execute(address target, bytes calldata callData) external payable onlyVertex returns (bytes memory) {
+        // solhint-disable avoid-low-level-calls
+        (bool success, bytes memory result) = target.delegatecall(callData);
+        if (!success) revert FailedExecution();
+        return result;
     }
 }
