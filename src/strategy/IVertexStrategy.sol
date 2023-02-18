@@ -7,6 +7,8 @@ import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 interface IVertexStrategy {
     event NewStrategyCreated(IVertexCore vertex, VertexPolicyNFT policy);
 
+    error NoPolicy();
+
     /// @notice Get whether an action has passed the approval process.
     /// @param actionId id of the action.
     /// @return Boolean value that is true if the action has passed the approval process.
