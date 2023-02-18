@@ -337,6 +337,20 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // approve ERC1155 unit tests
+    function test_VertexAccount_approveERC1155_ApproveRARI() public {
+        _approveRARIToRecipient(true);
+    }
+
+    function test_VertexAccount_approveERC1155_DisapproveRARI() public {
+        _approveRARIToRecipient(false);
+    }
+
+    function test_VertexAccount_approveERC1155_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].approveERC1155(RARI, RARI_WHALE, true);
+    }
+
     // generic execute unit tests
     function test_VertexAccount_execute_DelegateCallTestScript() public {
         TestScript testScript = new TestScript();
@@ -525,6 +539,13 @@ contract VertexAccountTest is Test {
         vm.startPrank(RARI_WHALE);
         RARI.safeTransferFrom(RARI_WHALE, address(accounts[0]), id, amount, "");
         assertEq(RARI.balanceOf(address(accounts[0]), id), amount);
+        vm.stopPrank();
+    }
+
+    function _approveRARIToRecipient(bool approved) public {
+        vm.startPrank(address(vertex));
+        accounts[0].approveERC1155(RARI, RARI_WHALE, approved);
+        assertEq(RARI.isApprovedForAll(address(accounts[0]), RARI_WHALE), approved);
         vm.stopPrank();
     }
 }
