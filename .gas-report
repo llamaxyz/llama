@@ -1,11 +1,12 @@
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
-| 703222                                               | 4310            |       |        |       |         |
+| 788121                                               | 4741            |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
-| approveERC20                                         | 563             | 24943 | 29634  | 44634 | 3       |
+| approveERC20                                         | 563             | 32990 | 35118  | 50118 | 11      |
 | approveERC721                                        | 498             | 16890 | 25087  | 25087 | 3       |
 | approveOperatorERC721                                | 578             | 15666 | 16962  | 28162 | 4       |
+| execute                                              | 639             | 1051  | 1018   | 1496  | 3       |
 | onERC721Received                                     | 895             | 895   | 895    | 895   | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
 | transfer                                             | 486             | 2835  | 521    | 7500  | 3       |
@@ -16,57 +17,40 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-<<<<<<< HEAD
-| 4596301                                     | 23183           |         |         |         |         |
-=======
-| 4505579                                     | 22730           |         |         |         |         |
->>>>>>> main
+| 4760131                                     | 24001           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedStrategies                        | 548             | 1119    | 548     | 2548    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
-<<<<<<< HEAD
-| createAction                                | 2991            | 199384  | 240475  | 242984  | 27      |
-| createAndAuthorizeAccounts                  | 2221079         | 2221079 | 2221079 | 2221079 | 1       |
-| createAndAuthorizeStrategies                | 2638741         | 2638741 | 2638741 | 2638741 | 1       |
-| executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
-| getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 3196040 | 3287008 | 3490865 | 61      |
-| name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
-| policy                                      | 361             | 379     | 361     | 2361    | 106     |
-| queueAction                                 | 543             | 53564   | 61369   | 66004   | 13      |
-| submitApproval                              | 3028            | 38475   | 40159   | 53109   | 34      |
-| submitDisapproval                           | 2622            | 47534   | 66031   | 66031   | 11      |
-=======
 | createAction                                | 2991            | 199360  | 240437  | 243022  | 27      |
-| createAndAuthorizeAccounts                  | 1731079         | 1731079 | 1731079 | 1731079 | 1       |
+| createAndAuthorizeAccounts                  | 2476201         | 2476201 | 2476201 | 2476201 | 1       |
 | createAndAuthorizeStrategies                | 2863236         | 2863236 | 2863236 | 2863236 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 3004065 | 3110090 | 3313949 | 49      |
+| initialize                                  | 1849            | 3515728 | 3606736 | 3810595 | 68      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
-| queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
+| queueAction                                 | 543             | 53564   | 61369   | 66004   | 13      |
 | submitApproval                              | 3028            | 41281   | 43210   | 56160   | 34      |
 | submitDisapproval                           | 2622            | 48552   | 67076   | 67076   | 11      |
->>>>>>> main
 | unauthorizeStrategies                       | 11269           | 11269   | 11269   | 11269   | 1       |
 
 
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-<<<<<<< HEAD
-| 10469077                                             | 44393           |         |         |         |         |
+| 10788807                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 4128286 | 6187514 | 6187514 | 3       |
-| initialVertex                                        | 205             | 205     | 205     | 205     | 57      |
-=======
-| 10292161                                             | 44393           |         |         |         |         |
-| Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 4010342 | 6010598 | 6010598 | 3       |
-| initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
->>>>>>> main
+| deploy                                               | 9832            | 4341440 | 6507244 | 6507244 | 3       |
+| initialVertex                                        | 205             | 205     | 205     | 205     | 64      |
+
+
+| src/mock/scripts/TestScript.sol:TestScript contract |                 |     |        |     |         |
+|-----------------------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                                     | Deployment Size |     |        |     |         |
+| 15669                                               | 107             |     |        |     |         |
+| Function Name                                       | min             | avg | median | max | # calls |
+| fallback                                            | 70              | 70  | 70     | 70  | 1       |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
@@ -86,7 +70,7 @@
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 78      |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 85      |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
 | totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
