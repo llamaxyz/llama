@@ -253,7 +253,7 @@ contract VertexAccountTest is Test {
 
     // transfer ERC1155 unit tests
     function test_VertexAccount_transferERC1155_TransferRARI() public {
-        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+        _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
 
         uint256 accountNFTBalance = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
         uint256 whaleNFTBalance = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
@@ -281,8 +281,8 @@ contract VertexAccountTest is Test {
 
     // transfer batch ERC1155 unit tests
     function test_VertexAccount_transferBatchERC1155_TransferRARI() public {
-        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
-        _transferRARItoAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+        _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+        _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
 
         uint256 accountNFTBalance1 = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
         uint256 whaleNFTBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
@@ -468,7 +468,38 @@ contract VertexAccountTest is Test {
 
     // Test that VertexAccount can receive ERC1155 tokens
     function test_VertexAccount_ReceiveERC1155() public {
-        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+        _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    }
+
+    // Test that approved ERC1155 tokens can be transferred from VertexAccount to a recipient
+    function test_VertexAccount_TransferApprovedERC1155() public {
+        _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+        _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+        _approveRARIToRecipient(true);
+
+        uint256 accountNFTBalance1 = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
+        uint256 whaleNFTBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
+        uint256 accountNFTBalance2 = RARI.balanceOf(address(accounts[0]), RARI_ID_2);
+        uint256 whaleNFTBalance2 = RARI.balanceOf(RARI_WHALE, RARI_ID_2);
+
+        uint256[] memory tokenIDs = new uint256[](2);
+        tokenIDs[0] = RARI_ID_1;
+        tokenIDs[1] = RARI_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = RARI_ID_1_AMOUNT;
+        amounts[1] = RARI_ID_2_AMOUNT;
+
+        // Transfer NFT from account to whale
+        vm.startPrank(address(RARI_WHALE));
+        RARI.safeBatchTransferFrom(address(accounts[0]), RARI_WHALE, tokenIDs, amounts, "");
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), 0);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), accountNFTBalance1 - RARI_ID_1_AMOUNT);
+        assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance1 + RARI_ID_1_AMOUNT);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_2), 0);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_2), accountNFTBalance2 - RARI_ID_2_AMOUNT);
+        assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_2), whaleNFTBalance2 + RARI_ID_2_AMOUNT);
+        vm.stopPrank();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -533,7 +564,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function _transferRARItoAccount(uint256 id, uint256 amount) public {
+    function _transferRARIToAccount(uint256 id, uint256 amount) public {
         assertEq(RARI.balanceOf(address(accounts[0]), id), 0);
 
         vm.startPrank(RARI_WHALE);
