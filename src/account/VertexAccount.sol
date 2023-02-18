@@ -6,12 +6,14 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
+import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
+import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexAccount is IVertexAccount, ERC721Holder {
+contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -38,7 +40,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
     // Native Token
     // -------------------------------------------------------------------------
 
-    /// @notice Function for Vertex Account to receive ETH
+    /// @inheritdoc IVertexAccount
     receive() external payable {}
 
     /// @inheritdoc IVertexAccount
@@ -84,9 +86,34 @@ contract VertexAccount is IVertexAccount, ERC721Holder {
     }
 
     // -------------------------------------------------------------------------
+    // ERC1155 Token
+    // -------------------------------------------------------------------------
+
+    /// @inheritdoc IVertexAccount
+    function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data) external onlyVertex {
+        if (recipient == address(0)) revert Invalid0xRecipient();
+        token.safeTransferFrom(address(this), recipient, tokenId, amount, data);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function transferBatchERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data)
+        external
+        onlyVertex
+    {
+        if (recipient == address(0)) revert Invalid0xRecipient();
+        token.safeBatchTransferFrom(address(this), recipient, tokenIds, amounts, data);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function approveERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
+        token.setApprovalForAll(recipient, approved);
+    }
+
+    // -------------------------------------------------------------------------
     // Generic Execution
     // -------------------------------------------------------------------------
 
+    /// @inheritdoc IVertexAccount
     function execute(address target, bytes calldata callData) external payable onlyVertex returns (bytes memory) {
         // solhint-disable avoid-low-level-calls
         (bool success, bytes memory result) = target.delegatecall(callData);
