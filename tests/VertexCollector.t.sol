@@ -71,8 +71,8 @@ contract VertexAccountTest is Test {
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
-        vertexFactory =
-        new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory = new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions,
+    initialExpirationTimestamps);
         vertex = VertexCore(vertexFactory.initialVertex());
 
         // Use create2 to get vertex account addresses

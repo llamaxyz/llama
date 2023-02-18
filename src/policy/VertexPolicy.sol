@@ -24,7 +24,7 @@ abstract contract VertexPolicy is ERC721 {
     function batchUpdatePermissions(
         uint256[] calldata _policyIds,
         bytes8[][] calldata permissions,
-        bytes8[][] permissionsToRemove,
+        bytes8[][] calldata permissionsToRemove,
         uint256[][] calldata expirationTimestamps
     ) public virtual;
 
@@ -37,7 +37,7 @@ abstract contract VertexPolicy is ERC721 {
     /// @notice revokes all permissions from multiple policy tokens
     /// @param _policyIds the ids of the policy tokens to revoke permissions from
     /// @param permissionsToRevoke the permissions to revoke from the policy tokens
-    function batchRevokePermissions(uint256[] calldata _policyIds, bytes8[][] permissionsToRevoke) public virtual;
+    function batchRevokePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissionsToRevoke) public virtual;
 
     /// @notice Check if a holder has a permissionSignature at a specific timestamp
     /// @param policyholder the address of the policy holder
@@ -49,7 +49,7 @@ abstract contract VertexPolicy is ERC721 {
     /// @dev should be called periodically to remove expired permissions
     /// @param policyId the address of the policy holder
     /// @param permissionSignature the signature of the permission
-    function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) public virtual returns (bool expired);
+    function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external virtual returns (bool expired);
 
     /// @notice sets the base URI for the contract
     /// @param _baseURI the base URI string to set
@@ -61,10 +61,6 @@ abstract contract VertexPolicy is ERC721 {
 
     /// @dev returns the total token supply of the contract
     function totalSupply() public view virtual returns (uint256);
-
-    /// @dev returns the permission signatures of a token
-    /// @param policyId the id of the token
-    function getPermissionSignatures(uint256 policyId) public view virtual returns (bytes8[] memory);
 
     /// @dev checks if a token has a permission
     /// @param policyId the id of the token
