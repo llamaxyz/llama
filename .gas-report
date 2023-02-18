@@ -8,7 +8,7 @@
 | approveERC721                                        | 2621            | 19013 | 27210  | 27210 | 3       |
 | approveOperatorERC721                                | 2679            | 17767 | 19063  | 30263 | 4       |
 | execute                                              | 2763            | 3175  | 3142   | 3620  | 3       |
-| initialize                                           | 69447           | 69447 | 69447  | 69447 | 157     |
+| initialize                                           | 1368            | 67432 | 69447  | 69447 | 167     |
 | onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
 | onERC721Received                                     | 1078            | 1078  | 1078   | 1078  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
@@ -28,13 +28,13 @@
 | authorizedStrategies                        | 571             | 1142    | 571     | 2571    | 7       |
 | cancelAction                                | 497             | 13729   | 15720   | 30933   | 10      |
 | createAction                                | 3013            | 199268  | 240323  | 242908  | 27      |
-| createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 1       |
+| createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 2       |
 | createAndAuthorizeStrategies                | 2863187         | 2863187 | 2863187 | 2863187 | 1       |
 | executeAction                               | 432             | 21087   | 17771   | 37499   | 6       |
 | getAction                                   | 3950            | 5011    | 3950    | 9950    | 117     |
-| initialize                                  | 1936            | 2165718 | 2208592 | 2414951 | 79      |
+| initialize                                  | 1936            | 2166254 | 2208592 | 2414951 | 80      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
-| policy                                      | 350             | 368     | 350     | 2350    | 106     |
+| policy                                      | 350             | 368     | 350     | 2350    | 109     |
 | queueAction                                 | 543             | 53610   | 61419   | 66054   | 13      |
 | submitApproval                              | 3031            | 41286   | 43213   | 56163   | 34      |
 | submitDisapproval                           | 2647            | 48621   | 67151   | 67151   | 11      |
@@ -47,7 +47,7 @@
 | 9410099                                              | 44577           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9832            | 3411034 | 5111635 | 5111635 | 3       |
-| initialVertex                                        | 205             | 205     | 205     | 205     | 75      |
+| initialVertex                                        | 205             | 205     | 205     | 205     | 76      |
 
 
 | src/mock/scripts/TestScript.sol:TestScript contract |                 |     |        |     |         |
@@ -64,18 +64,18 @@
 | 2566798                                                 | 17800           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 651             | 2139   | 2651    | 2651    | 43      |
-| batchGrantPermissions                                   | 3683            | 697066 | 1095282 | 1095282 | 62      |
+| batchGrantPermissions                                   | 3683            | 703387 | 1095282 | 1095282 | 63      |
 | batchRevokePermissions                                  | 2789            | 35701  | 47640   | 60120   | 6       |
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
 | checkExpiration                                         | 2895            | 3020   | 2895    | 6284    | 27      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
 | hasPermission                                           | 1913            | 6400   | 6721    | 8751    | 31      |
-| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 128     |
+| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 131     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 96      |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 97      |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
 | totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
