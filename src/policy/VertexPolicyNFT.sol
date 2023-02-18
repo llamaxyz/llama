@@ -111,31 +111,35 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps)
-        public
-        override
-        onlyVertex
-    {
+    function batchUpdatePermissions(
+        uint256[] calldata _policyIds,
+        bytes8[][] calldata permissions,
+        bytes8[][] permissionsToRemove,
+        uint256[][] calldata expirationTimestamps
+    ) public override onlyVertex {
         uint256 length = _policyIds.length;
-        if (length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) revert InvalidInput();
+        if (length != permissions.length && permissionsToRemove.length == length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length))
+        {
+            revert InvalidInput();
+        }
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 uint256[] memory expiration;
                 if (expirationTimestamps.length > 0) {
                     expiration = expirationTimestamps[i];
                 }
-                updatePermissions(_policyIds[i], permissions[i], expiration);
+                updatePermissions(_policyIds[i], permissions[i], permissionsToRemove[i], expiration);
             }
         }
     }
 
     /// @inheritdoc VertexPolicy
-    function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
+    function batchRevokePermissions(uint256[] calldata _policyIds, bytes8[][] permissionsToRevoke) public override onlyVertex {
         uint256 length = _policyIds.length;
-        if (length == 0) revert InvalidInput();
+        if (length == 0 || length != permissionsToRevoke.length) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                revokePermissions(_policyIds[i]);
+                revokePermissions(_policyIds[i], permissionsToRevoke[i]);
             }
         }
     }
@@ -148,7 +152,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @dev hashes an array of permissions
     /// @param _permissions the permissions array to hash
-    function hashPermissions(PermissionData[] calldata _permissions) public pure returns (bytes8[] memory) {
+    function hashPermissions(PermissionData[] calldata _permissions) external pure returns (bytes8[] memory) {
         uint256 length = _permissions.length;
         bytes8[] memory output = new bytes8[](length);
         unchecked {
@@ -270,11 +274,6 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
     function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public override {
         revert SoulboundToken();
-    }
-
-    /// @inheritdoc VertexPolicy
-    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
-        return tokenToPermissionSignatures[userId];
     }
 
     /// @inheritdoc VertexPolicy

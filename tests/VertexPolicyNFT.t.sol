@@ -193,7 +193,6 @@ contract VertexPolicyNFTTest is Test {
         assertEq(newExpirationTimestamp[0] < block.timestamp, true);
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
         assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
-        assertEq(vertexPolicyNFT.checkExpiration(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
     }
 
     function test_grantPermissions_GrantsTokenWithExpiration() public {

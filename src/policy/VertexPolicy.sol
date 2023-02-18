@@ -19,8 +19,14 @@ abstract contract VertexPolicy is ERC721 {
     /// @notice updates the permissions for a policy token
     /// @param _policyIds the policy token id being altered
     /// @param permissions the new permissions array to be set
+    /// @param permissionsToRemove the permissions to be removed from the policy token
     /// @param expirationTimestamps the new expiration timestamps array to be set
-    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps) public virtual;
+    function batchUpdatePermissions(
+        uint256[] calldata _policyIds,
+        bytes8[][] calldata permissions,
+        bytes8[][] permissionsToRemove,
+        uint256[][] calldata expirationTimestamps
+    ) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
@@ -29,19 +35,21 @@ abstract contract VertexPolicy is ERC721 {
     function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
-    /// @param policyIds the ids of the policy tokens to revoke permissions from
-    function batchRevokePermissions(uint256[] calldata policyIds) public virtual;
+    /// @param _policyIds the ids of the policy tokens to revoke permissions from
+    /// @param permissionsToRevoke the permissions to revoke from the policy tokens
+    function batchRevokePermissions(uint256[] calldata _policyIds, bytes8[][] permissionsToRevoke) public virtual;
 
-    /// @notice Check if a holder has a permissionSignature at a specific block number
+    /// @notice Check if a holder has a permissionSignature at a specific timestamp
     /// @param policyholder the address of the policy holder
     /// @param permissionSignature the signature of the permission
-    /// @param blockNumber the block number to query
-    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view virtual returns (bool);
+    /// @param timestamp the block number to query
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 timestamp) external view virtual returns (bool);
 
     /// @notice Check if a holder has an expired permissionSignature and removes their permission if it is expired
+    /// @dev should be called periodically to remove expired permissions
     /// @param policyId the address of the policy holder
     /// @param permissionSignature the signature of the permission
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public virtual returns (bool expired);
+    function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) public virtual returns (bool expired);
 
     /// @notice sets the base URI for the contract
     /// @param _baseURI the base URI string to set
