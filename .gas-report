@@ -23,9 +23,9 @@
 | createAndAuthorizeStrategies                | 2863236         | 2863236 | 2863236 | 2863236 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 3004065 | 3110090 | 3313949 | 49      |
-| name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
-| policy                                      | 361             | 379     | 361     | 2361    | 106     |
+| initialize                                  | 1849            | 3131269 | 3110090 | 3313949 | 65      |
+| name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
+| policy                                      | 361             | 375     | 361     | 2361    | 139     |
 | queueAction                                 | 455             | 53476   | 61281   | 65916   | 13      |
 | submitApproval                              | 3028            | 41281   | 43210   | 56160   | 34      |
 | submitDisapproval                           | 2622            | 48552   | 67076   | 67076   | 11      |
@@ -35,10 +35,12 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10292161                                             | 44393           |         |         |         |         |
+| 10297655                                             | 44459           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 4010342 | 6010598 | 6010598 | 3       |
-| initialVertex                                        | 205             | 205     | 205     | 205     | 45      |
+| deploy                                               | 9854            | 5343702 | 6010683 | 6010683 | 9       |
+| rootVertex                                           | 183             | 183     | 183     | 183     | 57      |
+| vertexCoreLogic                                      | 227             | 227     | 227     | 227     | 1       |
+| vertexCount                                          | 339             | 1672    | 2339    | 2339    | 3       |
 
 
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |         |         |         |
@@ -47,22 +49,24 @@
 | 2566798                                                 | 17800           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
 | balanceOf                                               | 651             | 2139   | 2651    | 2651    | 43      |
-| batchGrantPermissions                                   | 3683            | 696998 | 1094583 | 1095282 | 62      |
+| baseURI                                                 | 2989            | 2989   | 2989    | 2989    | 1       |
+| batchGrantPermissions                                   | 3683            | 756803 | 1093884 | 1095282 | 73      |
 | batchRevokePermissions                                  | 2789            | 35701  | 47640   | 60120   | 6       |
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
 | checkExpiration                                         | 2895            | 3020   | 2895    | 6284    | 27      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
 | hasPermission                                           | 1913            | 6398   | 6721    | 8713    | 31      |
-| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 128     |
+| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 161     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 66      |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 83      |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
 | totalSupply                                             | 349             | 1327   | 349     | 2349    | 47      |
 | transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
+| vertex                                                  | 382             | 382    | 382     | 382     | 2       |
 
 
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |

@@ -73,7 +73,7 @@ contract VertexAccountTest is Test {
         vertexCore = new VertexCore();
         vertexFactory =
         new VertexFactory(vertexCore, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
-        vertex = VertexCore(vertexFactory.initialVertex());
+        vertex = VertexCore(vertexFactory.rootVertex());
 
         // Use create2 to get vertex account addresses
         for (uint256 i; i < initialAccounts.length; i++) {
