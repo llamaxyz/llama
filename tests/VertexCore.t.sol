@@ -147,6 +147,12 @@ contract VertexCoreTest is Test {
         assertEq(strategies.length, 2);
 
         assertEq(accounts.length, 2);
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        accounts[0].initialize("VertexAccount0", address(vertex));
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        accounts[1].initialize("VertexAccount1", address(vertex));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -709,6 +715,32 @@ contract VertexCoreTest is Test {
         vm.expectEmit(true, true, true, true);
         emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
         vertex.createAndAuthorizeAccounts(newAccounts);
+    }
+
+    function test_createAndAuthorizeAccounts_RevertIfReinitialized() public {
+        string[] memory newAccounts = new string[](3);
+        VertexAccount[] memory accountAddresses = new VertexAccount[](3);
+
+        newAccounts[0] = "VertexAccount2";
+        newAccounts[1] = "VertexAccount3";
+        newAccounts[2] = "VertexAccount4";
+
+        for (uint256 i; i < newAccounts.length; i++) {
+            bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
+            accountAddresses[i] = VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex))));
+        }
+
+        vm.startPrank(address(vertex));
+        vertex.createAndAuthorizeAccounts(newAccounts);
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        accountAddresses[0].initialize(newAccounts[0], address(vertex));
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        accountAddresses[1].initialize(newAccounts[1], address(vertex));
+
+        vm.expectRevert(bytes("Initializable: contract is already initialized"));
+        accountAddresses[2].initialize(newAccounts[2], address(vertex));
     }
 
     /*///////////////////////////////////////////////////////////////
