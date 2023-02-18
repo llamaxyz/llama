@@ -8,6 +8,7 @@ import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
+import {TestScript} from "src/mock/scripts/TestScript.sol";
 
 contract VertexAccountTest is Test {
     // Testing Parameters
@@ -240,6 +241,32 @@ contract VertexAccountTest is Test {
     function test_VertexAccount_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
+    }
+
+    // generic execute unit tests
+    function test_VertexAccount_execute_DelegateCallTestScript() public {
+        TestScript testScript = new TestScript();
+
+        vm.startPrank(address(vertex));
+        bytes memory result = accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""));
+        assertEq(10, uint256(bytes32(result)));
+        vm.stopPrank();
+    }
+
+    function test_VertexAccount_execute_RevertIfNotVertexMsgSender() public {
+        TestScript testScript = new TestScript();
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""));
+    }
+
+    function test_VertexAccount_execute_RevertIfNotSuccess() public {
+        TestScript testScript = new TestScript();
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.FailedExecution.selector);
+        accounts[0].execute(address(testScript), abi.encodePacked("", ""));
+        vm.stopPrank();
     }
 
     /*///////////////////////////////////////////////////////////////
