@@ -1,33 +1,138 @@
+   |
+14 | contract VertexCore is IVertexCore, Initializable {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+[0m
+
+
+Running 1 test for src/mock/scripts/TestScript.sol:TestScript
+[32m[PASS][0m testFunction():(uint256) (gas: 146)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 192.50µs
+
+Running 31 tests for tests/VertexCore.t.sol:VertexCoreTest
+[32m[PASS][0m test_VertexCore_CompleteActionFlow() (gas: 562522)
+[32m[PASS][0m test_cancelAction_CancelIfDisapproved() (gas: 638862)
+[32m[PASS][0m test_cancelAction_CreatorCancelFlow() (gas: 286518)
+[32m[PASS][0m test_cancelAction_RevertIfActionExecuted() (gas: 580189)
+[32m[PASS][0m test_cancelAction_RevertIfActionExpired() (gas: 543766)
+[32m[PASS][0m test_cancelAction_RevertIfActionFailed() (gas: 367445)
+[32m[PASS][0m test_cancelAction_RevertIfAlreadyCanceled() (gas: 287807)
+[32m[PASS][0m test_cancelAction_RevertIfDisapprovalDoesNotReachQuorum() (gas: 485057)
+[32m[PASS][0m test_cancelAction_RevertIfInvalidActionId() (gas: 279411)
+[32m[PASS][0m test_cancelAction_RevertIfNotCreator() (gas: 295515)
+[32m[PASS][0m test_createAction_RevertIfNoPermissionForSelector() (gas: 40358)
+[32m[PASS][0m test_createAction_RevertIfNoPermissionForStrategy() (gas: 40371)
+[32m[PASS][0m test_createAction_RevertIfNoPermissionForTarget() (gas: 38230)
+[32m[PASS][0m test_createAction_RevertIfPolicyholderNotMinted() (gas: 34303)
+[32m[PASS][0m test_createAction_RevertIfStrategyUnauthorized() (gas: 16883)
+[32m[PASS][0m test_createAndAuthorizeAccounts_CreateNewAccounts() (gas: 3736589)
+[32m[PASS][0m test_createAndAuthorizeStrategies_CreateNewStrategies() (gas: 2963845)
+[32m[PASS][0m test_executeAction_RevertIfFailedActionExecution() (gas: 465211)
+[32m[PASS][0m test_executeAction_RevertIfInvalidActionId() (gas: 451956)
+[32m[PASS][0m test_executeAction_RevertIfNotQueued() (gas: 404109)
+[32m[PASS][0m test_executeAction_RevertIfTimelockNotFinished() (gas: 468649)
+[32m[PASS][0m test_queueAction_RevertIfInvalidActionId() (gas: 410719)
+[32m[PASS][0m test_queueAction_RevertIfNotApproved() (gas: 353412)
+[32m[PASS][0m test_setUp() (gas: 28001)
+[32m[PASS][0m test_submitApproval_ChangeApprovalSupport() (gas: 311145)
+[32m[PASS][0m test_submitApproval_RevertIfActionNotActive() (gas: 443702)
+[32m[PASS][0m test_submitApproval_RevertIfDuplicateApproval() (gas: 339646)
+[32m[PASS][0m test_submitDisapproval_ChangeDisapprovalSupport() (gas: 500305)
+[32m[PASS][0m test_submitDisapproval_RevertIfActionNotQueued() (gas: 265061)
+[32m[PASS][0m test_submitDisapproval_RevertIfDuplicateDisapproval() (gas: 542895)
+[32m[PASS][0m test_unauthorizeStrategies_UnauthorizeStrategies() (gas: 29170)
+Test result: [32mok[0m. 31 passed; 0 failed; finished in 875.23ms
+
+Running 30 tests for tests/VertexAccount.t.sol:VertexAccountTest
+[32m[PASS][0m test_VertexAccount_ReceiveERC20() (gas: 59027)
+[32m[PASS][0m test_VertexAccount_ReceiveERC721() (gas: 120613)
+[32m[PASS][0m test_VertexAccount_ReceiveETH() (gas: 18278)
+[32m[PASS][0m test_VertexAccount_SafeReceiveERC721() (gas: 126368)
+[32m[PASS][0m test_VertexAccount_TransferApprovedERC20() (gas: 91891)
+[32m[PASS][0m test_VertexAccount_TransferApprovedERC721() (gas: 144336)
+[32m[PASS][0m test_VertexAccount_TransferApprovedOperatorERC721() (gas: 211827)
+[32m[PASS][0m test_VertexAccount_approveERC20_ApproveUSDC() (gas: 65295)
+[32m[PASS][0m test_VertexAccount_approveERC20_DecreaseUSDCAllowance() (gas: 82438)
+[32m[PASS][0m test_VertexAccount_approveERC20_DecreaseUSDTAllowance() (gas: 67249)
+[32m[PASS][0m test_VertexAccount_approveERC20_IncreaseUSDCAllowance() (gas: 82437)
+[32m[PASS][0m test_VertexAccount_approveERC20_IncreaseUSDTAllowance() (gas: 67247)
+[32m[PASS][0m test_VertexAccount_approveERC20_RevertIfNotVertexMsgSender() (gas: 11056)
+[32m[PASS][0m test_VertexAccount_approveERC721_ApproveBAYC() (gas: 153518)
+[32m[PASS][0m test_VertexAccount_approveERC721_RevertIfNotVertexMsgSender() (gas: 11045)
+[32m[PASS][0m test_VertexAccount_approveOperatorERC721_ApproveBAYC() (gas: 42771)
+[32m[PASS][0m test_VertexAccount_approveOperatorERC721_DisapproveBAYC() (gas: 22849)
+[32m[PASS][0m test_VertexAccount_approveOperatorERC721_RevertIfNotVertexMsgSender() (gas: 11065)
+[32m[PASS][0m test_VertexAccount_execute_DelegateCallTestScript() (gas: 63122)
+[32m[PASS][0m test_VertexAccount_execute_RevertIfNotSuccess() (gas: 62829)
+[32m[PASS][0m test_VertexAccount_execute_RevertIfNotVertexMsgSender() (gas: 59730)
+[32m[PASS][0m test_VertexAccount_transferERC20_RevertIfNotVertexMsgSender() (gas: 11012)
+[32m[PASS][0m test_VertexAccount_transferERC20_RevertIfToZeroAddress() (gas: 13987)
+[32m[PASS][0m test_VertexAccount_transferERC20_TransferUSDC() (gas: 61348)
+[32m[PASS][0m test_VertexAccount_transferERC721_RevertIfNotVertexMsgSender() (gas: 11088)
+[32m[PASS][0m test_VertexAccount_transferERC721_RevertIfToZeroAddress() (gas: 13899)
+[32m[PASS][0m test_VertexAccount_transferERC721_TransferBAYC() (gas: 121912)
+[32m[PASS][0m test_VertexAccount_transfer_RevertIfNotVertexMsgSender() (gas: 10900)
+[32m[PASS][0m test_VertexAccount_transfer_RevertIfToZeroAddress() (gas: 13792)
+[32m[PASS][0m test_VertexAccount_transfer_TransferETH() (gas: 31064)
+Test result: [32mok[0m. 30 passed; 0 failed; finished in 1.77s
+
+Running 19 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
+[32m[PASS][0m test_Revoke_CorrectlyRevokesPolicy() (gas: 64608)
+[32m[PASS][0m test_batchUpdatePermissions_RevertIfArraysLengthMismatch() (gas: 50569)
+[32m[PASS][0m test_batchUpdatePermissions_UpdatesPermissionsCorrectly() (gas: 200364)
+[32m[PASS][0m test_batchUpdatePermissions_updatesTimeStamp() (gas: 204055)
+[32m[PASS][0m test_expirationTimestamp_DoesNotHavePermissionIfExpired() (gas: 212587)
+[32m[PASS][0m test_expirationTimestamp_RevertIfTimestampIsExpired() (gas: 128192)
+[32m[PASS][0m test_getSupplyByPermissions_ReturnsCorrectSupply() (gas: 288163)
+[32m[PASS][0m test_grantPermission_CorrectlyGrantsPermission() (gas: 246514)
+[32m[PASS][0m test_grantPermission_RevertIfArraysLengthMismatch() (gas: 51699)
+[32m[PASS][0m test_grantPermission_RevertIfPermissionsArrayEmpty() (gas: 22097)
+[32m[PASS][0m test_grantPermission_RevertIfPolicyAlreadyGranted() (gas: 28893)
+[32m[PASS][0m test_grantPermissions_GrantsTokenWithExpiration() (gas: 336742)
+[32m[PASS][0m test_holderHasPermissionAt_ReturnsCorrectBool() (gas: 298839)
+[32m[PASS][0m test_onlyVertex_RevertIfNotVertex() (gas: 11596)
+[32m[PASS][0m test_revoke_RevertIfNoPolicySpecified() (gas: 11163)
+[32m[PASS][0m test_revoke_RevertIfPolicyNotGranted() (gas: 20971)
+[32m[PASS][0m test_tokenURI_ReturnsCorrectURI() (gas: 44385)
+[32m[PASS][0m test_totalSupply_ReturnsCorrectSupply() (gas: 270560)
+[32m[PASS][0m test_transferFrom_RevertIfTransferFrom() (gas: 10856)
+Test result: [32mok[0m. 19 passed; 0 failed; finished in 235.05ms
+
+Running 3 tests for tests/VertexFactory.t.sol:VertexFactoryTest
+[32m[PASS][0m testFuzz_deploy_RevertIfNotInitialVertex(address) (runs: 256, μ: 34478, ~: 34478)
+[32m[PASS][0m test_deploy_DeployIfInitialVertex() (gas: 7318482)
+[32m[PASS][0m test_deploy_RevertIfReinitialized() (gas: 7334541)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 9.31s
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
-| 788121                                               | 4741            |       |        |       |         |
+| 1179952                                              | 6712            |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
-| approveERC20                                         | 563             | 32990 | 35118  | 50118 | 11      |
-| approveERC721                                        | 498             | 16890 | 25087  | 25087 | 3       |
-| approveOperatorERC721                                | 578             | 15666 | 16962  | 28162 | 4       |
-| execute                                              | 639             | 1051  | 1018   | 1496  | 3       |
-| onERC721Received                                     | 895             | 895   | 895    | 895   | 1       |
+| approveERC20                                         | 564             | 32991 | 35119  | 50119 | 11      |
+| approveERC721                                        | 521             | 16913 | 25110  | 25110 | 3       |
+| approveOperatorERC721                                | 645             | 15733 | 17029  | 28229 | 4       |
+| execute                                              | 636             | 1048  | 1015   | 1493  | 3       |
+| onERC721Received                                     | 1007            | 1007  | 1007   | 1007  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
-| transfer                                             | 486             | 2835  | 521    | 7500  | 3       |
-| transferERC20                                        | 541             | 2195  | 576    | 5469  | 3       |
-| transferERC721                                       | 564             | 3757  | 599    | 10109 | 3       |
+| transfer                                             | 487             | 2836  | 522    | 7501  | 3       |
+| transferERC20                                        | 542             | 2196  | 577    | 5470  | 3       |
+| transferERC721                                       | 520             | 3716  | 555    | 10074 | 3       |
 
 
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 4760131                                     | 24001           |         |         |         |         |
+| 5154881                                     | 25972           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 406             | 406     | 406     | 406     | 19      |
 | authorizedStrategies                        | 548             | 1119    | 548     | 2548    | 7       |
 | cancelAction                                | 475             | 13671   | 15651   | 30817   | 10      |
 | createAction                                | 2991            | 199360  | 240437  | 243022  | 27      |
-| createAndAuthorizeAccounts                  | 2476201         | 2476201 | 2476201 | 2476201 | 1       |
+| createAndAuthorizeAccounts                  | 3653574         | 3653574 | 3653574 | 3653574 | 1       |
 | createAndAuthorizeStrategies                | 2863236         | 2863236 | 2863236 | 2863236 | 1       |
 | executeAction                               | 477             | 21091   | 17767   | 37495   | 6       |
 | getAction                                   | 3928            | 4989    | 3928    | 9928    | 117     |
-| initialize                                  | 1849            | 3515728 | 3606736 | 3810595 | 68      |
+| initialize                                  | 1849            | 4277486 | 4391579 | 4595407 | 68      |
 | name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
 | policy                                      | 361             | 379     | 361     | 2361    | 106     |
 | queueAction                                 | 543             | 53564   | 61369   | 66004   | 13      |
@@ -39,9 +144,9 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 10788807                                             | 44393           |         |         |         |         |
+| 11573619                                             | 44393           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9832            | 4341440 | 6507244 | 6507244 | 3       |
+| deploy                                               | 9832            | 4864648 | 7292056 | 7292056 | 3       |
 | initialVertex                                        | 205             | 205     | 205     | 205     | 64      |
 
 
