@@ -20,7 +20,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
     error OnlyVertex();
     error Invalid0xRecipient();
-    error FailedExecution();
+    error FailedExecution(bytes result);
 
     /// @notice Name of this Vertex Account.
     string public name;
@@ -121,7 +121,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     function execute(address target, bytes calldata callData) external payable onlyVertex returns (bytes memory) {
         // solhint-disable avoid-low-level-calls
         (bool success, bytes memory result) = target.delegatecall(callData);
-        if (!success) revert FailedExecution();
+        if (!success) revert FailedExecution(result);
         return result;
     }
 }

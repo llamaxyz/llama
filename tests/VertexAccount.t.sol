@@ -369,7 +369,7 @@ contract VertexAccountTest is Test {
         TestScript testScript = new TestScript();
 
         vm.startPrank(address(vertex));
-        vm.expectRevert(VertexAccount.FailedExecution.selector);
+        vm.expectRevert(abi.encodeWithSelector(VertexAccount.FailedExecution.selector, ""));
         accounts[0].execute(address(testScript), abi.encodePacked("", ""));
         vm.stopPrank();
     }

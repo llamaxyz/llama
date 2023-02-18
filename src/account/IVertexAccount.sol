@@ -17,7 +17,7 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
     // Native Token
     // -------------------------------------------------------------------------
 
-    /// @notice Function for Vertex Account to receive ETH
+    /// @notice Function for Vertex Account to receive native token
     receive() external payable;
 
     /// @notice Function for Vertex to transfer native tokens to other parties
