@@ -279,6 +279,64 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // transfer batch ERC1155 unit tests
+    function test_VertexAccount_transferBatchERC1155_TransferRARI() public {
+        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+        _transferRARItoAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+
+        uint256 accountNFTBalance1 = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
+        uint256 whaleNFTBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
+        uint256 accountNFTBalance2 = RARI.balanceOf(address(accounts[0]), RARI_ID_2);
+        uint256 whaleNFTBalance2 = RARI.balanceOf(RARI_WHALE, RARI_ID_2);
+
+        uint256[] memory tokenIDs = new uint256[](2);
+        tokenIDs[0] = RARI_ID_1;
+        tokenIDs[1] = RARI_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = RARI_ID_1_AMOUNT;
+        amounts[1] = RARI_ID_2_AMOUNT;
+
+        // Transfer NFT from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].transferBatchERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), 0);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), accountNFTBalance1 - RARI_ID_1_AMOUNT);
+        assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance1 + RARI_ID_1_AMOUNT);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_2), 0);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_2), accountNFTBalance2 - RARI_ID_2_AMOUNT);
+        assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_2), whaleNFTBalance2 + RARI_ID_2_AMOUNT);
+        vm.stopPrank();
+    }
+
+    function test_VertexAccount_transferBatchERC1155_RevertIfNotVertexMsgSender() public {
+        uint256[] memory tokenIDs = new uint256[](2);
+        tokenIDs[0] = RARI_ID_1;
+        tokenIDs[1] = RARI_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = RARI_ID_1_AMOUNT;
+        amounts[1] = RARI_ID_2_AMOUNT;
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].transferBatchERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
+    }
+
+    function test_VertexAccount_transferBatchERC1155_RevertIfToZeroAddress() public {
+        uint256[] memory tokenIDs = new uint256[](2);
+        tokenIDs[0] = RARI_ID_1;
+        tokenIDs[1] = RARI_ID_2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = RARI_ID_1_AMOUNT;
+        amounts[1] = RARI_ID_2_AMOUNT;
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+        accounts[0].transferBatchERC1155(RARI, address(0), tokenIDs, amounts, "");
+        vm.stopPrank();
+    }
+
     // generic execute unit tests
     function test_VertexAccount_execute_DelegateCallTestScript() public {
         TestScript testScript = new TestScript();
