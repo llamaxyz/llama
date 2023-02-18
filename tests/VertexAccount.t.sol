@@ -8,6 +8,7 @@ import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "src/mock/scripts/TestScript.sol";
 
 contract VertexAccountTest is Test {
@@ -27,6 +28,13 @@ contract VertexAccountTest is Test {
     address public constant BAYC_WHALE = 0x619866736a3a101f65cfF3A8c3d2602fC54Fd749;
     uint256 public constant BAYC_ID = 27;
     uint256 public constant BAYC_ID_2 = 8885;
+
+    IERC1155 public constant RARI = IERC1155(0xd07dc4262BCDbf85190C01c996b4C06a461d2430);
+    address public constant RARI_WHALE = 0xEdba5d56d0147aee8a227D284bcAaC03B4a87eD4;
+    uint256 public constant RARI_ID_1 = 657774;
+    uint256 public constant RARI_ID_1_AMOUNT = 3;
+    uint256 public constant RARI_ID_2 = 74385;
+    uint256 public constant RARI_ID_2_AMOUNT = 1;
 
     // Vertex system
     VertexCore public vertex;
@@ -358,6 +366,11 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    // Test that VertexAccount can receive ERC1155 tokens
+    function test_VertexAccount_ReceiveERC1155() public {
+        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Helpers
     //////////////////////////////////////////////////////////////*/
@@ -417,6 +430,15 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, approved);
         assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), approved);
+        vm.stopPrank();
+    }
+
+    function _transferRARItoAccount(uint256 id, uint256 amount) public {
+        assertEq(RARI.balanceOf(address(accounts[0]), id), 0);
+
+        vm.startPrank(RARI_WHALE);
+        RARI.safeTransferFrom(RARI_WHALE, address(accounts[0]), id, amount, "");
+        assertEq(RARI.balanceOf(address(accounts[0]), id), amount);
         vm.stopPrank();
     }
 }
