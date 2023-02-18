@@ -222,7 +222,7 @@ contract VertexAccountTest is Test {
     function test_VertexAccount_transferERC721_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-        accounts[0].transferERC721(BAYC, payable(address(0)), BAYC_ID);
+        accounts[0].transferERC721(BAYC, address(0), BAYC_ID);
         vm.stopPrank();
     }
 
@@ -249,6 +249,34 @@ contract VertexAccountTest is Test {
     function test_VertexAccount_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
+    }
+
+    // transfer ERC1155 unit tests
+    function test_VertexAccount_transferERC1155_TransferRARI() public {
+        _transferRARItoAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+
+        uint256 accountNFTBalance = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
+        uint256 whaleNFTBalance = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
+
+        // Transfer NFT from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].transferERC1155(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, "");
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), 0);
+        assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), accountNFTBalance - RARI_ID_1_AMOUNT);
+        assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance + RARI_ID_1_AMOUNT);
+        vm.stopPrank();
+    }
+
+    function test_VertexAccount_transferERC1155_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].transferERC1155(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, "");
+    }
+
+    function test_VertexAccount_transferERC1155_RevertIfToZeroAddress() public {
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+        accounts[0].transferERC1155(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, "");
+        vm.stopPrank();
     }
 
     // generic execute unit tests
