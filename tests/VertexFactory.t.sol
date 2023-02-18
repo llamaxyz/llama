@@ -184,7 +184,10 @@ contract Constructor is VertexFactoryTest {
 }
 
 contract Deploy is VertexFactoryTest {
-    // These are the expected addresses of the contracts deployed by the `deployVertex` helper method.
+    // These are the expected addresses of the contracts deployed by the `deployVertex` helper
+    // method. The addresses are functions of the constructor parameters in the `deployVertex`
+    // helper method, so if those parameters change, or we change the constructor signature, these
+    // will need to be updated.
     address constant NEW_VERTEX = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
     address constant NEW_POLICY = 0x525F3daaB67189A2763B96A1518aaE34292a4f0b;
 
