@@ -8,6 +8,7 @@ import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
+import {VertexAccount} from "src/account/VertexAccount.sol";
 import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
@@ -16,6 +17,7 @@ contract VertexFactoryTest is Test {
     // Vertex system
     VertexCore public rootVertex;
     VertexCore public vertexCoreLogic;
+    VertexAccount public vertexAccountLogic;
     VertexFactory public vertexFactory;
     VertexStrategy[] public strategies;
     VertexPolicyNFT public policy;
@@ -64,13 +66,14 @@ contract VertexFactoryTest is Test {
         vm.createSelectFork(vm.rpcUrl("mainnet"));
 
         vertexCoreLogic = new VertexCore();
+        vertexAccountLogic = new VertexAccount();
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
 
         // Deploy vertex and mock protocol
         vertexFactory =
-        new VertexFactory(vertexCoreLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        new VertexFactory(vertexCoreLogic, vertexAccountLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
         rootVertex = VertexCore(vertexFactory.rootVertex());
         protocol = new ProtocolXYZ(address(rootVertex));
 
@@ -171,6 +174,10 @@ contract Constructor is VertexFactoryTest {
         assertEq(address(vertexFactory.vertexCoreLogic()), address(vertexCoreLogic));
     }
 
+    function test_SetsVertexAccountLogicAddress() public {
+        assertEq(address(vertexFactory.vertexAccountLogic()), address(vertexAccountLogic));
+    }
+
     function test_SetsRootVertexAddress() public {
         assertEq(address(vertexFactory.rootVertex()), address(rootVertex));
     }
@@ -188,8 +195,8 @@ contract Deploy is VertexFactoryTest {
     // method. The addresses are functions of the constructor parameters in the `deployVertex`
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
-    address constant NEW_VERTEX = 0x76006C4471fb6aDd17728e9c9c8B67d5AF06cDA0;
-    address constant NEW_POLICY = 0x525F3daaB67189A2763B96A1518aaE34292a4f0b;
+    address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
+    address constant NEW_POLICY = 0x8f2CEb22F71F5a88d04Ebd0122ab306aC789B6a0;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
@@ -235,7 +242,7 @@ contract Deploy is VertexFactoryTest {
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
         vm.expectRevert("Initializable: contract is already initialized");
-        VertexCore(NEW_VERTEX).initialize("NewProject", VertexPolicyNFT(NEW_POLICY), initialStrategies, initialAccounts);
+        VertexCore(NEW_VERTEX).initialize("NewProject", VertexPolicyNFT(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts);
     }
 
     function test_SetsVertexCoreAddressOnThePolicy() public {

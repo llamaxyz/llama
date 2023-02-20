@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
@@ -41,6 +42,9 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Equivalent to 100%, but scaled for precision
     uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
 
+    /// @notice The Vertex Account implementation contract.
+    VertexAccount public vertexAccountImplementation;
+
     /// @notice The NFT contract that defines the policies for this Vertex system.
     VertexPolicyNFT public policy;
 
@@ -65,9 +69,6 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
 
-    /// @notice Mapping of all authorized accounts.
-    mapping(VertexAccount => bool) public authorizedAccounts;
-
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
@@ -79,13 +80,16 @@ contract VertexCore is IVertexCore, Initializable {
         _;
     }
 
-    function initialize(string memory _name, VertexPolicyNFT _policy, Strategy[] calldata initialStrategies, string[] calldata initialAccounts)
-        external
-        override
-        initializer
-    {
+    function initialize(
+        string memory _name,
+        VertexPolicyNFT _policy,
+        VertexAccount _vertexAccountImplementation,
+        Strategy[] calldata initialStrategies,
+        string[] calldata initialAccounts
+    ) external override initializer {
         name = _name;
         policy = _policy;
+        vertexAccountImplementation = _vertexAccountImplementation;
 
         _deployStrategies(initialStrategies, _policy);
         _deployAccounts(initialAccounts);
@@ -331,8 +335,8 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < accountLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-                VertexAccount account = new VertexAccount{salt: salt}(accounts[i], address(this));
-                authorizedAccounts[account] = true;
+                VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountImplementation), salt)));
+                account.initialize(accounts[i], address(this));
                 emit AccountAuthorized(account, accounts[i]);
             }
         }
