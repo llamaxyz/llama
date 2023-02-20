@@ -61,7 +61,7 @@ contract VertexCoreTest is Test {
     event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
-    function setUp() virtual public {
+    function setUp() public virtual {
         // Setup strategy parameters
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
@@ -97,7 +97,7 @@ contract VertexCoreTest is Test {
         vertexCore = new VertexCore();
         vertexAccountImplementation = new VertexAccount();
         vertexFactory =
-            new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
+        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
         vertex = VertexCore(vertexFactory.rootVertex());
         targetProtocol = new ProtocolXYZ(address(vertex));
 
@@ -231,14 +231,14 @@ contract VertexCoreTest is Test {
     }
 
     function _computeVertexStrategyAddress(Strategy memory _strategy) internal returns (VertexStrategy) {
-      bytes memory bytecode = type(VertexStrategy).creationCode;
-      return VertexStrategy(
-          computeCreate2Address(
-              keccak256(abi.encode(_strategy)), // salt
-              keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, vertex.policy(), address(vertex)))),
-              address(vertex) // deployer
-          )
-      );
+        bytes memory bytecode = type(VertexStrategy).creationCode;
+        return VertexStrategy(
+            computeCreate2Address(
+                keccak256(abi.encode(_strategy)), // salt
+                keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, vertex.policy(), address(vertex)))),
+                address(vertex) // deployer
+            )
+        );
     }
 
     function _computeVertexAccountAddress(string memory _name) internal returns (VertexAccount) {
@@ -249,7 +249,6 @@ contract VertexCoreTest is Test {
         );
         return VertexAccount(payable(_computedAddress));
     }
-
 }
 
 contract Setup is VertexCoreTest {
@@ -271,48 +270,48 @@ contract Setup is VertexCoreTest {
 }
 
 contract Initialize is VertexCoreTest {
-  // TODO might want a new setup function here which deploys a VertexCore
-  // without initializing it, then allows the test functions below to initialize
+    // TODO might want a new setup function here which deploys a VertexCore
+    // without initializing it, then allows the test functions below to initialize
 
-  function test_StrategiesAreDeployedAtExpectedAddress() public {
-    // TODO confirm strateges have been deployed at expected addresses
-  }
+    function test_StrategiesAreDeployedAtExpectedAddress() public {
+        // TODO confirm strateges have been deployed at expected addresses
+    }
 
-  function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
-    // TODO confirm strategy events have been emitted
-  }
+    function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
+        // TODO confirm strategy events have been emitted
+    }
 
-  function test_StrategiesHaveVertexCoreAddressInStorage() public {
-    // TODO confirm strategies have this vertex core address in storage
-  }
+    function test_StrategiesHaveVertexCoreAddressInStorage() public {
+        // TODO confirm strategies have this vertex core address in storage
+    }
 
-  function test_StrategiesHavePolicyAddressInStorage() public {
-    // TODO confirm strategies have the correct policy address in storage
-  }
+    function test_StrategiesHavePolicyAddressInStorage() public {
+        // TODO confirm strategies have the correct policy address in storage
+    }
 
-  function test_StrategiesAreAuthorizedByVertexCore() public {
-    // TODO confirm strategies are authorized
-  }
+    function test_StrategiesAreAuthorizedByVertexCore() public {
+        // TODO confirm strategies are authorized
+    }
 
-  function test_AccountsAreDeployedAtExpectedAddress() public {
-    // TODO confirm accounts have been deployed at expected addresses
-  }
+    function test_AccountsAreDeployedAtExpectedAddress() public {
+        // TODO confirm accounts have been deployed at expected addresses
+    }
 
-  function test_EmitsAccountAuthorizedEventForEachAccount() public {
-    // TODO confirm events have been emitted
-  }
+    function test_EmitsAccountAuthorizedEventForEachAccount() public {
+        // TODO confirm events have been emitted
+    }
 
-  function test_AccountsHaveVertexCoreAddressInStorage() public {
-    // TODO confirm accounts have this vertex core address in storage
-  }
+    function test_AccountsHaveVertexCoreAddressInStorage() public {
+        // TODO confirm accounts have this vertex core address in storage
+    }
 
-  function test_AccountsHaveNameInStorage() public {
-    // TODO confirm accounts have the correct name in storage
-  }
+    function test_AccountsHaveNameInStorage() public {
+        // TODO confirm accounts have the correct name in storage
+    }
 
-  function test_AccountsAreAuthorizedByVertexCore() public {
-    // TODO confirm accounts are authorized
-  }
+    function test_AccountsAreAuthorizedByVertexCore() public {
+        // TODO confirm accounts are authorized
+    }
 }
 
 contract CreateAction is VertexCoreTest {
@@ -382,9 +381,9 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CancelAction is VertexCoreTest {
-    function setUp() override public {
-      VertexCoreTest.setUp();
-      _createAction();
+    function setUp() public override {
+        VertexCoreTest.setUp();
+        _createAction();
     }
 
     function test_CreatorCancelFlow() public {
@@ -525,7 +524,7 @@ contract QueueAction is VertexCoreTest {
 contract ExecuteAction is VertexCoreTest {
     uint256 actionId;
 
-    function setUp() override public {
+    function setUp() public override {
         VertexCoreTest.setUp();
 
         actionId = _createAction();
@@ -539,11 +538,11 @@ contract ExecuteAction is VertexCoreTest {
     }
 
     function test_ActionExecution() public {
-      // TODO
-      // This is a happy path test.
-      // Execute the queued action, confirm the call was performed.
-      // Assert that ActionExecuted was emitted.
-      // Assert that the call result was returned.
+        // TODO
+        // This is a happy path test.
+        // Execute the queued action, confirm the call was performed.
+        // Assert that ActionExecuted was emitted.
+        // Assert that the call result was returned.
     }
 
     function test_RevertIfNotQueued() public {
@@ -551,7 +550,6 @@ contract ExecuteAction is VertexCoreTest {
         vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
         vertex.executeAction(actionId);
     }
-
 
     // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
     function test_RevertIfInvalidActionId() public {
@@ -603,15 +601,15 @@ contract ExecuteAction is VertexCoreTest {
     }
 
     function test_HandlesReentrancy() public {
-      // TODO
-      // What happens if somone queues an action to call vertex.executeAction?
-      // Calling executeAction on that action should revert with OnlyQueuedActions.
-      // We should confirm that nothing weird happens if this is done
+        // TODO
+        // What happens if somone queues an action to call vertex.executeAction?
+        // Calling executeAction on that action should revert with OnlyQueuedActions.
+        // We should confirm that nothing weird happens if this is done
     }
 
     function test_RevertsIfExternalCallIsUnsuccessful() public {
-      // TODO
-      // expect the call to revert with FailedActionExecution
+        // TODO
+        // expect the call to revert with FailedActionExecution
     }
 }
 
@@ -619,11 +617,11 @@ contract SubmitApproval is VertexCoreTest {
     uint256 actionId;
 
     function test_SuccessfulApproval() public {
-      // TODO
-      // This is a happy path test.
-      // Assert changes to Action storage.
-      // Assert changes to Approval storage.
-      // Assert event emission.
+        // TODO
+        // This is a happy path test.
+        // Assert changes to Action storage.
+        // Assert changes to Approval storage.
+        // Assert event emission.
     }
 
     function test_RevertIfActionNotActive() public {
@@ -666,35 +664,35 @@ contract SubmitApproval is VertexCoreTest {
     }
 
     function test_ChangeApprovalSupportToTrue() public {
-      // TODO
-      // Just like the previous test, but go from false -> true
+        // TODO
+        // Just like the previous test, but go from false -> true
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {
-      // TODO
-      // https://github.com/llama-community/vertex-v1/issues/62
+        // TODO
+        // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
 contract SubmitApprovalBySignature is VertexCoreTest {
     function test_SuccessfulApprovalBySignature() public {
-      // TODO
-      // This is a happy path test.
-      // Assert changes to Action storage.
-      // Assert changes to Approval storage.
-      // Assert event emission.
+        // TODO
+        // This is a happy path test.
+        // Assert changes to Action storage.
+        // Assert changes to Approval storage.
+        // Assert event emission.
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {
-      // TODO
-      // https://github.com/llama-community/vertex-v1/issues/62
+        // TODO
+        // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
 contract SubmitDisapproval is VertexCoreTest {
     uint256 actionId;
 
-    function _createApproveAndQueueAction() internal returns (uint256 _actionId){
+    function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
         _actionId = _createAction();
         _approveAction(policyholder1, _actionId);
         _approveAction(policyholder2, _actionId);
@@ -707,11 +705,11 @@ contract SubmitDisapproval is VertexCoreTest {
     }
 
     function test_SuccessfulDisapproval() public {
-      // TODO
-      // This is a happy path test.
-      // Assert changes to Action storage.
-      // Assert changes to Disapproval storage.
-      // Assert event emission.
+        // TODO
+        // This is a happy path test.
+        // Assert changes to Action storage.
+        // Assert changes to Disapproval storage.
+        // Assert event emission.
     }
 
     function test_RevertIfActionNotQueued() public {
@@ -748,24 +746,24 @@ contract SubmitDisapproval is VertexCoreTest {
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {
-      // TODO
-      // https://github.com/llama-community/vertex-v1/issues/62
+        // TODO
+        // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
 contract SubmitDisapprovalBySignature is VertexCoreTest {
     function test_SuccessfulDisapprovalBySignature() public {
-      // TODO
-      // This is a happy path test.
-      // Sign a message and have one account submit disapproval on behalf of another.
-      // Assert changes to Action storage.
-      // Assert changes to Dispproval storage.
-      // Assert event emission.
+        // TODO
+        // This is a happy path test.
+        // Sign a message and have one account submit disapproval on behalf of another.
+        // Assert changes to Action storage.
+        // Assert changes to Dispproval storage.
+        // Assert event emission.
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {
-      // TODO
-      // https://github.com/llama-community/vertex-v1/issues/62
+        // TODO
+        // https://github.com/llama-community/vertex-v1/issues/62
     }
 }
 
@@ -836,21 +834,21 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     }
 
     function test_UniquenessOfInput() public {
-      // TODO
-      // What happens if duplicate strategies are in the input array?
+        // TODO
+        // What happens if duplicate strategies are in the input array?
     }
 
     function test_Idempotency() public {
-      // TODO
-      // What happens if it is called twice with the same input?
+        // TODO
+        // What happens if it is called twice with the same input?
     }
 
     function test_CanBeCalledByASuccessfulAction() public {
-      // TODO
-      // Submit an action to call this function and authorize a new Strategy.
-      // Approve and queue the action.
-      // Execute the action.
-      // Ensure that the strategy is now authorized.
+        // TODO
+        // Submit an action to call this function and authorize a new Strategy.
+        // Approve and queue the action.
+        // Execute the action.
+        // Ensure that the strategy is now authorized.
     }
 }
 
@@ -902,7 +900,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
         vertex.createAndAuthorizeAccounts(newAccounts);
     }
 
-   function test_RevertIfReinitialized() public {
+    function test_RevertIfReinitialized() public {
         string[] memory newAccounts = new string[](3);
         VertexAccount[] memory accountAddresses = new VertexAccount[](3);
 
@@ -929,80 +927,80 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     }
 
     function test_UniquenessOfInput() public {
-      // TODO
-      // What happens if duplicate account names are in the input array?
+        // TODO
+        // What happens if duplicate account names are in the input array?
     }
 
     function test_Idempotency() public {
-      // TODO
-      // What happens if it is called twice with the same inputs?
+        // TODO
+        // What happens if it is called twice with the same inputs?
     }
 
     function test_CanBeCalledByASuccessfulAction() public {
-      // TODO
-      // Submit an action to call this function and authorize a new Account.
-      // Approve and queue the action.
-      // Execute the action.
-      // Ensure that the account is now authorized.
+        // TODO
+        // Submit an action to call this function and authorize a new Account.
+        // Approve and queue the action.
+        // Execute the action.
+        // Ensure that the account is now authorized.
     }
 }
 
 contract GetActionState is VertexCoreTest {
-  function test_RevertsOnInvalidAction() public {} // TODO
-  function test_CanceledActionsHaveStateCanceled() public {} // TODO
-  function test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // confirm its state begins at Active
-  }
-  function test_ApprovedActionsWithFixedLengthHaveStateActive() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == true
-    // have enough accounts approve it before the end of the approvalEndBlock so that it will succeed
-    // confirm its state is still Active, not Approved
-  }
-  function test_PassedActionsPriorToApprovalEndBlockHaveStateApproved() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // confirm its state begins at Active
-  }
-  function testFuzz_ApprovedActionsHaveStateApproved(uint256 _blocksSinceCreation) public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // have enough accounts approve it so that it will pass
-    // bound(_blocksSinceCreation, 0, approvalPeriod * 2);
-    // vm.roll(_blocksSinceCreation)
-    // if _blocksSinceCreation => approvalPeriod --> expect Approved
-    // if _blocksSinceCreation < approvalPeriod --> expect Active
-  }
-  function test_QueuedActionsHaveStateQueued() public {} // TODO
-  function test_ExecutedActionsHaveStateExecuted() public {} // TODO
-  function test_RejectedActionsHaveStateFailed() public {} // TODO
+    function test_RevertsOnInvalidAction() public {} // TODO
+    function test_CanceledActionsHaveStateCanceled() public {} // TODO
+    function test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() public {
+        // TODO
+        // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+        // confirm its state begins at Active
+    }
+    function test_ApprovedActionsWithFixedLengthHaveStateActive() public {
+        // TODO
+        // create an action such that action.strategy.isFixedLengthApprovalPeriod == true
+        // have enough accounts approve it before the end of the approvalEndBlock so that it will succeed
+        // confirm its state is still Active, not Approved
+    }
+    function test_PassedActionsPriorToApprovalEndBlockHaveStateApproved() public {
+        // TODO
+        // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+        // confirm its state begins at Active
+    }
+    function testFuzz_ApprovedActionsHaveStateApproved(uint256 _blocksSinceCreation) public {
+        // TODO
+        // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
+        // have enough accounts approve it so that it will pass
+        // bound(_blocksSinceCreation, 0, approvalPeriod * 2);
+        // vm.roll(_blocksSinceCreation)
+        // if _blocksSinceCreation => approvalPeriod --> expect Approved
+        // if _blocksSinceCreation < approvalPeriod --> expect Active
+    }
+    function test_QueuedActionsHaveStateQueued() public {} // TODO
+    function test_ExecutedActionsHaveStateExecuted() public {} // TODO
+    function test_RejectedActionsHaveStateFailed() public {} // TODO
 }
 
 contract Integration is VertexCoreTest {
     function test_CompleteActionFlow() public {
-      _executeCompleteActionFlow();
+        _executeCompleteActionFlow();
     }
 
     function testFuzz_NewVertexInstancesCanBeDeployed() public {
-      // TODO
-      // Test that the root/llama VertexCore can deploy new client VertexCore
-      // instances by creating an action to call VertexFactory.deploy.
+        // TODO
+        // Test that the root/llama VertexCore can deploy new client VertexCore
+        // instances by creating an action to call VertexFactory.deploy.
     }
 
     function testFuzz_ETHSendFromAccountViaActionApproval(uint256 _ethAmount) public {
-      // TODO test that funds can be moved from VertexAccounts via actions
-      // submitted and approved through VertextCore
+        // TODO test that funds can be moved from VertexAccounts via actions
+        // submitted and approved through VertextCore
     }
 
     function testFuzz_ERC20SendFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
-      // TODO test that funds can be moved from VertexAccounts via actions
-      // submitted and approved through VertextCore
+        // TODO test that funds can be moved from VertexAccounts via actions
+        // submitted and approved through VertextCore
     }
 
     function testFuzz_ERC20ApprovalFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
-      // TODO test that funds can be approved + transferred from VertexAccounts via actions
-      // submitted and approved through VertextCore
+        // TODO test that funds can be approved + transferred from VertexAccounts via actions
+        // submitted and approved through VertextCore
     }
 }
