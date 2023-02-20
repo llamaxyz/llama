@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
