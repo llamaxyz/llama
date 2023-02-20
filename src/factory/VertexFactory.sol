@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
+import {VertexAccount} from "src/account/VertexAccount.sol";
 import {IVertexFactory} from "src/factory/IVertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Strategy} from "src/utils/Structs.sol";
@@ -16,6 +17,9 @@ contract VertexFactory is IVertexFactory {
     /// @notice The VertexCore implementation (logic) contract.
     VertexCore public immutable vertexCoreLogic;
 
+    /// @notice The Vertex Account implementation (logic) contract.
+    VertexAccount public immutable vertexAccountLogic;
+
     /// @notice The Vertex instance responsible for deploying new Vertex instances.
     VertexCore public immutable rootVertex;
 
@@ -24,6 +28,7 @@ contract VertexFactory is IVertexFactory {
 
     constructor(
         VertexCore _vertexCoreLogic,
+        VertexAccount _vertexAccountLogic,
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
@@ -33,6 +38,7 @@ contract VertexFactory is IVertexFactory {
         uint256[][] memory initialExpirationTimestamps
     ) {
         vertexCoreLogic = _vertexCoreLogic;
+        vertexAccountLogic = _vertexAccountLogic;
         rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
@@ -66,7 +72,7 @@ contract VertexFactory is IVertexFactory {
         VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
 
         vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
-        vertex.initialize(name, policy, initialStrategies, initialAccounts);
+        vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
         unchecked {

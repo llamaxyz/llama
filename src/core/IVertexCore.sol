@@ -30,9 +30,16 @@ interface IVertexCore {
     /// @notice Initializes a new VertexCore clone.
     /// @param name The name of the VertexCore clone.
     /// @param policy This Vertex instance's policy contract.
+    /// @param vertexAccountImplementation The VertexAccount implementation contract.
     /// @param initialStrategies The configuration of the initial strategies.
     /// @param initialAccounts The configuration of the initial strategies.
-    function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memory initialStrategies, string[] memory initialAccounts) external;
+    function initialize(
+        string memory name,
+        VertexPolicyNFT policy,
+        VertexAccount vertexAccountImplementation,
+        Strategy[] memory initialStrategies,
+        string[] memory initialAccounts
+    ) external;
 
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.
