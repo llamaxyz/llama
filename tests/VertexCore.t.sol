@@ -102,7 +102,7 @@ contract VertexCoreTest is Test {
         vertexAccountImplementation = new VertexAccount();
         vertexFactory =
         new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
-        vertex = VertexCore(vertexFactory.initialVertex());
+        vertex = VertexCore(vertexFactory.rootVertex());
         protocol = new ProtocolXYZ(address(vertex));
 
         // Use create2 to get vertex strategy addresses

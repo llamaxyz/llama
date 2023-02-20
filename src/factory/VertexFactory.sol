@@ -14,21 +14,21 @@ import {Strategy} from "src/utils/Structs.sol";
 contract VertexFactory is IVertexFactory {
     error OnlyVertex();
 
-    /// @notice The VertexCore implementation contract.
-    VertexCore public immutable vertexCoreImplementation;
+    /// @notice The VertexCore implementation (logic) contract.
+    VertexCore public immutable vertexCoreLogic;
 
-    /// @notice The Vertex Account implementation contract.
-    VertexAccount public immutable vertexAccountImplementation;
+    /// @notice The Vertex Account implementation (logic) contract.
+    VertexAccount public immutable vertexAccountLogic;
 
-    /// @notice The initially deployed Vertex system.
-    VertexCore public immutable initialVertex;
+    /// @notice The Vertex instance responsible for deploying new Vertex instances.
+    VertexCore public immutable rootVertex;
 
     /// @notice The current number of vertex systems created.
     uint256 public vertexCount;
 
     constructor(
-        VertexCore _vertexCoreImplementation,
-        VertexAccount _vertexAccountImplementation,
+        VertexCore _vertexCoreLogic,
+        VertexAccount _vertexAccountLogic,
         string memory name,
         string memory symbol,
         Strategy[] memory initialStrategies,
@@ -37,27 +37,13 @@ contract VertexFactory is IVertexFactory {
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
     ) {
-        vertexCoreImplementation = _vertexCoreImplementation;
-        vertexAccountImplementation = _vertexAccountImplementation;
-
-        unchecked {
-            ++vertexCount;
-        }
-
-        bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
-
-        initialVertex = VertexCore(Clones.clone(address(vertexCoreImplementation)));
-        initialVertex.initialize(name, policy, vertexAccountImplementation, initialStrategies, initialAccounts);
-
-        policy.setVertex(address(initialVertex));
-
-        emit VertexCreated(0, name, address(initialVertex), address(policy));
+        vertexCoreLogic = _vertexCoreLogic;
+        vertexAccountLogic = _vertexAccountLogic;
+        rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
     }
 
-    modifier onlyInitialVertex() {
-        if (msg.sender != address(initialVertex)) revert OnlyVertex();
+    modifier onlyRootVertex() {
+        if (msg.sender != address(rootVertex)) revert OnlyVertex();
         _;
     }
 
@@ -69,22 +55,28 @@ contract VertexFactory is IVertexFactory {
         address[] memory initialPolicyholders,
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
-    ) public onlyInitialVertex returns (VertexCore) {
-        uint256 previousVertexCount = vertexCount;
-        unchecked {
-            ++vertexCount;
-        }
+    ) external onlyRootVertex returns (VertexCore) {
+        return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+    }
 
+    function _deploy(
+        string memory name,
+        string memory symbol,
+        Strategy[] memory initialStrategies,
+        string[] memory initialAccounts,
+        address[] memory initialPolicyholders,
+        bytes8[][] memory initialPermissions,
+        uint256[][] memory initialExpirationTimestamps
+    ) internal returns (VertexCore vertex) {
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy =
-            VertexPolicyNFT(new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps));
+        VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
 
-        VertexCore vertex = VertexCore(Clones.clone(address(vertexCoreImplementation)));
-        vertex.initialize(name, policy, vertexAccountImplementation, initialStrategies, initialAccounts);
+        vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
+        vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
         policy.setVertex(address(vertex));
-        emit VertexCreated(previousVertexCount, name, address(vertex), address(policy));
-
-        return vertex;
+        unchecked {
+            emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
+        }
     }
 }
