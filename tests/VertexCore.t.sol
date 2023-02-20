@@ -274,19 +274,44 @@ contract Initialize is VertexCoreTest {
   // TODO might want a new setup function here which deploys a VertexCore
   // without initializing it, then allows the test functions below to initialize
 
-  function test_DeploysStrategies() public {
-    // TODO
-    // confirm strateges have been deployed at expected addresses
-    // confirm events are emitted
-    // confirm strategies have expected storage, e.g. vertex + policy are set properly
-    // confirm deployed strategies are authorized by vertexcore contract
+  function test_StrategiesAreDeployedAtExpectedAddress() public {
+    // TODO confirm strateges have been deployed at expected addresses
   }
-  function test_DeploysAccounts() public {
-    // TODO
-    // confirm accounts have been deployed at expected addresses
-    // confirm events are emitted
-    // confirm accounts have expected storage, e.g. vertex + name are set properly
-    // confirm deployed accounts are authorized by vertexcore contract
+
+  function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
+    // TODO confirm strategy events have been emitted
+  }
+
+  function test_StrategiesHaveVertexCoreAddressInStorage() public {
+    // TODO confirm strategies have this vertex core address in storage
+  }
+
+  function test_StrategiesHavePolicyAddressInStorage() public {
+    // TODO confirm strategies have the correct policy address in storage
+  }
+
+  function test_StrategiesAreAuthorizedByVertexCore() public {
+    // TODO confirm strategies are authorized
+  }
+
+  function test_AccountsAreDeployedAtExpectedAddress() public {
+    // TODO confirm accounts have been deployed at expected addresses
+  }
+
+  function test_EmitsAccountAuthorizedEventForEachAccount() public {
+    // TODO confirm events have been emitted
+  }
+
+  function test_AccountsHaveVertexCoreAddressInStorage() public {
+    // TODO confirm accounts have this vertex core address in storage
+  }
+
+  function test_AccountsHaveNameInStorage() public {
+    // TODO confirm accounts have the correct name in storage
+  }
+
+  function test_AccountsAreAuthorizedByVertexCore() public {
+    // TODO confirm accounts are authorized
   }
 }
 
