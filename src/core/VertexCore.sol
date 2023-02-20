@@ -173,7 +173,7 @@ contract VertexCore is IVertexCore, Initializable {
         }
 
         Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || action.strategy.isActionCanceletionValid(actionId))) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) revert ActionCannotBeCanceled();
 
         action.canceled = true;
         queuedActions[actionId] = false;

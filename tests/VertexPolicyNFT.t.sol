@@ -38,8 +38,6 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function setUp() public {
-        vm.createSelectFork(vm.rpcUrl("mainnet"));
-
         vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertexPolicyNFT.setVertex(address(this));
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
