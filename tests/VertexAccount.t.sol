@@ -109,7 +109,7 @@ contract VertexAccountTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     // transfer Native unit tests
-    function test_VertexAccount_transfer_TransferETH() public {
+    function test_transfer_TransferETH() public {
         _transferETHToAccount(ETH_AMOUNT);
 
         uint256 accountETHBalance = address(accounts[0]).balance;
@@ -124,12 +124,12 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_transfer_RevertIfNotVertexMsgSender() public {
+    function test_transfer_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].transfer(payable(ETH_WHALE), ETH_AMOUNT);
     }
 
-    function test_VertexAccount_transfer_RevertIfToZeroAddress() public {
+    function test_transfer_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transfer(payable(address(0)), ETH_AMOUNT);
@@ -137,7 +137,7 @@ contract VertexAccountTest is Test {
     }
 
     // transfer ERC20 unit tests
-    function test_VertexAccount_transferERC20_TransferUSDC() public {
+    function test_transferERC20_TransferUSDC() public {
         _transferUSDCToAccount(USDC_AMOUNT);
 
         uint256 accountUSDCBalance = USDC.balanceOf(address(accounts[0]));
@@ -152,12 +152,12 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_transferERC20_RevertIfNotVertexMsgSender() public {
+    function test_transferERC20_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].transferERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
-    function test_VertexAccount_transferERC20_RevertIfToZeroAddress() public {
+    function test_transferERC20_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transferERC20(USDC, address(0), USDC_AMOUNT);
@@ -165,41 +165,41 @@ contract VertexAccountTest is Test {
     }
 
     // approve ERC20 unit tests
-    function test_VertexAccount_approveERC20_ApproveUSDC() public {
+    function test_approveERC20_ApproveUSDC() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
     }
 
-    function test_VertexAccount_approveERC20_IncreaseUSDCAllowance() public {
+    function test_approveERC20_IncreaseUSDCAllowance() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
         _approveUSDCToRecipient(0);
         _approveUSDCToRecipient(USDC_AMOUNT + 1);
     }
 
-    function test_VertexAccount_approveERC20_DecreaseUSDCAllowance() public {
+    function test_approveERC20_DecreaseUSDCAllowance() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
         _approveUSDCToRecipient(0);
         _approveUSDCToRecipient(USDC_AMOUNT - 1);
     }
 
-    function test_VertexAccount_approveERC20_IncreaseUSDTAllowance() public {
+    function test_approveERC20_IncreaseUSDTAllowance() public {
         _approveUSDTToRecipient(USDT_AMOUNT);
         _approveUSDTToRecipient(0);
         _approveUSDTToRecipient(USDT_AMOUNT + 1);
     }
 
-    function test_VertexAccount_approveERC20_DecreaseUSDTAllowance() public {
+    function test_approveERC20_DecreaseUSDTAllowance() public {
         _approveUSDTToRecipient(USDT_AMOUNT);
         _approveUSDTToRecipient(0);
         _approveUSDTToRecipient(USDT_AMOUNT - 1);
     }
 
-    function test_VertexAccount_approveERC20_RevertIfNotVertexMsgSender() public {
+    function test_approveERC20_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
     // transfer ERC721 unit tests
-    function test_VertexAccount_transferERC721_TransferBAYC() public {
+    function test_transferERC721_TransferBAYC() public {
         _transferBAYCToAccount(BAYC_ID);
 
         uint256 accountNFTBalance = BAYC.balanceOf(address(accounts[0]));
@@ -215,12 +215,12 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_transferERC721_RevertIfNotVertexMsgSender() public {
+    function test_transferERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].transferERC721(BAYC, BAYC_WHALE, BAYC_ID);
     }
 
-    function test_VertexAccount_transferERC721_RevertIfToZeroAddress() public {
+    function test_transferERC721_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transferERC721(BAYC, address(0), BAYC_ID);
@@ -228,32 +228,32 @@ contract VertexAccountTest is Test {
     }
 
     // approve ERC721 unit tests
-    function test_VertexAccount_approveERC721_ApproveBAYC() public {
+    function test_approveERC721_ApproveBAYC() public {
         _transferBAYCToAccount(BAYC_ID);
         _approveBAYCToRecipient(BAYC_ID);
     }
 
-    function test_VertexAccount_approveERC721_RevertIfNotVertexMsgSender() public {
+    function test_approveERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveERC721(BAYC, BAYC_WHALE, BAYC_ID);
     }
 
     // approve Operator ERC721 unit tests
-    function test_VertexAccount_approveOperatorERC721_ApproveBAYC() public {
+    function test_approveOperatorERC721_ApproveBAYC() public {
         _approveOperatorBAYCToRecipient(true);
     }
 
-    function test_VertexAccount_approveOperatorERC721_DisapproveBAYC() public {
+    function test_approveOperatorERC721_DisapproveBAYC() public {
         _approveOperatorBAYCToRecipient(false);
     }
 
-    function test_VertexAccount_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
+    function test_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
     }
 
     // transfer ERC1155 unit tests
-    function test_VertexAccount_transferERC1155_TransferRARI() public {
+    function test_transferERC1155_TransferRARI() public {
         _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
 
         uint256 accountNFTBalance = RARI.balanceOf(address(accounts[0]), RARI_ID_1);
@@ -268,12 +268,12 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_transferERC1155_RevertIfNotVertexMsgSender() public {
+    function test_transferERC1155_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].transferERC1155(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, "");
     }
 
-    function test_VertexAccount_transferERC1155_RevertIfToZeroAddress() public {
+    function test_transferERC1155_RevertIfToZeroAddress() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transferERC1155(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, "");
@@ -281,7 +281,7 @@ contract VertexAccountTest is Test {
     }
 
     // transfer batch ERC1155 unit tests
-    function test_VertexAccount_transferBatchERC1155_TransferRARI() public {
+    function test_transferBatchERC1155_TransferRARI() public {
         _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
         _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
 
@@ -310,7 +310,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_transferBatchERC1155_RevertIfNotVertexMsgSender() public {
+    function test_transferBatchERC1155_RevertIfNotVertexMsgSender() public {
         uint256[] memory tokenIDs = new uint256[](2);
         tokenIDs[0] = RARI_ID_1;
         tokenIDs[1] = RARI_ID_2;
@@ -323,7 +323,7 @@ contract VertexAccountTest is Test {
         accounts[0].transferBatchERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
     }
 
-    function test_VertexAccount_transferBatchERC1155_RevertIfToZeroAddress() public {
+    function test_transferBatchERC1155_RevertIfToZeroAddress() public {
         uint256[] memory tokenIDs = new uint256[](2);
         tokenIDs[0] = RARI_ID_1;
         tokenIDs[1] = RARI_ID_2;
@@ -339,21 +339,21 @@ contract VertexAccountTest is Test {
     }
 
     // approve ERC1155 unit tests
-    function test_VertexAccount_approveERC1155_ApproveRARI() public {
+    function test_approveERC1155_ApproveRARI() public {
         _approveRARIToRecipient(true);
     }
 
-    function test_VertexAccount_approveERC1155_DisapproveRARI() public {
+    function test_approveERC1155_DisapproveRARI() public {
         _approveRARIToRecipient(false);
     }
 
-    function test_VertexAccount_approveERC1155_RevertIfNotVertexMsgSender() public {
+    function test_approveERC1155_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveERC1155(RARI, RARI_WHALE, true);
     }
 
     // generic execute unit tests
-    function test_VertexAccount_execute_DelegateCallTestScript() public {
+    function test_execute_DelegateCallTestScript() public {
         TestScript testScript = new TestScript();
 
         vm.startPrank(address(vertex));
@@ -362,14 +362,14 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_VertexAccount_execute_RevertIfNotVertexMsgSender() public {
+    function test_execute_RevertIfNotVertexMsgSender() public {
         TestScript testScript = new TestScript();
 
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""));
     }
 
-    function test_VertexAccount_execute_RevertIfNotSuccess() public {
+    function test_execute_RevertIfNotSuccess() public {
         TestScript testScript = new TestScript();
 
         vm.startPrank(address(vertex));
@@ -383,17 +383,17 @@ contract VertexAccountTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     // Test that VertexAccount can receive ETH
-    function test_VertexAccount_ReceiveETH() public {
+    function test_ReceiveETH() public {
         _transferETHToAccount(ETH_AMOUNT);
     }
 
     // Test that VertexAccount can receive ERC20 tokens
-    function test_VertexAccount_ReceiveERC20() public {
+    function test_ReceiveERC20() public {
         _transferUSDCToAccount(USDC_AMOUNT);
     }
 
     // Test that approved ERC20 tokens can be transferred from VertexAccount to a recipient
-    function test_VertexAccount_TransferApprovedERC20() public {
+    function test_TransferApprovedERC20() public {
         _transferUSDCToAccount(USDC_AMOUNT);
         _approveUSDCToRecipient(USDC_AMOUNT);
 
@@ -410,12 +410,12 @@ contract VertexAccountTest is Test {
     }
 
     // Test that VertexAccount can receive ERC721 tokens
-    function test_VertexAccount_ReceiveERC721() public {
+    function test_ReceiveERC721() public {
         _transferBAYCToAccount(BAYC_ID);
     }
 
     // Test that VertexAccount can safe receive ERC721 tokens
-    function test_VertexAccount_SafeReceiveERC721() public {
+    function test_SafeReceiveERC721() public {
         assertEq(BAYC.balanceOf(address(accounts[0])), 0);
         assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
 
@@ -427,7 +427,7 @@ contract VertexAccountTest is Test {
     }
 
     // Test that approved ERC721 tokens can be transferred from VertexAccount to a recipient
-    function test_VertexAccount_TransferApprovedERC721() public {
+    function test_TransferApprovedERC721() public {
         _transferBAYCToAccount(BAYC_ID);
         _approveBAYCToRecipient(BAYC_ID);
 
@@ -445,7 +445,7 @@ contract VertexAccountTest is Test {
     }
 
     // Test that approved Operator ERC721 tokens can be transferred from VertexAccount to a recipient
-    function test_VertexAccount_TransferApprovedOperatorERC721() public {
+    function test_TransferApprovedOperatorERC721() public {
         vm.startPrank(BAYC_WHALE);
         BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), BAYC_ID);
         BAYC.transferFrom(BAYC_WHALE, address(accounts[0]), BAYC_ID_2);
@@ -468,12 +468,12 @@ contract VertexAccountTest is Test {
     }
 
     // Test that VertexAccount can receive ERC1155 tokens
-    function test_VertexAccount_ReceiveERC1155() public {
+    function test_ReceiveERC1155() public {
         _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
     }
 
     // Test that approved ERC1155 tokens can be transferred from VertexAccount to a recipient
-    function test_VertexAccount_TransferApprovedERC1155() public {
+    function test_TransferApprovedERC1155() public {
         _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
         _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
         _approveRARIToRecipient(true);
