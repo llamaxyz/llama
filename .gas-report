@@ -8,7 +8,7 @@
 | approveERC721                                        | 2621            | 19013 | 27210  | 27210 | 3       |
 | approveOperatorERC721                                | 2679            | 17767 | 19063  | 30263 | 4       |
 | execute                                              | 2763            | 3259  | 3396   | 3620  | 3       |
-| initialize                                           | 1379            | 68291 | 69447  | 69447 | 291     |
+| initialize                                           | 1379            | 68299 | 69447  | 69447 | 293     |
 | onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
 | onERC721Received                                     | 1078            | 1078  | 1078   | 1078  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
@@ -22,21 +22,21 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 3752375                                     | 18969           |         |         |         |         |
+| 3827275                                     | 19343           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 428             | 428     | 428     | 428     | 1       |
 | authorizedStrategies                        | 571             | 1459    | 571     | 2571    | 9       |
 | cancelAction                                | 1781            | 14836   | 14342   | 38781   | 10      |
-| createAction                                | 3013            | 195407  | 219383  | 240383  | 33      |
+| createAction                                | 3013            | 204381  | 220191  | 243929  | 35      |
 | createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 2       |
 | createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
-| executeAction                               | 456             | 21552   | 22782   | 37751   | 6       |
-| getAction                                   | 3950            | 7588    | 3950    | 21950   | 59      |
-| initialize                                  | 1936            | 2079706 | 2060914 | 2267271 | 141     |
+| executeAction                               | 432             | 20066   | 13209   | 37727   | 7       |
+| getAction                                   | 3950            | 7541    | 3950    | 21950   | 62      |
+| initialize                                  | 1936            | 2079574 | 2060914 | 2267271 | 142     |
 | name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
-| policy                                      | 350             | 357     | 350     | 2350    | 277     |
-| queueAction                                 | 543             | 52410   | 55117   | 83617   | 13      |
-| submitApproval                              | 3020            | 43290   | 43206   | 71156   | 42      |
+| policy                                      | 350             | 357     | 350     | 2350    | 280     |
+| queueAction                                 | 543             | 52889   | 55117   | 83617   | 14      |
+| submitApproval                              | 3020            | 43282   | 43206   | 71156   | 46      |
 | submitDisapproval                           | 2636            | 43349   | 60827   | 62827   | 11      |
 | unauthorizeStrategies                       | 8069            | 8069    | 8069    | 8069    | 1       |
 
@@ -47,7 +47,7 @@
 | 9059998                                              | 44132           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9854            | 4413355 | 4964043 | 4964043 | 9       |
-| rootVertex                                           | 183             | 183     | 183     | 183     | 133     |
+| rootVertex                                           | 183             | 183     | 183     | 183     | 134     |
 | vertexAccountLogic                                   | 227             | 227     | 227     | 227     | 1       |
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
 | vertexCount                                          | 361             | 1694    | 2361    | 2361    | 3       |
@@ -66,23 +66,23 @@
 | Deployment Cost                                         | Deployment Size |        |         |         |         |
 | 2566798                                                 | 17800           |        |         |         |         |
 | Function Name                                           | min             | avg    | median  | max     | # calls |
-| balanceOf                                               | 651             | 1670   | 2651    | 2651    | 51      |
+| balanceOf                                               | 651             | 1669   | 2651    | 2651    | 55      |
 | baseURI                                                 | 2989            | 2989   | 2989    | 2989    | 1       |
-| batchGrantPermissions                                   | 3683            | 886739 | 1093884 | 1093884 | 119     |
+| batchGrantPermissions                                   | 3683            | 892752 | 1100565 | 1100565 | 120     |
 | batchRevokePermissions                                  | 2789            | 35701  | 47640   | 60120   | 6       |
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
-| checkExpiration                                         | 895             | 2028   | 2895    | 6284    | 33      |
+| checkExpiration                                         | 895             | 2020   | 2895    | 6284    | 35      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
-| hasPermission                                           | 1913            | 4748   | 2759    | 8751    | 37      |
-| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 305     |
+| hasPermission                                           | 1913            | 5314   | 3567    | 8713    | 39      |
+| hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 387     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
 | ownerOf                                                 | 622             | 622    | 622     | 622     | 1       |
 | setBaseURI                                              | 2710            | 13938  | 13938   | 25167   | 2       |
-| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 159     |
+| setVertex                                               | 22647           | 22647  | 22647   | 22647   | 160     |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
-| totalSupply                                             | 349             | 789    | 349     | 2349    | 59      |
+| totalSupply                                             | 349             | 810    | 349     | 2349    | 65      |
 | transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
 | vertex                                                  | 382             | 382    | 382     | 382     | 2       |
 
@@ -92,18 +92,24 @@
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
 | 816402                                                  | 5950            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
-| DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 56      |
-| approvalPeriod                                          | 218             | 218   | 218    | 218   | 80      |
-| approvalWeightByPermission                              | 615             | 1472  | 615    | 2615  | 28      |
-| disapprovalWeightByPermission                           | 592             | 1449  | 592    | 2592  | 28      |
-| expirationDelay                                         | 262             | 262   | 262    | 262   | 18      |
-| getApprovalWeightAt                                     | 1843            | 4593  | 3843   | 10343 | 40      |
+| DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 62      |
+| approvalPeriod                                          | 218             | 218   | 218    | 218   | 86      |
+| approvalWeightByPermission                              | 615             | 1518  | 615    | 2615  | 31      |
+| disapprovalWeightByPermission                           | 592             | 1495  | 592    | 2592  | 31      |
+| expirationDelay                                         | 262             | 262   | 262    | 262   | 19      |
+| getApprovalWeightAt                                     | 1843            | 4524  | 3843   | 10343 | 44      |
 | getDisapprovalWeightAt                                  | 1747            | 3747  | 3747   | 5747  | 9       |
 | isActionCancelationValid                                | 6797            | 12797 | 6797   | 24797 | 3       |
-| isActionPassed                                          | 6862            | 10677 | 6862   | 24862 | 49      |
-| isFixedLengthApprovalPeriod                             | 235             | 235   | 235    | 235   | 45      |
+| isActionPassed                                          | 6862            | 10611 | 6862   | 24862 | 52      |
+| isFixedLengthApprovalPeriod                             | 235             | 235   | 235    | 235   | 49      |
 | minDisapprovalPct                                       | 307             | 307   | 307    | 307   | 10      |
-| queuingDuration                                         | 262             | 262   | 262    | 262   | 18      |
+| queuingDuration                                         | 262             | 262   | 262    | 262   | 19      |
 
 
 
+
+Failing tests:
+Encountered 1 failing test in tests/VertexCore.t.sol:CreateAction
+[31m[FAIL. Reason: Call did not revert as expected Counterexample: calldata=0xe4a367424185f8eb00000000000000000000000000000000000000000000000000000000, args=[0x4185f8eb]][0m testFuzz_RevertIfBadPermissionForSelector(bytes4) (runs: 165, μ: 41638, ~: 41803)
+
+Encountered a total of [31m1[0m failing tests, [32m184[0m tests succeeded
