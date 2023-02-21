@@ -107,13 +107,13 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isApprovalQuorumValid(actionId, action.totalApprovals);
+        return action.totalApprovals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
     function isActionCancelationValid(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isDisapprovalQuorumValid(actionId, action.totalDisapprovals);
+        return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
@@ -144,18 +144,6 @@ contract VertexStrategy is IVertexStrategy {
         }
 
         return disapprovalWeightByPermission[DEFAULT_OPERATOR];
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isApprovalQuorumValid(uint256 actionId, uint256 approvals) public view override returns (bool) {
-        Action memory action = vertex.getAction(actionId);
-        return approvals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isDisapprovalQuorumValid(uint256 actionId, uint256 disapprovals) public view override returns (bool) {
-        Action memory action = vertex.getAction(actionId);
-        return disapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
