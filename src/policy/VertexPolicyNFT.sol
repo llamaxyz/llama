@@ -110,6 +110,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             grantPermissions(to[i], userPermissions[i], expiration);
         }
+        emit PermissionsAdded(to, userPermissions, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy

@@ -10,8 +10,10 @@ import {PermissionData} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
-    VertexPolicyNFT public vertexPolicyNFT;
+    event PermissionsAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
+    event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 
+    VertexPolicyNFT public vertexPolicyNFT;
     PermissionData public permission;
     PermissionData[] public permissions;
     PermissionData[][] public permissionsArray;
@@ -21,11 +23,9 @@ contract VertexPolicyNFTTest is Test {
     uint256[][] public expirationTimestamps;
     address[] public addresses;
     uint256[] public policyIds;
-
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
-
     uint256 ADDRESS_THIS_TOKEN_ID;
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
@@ -49,6 +49,8 @@ contract VertexPolicyNFTTest is Test {
 
     function test_grantPermission_CorrectlyGrantsPermission() public {
         addresses[0] = address(0xdeadbeef);
+        vm.expectEmit(true, true, true, true);
+        emit PermissionsAdded(addresses, permissionSignatures, initialExpirationTimestamps);
         vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, initialExpirationTimestamps);
         assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
         assertEq(vertexPolicyNFT.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));

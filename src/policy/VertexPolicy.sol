@@ -5,7 +5,7 @@ import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {PermissionData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PermissionsAdded(uint256[] users, PermissionData[] permissions, bytes8[] permissionSignatures);
+    event PermissionsAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
     event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
 
     error SoulboundToken();
