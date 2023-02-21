@@ -178,8 +178,7 @@ contract VertexPolicyNFT is VertexPolicy {
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
         PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];
         uint256 length = _permissionIdCheckpoint.length;
-        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < block.timestamp
-            && tokenToPermissionExpirationTimestamp[policyId][permissionSignature] != 0;
+        bool expired = isPermissionExpired(policyId, permissionSignature);
         bool hasQuantity = length > 0 ? _permissionIdCheckpoint[length - 1].quantity > 0 : false;
         return hasQuantity && !expired;
     }
@@ -208,7 +207,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             for (uint256 j; j < newPermissionSignaturesLength; ++j) {
                 bool _hasPermission = hasPermission(policyId, newPermissionSignatures[j]);
-                uint256 expiration = expirationTimestamps.length > 0 ? expirationTimestamps[j] : 0;
+                uint256 expiration = calculateExpirtation(expirationTimestamps, j);
                 if (!_hasPermission) {
                     tokenPermissionCheckpoints[policyId][newPermissionSignatures[j]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
                     PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[newPermissionSignatures[j]];
@@ -235,7 +234,7 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 if (!hasPermission(policyId, permissionSignatures[i])) {
-                    uint256 expiration = expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
+                    uint256 expiration = calculateExpirtation(expirationTimestamp, i);
                     if (expiration > 0) {
                         if (expiration < block.timestamp) revert Expired();
                         tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[i]] = expiration;
@@ -270,9 +269,18 @@ contract VertexPolicyNFT is VertexPolicy {
         }
     }
 
+    function calculateExpirtation(uint256[] memory expirationTimestamp, uint256 i) private pure returns (uint256) {
+        return expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
+    }
+
+    function isPermissionExpired(uint256 _policyId, bytes8 _permissionSignature) internal view returns (bool) {
+        uint256 _expiration = tokenToPermissionExpirationTimestamp[_policyId][_permissionSignature];
+        return _expiration < block.timestamp && _expiration != 0;
+    }
+
     /// @inheritdoc VertexPolicy
     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
-        expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < block.timestamp;
+        bool expired = isPermissionExpired(policyId, permissionSignature);
         if (expired) {
             tokenPermissionCheckpoints[policyId][permissionSignature].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
             PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionSignature];
