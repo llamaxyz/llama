@@ -276,7 +276,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @inheritdoc VertexPolicy
     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
-        bool expired = isPermissionExpired(policyId, permissionSignature);
+        expired = isPermissionExpired(policyId, permissionSignature);
         if (expired) {
             tokenPermissionCheckpoints[policyId][permissionSignature].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
             PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionSignature];
