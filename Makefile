@@ -16,9 +16,10 @@ report   :; forge clean && forge test --gas-report | sed -e/\|/\{ -e:1 -en\;b1 -
 doc      :; forge doc -b
 yul      :; forge inspect ${CONTRACT} ir-optimized > ${CONTRACT}-yul.sol
 
-# Deploy and Verify Payload
-deploy   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
-verify   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --verify -vvvv
+# Deploy & verify
+dry-run   :; forge script script/Deploy.s.sol:Deploy --fork-url ${RPC_MAINNET_URL} --private-key ${PRIVATE_KEY} --verify -vvvv
+deploy   :; forge script script/Deploy.s.sol:Deploy --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
+verify   :; forge script script/Deploy.s.sol:Deploy --fork-url ${RPC_MAINNET_URL} --verify -vvvv
 
 # Clean & lint
 clean    :; forge clean
