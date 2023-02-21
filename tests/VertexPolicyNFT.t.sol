@@ -56,7 +56,14 @@ contract Constructor is VertexPolicyNFTTest {
 }
 
 contract SetVertex is VertexPolicyNFTTest {
-  // TODO
+  function testFuzz_SetsVertexInStorage(address _newVertex) public {
+    // TODO
+    // expect address to be present in storage
+  }
+  function testFuzz_RevertsIfAlreadyInitialized(address _newVertex) public {
+    // TODO
+    // expect revert if vertexPolicyNFT.setVertex(_newVertex) is called
+  }
 }
 
 contract BatchGrantPermissions is VertexPolicyNFTTest {
@@ -98,10 +105,6 @@ contract BatchGrantPermissions is VertexPolicyNFTTest {
     }
 }
 
-contract RevokePermissions is VertexPolicyNFTTest {
-  // TODO
-}
-
 contract BatchRevokePermissions is VertexPolicyNFTTest {
     function test_Revoke_CorrectlyRevokesPolicy() public {
         vm.expectEmit(true, true, true, true);
@@ -134,14 +137,6 @@ contract HashPermissions is VertexPolicyNFTTest {
 }
 
 contract HasPermission is VertexPolicyNFTTest {
-  // TODO
-}
-
-contract UpdatePermissions is VertexPolicyNFTTest {
-  // TODO
-}
-
-contract GrantPermissions is VertexPolicyNFTTest {
   // TODO
 }
 
