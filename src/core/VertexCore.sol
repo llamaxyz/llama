@@ -147,7 +147,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function executeAction(uint256 actionId) external payable override returns (bytes memory) {
+    function executeAction(uint256 actionId) external override returns (bytes memory) {
         if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
 
         Action storage action = actions[actionId];
