@@ -22,7 +22,7 @@
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
-| 3819666                                     | 19305           |         |         |         |         |
+| 3752375                                     | 18969           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
 | actionsCount                                | 428             | 428     | 428     | 428     | 1       |
 | authorizedStrategies                        | 571             | 1459    | 571     | 2571    | 9       |
@@ -30,7 +30,7 @@
 | createAction                                | 3013            | 195407  | 219383  | 240383  | 33      |
 | createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 2       |
 | createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
-| executeAction                               | 432             | 21530   | 22763   | 37727   | 6       |
+| executeAction                               | 456             | 21552   | 22782   | 37751   | 6       |
 | getAction                                   | 3950            | 7588    | 3950    | 21950   | 59      |
 | initialize                                  | 1936            | 2079706 | 2060914 | 2267271 | 141     |
 | name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
