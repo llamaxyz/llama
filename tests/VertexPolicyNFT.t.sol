@@ -11,7 +11,8 @@ import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
     event PermissionsAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
+    event PermissionsUpdated(uint256[] policyIds, bytes8[][] permissionSignatures, bytes8[][] permissionsRemoved, uint256[][] expirationTimestamps);
+    event PermissionsRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     VertexPolicyNFT public vertexPolicyNFT;
     PermissionData public permission;
@@ -74,6 +75,9 @@ contract VertexPolicyNFTTest is Test {
     }
 
     function test_Revoke_CorrectlyRevokesPolicy() public {
+        vm.expectEmit(true, true, true, true);
+        emit PermissionsRevoked(policyIds, permissionSignatures);
+
         vertexPolicyNFT.batchRevokePermissions(policyIds, permissionSignatures);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
@@ -133,6 +137,9 @@ contract VertexPolicyNFTTest is Test {
         permissionSignatures[0] = permissionSignature;
 
         vm.warp(block.timestamp + 100);
+
+        vm.expectEmit(true, true, true, true);
+        emit PermissionsUpdated(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
 
         vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
 

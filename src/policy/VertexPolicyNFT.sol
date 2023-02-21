@@ -140,6 +140,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 updatePermissions(_policyIds[i], permissions[i], _permissionsToRemove, expiration);
             }
         }
+        emit PermissionsUpdated(_policyIds, permissions, permissionsToRemove, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy
@@ -151,6 +152,7 @@ contract VertexPolicyNFT is VertexPolicy {
                 revokePermissions(_policyIds[i], permissionsToRevoke[i]);
             }
         }
+        emit PermissionsRevoked(_policyIds, permissionsToRevoke);
     }
 
     /// @dev hashes a permission

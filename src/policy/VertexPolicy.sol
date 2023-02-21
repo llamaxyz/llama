@@ -6,7 +6,8 @@ import {PermissionData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event PermissionsAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionsDeleted(uint256[] users, bytes8[] permissionSignatures);
+    event PermissionsUpdated(uint256[] policyIds, bytes8[][] permissionSignatures, bytes8[][] permissionsRemoved, uint256[][] expirationTimestamps);
+    event PermissionsRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     error SoulboundToken();
     error InvalidInput();
