@@ -1,18 +1,18 @@
     |
-283 |         bool expired = isPermissionExpired(policyId, permissionSignature);
+279 |         bool expired = isPermissionExpired(policyId, permissionSignature);
     |         ^^^^^^^^^^^^
 Note: The shadowed declaration is here:
-   --> src/policy/VertexPolicyNFT.sol:282:111:
+   --> src/policy/VertexPolicyNFT.sol:278:111:
     |
-282 |     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
+278 |     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
     |                                                                                                               ^^^^^^^^^^^^
 
 [0m
 
 [33mwarning[5667]: [0m[33mWarning: Unused function parameter. Remove or comment out the variable name to silence this warning.
-   --> src/policy/VertexPolicyNFT.sol:282:111:
+   --> src/policy/VertexPolicyNFT.sol:278:111:
     |
-282 |     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
+278 |     function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
     |                                                                                                               ^^^^^^^^^^^^
 
 [0m
@@ -20,88 +20,88 @@ Note: The shadowed declaration is here:
 
 Running 1 test for tests/Deploy.t.sol:DeployTest
 [32m[PASS][0m testDeploy() (gas: 190)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 375.11µs
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 330.11µs
 
 Running 1 test for src/mock/scripts/TestScript.sol:TestScript
 [32m[PASS][0m testFunction():(uint256) (gas: 146)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 125.10µs
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 110.01µs
 
 Running 6 tests for tests/VertexCore.t.sol:SubmitApproval
-[32m[PASS][0m test_ChangeApprovalSupportToFalse() (gas: 303832)
+[32m[PASS][0m test_ChangeApprovalSupportToFalse() (gas: 303766)
 [32m[PASS][0m test_ChangeApprovalSupportToTrue() (gas: 232)
-[32m[PASS][0m test_RevertIfActionNotActive() (gas: 425848)
-[32m[PASS][0m test_RevertIfDuplicateApproval() (gas: 321873)
+[32m[PASS][0m test_RevertIfActionNotActive() (gas: 425782)
+[32m[PASS][0m test_RevertIfDuplicateApproval() (gas: 321807)
 [32m[PASS][0m test_RevertsIfCallerIsNotPolicyHolder() (gas: 276)
 [32m[PASS][0m test_SuccessfulApproval() (gas: 187)
-Test result: [32mok[0m. 6 passed; 0 failed; finished in 14.76ms
+Test result: [32mok[0m. 6 passed; 0 failed; finished in 13.31ms
 
 Running 2 tests for tests/VertexCore.t.sol:SubmitApprovalBySignature
 [32m[PASS][0m test_RevertsIfCallerIsNotPolicyHolder() (gas: 254)
 [32m[PASS][0m test_SuccessfulApprovalBySignature() (gas: 254)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 6.74ms
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 7.79ms
 
 Running 5 tests for tests/VertexCore.t.sol:SubmitDisapproval
-[32m[PASS][0m test_ChangeDisapprovalSupport() (gas: 484090)
-[32m[PASS][0m test_RevertIfActionNotQueued() (gas: 261399)
-[32m[PASS][0m test_RevertIfDuplicateDisapproval() (gas: 503498)
+[32m[PASS][0m test_ChangeDisapprovalSupport() (gas: 484024)
+[32m[PASS][0m test_RevertIfActionNotQueued() (gas: 261333)
+[32m[PASS][0m test_RevertIfDuplicateDisapproval() (gas: 503432)
 [32m[PASS][0m test_RevertsIfCallerIsNotPolicyHolder() (gas: 254)
 [32m[PASS][0m test_SuccessfulDisapproval() (gas: 232)
-Test result: [32mok[0m. 5 passed; 0 failed; finished in 8.97ms
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 12.20ms
 
 Running 2 tests for tests/VertexCore.t.sol:SubmitDisapprovalBySignature
 [32m[PASS][0m test_RevertsIfCallerIsNotPolicyHolder() (gas: 254)
 [32m[PASS][0m test_SuccessfulDisapprovalBySignature() (gas: 186)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 6.98ms
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 6.64ms
 
 Running 1 test for tests/VertexCore.t.sol:UnauthorizeStrategies
 [32m[PASS][0m test_UnauthorizeStrategies() (gas: 32530)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 7.27ms
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 6.72ms
 
 Running 2 tests for tests/VertexFactory.t.sol:ComputeAddress
 [32m[PASS][0m test_ComputesExpectedAddressForPolicy() (gas: 209)
 [32m[PASS][0m test_ComputesExpectedAddressForVertexCore() (gas: 210)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 7.44ms
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 7.18ms
 
 Running 4 tests for tests/VertexFactory.t.sol:Constructor
 [32m[PASS][0m test_DeploysRootVertexViaInternalDeployMethod() (gas: 7626)
 [32m[PASS][0m test_SetsRootVertexAddress() (gas: 7699)
 [32m[PASS][0m test_SetsVertexAccountLogicAddress() (gas: 7721)
 [32m[PASS][0m test_SetsVertexCoreLogicAddress() (gas: 7697)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 7.33ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 7.17ms
 
 Running 9 tests for tests/VertexFactory.t.sol:Deploy
-[32m[PASS][0m test_DeploysPolicy() (gas: 4927534)
-[32m[PASS][0m test_DeploysVertexCore() (gas: 4926048)
-[32m[PASS][0m test_EmitsVertexCreatedEvent() (gas: 4923549)
-[32m[PASS][0m test_IncrementsVertexCountByOne() (gas: 4922759)
-[32m[PASS][0m test_InitializesVertexCore() (gas: 4935576)
-[32m[PASS][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 4921968)
+[32m[PASS][0m test_DeploysPolicy() (gas: 4928742)
+[32m[PASS][0m test_DeploysVertexCore() (gas: 4927256)
+[32m[PASS][0m test_EmitsVertexCreatedEvent() (gas: 4924757)
+[32m[PASS][0m test_IncrementsVertexCountByOne() (gas: 4923967)
+[32m[PASS][0m test_InitializesVertexCore() (gas: 4936784)
+[32m[PASS][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 4923176)
 [32m[PASS][0m test_RevertsIf_CalledByAccountThatIsNotRootVertex(address) (runs: 256, μ: 34543, ~: 34543)
-[32m[PASS][0m test_SetsPolicyAddressOnVertexCore() (gas: 4922023)
-[32m[PASS][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 4921912)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 83.17ms
+[32m[PASS][0m test_SetsPolicyAddressOnVertexCore() (gas: 4923231)
+[32m[PASS][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 4923120)
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 87.66ms
 
 Running 19 tests for tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
-[32m[PASS][0m test_Revoke_CorrectlyRevokesPolicy() (gas: 95773)
+[32m[PASS][0m test_Revoke_CorrectlyRevokesPolicy() (gas: 95801)
 [32m[PASS][0m test_batchUpdatePermissions_RevertIfArraysLengthMismatch() (gas: 53240)
-[32m[PASS][0m test_batchUpdatePermissions_UpdatesPermissionsCorrectly() (gas: 340518)
-[32m[PASS][0m test_batchUpdatePermissions_updatesTimeStamp() (gas: 138251)
-[32m[PASS][0m test_expirationTimestamp_DoesNotHavePermissionIfExpired() (gas: 146628)
+[32m[PASS][0m test_batchUpdatePermissions_UpdatesPermissionsCorrectly() (gas: 340378)
+[32m[PASS][0m test_batchUpdatePermissions_updatesTimeStamp() (gas: 138256)
+[32m[PASS][0m test_expirationTimestamp_DoesNotHavePermissionIfExpired() (gas: 146589)
 [32m[PASS][0m test_expirationTimestamp_RevertIfTimestampIsExpired() (gas: 129868)
-[32m[PASS][0m test_getSupplyByPermissions_ReturnsCorrectSupply() (gas: 264896)
-[32m[PASS][0m test_grantPermission_CorrectlyGrantsPermission() (gas: 198611)
+[32m[PASS][0m test_getSupplyByPermissions_ReturnsCorrectSupply() (gas: 264922)
+[32m[PASS][0m test_grantPermission_CorrectlyGrantsPermission() (gas: 198609)
 [32m[PASS][0m test_grantPermission_RevertIfArraysLengthMismatch() (gas: 51670)
 [32m[PASS][0m test_grantPermission_RevertIfPermissionsArrayEmpty() (gas: 22082)
 [32m[PASS][0m test_grantPermission_RevertIfPolicyAlreadyGranted() (gas: 28886)
-[32m[PASS][0m test_grantPermissions_GrantsTokenWithExpiration() (gas: 281835)
-[32m[PASS][0m test_holderHasPermissionAt_ReturnsCorrectBool() (gas: 283534)
+[32m[PASS][0m test_grantPermissions_GrantsTokenWithExpiration() (gas: 281842)
+[32m[PASS][0m test_holderHasPermissionAt_ReturnsCorrectBool() (gas: 283428)
 [32m[PASS][0m test_onlyVertex_RevertIfNotVertex() (gas: 11640)
-[32m[PASS][0m test_revoke_RevertIfNoPolicySpecified() (gas: 18368)
-[32m[PASS][0m test_revoke_RevertIfPolicyNotGranted() (gas: 28448)
+[32m[PASS][0m test_revoke_RevertIfNoPolicySpecified() (gas: 18389)
+[32m[PASS][0m test_revoke_RevertIfPolicyNotGranted() (gas: 28469)
 [32m[PASS][0m test_tokenURI_ReturnsCorrectURI() (gas: 44473)
-[32m[PASS][0m test_totalSupply_ReturnsCorrectSupply() (gas: 255811)
-[32m[PASS][0m test_transferFrom_RevertIfTransferFrom() (gas: 10812)
-Test result: [32mok[0m. 19 passed; 0 failed; finished in 5.35ms
+[32m[PASS][0m test_totalSupply_ReturnsCorrectSupply() (gas: 255771)
+[32m[PASS][0m test_transferFrom_RevertIfTransferFrom() (gas: 10878)
+Test result: [32mok[0m. 19 passed; 0 failed; finished in 5.51ms
 
 Running 16 tests for tests/VertexStrategy.t.sol:Constructor
 [32m[PASS][0m testFuzz_CanOverrideDefaultOperatorWeights(uint256,uint256) (runs: 256, μ: 325, ~: 325)
@@ -120,52 +120,52 @@ Running 16 tests for tests/VertexStrategy.t.sol:Constructor
 [32m[PASS][0m test_SetsStrategyStorageDefaultOperatorWeights() (gas: 188)
 [32m[PASS][0m test_SetsStrategyStorageIsFixedLengthApprovalPeriodFalse() (gas: 230)
 [32m[PASS][0m test_SetsStrategyStorageIsFixedLengthApprovalPeriodTrue() (gas: 165)
-Test result: [32mok[0m. 16 passed; 0 failed; finished in 95.90ms
+Test result: [32mok[0m. 16 passed; 0 failed; finished in 111.14ms
 
 Running 4 tests for tests/VertexStrategy.t.sol:GetApprovalWeightAt
 [32m[PASS][0m testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256,bytes8,address) (runs: 256, μ: 421, ~: 421)
 [32m[PASS][0m testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(uint256,bytes8,uint256,address) (runs: 256, μ: 494, ~: 494)
 [32m[PASS][0m testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256,address) (runs: 256, μ: 342, ~: 342)
 [32m[PASS][0m testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(uint256,bytes8,uint256,address) (runs: 256, μ: 472, ~: 472)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 46.05ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 64.09ms
 
 Running 4 tests for tests/VertexStrategy.t.sol:GetDisapprovalWeightAt
 [32m[PASS][0m testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256,bytes8,address) (runs: 256, μ: 421, ~: 421)
 [32m[PASS][0m testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(uint256,bytes8,uint256,address) (runs: 256, μ: 494, ~: 494)
 [32m[PASS][0m testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256,address) (runs: 256, μ: 342, ~: 342)
 [32m[PASS][0m testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(uint256,bytes8,uint256,address) (runs: 256, μ: 472, ~: 472)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 47.00ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 61.11ms
 
 Running 4 tests for tests/VertexStrategy.t.sol:IsActionCancelationValid
 [32m[PASS][0m testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256) (runs: 256, μ: 211, ~: 211)
 [32m[PASS][0m testFuzz_ReturnsTrueForDisapprovedActions(uint256) (runs: 256, μ: 233, ~: 233)
 [32m[PASS][0m testFuzz_RevertsForNonExistentActionId(uint256) (runs: 256, μ: 256, ~: 256)
 [32m[PASS][0m testFuzz_RoundsCorrectly(uint256) (runs: 256, μ: 234, ~: 234)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 40.93ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 52.61ms
 
 Running 4 tests for tests/VertexStrategy.t.sol:IsActionPassed
 [32m[PASS][0m testFuzz_ReturnsFalseForFailedActions(uint256) (runs: 256, μ: 234, ~: 234)
 [32m[PASS][0m testFuzz_ReturnsTrueForPassedActions(uint256) (runs: 256, μ: 277, ~: 277)
 [32m[PASS][0m testFuzz_RevertsForNonExistentActionId(uint256) (runs: 256, μ: 211, ~: 211)
 [32m[PASS][0m testFuzz_RoundsCorrectly(uint256) (runs: 256, μ: 256, ~: 256)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 39.91ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 46.37ms
 
 Running 4 tests for tests/VertexCore.t.sol:CreateAndAuthorizeStrategies
 [32m[PASS][0m test_CanBeCalledByASuccessfulAction() (gas: 165)
 [32m[PASS][0m test_CreateNewStrategies() (gas: 2738759)
 [32m[PASS][0m test_Idempotency() (gas: 232)
 [32m[PASS][0m test_UniquenessOfInput() (gas: 252)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 8.99ms
+Test result: [32mok[0m. 4 passed; 0 failed; finished in 9.32ms
 
 Running 7 tests for tests/VertexCore.t.sol:ExecuteAction
 [32m[PASS][0m test_ActionExecution() (gas: 165)
 [32m[PASS][0m test_HandlesReentrancy() (gas: 254)
-[32m[PASS][0m test_RevertIfFailedActionExecution() (gas: 446805)
+[32m[PASS][0m test_RevertIfFailedActionExecution() (gas: 446739)
 [32m[PASS][0m test_RevertIfInvalidActionId() (gas: 99248)
 [32m[PASS][0m test_RevertIfNotQueued() (gas: 51234)
 [32m[PASS][0m test_RevertIfTimelockNotFinished() (gas: 109556)
 [32m[PASS][0m test_RevertsIfExternalCallIsUnsuccessful() (gas: 208)
-Test result: [32mok[0m. 7 passed; 0 failed; finished in 8.85ms
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 9.08ms
 
 Running 9 tests for tests/VertexCore.t.sol:GetActionState
 [32m[PASS][0m testFuzz_ApprovedActionsHaveStateApproved(uint256) (runs: 256, μ: 301, ~: 301)
@@ -177,7 +177,7 @@ Running 9 tests for tests/VertexCore.t.sol:GetActionState
 [32m[PASS][0m test_RejectedActionsHaveStateFailed() (gas: 232)
 [32m[PASS][0m test_RevertsOnInvalidAction() (gas: 233)
 [32m[PASS][0m test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() (gas: 254)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 21.18ms
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 23.08ms
 
 Running 10 tests for tests/VertexCore.t.sol:Initialize
 [32m[PASS][0m test_AccountsAreAuthorizedByVertexCore() (gas: 188)
@@ -190,47 +190,47 @@ Running 10 tests for tests/VertexCore.t.sol:Initialize
 [32m[PASS][0m test_StrategiesAreDeployedAtExpectedAddress() (gas: 186)
 [32m[PASS][0m test_StrategiesHavePolicyAddressInStorage() (gas: 274)
 [32m[PASS][0m test_StrategiesHaveVertexCoreAddressInStorage() (gas: 187)
-Test result: [32mok[0m. 10 passed; 0 failed; finished in 7.64ms
+Test result: [32mok[0m. 10 passed; 0 failed; finished in 7.18ms
 
 Running 5 tests for tests/VertexCore.t.sol:Integration
 [32m[PASS][0m testFuzz_ERC20ApprovalFromAccountViaActionApproval(uint256,address) (runs: 256, μ: 407, ~: 407)
 [32m[PASS][0m testFuzz_ERC20SendFromAccountViaActionApproval(uint256,address) (runs: 256, μ: 408, ~: 408)
 [32m[PASS][0m testFuzz_ETHSendFromAccountViaActionApproval(uint256) (runs: 256, μ: 345, ~: 345)
 [32m[PASS][0m testFuzz_NewVertexInstancesCanBeDeployed() (gas: 165)
-[32m[PASS][0m test_CompleteActionFlow() (gas: 520045)
-Test result: [32mok[0m. 5 passed; 0 failed; finished in 52.60ms
+[32m[PASS][0m test_CompleteActionFlow() (gas: 519979)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 58.85ms
 
 Running 2 tests for tests/VertexCore.t.sol:QueueAction
-[32m[PASS][0m test_RevertIfInvalidActionId() (gas: 389310)
-[32m[PASS][0m test_RevertIfNotApproved() (gas: 330262)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 7.78ms
+[32m[PASS][0m test_RevertIfInvalidActionId() (gas: 389244)
+[32m[PASS][0m test_RevertIfNotApproved() (gas: 330196)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 7.82ms
 
 Running 1 test for tests/VertexCore.t.sol:Setup
 [32m[PASS][0m test_setUp() (gas: 54914)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 6.98ms
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 6.95ms
 
 Running 9 tests for tests/VertexCore.t.sol:CancelAction
-[32m[PASS][0m testFuzz_RevertIfNotCreator(address) (runs: 256, μ: 50497, ~: 50507)
+[32m[PASS][0m testFuzz_RevertIfNotCreator(address) (runs: 256, μ: 50507, ~: 50507)
 [32m[PASS][0m test_CancelIfDisapproved() (gas: 367226)
 [32m[PASS][0m test_CreatorCancelFlow() (gas: 32401)
-[32m[PASS][0m test_RevertIfActionExecuted() (gas: 535133)
+[32m[PASS][0m test_RevertIfActionExecuted() (gas: 535067)
 [32m[PASS][0m test_RevertIfActionExpired() (gas: 288713)
 [32m[PASS][0m test_RevertIfActionFailed() (gas: 123547)
 [32m[PASS][0m test_RevertIfAlreadyCanceled() (gas: 33803)
 [32m[PASS][0m test_RevertIfDisapprovalDoesNotReachQuorum() (gas: 228227)
 [32m[PASS][0m test_RevertIfInvalidActionId() (gas: 14103)
-Test result: [32mok[0m. 9 passed; 0 failed; finished in 54.89ms
+Test result: [32mok[0m. 9 passed; 0 failed; finished in 62.26ms
 
 Running 8 tests for tests/VertexCore.t.sol:CreateAction
-[32m[PASS][0m testFuzz_RevertIfBadPermissionForSelector(bytes4) (runs: 256, μ: 33798, ~: 33798)
-[32m[PASS][0m testFuzz_RevertIfNoPermissionForTarget(address) (runs: 256, μ: 33765, ~: 33765)
+[32m[PASS][0m testFuzz_RevertIfBadPermissionForSelector(bytes4) (runs: 256, μ: 33776, ~: 33776)
+[32m[PASS][0m testFuzz_RevertIfNoPermissionForTarget(address) (runs: 256, μ: 33743, ~: 33743)
 [32m[PASS][0m testFuzz_RevertIfPermissionExpired(uint256) (runs: 256, μ: 323, ~: 323)
-[32m[PASS][0m testFuzz_RevertIfPolicyholderNotMinted(address) (runs: 256, μ: 33734, ~: 33744)
-[32m[PASS][0m test_CreatesAnAction() (gas: 274634)
-[32m[PASS][0m test_RevertIfNoPermissionForStrategy() (gas: 33108)
+[32m[PASS][0m testFuzz_RevertIfPolicyholderNotMinted(address) (runs: 256, μ: 33712, ~: 33722)
+[32m[PASS][0m test_CreatesAnAction() (gas: 274568)
+[32m[PASS][0m test_RevertIfNoPermissionForStrategy() (gas: 33086)
 [32m[PASS][0m test_RevertIfStrategyIsFromAnotherVertex() (gas: 187)
 [32m[PASS][0m test_RevertIfStrategyUnauthorized() (gas: 18584)
-Test result: [32mok[0m. 8 passed; 0 failed; finished in 121.96ms
+Test result: [32mok[0m. 8 passed; 0 failed; finished in 137.56ms
 
 Running 5 tests for tests/VertexCore.t.sol:CreateAndAuthorizeAccounts
 [32m[PASS][0m test_CanBeCalledByASuccessfulAction() (gas: 165)
@@ -238,7 +238,7 @@ Running 5 tests for tests/VertexCore.t.sol:CreateAndAuthorizeAccounts
 [32m[PASS][0m test_Idempotency() (gas: 254)
 [32m[PASS][0m test_RevertIfReinitialized() (gas: 377994)
 [32m[PASS][0m test_UniquenessOfInput() (gas: 252)
-Test result: [32mok[0m. 5 passed; 0 failed; finished in 8.12ms
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 8.02ms
 
 Running 41 tests for tests/VertexAccount.t.sol:VertexAccountTest
 [32m[PASS][0m test_VertexAccount_ReceiveERC1155() (gas: 54823)
@@ -282,7 +282,7 @@ Running 41 tests for tests/VertexAccount.t.sol:VertexAccountTest
 [32m[PASS][0m test_VertexAccount_transfer_RevertIfNotVertexMsgSender() (gas: 15616)
 [32m[PASS][0m test_VertexAccount_transfer_RevertIfToZeroAddress() (gas: 18594)
 [32m[PASS][0m test_VertexAccount_transfer_TransferETH() (gas: 36058)
-Test result: [32mok[0m. 41 passed; 0 failed; finished in 4.02s
+Test result: [32mok[0m. 41 passed; 0 failed; finished in 5.86s
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
@@ -312,7 +312,7 @@ Test result: [32mok[0m. 41 passed; 0 failed; finished in 4.02s
 | actionsCount                                | 428             | 428     | 428     | 428     | 1       |
 | authorizedStrategies                        | 571             | 1459    | 571     | 2571    | 9       |
 | cancelAction                                | 1781            | 14836   | 14342   | 38781   | 10      |
-| createAction                                | 3013            | 192345  | 216585  | 237585  | 33      |
+| createAction                                | 3013            | 192286  | 216519  | 237519  | 33      |
 | createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 2       |
 | createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
 | executeAction                               | 432             | 21530   | 22763   | 37727   | 6       |
@@ -329,9 +329,9 @@ Test result: [32mok[0m. 41 passed; 0 failed; finished in 4.02s
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 8624521                                              | 40448           |         |         |         |         |
+| 8626929                                              | 40460           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9854            | 4353894 | 4897150 | 4897150 | 9       |
+| deploy                                               | 9854            | 4354968 | 4898358 | 4898358 | 9       |
 | rootVertex                                           | 183             | 183     | 183     | 183     | 133     |
 | vertexAccountLogic                                   | 227             | 227     | 227     | 227     | 1       |
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
@@ -349,25 +349,25 @@ Test result: [32mok[0m. 41 passed; 0 failed; finished in 4.02s
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
 |---------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                         | Deployment Size |        |        |        |         |
-| 2500715                                                 | 15958           |        |        |        |         |
+| 2501923                                                 | 15964           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1692   | 2673   | 2673   | 51      |
 | baseURI                                                 | 3011            | 3011   | 3011   | 3011   | 1       |
-| batchGrantPermissions                                   | 3638            | 712373 | 877563 | 877563 | 119     |
-| batchRevokePermissions                                  | 3016            | 42410  | 58043  | 70643  | 6       |
-| batchUpdatePermissions                                  | 3592            | 51234  | 35812  | 161988 | 5       |
+| batchGrantPolicies                                      | 3638            | 712371 | 877561 | 877561 | 119     |
+| batchRevokePolicies                                     | 3037            | 42436  | 58071  | 70671  | 6       |
+| batchUpdatePermissions                                  | 3592            | 51239  | 35817  | 162002 | 5       |
 | getSupplyByPermissions                                  | 1488            | 2821   | 1488   | 5488   | 3       |
-| hasPermission                                           | 1534            | 4148   | 1542   | 7542   | 37      |
+| hasPermission                                           | 1512            | 4126   | 1520   | 7520   | 37      |
 | hashPermission                                          | 924             | 924    | 924    | 924    | 305     |
 | hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 20      |
-| holderHasPermissionAt                                   | 1669            | 3076   | 2457   | 8457   | 10      |
+| holderHasPermissionAt                                   | 1647            | 3054   | 2435   | 8435   | 10      |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
 | setBaseURI                                              | 2754            | 13982  | 13982  | 25211  | 2       |
 | setVertex                                               | 22669           | 22669  | 22669  | 22669  | 159     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
 | tokenURI                                                | 5406            | 5406   | 5406   | 5406   | 1       |
-| totalSupply                                             | 371             | 811    | 371    | 2371   | 59      |
-| transferFrom                                            | 504             | 504    | 504    | 504    | 1       |
+| totalSupply                                             | 349             | 789    | 349    | 2349   | 59      |
+| transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
 | vertex                                                  | 426             | 426    | 426    | 426    | 2       |
 
 
