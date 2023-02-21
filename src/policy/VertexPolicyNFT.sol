@@ -166,9 +166,10 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @inheritdoc VertexPolicy
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
         PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];
+        uint256 length = _permissionIdCheckpoint.length;
         bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < block.timestamp
             && tokenToPermissionExpirationTimestamp[policyId][permissionSignature] != 0;
-        bool hasQuantity = _permissionIdCheckpoint[_permissionIdCheckpoint.length - 1].quantity > 0;
+        bool hasQuantity = length > 0 ? _permissionIdCheckpoint[length - 1].quantity > 0 : false;
         return hasQuantity && !expired;
     }
 
@@ -228,7 +229,9 @@ contract VertexPolicyNFT is VertexPolicy {
                     }
                     tokenPermissionCheckpoints[policyId][permissionSignatures[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
                     PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[permissionSignatures[i]];
-                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), checkpoints[checkpoints.length - 1].quantity + 1));
+                    uint256 checkpointsLength = checkpoints.length;
+                    uint32 quantity = checkpointsLength > 0 ? checkpoints[checkpointsLength - 1].quantity : 0;
+                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), quantity + 1));
                 }
             }
             ++_totalSupply;
