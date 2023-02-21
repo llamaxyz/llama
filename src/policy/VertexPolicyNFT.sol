@@ -70,7 +70,9 @@ contract VertexPolicyNFT is VertexPolicy {
             }
         }
         bool hasQuantity = _checkpoints[min].quantity > 0;
-        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < timestamp;
+        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] == 0
+            ? false
+            : tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < timestamp;
         return hasQuantity && !expired;
     }
 
@@ -118,17 +120,23 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256[][] calldata expirationTimestamps
     ) public override onlyVertex {
         uint256 length = _policyIds.length;
-        if (length != permissions.length && permissionsToRemove.length == length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length))
-        {
+        if (
+            length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)
+                && (permissionsToRemove.length == 0 || permissionsToRemove.length == length)
+        ) {
             revert InvalidInput();
         }
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 uint256[] memory expiration;
+                bytes8[] memory _permissionsToRemove;
                 if (expirationTimestamps.length > 0) {
                     expiration = expirationTimestamps[i];
                 }
-                updatePermissions(_policyIds[i], permissions[i], permissionsToRemove[i], expiration);
+                if (permissionsToRemove.length > 0) {
+                    _permissionsToRemove = permissionsToRemove[i];
+                }
+                updatePermissions(_policyIds[i], permissions[i], _permissionsToRemove, expiration);
             }
         }
     }
@@ -180,7 +188,7 @@ contract VertexPolicyNFT is VertexPolicy {
     function updatePermissions(
         uint256 policyId,
         bytes8[] calldata newPermissionSignatures,
-        bytes8[] calldata permissionsToRemove,
+        bytes8[] memory permissionsToRemove,
         uint256[] memory expirationTimestamps
     ) private onlyVertex {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
@@ -192,7 +200,8 @@ contract VertexPolicyNFT is VertexPolicy {
             for (uint256 i; i < removeLength; ++i) {
                 tokenPermissionCheckpoints[policyId][permissionsToRemove[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
                 PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionsToRemove[i]];
-                supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1));
+                uint256 supplyIndex = supplyCheckpoint.length > 0 ? supplyCheckpoint.length - 1 : 0;
+                supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyIndex].quantity - 1));
             }
             for (uint256 j; j < newPermissionSignaturesLength; ++j) {
                 bool _hasPermission = hasPermission(policyId, newPermissionSignatures[j]);
@@ -200,7 +209,8 @@ contract VertexPolicyNFT is VertexPolicy {
                 if (!_hasPermission) {
                     tokenPermissionCheckpoints[policyId][newPermissionSignatures[j]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
                     PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[newPermissionSignatures[j]];
-                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), checkpoints[checkpoints.length - 1].quantity + 1));
+                    uint32 quantity = checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].quantity : 0;
+                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), quantity + 1));
                 }
                 if (expiration > 0 && expiration != tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[j]]) {
                     if (expiration < block.timestamp) revert Expired();
