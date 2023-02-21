@@ -370,7 +370,7 @@ contract CreateAction is VertexCoreTest {
     }
 
     function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
-        vm.assume(_badSelector != pauseSelector && _badSelector != failSelector);
+        vm.assume(_badSelector != pauseSelector && _badSelector != failSelector && _badSelector != receiveETHSelector);
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
         vertex.createAction(strategies[0], address(targetProtocol), 0, _badSelector, abi.encode(true));
