@@ -27,7 +27,7 @@
 | actionsCount                                | 428             | 428     | 428     | 428     | 1       |
 | authorizedStrategies                        | 571             | 1459    | 571     | 2571    | 9       |
 | cancelAction                                | 1781            | 14836   | 14342   | 38781   | 10      |
-| createAction                                | 3013            | 204381  | 220191  | 243929  | 35      |
+| createAction                                | 3013            | 198171  | 220191  | 243929  | 35      |
 | createAndAuthorizeAccounts                  | 349626          | 349626  | 349626  | 349626  | 2       |
 | createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
 | executeAction                               | 432             | 20066   | 13209   | 37727   | 7       |
@@ -73,7 +73,7 @@
 | batchUpdatePermissions                                  | 3293            | 63709  | 87512   | 108077  | 5       |
 | checkExpiration                                         | 895             | 2020   | 2895    | 6284    | 35      |
 | getSupplyByPermissions                                  | 2929            | 6972   | 5058    | 12929   | 3       |
-| hasPermission                                           | 1913            | 5314   | 3567    | 8713    | 39      |
+| hasPermission                                           | 1913            | 5389   | 3567    | 9559    | 39      |
 | hashPermission                                          | 1083            | 1083   | 1083    | 1083    | 387     |
 | hashPermissions                                         | 1922            | 1922   | 1922    | 1922    | 20      |
 | holderHasPermissionAt                                   | 1540            | 3829   | 2498    | 10171   | 10      |
@@ -82,7 +82,7 @@
 | setVertex                                               | 22647           | 22647  | 22647   | 22647   | 160     |
 | tokenToPermissionExpirationTimestamp                    | 687             | 1487   | 687     | 2687    | 5       |
 | tokenURI                                                | 5384            | 5384   | 5384    | 5384    | 1       |
-| totalSupply                                             | 349             | 810    | 349     | 2349    | 65      |
+| totalSupply                                             | 349             | 793    | 349     | 2349    | 63      |
 | transferFrom                                            | 570             | 570    | 570     | 570     | 1       |
 | vertex                                                  | 382             | 382    | 382     | 382     | 2       |
 
@@ -92,10 +92,10 @@
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
 | 816402                                                  | 5950            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
-| DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 62      |
+| DEFAULT_OPERATOR                                        | 302             | 302   | 302    | 302   | 60      |
 | approvalPeriod                                          | 218             | 218   | 218    | 218   | 86      |
-| approvalWeightByPermission                              | 615             | 1518  | 615    | 2615  | 31      |
-| disapprovalWeightByPermission                           | 592             | 1495  | 592    | 2592  | 31      |
+| approvalWeightByPermission                              | 615             | 1481  | 615    | 2615  | 30      |
+| disapprovalWeightByPermission                           | 592             | 1458  | 592    | 2592  | 30      |
 | expirationDelay                                         | 262             | 262   | 262    | 262   | 19      |
 | getApprovalWeightAt                                     | 1843            | 4524  | 3843   | 10343 | 44      |
 | getDisapprovalWeightAt                                  | 1747            | 3747  | 3747   | 5747  | 9       |
@@ -107,9 +107,3 @@
 
 
 
-
-Failing tests:
-Encountered 1 failing test in tests/VertexCore.t.sol:CreateAction
-[31m[FAIL. Reason: Call did not revert as expected Counterexample: calldata=0xe4a367424185f8eb00000000000000000000000000000000000000000000000000000000, args=[0x4185f8eb]][0m testFuzz_RevertIfBadPermissionForSelector(bytes4) (runs: 165, μ: 41638, ~: 41803)
-
-Encountered a total of [31m1[0m failing tests, [32m184[0m tests succeeded
