@@ -27,13 +27,12 @@ contract VertexPolicyNFTTest is Test {
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
-    uint256 ADDRESS_THIS_TOKEN_ID;
+    uint256 ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
     function setUp() public {
         vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", initialPolicies, initialPermissions, initialExpirationTimestamps);
         vertexPolicyNFT.setVertex(address(this));
-        ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
         policyIds.push(ADDRESS_THIS_TOKEN_ID);
@@ -50,7 +49,10 @@ contract VertexPolicyNFTTest is Test {
 }
 
 contract Constructor is VertexPolicyNFTTest {
-  // TODO
+  function testFuzz_SetsName(string memory _name) public {} // TODO
+  function testFuzz_SetsSymbol(string memory _symbol) public {} // TODO
+  function testFuzz_GrantsInitialPermissions(/*random array args*/) public {} // TODO
+  function testFuzz_RevertIfInvalidInput(/*random array lengths*/) public {} // TODO
 }
 
 contract SetVertex is VertexPolicyNFTTest {
