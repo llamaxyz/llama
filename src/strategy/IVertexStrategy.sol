@@ -31,18 +31,6 @@ interface IVertexStrategy {
     /// @return The weight of the policyholder's disapproval.
     function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256);
 
-    /// @notice Determine if the total weight of policyholders in support of an approval has reached quorum.
-    /// @param approvals total weight of approvals
-    /// @param blockNumber The block number at which to determine policyholder's approval weight.
-    /// @return Boolean value that is true if the approval of an action has reached quorum.
-    function isApprovalQuorumValid(uint256 approvals, uint256 blockNumber) external view returns (bool);
-
-    /// @notice Determine if the total weight of policyholders in support of a disapproval has reached quorum.
-    /// @param disapprovals total weight of disapprovals
-    /// @param blockNumber The block number at which to determine policyholder's disapproval weight.
-    /// @return Boolean value that is true if the disapproval of an action has reached quorum.
-    function isDisapprovalQuorumValid(uint256 disapprovals, uint256 blockNumber) external view returns (bool);
-
     /// @notice Determine the minimum weight needed for an action to reach quorum.
     /// @param supply Total number of policyholders eligible for participation.
     /// @param minPercentage Minimum percentage needed to reach quorum.
