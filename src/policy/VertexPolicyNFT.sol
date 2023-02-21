@@ -203,7 +203,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             for (uint256 j; j < newPermissionSignaturesLength; ++j) {
                 bool _hasPermission = hasPermission(policyId, newPermissionSignatures[j]);
-                uint256 expiration = calculateExpirtation(expirationTimestamps, j);
+                uint256 expiration = calculateExpiration(expirationTimestamps, j);
                 if (!_hasPermission) {
                     tokenPermissionCheckpoints[policyId][newPermissionSignatures[j]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
                     PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[newPermissionSignatures[j]];
@@ -230,7 +230,7 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 if (!hasPermission(policyId, permissionSignatures[i])) {
-                    uint256 expiration = calculateExpirtation(expirationTimestamp, i);
+                    uint256 expiration = calculateExpiration(expirationTimestamp, i);
                     if (expiration > 0) {
                         if (expiration < block.timestamp) revert Expired();
                         tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[i]] = expiration;
@@ -265,7 +265,7 @@ contract VertexPolicyNFT is VertexPolicy {
         }
     }
 
-    function calculateExpirtation(uint256[] memory expirationTimestamp, uint256 i) private pure returns (uint256) {
+    function calculateExpiration(uint256[] memory expirationTimestamp, uint256 i) private pure returns (uint256) {
         return expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
     }
 
