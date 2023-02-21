@@ -9,7 +9,8 @@ install  :; forge install
 # Build & test
 build    :; forge clean && forge build --sizes
 test     :; forge test $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
-match    :; forge test -m ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
+match-t  :; forge test --match-test ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match-t MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
+match-c  :; forge test --match-contract ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match-c MATCH=<CONTRACT_NAME> [optional](V=<{1,2,3,4,5}>)
 watch    :; forge test --watch $(call compute_test_verbosity,${V}) # Usage: make watch [optional](V=<{1,2,3,4,5}>)
 report   :; forge clean && forge test --gas-report | sed -e/\|/\{ -e:1 -en\;b1 -e\} -ed | cat > .gas-report
 doc      :; forge doc -b
