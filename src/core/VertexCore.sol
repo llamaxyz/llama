@@ -29,6 +29,7 @@ contract VertexCore is IVertexCore, Initializable {
     error DuplicateDisapproval();
     error DisapproveDisabled();
     error PolicyholderDoesNotHavePermission();
+    error InsufficientMsgValue();
 
     /// @notice EIP-712 base typehash.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -147,11 +148,12 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function executeAction(uint256 actionId) external override returns (bytes memory) {
+    function executeAction(uint256 actionId) external payable override returns (bytes memory) {
         if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
+        if (msg.value < action.value) revert InsufficientMsgValue();
 
         action.executed = true;
         queuedActions[actionId] = false;

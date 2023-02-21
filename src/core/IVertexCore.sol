@@ -61,7 +61,7 @@ interface IVertexCore {
     /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
     /// @param actionId Id of the action to execute.
     /// @return The result returned from the call to the target contract.
-    function executeAction(uint256 actionId) external returns (bytes memory);
+    function executeAction(uint256 actionId) external payable returns (bytes memory);
 
     /// @notice How policyholders add or remove their support of the approval of an action.
     /// @param actionId The id of the action.
