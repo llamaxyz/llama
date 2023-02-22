@@ -165,7 +165,7 @@ contract VertexCoreTest is Test {
         batchedAddresses[4] = policyholder4;
         batchedSignatures[4] = pauserPermissions;
 
-        policy.batchGrantPermissions(batchedAddresses, batchedSignatures, expirationTimestamps);
+        policy.batchGrantPolicies(batchedAddresses, batchedSignatures, expirationTimestamps);
         vm.stopPrank();
     }
 

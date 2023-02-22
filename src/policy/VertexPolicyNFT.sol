@@ -4,16 +4,16 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {PermissionData, Checkpoint} from "src/utils/Structs.sol";
+import {PermissionData, PermissionIdCheckpoint} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicyNFT is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 contract VertexPolicyNFT is VertexPolicy {
-    mapping(uint256 => bytes8[]) public tokenToPermissionSignatures;
+    mapping(uint256 => mapping(bytes8 => PermissionIdCheckpoint[])) private tokenPermissionCheckpoints;
+    mapping(bytes8 => PermissionIdCheckpoint[]) private permissionSupplyCheckpoints;
     mapping(uint256 => mapping(bytes8 => uint256)) public tokenToPermissionExpirationTimestamp;
-    mapping(uint256 => Checkpoint[]) private checkpoints;
     uint256[] public policyIds;
     string public baseURI;
     uint256 private _totalSupply;
@@ -39,7 +39,7 @@ contract VertexPolicyNFT is VertexPolicy {
             for (uint256 i = 0; i < policyholderLength; ++i) {
                 uint256[] memory expiration;
                 if (expirationsLength > 0) expiration = initialExpirationTimestamps[i];
-                grantPermissions(initialPolicyholders[i], initialPermissions[i], expiration);
+                grantPolicies(initialPolicyholders[i], initialPermissions[i], expiration);
             }
         }
     }
@@ -50,40 +50,42 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 blockNumber) external view override returns (bool) {
+    function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 timestamp) external view override returns (bool) {
         uint256 policyId = uint256(uint160(policyholder));
-        Checkpoint[] storage _checkpoints = checkpoints[policyId];
+        PermissionIdCheckpoint[] storage _checkpoints = tokenPermissionCheckpoints[policyId][permissionSignature];
         uint256 length = _checkpoints.length;
         if (length == 0) return false;
-        if (blockNumber >= _checkpoints[length - 1].blockNumber) {
-            return permissionIsInPermissionsArray(_checkpoints[length - 1].permissionSignatures, permissionSignature);
+        if (timestamp >= _checkpoints[length - 1].timestamp) {
+            return hasPermission(policyId, permissionSignature);
         }
-        if (blockNumber < _checkpoints[0].blockNumber) return false;
+        if (timestamp < _checkpoints[0].timestamp) return false;
         uint256 min = 0;
         uint256 max = length - 1;
         while (max > min) {
             uint256 mid = (max + min + 1) / 2;
-            if (_checkpoints[mid].blockNumber <= blockNumber) {
+            if (_checkpoints[mid].timestamp <= timestamp) {
                 min = mid;
             } else {
                 max = mid - 1;
             }
         }
-        return permissionIsInPermissionsArray(_checkpoints[min].permissionSignatures, permissionSignature);
+        bool hasQuantity = _checkpoints[min].quantity > 0;
+        bool expired = tokenToPermissionExpirationTimestamp[policyId][permissionSignature] == 0
+            ? false
+            : tokenToPermissionExpirationTimestamp[policyId][permissionSignature] < timestamp;
+        return hasQuantity && !expired;
     }
 
     /// @inheritdoc VertexPolicy
     function getSupplyByPermissions(bytes8[] calldata _permissions) external view override returns (uint256) {
-        uint256 policyLength = policyIds.length;
         uint256 permissionLength = _permissions.length;
         uint256 supply;
         unchecked {
-            for (uint256 i; i < policyLength; ++i) {
-                for (uint256 j; j < permissionLength; ++j) {
-                    if (hasPermission(policyIds[i], _permissions[j])) {
-                        ++supply;
-                        break;
-                    }
+            for (uint256 i; i < permissionLength; ++i) {
+                PermissionIdCheckpoint[] storage _checkpoints = permissionSupplyCheckpoints[_permissions[i]];
+                uint256 length = _checkpoints.length;
+                if (length != 0) {
+                    supply += _checkpoints[length - 1].quantity;
                 }
             }
         }
@@ -91,11 +93,7 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchGrantPermissions(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps)
-        public
-        override
-        onlyVertex
-    {
+    function batchGrantPolicies(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public override onlyVertex {
         uint256 length = userPermissions.length;
         uint256 expirationTimeStampLength = expirationTimestamps.length;
         if (length == 0 || length != to.length && (expirationTimeStampLength == 0 || expirationTimeStampLength == length)) {
@@ -106,49 +104,62 @@ contract VertexPolicyNFT is VertexPolicy {
             if (expirationTimeStampLength > 0) {
                 expiration = expirationTimestamps[i];
             }
-            grantPermissions(to[i], userPermissions[i], expiration);
+            grantPolicies(to[i], userPermissions[i], expiration);
         }
+        emit PoliciesAdded(to, userPermissions, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy
-    function batchUpdatePermissions(uint256[] calldata _policyIds, bytes8[][] calldata permissions, uint256[][] calldata expirationTimestamps)
-        public
-        override
-        onlyVertex
-    {
+    function batchUpdatePermissions(
+        uint256[] calldata _policyIds,
+        bytes8[][] calldata permissions,
+        bytes8[][] calldata permissionsToRemove,
+        uint256[][] calldata expirationTimestamps
+    ) public override onlyVertex {
         uint256 length = _policyIds.length;
-        if (length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)) revert InvalidInput();
+        if (
+            length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)
+                && (permissionsToRemove.length == 0 || permissionsToRemove.length == length)
+        ) {
+            revert InvalidInput();
+        }
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 uint256[] memory expiration;
+                bytes8[] memory _permissionsToRemove;
                 if (expirationTimestamps.length > 0) {
                     expiration = expirationTimestamps[i];
                 }
-                updatePermissions(_policyIds[i], permissions[i], expiration);
+                if (permissionsToRemove.length > 0) {
+                    _permissionsToRemove = permissionsToRemove[i];
+                }
+                updatePermissions(_policyIds[i], permissions[i], _permissionsToRemove, expiration);
             }
         }
+        emit PermissionsUpdated(_policyIds, permissions, permissionsToRemove, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy
-    function batchRevokePermissions(uint256[] calldata _policyIds) public override onlyVertex {
+    function batchRevokePolicies(uint256[] calldata _policyIds, bytes8[][] calldata permissionsToRevoke) public override onlyVertex {
         uint256 length = _policyIds.length;
-        if (length == 0) revert InvalidInput();
+        if (length == 0 || length != permissionsToRevoke.length) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                revokePermissions(_policyIds[i]);
+                revokePolicies(_policyIds[i], permissionsToRevoke[i]);
             }
         }
+        emit PoliciesRevoked(_policyIds, permissionsToRevoke);
     }
 
     /// @dev hashes a permission
     /// @param _permission the permission to hash
     function hashPermission(PermissionData calldata _permission) public pure returns (bytes8) {
-        return bytes8(keccak256(abi.encodePacked(_permission.target, _permission.selector, _permission.strategy)));
+        return bytes8(keccak256(abi.encode(_permission)));
     }
 
     /// @dev hashes an array of permissions
     /// @param _permissions the permissions array to hash
-    function hashPermissions(PermissionData[] calldata _permissions) public pure returns (bytes8[] memory) {
+    function hashPermissions(PermissionData[] calldata _permissions) external pure returns (bytes8[] memory) {
         uint256 length = _permissions.length;
         bytes8[] memory output = new bytes8[](length);
         unchecked {
@@ -161,201 +172,115 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @inheritdoc VertexPolicy
     function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
-        bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
-        uint256 length = permissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (permissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        bool expired = _checkExpiration(policyId, permissionSignatures[min]);
-        return permissionSignatures[min] == permissionSignature && !expired;
+        PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];
+        uint256 length = _permissionIdCheckpoint.length;
+        bool expired = isPermissionExpired(policyId, permissionSignature);
+        bool hasQuantity = length > 0 ? _permissionIdCheckpoint[length - 1].quantity > 0 : false;
+        return hasQuantity && !expired;
     }
 
     /// @notice updates a policyID with a new set of permissions
     /// @notice will delete and add permissions as needed
     /// @param policyId the policy token id being updated
     /// @param newPermissionSignatures the new permissions array to be set
-    function updatePermissions(uint256 policyId, bytes8[] calldata newPermissionSignatures, uint256[] memory expirationTimestamps) private onlyVertex {
+    function updatePermissions(
+        uint256 policyId,
+        bytes8[] calldata newPermissionSignatures,
+        bytes8[] memory permissionsToRemove,
+        uint256[] memory expirationTimestamps
+    ) private onlyVertex {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
-        bytes8[] storage permissionSignatures = tokenToPermissionSignatures[policyId];
-        uint256 permissionSignaturesLength = permissionSignatures.length;
         uint256 newPermissionSignaturesLength = newPermissionSignatures.length;
         uint256 expirationTimestampsLength = expirationTimestamps.length;
+        uint256 removeLength = permissionsToRemove.length;
         if (expirationTimestampsLength != 0 && newPermissionSignaturesLength != expirationTimestampsLength) revert InvalidInput();
-        bytes8[] memory permissionsToRemove = new bytes8[](permissionSignaturesLength);
-        uint256 permissionsToRemoveIndex;
         unchecked {
-            for (uint256 i; i < permissionSignaturesLength; ++i) {
-                if (!permissionIsInPermissionsArrayCalldata(newPermissionSignatures, permissionSignatures[i])) {
-                    permissionsToRemove[permissionsToRemoveIndex] = permissionSignatures[i];
-                    ++permissionsToRemoveIndex;
-                }
+            for (uint256 i; i < removeLength; ++i) {
+                tokenPermissionCheckpoints[policyId][permissionsToRemove[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
+                PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionsToRemove[i]];
+                uint256 supplyIndex = supplyCheckpoint.length > 0 ? supplyCheckpoint.length - 1 : 0;
+                supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyIndex].quantity - 1));
             }
-            for (uint256 j; j < permissionsToRemoveIndex; ++j) {
-                sortedPermissionRemove(permissionSignatures, permissionsToRemove[j]);
-            }
-            for (uint256 k; k < newPermissionSignaturesLength; ++k) {
-                bool permissionIsInArray = permissionIsInPermissionsArray(permissionSignatures, newPermissionSignatures[k]);
-                uint256 expiration = expirationTimestamps.length > 0 ? expirationTimestamps[k] : 0;
-                if (!permissionIsInArray) {
-                    sortedPermissionInsert(permissionSignatures, newPermissionSignatures[k]);
+            for (uint256 j; j < newPermissionSignaturesLength; ++j) {
+                bool _hasPermission = hasPermission(policyId, newPermissionSignatures[j]);
+                uint256 expiration = calculateExpiration(expirationTimestamps, j);
+                if (!_hasPermission) {
+                    tokenPermissionCheckpoints[policyId][newPermissionSignatures[j]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
+                    PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[newPermissionSignatures[j]];
+                    uint32 quantity = checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].quantity : 0;
+                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), quantity + 1));
                 }
-                if (expiration > 0 && expiration != tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]]) {
+                if (expiration > 0 && expiration != tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[j]]) {
                     if (expiration < block.timestamp) revert Expired();
-                    tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[k]] = expiration;
+                    tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[j]] = expiration;
                 }
             }
         }
-        checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: permissionSignatures}));
     }
 
     /// @notice mints a new policy token with the given permissions
     /// @param to the address to mint the policy token to
     /// @param permissionSignatures the permission signature's to be granted to the policyholder
     /// @param expirationTimestamp the expiration timestamp for each permission signature in the permissionSignatures array
-    function grantPermissions(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private {
+    function grantPolicies(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private {
         if (balanceOf(to) != 0) revert OnlyOnePolicyPerHolder();
         uint256 length = permissionSignatures.length;
         if (length == 0 || (expirationTimestamp.length != 0 && expirationTimestamp.length != length)) revert InvalidInput();
         uint256 policyId = uint256(uint160(to));
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                checkExpiration(policyId, permissionSignatures[i]);
                 if (!hasPermission(policyId, permissionSignatures[i])) {
-                    uint256 expiration = expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
+                    uint256 expiration = calculateExpiration(expirationTimestamp, i);
                     if (expiration > 0) {
                         if (expiration < block.timestamp) revert Expired();
                         tokenToPermissionExpirationTimestamp[policyId][permissionSignatures[i]] = expiration;
                     }
-                    sortedPermissionInsert(tokenToPermissionSignatures[policyId], permissionSignatures[i]);
+                    tokenPermissionCheckpoints[policyId][permissionSignatures[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
+                    PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[permissionSignatures[i]];
+                    uint256 checkpointsLength = checkpoints.length;
+                    uint32 quantity = checkpointsLength > 0 ? checkpoints[checkpointsLength - 1].quantity : 0;
+                    checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), quantity + 1));
                 }
             }
             ++_totalSupply;
             policyIds.push(policyId);
-            checkpoints[policyId].push(Checkpoint(block.number, permissionSignatures));
             _mint(to, policyId);
         }
     }
 
-    /// @notice revokes all permissions from a policy token
+    /// @notice revokes given permissions from a policy token
     /// @param policyId the id of the policy token to revoke permissions from
-    function revokePermissions(uint256 policyId) private {
+    /// @param _permissions the permissions to revoke from the policy token
+    function revokePolicies(uint256 policyId, bytes8[] calldata _permissions) private {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
-        bytes8[] storage userPermissions = tokenToPermissionSignatures[policyId];
-        uint256 userPermissionslength = userPermissions.length;
         unchecked {
+            uint256 permissionsLength = _permissions.length;
+            for (uint256 i = 0; i < permissionsLength; ++i) {
+                tokenPermissionCheckpoints[policyId][_permissions[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
+                PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[_permissions[i]];
+                supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1));
+            }
             _totalSupply--;
-            for (uint256 i; i < userPermissionslength; ++i) {
-                sortedPermissionRemove(userPermissions, userPermissions[i]);
-            }
-            uint256 policyIdsLength = policyIds.length;
-            for (uint256 j = 0; j < policyIdsLength; ++j) {
-                if (policyIds[j] == policyId) {
-                    policyIds[j] = policyIds[policyIdsLength - 1];
-                    policyIds.pop();
-                    break;
-                }
-            }
-        }
-        checkpoints[policyId].push(Checkpoint({blockNumber: block.number, permissionSignatures: new bytes8[](0)}));
-        _burn(policyId);
-    }
-
-    function sortedPermissionInsert(bytes8[] storage signatures, bytes8 value) internal {
-        uint256 length = signatures.length;
-        if (length == 0 || value > signatures[length - 1]) {
-            signatures.push(value);
-            return;
-        }
-        uint256 i;
-        unchecked {
-            while (i < length && signatures[i] < value) {
-                ++i;
-            }
-            if (i == length) {
-                signatures.push(value);
-            } else {
-                signatures.push(signatures[length - 1]);
-                for (uint256 j = length - 1; j > i; --j) {
-                    signatures[j] = signatures[j - 1];
-                }
-                signatures[i] = value;
-            }
+            _burn(policyId);
         }
     }
 
-    function sortedPermissionRemove(bytes8[] storage signatures, bytes8 value) internal {
-        uint256 length = signatures.length;
-        if (length == 0) return;
-        uint256 i;
-        unchecked {
-            while (i < length && signatures[i] < value) {
-                ++i;
-            }
-            if (i == length) return;
-            for (uint256 j = i; j < length - 1; ++j) {
-                signatures[j] = signatures[j + 1];
-            }
-            signatures.pop();
-        }
+    function calculateExpiration(uint256[] memory expirationTimestamp, uint256 i) private pure returns (uint256) {
+        return expirationTimestamp.length > 0 ? expirationTimestamp[i] : 0;
     }
 
-    function permissionIsInPermissionsArray(bytes8[] storage policyPermissionSignatures, bytes8 permissionSignature) internal view returns (bool) {
-        uint256 length = policyPermissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (policyPermissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        return policyPermissionSignatures[min] == permissionSignature;
-    }
-
-    function permissionIsInPermissionsArrayCalldata(bytes8[] calldata policyPermissionSignatures, bytes8 permissionSignature) internal pure returns (bool) {
-        uint256 length = policyPermissionSignatures.length;
-        if (length == 0) return false;
-        uint256 min;
-        uint256 max = length - 1;
-        while (max > min) {
-            uint256 mid = (max + min + 1) / 2;
-            if (policyPermissionSignatures[mid] <= permissionSignature) {
-                min = mid;
-            } else {
-                max = mid - 1;
-            }
-        }
-        return policyPermissionSignatures[min] == permissionSignature;
+    function isPermissionExpired(uint256 _policyId, bytes8 _permissionSignature) internal view returns (bool) {
+        uint256 _expiration = tokenToPermissionExpirationTimestamp[_policyId][_permissionSignature];
+        return _expiration < block.timestamp && _expiration != 0;
     }
 
     /// @inheritdoc VertexPolicy
-    function checkExpiration(uint256 policyId, bytes8 permissionSignature) public override returns (bool expired) {
-        expired = _checkExpiration(policyId, permissionSignature);
+    function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external override returns (bool expired) {
+        expired = isPermissionExpired(policyId, permissionSignature);
         if (expired) {
-            sortedPermissionRemove(tokenToPermissionSignatures[policyId], permissionSignature);
-        }
-        return expired;
-    }
-
-    ///@notice checks if a permission has expired
-    ///@param policyId the id of the policy token to check
-    ///@param permissionSignature the signature of the permission to check
-    function _checkExpiration(uint256 policyId, bytes8 permissionSignature) internal view returns (bool expired) {
-        uint256 expiration = tokenToPermissionExpirationTimestamp[policyId][permissionSignature];
-        if (expiration == 0 || expiration > block.timestamp) return false;
-        if (block.timestamp > expiration) {
-            return true;
+            tokenPermissionCheckpoints[policyId][permissionSignature].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
+            PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionSignature];
+            supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1));
         }
     }
 
@@ -369,11 +294,6 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
     function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public override {
         revert SoulboundToken();
-    }
-
-    /// @inheritdoc VertexPolicy
-    function getPermissionSignatures(uint256 userId) public view override returns (bytes8[] memory) {
-        return tokenToPermissionSignatures[userId];
     }
 
     /// @inheritdoc VertexPolicy
