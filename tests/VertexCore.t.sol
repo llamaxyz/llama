@@ -34,6 +34,7 @@ contract VertexCoreTest is Test {
     address public constant policyholder4 = address(0x1341);
     bytes4 public constant pauseSelector = 0x02329a29;
     bytes4 public constant failSelector = 0xa9cc4718;
+    bytes4 public constant receiveETHSelector = 0x4185f8eb;
 
     PermissionData public permission;
     uint256[][] public expirationTimestamps;
@@ -114,6 +115,7 @@ contract VertexCoreTest is Test {
         _grantPermissions();
 
         vm.label(actionCreator, "Action Creator");
+        vm.label(address(targetProtocol), "ProtocolXYZ");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -138,10 +140,12 @@ contract VertexCoreTest is Test {
         PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
         pauserPermissions[0] = policy.hashPermission(pausePermission);
 
-        bytes8[] memory creatorPermissions = new bytes8[](2);
+        bytes8[] memory creatorPermissions = new bytes8[](3);
         PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
+        PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: strategies[0]});
         creatorPermissions[0] = policy.hashPermission(failPermission);
         creatorPermissions[1] = policy.hashPermission(pausePermission);
+        creatorPermissions[2] = policy.hashPermission(receiveETHPermission);
 
         address[] memory batchedAddresses = new address[](5);
         bytes8[][] memory batchedSignatures = new bytes8[][](5);
@@ -366,7 +370,7 @@ contract CreateAction is VertexCoreTest {
     }
 
     function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
-        vm.assume(_badSelector != pauseSelector && _badSelector != failSelector);
+        vm.assume(_badSelector != pauseSelector && _badSelector != failSelector && _badSelector != receiveETHSelector);
         vm.prank(actionCreator);
         vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
         vertex.createAction(strategies[0], address(targetProtocol), 0, _badSelector, abi.encode(true));
@@ -570,6 +574,25 @@ contract ExecuteAction is VertexCoreTest {
         vm.roll(block.number + 1800);
 
         vm.expectRevert(VertexCore.TimelockNotFinished.selector);
+        vertex.executeAction(actionId);
+    }
+
+    function test_RevertIfInsufficientMsgValue() public {
+        vm.prank(actionCreator);
+        actionId = vertex.createAction(strategies[0], address(targetProtocol), 1e18, receiveETHSelector, abi.encode(true));
+
+        _approveAction(policyholder1, actionId);
+        _approveAction(policyholder2, actionId);
+
+        vm.warp(block.timestamp + 6 days);
+        vm.roll(block.number + 43200);
+
+        vertex.queueAction(actionId);
+
+        vm.warp(block.timestamp + 5 days);
+        vm.roll(block.number + 36000);
+
+        vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
         vertex.executeAction(actionId);
     }
 

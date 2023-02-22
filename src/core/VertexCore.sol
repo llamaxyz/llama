@@ -29,6 +29,7 @@ contract VertexCore is IVertexCore, Initializable {
     error DuplicateDisapproval();
     error DisapproveDisabled();
     error PolicyholderDoesNotHavePermission();
+    error InsufficientMsgValue();
 
     /// @notice EIP-712 base typehash.
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -151,6 +152,7 @@ contract VertexCore is IVertexCore, Initializable {
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
+        if (msg.value < action.value) revert InsufficientMsgValue();
 
         action.executed = true;
         queuedActions[actionId] = false;
@@ -220,12 +222,12 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeStrategies(Strategy[] calldata strategies) public override onlyVertex {
+    function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
         _deployStrategies(strategies, policy);
     }
 
     /// @inheritdoc IVertexCore
-    function unauthorizeStrategies(VertexStrategy[] calldata strategies) public override onlyVertex {
+    function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyVertex {
         uint256 strategiesLength = strategies.length;
         unchecked {
             for (uint256 i = 0; i < strategiesLength; ++i) {
@@ -236,7 +238,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAndAuthorizeAccounts(string[] calldata accounts) public override onlyVertex {
+    function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
         _deployAccounts(accounts);
     }
 
