@@ -8,8 +8,7 @@ on:
       - main
 
 env:
-  RPC_MAINNET_URL: ${{ secrets.RPC_MAINNET_URL }}
-  FOUNDRY_PROFILE: ci
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
 jobs:
   reports:
