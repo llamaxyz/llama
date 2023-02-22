@@ -357,7 +357,7 @@ contract VertexAccountTest is Test {
         TestScript testScript = new TestScript();
 
         vm.startPrank(address(vertex));
-        bytes memory result = accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""));
+        bytes memory result = accounts[0].execute(address(testScript), TestScript.testFunction.selector, "", true);
         assertEq(10, uint256(bytes32(result)));
         vm.stopPrank();
     }
@@ -366,7 +366,7 @@ contract VertexAccountTest is Test {
         TestScript testScript = new TestScript();
 
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
-        accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""));
+        accounts[0].execute(address(testScript), TestScript.testFunction.selector, "", true);
     }
 
     function test_execute_RevertIfNotSuccess() public {
@@ -374,7 +374,7 @@ contract VertexAccountTest is Test {
 
         vm.startPrank(address(vertex));
         vm.expectRevert(abi.encodeWithSelector(VertexAccount.FailedExecution.selector, ""));
-        accounts[0].execute(address(testScript), abi.encodePacked("", ""));
+        accounts[0].execute(address(testScript), "", "", true);
         vm.stopPrank();
     }
 

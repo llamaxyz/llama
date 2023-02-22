@@ -117,9 +117,19 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
-    function execute(address target, bytes calldata callData) external payable onlyVertex returns (bytes memory) {
-        // solhint-disable avoid-low-level-calls
-        (bool success, bytes memory result) = target.delegatecall(callData);
+    function execute(address target, bytes4 selector, bytes calldata data, bool withDelegatecall) external payable onlyVertex returns (bytes memory) {
+        bytes memory callData = abi.encodePacked(selector, data);
+        bool success;
+        bytes memory result;
+
+        if (withDelegatecall) {
+            // solhint-disable avoid-low-level-calls
+            (success, result) = target.delegatecall(callData);
+        } else {
+            // solhint-disable avoid-low-level-calls
+            (success, result) = target.call{value: msg.value}(callData);
+        }
+
         if (!success) revert FailedExecution(result);
         return result;
     }
