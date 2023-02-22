@@ -66,7 +66,7 @@ contract SetVertex is VertexPolicyNFTTest {
   }
 }
 
-contract BatchGrantPermissions is VertexPolicyNFTTest {
+contract BatchGrantPolicies is VertexPolicyNFTTest {
     // TODO fuzz over addresses, permissionSignatures, expirationTimestamps
     function test_CorrectlyGrantsPermission() public {
         addresses[0] = address(0xdeadbeef);
@@ -181,11 +181,11 @@ contract BatchRevokePolicies is VertexPolicyNFTTest {
     }
 }
 
-contract RevokePolicies is VertexPolicyNFTTest {
+contract RevokePolicy is VertexPolicyNFTTest {
   // This can be called via batchRevokePolicies or by exposing the function
   // through a MockVertexPolicyNFT contract and using that in the tests, e.g.
-  // function exposed_revokePolicies(...same args) public {
-  //   revokePolicies(...args);
+  // function exposed_revokePolicy(...same args) public {
+  //   revokePolicy(...args);
   // }
   function testFuzz_RevertsIfCallerIsNotOwner(address _caller) public {} // TODO
   function testFuzz_ZerosTokenPermissionCheckpoints(address _caller) public {} // TODO
@@ -195,32 +195,50 @@ contract RevokePolicies is VertexPolicyNFTTest {
 }
 
 contract HashPermission is VertexPolicyNFTTest {
-  // TODO
+  function test_hashesPermissions() public {
+    // TODO just a manual comparison of hashPermission
+  }
 }
 
 contract HashPermissions is VertexPolicyNFTTest {
-  // TODO
+  function test_hashesPermissions() public {
+    // TODO just a manual comparison of multiple permission hashes
+  }
 }
 
 contract HasPermission is VertexPolicyNFTTest {
-  // TODO
-}
+  function testFuzz_returnsTrueWhenPolicyHasPermission(address _owner, bytes8 _permission) public {
+    // TODO
+    // This is just a simple happy path test.
+    // Grant the permission to a policy, confirm that hasPermission == true
+  }
 
-contract SortedPermissionInsert is VertexPolicyNFTTest {
-  // TODO
-}
+  function testFuzz_returnsFalseWhenPolicyNeverHadPermission(address _owner, bytes8 _permission) public {
+    // TODO
+    // Assert that hasPermission(uint(uint160(_owner)), _permission) == false
+  }
 
-contract SortedPermissionRemove is VertexPolicyNFTTest {
-  // TODO
-}
+  function testFuzz_returnsFalseWhenPolicyNoLongerHasPermission(address _owner, bytes8 _permission) public {
+    // TODO
+    // Grant the _permission to _owner.
+    // vm.roll ahead.
+    // Revoke the _permission.
+    // vm.roll ahead.
+    // Assert that hasPermission(uint(uint160(_owner)), _permission) == false
+  }
 
-contract PermissionIsInPermissionsArray is VertexPolicyNFTTest {
-}
+  function testFuzz_returnsFalseWhenPolicyIsExpired(address _owner, bytes8 _permission) public {
+    // TODO
+    // Grant the _permission to _owner.
+    // vm.warp past expiration.
+    // Assert that hasPermission(uint(uint160(_owner)), _permission) == false
+  }
 
-contract PermissionIsInPermissionsArrayCalldata is VertexPolicyNFTTest {
-}
-
-contract CheckExpiration is VertexPolicyNFTTest {
+  function testFuzz_returnsFalseWhenPolicyIdIsFake(address _owner, bytes8 _permission) public {
+    // TODO
+    // We just want to use a policy ID that hasn't been seen before.
+    // Assert that hasPermission(uint(uint160(_owner)), _permission) == false
+  }
 }
 
 contract TransferFrom is VertexPolicyNFTTest {
