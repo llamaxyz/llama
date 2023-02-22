@@ -242,7 +242,8 @@ contract HasPermission is VertexPolicyNFTTest {
 }
 
 contract TransferFrom is VertexPolicyNFTTest {
-    function test_transferFrom_RevertIfTransferFrom() public {
+    // TODO convert to fuzz test, fuzzing over caller, from, and recipient
+    function test_RevertIfTransferFrom() public {
         vm.expectRevert(VertexPolicy.SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
     }
