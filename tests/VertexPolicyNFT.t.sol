@@ -51,7 +51,7 @@ contract VertexPolicyNFTTest is Test {
     function test_grantPermission_CorrectlyGrantsPermission() public {
         addresses[0] = address(0xdeadbeef);
         vm.expectEmit(true, true, true, true);
-        emit PermissionsAdded(addresses, permissionSignatures, initialExpirationTimestamps);
+        emit PoliciesAdded(addresses, permissionSignatures, initialExpirationTimestamps);
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
         assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
         assertEq(vertexPolicyNFT.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));
@@ -76,7 +76,7 @@ contract VertexPolicyNFTTest is Test {
 
     function test_Revoke_CorrectlyRevokesPolicy() public {
         vm.expectEmit(true, true, true, true);
-        emit PermissionsRevoked(policyIds, permissionSignatures);
+        emit PoliciessRevoked(policyIds, permissionSignatures);
 
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
