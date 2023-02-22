@@ -39,7 +39,7 @@ contract VertexPolicyNFT is VertexPolicy {
             for (uint256 i = 0; i < policyholderLength; ++i) {
                 uint256[] memory expiration;
                 if (expirationsLength > 0) expiration = initialExpirationTimestamps[i];
-                grantPolicy(initialPolicyholders[i], initialPermissions[i], expiration);
+                grantPolicies(initialPolicyholders[i], initialPermissions[i], expiration);
             }
         }
     }
@@ -104,9 +104,9 @@ contract VertexPolicyNFT is VertexPolicy {
             if (expirationTimeStampLength > 0) {
                 expiration = expirationTimestamps[i];
             }
-            grantPolicy(to[i], userPermissions[i], expiration);
+            grantPolicies(to[i], userPermissions[i], expiration);
         }
-        emit PermissionsAdded(to, userPermissions, expirationTimestamps);
+        emit PoliciesAdded(to, userPermissions, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy
@@ -145,10 +145,10 @@ contract VertexPolicyNFT is VertexPolicy {
         if (length == 0 || length != permissionsToRevoke.length) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                revokePolicy(_policyIds[i], permissionsToRevoke[i]);
+                revokePolicies(_policyIds[i], permissionsToRevoke[i]);
             }
         }
-        emit PermissionsRevoked(_policyIds, permissionsToRevoke);
+        emit PoliciesRevoked(_policyIds, permissionsToRevoke);
     }
 
     /// @dev hashes a permission
@@ -222,7 +222,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param to the address to mint the policy token to
     /// @param permissionSignatures the permission signature's to be granted to the policyholder
     /// @param expirationTimestamp the expiration timestamp for each permission signature in the permissionSignatures array
-    function grantPolicy(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private {
+    function grantPolicies(address to, bytes8[] memory permissionSignatures, uint256[] memory expirationTimestamp) private {
         if (balanceOf(to) != 0) revert OnlyOnePolicyPerHolder();
         uint256 length = permissionSignatures.length;
         if (length == 0 || (expirationTimestamp.length != 0 && expirationTimestamp.length != length)) revert InvalidInput();
@@ -251,7 +251,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice revokes given permissions from a policy token
     /// @param policyId the id of the policy token to revoke permissions from
     /// @param _permissions the permissions to revoke from the policy token
-    function revokePolicy(uint256 policyId, bytes8[] calldata _permissions) private {
+    function revokePolicies(uint256 policyId, bytes8[] calldata _permissions) private {
         if (ownerOf(policyId) == address(0)) revert InvalidInput();
         unchecked {
             uint256 permissionsLength = _permissions.length;
