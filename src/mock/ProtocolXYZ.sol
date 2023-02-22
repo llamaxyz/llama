@@ -17,6 +17,10 @@ contract ProtocolXYZ {
         _;
     }
 
+    function receiveEth() external payable onlyVertex returns (uint256) {
+        return msg.value;
+    }
+
     function pause(bool isPaused) external onlyVertex {
         paused = isPaused;
     }
