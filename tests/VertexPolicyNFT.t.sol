@@ -249,6 +249,62 @@ contract TransferFrom is VertexPolicyNFTTest {
     }
 }
 
+contract RevokeExpiredPermission is VertexPolicyNFTTest {
+  // TODO We'll need to expose tokenPermissionCheckpoints and
+  // permissionSupplyCheckpoints for these tests. This is another reason to make a
+  // MockVertexPolicyNFT contract.
+  function testFuzz_UpdatesTokenPermissionCheckpoints(
+    address _owner,
+    bytes8 _permission,
+    uint256 _timeUntilExpiration
+  ) public {
+    // TODO
+    // grant _permission to _owner that expires at block.time + _timeUntilExpiration.
+    // assert that latest tokenPermissionCheckpoints[uint(_owner)][_permission] > 0
+    // vm.warp past expiration time.
+    // revokeExpiredPermission should return true
+    // assert that latest tokenPermissionCheckpoints[uint(_owner)][_permission] == 0
+  }
+
+  function testFuzz_UpdatesPermissionSupplyCheckpoints(
+    address _owner,
+    bytes8 _permission,
+    uint256 _timeUntilExpiration
+  ) public {
+    // TODO
+    // grant _permission to _owner that expires at block.time + _timeUntilExpiration.
+    // get latest permissionSupplyCheckpoints[_permission]
+    // vm.warp past expiration time.
+    // revokeExpiredPermission should return true
+    // assert that latest permissionSupplyCheckpoints[_permission] has been
+    // decremented relative to the value we just got.
+  }
+
+  function testFuzz_NonExpiredPolicyIdReturnsFalse(
+    address _owner,
+    bytes8 _permission,
+    uint256 _timeUntilExpiration
+  ) public {
+    // TODO
+    // grant _permission to _owner that expires at block.time + _timeUntilExpiration.
+    // get latest permissionSupplyCheckpoints[_permission]
+    // assert revokeExpiredPermission(uint(_owner), _permission) == false
+    // assert permissionSupplyCheckpoints[_permission] hasn't changed
+    // assert that latest tokenPermissionCheckpoints[uint(_owner)][_permission] == 1
+  }
+
+  function testFuzz_NonExistentPolicyIdReturnsFalse(
+    address _owner,
+    bytes8 _permission
+  ) public {
+    // TODO
+    // vm.assume _owner was never granted any permission (i.e. never had a policy).
+    // get latest permissionSupplyCheckpoints[_permission]
+    // assert revokeExpiredPermission(uint(_owner), _permission) == false
+    // assert permissionSupplyCheckpoints[_permission] hasn't changed
+  }
+}
+
 contract HolderHasPermissionAt is VertexPolicyNFTTest {
     function test_holderHasPermissionAt_ReturnsCorrectBool() public {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
