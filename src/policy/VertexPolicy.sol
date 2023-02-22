@@ -36,7 +36,7 @@ abstract contract VertexPolicy is ERC721 {
     function batchGrantPolicies(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
-    /// @notice all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a
+    /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a
     /// policy was ever reissued to the same address
     /// @param _policyIds the ids of the policy tokens to revoke permissions from
     /// @param permissionsToRevoke the permissions to revoke from the policy tokens
