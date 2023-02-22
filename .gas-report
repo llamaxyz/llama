@@ -67,7 +67,6 @@
 | 2502723                                                 | 15968           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1691   | 2673   | 2673   | 55      |
-| baseURI                                                 | 3011            | 3011   | 3011   | 3011   | 1       |
 | batchGrantPolicies                                      | 3638            | 773364 | 970469 | 970469 | 120     |
 | batchRevokePolicies                                     | 3037            | 42436  | 58071  | 70671  | 6       |
 | batchUpdatePermissions                                  | 3592            | 51239  | 35817  | 162002 | 5       |
@@ -83,7 +82,6 @@
 | tokenURI                                                | 5406            | 5406   | 5406   | 5406   | 1       |
 | totalSupply                                             | 349             | 793    | 349    | 2349   | 63      |
 | transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
-| vertex                                                  | 426             | 426    | 426    | 426    | 2       |
 
 
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
@@ -106,3 +104,17 @@
 
 
 
+
+Failing tests:
+Encountered 5 failing tests in tests/VertexFactory.t.sol:Deploy
+[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysPolicy() (gas: 5017852)
+[31m[FAIL. Reason: Log != expected log][0m test_EmitsVertexCreatedEvent() (gas: 5005157)
+[31m[FAIL. Reason: EvmError: Revert][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 5005463)
+[31m[FAIL. Reason: Assertion failed.][0m test_SetsPolicyAddressOnVertexCore() (gas: 4936227)
+[31m[FAIL. Reason: EvmError: Revert][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 5005406)
+
+Encountered 2 failing tests in tests/VertexPolicyNFT.t.sol:VertexPolicyNFTTest
+[31m[FAIL. Reason: Log != expected log][0m test_Revoke_CorrectlyRevokesPolicy() (gas: 110201)
+[31m[FAIL. Reason: Log != expected log][0m test_grantPermission_CorrectlyGrantsPermission() (gas: 198609)
+
+Encountered a total of [31m7[0m failing tests, [32m179[0m tests succeeded
