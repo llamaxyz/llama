@@ -104,7 +104,7 @@ contract BatchGrantPermissions is VertexPolicyNFTTest {
         address[] memory newAddresses = new address[](1);
         newAddresses[0] = address(0xdeadbeef);
         addresses = newAddresses;
-        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
+        vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
         assertEq(
           vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(address(0xdeadbeef))), permissionSignature[0]),
           newExpirationTimestamp[0]
@@ -124,7 +124,7 @@ contract BatchGrantPermissions is VertexPolicyNFTTest {
         // newAddresses[0] = _newAddress;
         // addresses = newAddresses;
         // vm.expectRevert(Expired);
-        // vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, expirationTimestamps);
+        // vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
     }
 
     function testFuzz_CheckpointsTokenPermissions(
@@ -133,21 +133,21 @@ contract BatchGrantPermissions is VertexPolicyNFTTest {
       bytes8 _permission
     ) public {
         // TODO
-        // batchGrantPermissions and confirm that tokenPermissionCheckpoints get added
+        // batchGrantPolicies and confirm that tokenPermissionCheckpoints get added
     }
 
-    function testFuzz_CheckpointsPermissionsSupply
+    function testFuzz_CheckpointsPermissionsSupply(
       address _newAddress,
       uint256 _timedelta,
       bytes8 _permission
     ) public {
         // TODO
-        // batchGrantPermissions and confirm that permissionSupplyCheckpoints get added
+        // batchGrantPolicies and confirm that permissionSupplyCheckpoints get added
     }
 }
 
-contract BatchRevokePermissions is VertexPolicyNFTTest {
-    function test_Revoke_CorrectlyRevokesPolicy() public {
+contract BatchRevokePolicies is VertexPolicyNFTTest {
+    function test_RevokesSinglePolicy() public {
         vm.expectEmit(true, true, true, true);
         emit PoliciesRevoked(policyIds, permissionSignatures);
 
@@ -155,18 +155,43 @@ contract BatchRevokePermissions is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
 
-    function test_revoke_RevertIfNoPolicySpecified() public {
+    function test_RevokesMultiplePolicies() public {
+        // TODO test that multiple policies can be revoked with a single call
+    }
+
+    function testFuzz_RevertsIfInputArraysAreMismatched(uint8 _policyIdsLength, uint8 _permissionsLength) public {
+        // TODO
+        // if (_policyIdsLength == _permissionsLength) _policyIdsLength++;
+        // Instantiate random input args that differ in length.
+        // vm.expectRevert(InvalidInput);
+        // Call batchRevokePolicies with the mismatched inputs.
+    }
+
+    function test_RevertIfNoPolicySpecified() public {
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchRevokePolicies(new uint256[](0), permissionSignatures);
     }
 
-    function test_revoke_RevertIfPolicyNotGranted() public {
+    function test_RevertIfPolicyNotGranted() public {
         uint256 mockPolicyId = uint256(uint160(address(0xdeadbeef)));
         policyIds[0] = mockPolicyId;
 
         vm.expectRevert("NOT_MINTED");
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
     }
+}
+
+contract RevokePolicies is VertexPolicyNFTTest {
+  // This can be called via batchRevokePolicies or by exposing the function
+  // through a MockVertexPolicyNFT contract and using that in the tests, e.g.
+  // function exposed_revokePolicies(...same args) public {
+  //   revokePolicies(...args);
+  // }
+  function testFuzz_RevertsIfCallerIsNotOwner(address _caller) public {} // TODO
+  function testFuzz_ZerosTokenPermissionCheckpoints(address _caller) public {} // TODO
+  function testFuzz_DecrementsPermissionSuppylCheckpoints(address _caller) public {} // TODO
+  function testFuzz_DecrementsTotalSupply(address _caller) public {} // TODO
+  function testFuzz_BurnsTheNFT(address _caller) public {} // TODO
 }
 
 contract HashPermission is VertexPolicyNFTTest {
@@ -324,9 +349,9 @@ contract TotalSupply is VertexPolicyNFTTest {
     function test_totalSupply_ReturnsCorrectSupply() public {
         assertEq(vertexPolicyNFT.totalSupply(), 1);
         addresses[0] = address(0xdeadbeef);
-        vertexPolicyNFT.batchGrantPermissions(addresses, permissionSignatures, initialExpirationTimestamps);
+        vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
         assertEq(vertexPolicyNFT.totalSupply(), 2);
-        vertexPolicyNFT.batchRevokePermissions(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
         assertEq(vertexPolicyNFT.totalSupply(), 1);
     }
 }
