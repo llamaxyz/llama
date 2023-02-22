@@ -127,7 +127,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
             (success, result) = target.delegatecall(callData);
         } else {
             // solhint-disable avoid-low-level-calls
-            (success, result) = target.call{value: msg.value}(callData);
+            (success, result) = address(this).call{value: msg.value}(callData);
         }
 
         if (!success) revert FailedExecution(result);
