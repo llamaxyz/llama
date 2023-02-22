@@ -8,7 +8,7 @@
 | approveERC721                                        | 2621            | 19013 | 27210  | 27210 | 3       |
 | approveOperatorERC721                                | 2679            | 17767 | 19063  | 30263 | 4       |
 | execute                                              | 2763            | 3259  | 3396   | 3620  | 3       |
-| initialize                                           | 1379            | 68299 | 69447  | 69447 | 293     |
+| initialize                                           | 1379            | 68306 | 69447  | 69447 | 295     |
 | onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
 | onERC721Received                                     | 1078            | 1078  | 1078   | 1078  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
@@ -32,9 +32,9 @@
 | createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
 | executeAction                               | 432             | 20066   | 13209   | 37727   | 7       |
 | getAction                                   | 3950            | 7541    | 3950    | 21950   | 62      |
-| initialize                                  | 1936            | 2079574 | 2060914 | 2267271 | 142     |
+| initialize                                  | 1936            | 2079443 | 2060914 | 2267271 | 143     |
 | name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
-| policy                                      | 350             | 357     | 350     | 2350    | 280     |
+| policy                                      | 350             | 357     | 350     | 2350    | 283     |
 | queueAction                                 | 543             | 52889   | 55117   | 83617   | 14      |
 | submitApproval                              | 3020            | 43303   | 43228   | 71178   | 46      |
 | submitDisapproval                           | 2636            | 43367   | 60849   | 62849   | 11      |
@@ -47,7 +47,7 @@
 | 8628529                                              | 40468           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9854            | 4355679 | 4899158 | 4899158 | 9       |
-| rootVertex                                           | 183             | 183     | 183     | 183     | 134     |
+| rootVertex                                           | 183             | 183     | 183     | 183     | 135     |
 | vertexAccountLogic                                   | 227             | 227     | 227     | 227     | 1       |
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
 | vertexCount                                          | 361             | 1694    | 2361    | 2361    | 3       |
@@ -68,17 +68,17 @@
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1691   | 2673   | 2673   | 55      |
 | baseURI                                                 | 3011            | 3011   | 3011   | 3011   | 1       |
-| batchGrantPolicies                                      | 3638            | 773364 | 970469 | 970469 | 120     |
+| batchGrantPolicies                                      | 3638            | 774993 | 970469 | 970469 | 121     |
 | batchRevokePolicies                                     | 3037            | 42436  | 58071  | 70671  | 6       |
 | batchUpdatePermissions                                  | 3592            | 51239  | 35817  | 162002 | 5       |
 | getSupplyByPermissions                                  | 1488            | 2821   | 1488   | 5488   | 3       |
 | hasPermission                                           | 1512            | 4146   | 1520   | 7520   | 39      |
-| hashPermission                                          | 924             | 924    | 924    | 924    | 387     |
+| hashPermission                                          | 924             | 924    | 924    | 924    | 391     |
 | hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 20      |
 | holderHasPermissionAt                                   | 1647            | 3054   | 2435   | 8435   | 10      |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
 | setBaseURI                                              | 2754            | 13982  | 13982  | 25211  | 2       |
-| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 160     |
+| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 161     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
 | tokenURI                                                | 5406            | 5406   | 5406   | 5406   | 1       |
 | totalSupply                                             | 349             | 793    | 349    | 2349   | 63      |
@@ -106,3 +106,9 @@
 
 
 
+
+Failing tests:
+Encountered 1 failing test in tests/invariants/Invariants.t.sol:VertexInvariants
+[31m[FAIL. Reason: Assertion failed.][0m invariant_Fail() (runs: 1, calls: 0, reverts: 0)
+
+Encountered a total of [31m1[0m failing tests, [32m186[0m tests succeeded
