@@ -420,7 +420,7 @@ contract GetSupplyByPermissions is VertexPolicyNFTTest {
 }
 
 contract BatchUpdatePermissions is VertexPolicyNFTTest {
-    function test_batchUpdatePermissions_UpdatesPermissionsCorrectly() public {
+    function test_UpdatesPermissionsCorrectly() public {
         bytes8 oldPermissionSignature = permissionSignature[0];
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
         permissionsToRevoke = permissionSignatures;
@@ -446,13 +446,14 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
     }
 
-    function test_batchUpdatePermissions_RevertIfArraysLengthMismatch() public {
+    // TODO This should go away if/when we switch to passing in arrays of structs instead of nested arrays.
+    function test_RevertIfArraysLengthMismatch() public {
         policyIds.push(uint256(uint160(address(0xdeadbeef))));
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
     }
 
-    function test_batchUpdatePermissions_updatesTimeStamp() public {
+    function test_updatesTimeStamp() public {
         uint256[] memory newExpirationTimestamp = new uint256[](1);
         newExpirationTimestamp[0] = block.timestamp + 1 days;
         expirationTimestamps.push(newExpirationTimestamp);
@@ -494,6 +495,22 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         assertEq(newExpirationTimestamp[0] < block.timestamp, true);
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
         assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
+    }
+
+    function test_PermissionRemovalUpdatesTokenPermissionCheckpoints() public {
+      // TODO
+    }
+
+    function test_PermissionRemovalUpdatesPermissionSupplyCheckpoints() public {
+      // TODO
+    }
+
+    function test_PermissionAdditionUpdatesTokenPermissionCheckpoints() public {
+      // TODO
+    }
+
+    function test_PermissionAdditionUpdatesPermissionSupplyCheckpoints() public {
+      // TODO
     }
 }
 
