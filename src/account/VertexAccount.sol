@@ -103,13 +103,47 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
+    function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                if (recipients[i] == address(0)) revert Invalid0xRecipient();
+                tokens[i].transferFrom(address(this), recipients[i], tokenIds[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IVertexAccount
     function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
         token.approve(recipient, tokenId);
     }
 
     /// @inheritdoc IVertexAccount
+    function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                tokens[i].approve(recipients[i], tokenIds[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IVertexAccount
     function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
         token.setApprovalForAll(recipient, approved);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function batchApproveOperatorERC721(IERC721[] calldata tokens, address[] calldata recipients, bool[] calldata approved) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                tokens[i].setApprovalForAll(recipients[i], approved[i]);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
