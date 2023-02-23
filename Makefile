@@ -17,9 +17,9 @@ doc      :; forge doc -b
 yul      :; forge inspect ${CONTRACT} ir-optimized > ${CONTRACT}-yul.sol
 
 # Deploy & verify
-dry-run   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${RPC_MAINNET_URL} --private-key ${PRIVATE_KEY} --verify -vvvv
-deploy   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
-verify   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${RPC_MAINNET_URL} --verify -vvvv
+dry-run   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --private-key ${PRIVATE_KEY} --verify -vvvv
+deploy   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
+verify   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --verify -vvvv
 
 # Clean & lint
 clean    :; forge clean
