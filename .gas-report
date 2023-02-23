@@ -1,11 +1,11 @@
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
-| 1291886                                              | 6681            |       |        |       |         |
+| 1977433                                              | 10105           |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
-| approveERC1155                                       | 2744            | 17961 | 19301  | 30501 | 4       |
-| approveERC20                                         | 2686            | 24775 | 27757  | 46757 | 15      |
+| approveERC20                                         | 2730            | 24807 | 27790  | 46790 | 15      |
 | approveERC721                                        | 2621            | 19013 | 27210  | 27210 | 3       |
+<<<<<<< HEAD
 | approveOperatorERC721                                | 2679            | 17767 | 19063  | 30263 | 4       |
 <<<<<<< HEAD
 | execute                                              | 2763            | 3259  | 3396   | 3620  | 3       |
@@ -14,13 +14,19 @@
 | execute                                              | 2869            | 3389  | 3536   | 3762  | 3       |
 | initialize                                           | 1379            | 68299 | 69447  | 69447 | 293     |
 >>>>>>> 6958632 (Generate updated gas report)
+=======
+| approveOperatorERC1155                               | 2701            | 17918 | 19258  | 30458 | 4       |
+| approveOperatorERC721                                | 2745            | 17833 | 19129  | 30329 | 4       |
+| batchTransferSingleERC1155                           | 3419            | 6008  | 3454   | 11152 | 3       |
+| execute                                              | 2825            | 3345  | 3492   | 3718  | 3       |
+| initialize                                           | 1357            | 68277 | 69425  | 69425 | 293     |
+>>>>>>> 9ed41c5 (Generate updated gas report)
 | onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
-| onERC721Received                                     | 1078            | 1078  | 1078   | 1078  | 1       |
+| onERC721Received                                     | 1122            | 1122  | 1122   | 1122  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
 | transfer                                             | 2520            | 4869  | 2555   | 9534  | 3       |
-| transferBatchERC1155                                 | 3397            | 5988  | 3432   | 11135 | 3       |
-| transferERC1155                                      | 2947            | 4372  | 2982   | 7188  | 3       |
-| transferERC20                                        | 2664            | 4177  | 2699   | 7168  | 3       |
+| transferERC1155                                      | 2969            | 4393  | 3004   | 7206  | 3       |
+| transferERC20                                        | 2708            | 4221  | 2743   | 7212  | 3       |
 | transferERC721                                       | 2620            | 5676  | 2655   | 11754 | 3       |
 
 
@@ -32,12 +38,21 @@
 | actionsCount                                | 384             | 384     | 384     | 384     | 1       |
 | authorizedStrategies                        | 659             | 1547    | 659     | 2659    | 9       |
 | cancelAction                                | 1781            | 14836   | 14342   | 38781   | 10      |
+<<<<<<< HEAD
 | createAction                                | 2991            | 191489  | 216233  | 240033  | 33      |
 | createAndAuthorizeAccounts                  | 349604          | 349604  | 349604  | 349604  | 2       |
 | createAndAuthorizeStrategies                | 2606508         | 2606508 | 2606508 | 2606508 | 1       |
 | executeAction                               | 454             | 20086   | 13227   | 37749   | 7       |
 | getAction                                   | 3950            | 7925    | 3950    | 21950   | 54      |
 | initialize                                  | 1935            | 2056134 | 2037492 | 2240289 | 139     |
+=======
+| createAction                                | 3013            | 194351  | 216519  | 240319  | 35      |
+| createAndAuthorizeAccounts                  | 349560          | 349560  | 349560  | 349560  | 2       |
+| createAndAuthorizeStrategies                | 2641692         | 2641692 | 2641692 | 2641692 | 1       |
+| executeAction                               | 432             | 20066   | 13209   | 37727   | 7       |
+| getAction                                   | 3950            | 7541    | 3950    | 21950   | 62      |
+| initialize                                  | 1936            | 2079530 | 2060870 | 2267227 | 142     |
+>>>>>>> 9ed41c5 (Generate updated gas report)
 | name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
 | policy                                      | 350             | 357     | 350     | 2350    | 271     |
 | queueAction                                 | 521             | 52696   | 55095   | 83595   | 13      |
@@ -49,11 +64,19 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
+<<<<<<< HEAD
 | 8598699                                              | 40404           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9548            | 4331261 | 4871726 | 4871726 | 9       |
 | rootVertex                                           | 183             | 183     | 183     | 183     | 131     |
 | vertexAccountLogic                                   | 205             | 205     | 205     | 205     | 1       |
+=======
+| 8628485                                              | 40468           |         |         |         |         |
+| Function Name                                        | min             | avg     | median  | max     | # calls |
+| deploy                                               | 9854            | 4355640 | 4899114 | 4899114 | 9       |
+| rootVertex                                           | 183             | 183     | 183     | 183     | 134     |
+| vertexAccountLogic                                   | 227             | 227     | 227     | 227     | 1       |
+>>>>>>> 9ed41c5 (Generate updated gas report)
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
 | vertexCount                                          | 361             | 1694    | 2361    | 2361    | 3       |
 
