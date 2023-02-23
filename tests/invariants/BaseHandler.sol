@@ -12,6 +12,10 @@ import {Strategy} from "src/utils/Structs.sol";
 import {VertexCoreTest} from "tests/VertexCore.t.sol";
 
 contract BaseHandler is CommonBase, StdCheats, StdUtils {
+    // =========================
+    // ======== Storage ========
+    // =========================
+
     // Protocol contracts.
     VertexFactory public immutable vertexFactory;
     VertexPolicyNFT public immutable vertexPolicyNFT;
@@ -21,26 +25,56 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     uint256[] internal timestamps;
     uint256 currentTimestamp;
 
+    // Metrics.
+    mapping(string => uint256) public calls;
+
+    // =============================
+    // ======== Constructor ========
+    // =============================
+
     constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) {
         vertexFactory = _vertexFactory;
         vertexPolicyNFT = _vertexPolicyNFT;
     }
 
-    // --- Actor Management ---
-    function addActor() public {
+    // =================================================
+    // ======== Methods and Modifiers for Users ========
+    // =================================================
+
+    // -------- Metrics --------
+    modifier recordCall(string memory name) {
+        calls[name]++;
+        _;
+    }
+
+    function callSummary() public view virtual {
+        // In the most-derived handler contract, implement your own `callSummary` method that
+        // overrides this and calls `super.callSummary()`. Then in the invariant test contract add
+        // add a test like this:
+        //   function invariant_CallSummary() public view {
+        //     handler.callSummary();
+        //    }
+        console2.log("\n  \u001b[01mCall Summary\u001b[0m");
+        console2.log("-----------------------------------------------");
+        console2.log("handler_addActor                 ", calls["handler_addActor"]);
+        console2.log("handler_increaseTimestampBy      ", calls["handler_increaseTimestampBy"]);
+    }
+
+    // -------- Actor Management --------
+    function handler_addActor() public recordCall("handler_addActor") {
         string memory actorName = string(abi.encodePacked("actor", vm.toString(actors.length)));
         actors.push(makeAddr(actorName));
     }
 
     modifier useActor(uint256 seed) {
-        if (actors.length == 0) addActor();
+        if (actors.length == 0) handler_addActor();
         vm.startPrank(actors[seed % actors.length]);
         _;
         vm.stopPrank();
     }
 
-    // --- Timestamp Management ---
-    function increaseTimestampBy(uint256 timeToIncrease) public {
+    // -------- Timestamp Management --------
+    function handler_increaseTimestampBy(uint256 timeToIncrease) public recordCall("handler_increaseTimestampBy") {
         timeToIncrease = bound(timeToIncrease, 0, 8 weeks);
         uint256 newTimestamp = currentTimestamp + timeToIncrease;
         timestamps.push(newTimestamp);
@@ -55,6 +89,6 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     modifier useCurrentTimestampThenIncreaseTimestampBy(uint256 timeToIncrease) {
         vm.warp(currentTimestamp);
         _;
-        increaseTimestampBy(timeToIncrease);
+        handler_increaseTimestampBy(timeToIncrease);
     }
 }

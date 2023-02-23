@@ -33,7 +33,12 @@ contract VertexFactoryHandler is BaseHandler {
         return vertexCounts;
     }
 
-    function vertexFactory_deploy() public {
+    function callSummary() public view override {
+        BaseHandler.callSummary();
+        console2.log("vertexFactory_deploy             ", calls["vertexFactory_deploy"]);
+    }
+
+    function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
         // We don't care about the parameters, we just need it to execute successfully.
         vm.prank(address(vertexFactory.rootVertex()));
         vertexFactory.deploy(name(), name(), new Strategy[](0), new string[](0), new address[](0), new bytes8[][](0), new uint256[][](0));
@@ -82,5 +87,9 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     function invariant_VertexCountMonotonicallyIncreases() public view {
         assertInvariant_VertexCountMonotonicallyIncreases();
+    }
+
+    function invariant_CallSummary() public view {
+        handler.callSummary();
     }
 }
