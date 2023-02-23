@@ -2,15 +2,15 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData} from "src/utils/Structs.sol";
+import {PermissionData, BatchUpdateData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event PoliciesAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionsUpdated(uint256[] policyIds, bytes8[][] permissionSignatures, bytes8[][] permissionsRemoved, uint256[][] expirationTimestamps);
+    event PermissionsUpdated(BatchUpdateData[] updateData);
     event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     error SoulboundToken();
-    error InvalidInput();
+    error InvalidInput(); // TODO: Probably need more than one error?
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
     error OnlyVertexFactory();
@@ -18,16 +18,8 @@ abstract contract VertexPolicy is ERC721 {
     error Expired();
 
     /// @notice updates the permissions for a policy token
-    /// @param _policyIds the policy token id being altered
-    /// @param permissions the new permissions array to be set
-    /// @param permissionsToRemove the permissions to be removed from the policy token
-    /// @param expirationTimestamps the new expiration timestamps array to be set
-    function batchUpdatePermissions(
-        uint256[] calldata _policyIds,
-        bytes8[][] calldata permissions,
-        bytes8[][] calldata permissionsToRemove,
-        uint256[][] calldata expirationTimestamps
-    ) public virtual;
+    /// @param updateData array of BatchUpdateData struct to update permissions
+    function batchUpdatePermissions(BatchUpdateData[] calldata updateData) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
     /// @param to the addresses to mint the policy token to
