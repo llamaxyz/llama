@@ -105,19 +105,40 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
     /// @param data Data to pass to the receiver
     function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data) external;
 
-    /// @notice Function for Vertex to batch transfer ERC1155 tokens to other parties
+    /// @notice Function for Vertex to batch transfer ERC1155 tokens of a single ERC1155 collection to other parties
     /// @param token The address of the token to transfer
     /// @param recipient Transfer's recipient
     /// @param tokenIds Token IDs to transfer
     /// @param amounts Amounts to transfer
     /// @param data Data to pass to the receiver
-    function transferBatchERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data) external;
+    function batchTransferSingleERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data)
+        external;
+
+    /// @notice Function for Vertex to batch transfer ERC1155 tokens of multiple ERC1155 collections to other parties
+    /// @param tokens The addresses of the tokens to transfer
+    /// @param recipients Transfers' recipients
+    /// @param tokenIds Token IDs to transfer
+    /// @param amounts Amounts to transfer
+    /// @param data Data to pass to the receiver
+    function batchTransferMultipleERC1155(
+        IERC1155[] calldata tokens,
+        address[] calldata recipients,
+        uint256[][] calldata tokenIds,
+        uint256[][] calldata amounts,
+        bytes[] calldata data
+    ) external;
 
     /// @notice Function for Vertex to give ERC1155 operator allowance to other parties
     /// @param token The address of the token to give allowance from
     /// @param recipient Allowance's recipient
     /// @param approved Whether to approve or revoke allowance
-    function approveERC1155(IERC1155 token, address recipient, bool approved) external;
+    function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external;
+
+    /// @notice Function for Vertex to batch give ERC1155 operator allowance to other parties
+    /// @param tokens The addresses of the tokens to give allowance from
+    /// @param recipients Allowances' recipients
+    /// @param approved Whether to approve or revoke allowance
+    function batchApproveOperatorERC1155(IERC1155[] calldata tokens, address[] calldata recipients, bool[] calldata approved) external;
 
     // -------------------------------------------------------------------------
     // Generic Execution

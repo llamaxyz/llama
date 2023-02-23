@@ -157,7 +157,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function transferBatchERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data)
+    function batchTransferSingleERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data)
         external
         onlyVertex
     {
@@ -166,8 +166,37 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function approveERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
+    function batchTransferMultipleERC1155(
+        IERC1155[] calldata tokens,
+        address[] calldata recipients,
+        uint256[][] calldata tokenIds,
+        uint256[][] calldata amounts,
+        bytes[] calldata data
+    ) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length || length != data.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                if (recipients[i] == address(0)) revert Invalid0xRecipient();
+                tokens[i].safeBatchTransferFrom(address(this), recipients[i], tokenIds[i], amounts[i], data[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IVertexAccount
+    function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
         token.setApprovalForAll(recipient, approved);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function batchApproveOperatorERC1155(IERC1155[] calldata tokens, address[] calldata recipients, bool[] calldata approved) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                tokens[i].setApprovalForAll(recipients[i], approved[i]);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

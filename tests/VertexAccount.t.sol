@@ -280,8 +280,8 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    // transfer batch ERC1155 unit tests
-    function test_transferBatchERC1155_TransferRARI() public {
+    // batch transfer single ERC1155 unit tests
+    function test_batchTransferSingleERC1155_TransferRARI() public {
         _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
         _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
 
@@ -300,7 +300,7 @@ contract VertexAccountTest is Test {
 
         // Transfer NFT from account to whale
         vm.startPrank(address(vertex));
-        accounts[0].transferBatchERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
+        accounts[0].batchTransferSingleERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
         assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), 0);
         assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), accountNFTBalance1 - RARI_ID_1_AMOUNT);
         assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance1 + RARI_ID_1_AMOUNT);
@@ -310,7 +310,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_transferBatchERC1155_RevertIfNotVertexMsgSender() public {
+    function test_batchTransferSingleERC1155_RevertIfNotVertexMsgSender() public {
         uint256[] memory tokenIDs = new uint256[](2);
         tokenIDs[0] = RARI_ID_1;
         tokenIDs[1] = RARI_ID_2;
@@ -320,10 +320,10 @@ contract VertexAccountTest is Test {
         amounts[1] = RARI_ID_2_AMOUNT;
 
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
-        accounts[0].transferBatchERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
+        accounts[0].batchTransferSingleERC1155(RARI, RARI_WHALE, tokenIDs, amounts, "");
     }
 
-    function test_transferBatchERC1155_RevertIfToZeroAddress() public {
+    function test_batchTransferSingleERC1155_RevertIfToZeroAddress() public {
         uint256[] memory tokenIDs = new uint256[](2);
         tokenIDs[0] = RARI_ID_1;
         tokenIDs[1] = RARI_ID_2;
@@ -334,22 +334,22 @@ contract VertexAccountTest is Test {
 
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-        accounts[0].transferBatchERC1155(RARI, address(0), tokenIDs, amounts, "");
+        accounts[0].batchTransferSingleERC1155(RARI, address(0), tokenIDs, amounts, "");
         vm.stopPrank();
     }
 
-    // approve ERC1155 unit tests
-    function test_approveERC1155_ApproveRARI() public {
+    // approve Operator ERC1155 unit tests
+    function test_approveOperatorERC1155_ApproveRARI() public {
         _approveRARIToRecipient(true);
     }
 
-    function test_approveERC1155_DisapproveRARI() public {
+    function test_approveOperatorERC1155_DisapproveRARI() public {
         _approveRARIToRecipient(false);
     }
 
-    function test_approveERC1155_RevertIfNotVertexMsgSender() public {
+    function test_approveOperatorERC1155_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
-        accounts[0].approveERC1155(RARI, RARI_WHALE, true);
+        accounts[0].approveOperatorERC1155(RARI, RARI_WHALE, true);
     }
 
     // generic execute unit tests
@@ -576,7 +576,7 @@ contract VertexAccountTest is Test {
 
     function _approveRARIToRecipient(bool approved) public {
         vm.startPrank(address(vertex));
-        accounts[0].approveERC1155(RARI, RARI_WHALE, approved);
+        accounts[0].approveOperatorERC1155(RARI, RARI_WHALE, approved);
         assertEq(RARI.isApprovedForAll(address(accounts[0]), RARI_WHALE), approved);
         vm.stopPrank();
     }
