@@ -42,9 +42,15 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     // =================================================
 
     // -------- Metrics --------
+    // Used to record the number of times each method on a handler contract is called.
     modifier recordCall(string memory name) {
         calls[name]++;
         _;
+    }
+
+    // Used to record code paths hit within invariant tests, but for simplicity it uses the same mapping.
+    function recordMetric(string memory name) public {
+        calls[name]++;
     }
 
     function callSummary() public view virtual {
@@ -61,11 +67,6 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     }
 
     // -------- Actor Management --------
-    function handler_addActor() public recordCall("handler_addActor") {
-        string memory actorName = string(abi.encodePacked("actor", vm.toString(actors.length)));
-        actors.push(makeAddr(actorName));
-    }
-
     modifier useActor(uint256 seed) {
         if (actors.length == 0) handler_addActor();
         vm.startPrank(actors[seed % actors.length]);
@@ -73,14 +74,16 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
-    // -------- Timestamp Management --------
-    function handler_increaseTimestampBy(uint256 timeToIncrease) public recordCall("handler_increaseTimestampBy") {
-        timeToIncrease = bound(timeToIncrease, 0, 8 weeks);
-        uint256 newTimestamp = currentTimestamp + timeToIncrease;
-        timestamps.push(newTimestamp);
-        currentTimestamp = newTimestamp;
+    function handler_addActor() public recordCall("handler_addActor") {
+        string memory actorName = string(abi.encodePacked("actor", vm.toString(actors.length)));
+        actors.push(makeAddr(actorName));
     }
 
+    function getActors() public view returns (address[] memory) {
+        return actors;
+    }
+
+    // -------- Timestamp Management --------
     modifier useCurrentTimestamp() {
         vm.warp(currentTimestamp);
         _;
@@ -90,5 +93,12 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         vm.warp(currentTimestamp);
         _;
         handler_increaseTimestampBy(timeToIncrease);
+    }
+
+    function handler_increaseTimestampBy(uint256 timeToIncrease) public recordCall("handler_increaseTimestampBy") {
+        timeToIncrease = bound(timeToIncrease, 0, 8 weeks);
+        uint256 newTimestamp = currentTimestamp + timeToIncrease;
+        timestamps.push(newTimestamp);
+        currentTimestamp = newTimestamp;
     }
 }
