@@ -14,6 +14,10 @@ import {VertexCoreTest} from "tests/VertexCore.t.sol";
 import {BaseHandler} from "tests/invariants/BaseHandler.sol";
 
 contract VertexFactoryHandler is BaseHandler {
+    // =========================
+    // ======== Storage ========
+    // =========================
+
     // Used to track the last seen `vertexCount` value.
     uint256[] public vertexCounts;
 
@@ -21,9 +25,17 @@ contract VertexFactoryHandler is BaseHandler {
     // time we deterministically update this value to track what the next name and symbol will be.
     uint256 nextNameCounter = 0;
 
+    // =============================
+    // ======== Constructor ========
+    // =============================
+
     constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, _vertexPolicyNFT) {
         vertexCounts.push(vertexFactory.vertexCount());
     }
+
+    // ==========================
+    // ======== Helpers =========
+    // ==========================
 
     function name() private returns (string memory currentName) {
         currentName = string.concat("NAME_", vm.toString(nextNameCounter++));
@@ -37,6 +49,10 @@ contract VertexFactoryHandler is BaseHandler {
         BaseHandler.callSummary();
         console2.log("vertexFactory_deploy             ", calls["vertexFactory_deploy"]);
     }
+
+    // =====================================
+    // ======== Methods for Fuzzer =========
+    // =====================================
 
     function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
         // We don't care about the parameters, we just need it to execute successfully.
@@ -76,6 +92,10 @@ contract VertexFactoryInvariants is VertexCoreTest {
         targetContract(address(handler));
     }
 
+    // ======================================
+    // ======== Invariant Assertions ========
+    // ======================================
+
     // The vertexCount state variable should only increase, and be incremented by 1 with each
     // successful deploy.
     function assertInvariant_VertexCountMonotonicallyIncreases() internal view {
@@ -84,6 +104,10 @@ contract VertexFactoryInvariants is VertexCoreTest {
             require(vertexCounts[i] == vertexCounts[i - 1] + 1, "vertexCount did not monotonically increase");
         }
     }
+
+    // =================================
+    // ======== Invariant Tests ========
+    // =================================
 
     function invariant_VertexCountMonotonicallyIncreases() public view {
         assertInvariant_VertexCountMonotonicallyIncreases();
