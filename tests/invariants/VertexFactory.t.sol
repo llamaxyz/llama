@@ -7,12 +7,13 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {VertexFactory} from "src/factory/VertexFactory.sol";
+import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Strategy} from "src/utils/Structs.sol";
+
 import {VertexCoreTest} from "tests/VertexCore.t.sol";
+import {BaseHandler} from "tests/invariants/BaseHandler.sol";
 
-contract Handler is CommonBase, StdCheats, StdUtils {
-    VertexFactory public immutable vertexFactory;
-
+contract VertexFactoryHandler is BaseHandler {
     // Used to track the last seen `vertexCount` value.
     uint256 public lastVertexCount;
 
@@ -20,8 +21,7 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     // time we deterministically update this value to track what the next name and symbol will be.
     uint256 nextNameCounter = 0;
 
-    constructor(VertexFactory _vertexFactory) {
-        vertexFactory = _vertexFactory;
+    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, vertexPolicyNFT) {
         lastVertexCount = vertexFactory.vertexCount();
     }
 
@@ -50,16 +50,16 @@ contract Handler is CommonBase, StdCheats, StdUtils {
     }
 }
 
-contract VertexInvariants is VertexCoreTest {
+contract VertexFactoryInvariants is VertexCoreTest {
     // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
     // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
     // tests would not be coupled to our unit tests in this way.
 
-    Handler public handler;
+    VertexFactoryHandler public handler;
 
     function setUp() public override {
         VertexCoreTest.setUp();
-        handler = new Handler(vertexFactory);
+        handler = new VertexFactoryHandler(vertexFactory, policy);
 
         // Target the handler contract, and use `excludeArtifact` to prevent contracts deployed by
         // the factory from automatically being added to the target contracts list (by default,
@@ -73,6 +73,7 @@ contract VertexInvariants is VertexCoreTest {
     }
 
     function invariant_VertexCountMonotonicallyIncreases() public {
-        // No logic is needed here since checks are done in the `Handler` contract.
+        // No logic is needed here since checks are done in the `Handler` contract. The only method
+        // called in this invariant test is the `vertexFactory_deploy` method, which checks the invariant.
     }
 }
