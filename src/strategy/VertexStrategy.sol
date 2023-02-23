@@ -52,10 +52,10 @@ contract VertexStrategy is IVertexStrategy {
     bytes8[] public disapprovalPermissions;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public approvalWeightByPermission;
+    mapping(bytes8 => uint256) public approvalWeightByPermission;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public disapprovalWeightByPermission;
+    mapping(bytes8 => uint256) public disapprovalWeightByPermission;
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {

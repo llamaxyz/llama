@@ -56,8 +56,8 @@ contract VertexCoreTest is Test {
     event ActionCanceled(uint256 id);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
+    event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
     event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
     event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
@@ -171,9 +171,9 @@ contract VertexCoreTest is Test {
 
     function _approveAction(address _policyholder, uint256 _actionId) public {
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderApproved(_actionId, _policyholder, true, 1);
+        emit PolicyholderApproved(_actionId, _policyholder, 1);
         vm.prank(_policyholder);
-        vertex.submitApproval(_actionId, true);
+        vertex.submitApproval(_actionId);
     }
 
     function _approveAction(address _policyholder) public {
@@ -183,9 +183,9 @@ contract VertexCoreTest is Test {
 
     function _disapproveAction(address _policyholder, uint256 _actionId) public {
         vm.expectEmit(true, true, true, true);
-        emit PolicyholderDisapproved(_actionId, _policyholder, true, 1);
+        emit PolicyholderDisapproved(_actionId, _policyholder, 1);
         vm.prank(_policyholder);
-        vertex.submitDisapproval(_actionId, true);
+        vertex.submitDisapproval(_actionId);
     }
 
     function _disapproveAction(address _policyholder) public {
@@ -658,7 +658,7 @@ contract SubmitApproval is VertexCoreTest {
         vertex.queueAction(actionId);
 
         vm.expectRevert(VertexCore.ActionNotActive.selector);
-        vertex.submitApproval(actionId, true);
+        vertex.submitApproval(actionId);
     }
 
     function test_RevertIfDuplicateApproval() public {
@@ -667,28 +667,7 @@ contract SubmitApproval is VertexCoreTest {
 
         vm.expectRevert(VertexCore.DuplicateApproval.selector);
         vm.prank(policyholder1);
-        vertex.submitApproval(actionId, true);
-    }
-
-    function test_ChangeApprovalSupportToFalse() public {
-        actionId = _createAction();
-
-        vm.startPrank(policyholder1);
-        vertex.submitApproval(actionId, true);
-        Action memory action = vertex.getAction(actionId);
-        assertEq(action.totalApprovals, 1);
-
-        vm.expectEmit(true, true, true, true);
-        emit PolicyholderApproved(actionId, policyholder1, false, 1);
-        vertex.submitApproval(actionId, false);
-        action = vertex.getAction(actionId);
-
-        assertEq(action.totalApprovals, 0);
-    }
-
-    function test_ChangeApprovalSupportToTrue() public {
-        // TODO
-        // Just like the previous test, but go from false -> true
+        vertex.submitApproval(actionId);
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {
@@ -739,7 +718,7 @@ contract SubmitDisapproval is VertexCoreTest {
         actionId = _createAction();
 
         vm.expectRevert(VertexCore.ActionNotQueued.selector);
-        vertex.submitDisapproval(actionId, true);
+        vertex.submitDisapproval(actionId);
     }
 
     function test_RevertIfDuplicateDisapproval() public {
@@ -749,23 +728,7 @@ contract SubmitDisapproval is VertexCoreTest {
 
         vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
         vm.prank(policyholder1);
-        vertex.submitDisapproval(actionId, true);
-    }
-
-    function test_ChangeDisapprovalSupport() public {
-        actionId = _createApproveAndQueueAction();
-
-        _disapproveAction(policyholder1, actionId);
-        Action memory action = vertex.getAction(actionId);
-        assertEq(action.totalDisapprovals, 1);
-
-        vm.expectEmit(true, true, true, true);
-        emit PolicyholderDisapproved(actionId, policyholder1, false, 1);
-        vm.prank(policyholder1);
-        vertex.submitDisapproval(actionId, false);
-
-        action = vertex.getAction(actionId);
-        assertEq(action.totalDisapprovals, 0);
+        vertex.submitDisapproval(actionId);
     }
 
     function test_RevertsIfCallerIsNotPolicyHolder() public {

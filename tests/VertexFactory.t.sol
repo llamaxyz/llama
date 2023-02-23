@@ -57,8 +57,8 @@ contract VertexFactoryTest is Test {
     event ActionCanceled(uint256 id);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
+    event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
     event StrategiesAuthorized(Strategy[] strategies);
     event StrategiesUnauthorized(VertexStrategy[] strategies);
 
@@ -127,12 +127,12 @@ contract VertexFactoryTest is Test {
     function createInitialStrategies() internal pure returns (Strategy[] memory) {
         bytes8 permissionSig = 0xa9cc4718a9cc4718;
         WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](2);
-        approvalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint248(2)});
-        approvalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint248(0)});
+        approvalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint256(2)});
+        approvalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
 
         WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](2);
-        disapprovalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint248(2)});
-        disapprovalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint248(0)});
+        disapprovalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint256(2)});
+        disapprovalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
         Strategy[] memory initialStrategies = new Strategy[](2);
 
         initialStrategies[0] = Strategy({

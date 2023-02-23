@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, Approval, Disapproval, PermissionData, Strategy} from "src/utils/Structs.sol";
+import {Action, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -35,10 +35,10 @@ contract VertexCore is IVertexCore, Initializable {
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
     /// @notice EIP-712 approval typehash.
-    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,bool support)");
+    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,address policyholder)");
 
     /// @notice EIP-712 disapproval typehash.
-    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,bool support)");
+    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
     /// @notice Equivalent to 100%, but scaled for precision
     uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
@@ -62,10 +62,10 @@ contract VertexCore is IVertexCore, Initializable {
     mapping(uint256 => Action) internal actions;
 
     /// @notice Mapping of actionIds to policyholders to approvals.
-    mapping(uint256 => mapping(address => Approval)) public approvals;
+    mapping(uint256 => mapping(address => bool)) public approvals;
 
     /// @notice Mapping of action ids to policyholders to disapprovals.
-    mapping(uint256 => mapping(address => Disapproval)) public disapprovals;
+    mapping(uint256 => mapping(address => bool)) public disapprovals;
 
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
@@ -184,41 +184,41 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function submitApproval(uint256 actionId, bool support) external override {
-        return _submitApproval(msg.sender, actionId, support);
+    function submitApproval(uint256 actionId) external override {
+        return _submitApproval(msg.sender, actionId);
     }
 
     /// @inheritdoc IVertexCore
-    function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-                keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, support))
+                keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
             )
         );
         address signer = ecrecover(digest, v, r, s);
         if (signer == address(0)) revert InvalidSignature();
-        return _submitApproval(signer, actionId, support);
+        return _submitApproval(signer, actionId);
     }
 
     /// @inheritdoc IVertexCore
-    function submitDisapproval(uint256 actionId, bool support) external override {
-        return _submitDisapproval(msg.sender, actionId, support);
+    function submitDisapproval(uint256 actionId) external override {
+        return _submitDisapproval(msg.sender, actionId);
     }
 
     /// @inheritdoc IVertexCore
-    function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external override {
+    function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-                keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, support))
+                keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
             )
         );
         address signer = ecrecover(digest, v, r, s);
         if (signer == address(0)) revert InvalidSignature();
-        return _submitDisapproval(signer, actionId, support);
+        return _submitDisapproval(signer, actionId);
     }
 
     /// @inheritdoc IVertexCore
@@ -286,49 +286,35 @@ contract VertexCore is IVertexCore, Initializable {
         return ActionState.Queued;
     }
 
-    function _submitApproval(address policyholder, uint256 actionId, bool support) internal {
+    function _submitApproval(address policyholder, uint256 actionId) internal {
         if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
+        bool hasApproved = approvals[actionId][policyholder];
+        if (hasApproved) revert DuplicateApproval();
+
         Action storage action = actions[actionId];
-        Approval storage approval = approvals[actionId][policyholder];
-
-        if (support == approval.support) revert DuplicateApproval();
-
         uint256 weight = action.strategy.getApprovalWeightAt(policyholder, action.createdBlockNumber);
 
-        if (support) {
-            action.totalApprovals += weight;
-        } else {
-            action.totalApprovals -= weight;
-        }
+        action.totalApprovals += weight;
+        approvals[actionId][policyholder] = true;
 
-        approval.support = support;
-        approval.weight = uint248(support ? weight : 0);
-
-        emit PolicyholderApproved(actionId, policyholder, support, weight);
+        emit PolicyholderApproved(actionId, policyholder, weight);
     }
 
-    function _submitDisapproval(address policyholder, uint256 actionId, bool support) internal {
+    function _submitDisapproval(address policyholder, uint256 actionId) internal {
         if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
+        bool hasDisapproved = disapprovals[actionId][policyholder];
+        if (hasDisapproved) revert DuplicateDisapproval();
+
         Action storage action = actions[actionId];
 
         if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
-        Disapproval storage disapproval = disapprovals[actionId][policyholder];
-
-        if (support == disapproval.support) revert DuplicateDisapproval();
-
         uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, action.createdBlockNumber);
 
-        if (support) {
-            action.totalDisapprovals += weight;
-        } else {
-            action.totalDisapprovals -= weight;
-        }
+        action.totalDisapprovals += weight;
+        disapprovals[actionId][policyholder] = true;
 
-        disapproval.support = support;
-        disapproval.weight = uint248(support ? weight : 0);
-
-        emit PolicyholderDisapproved(actionId, policyholder, support, weight);
+        emit PolicyholderDisapproved(actionId, policyholder, weight);
     }
 
     function _deployAccounts(string[] calldata accounts) internal {

@@ -14,16 +14,6 @@ struct PermissionIdCheckpoint {
     uint32 quantity; // Quantity of the permission ID held at the timestamp.
 }
 
-struct Approval {
-    bool support; // is policyholder supporting this approval.
-    uint248 weight; // weight of policyholder's support.
-}
-
-struct Disapproval {
-    bool support; // is policyholder supporting this disapproval.
-    uint248 weight; // weight of policyholder's support.
-}
-
 struct Action {
     address creator; // msg.sender of createAction.
     bool executed; // has action executed.
@@ -43,7 +33,7 @@ struct Action {
 
 struct WeightByPermission {
     bytes8 permissionSignature; // Policyholder's permission signature.
-    uint248 weight; // Approval or disapproval weight of policyholder.
+    uint256 weight; // Approval or disapproval weight of policyholder.
 }
 
 struct Strategy {
