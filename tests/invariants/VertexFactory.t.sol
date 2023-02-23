@@ -15,38 +15,29 @@ import {BaseHandler} from "tests/invariants/BaseHandler.sol";
 
 contract VertexFactoryHandler is BaseHandler {
     // Used to track the last seen `vertexCount` value.
-    uint256 public lastVertexCount;
+    uint256[] public vertexCounts;
 
     // The salt is a function of name and symbol. To ensure we get a different contract address each
     // time we deterministically update this value to track what the next name and symbol will be.
     uint256 nextNameCounter = 0;
 
-    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, vertexPolicyNFT) {
-        lastVertexCount = vertexFactory.vertexCount();
+    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, _vertexPolicyNFT) {
+        vertexCounts.push(vertexFactory.vertexCount());
     }
 
     function name() private returns (string memory currentName) {
         currentName = string.concat("NAME_", vm.toString(nextNameCounter++));
     }
 
-    // The vertexCount state variable should only increase, and be incremented by 1 with each
-    // successful deploy.
-    modifier assertInvariant_VertexCountMonotonicallyIncreases() {
-        uint256 initVertexCount1 = vertexFactory.vertexCount();
-        uint256 initVertexCount2 = lastVertexCount;
-        require(initVertexCount1 == initVertexCount2, "pre-deploy vertexCount mismatch");
-
-        _;
-
-        uint256 newVertexCount = vertexFactory.vertexCount();
-        require(newVertexCount == initVertexCount1 + 1, "post-deploy vertexCount mismatch");
-        lastVertexCount = newVertexCount;
+    function getVertexCounts() public view returns (uint256[] memory) {
+        return vertexCounts;
     }
 
-    function vertexFactory_deploy() public assertInvariant_VertexCountMonotonicallyIncreases {
+    function vertexFactory_deploy() public {
         // We don't care about the parameters, we just need it to execute successfully.
         vm.prank(address(vertexFactory.rootVertex()));
         vertexFactory.deploy(name(), name(), new Strategy[](0), new string[](0), new address[](0), new bytes8[][](0), new uint256[][](0));
+        vertexCounts.push(vertexFactory.vertexCount());
     }
 }
 
@@ -61,19 +52,35 @@ contract VertexFactoryInvariants is VertexCoreTest {
         VertexCoreTest.setUp();
         handler = new VertexFactoryHandler(vertexFactory, policy);
 
-        // Target the handler contract, and use `excludeArtifact` to prevent contracts deployed by
-        // the factory from automatically being added to the target contracts list (by default,
-        // deployed contracts are automatically added to the target contracts list).
+        // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
+        // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
+        // added to the target contracts list (by default, deployed contracts are automatically
+        // added to the target contracts list). We then use `targetSelector` to filter out all
+        // methods from the handler except for `vertexFactory_deploy`.
         targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being deployed to a sender's address?
-        targetContract(address(handler));
+
         excludeArtifact("VertexCore");
         excludeArtifact("VertexPolicyNFT");
         excludeArtifact("VertexStrategy");
         excludeArtifact("VertexAccount");
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = handler.vertexFactory_deploy.selector;
+        FuzzSelector memory selector = FuzzSelector({addr: address(handler), selectors: selectors});
+        targetSelector(selector);
+        targetContract(address(handler));
     }
 
-    function invariant_VertexCountMonotonicallyIncreases() public {
-        // No logic is needed here since checks are done in the `Handler` contract. The only method
-        // called in this invariant test is the `vertexFactory_deploy` method, which checks the invariant.
+    // The vertexCount state variable should only increase, and be incremented by 1 with each
+    // successful deploy.
+    function assertInvariant_VertexCountMonotonicallyIncreases() internal view {
+        uint256[] memory vertexCounts = handler.getVertexCounts();
+        for (uint256 i = 1; i < vertexCounts.length; i++) {
+            require(vertexCounts[i] == vertexCounts[i - 1] + 1, "vertexCount did not monotonically increase");
+        }
+    }
+
+    function invariant_VertexCountMonotonicallyIncreases() public view {
+        assertInvariant_VertexCountMonotonicallyIncreases();
     }
 }
