@@ -114,7 +114,7 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 length = updateData.length;
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                if (updateData[i].permissionsToAdd.length == 0) {
+                if (updateData[i].permissionsToAdd.length == 0 && updateData[i].permissionsToRemove.length == 0) {
                     revert InvalidInput();
                 }
                 updatePermissions(updateData[i]);
