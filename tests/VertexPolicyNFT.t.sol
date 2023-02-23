@@ -144,6 +144,14 @@ contract BatchGrantPolicies is VertexPolicyNFTTest {
         // TODO
         // batchGrantPolicies and confirm that permissionSupplyCheckpoints get added
     }
+
+    function testFuzz_OnlyCallableByVertex(address _caller) public {
+      // TODO
+      // vm.assume(_caller != address(this));
+      // vm.prank(_caller);
+      // vm.expectRevert(OnlyVertex());
+      // batchGrantPolicies(...);
+    }
 }
 
 contract BatchRevokePolicies is VertexPolicyNFTTest {
@@ -178,6 +186,14 @@ contract BatchRevokePolicies is VertexPolicyNFTTest {
 
         vm.expectRevert("NOT_MINTED");
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+    }
+
+    function testFuzz_OnlyCallableByVertex(address _caller) public {
+      // TODO
+      // vm.assume(_caller != address(this));
+      // vm.prank(_caller);
+      // vm.expectRevert(OnlyVertex());
+      // call function(...);
     }
 }
 
@@ -512,13 +528,28 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
     function test_PermissionAdditionUpdatesPermissionSupplyCheckpoints() public {
       // TODO
     }
+
+    function testFuzz_OnlyCallableByVertex(address _caller) public {
+      // TODO
+      // vm.assume(_caller != address(this));
+      // vm.prank(_caller);
+      // vm.expectRevert(OnlyVertex());
+      // call function(...);
+    }
 }
 
 contract TokenURI is VertexPolicyNFTTest {
-    function test_tokenURI_ReturnsCorrectURI() public {
-        string memory baseURI = "https://vertex.link/policy/";
-        vertexPolicyNFT.setBaseURI(baseURI);
-        assertEq(vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(baseURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
+    function testFuzz_ReturnsCorrectURI(string memory _newURI) public {
+        vertexPolicyNFT.setBaseURI(_newURI);
+        assertEq(vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(_newURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
+    }
+
+    function testFuzz_OnlyCallableByVertex(address _caller, string memory _newURI) public {
+      // TODO
+      // vm.assume(_caller != address(this));
+      // vm.expectRevert(OnlyVertex());
+      // vm.prank(_caller);
+      // vertexPolicyNFT.setBaseURI(_newURI);
     }
 }
 
@@ -530,14 +561,5 @@ contract TotalSupply is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.totalSupply(), 2);
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
         assertEq(vertexPolicyNFT.totalSupply(), 1);
-    }
-}
-
-contract OnlyVertex is VertexPolicyNFTTest {
-    function test_onlyVertex_RevertIfNotVertex() public {
-        string memory baseURI = "https://vertex.link/policy/";
-        vm.prank(address(0xdeadbeef));
-        vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-        vertexPolicyNFT.setBaseURI(baseURI);
     }
 }
