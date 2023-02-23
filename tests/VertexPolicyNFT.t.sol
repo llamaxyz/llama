@@ -398,13 +398,24 @@ contract HolderHasPermissionAt is VertexPolicyNFTTest {
 }
 
 contract GetSupplyByPermissions is VertexPolicyNFTTest {
-    function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
+    function test_ReturnsCorrectSupply() public {
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
         addresses[0] = address(0xdeadbeef);
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 2);
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
+    }
+
+    function testFuzz_ReturnsCorrectSupply(
+      uint8 _permissionCount
+    ) public {
+      // TODO
+      // assert getSupplyByPermissions(permissions) == 0
+      // construct array of random addresses of length=_permissionCount
+      // construct array of random byte8's of length=_permissionCount
+      // vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, new uint[][](_permissionCount));
+      // assert getSupplyByPermissions(permissions) == _permissionCount
     }
 }
 
