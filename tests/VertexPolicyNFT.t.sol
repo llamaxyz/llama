@@ -306,20 +306,94 @@ contract RevokeExpiredPermission is VertexPolicyNFTTest {
 }
 
 contract HolderHasPermissionAt is VertexPolicyNFTTest {
-    function test_holderHasPermissionAt_ReturnsCorrectBool() public {
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
-        addresses[0] = address(0xdeadbeef);
+    function testFuzz_UnexpiredPolicyIsHandled(
+      address _owner,
+      bytes8 _permission,
+      uint256 _timeUntilGrant,
+      uint256 _timeUntilExpiration,
+      uint256 _queryTime
+    ) public {
+      // TODO
+      // vm.warp(_timeUntilGrant);
+      // grant _permission to _owner's policy with _timeUntilExpiration
+      //   It's important that _timeUntilExpiration be allowed to be 0 so that we
+      //   test permissions that don't expire as well as those that do.
+      // if _timeUntilExpiration == 0, vm.warp(10 years or something)
+      // else vm.warp(_timeUntilExpiration);
+      // if _queryTime < _timeUntilGrant
+      //   assert holderHasPermissionAt(_queryTime) == false
+      // if _queryTime < _timeAfterExpiration
+      //   assert holderHasPermissionAt(_queryTime) == true
+      // if _queryTime >= _timeAfterExpiration
+      //   assert holderHasPermissionAt(_queryTime) == false
+    }
 
-        vm.warp(block.timestamp + 100);
+    function testFuzz_UnexpiredRevokedPolicyIsHandled(
+      address _owner,
+      bytes8 _permission,
+      uint256 _timeUntilRevoke,
+      uint256 _timeAfterRevoke,
+      uint256 _queryTime
+    ) public {
+      // TODO
+      // vm.assume(_queryTime <= _timeAfterRevoke);
+      // grant _permission to _owner's policy without an expiration
+      // vm.warp(_timeUntilRevoke);
+      // revoke the policy
+      // vm.warp(_timeAfterRevoke);
+      // if _queryTime < _timeUntilRevoke
+      //   assert that holderHasPermissionAt(_queryTime) == true
+      // else
+      //   assert that holderHasPermissionAt(_queryTime) == false
+    }
 
-        vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+    function testFuzz_ExpiredPolicyReturnsFalse(
+      address _owner,
+      bytes8 _permission,
+      uint256 _timeUntilExpiration,
+      bool _revokePermission,
+      uint256 _timeAfterExpiration,
+      uint256 _queryTime
+    ) public {
+      // TODO
+      // The basic idea here is to vary:
+      //   (a) when the policy expires
+      //   (b) whether to revoke it
+      //   (c) the timestamp provided to holderHasPermissionAt
+      //   to confirm that no matter the combination, the function still returns false.
+      // grant _permission to _owner's policy with _timeUntilExpiration
+      // vm.warp(_timeUntilExpiration)
+      // if _revokePermission, revoke the permission
+      // vm.warp(_timeAfterExpiration)
+      // if _queryTime < _timeUntilExpiration
+      //   assert that holderHasPermissionAt(_queryTime) == true
+      // else
+      //   assert that holderHasPermissionAt(_queryTime) == false
+    }
 
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 99), true);
-        assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp - 99), false);
+    function testFuzz_PolicyNeverHasPermissionReturnsFalse(
+      address _owner,
+      bytes8 _permissionToGrant,
+      bytes8 _permissionToTest,
+      uint256 _queryTime
+    ) public {
+      // TODO
+      // vm.assume(_queryTime < 10 years from now)
+      // grant _permissionToGrant to _owner with no expiration
+      // vm.warp(10 years from now);
+      // assert holderHasPermissionAt(_owner, _permissionToTest, _queryTime) == false
+    }
+
+    function testFuzz_AddressWithoutPolicyReturnsFalse(
+      address _owner,
+      bytes8 _permission,
+      uint256 _queryTime
+    ) public {
+      // TODO
+      // vm.assume(_queryTime < 10 years from now)
+      // grant _permission to _owner with no expiration
+      // vm.warp(10 years from now);
+      // assert holderHasPermissionAt(_owner, _permission, _queryTime) == false
     }
 }
 
