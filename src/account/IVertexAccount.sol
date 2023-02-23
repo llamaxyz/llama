@@ -95,8 +95,7 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
 
     /// @notice Function for Vertex to execute arbitrary calls
     /// @param target The address of the contract to call
-    /// @param selector The function selector to call
-    /// @param data The data to pass to the function
+    /// @param callData The call data to pass to the contract
     /// @param withDelegatecall Whether to use delegatecall or call
-    function execute(address target, bytes4 selector, bytes calldata data, bool withDelegatecall) external payable returns (bytes memory);
+    function execute(address target, bytes calldata callData, bool withDelegatecall) external payable returns (bytes memory);
 }

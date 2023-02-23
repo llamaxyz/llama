@@ -117,8 +117,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
-    function execute(address target, bytes4 selector, bytes calldata data, bool withDelegatecall) external payable onlyVertex returns (bytes memory) {
-        bytes memory callData = abi.encodePacked(selector, data);
+    function execute(address target, bytes calldata callData, bool withDelegatecall) external payable onlyVertex returns (bytes memory) {
         bool success;
         bytes memory result;
 
