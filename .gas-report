@@ -75,19 +75,19 @@
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1693   | 2673   | 2673   | 49      |
 | baseURI                                                 | 3011            | 3011   | 3011   | 3011   | 1       |
-| batchGrantPolicies                                      | 3638            | 768310 | 970469 | 970469 | 117     |
-| batchRevokePolicies                                     | 3037            | 42436  | 58071  | 70671  | 6       |
+| batchGrantPolicies                                      | 3638            | 632441 | 877561 | 970469 | 155     |
+| batchRevokePolicies                                     | 3037            | 39509  | 59071  | 70671  | 5       |
 | batchUpdatePermissions                                  | 3592            | 51239  | 35817  | 162002 | 5       |
 | getSupplyByPermissions                                  | 1488            | 2821   | 1488   | 5488   | 3       |
 | hasPermission                                           | 1512            | 3964   | 1520   | 7520   | 37      |
 | hashPermission                                          | 924             | 924    | 924    | 924    | 373     |
-| hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 20      |
-| holderHasPermissionAt                                   | 1647            | 3054   | 2435   | 8435   | 10      |
+| hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 59      |
+| holderHasPermissionAt                                   | 1647            | 2398   | 2431   | 3086   | 4       |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
-| setBaseURI                                              | 2754            | 13982  | 13982  | 25211  | 2       |
-| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 189     |
+| setBaseURI                                              | 69597           | 69597  | 69597  | 69597  | 1       |
+| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 228     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
-| tokenURI                                                | 5406            | 5406   | 5406   | 5406   | 1       |
+| tokenURI                                                | 5804            | 5804   | 5804   | 5804   | 1       |
 | totalSupply                                             | 349             | 755    | 349    | 2349   | 59      |
 | transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
 | vertex                                                  | 426             | 426    | 426    | 426    | 2       |
