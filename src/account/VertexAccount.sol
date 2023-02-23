@@ -20,6 +20,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
     error OnlyVertex();
     error Invalid0xRecipient();
+    error InvalidInput();
     error FailedExecution(bytes result);
 
     /// @notice Name of this Vertex Account.
@@ -64,8 +65,31 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
+    function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                if (recipients[i] == address(0)) revert Invalid0xRecipient();
+                tokens[i].safeTransfer(recipients[i], amounts[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IVertexAccount
     function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
         token.safeApprove(recipient, amount);
+    }
+
+    /// @inheritdoc IVertexAccount
+    function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external onlyVertex {
+        uint256 length = tokens.length;
+        if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+        unchecked {
+            for (uint256 i = 0; i < length; ++i) {
+                tokens[i].safeApprove(recipients[i], amounts[i]);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -35,11 +35,23 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
     /// @param amount Amount to transfer
     function transferERC20(IERC20 token, address recipient, uint256 amount) external;
 
+    /// @notice Function for Vertex to batch transfer ERC20 tokens to other parties
+    /// @param tokens The addresses of the tokens to transfer
+    /// @param recipients Transfers' recipients
+    /// @param amounts Amounts to transfer
+    function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external;
+
     /// @notice Function for Vertex to give ERC20 allowance to other parties
     /// @param token The address of the token to give allowance from
     /// @param recipient Allowance's recipient
     /// @param amount Allowance to approve
     function approveERC20(IERC20 token, address recipient, uint256 amount) external;
+
+    /// @notice Function for Vertex to batch give ERC20 allowance to other parties
+    /// @param tokens The addresses of the tokens to give allowance from
+    /// @param recipients Allowances' recipients
+    /// @param amounts Allowances to approve
+    function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external;
 
     // -------------------------------------------------------------------------
     // ERC721 Token
