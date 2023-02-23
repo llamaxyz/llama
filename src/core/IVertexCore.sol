@@ -21,18 +21,25 @@ interface IVertexCore {
     event ActionCanceled(uint256 id);
     event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-    event PolicyholderApproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event PolicyholderDisapproved(uint256 id, address indexed policyholder, bool support, uint256 weight);
-    event StrategiesAuthorized(Strategy[] strategies);
-    event StrategiesUnauthorized(VertexStrategy[] strategies);
+    event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
+    event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
+    event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+    event StrategyUnauthorized(VertexStrategy indexed strategy);
     event AccountAuthorized(VertexAccount indexed account, string name);
 
     /// @notice Initializes a new VertexCore clone.
     /// @param name The name of the VertexCore clone.
     /// @param policy This Vertex instance's policy contract.
+    /// @param vertexAccountImplementation The VertexAccount implementation contract.
     /// @param initialStrategies The configuration of the initial strategies.
     /// @param initialAccounts The configuration of the initial strategies.
-    function initialize(string memory name, VertexPolicyNFT policy, Strategy[] memory initialStrategies, string[] memory initialAccounts) external;
+    function initialize(
+        string memory name,
+        VertexPolicyNFT policy,
+        VertexAccount vertexAccountImplementation,
+        Strategy[] memory initialStrategies,
+        string[] memory initialAccounts
+    ) external;
 
     /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided strategy, target, selector.
     /// @param strategy The VertexStrategy contract that will determine how the action is executed.
@@ -56,31 +63,27 @@ interface IVertexCore {
     /// @return The result returned from the call to the target contract.
     function executeAction(uint256 actionId) external payable returns (bytes memory);
 
-    /// @notice How policyholders add or remove their support of the approval of an action.
+    /// @notice How policyholders add their support of the approval of an action.
     /// @param actionId The id of the action.
-    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
-    function submitApproval(uint256 actionId, bool support) external;
+    function submitApproval(uint256 actionId) external;
 
-    /// @notice How policyholders add or remove their support of the approval of an action via an offchain selector.
+    /// @notice How policyholders add their support of the approval of an action via an offchain selector.
     /// @param actionId The id of the action.
-    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the approval.
     /// @param v v part of the policyholder selector
     /// @param r r part of the policyholder selector
     /// @param s s part of the policyholder selector
-    function submitApprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
 
-    /// @notice How policyholders add or remove their support of the disapproval of an action.
+    /// @notice How policyholders add their support of the disapproval of an action.
     /// @param actionId The id of the action.
-    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
-    function submitDisapproval(uint256 actionId, bool support) external;
+    function submitDisapproval(uint256 actionId) external;
 
-    /// @notice How policyholders add or remove their support of the disapproval of an action via an offchain selector.
+    /// @notice How policyholders add their support of the disapproval of an action via an offchain selector.
     /// @param actionId The id of the action.
-    /// @param support A boolean value that indicates whether the policyholder is adding or removing their support of the disapproval.
     /// @param v v part of the policyholder selector
     /// @param r r part of the policyholder selector
     /// @param s s part of the policyholder selector
-    function submitDisapprovalBySignature(uint256 actionId, bool support, uint8 v, bytes32 r, bytes32 s) external;
+    function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
 
     /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
     /// @param strategies list of new Strategys to be authorized.

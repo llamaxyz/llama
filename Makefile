@@ -8,16 +8,18 @@ install  :; forge install
 
 # Build & test
 build    :; forge clean && forge build --sizes
-test     :; forge test --fork-url ${RPC_MAINNET_URL} $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
-match    :; forge test --fork-url ${RPC_MAINNET_URL} -m ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
-watch    :; forge test --fork-url ${RPC_MAINNET_URL} --watch $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
+test     :; forge test $(call compute_test_verbosity,${V}) # Usage: make test [optional](V=<{1,2,3,4,5}>)
+match-t  :; forge test --match-test ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match-t MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)
+match-c  :; forge test --match-contract ${MATCH} $(call compute_test_verbosity,${V}) # Usage: make match-c MATCH=<CONTRACT_NAME> [optional](V=<{1,2,3,4,5}>)
+watch    :; forge test --watch $(call compute_test_verbosity,${V}) # Usage: make watch [optional](V=<{1,2,3,4,5}>)
 report   :; forge clean && forge test --gas-report | sed -e/\|/\{ -e:1 -en\;b1 -e\} -ed | cat > .gas-report
 doc      :; forge doc -b
 yul      :; forge inspect ${CONTRACT} ir-optimized > ${CONTRACT}-yul.sol
 
-# Deploy and Verify Payload
-deploy   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
-verify   :; forge script script/Vertex.s.sol:VertexScript --fork-url ${RPC_MAINNET_URL} --verify -vvvv
+# Deploy & verify
+dry-run   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --private-key ${PRIVATE_KEY} --verify -vvvv
+deploy   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --broadcast --private-key ${PRIVATE_KEY} --verify -vvvv
+verify   :; forge script script/Deploy.s.sol:Deploy --rpc-url ${MAINNET_RPC_URL} --verify -vvvv
 
 # Clean & lint
 clean    :; forge clean

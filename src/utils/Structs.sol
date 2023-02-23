@@ -9,14 +9,9 @@ struct PermissionData {
     VertexStrategy strategy;
 }
 
-struct Approval {
-    bool support; // is policyholder supporting this approval.
-    uint248 weight; // weight of policyholder's support.
-}
-
-struct Disapproval {
-    bool support; // is policyholder supporting this disapproval.
-    uint248 weight; // weight of policyholder's support.
+struct PermissionIdCheckpoint {
+    uint224 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
+    uint32 quantity; // Quantity of the permission ID held at the timestamp.
 }
 
 struct Action {
@@ -38,7 +33,7 @@ struct Action {
 
 struct WeightByPermission {
     bytes8 permissionSignature; // Policyholder's permission signature.
-    uint248 weight; // Approval or disapproval weight of policyholder.
+    uint256 weight; // Approval or disapproval weight of policyholder.
 }
 
 struct Strategy {
@@ -50,9 +45,4 @@ struct Strategy {
     WeightByPermission[] approvalWeightByPermission; // List of permissionSignatures and weights that define the validation process for approval.
     WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the validation process for disapproval.
     bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
-}
-
-struct Checkpoint {
-    uint256 blockNumber;
-    bytes8[] permissionSignatures;
 }

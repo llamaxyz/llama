@@ -52,10 +52,10 @@ contract VertexStrategy is IVertexStrategy {
     bytes8[] public disapprovalPermissions;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public approvalWeightByPermission;
+    mapping(bytes8 => uint256) public approvalWeightByPermission;
 
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-    mapping(bytes8 => uint248) public disapprovalWeightByPermission;
+    mapping(bytes8 => uint256) public disapprovalWeightByPermission;
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
@@ -107,17 +107,18 @@ contract VertexStrategy is IVertexStrategy {
     /// @inheritdoc IVertexStrategy
     function isActionPassed(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isApprovalQuorumValid(actionId, action.totalApprovals);
+        return action.totalApprovals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
-    function isActionCanceletionValid(uint256 actionId) external view override returns (bool) {
+    function isActionCancelationValid(uint256 actionId) external view override returns (bool) {
         Action memory action = vertex.getAction(actionId);
-        return isDisapprovalQuorumValid(actionId, action.totalDisapprovals);
+        return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
     function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+        if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
@@ -132,6 +133,7 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @inheritdoc IVertexStrategy
     function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+        if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
@@ -142,18 +144,6 @@ contract VertexStrategy is IVertexStrategy {
         }
 
         return disapprovalWeightByPermission[DEFAULT_OPERATOR];
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isApprovalQuorumValid(uint256 actionId, uint256 approvals) public view override returns (bool) {
-        Action memory action = vertex.getAction(actionId);
-        return approvals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
-    }
-
-    /// @inheritdoc IVertexStrategy
-    function isDisapprovalQuorumValid(uint256 actionId, uint256 disapprovals) public view override returns (bool) {
-        Action memory action = vertex.getAction(actionId);
-        return disapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
     }
 
     /// @inheritdoc IVertexStrategy
