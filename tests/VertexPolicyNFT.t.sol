@@ -137,13 +137,13 @@ contract VertexPolicyNFTTest is Test {
         permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];
         permissionSignatures[0] = permissionSignature;
 
-        PermissionChangeData[] memory toAdd;
-        PermissionChangeData[] memory toRemove;
+        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
 
         toAdd[0] = PermissionChangeData(permissionSignature[0], 0);
         toRemove[0] = PermissionChangeData(oldPermissionSignature, 0);
 
-        BatchUpdateData[] memory updateData;
+        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
         updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
 
         vm.warp(block.timestamp + 100);
