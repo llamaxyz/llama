@@ -1,14 +1,19 @@
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
 |------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
-| 1265259                                              | 6548            |       |        |       |         |
+| 1291886                                              | 6681            |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
 | approveERC1155                                       | 2744            | 17961 | 19301  | 30501 | 4       |
 | approveERC20                                         | 2686            | 24775 | 27757  | 46757 | 15      |
 | approveERC721                                        | 2621            | 19013 | 27210  | 27210 | 3       |
 | approveOperatorERC721                                | 2679            | 17767 | 19063  | 30263 | 4       |
+<<<<<<< HEAD
 | execute                                              | 2763            | 3259  | 3396   | 3620  | 3       |
 | initialize                                           | 1379            | 68275 | 69447  | 69447 | 287     |
+=======
+| execute                                              | 2869            | 3389  | 3536   | 3762  | 3       |
+| initialize                                           | 1379            | 68299 | 69447  | 69447 | 293     |
+>>>>>>> 6958632 (Generate updated gas report)
 | onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
 | onERC721Received                                     | 1078            | 1078  | 1078   | 1078  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
