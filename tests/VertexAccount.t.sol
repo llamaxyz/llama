@@ -6,7 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
-import {Strategy, WeightByPermission} from "src/utils/Structs.sol";
+import {Strategy, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
@@ -47,6 +47,7 @@ contract VertexAccountTest is Test {
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
+    BatchGrantData[] public initialPolicyData;
 
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
@@ -93,8 +94,7 @@ contract VertexAccountTest is Test {
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
         vertexAccountImplementation = new VertexAccount();
-        vertexFactory =
-        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory = new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicyData);
         vertex = VertexCore(vertexFactory.rootVertex());
 
         // Use create2 to get vertex account addresses

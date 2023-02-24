@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -41,9 +41,8 @@ contract VertexFactoryTest is Test {
     address[] public addresses;
     uint256[] public policyIds;
 
-    address[] public initialPolicies;
-    bytes8[][] public initialPermissions;
-    uint256[][] public initialExpirationTimestamps;
+    BatchGrantData[] public initialPolicies;
+    PermissionChangeData[][] public permissionChangeData;
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -69,10 +68,10 @@ contract VertexFactoryTest is Test {
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
+        createInitialBatchGrantData();
 
         // Deploy vertex and mock protocol
-        vertexFactory =
-        new VertexFactory(vertexCoreLogic, vertexAccountLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory = new VertexFactory(vertexCoreLogic, vertexAccountLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies);
         rootVertex = VertexCore(vertexFactory.rootVertex());
         protocol = new ProtocolXYZ(address(rootVertex));
 
@@ -104,6 +103,8 @@ contract VertexFactoryTest is Test {
         permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
+        PermissionChangeData memory permissionChange = PermissionChangeData(permissionSignature[0], 0);
+        PermissionChangeData[] memory permissionChangeDataArray = new PermissionChangeData[](1);
         for (uint256 i; i < 5; i++) {
             if (i == 0) {
                 bytes8[] memory creatorPermissions = new bytes8[](2);
@@ -111,8 +112,14 @@ contract VertexFactoryTest is Test {
                 creatorPermissions[0] = policy.hashPermission(failPermission);
                 creatorPermissions[1] = policy.hashPermission(permission);
                 permissionSignatures.push(creatorPermissions);
+                permissionChangeDataArray[0] = PermissionChangeData(creatorPermissions[0], 0);
+                permissionChangeData.push(permissionChangeDataArray);
+                permissionChangeDataArray[0] = PermissionChangeData(creatorPermissions[1], 0);
+                permissionChangeData.push(permissionChangeDataArray);
             } else {
                 permissionSignatures.push(permissionSignature);
+                permissionChangeDataArray[0] = PermissionChangeData(permissionSignature[0], 0);
+                permissionChangeData.push(permissionChangeDataArray);
             }
         }
         addresses.push(actionCreator);
@@ -120,7 +127,11 @@ contract VertexFactoryTest is Test {
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
+        initialPolicies.push(BatchGrantData(actionCreator, permissionChangeData[0]));
+        initialPolicies.push(BatchGrantData(policyholder1, permissionChangeData[1]));
+        initialPolicies.push(BatchGrantData(policyholder2, permissionChangeData[2]));
+        initialPolicies.push(BatchGrantData(policyholder4, permissionChangeData[3]));
+        policy.batchGrantPolicies(initialPolicies);
         vm.stopPrank();
     }
 
@@ -166,6 +177,18 @@ contract VertexFactoryTest is Test {
         initialAccounts[1] = "VertexAccount1";
         return initialAccounts;
     }
+
+    function createInitialBatchGrantData() internal returns (BatchGrantData[] memory) {
+        BatchGrantData[] memory initialBatchGrantData = new BatchGrantData[](2);
+        PermissionChangeData[] memory permissionsToAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory permissionsToAdd2 = new PermissionChangeData[](1);
+        permissionsToAdd[0] = PermissionChangeData(0xa9cc4718a9cc4718, 0);
+        permissionsToAdd2[0] = PermissionChangeData(0xffffffffffffffff, 0);
+        initialBatchGrantData[0] = BatchGrantData({user: addresses[0], permissionsToAdd: permissionsToAdd});
+        initialBatchGrantData[1] = BatchGrantData({user: addresses[1], permissionsToAdd: permissionsToAdd2});
+        initialPolicies = initialBatchGrantData;
+        return initialBatchGrantData;
+    }
 }
 
 contract Constructor is VertexFactoryTest {
@@ -201,7 +224,7 @@ contract Deploy is VertexFactoryTest {
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = createInitialAccounts();
         vm.prank(address(rootVertex));
-        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies);
     }
 
     function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
@@ -211,7 +234,7 @@ contract Deploy is VertexFactoryTest {
 
         vm.prank(address(caller));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies);
     }
 
     function test_IncrementsVertexCountByOne() public {

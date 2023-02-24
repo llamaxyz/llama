@@ -11,7 +11,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -22,6 +22,7 @@ contract VertexCoreTest is Test {
     VertexStrategy[] public strategies;
     VertexAccount[] public accounts;
     VertexPolicyNFT public policy;
+    BatchGrantData[] public initialPolicyData;
 
     // Mock protocol for action targets.
     ProtocolXYZ public targetProtocol;
@@ -97,8 +98,7 @@ contract VertexCoreTest is Test {
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
         vertexAccountImplementation = new VertexAccount();
-        vertexFactory =
-        new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, expirationTimestamps);
+        vertexFactory = new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicyData);
         vertex = VertexCore(vertexFactory.rootVertex());
         targetProtocol = new ProtocolXYZ(address(vertex));
 
@@ -165,7 +165,7 @@ contract VertexCoreTest is Test {
         batchedAddresses[4] = policyholder4;
         batchedSignatures[4] = pauserPermissions;
 
-        policy.batchGrantPolicies(batchedAddresses, batchedSignatures, expirationTimestamps);
+        policy.batchGrantPolicies(initialPolicyData);
         vm.stopPrank();
     }
 
