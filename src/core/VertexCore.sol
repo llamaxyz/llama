@@ -32,13 +32,16 @@ contract VertexCore is IVertexCore, Initializable {
     error InsufficientMsgValue();
 
     /// @notice EIP-712 base typehash.
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+    bytes32 public constant DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
     /// @notice EIP-712 approval typehash.
-    bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,address policyholder)");
+    bytes32 public constant APPROVAL_EMITTED_TYPEHASH =
+        keccak256("PolicyholderApproved(uint256 id,address policyholder)");
 
     /// @notice EIP-712 disapproval typehash.
-    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
+    bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
+        keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
     /// @notice Equivalent to 100%, but scaled for precision
     uint256 private constant ONE_HUNDRED_IN_BPS = 100_00;
@@ -96,12 +99,18 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     /// @inheritdoc IVertexCore
-    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data) external override returns (uint256) {
+    function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
+        external
+        override
+        returns (uint256)
+    {
         if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
         PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
         bytes8 permissionSignature = policy.hashPermission(permission);
-        if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) revert PolicyholderDoesNotHavePermission();
+        if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) {
+            revert PolicyholderDoesNotHavePermission();
+        }
 
         uint256 previousActionCount = actionsCount;
         Action storage newAction = actions[previousActionCount];
@@ -156,7 +165,8 @@ contract VertexCore is IVertexCore, Initializable {
         action.executed = true;
         queuedActions[actionId] = false;
 
-        (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+        (bool success, bytes memory result) =
+            action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
         if (!success) revert FailedActionExecution();
 
@@ -168,12 +178,17 @@ contract VertexCore is IVertexCore, Initializable {
     /// @inheritdoc IVertexCore
     function cancelAction(uint256 actionId) external override {
         ActionState state = getActionState(actionId);
-        if (state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired || state == ActionState.Failed) {
+        if (
+            state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
+                || state == ActionState.Failed
+        ) {
             revert InvalidCancelation();
         }
 
         Action storage action = actions[actionId];
-        if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) revert ActionCannotBeCanceled();
+        if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) {
+            revert ActionCannotBeCanceled();
+        }
 
         action.canceled = true;
         queuedActions[actionId] = false;
@@ -261,7 +276,10 @@ contract VertexCore is IVertexCore, Initializable {
             return ActionState.Canceled;
         }
 
-        if (block.number < approvalEndBlock && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (
+            block.number < approvalEndBlock
+                && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))
+        ) {
             return ActionState.Active;
         }
 
@@ -320,7 +338,8 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < accountLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-                VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountImplementation), salt)));
+                VertexAccount account =
+                    VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountImplementation), salt)));
                 account.initialize(accounts[i], address(this));
                 emit AccountAuthorized(account, accounts[i]);
             }
@@ -332,7 +351,8 @@ contract VertexCore is IVertexCore, Initializable {
         unchecked {
             for (uint256 i; i < strategyLength; ++i) {
                 bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
-                VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
+                VertexStrategy strategy =
+                    new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
                 authorizedStrategies[strategy] = true;
                 emit StrategyAuthorized(strategy, strategies[i]);
             }

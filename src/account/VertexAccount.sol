@@ -64,7 +64,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external onlyVertex {
+    function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
+        external
+        onlyVertex
+    {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
         unchecked {
@@ -81,7 +84,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts) external onlyVertex {
+    function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
+        external
+        onlyVertex
+    {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
         unchecked {
@@ -102,7 +108,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds) external onlyVertex {
+    function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
+        external
+        onlyVertex
+    {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
         unchecked {
@@ -119,7 +128,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds) external onlyVertex {
+    function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
+        external
+        onlyVertex
+    {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
         unchecked {
@@ -135,7 +147,11 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchApproveOperatorERC721(IERC721[] calldata tokens, address[] calldata recipients, bool[] calldata approved) external onlyVertex {
+    function batchApproveOperatorERC721(
+        IERC721[] calldata tokens,
+        address[] calldata recipients,
+        bool[] calldata approved
+    ) external onlyVertex {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
         unchecked {
@@ -150,16 +166,22 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
-    function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data) external onlyVertex {
+    function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data)
+        external
+        onlyVertex
+    {
         if (recipient == address(0)) revert Invalid0xRecipient();
         token.safeTransferFrom(address(this), recipient, tokenId, amount, data);
     }
 
     /// @inheritdoc IVertexAccount
-    function batchTransferSingleERC1155(IERC1155 token, address recipient, uint256[] calldata tokenIds, uint256[] calldata amounts, bytes calldata data)
-        external
-        onlyVertex
-    {
+    function batchTransferSingleERC1155(
+        IERC1155 token,
+        address recipient,
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external onlyVertex {
         if (recipient == address(0)) revert Invalid0xRecipient();
         token.safeBatchTransferFrom(address(this), recipient, tokenIds, amounts, data);
     }
@@ -173,7 +195,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
         bytes[] calldata data
     ) external onlyVertex {
         uint256 length = tokens.length;
-        if (length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length || length != data.length) revert InvalidInput();
+        if (
+            length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length
+                || length != data.length
+        ) revert InvalidInput();
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 if (recipients[i] == address(0)) revert Invalid0xRecipient();
@@ -188,7 +213,11 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
 
     /// @inheritdoc IVertexAccount
-    function batchApproveOperatorERC1155(IERC1155[] calldata tokens, address[] calldata recipients, bool[] calldata approved) external onlyVertex {
+    function batchApproveOperatorERC1155(
+        IERC1155[] calldata tokens,
+        address[] calldata recipients,
+        bool[] calldata approved
+    ) external onlyVertex {
         uint256 length = tokens.length;
         if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
         unchecked {
@@ -203,7 +232,12 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     // -------------------------------------------------------------------------
 
     /// @inheritdoc IVertexAccount
-    function execute(address target, bytes calldata callData, bool withDelegatecall) external payable onlyVertex returns (bytes memory) {
+    function execute(address target, bytes calldata callData, bool withDelegatecall)
+        external
+        payable
+        onlyVertex
+        returns (bytes memory)
+    {
         bool success;
         bytes memory result;
 

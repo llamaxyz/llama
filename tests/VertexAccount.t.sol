@@ -58,9 +58,11 @@ contract VertexAccountTest is Test {
 
     IERC1155 public constant OPENSTORE = IERC1155(0x495f947276749Ce646f68AC8c248420045cb7b5e);
     address public constant OPENSTORE_WHALE = 0xaBA7161A7fb69c88e16ED9f455CE62B791EE4D03;
-    uint256 public constant OPENSTORE_ID_1 = 50227944111491829717518767573293673148720215112283513814059266953762918367332;
+    uint256 public constant OPENSTORE_ID_1 =
+        50227944111491829717518767573293673148720215112283513814059266953762918367332;
     uint256 public constant OPENSTORE_ID_1_AMOUNT = 20;
-    uint256 public constant OPENSTORE_ID_2 = 25221312271773506578423917291534224130165348289584384465161209685514687348761;
+    uint256 public constant OPENSTORE_ID_2 =
+        25221312271773506578423917291534224130165348289584384465161209685514687348761;
     uint256 public constant OPENSTORE_ID_2_AMOUNT = 1;
 
     // Vertex system
@@ -126,7 +128,15 @@ contract VertexAccountTest is Test {
         // Use create2 to get vertex account addresses
         for (uint256 i; i < initialAccounts.length; i++) {
             bytes32 accountSalt = bytes32(keccak256(abi.encode(initialAccounts[i])));
-            accounts.push(VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex)))));
+            accounts.push(
+                VertexAccount(
+                    payable(
+                        Clones.predictDeterministicAddress(
+                            address(vertexAccountImplementation), accountSalt, address(vertex)
+                        )
+                    )
+                )
+            );
         }
     }
 
@@ -752,20 +762,26 @@ contract VertexAccountTest is Test {
 
     function test_batchTransferMultipleERC1155_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
-        accounts[0].batchTransferMultipleERC1155(new IERC1155[](0), new address[](0), new uint256[][](0), new uint256[][](0), new bytes[](0));
+        accounts[0].batchTransferMultipleERC1155(
+            new IERC1155[](0), new address[](0), new uint256[][](0), new uint256[][](0), new bytes[](0)
+        );
     }
 
     function test_batchTransferMultipleERC1155_RevertIfZeroInputLength() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.InvalidInput.selector);
-        accounts[0].batchTransferMultipleERC1155(new IERC1155[](0), new address[](0), new uint256[][](0), new uint256[][](0), new bytes[](0));
+        accounts[0].batchTransferMultipleERC1155(
+            new IERC1155[](0), new address[](0), new uint256[][](0), new uint256[][](0), new bytes[](0)
+        );
         vm.stopPrank();
     }
 
     function test_batchTransferMultipleERC1155_RevertIfInvalidInputLength() public {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.InvalidInput.selector);
-        accounts[0].batchTransferMultipleERC1155(new IERC1155[](1), new address[](2), new uint256[][](0), new uint256[][](0), new bytes[](0));
+        accounts[0].batchTransferMultipleERC1155(
+            new IERC1155[](1), new address[](2), new uint256[][](0), new uint256[][](0), new bytes[](0)
+        );
         vm.stopPrank();
     }
 
@@ -775,7 +791,9 @@ contract VertexAccountTest is Test {
 
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-        accounts[0].batchTransferMultipleERC1155(new IERC1155[](1), recipients, new uint256[][](1), new uint256[][](1), new bytes[](1));
+        accounts[0].batchTransferMultipleERC1155(
+            new IERC1155[](1), recipients, new uint256[][](1), new uint256[][](1), new bytes[](1)
+        );
         vm.stopPrank();
     }
 
@@ -843,7 +861,9 @@ contract VertexAccountTest is Test {
 
         // Rescue Punk by calling execute call
         vm.startPrank(address(vertex));
-        accounts[0].execute(address(PUNK), abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID), false);
+        accounts[0].execute(
+            address(PUNK), abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID), false
+        );
         assertEq(PUNK.balanceOf(address(accounts[0])), 0);
         assertEq(PUNK.balanceOf(address(accounts[0])), accountNFTBalance - 1);
         assertEq(PUNK.balanceOf(PUNK_WHALE), whaleNFTBalance + 1);
@@ -855,7 +875,8 @@ contract VertexAccountTest is Test {
         TestScript testScript = new TestScript();
 
         vm.startPrank(address(vertex));
-        bytes memory result = accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
+        bytes memory result =
+            accounts[0].execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
         assertEq(10, uint256(bytes32(result)));
         vm.stopPrank();
     }

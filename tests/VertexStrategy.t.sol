@@ -170,7 +170,11 @@ contract GetApprovalWeightAt is VertexStrategyTest {
         // TODO
     }
 
-    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _blockNumber, bytes8 _permission, address _policyHolder) public {
+    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
+        uint256 _blockNumber,
+        bytes8 _permission,
+        address _policyHolder
+    ) public {
         // TODO
         // _policyHolder doesn't have a weight for _permission
         // the function should return the default weight
@@ -217,7 +221,11 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
         // TODO
     }
 
-    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _blockNumber, bytes8 _permission, address _policyHolder) public {
+    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
+        uint256 _blockNumber,
+        bytes8 _permission,
+        address _policyHolder
+    ) public {
         // TODO
         // _policyHolder doesn't have a weight for _permission
         // the function should return the default weight

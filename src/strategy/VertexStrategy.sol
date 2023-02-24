@@ -36,11 +36,13 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Length of approval period in blocks.
     uint256 public immutable approvalPeriod;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of the action for it to be queued. In bps, where
+    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of the action
+    /// for it to be queued. In bps, where
     /// 100_00 == 100%.
     uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of the action for it to be canceled. In bps,
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of the
+    /// action for it to be canceled. In bps,
     /// where 100_00
     /// == 100%.
     uint256 public immutable minDisapprovalPct;
@@ -57,7 +59,8 @@ contract VertexStrategy is IVertexStrategy {
     /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
     mapping(bytes8 => uint256) public disapprovalWeightByPermission;
 
-    /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
+    /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission
+    /// match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
         queuingDuration = strategyConfig.queuingDuration;
         expirationDelay = strategyConfig.expirationDelay;

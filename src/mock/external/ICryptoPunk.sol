@@ -4,7 +4,10 @@ pragma solidity ^0.8.17;
 interface ICryptoPunk {
     function name() external view returns (string memory);
 
-    function punksOfferedForSale(uint256) external view returns (bool isForSale, uint256 punkIndex, address seller, uint256 minValue, address onlySellTo);
+    function punksOfferedForSale(uint256)
+        external
+        view
+        returns (bool isForSale, uint256 punkIndex, address seller, uint256 minValue, address onlySellTo);
 
     function enterBidForPunk(uint256 punkIndex) external payable;
 

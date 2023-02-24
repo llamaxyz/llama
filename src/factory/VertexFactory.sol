@@ -39,7 +39,15 @@ contract VertexFactory is IVertexFactory {
     ) {
         vertexCoreLogic = _vertexCoreLogic;
         vertexAccountLogic = _vertexAccountLogic;
-        rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        rootVertex = _deploy(
+            name,
+            symbol,
+            initialStrategies,
+            initialAccounts,
+            initialPolicyholders,
+            initialPermissions,
+            initialExpirationTimestamps
+        );
     }
 
     modifier onlyRootVertex() {
@@ -56,7 +64,15 @@ contract VertexFactory is IVertexFactory {
         bytes8[][] memory initialPermissions,
         uint256[][] memory initialExpirationTimestamps
     ) external onlyRootVertex returns (VertexCore) {
-        return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        return _deploy(
+            name,
+            symbol,
+            initialStrategies,
+            initialAccounts,
+            initialPolicyholders,
+            initialPermissions,
+            initialExpirationTimestamps
+        );
     }
 
     function _deploy(
@@ -69,7 +85,8 @@ contract VertexFactory is IVertexFactory {
         uint256[][] memory initialExpirationTimestamps
     ) internal returns (VertexCore vertex) {
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        VertexPolicyNFT policy =
+        new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
 
         vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
         vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);

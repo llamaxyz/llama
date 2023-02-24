@@ -19,7 +19,7 @@ mainnet = "${MAINNET_RPC_URL}"
 mainnet = { key = "${ETHERSCAN_API_KEY}", chain = "mainnet" }
 
 [fmt]
-line_length = 160
+line_length = 120
 wrap_comments = true
 
 [doc]

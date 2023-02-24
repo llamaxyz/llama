@@ -52,9 +52,23 @@ contract VertexCoreTest is Test {
     uint256 public constant minDisapprovalPct = 20_00;
 
     // Events
-    event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
+    event ActionCreated(
+        uint256 id,
+        address indexed creator,
+        VertexStrategy indexed strategy,
+        address target,
+        uint256 value,
+        bytes4 selector,
+        bytes data
+    );
     event ActionCanceled(uint256 id);
-    event ActionQueued(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime);
+    event ActionQueued(
+        uint256 id,
+        address indexed caller,
+        VertexStrategy indexed strategy,
+        address indexed creator,
+        uint256 executionTime
+    );
     event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
     event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
     event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
@@ -137,12 +151,15 @@ contract VertexCoreTest is Test {
         vm.startPrank(address(vertex));
 
         bytes8[] memory pauserPermissions = new bytes8[](1);
-        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
+        PermissionData memory pausePermission =
+            PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
         pauserPermissions[0] = policy.hashPermission(pausePermission);
 
         bytes8[] memory creatorPermissions = new bytes8[](3);
-        PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
-        PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: strategies[0]});
+        PermissionData memory failPermission =
+            PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
+        PermissionData memory receiveETHPermission =
+            PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: strategies[0]});
         creatorPermissions[0] = policy.hashPermission(failPermission);
         creatorPermissions[1] = policy.hashPermission(pausePermission);
         creatorPermissions[2] = policy.hashPermission(receiveETHPermission);
@@ -325,7 +342,8 @@ contract CreateAction is VertexCoreTest {
         vm.expectEmit(true, true, true, true);
         emit ActionCreated(0, actionCreator, strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
         vm.prank(actionCreator);
-        uint256 _actionId = vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
+        uint256 _actionId =
+            vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(_actionId);
         uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
@@ -579,7 +597,8 @@ contract ExecuteAction is VertexCoreTest {
 
     function test_RevertIfInsufficientMsgValue() public {
         vm.prank(actionCreator);
-        actionId = vertex.createAction(strategies[0], address(targetProtocol), 1e18, receiveETHSelector, abi.encode(true));
+        actionId =
+            vertex.createAction(strategies[0], address(targetProtocol), 1e18, receiveETHSelector, abi.encode(true));
 
         _approveAction(policyholder1, actionId);
         _approveAction(policyholder2, actionId);
@@ -896,7 +915,13 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
         for (uint256 i; i < newAccounts.length; i++) {
             bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
-            accountAddresses[i] = VertexAccount(payable(Clones.predictDeterministicAddress(address(vertexAccountImplementation), accountSalt, address(vertex))));
+            accountAddresses[i] = VertexAccount(
+                payable(
+                    Clones.predictDeterministicAddress(
+                        address(vertexAccountImplementation), accountSalt, address(vertex)
+                    )
+                )
+            );
         }
 
         vm.startPrank(address(vertex));
