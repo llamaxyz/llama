@@ -221,7 +221,6 @@ contract VertexCoreTest is Test {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -229,7 +228,6 @@ contract VertexCoreTest is Test {
         _disapproveAction(policyholder1);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         _executeAction();
     }
@@ -436,7 +434,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -444,7 +441,6 @@ contract CancelAction is VertexCoreTest {
         _disapproveAction(policyholder1);
 
         vm.warp(block.timestamp + 15 days);
-        vm.roll(block.number + 108000);
 
         vm.startPrank(actionCreator);
         vm.expectRevert(VertexCore.InvalidCancelation.selector);
@@ -456,7 +452,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), false);
 
@@ -469,7 +464,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -488,7 +482,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -504,7 +497,6 @@ contract QueueAction is VertexCoreTest {
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
         vertex.queueAction(0);
@@ -518,7 +510,6 @@ contract QueueAction is VertexCoreTest {
         _approveAction(policyholder3);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vm.expectRevert(VertexCore.InvalidActionId.selector);
         vertex.queueAction(1);
@@ -536,7 +527,6 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(actionId), true);
     }
@@ -560,7 +550,6 @@ contract ExecuteAction is VertexCoreTest {
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.InvalidActionId.selector);
         vertex.executeAction(actionId + 1);
@@ -571,7 +560,6 @@ contract ExecuteAction is VertexCoreTest {
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 6 hours);
-        vm.roll(block.number + 1800);
 
         vm.expectRevert(VertexCore.TimelockNotFinished.selector);
         vertex.executeAction(actionId);
@@ -585,12 +573,10 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
         vertex.executeAction(actionId);
@@ -610,14 +596,12 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(actionId), true);
 
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.FailedActionExecution.selector);
         vertex.executeAction(actionId);
@@ -653,7 +637,6 @@ contract SubmitApproval is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vertex.queueAction(actionId);
 
@@ -700,7 +683,6 @@ contract SubmitDisapproval is VertexCoreTest {
         _approveAction(policyholder2, _actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(_actionId), true);
         _queueAction(_actionId);
