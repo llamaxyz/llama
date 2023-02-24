@@ -27,7 +27,7 @@ contract VertexPolicyNFTTest is Test {
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
-    uint256 ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
+    uint256 immutable ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
     function setUp() public {
@@ -52,7 +52,7 @@ contract Constructor is VertexPolicyNFTTest {
     function testFuzz_SetsName(string memory _name) public {} // TODO
     function testFuzz_SetsSymbol(string memory _symbol) public {} // TODO
     function testFuzz_GrantsInitialPermissions( /*random array args*/ ) public {} // TODO
-    function testFuzz_RevertIfInvalidInput( /*random array lengths*/ ) public {} // TODO
+    function testFuzz_RevertIf_InvalidInput( /*random array lengths*/ ) public {} // TODO
 }
 
 contract SetVertex is VertexPolicyNFTTest {
@@ -60,7 +60,7 @@ contract SetVertex is VertexPolicyNFTTest {
         // TODO
         // expect address to be present in storage
     }
-    function testFuzz_RevertsIfAlreadyInitialized(address _newVertex) public {
+    function testFuzz_RevertIf_AlreadyInitialized(address _newVertex) public {
         // TODO
         // expect revert if vertexPolicyNFT.setVertex(_newVertex) is called
     }
@@ -78,19 +78,19 @@ contract BatchGrantPolicies is VertexPolicyNFTTest {
     }
 
     // TODO fuzz over input array lengths
-    function test_RevertIfArraysLengthMismatch() public {
+    function test_RevertIf_ArraysLengthsDoNotMatch() public {
         addresses.push(address(0xdeadbeef));
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
     }
 
-    function test_RevertIfPolicyAlreadyGranted() public {
+    function test_RevertIf_PolicyAlreadyGranted() public {
         vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
     }
 
     // TODO fuzz over addresses and initialExpirationTimestamps
-    function test_RevertIfPermissionsArrayEmpty() public {
+    function test_RevertIf_PermissionsArrayIsEmpty() public {
         addresses[0] = address(0xdeadbeef);
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchGrantPolicies(addresses, new bytes8[][](0), initialExpirationTimestamps);
@@ -108,7 +108,7 @@ contract BatchGrantPolicies is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(address(0xdeadbeef))), permissionSignature[0]), newExpirationTimestamp[0]);
     }
 
-    function testFuzz_RevertsWithExpiredIfExpirationTimestampIsInPast(address _newAddress, uint256 _timedelta, bytes8 _permission) public {
+    function testFuzz_RevertIf_ExpirationTimestampIsInPast(address _newAddress, uint256 _timedelta, bytes8 _permission) public {
         // TODO
         // uint256[] memory newExpirationTimestamp = new uint256[](1);
         // newExpirationTimestamp[0] = block.timestamp - _timedelta;
@@ -130,7 +130,7 @@ contract BatchGrantPolicies is VertexPolicyNFTTest {
         // batchGrantPolicies and confirm that permissionSupplyCheckpoints get added
     }
 
-    function testFuzz_OnlyCallableByVertex(address _caller) public {
+    function testFuzz_RevertIf_CalledByAccountThatIsNotVertex(address _caller) public {
         // TODO
         // vm.assume(_caller != address(this));
         // vm.prank(_caller);
@@ -152,7 +152,7 @@ contract BatchRevokePolicies is VertexPolicyNFTTest {
         // TODO test that multiple policies can be revoked with a single call
     }
 
-    function testFuzz_RevertsIfInputArraysAreMismatched(uint8 _policyIdsLength, uint8 _permissionsLength) public {
+    function testFuzz_RevertIf_InputArraysAreMismatched(uint8 _policyIdsLength, uint8 _permissionsLength) public {
         // TODO
         // if (_policyIdsLength == _permissionsLength) _policyIdsLength++;
         // Instantiate random input args that differ in length.
@@ -160,12 +160,12 @@ contract BatchRevokePolicies is VertexPolicyNFTTest {
         // Call batchRevokePolicies with the mismatched inputs.
     }
 
-    function test_RevertIfNoPolicySpecified() public {
+    function test_RevertIf_NoPolicySpecified() public {
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchRevokePolicies(new uint256[](0), permissionSignatures);
     }
 
-    function test_RevertIfPolicyNotGranted() public {
+    function test_RevertIf_PolicyNotGranted() public {
         uint256 mockPolicyId = uint256(uint160(address(0xdeadbeef)));
         policyIds[0] = mockPolicyId;
 
@@ -173,7 +173,7 @@ contract BatchRevokePolicies is VertexPolicyNFTTest {
         vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
     }
 
-    function testFuzz_OnlyCallableByVertex(address _caller) public {
+    function testFuzz_RevertIf_CalledByAccountThatIsNotVertex(address _caller) public {
         // TODO
         // vm.assume(_caller != address(this));
         // vm.prank(_caller);
@@ -188,7 +188,7 @@ contract RevokePolicy is VertexPolicyNFTTest {
     // function exposed_revokePolicy(...same args) public {
     //   revokePolicy(...args);
     // }
-    function testFuzz_RevertsIfCallerIsNotOwner(address _caller) public {} // TODO
+    function testFuzz_RevertIf_CallerIsNotOwner(address _caller) public {} // TODO
     function testFuzz_ZerosTokenPermissionCheckpoints(address _caller) public {} // TODO
     function testFuzz_DecrementsPermissionSuppylCheckpoints(address _caller) public {} // TODO
     function testFuzz_DecrementsTotalSupply(address _caller) public {} // TODO
@@ -244,7 +244,7 @@ contract HasPermission is VertexPolicyNFTTest {
 
 contract TransferFrom is VertexPolicyNFTTest {
     // TODO convert to fuzz test, fuzzing over caller, from, and recipient
-    function test_RevertIfTransferFrom() public {
+    function test_RevertIf_TransferFromIsCalled() public {
         vm.expectRevert(VertexPolicy.SoulboundToken.selector);
         vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
     }
@@ -418,7 +418,7 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
     }
 
     // TODO This should go away if/when we switch to passing in arrays of structs instead of nested arrays.
-    function test_RevertIfArraysLengthMismatch() public {
+    function test_RevertIf_ArraysLengthsDoNotMatch() public {
         policyIds.push(uint256(uint160(address(0xdeadbeef))));
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
         vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
@@ -433,7 +433,7 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
     }
 
-    function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
+    function test_RevertIf_TimestampIsExpired() public {
         uint256[] memory newExpirationTimestamp = new uint256[](1);
         newExpirationTimestamp[0] = block.timestamp;
         expirationTimestamps.push(newExpirationTimestamp);
@@ -484,7 +484,7 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         // TODO
     }
 
-    function testFuzz_OnlyCallableByVertex(address _caller) public {
+    function testFuzz_RevertIf_CalledByAccountThatIsNotVertex(address _caller) public {
         // TODO
         // vm.assume(_caller != address(this));
         // vm.prank(_caller);
@@ -499,7 +499,7 @@ contract TokenURI is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(_newURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
     }
 
-    function testFuzz_OnlyCallableByVertex(address _caller, string memory _newURI) public {
+    function testFuzz_RevertIf_CalledByAccountThatIsNotVertex(address _caller, string memory _newURI) public {
         // TODO
         // vm.assume(_caller != address(this));
         // vm.expectRevert(OnlyVertex());
