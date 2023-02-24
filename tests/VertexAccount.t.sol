@@ -528,7 +528,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    // approve Operator ERC721 unit tests
+    // approve operator ERC721 unit tests
     function test_approveOperatorERC721_ApproveBAYC() public {
         _approveOperatorBAYCToRecipient(true);
     }
@@ -540,6 +540,59 @@ contract VertexAccountTest is Test {
     function test_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
+    }
+
+    // batch approve operator ERC721 unit tests
+    function test_batchApproveOperatorERC721_ApproveBAYCAndNOUNS() public {
+        IERC721[] memory tokens = new IERC721[](2);
+        tokens[0] = BAYC;
+        tokens[1] = NOUNS;
+
+        address[] memory recipients = new address[](2);
+        recipients[0] = BAYC_WHALE;
+        recipients[1] = NOUNS_WHALE;
+
+        bool[] memory approvals = new bool[](2);
+        approvals[0] = true;
+        approvals[1] = true;
+
+        // Approve NFTs from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
+        assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), true);
+        assertEq(NOUNS.isApprovedForAll(address(accounts[0]), NOUNS_WHALE), true);
+        vm.stopPrank();
+    }
+
+    function test_batchApproveOperatorERC721_RevertIfNotVertexMsgSender() public {
+        IERC721[] memory tokens = new IERC721[](2);
+        address[] memory recipients = new address[](2);
+        bool[] memory approvals = new bool[](2);
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
+    }
+
+    function test_batchApproveOperatorERC721_RevertIfZeroInputLength() public {
+        IERC721[] memory tokens = new IERC721[](0);
+        address[] memory recipients = new address[](0);
+        bool[] memory approvals = new bool[](0);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
+        vm.stopPrank();
+    }
+
+    function test_batchApproveOperatorERC721_RevertIfInvalidInputLength() public {
+        IERC721[] memory tokens = new IERC721[](1);
+        address[] memory recipients = new address[](2);
+        bool[] memory approvals = new bool[](2);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
+        vm.stopPrank();
     }
 
     // transfer ERC1155 unit tests
