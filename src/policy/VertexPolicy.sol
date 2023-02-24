@@ -2,12 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData, BatchUpdateData, BatchGrantData} from "src/utils/Structs.sol";
+import {PermissionData, BatchUpdateData, BatchGrantData, BatchRevokeData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event PoliciesAdded(BatchGrantData[] grantData);
     event PermissionsUpdated(BatchUpdateData[] updateData);
-    event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
+    event PoliciesRevoked(BatchRevokeData[] revokeData);
 
     error SoulboundToken();
     error InvalidInput(); // TODO: Probably need more than one error?
@@ -28,9 +28,8 @@ abstract contract VertexPolicy is ERC721 {
     /// @notice revokes all permissions from multiple policy tokens
     /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a
     /// policy was ever reissued to the same address
-    /// @param _policyIds the ids of the policy tokens to revoke permissions from
-    /// @param permissionsToRevoke the permissions to revoke from the policy tokens
-    function batchRevokePolicies(uint256[] calldata _policyIds, bytes8[][] calldata permissionsToRevoke) public virtual;
+    /// @param policyData array of BatchRevokeData struct to revoke permissions
+    function batchRevokePolicies(BatchRevokeData[] calldata policyData) public virtual;
 
     /// @notice Check if a holder has a permissionSignature at a specific timestamp
     /// @param policyholder the address of the policy holder

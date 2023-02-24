@@ -62,3 +62,8 @@ struct BatchGrantData {
     address user;
     PermissionChangeData[] permissionsToAdd;
 }
+
+struct BatchRevokeData {
+    uint256 policyId;
+    bytes8[] permissionIds;
+}

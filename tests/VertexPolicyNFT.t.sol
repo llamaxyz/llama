@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {PermissionData, BatchUpdateData, PermissionChangeData, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
+import {PermissionData, BatchUpdateData, PermissionChangeData, BatchGrantData, BatchRevokeData, PermissionChangeData} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
@@ -29,6 +29,7 @@ contract VertexPolicyNFTTest is Test {
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
     BatchGrantData[] public initialBatchGrantData;
+    BatchRevokeData[] public batchRevokeData;
     uint256 ADDRESS_THIS_TOKEN_ID;
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
@@ -80,13 +81,13 @@ contract VertexPolicyNFTTest is Test {
         vm.expectEmit(true, true, true, true);
         emit PoliciesRevoked(policyIds, permissionSignatures);
 
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
 
     function test_revoke_RevertIfNoPolicySpecified() public {
         vm.expectRevert(VertexPolicy.InvalidInput.selector);
-        vertexPolicyNFT.batchRevokePolicies(new uint256[](0), permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
     }
 
     function test_revoke_RevertIfPolicyNotGranted() public {
@@ -94,7 +95,7 @@ contract VertexPolicyNFTTest is Test {
         policyIds[0] = mockPolicyId;
 
         vm.expectRevert("NOT_MINTED");
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
     }
 
     function test_transferFrom_RevertIfTransferFrom() public {
@@ -110,7 +111,7 @@ contract VertexPolicyNFTTest is Test {
         vm.warp(block.timestamp + 100);
 
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
 
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
@@ -123,7 +124,7 @@ contract VertexPolicyNFTTest is Test {
         addresses[0] = address(0xdeadbeef);
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 2);
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
     }
 
@@ -188,7 +189,7 @@ contract VertexPolicyNFTTest is Test {
         addresses[0] = address(0xdeadbeef);
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
         assertEq(vertexPolicyNFT.totalSupply(), 2);
-        vertexPolicyNFT.batchRevokePolicies(policyIds, permissionSignatures);
+        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
         assertEq(vertexPolicyNFT.totalSupply(), 1);
     }
 
