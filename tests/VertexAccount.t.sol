@@ -11,6 +11,7 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "src/mock/scripts/TestScript.sol";
+import {ICryptoPunk} from "src/mock/external/ICryptoPunk.sol";
 
 contract VertexAccountTest is Test {
     // Testing Parameters
@@ -29,6 +30,10 @@ contract VertexAccountTest is Test {
     address public constant BAYC_WHALE = 0x619866736a3a101f65cfF3A8c3d2602fC54Fd749;
     uint256 public constant BAYC_ID = 27;
     uint256 public constant BAYC_ID_2 = 8885;
+
+    ICryptoPunk public constant PUNK = ICryptoPunk(0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB);
+    address public constant PUNK_WHALE = 0xB88F61E6FbdA83fbfffAbE364112137480398018;
+    uint256 public constant PUNK_ID = 9313;
 
     IERC1155 public constant RARI = IERC1155(0xd07dc4262BCDbf85190C01c996b4C06a461d2430);
     address public constant RARI_WHALE = 0xEdba5d56d0147aee8a227D284bcAaC03B4a87eD4;
@@ -353,6 +358,23 @@ contract VertexAccountTest is Test {
     }
 
     // generic execute unit tests
+    function test_execute_CallCryptoPunk() public {
+        // Transfer Punk to Account to have it stuck in the Vertex Account
+        _transferPUNKToAccount(PUNK_ID);
+
+        uint256 accountNFTBalance = PUNK.balanceOf(address(accounts[0]));
+        uint256 whaleNFTBalance = PUNK.balanceOf(PUNK_WHALE);
+
+        // Rescue Punk by calling execute call
+        vm.startPrank(address(vertex));
+        accounts[0].execute(address(PUNK), abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID), false);
+        assertEq(PUNK.balanceOf(address(accounts[0])), 0);
+        assertEq(PUNK.balanceOf(address(accounts[0])), accountNFTBalance - 1);
+        assertEq(PUNK.balanceOf(PUNK_WHALE), whaleNFTBalance + 1);
+        assertEq(PUNK.punkIndexToAddress(PUNK_ID), PUNK_WHALE);
+        vm.stopPrank();
+    }
+
     function test_execute_DelegateCallTestScript() public {
         TestScript testScript = new TestScript();
 
@@ -562,6 +584,17 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, approved);
         assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), approved);
+        vm.stopPrank();
+    }
+
+    function _transferPUNKToAccount(uint256 id) public {
+        assertEq(PUNK.balanceOf(address(accounts[0])), 0);
+        assertEq(PUNK.punkIndexToAddress(id), PUNK_WHALE);
+
+        vm.startPrank(PUNK_WHALE);
+        PUNK.transferPunk(address(accounts[0]), id);
+        assertEq(PUNK.balanceOf(address(accounts[0])), 1);
+        assertEq(PUNK.punkIndexToAddress(id), address(accounts[0]));
         vm.stopPrank();
     }
 
