@@ -23,7 +23,7 @@ You can get Solidity support for Visual Studio Code by installing the [VSCode So
 $ git clone https://github.com/llama-community/vertex-v1.git
 $ cd vertex-v1
 $ npm install
-$ make install
+$ forge install
 $ git submodule update --init --recursive
 ```
 
@@ -37,13 +37,12 @@ Duplicate `.env.example` and rename to `.env`:
 
 ### Commands
 
-- `make build` - build the project
-- `make test [optional](V={1,2,3,4,5})` - run tests (with different debug levels if provided)
-- `make match MATCH=<TEST_FUNCTION_NAME> [optional](V=<{1,2,3,4,5}>)` - run matched tests (with different debug levels if provided)
+- `forge build` - build the project
+- `forge test`  - run tests
 
 ### Deploy and Verify
 
-- `make deploy` - deploy and verify payload on mainnet
+- `just deploy` - deploy and verify payload on mainnet
 
 To confirm the deploy was successful, re-run your test suite but use the newly created contract address.
 
@@ -52,6 +51,6 @@ To confirm the deploy was successful, re-run your test suite but use the newly c
 The generate documentation for the project and serve those static files locally, run the following commands:
 
 ```sh
-$ make doc
+$ forge doc -b
 $ forge doc -s
 ```
