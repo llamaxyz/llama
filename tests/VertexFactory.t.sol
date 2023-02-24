@@ -39,7 +39,6 @@ contract VertexFactoryTest is Test {
     address[] public addresses;
     uint256[] public policyIds;
 
-    BatchGrantData[] public initialPolicies;
     // Strategy config
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingDuration = 4 days;
@@ -65,7 +64,7 @@ contract VertexFactoryTest is Test {
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
 
-        createInitialBatchGrantData();
+        BatchGrantData[] memory initialPolicies = buildInitialBatchGrantData();
 
         // Deploy vertex and mock protocol
         vertexFactory = new VertexFactory(
@@ -74,7 +73,7 @@ contract VertexFactoryTest is Test {
           "ProtocolXYZ",
           "VXP",
           initialStrategies,
-          createInitialAccounts(),
+          buildInitialAccounts(),
           initialPolicies
         );
 
@@ -156,11 +155,12 @@ contract VertexFactoryTest is Test {
         addresses.push(policyholder3);
         addresses.push(policyholder4);
 
-        initialPolicies.push(BatchGrantData(actionCreator, _vars.creatorPermissions));
-        initialPolicies.push(BatchGrantData(policyholder1, _vars.defaultPermissions));
-        initialPolicies.push(BatchGrantData(policyholder2, _vars.defaultPermissions));
-        initialPolicies.push(BatchGrantData(policyholder3, _vars.defaultPermissions));
-        initialPolicies.push(BatchGrantData(policyholder4, _vars.defaultPermissions));
+        BatchGrantData[] memory initialPolicies = new BatchGrantData[](5);
+        initialPolicies[0] = BatchGrantData(actionCreator, _vars.creatorPermissions);
+        initialPolicies[1] = BatchGrantData(policyholder1, _vars.defaultPermissions);
+        initialPolicies[2] = BatchGrantData(policyholder2, _vars.defaultPermissions);
+        initialPolicies[3] = BatchGrantData(policyholder3, _vars.defaultPermissions);
+        initialPolicies[4] = BatchGrantData(policyholder4, _vars.defaultPermissions);
 
         policy.batchGrantPolicies(initialPolicies);
 
@@ -197,34 +197,23 @@ contract VertexFactoryTest is Test {
         });
     }
 
-    function createInitialAccounts() internal pure returns (string[] memory) {
+    function buildInitialAccounts() internal pure returns (string[] memory) {
         string[] memory initialAccounts = new string[](2);
         initialAccounts[0] = "VertexAccount0";
         initialAccounts[1] = "VertexAccount1";
         return initialAccounts;
     }
 
-    struct InitialBatchGrantDataVars {
-      BatchGrantData[] initialBatchGrantData;
-      PermissionChangeData[] firstPermissions;
-      PermissionChangeData[] secondPermissions;
-    }
+    function buildInitialBatchGrantData() internal returns (BatchGrantData[] memory initialBatchGrantData) {
+        PermissionChangeData[] memory firstPermissions = new PermissionChangeData[](1);
+        firstPermissions[0] = PermissionChangeData(0xa9cc4718a9cc4718, 0);
 
-    function createInitialBatchGrantData() internal returns (BatchGrantData[] memory) {
-        InitialBatchGrantDataVars memory _vars;
+        PermissionChangeData[] memory secondPermissions = new PermissionChangeData[](1);
+        secondPermissions[0] = PermissionChangeData(0xffffffffffffffff, 0);
 
-        _vars.firstPermissions = new PermissionChangeData[](1);
-        _vars.firstPermissions[0] = PermissionChangeData(0xa9cc4718a9cc4718, 0);
-
-        _vars.secondPermissions = new PermissionChangeData[](1);
-        _vars.secondPermissions[0] = PermissionChangeData(0xffffffffffffffff, 0);
-
-        _vars.initialBatchGrantData = new BatchGrantData[](2);
-        _vars.initialBatchGrantData[0] = BatchGrantData({user: addresses[0], permissionsToAdd: _vars.firstPermissions});
-        _vars.initialBatchGrantData[1] = BatchGrantData({user: addresses[1], permissionsToAdd: _vars.secondPermissions});
-
-        initialPolicies = _vars.initialBatchGrantData;
-        return _vars.initialBatchGrantData;
+        initialBatchGrantData = new BatchGrantData[](2);
+        initialBatchGrantData[0] = BatchGrantData({user: addresses[0], permissionsToAdd: firstPermissions});
+        initialBatchGrantData[1] = BatchGrantData({user: addresses[1], permissionsToAdd: secondPermissions});
     }
 }
 
@@ -259,19 +248,19 @@ contract Deploy is VertexFactoryTest {
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
         vm.prank(address(rootVertex));
-        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies);
+        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, buildInitialBatchGrantData());
     }
 
     function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
         vm.assume(caller != address(rootVertex));
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
 
         vm.prank(address(caller));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialBatchGrantData());
     }
 
     function test_IncrementsVertexCountByOne() public {
@@ -299,7 +288,7 @@ contract Deploy is VertexFactoryTest {
         assertEq(VertexCore(NEW_VERTEX).name(), "NewProject");
 
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
         vm.expectRevert("Initializable: contract is already initialized");
         VertexCore(NEW_VERTEX).initialize("NewProject", VertexPolicyNFT(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts);
     }
