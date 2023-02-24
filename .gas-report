@@ -12,10 +12,11 @@
 | batchApproveOperatorERC721                           | 3304            | 17494 | 3371   | 59932 | 4       |
 | batchTransferERC20                                   | 3305            | 5557  | 3379   | 14066 | 5       |
 | batchTransferERC721                                  | 3262            | 8277  | 3336   | 27837 | 5       |
+| batchTransferMultipleERC1155                         | 3736            | 7621  | 3844   | 22529 | 5       |
 | batchTransferSingleERC1155                           | 3419            | 6008  | 3454   | 11152 | 3       |
 | execute                                              | 2825            | 4456  | 3605   | 7792  | 4       |
-| initialize                                           | 1357            | 68414 | 69425  | 69425 | 333     |
-| onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 6       |
+| initialize                                           | 1357            | 68444 | 69425  | 69425 | 343     |
+| onERC1155Received                                    | 1110            | 1110  | 1110   | 1110  | 10      |
 | onERC721Received                                     | 1122            | 1122  | 1122   | 1122  | 1       |
 | receive                                              | 55              | 55    | 55     | 55    | 2       |
 | transfer                                             | 2520            | 4869  | 2555   | 9534  | 3       |
@@ -37,7 +38,7 @@
 | createAndAuthorizeStrategies                | 2606508         | 2606508 | 2606508 | 2606508 | 1       |
 | executeAction                               | 454             | 20086   | 13227   | 37749   | 7       |
 | getAction                                   | 3950            | 7925    | 3950    | 21950   | 54      |
-| initialize                                  | 1935            | 2053443 | 2037448 | 2240245 | 162     |
+| initialize                                  | 1935            | 2052964 | 2037448 | 2240245 | 167     |
 | name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
 | policy                                      | 350             | 357     | 350     | 2350    | 271     |
 | queueAction                                 | 521             | 52696   | 55095   | 83595   | 13      |
@@ -52,7 +53,7 @@
 | 8598655                                              | 40404           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
 | deploy                                               | 9548            | 4331222 | 4871682 | 4871682 | 9       |
-| rootVertex                                           | 183             | 183     | 183     | 183     | 154     |
+| rootVertex                                           | 183             | 183     | 183     | 183     | 159     |
 | vertexAccountLogic                                   | 205             | 205     | 205     | 205     | 1       |
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
 | vertexCount                                          | 361             | 1694    | 2361    | 2361    | 3       |
@@ -83,7 +84,7 @@
 | holderHasPermissionAt                                   | 1647            | 3054   | 2435   | 8435   | 10      |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
 | setBaseURI                                              | 2754            | 13982  | 13982  | 25211  | 2       |
-| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 180     |
+| setVertex                                               | 22669           | 22669  | 22669  | 22669  | 185     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
 | tokenURI                                                | 5406            | 5406   | 5406   | 5406   | 1       |
 | totalSupply                                             | 349             | 755    | 349    | 2349   | 59      |
