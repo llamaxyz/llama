@@ -45,7 +45,7 @@ contract VertexFactoryTest is Test {
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
     // Strategy config
-    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
+    uint256 public constant approvalPeriod = 2 days;
     uint256 public constant queuingDuration = 4 days;
     uint256 public constant expirationDelay = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
