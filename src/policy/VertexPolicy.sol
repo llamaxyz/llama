@@ -10,7 +10,7 @@ abstract contract VertexPolicy is ERC721 {
     event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     error SoulboundToken();
-    error InvalidInput(); // TODO: Probably need more than one error?
+    error InvalidInput();
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
     error OnlyVertexFactory();

@@ -194,8 +194,8 @@ contract Deploy is VertexFactoryTest {
     // method. The addresses are functions of the constructor parameters in the `deployVertex`
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
-    address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-    address constant NEW_POLICY = 0xc18e69aFf5b251A438Cd2CA7bdd49519efe26d45;
+    address constant NEW_VERTEX = 0xCe71065D4017F316EC606Fe4422e11eB2c47c246;
+    address constant NEW_POLICY = 0x79F739E17E3a8e4b7eBBDcb96d3B7Ad1E116abEC;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
