@@ -288,6 +288,58 @@ contract VertexAccountTest is Test {
         accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
+    function test_batchApproveERC20_ApproveUSDCAndUNI() public {
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = USDC;
+        tokens[1] = UNI;
+
+        address[] memory recipients = new address[](2);
+        recipients[0] = USDC_WHALE;
+        recipients[1] = UNI_WHALE;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = USDC_AMOUNT;
+        amounts[1] = UNI_AMOUNT;
+
+        // Approve USDC and UNI to whale
+        vm.startPrank(address(vertex));
+        accounts[0].batchApproveERC20(tokens, recipients, amounts);
+        assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), USDC_AMOUNT);
+        assertEq(UNI.allowance(address(accounts[0]), UNI_WHALE), UNI_AMOUNT);
+        vm.stopPrank();
+    }
+
+    function test_batchApproveERC20_RevertIfNotVertexMsgSender() public {
+        IERC20[] memory tokens = new IERC20[](2);
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].batchApproveERC20(tokens, recipients, amounts);
+    }
+
+    function test_batchApproveERC20_RevertIfZeroInputLength() public {
+        IERC20[] memory tokens = new IERC20[](0);
+        address[] memory recipients = new address[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveERC20(tokens, recipients, amounts);
+        vm.stopPrank();
+    }
+
+    function test_batchApproveERC20_RevertIfInvalidInputLength() public {
+        IERC20[] memory tokens = new IERC20[](1);
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveERC20(tokens, recipients, amounts);
+        vm.stopPrank();
+    }
+
     // transfer ERC721 unit tests
     function test_transferERC721_TransferBAYC() public {
         _transferBAYCToAccount(BAYC_ID);
