@@ -441,7 +441,7 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpiration);
     }
 
-    function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
+    function test_ExpirationTimestampDoesNotHavePermissionIfExpired() public {
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
         assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
 

@@ -163,7 +163,7 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @notice updates a policyID with a new set of permissions
     /// @notice will delete and add permissions as needed
     /// @param updateData the policy token Id being updated
-    function updatePermissions(BatchUpdateData calldata updateData) private onlyVertex {
+    function updatePermissions(BatchUpdateData calldata updateData) private {
         if (ownerOf(updateData.policyId) == address(0)) revert InvalidInput();
         uint256 permissionsToAddLength = updateData.permissionsToAdd.length;
         uint256 permissionsToRemoveLength = updateData.permissionsToRemove.length;
