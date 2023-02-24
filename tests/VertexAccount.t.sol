@@ -15,6 +15,11 @@ import {ICryptoPunk} from "src/mock/external/ICryptoPunk.sol";
 
 contract VertexAccountTest is Test {
     // Testing Parameters
+    // Native Token
+    address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
+    uint256 public constant ETH_AMOUNT = 1000e18;
+
+    // ERC20 Token
     IERC20 public constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     address public constant USDC_WHALE = 0x55FE002aefF02F77364de339a1292923A15844B8;
     uint256 public constant USDC_AMOUNT = 1000e6;
@@ -27,18 +32,23 @@ contract VertexAccountTest is Test {
     address public constant UNI_WHALE = 0x47173B170C64d16393a52e6C480b3Ad8c302ba1e;
     uint256 public constant UNI_AMOUNT = 1000e18;
 
-    address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
-    uint256 public constant ETH_AMOUNT = 1000e18;
-
+    // ERC721 Token
     IERC721 public constant BAYC = IERC721(0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D);
     address public constant BAYC_WHALE = 0x619866736a3a101f65cfF3A8c3d2602fC54Fd749;
     uint256 public constant BAYC_ID = 27;
     uint256 public constant BAYC_ID_2 = 8885;
 
+    IERC721 public constant NOUNS = IERC721(0x9C8fF314C9Bc7F6e59A9d9225Fb22946427eDC03);
+    address public constant NOUNS_WHALE = 0x2573C60a6D127755aA2DC85e342F7da2378a0Cc5;
+    uint256 public constant NOUNS_ID = 540;
+    uint256 public constant NOUNS_ID_2 = 550;
+
+    // Non-standard NFT
     ICryptoPunk public constant PUNK = ICryptoPunk(0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB);
     address public constant PUNK_WHALE = 0xB88F61E6FbdA83fbfffAbE364112137480398018;
     uint256 public constant PUNK_ID = 9313;
 
+    // ERC1155 Token
     IERC1155 public constant RARI = IERC1155(0xd07dc4262BCDbf85190C01c996b4C06a461d2430);
     address public constant RARI_WHALE = 0xEdba5d56d0147aee8a227D284bcAaC03B4a87eD4;
     uint256 public constant RARI_ID_1 = 657774;
@@ -173,7 +183,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    // batch Transfer ERC20 unit tests
+    // batch transfer ERC20 unit tests
     function test_batchTransferERC20_TransferUSDCAndUNI() public {
         _transferUSDCToAccount(USDC_AMOUNT);
         _transferUNIToAccount(UNI_AMOUNT);
@@ -288,6 +298,7 @@ contract VertexAccountTest is Test {
         accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
     }
 
+    // batch approve ERC20 unit tests
     function test_batchApproveERC20_ApproveUSDCAndUNI() public {
         IERC20[] memory tokens = new IERC20[](2);
         tokens[0] = USDC;
@@ -366,6 +377,87 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transferERC721(BAYC, address(0), BAYC_ID);
+        vm.stopPrank();
+    }
+
+    // batch transfer ERC721 unit tests
+    function test_batchTransferERC721_TransferBAYCAndNOUNS() public {
+        _transferBAYCToAccount(BAYC_ID);
+        _transferNOUNSToAccount(NOUNS_ID);
+
+        uint256 accountBAYCBalance = BAYC.balanceOf(address(accounts[0]));
+        uint256 whaleBAYCBalance = BAYC.balanceOf(BAYC_WHALE);
+        uint256 accountNOUNSBalance = NOUNS.balanceOf(address(accounts[0]));
+        uint256 whaleNOUNSBalance = NOUNS.balanceOf(NOUNS_WHALE);
+
+        IERC721[] memory tokens = new IERC721[](2);
+        tokens[0] = BAYC;
+        tokens[1] = NOUNS;
+
+        address[] memory recipients = new address[](2);
+        recipients[0] = BAYC_WHALE;
+        recipients[1] = NOUNS_WHALE;
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = BAYC_ID;
+        ids[1] = NOUNS_ID;
+
+        // Transfer NFTs from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].batchTransferERC721(tokens, recipients, ids);
+        assertEq(BAYC.balanceOf(address(accounts[0])), accountBAYCBalance - 1);
+        assertEq(BAYC.balanceOf(BAYC_WHALE), whaleBAYCBalance + 1);
+        assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
+        assertEq(NOUNS.balanceOf(address(accounts[0])), accountNOUNSBalance - 1);
+        assertEq(NOUNS.balanceOf(NOUNS_WHALE), whaleNOUNSBalance + 1);
+        assertEq(NOUNS.ownerOf(NOUNS_ID), NOUNS_WHALE);
+        vm.stopPrank();
+    }
+
+    function test_batchTransferERC721_RevertIfNotVertexMsgSender() public {
+        IERC721[] memory tokens = new IERC721[](2);
+        address[] memory recipients = new address[](2);
+        uint256[] memory ids = new uint256[](2);
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].batchTransferERC721(tokens, recipients, ids);
+    }
+
+    function test_batchTransferERC721_RevertIfZeroInputLength() public {
+        IERC721[] memory tokens = new IERC721[](0);
+        address[] memory recipients = new address[](0);
+        uint256[] memory ids = new uint256[](0);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchTransferERC721(tokens, recipients, ids);
+        vm.stopPrank();
+    }
+
+    function test_batchTransferERC721_RevertIfInvalidInputLength() public {
+        IERC721[] memory tokens = new IERC721[](1);
+        address[] memory recipients = new address[](2);
+        uint256[] memory ids = new uint256[](2);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchTransferERC721(tokens, recipients, ids);
+        vm.stopPrank();
+    }
+
+    function test_batchTransferERC721_RevertIfToZeroAddress() public {
+        IERC721[] memory tokens = new IERC721[](1);
+        tokens[0] = BAYC;
+
+        address[] memory recipients = new address[](1);
+        recipients[0] = address(0);
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = BAYC_ID;
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+        accounts[0].batchTransferERC721(tokens, recipients, ids);
         vm.stopPrank();
     }
 
@@ -730,6 +822,17 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, approved);
         assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), approved);
+        vm.stopPrank();
+    }
+
+    function _transferNOUNSToAccount(uint256 id) public {
+        assertEq(NOUNS.balanceOf(address(accounts[0])), 0);
+        assertEq(NOUNS.ownerOf(id), NOUNS_WHALE);
+
+        vm.startPrank(NOUNS_WHALE);
+        NOUNS.transferFrom(NOUNS_WHALE, address(accounts[0]), id);
+        assertEq(NOUNS.balanceOf(address(accounts[0])), 1);
+        assertEq(NOUNS.ownerOf(id), address(accounts[0]));
         vm.stopPrank();
     }
 
