@@ -23,6 +23,10 @@ contract VertexAccountTest is Test {
     address public constant USDT_WHALE = 0xA7A93fd0a276fc1C0197a5B5623eD117786eeD06;
     uint256 public constant USDT_AMOUNT = 1000e6;
 
+    IERC20 public constant UNI = IERC20(0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984);
+    address public constant UNI_WHALE = 0x47173B170C64d16393a52e6C480b3Ad8c302ba1e;
+    uint256 public constant UNI_AMOUNT = 1000e18;
+
     address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
     uint256 public constant ETH_AMOUNT = 1000e18;
 
@@ -166,6 +170,40 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
         accounts[0].transferERC20(USDC, address(0), USDC_AMOUNT);
+        vm.stopPrank();
+    }
+
+    // batch Transfer ERC20 unit tests
+    function test_batchTransferERC20_TransferUSDCAndUNI() public {
+        _transferUSDCToAccount(USDC_AMOUNT);
+        _transferUNIToAccount(UNI_AMOUNT);
+
+        uint256 accountUSDCBalance = USDC.balanceOf(address(accounts[0]));
+        uint256 accountUNIBalance = UNI.balanceOf(address(accounts[0]));
+        uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
+        uint256 whaleUSDTBalance = UNI.balanceOf(UNI_WHALE);
+
+        IERC20[] memory tokens = new IERC20[](2);
+        tokens[0] = USDC;
+        tokens[1] = UNI;
+
+        address[] memory recipients = new address[](2);
+        recipients[0] = USDC_WHALE;
+        recipients[1] = UNI_WHALE;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = USDC_AMOUNT;
+        amounts[1] = UNI_AMOUNT;
+
+        // Transfer USDC and USDT from account to whale
+        vm.startPrank(address(vertex));
+        accounts[0].batchTransferERC20(tokens, recipients, amounts);
+        assertEq(USDC.balanceOf(address(accounts[0])), 0);
+        assertEq(UNI.balanceOf(address(accounts[0])), 0);
+        assertEq(USDC.balanceOf(address(accounts[0])), accountUSDCBalance - USDC_AMOUNT);
+        assertEq(UNI.balanceOf(address(accounts[0])), accountUNIBalance - UNI_AMOUNT);
+        assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
+        assertEq(UNI.balanceOf(UNI_WHALE), whaleUSDTBalance + UNI_AMOUNT);
         vm.stopPrank();
     }
 
@@ -559,6 +597,15 @@ contract VertexAccountTest is Test {
         vm.startPrank(address(vertex));
         accounts[0].approveERC20(USDT, USDT_WHALE, amount);
         assertEq(USDT.allowance(address(accounts[0]), USDT_WHALE), amount);
+        vm.stopPrank();
+    }
+
+    function _transferUNIToAccount(uint256 amount) public {
+        assertEq(UNI.balanceOf(address(accounts[0])), 0);
+
+        vm.startPrank(UNI_WHALE);
+        UNI.transfer(address(accounts[0]), amount);
+        assertEq(UNI.balanceOf(address(accounts[0])), amount);
         vm.stopPrank();
     }
 
