@@ -207,6 +207,53 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
+    function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
+        IERC20[] memory tokens = new IERC20[](2);
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].batchTransferERC20(tokens, recipients, amounts);
+    }
+
+    function test_batchTransferERC20_RevertIfZeroInputLength() public {
+        IERC20[] memory tokens = new IERC20[](0);
+        address[] memory recipients = new address[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchTransferERC20(tokens, recipients, amounts);
+        vm.stopPrank();
+    }
+
+    function test_batchTransferERC20_RevertIfInvalidInputLength() public {
+        IERC20[] memory tokens = new IERC20[](1);
+        address[] memory recipients = new address[](2);
+        uint256[] memory amounts = new uint256[](2);
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchTransferERC20(tokens, recipients, amounts);
+        vm.stopPrank();
+    }
+
+    function test_batchTransferERC20_RevertIfToZeroAddress() public {
+        IERC20[] memory tokens = new IERC20[](1);
+        tokens[0] = USDC;
+
+        address[] memory recipients = new address[](1);
+        recipients[0] = address(0);
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = USDC_AMOUNT;
+
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+        accounts[0].batchTransferERC20(tokens, recipients, amounts);
+        vm.stopPrank();
+    }
+
     // approve ERC20 unit tests
     function test_approveERC20_ApproveUSDC() public {
         _approveUSDCToRecipient(USDC_AMOUNT);
