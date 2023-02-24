@@ -8,7 +8,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Strategy} from "src/utils/Structs.sol";
+import {PermissionIdCheckpoint, Strategy} from "src/utils/Structs.sol";
 
 import {VertexCoreTest} from "tests/VertexCore.t.sol";
 import {BaseHandler} from "tests/invariants/BaseHandler.sol";
@@ -44,17 +44,17 @@ contract VertexPolicyNFTHandler is BaseHandler {
 
     function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
         vm.prank(address(vertexFactory.rootVertex()));
-        // TODO Implement this call.
+        // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
         vm.prank(address(vertexFactory.rootVertex()));
-        // TODO Implement this call.
+        // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
         vm.prank(address(vertexFactory.rootVertex()));
-        // TODO Implement this call.
+        // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_revokeExpiredPermission() public recordCall("vertexPolicyNFT_revokeExpiredPermission") {
@@ -90,31 +90,60 @@ contract VertexFactoryInvariants is VertexCoreTest {
     // For a given permission ID and timestamp, the sum of that permission's quantity over all users
     // with that permission should equal the total supply of that permission ID.
     function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public {
-        // TODO Implement this assertion.
-    }
+        bytes8[] memory allPermissionIds = handler.getPermissionIds();
+        for (uint256 i = 0; i < allPermissionIds.length; i++) {
+            PermissionIdCheckpoint[] memory checkpoints = policy.getTokenPermissionSupplyCheckpoints(allPermissionIds[i]);
 
-    // For a given user and permission ID,their tokenPermissionCheckpoints array should always be
-    // sorted by timestamp in ascending order.
-    function assertInvariant_TokenPermissionUserCheckpointsAreAlwaysSortedByTimestamp() public {
-        // TODO Implement this assertion.
-    }
+            for (uint256 j = 0; j < checkpoints.length; j++) {
+                uint256 sumOfPermissionsOverAllUsers = 0;
+                address[] memory policyholders = handler.getActors();
 
-    // For a given user and permission ID, their tokenPermissionCheckpoints array should always have
-    // unique timestamp values, i.e. a timestamp should not be duplicated.
-    function assertInvariant_TokenPermissionUserCheckpointsAreAlwaysUniqueByTimestamp() public {
-        // TODO Implement this assertion.
+                for (uint256 k = 0; k < policyholders.length; k++) {
+                    bool hasPermission = policy.holderHasPermissionAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp);
+                    sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
+                }
+                require(
+                    sumOfPermissionsOverAllUsers == checkpoints[j].quantity,
+                    string.concat(
+                        "sum of permissions over all users should equal total supply: ",
+                        "(permissionId, timestamp) =",
+                        "(",
+                        vm.toString(allPermissionIds[i]),
+                        ", ",
+                        vm.toString(checkpoints[j].timestamp),
+                        ")"
+                    )
+                );
+            }
+        }
     }
 
     // For a given permission ID,the tokenPermissionCheckpoints array should always be sorted by
-    // timestamp in ascending order.
-    function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByTimestamp() public {
-        // TODO Implement this assertion.
-    }
-
-    // For a given permission ID, the tokenPermissionCheckpoints array should always have unique
-    // timestamp values, i.e. a timestamp should not be duplicated.
-    function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysUniqueByTimestamp() public {
-        // TODO Implement this assertion.
+    // timestamp in ascending order, with no duplicate timestamps.
+    function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp() public {
+        uint256[] memory allPolicyIds = handler.getPolicyIds();
+        bytes8[] memory allPermissionIds = handler.getPermissionIds();
+        for (uint256 i = 0; i < allPolicyIds.length; i++) {
+            // The use of `<` here instead of `<=` is intentional and disallows two checkpoints
+            // with the same timestamp.
+            for (uint256 j = 0; j < allPermissionIds.length; j++) {
+                PermissionIdCheckpoint[] memory checkpoints = policy.getTokenPermissionCheckpoints(allPolicyIds[i], allPermissionIds[j]);
+                for (uint256 k = 1; k < checkpoints.length; k++) {
+                    require(
+                        checkpoints[k - 1].timestamp < checkpoints[k].timestamp,
+                        string.concat(
+                            "tokenPermissionCheckpoints should be sorted by timestamp: ",
+                            "(policyId, permissionId) =",
+                            "(",
+                            vm.toString(allPolicyIds[i]),
+                            ", ",
+                            vm.toString(allPermissionIds[j]),
+                            ")"
+                        )
+                    );
+                }
+            }
+        }
     }
 
     // The policyId, i.e. the token ID, held by a given user should always match that user's address.
@@ -139,7 +168,9 @@ contract VertexFactoryInvariants is VertexCoreTest {
     // ======== Invariant Tests ========
     // =================================
 
-    function invariant_AllInvariants() public view {
+    function invariant_AllInvariants() public {
+        assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
+        assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
         assertInvariant_DeterministicPolicyIds();
         assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT();
     }
