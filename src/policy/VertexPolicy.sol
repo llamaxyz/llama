@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData, BatchUpdateData} from "src/utils/Structs.sol";
+import {PermissionData, BatchUpdateData, BatchGrantData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PoliciesAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
+    event PoliciesAdded(BatchGrantData[] grantData);
     event PermissionsUpdated(BatchUpdateData[] updateData);
     event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
@@ -22,10 +22,8 @@ abstract contract VertexPolicy is ERC721 {
     function batchUpdatePermissions(BatchUpdateData[] calldata updateData) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
-    /// @param to the addresses to mint the policy token to
-    /// @param userPermissions the permissions to be granted to the policy token
-    /// @param expirationTimestamps the expiration timestamps to be set for the policy token
-    function batchGrantPolicies(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
+    /// @param policyData array of BatchGrantData struct to mint policy tokens
+    function batchGrantPolicies(BatchGrantData[] memory policyData) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
     /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a

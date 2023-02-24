@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {VertexCore} from "src/core/VertexCore.sol";
-import {Strategy} from "src/utils/Structs.sol";
+import {Strategy, BatchGrantData} from "src/utils/Structs.sol";
 
 interface IVertexFactory {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -12,16 +12,13 @@ interface IVertexFactory {
     /// @param policySymbol The token symbol for the policy NFT.
     /// @param initialStrategies The list of initial strategies.
     /// @param initialAccounts The list of initial accounts.
-    /// @param initialPolicyholders The list of initial policyholders.
-    /// @param initialPermissions The list of permissions granted to each initial policyholder.
+    /// @param initialPolicies The list of initial policies.
     /// @return the address of the VertexCore contract of the newly created system.
     function deploy(
         string memory name,
         string memory policySymbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions,
-        uint256[][] memory initialExpirationTimestamps
+        BatchGrantData[] memory initialPolicies
     ) external returns (VertexCore);
 }

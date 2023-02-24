@@ -6,7 +6,7 @@ import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {IVertexFactory} from "src/factory/IVertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Strategy} from "src/utils/Structs.sol";
+import {Strategy, BatchGrantData} from "src/utils/Structs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -33,13 +33,11 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions,
-        uint256[][] memory initialExpirationTimestamps
+        BatchGrantData[] memory initialPolicies
     ) {
         vertexCoreLogic = _vertexCoreLogic;
         vertexAccountLogic = _vertexAccountLogic;
-        rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
     }
 
     modifier onlyRootVertex() {
@@ -52,11 +50,9 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions,
-        uint256[][] memory initialExpirationTimestamps
+        BatchGrantData[] memory initialPolicies
     ) external onlyRootVertex returns (VertexCore) {
-        return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
     }
 
     function _deploy(
@@ -64,12 +60,10 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        address[] memory initialPolicyholders,
-        bytes8[][] memory initialPermissions,
-        uint256[][] memory initialExpirationTimestamps
+        BatchGrantData[] memory initialPolicies
     ) internal returns (VertexCore vertex) {
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-        VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicyholders, initialPermissions, initialExpirationTimestamps);
+        VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicies);
 
         vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
         vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);

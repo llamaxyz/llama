@@ -57,3 +57,8 @@ struct BatchUpdateData {
     PermissionChangeData[] permissionsToAdd;
     PermissionChangeData[] permissionsToRemove;
 }
+
+struct BatchGrantData {
+    address user;
+    PermissionChangeData[] permissionsToAdd;
+}
