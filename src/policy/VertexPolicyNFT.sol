@@ -114,9 +114,6 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 length = updateData.length;
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                if (updateData[i].permissionsToAdd.length == 0) {
-                    revert InvalidInput();
-                }
                 updatePermissions(updateData[i]);
             }
         }
@@ -173,6 +170,7 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i; i < removeLength; ++i) {
                 PermissionChangeData memory data = updateData.permissionsToRemove[i];
+                if (data.permissionId == 0x0000000000000000) continue;
                 tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
                 PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[data.permissionId];
                 uint256 supplyIndex = supplyCheckpoint.length > 0 ? supplyCheckpoint.length - 1 : 0;
@@ -180,6 +178,7 @@ contract VertexPolicyNFT is VertexPolicy {
             }
             for (uint256 j; j < newPermissionSignaturesLength; ++j) {
                 PermissionChangeData memory data = updateData.permissionsToAdd[j];
+                if (data.permissionId == 0x0000000000000000) continue;
                 bool _hasPermission = hasPermission(updateData.policyId, data.permissionId);
                 if (!_hasPermission) {
                     tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
