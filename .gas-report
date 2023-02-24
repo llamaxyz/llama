@@ -51,9 +51,9 @@
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
 |------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
-| 8434340                                              | 39584           |         |         |         |         |
+| 8417107                                              | 39498           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
-| deploy                                               | 9548            | 4258095 | 4789414 | 4789414 | 9       |
+| deploy                                               | 9548            | 4250419 | 4780778 | 4780778 | 9       |
 | rootVertex                                           | 183             | 183     | 183     | 183     | 163     |
 | vertexAccountLogic                                   | 205             | 205     | 205     | 205     | 1       |
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
@@ -71,22 +71,22 @@
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
 |---------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                         | Deployment Size |        |        |        |         |
-| 2420625                                                 | 15558           |        |        |        |         |
+| 2412018                                                 | 15515           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1693   | 2673   | 2673   | 49      |
 | batchGrantPolicies                                      | 3638            | 635167 | 877563 | 970471 | 154     |
 | batchRevokePolicies                                     | 3037            | 39469  | 59005  | 70605  | 5       |
-| batchUpdatePermissions                                  | 13948           | 60593  | 34368  | 159688 | 4       |
+| batchUpdatePermissions                                  | 13808           | 60453  | 34228  | 159548 | 4       |
 | getSupplyByPermissions                                  | 1488            | 2821   | 1488   | 5488   | 3       |
 | hasPermission                                           | 1512            | 3964   | 1520   | 7520   | 37      |
 | hashPermission                                          | 924             | 924    | 924    | 924    | 373     |
 | hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 58      |
 | holderHasPermissionAt                                   | 1647            | 2398   | 2431   | 3086   | 4       |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
-| setBaseURI                                              | 5297            | 5297   | 5297   | 5297   | 1       |
+| setBaseURI                                              | 47452           | 47452  | 47452  | 47452  | 1       |
 | setVertex                                               | 22669           | 22669  | 22669  | 22669  | 227     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
-| tokenURI                                                | 5333            | 5333   | 5333   | 5333   | 1       |
+| tokenURI                                                | 5631            | 5631   | 5631   | 5631   | 1       |
 | totalSupply                                             | 349             | 755    | 349    | 2349   | 59      |
 | transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
 
@@ -114,12 +114,12 @@
 
 Failing tests:
 Encountered 7 failing tests in tests/VertexFactory.t.sol:Deploy
-[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysPolicy() (gas: 4907892)
-[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysVertexCore() (gas: 4907892)
-[31m[FAIL. Reason: Log != expected log][0m test_EmitsVertexCreatedEvent() (gas: 4895197)
-[31m[FAIL. Reason: EvmError: Revert][0m test_InitializesVertexCore() (gas: 4895388)
-[31m[FAIL. Reason: EvmError: Revert][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 4907699)
-[31m[FAIL. Reason: EvmError: Revert][0m test_SetsPolicyAddressOnVertexCore() (gas: 4895467)
-[31m[FAIL. Reason: EvmError: Revert][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 4895446)
+[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysPolicy() (gas: 4899256)
+[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysVertexCore() (gas: 4899256)
+[31m[FAIL. Reason: Log != expected log][0m test_EmitsVertexCreatedEvent() (gas: 4886561)
+[31m[FAIL. Reason: EvmError: Revert][0m test_InitializesVertexCore() (gas: 4886752)
+[31m[FAIL. Reason: EvmError: Revert][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 4899063)
+[31m[FAIL. Reason: EvmError: Revert][0m test_SetsPolicyAddressOnVertexCore() (gas: 4886831)
+[31m[FAIL. Reason: EvmError: Revert][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 4886810)
 
 Encountered a total of [31m7[0m failing tests, [32m246[0m tests succeeded
