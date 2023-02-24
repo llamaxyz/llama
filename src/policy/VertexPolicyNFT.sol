@@ -115,9 +115,9 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 updatePermissions(updateData[i]);
+                emit PermissionUpdated(updateData[i]);
             }
         }
-        emit PermissionsUpdated(updateData);
     }
 
     /// @inheritdoc VertexPolicy
@@ -165,20 +165,18 @@ contract VertexPolicyNFT is VertexPolicy {
     /// @param updateData the policy token Id being updated
     function updatePermissions(BatchUpdateData calldata updateData) private onlyVertex {
         if (ownerOf(updateData.policyId) == address(0)) revert InvalidInput();
-        uint256 newPermissionSignaturesLength = updateData.permissionsToAdd.length;
-        uint256 removeLength = updateData.permissionsToRemove.length;
+        uint256 permissionsToAddLength = updateData.permissionsToAdd.length;
+        uint256 permissionsToRemoveLength = updateData.permissionsToRemove.length;
         unchecked {
-            for (uint256 i; i < removeLength; ++i) {
-                PermissionChangeData memory data = updateData.permissionsToRemove[i];
-                if (data.permissionId == 0x0000000000000000) continue;
+            for (uint256 i; i < permissionsToRemoveLength; ++i) {
+                PermissionChangeData calldata data = updateData.permissionsToRemove[i];
                 tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
                 PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[data.permissionId];
                 uint256 supplyIndex = supplyCheckpoint.length > 0 ? supplyCheckpoint.length - 1 : 0;
                 supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyIndex].quantity - 1));
             }
-            for (uint256 j; j < newPermissionSignaturesLength; ++j) {
-                PermissionChangeData memory data = updateData.permissionsToAdd[j];
-                if (data.permissionId == 0x0000000000000000) continue;
+            for (uint256 j; j < permissionsToAddLength; ++j) {
+                PermissionChangeData calldata data = updateData.permissionsToAdd[j];
                 bool _hasPermission = hasPermission(updateData.policyId, data.permissionId);
                 if (!_hasPermission) {
                     tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));

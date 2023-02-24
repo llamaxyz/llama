@@ -162,7 +162,7 @@ contract VertexPolicyNFTTest is Test {
 
     function test_batchUpdatePermissions_updatesTimeStamp() public {
         PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
-        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
 
         uint256 newExpiration = block.timestamp + 1 days;
         toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);
@@ -202,7 +202,7 @@ contract VertexPolicyNFTTest is Test {
         assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
 
         PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
-        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
 
         uint256 newExpiration = block.timestamp + 1 days;
         toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);
@@ -232,7 +232,7 @@ contract VertexPolicyNFTTest is Test {
 
     function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
         PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
-        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
 
         uint256 newExpiration = block.timestamp;
         toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);

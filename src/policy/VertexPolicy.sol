@@ -6,7 +6,7 @@ import {PermissionData, BatchUpdateData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
     event PoliciesAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionsUpdated(BatchUpdateData[] updateData);
+    event PermissionUpdated(BatchUpdateData updateData);
     event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     error SoulboundToken();
