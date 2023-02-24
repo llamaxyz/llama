@@ -190,7 +190,7 @@ contract RevokePolicy is VertexPolicyNFTTest {
     // }
     function testFuzz_RevertIf_CallerIsNotOwner(address _caller) public {} // TODO
     function testFuzz_ZerosTokenPermissionCheckpoints(address _caller) public {} // TODO
-    function testFuzz_DecrementsPermissionSuppylCheckpoints(address _caller) public {} // TODO
+    function testFuzz_DecrementsPermissionSupplyCheckpoints(address _caller) public {} // TODO
     function testFuzz_DecrementsTotalSupply(address _caller) public {} // TODO
     function testFuzz_BurnsTheNFT(address _caller) public {} // TODO
 }
