@@ -28,11 +28,12 @@ jobs:
           version: nightly
 
       - name: Generate gas report
-        run: make report
+        uses: extractions/setup-just@v1
+        run: just report
 
       - name: Add & Commit
         uses: EndBug/add-and-commit@v9
         with:
-          add: '.gas-report'
+          add: ".gas-report"
           message: Generate updated gas report
           default_author: user_info
