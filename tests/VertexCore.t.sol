@@ -234,7 +234,7 @@ contract VertexCoreTest is Test {
         _executeAction();
     }
 
-    function _computeVertexStrategyAddress(Strategy memory _strategy) internal returns (VertexStrategy) {
+    function _computeVertexStrategyAddress(Strategy memory _strategy) internal view returns (VertexStrategy) {
         bytes memory bytecode = type(VertexStrategy).creationCode;
         return VertexStrategy(
             computeCreate2Address(
@@ -245,7 +245,7 @@ contract VertexCoreTest is Test {
         );
     }
 
-    function _computeVertexAccountAddress(string memory _name) internal returns (VertexAccount) {
+    function _computeVertexAccountAddress(string memory _name) internal view returns (VertexAccount) {
         address _computedAddress = Clones.predictDeterministicAddress(
             address(vertexAccountImplementation),
             keccak256(abi.encode(_name)), // salt
