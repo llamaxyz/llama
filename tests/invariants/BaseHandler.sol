@@ -25,6 +25,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     uint256[] internal timestamps;
     uint256 currentTimestamp;
 
+    bytes8[] internal permissionIds; // All Permission IDs seen.
+    mapping(bytes8 => bool) internal havePermissionId; // Whether a Permission ID has been seen.
+
     // Metrics.
     mapping(string => uint256) public calls;
 
@@ -100,5 +103,26 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
         uint256 newTimestamp = currentTimestamp + timeToIncrease;
         timestamps.push(newTimestamp);
         currentTimestamp = newTimestamp;
+    }
+
+    // -------- Generic Helpers --------
+    function recordPermissionId(bytes8 permissionId) public {
+        if (!havePermissionId[permissionId]) {
+            permissionIds.push(permissionId);
+            havePermissionId[permissionId] = true;
+        }
+    }
+
+    function getPermissionIds() public view returns (bytes8[] memory) {
+        return permissionIds;
+    }
+
+    function getPolicyIds() public view returns (uint256[] memory) {
+        uint256[] memory policyIds = new uint256[](actors.length);
+        for (uint256 i = 0; i < actors.length; i++) {
+            uint256 policyId = uint256(uint160(actors[i]));
+            policyIds[i] = policyId;
+        }
+        return policyIds;
     }
 }

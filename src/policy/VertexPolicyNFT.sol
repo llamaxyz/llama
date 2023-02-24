@@ -280,4 +280,12 @@ contract VertexPolicyNFT is VertexPolicy {
     function tokenURI(uint256 id) public view override returns (string memory) {
         return string(abi.encodePacked(baseURI, Strings.toString(id)));
     }
+
+    function getTokenPermissionCheckpoints(uint256 policyId, bytes8 permissionId) external view returns (PermissionIdCheckpoint[] memory) {
+        return tokenPermissionCheckpoints[policyId][permissionId];
+    }
+
+    function getTokenPermissionSupplyCheckpoints(bytes8 permissionId) external view returns (PermissionIdCheckpoint[] memory) {
+        return permissionSupplyCheckpoints[permissionId];
+    }
 }
