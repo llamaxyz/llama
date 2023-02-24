@@ -266,7 +266,7 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @dev overriding transferFrom to disable transfers for SBTs
     /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-    function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public override {
+    function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
         revert SoulboundToken();
     }
 
