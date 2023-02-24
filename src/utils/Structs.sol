@@ -23,7 +23,7 @@ struct Action {
     address target; // The contract called when the action is executed
     bytes data; //  The encoded arguments to be passed to the function that is called when the action is executed.
     uint256 value; // The value in wei to be sent when the action is executed.
-    uint256 createdBlockNumber; // The block number of action creation (used for policy snapshots).
+    uint256 creationTime; // The timestamp when action was created (used for policy snapshots).
     uint256 executionTime; // Only set when an action is queued. The timestamp when action execution can begin.
     uint256 totalApprovals; // The total weight of policyholder approvals.
     uint256 totalDisapprovals; // The total weight of policyholder disapprovals.

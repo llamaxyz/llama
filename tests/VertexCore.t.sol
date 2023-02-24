@@ -44,7 +44,7 @@ contract VertexCoreTest is Test {
     bytes8[][] public initialPermissions;
     // Strategy config
     // TODO fuzz over these values rather than hardcoding
-    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
+    uint256 public constant approvalPeriod = 2 days;
     uint256 public constant queuingDuration = 4 days;
     uint256 public constant expirationDelay = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
@@ -328,12 +328,12 @@ contract CreateAction is VertexCoreTest {
         uint256 _actionId = vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(_actionId);
-        uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
+        uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
 
         assertEq(_actionId, 0);
         assertEq(vertex.actionsCount(), 1);
-        assertEq(action.createdBlockNumber, block.number);
-        assertEq(approvalEndTime, block.number + 14400);
+        assertEq(action.creationTime, block.timestamp);
+        assertEq(approvalEndTime, block.timestamp + 2 days);
         assertEq(action.approvalPolicySupply, 5);
         assertEq(action.disapprovalPolicySupply, 5);
     }
