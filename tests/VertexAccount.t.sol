@@ -779,7 +779,7 @@ contract VertexAccountTest is Test {
         vm.stopPrank();
     }
 
-    // approve Operator ERC1155 unit tests
+    // approve operator ERC1155 unit tests
     function test_approveOperatorERC1155_ApproveRARI() public {
         _approveRARIToRecipient(true);
     }
@@ -791,6 +791,46 @@ contract VertexAccountTest is Test {
     function test_approveOperatorERC1155_RevertIfNotVertexMsgSender() public {
         vm.expectRevert(VertexAccount.OnlyVertex.selector);
         accounts[0].approveOperatorERC1155(RARI, RARI_WHALE, true);
+    }
+
+    // batch approve operator ERC1155 unit tests
+    function test_batchApproveOperatorERC1155_ApproveRARIAndOPENSTORE() public {
+        IERC1155[] memory tokens = new IERC1155[](2);
+        tokens[0] = RARI;
+        tokens[1] = OPENSTORE;
+
+        address[] memory recipients = new address[](2);
+        recipients[0] = RARI_WHALE;
+        recipients[1] = OPENSTORE_WHALE;
+
+        bool[] memory approvals = new bool[](2);
+        approvals[0] = true;
+        approvals[1] = true;
+
+        vm.startPrank(address(vertex));
+        accounts[0].batchApproveOperatorERC1155(tokens, recipients, approvals);
+        assertEq(RARI.isApprovedForAll(address(accounts[0]), RARI_WHALE), true);
+        assertEq(OPENSTORE.isApprovedForAll(address(accounts[0]), OPENSTORE_WHALE), true);
+        vm.stopPrank();
+    }
+
+    function test_batchApproveOperatorERC1155_RevertIfNotVertexMsgSender() public {
+        vm.expectRevert(VertexAccount.OnlyVertex.selector);
+        accounts[0].batchApproveOperatorERC1155(new IERC1155[](0), new address[](0), new bool[](0));
+    }
+
+    function test_batchApproveOperatorERC1155_RevertIfZeroInputLength() public {
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveOperatorERC1155(new IERC1155[](0), new address[](0), new bool[](0));
+        vm.stopPrank();
+    }
+
+    function test_batchApproveOperatorERC1155_RevertIfInvalidInputLength() public {
+        vm.startPrank(address(vertex));
+        vm.expectRevert(VertexAccount.InvalidInput.selector);
+        accounts[0].batchApproveOperatorERC1155(new IERC1155[](1), new address[](2), new bool[](1));
+        vm.stopPrank();
     }
 
     // generic execute unit tests
