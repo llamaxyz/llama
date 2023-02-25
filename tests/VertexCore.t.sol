@@ -45,8 +45,8 @@ contract VertexCoreTest is Test {
     // Strategy config
     // TODO fuzz over these values rather than hardcoding
     uint256 public constant approvalPeriod = 2 days;
-    uint256 public constant queuingDuration = 4 days;
-    uint256 public constant expirationDelay = 8 days;
+    uint256 public constant queuingPeriod = 4 days;
+    uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
     uint256 public constant minApprovalPct = 40_00;
     uint256 public constant minDisapprovalPct = 20_00;
@@ -71,8 +71,8 @@ contract VertexCoreTest is Test {
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: queuingDuration,
-            expirationDelay: expirationDelay,
+            queuingPeriod: queuingPeriod,
+            expirationPeriod: expirationPeriod,
             isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
             minApprovalPct: minApprovalPct,
             minDisapprovalPct: minDisapprovalPct,
@@ -82,8 +82,8 @@ contract VertexCoreTest is Test {
 
         initialStrategies[1] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: 0,
-            expirationDelay: 1 days,
+            queuingPeriod: 0,
+            expirationPeriod: 1 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 80_00,
             minDisapprovalPct: 10001,
@@ -194,7 +194,7 @@ contract VertexCoreTest is Test {
     }
 
     function _queueAction(uint256 _actionId) public {
-        uint256 executionTime = block.timestamp + strategies[0].queuingDuration();
+        uint256 executionTime = block.timestamp + strategies[0].queuingPeriod();
         vm.expectEmit(true, true, true, true);
         emit ActionQueued(_actionId, address(this), strategies[0], actionCreator, executionTime);
         vertex.queueAction(_actionId);
@@ -750,8 +750,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
         // them below.
         newStrategies[0] = Strategy({
             approvalPeriod: 4 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,
@@ -761,8 +761,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
         newStrategies[1] = Strategy({
             approvalPeriod: 5 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,
@@ -772,8 +772,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
         newStrategies[2] = Strategy({
             approvalPeriod: 6 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,

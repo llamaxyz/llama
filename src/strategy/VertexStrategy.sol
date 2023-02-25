@@ -28,10 +28,10 @@ contract VertexStrategy is IVertexStrategy {
     VertexPolicyNFT public immutable policy;
 
     /// @notice Minimum time between queueing and execution of action.
-    uint256 public immutable queuingDuration;
+    uint256 public immutable queuingPeriod;
 
     /// @notice Time after executionTime that action can be executed before permanently expiring.
-    uint256 public immutable expirationDelay;
+    uint256 public immutable expirationPeriod;
 
     /// @notice Length of approval period in blocks.
     uint256 public immutable approvalPeriod;
@@ -59,8 +59,8 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
-        queuingDuration = strategyConfig.queuingDuration;
-        expirationDelay = strategyConfig.expirationDelay;
+        queuingPeriod = strategyConfig.queuingPeriod;
+        expirationPeriod = strategyConfig.expirationPeriod;
         isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
         approvalPeriod = strategyConfig.approvalPeriod;
         policy = _policy;
