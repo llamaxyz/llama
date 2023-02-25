@@ -11,7 +11,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -42,7 +42,7 @@ contract VertexCoreTest is Test {
     uint256[] public policyIds;
 
     address[] public initialPolicies;
-    bytes8[][] public initialPermissions;
+    BatchGrantData[] public initialPermissions;
     // Strategy config
     // TODO fuzz over these values rather than hardcoding
     uint256 public constant approvalPeriod = 14400; // 2 days in blocks
@@ -136,34 +136,25 @@ contract VertexCoreTest is Test {
     function _grantPermissions() public {
         vm.startPrank(address(vertex));
 
-        bytes8[] memory pauserPermissions = new bytes8[](1);
-        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
-        pauserPermissions[0] = policy.hashPermission(pausePermission);
+        PermissionChangeData[] memory creatorPermissions = new PermissionChangeData[](3);
+        PermissionChangeData[] memory pauserPermissions = new PermissionChangeData[](1);
 
-        bytes8[] memory creatorPermissions = new bytes8[](3);
+        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
         PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
         PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: strategies[0]});
-        creatorPermissions[0] = policy.hashPermission(failPermission);
-        creatorPermissions[1] = policy.hashPermission(pausePermission);
-        creatorPermissions[2] = policy.hashPermission(receiveETHPermission);
+        creatorPermissions[0] = PermissionChangeData(policy.hashPermission(failPermission), 0);
+        pauserPermissions[0] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
+        creatorPermissions[1] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
+        creatorPermissions[2] = PermissionChangeData(policy.hashPermission(receiveETHPermission), 0);
 
         address[] memory batchedAddresses = new address[](5);
         bytes8[][] memory batchedSignatures = new bytes8[][](5);
 
-        batchedAddresses[0] = actionCreator;
-        batchedSignatures[0] = creatorPermissions;
-
-        batchedAddresses[1] = policyholder1;
-        batchedSignatures[1] = pauserPermissions;
-
-        batchedAddresses[2] = policyholder2;
-        batchedSignatures[2] = pauserPermissions;
-
-        batchedAddresses[3] = policyholder3;
-        batchedSignatures[3] = pauserPermissions;
-
-        batchedAddresses[4] = policyholder4;
-        batchedSignatures[4] = pauserPermissions;
+        initialPolicyData.push(BatchGrantData(actionCreator, creatorPermissions));
+        initialPolicyData.push(BatchGrantData(policyholder1, pauserPermissions));
+        initialPolicyData.push(BatchGrantData(policyholder2, pauserPermissions));
+        initialPolicyData.push(BatchGrantData(policyholder3, pauserPermissions));
+        initialPolicyData.push(BatchGrantData(policyholder4, pauserPermissions));
 
         policy.batchGrantPolicies(initialPolicyData);
         vm.stopPrank();

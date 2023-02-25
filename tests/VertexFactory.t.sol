@@ -93,7 +93,7 @@ contract VertexFactoryTest is Test {
         policy = rootVertex.policy();
 
         // Create and assign policies
-        createPolicies();
+        // createPolicies();
 
         vm.label(actionCreator, "Action Creator");
     }
@@ -103,34 +103,30 @@ contract VertexFactoryTest is Test {
         permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
         permissions.push(permission);
         permissionSignature.push(policy.hashPermission(permission));
-        PermissionChangeData memory permissionChange = PermissionChangeData(permissionSignature[0], 0);
-        PermissionChangeData[] memory permissionChangeDataArray = new PermissionChangeData[](1);
-        for (uint256 i; i < 5; i++) {
-            if (i == 0) {
-                bytes8[] memory creatorPermissions = new bytes8[](2);
-                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
-                creatorPermissions[0] = policy.hashPermission(failPermission);
-                creatorPermissions[1] = policy.hashPermission(permission);
-                permissionSignatures.push(creatorPermissions);
-                permissionChangeDataArray[0] = PermissionChangeData(creatorPermissions[0], 0);
-                permissionChangeData.push(permissionChangeDataArray);
-                permissionChangeDataArray[0] = PermissionChangeData(creatorPermissions[1], 0);
-                permissionChangeData.push(permissionChangeDataArray);
-            } else {
-                permissionSignatures.push(permissionSignature);
-                permissionChangeDataArray[0] = PermissionChangeData(permissionSignature[0], 0);
-                permissionChangeData.push(permissionChangeDataArray);
-            }
-        }
+        PermissionChangeData[] memory permissionChangeDataArray = new PermissionChangeData[](2);
+        PermissionChangeData[] memory permissionChangeDataArray2 = new PermissionChangeData[](1);
+
+        bytes8[] memory creatorPermissions = new bytes8[](2);
+        PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+        creatorPermissions[0] = policy.hashPermission(failPermission);
+        creatorPermissions[1] = policy.hashPermission(permission);
+        permissionSignatures.push(creatorPermissions);
+        permissionChangeDataArray[0] = PermissionChangeData(creatorPermissions[0], 0);
+        permissionChangeDataArray[1] = PermissionChangeData(creatorPermissions[1], 0);
+        permissionChangeData.push(permissionChangeDataArray);
+        permissionChangeDataArray2[0] = PermissionChangeData(permissionSignature[0], 0);
+        permissionChangeData.push(permissionChangeDataArray2);
+
         addresses.push(actionCreator);
         addresses.push(policyholder1);
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        initialPolicies.push(BatchGrantData(actionCreator, permissionChangeData[0]));
-        initialPolicies.push(BatchGrantData(policyholder1, permissionChangeData[1]));
-        initialPolicies.push(BatchGrantData(policyholder2, permissionChangeData[2]));
-        initialPolicies.push(BatchGrantData(policyholder4, permissionChangeData[3]));
+        initialPolicies.push(BatchGrantData(actionCreator, permissionChangeDataArray));
+        initialPolicies.push(BatchGrantData(policyholder1, permissionChangeDataArray2));
+        initialPolicies.push(BatchGrantData(policyholder2, permissionChangeDataArray2));
+        initialPolicies.push(BatchGrantData(policyholder3, permissionChangeDataArray2));
+        initialPolicies.push(BatchGrantData(policyholder4, permissionChangeDataArray2));
         policy.batchGrantPolicies(initialPolicies);
         vm.stopPrank();
     }
@@ -184,8 +180,8 @@ contract VertexFactoryTest is Test {
         PermissionChangeData[] memory permissionsToAdd2 = new PermissionChangeData[](1);
         permissionsToAdd[0] = PermissionChangeData(0xa9cc4718a9cc4718, 0);
         permissionsToAdd2[0] = PermissionChangeData(0xffffffffffffffff, 0);
-        initialBatchGrantData[0] = BatchGrantData({user: addresses[0], permissionsToAdd: permissionsToAdd});
-        initialBatchGrantData[1] = BatchGrantData({user: addresses[1], permissionsToAdd: permissionsToAdd2});
+        initialBatchGrantData[0] = BatchGrantData({user: actionCreator, permissionsToAdd: permissionsToAdd});
+        initialBatchGrantData[1] = BatchGrantData({user: policyholder1, permissionsToAdd: permissionsToAdd2});
         initialPolicies = initialBatchGrantData;
         return initialBatchGrantData;
     }
@@ -218,7 +214,7 @@ contract Deploy is VertexFactoryTest {
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
     address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-    address constant NEW_POLICY = 0xc18e69aFf5b251A438Cd2CA7bdd49519efe26d45;
+    address constant NEW_POLICY = 0x81EC35Df972Dffbc14AB1A516Da8f3285DF65A25;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
