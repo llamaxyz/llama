@@ -19,17 +19,17 @@ interface IVertexStrategy {
     /// @return Boolean value that is true if the action can be canceled.
     function isActionCancelationValid(uint256 actionId) external view returns (bool);
 
-    /// @notice Get the weight of an approval of a policyholder at a specific block number.
+    /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
     /// @param policyholder Address of the policyholder.
-    /// @param blockNumber The block number at which to get the approval weight.
+    /// @param timestamp The block number at which to get the approval weight.
     /// @return The weight of the policyholder's approval.
-    function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256);
+    function getApprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256);
 
-    /// @notice Get the weight of a disapproval of a policyholder at a specific block number.
+    /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
     /// @param policyholder Address of the policyholder.
-    /// @param blockNumber The block number at which to get the disapproval weight.
+    /// @param timestamp The block number at which to get the disapproval weight.
     /// @return The weight of the policyholder's disapproval.
-    function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256);
+    function getDisapprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256);
 
     /// @notice Determine the minimum weight needed for an action to reach quorum.
     /// @param supply Total number of policyholders eligible for participation.

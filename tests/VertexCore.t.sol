@@ -44,9 +44,9 @@ contract VertexCoreTest is Test {
     bytes8[][] public initialPermissions;
     // Strategy config
     // TODO fuzz over these values rather than hardcoding
-    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
-    uint256 public constant queuingDuration = 4 days;
-    uint256 public constant expirationDelay = 8 days;
+    uint256 public constant approvalPeriod = 2 days;
+    uint256 public constant queuingPeriod = 4 days;
+    uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
     uint256 public constant minApprovalPct = 40_00;
     uint256 public constant minDisapprovalPct = 20_00;
@@ -71,8 +71,8 @@ contract VertexCoreTest is Test {
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: queuingDuration,
-            expirationDelay: expirationDelay,
+            queuingPeriod: queuingPeriod,
+            expirationPeriod: expirationPeriod,
             isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
             minApprovalPct: minApprovalPct,
             minDisapprovalPct: minDisapprovalPct,
@@ -82,8 +82,8 @@ contract VertexCoreTest is Test {
 
         initialStrategies[1] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: 0,
-            expirationDelay: 1 days,
+            queuingPeriod: 0,
+            expirationPeriod: 1 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 80_00,
             minDisapprovalPct: 10001,
@@ -194,7 +194,7 @@ contract VertexCoreTest is Test {
     }
 
     function _queueAction(uint256 _actionId) public {
-        uint256 executionTime = block.timestamp + strategies[0].queuingDuration();
+        uint256 executionTime = block.timestamp + strategies[0].queuingPeriod();
         vm.expectEmit(true, true, true, true);
         emit ActionQueued(_actionId, address(this), strategies[0], actionCreator, executionTime);
         vertex.queueAction(_actionId);
@@ -221,7 +221,6 @@ contract VertexCoreTest is Test {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -229,7 +228,6 @@ contract VertexCoreTest is Test {
         _disapproveAction(policyholder1);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         _executeAction();
     }
@@ -328,12 +326,12 @@ contract CreateAction is VertexCoreTest {
         uint256 _actionId = vertex.createAction(strategies[0], address(targetProtocol), 0, pauseSelector, abi.encode(true));
 
         Action memory action = vertex.getAction(_actionId);
-        uint256 approvalEndTime = block.number + action.strategy.approvalPeriod();
+        uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
 
         assertEq(_actionId, 0);
         assertEq(vertex.actionsCount(), 1);
-        assertEq(action.createdBlockNumber, block.number);
-        assertEq(approvalEndTime, block.number + 14400);
+        assertEq(action.creationTime, block.timestamp);
+        assertEq(approvalEndTime, block.timestamp + 2 days);
         assertEq(action.approvalPolicySupply, 5);
         assertEq(action.disapprovalPolicySupply, 5);
     }
@@ -436,7 +434,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -444,7 +441,6 @@ contract CancelAction is VertexCoreTest {
         _disapproveAction(policyholder1);
 
         vm.warp(block.timestamp + 15 days);
-        vm.roll(block.number + 108000);
 
         vm.startPrank(actionCreator);
         vm.expectRevert(VertexCore.InvalidCancelation.selector);
@@ -456,7 +452,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), false);
 
@@ -469,7 +464,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -488,7 +482,6 @@ contract CancelAction is VertexCoreTest {
         _approveAction(policyholder2);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(0), true);
         _queueAction();
@@ -504,7 +497,6 @@ contract QueueAction is VertexCoreTest {
         _approveAction(policyholder1);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
         vertex.queueAction(0);
@@ -518,7 +510,6 @@ contract QueueAction is VertexCoreTest {
         _approveAction(policyholder3);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vm.expectRevert(VertexCore.InvalidActionId.selector);
         vertex.queueAction(1);
@@ -536,7 +527,6 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(actionId), true);
     }
@@ -560,7 +550,6 @@ contract ExecuteAction is VertexCoreTest {
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.InvalidActionId.selector);
         vertex.executeAction(actionId + 1);
@@ -571,7 +560,6 @@ contract ExecuteAction is VertexCoreTest {
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 6 hours);
-        vm.roll(block.number + 1800);
 
         vm.expectRevert(VertexCore.TimelockNotFinished.selector);
         vertex.executeAction(actionId);
@@ -585,12 +573,10 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
         vertex.executeAction(actionId);
@@ -610,14 +596,12 @@ contract ExecuteAction is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(actionId), true);
 
         vertex.queueAction(actionId);
 
         vm.warp(block.timestamp + 5 days);
-        vm.roll(block.number + 36000);
 
         vm.expectRevert(VertexCore.FailedActionExecution.selector);
         vertex.executeAction(actionId);
@@ -653,7 +637,6 @@ contract SubmitApproval is VertexCoreTest {
         _approveAction(policyholder2, actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         vertex.queueAction(actionId);
 
@@ -700,7 +683,6 @@ contract SubmitDisapproval is VertexCoreTest {
         _approveAction(policyholder2, _actionId);
 
         vm.warp(block.timestamp + 6 days);
-        vm.roll(block.number + 43200);
 
         assertEq(strategies[0].isActionPassed(_actionId), true);
         _queueAction(_actionId);
@@ -768,8 +750,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
         // them below.
         newStrategies[0] = Strategy({
             approvalPeriod: 4 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,
@@ -779,8 +761,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
         newStrategies[1] = Strategy({
             approvalPeriod: 5 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,
@@ -790,8 +772,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
         newStrategies[2] = Strategy({
             approvalPeriod: 6 days,
-            queuingDuration: 14 days,
-            expirationDelay: 3 days,
+            queuingPeriod: 14 days,
+            expirationPeriod: 3 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 0,
             minDisapprovalPct: 20_00,
