@@ -131,46 +131,43 @@ contract IsActionCancelationValid is VertexStrategyTest {
 }
 
 contract GetApprovalWeightAt is VertexStrategyTest {
-    function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
-        uint256 _blocksUntilPermission,
-        bytes8 _permission,
-        uint256 _weight,
-        address _policyHolder
-    ) public {
+    function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(uint256 _timeUntilPermission, bytes8 _permission, uint256 _weight, address _policyHolder)
+        public
+    {
         // TODO
-        // vm.assume(_blocksUntilPermission > 0);
-        // uint _referenceBlock = block.number;
-        // vm.roll(_blocksUntilPermission)
+        // vm.assume(_timeUntilPermission > 0);
+        // uint _referenceTime = block.timestamp;
+        // vm.warp(_timeUntilPermission)
         // grant the permission to _policyHolder
         // deploy strategy that gives _weight to _permission
         // assertEq(
-        //   strategy.getApprovalWeightAt(_policyHolder, _referenceBlock);
+        //   strategy.getApprovalWeightAt(_policyHolder, _referenceTime);
         //   0 // there should be zero weight before permission was granted
         // );
     }
 
     function testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(
-        uint256 _blocksSincePermission, // no assume for this param, we want 0 tested
+        uint256 _timeSincePermission, // no assume for this param, we want 0 tested
         bytes8 _permission,
         uint256 _weight,
         address _policyHolder
     ) public {
         // TODO
-        // uint _referenceBlock = block.number;
+        // uint _referenceTime = block.timestamp;
         // grant the permission to _policyHolder
         // deploy strategy that gives _weight to _permission
-        // vm.roll(_blocksSincePermission)
+        // vm.warp(_timeSincePermission)
         // assertEq(
-        //   strategy.getApprovalWeightAt(_policyHolder, block.number);
+        //   strategy.getApprovalWeightAt(_policyHolder, block.timestamp);
         //   _weight // the account should still have the weight
         // );
     }
 
-    function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _blockNumber, address _nonPolicyHolder) public {
+    function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, address _nonPolicyHolder) public {
         // TODO
     }
 
-    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _blockNumber, bytes8 _permission, address _policyHolder) public {
+    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _timestamp, bytes8 _permission, address _policyHolder) public {
         // TODO
         // _policyHolder doesn't have a weight for _permission
         // the function should return the default weight
@@ -178,46 +175,43 @@ contract GetApprovalWeightAt is VertexStrategyTest {
 }
 
 contract GetDisapprovalWeightAt is VertexStrategyTest {
-    function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
-        uint256 _blocksUntilPermission,
-        bytes8 _permission,
-        uint256 _weight,
-        address _policyHolder
-    ) public {
+    function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(uint256 _timeUntilPermission, bytes8 _permission, uint256 _weight, address _policyHolder)
+        public
+    {
         // TODO
-        // vm.assume(_blocksUntilPermission > 0);
-        // uint _referenceBlock = block.number;
-        // vm.roll(_blocksUntilPermission)
+        // vm.assume(_timeUntilPermission > 0);
+        // uint _referenceTime = block.timestamp;
+        // vm.warp(_timeUntilPermission)
         // grant the permission to _policyHolder
         // deploy strategy that gives _weight to _permission
         // assertEq(
-        //   strategy.getDisapprovalWeightAt(_policyHolder, _referenceBlock);
+        //   strategy.getDisapprovalWeightAt(_policyHolder, _referenceTime);
         //   0 // there should be zero weight before permission was granted
         // );
     }
 
     function testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(
-        uint256 _blocksSincePermission, // no assume for this param, we want 0 tested
+        uint256 _timeSincePermission, // no assume for this param, we want 0 tested
         bytes8 _permission,
         uint256 _weight,
         address _policyHolder
     ) public {
         // TODO
-        // uint _referenceBlock = block.number;
+        // uint _referenceTime = block.timestamp;
         // grant the permission to _policyHolder
         // deploy strategy that gives _weight to _permission
-        // vm.roll(_blocksSincePermission)
+        // vm.warp(_timeSincePermission)
         // assertEq(
-        //   strategy.getDisapprovalWeightAt(_policyHolder, block.number);
+        //   strategy.getDisapprovalWeightAt(_policyHolder, block.timestamp);
         //   _weight // the account should still have the weight
         // );
     }
 
-    function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _blockNumber, address _nonPolicyHolder) public {
+    function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, address _nonPolicyHolder) public {
         // TODO
     }
 
-    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _blockNumber, bytes8 _permission, address _policyHolder) public {
+    function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(uint256 _timestamp, bytes8 _permission, address _policyHolder) public {
         // TODO
         // _policyHolder doesn't have a weight for _permission
         // the function should return the default weight

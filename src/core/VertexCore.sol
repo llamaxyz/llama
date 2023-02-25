@@ -121,7 +121,7 @@ contract VertexCore is IVertexCore, Initializable {
         newAction.value = value;
         newAction.selector = selector;
         newAction.data = data;
-        newAction.createdBlockNumber = block.number;
+        newAction.creationTime = block.timestamp;
         newAction.approvalPolicySupply = approvalPolicySupply;
         newAction.disapprovalPolicySupply = disapprovalPolicySupply;
 
@@ -138,7 +138,7 @@ contract VertexCore is IVertexCore, Initializable {
     function queueAction(uint256 actionId) external override {
         if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
         Action storage action = actions[actionId];
-        uint256 executionTime = block.timestamp + action.strategy.queuingDuration();
+        uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
         queuedActions[actionId] = true;
         action.executionTime = executionTime;
@@ -245,7 +245,7 @@ contract VertexCore is IVertexCore, Initializable {
     /// @inheritdoc IVertexCore
     function isActionExpired(uint256 actionId) public view override returns (bool) {
         Action storage action = actions[actionId];
-        return block.timestamp >= action.executionTime + action.strategy.expirationDelay();
+        return block.timestamp >= action.executionTime + action.strategy.expirationPeriod();
     }
 
     /// @inheritdoc IVertexCore
@@ -257,13 +257,13 @@ contract VertexCore is IVertexCore, Initializable {
     function getActionState(uint256 actionId) public view override returns (ActionState) {
         if (actionId >= actionsCount) revert InvalidActionId();
         Action storage action = actions[actionId];
-        uint256 approvalEndBlock = action.createdBlockNumber + action.strategy.approvalPeriod();
+        uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
 
         if (action.canceled) {
             return ActionState.Canceled;
         }
 
-        if (block.number < approvalEndBlock && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
+        if (block.timestamp < approvalEndTime && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))) {
             return ActionState.Active;
         }
 
@@ -292,7 +292,7 @@ contract VertexCore is IVertexCore, Initializable {
         if (hasApproved) revert DuplicateApproval();
 
         Action storage action = actions[actionId];
-        uint256 weight = action.strategy.getApprovalWeightAt(policyholder, action.createdBlockNumber);
+        uint256 weight = action.strategy.getApprovalWeightAt(policyholder, action.creationTime);
 
         action.totalApprovals += weight;
         approvals[actionId][policyholder] = true;
@@ -309,7 +309,7 @@ contract VertexCore is IVertexCore, Initializable {
 
         if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
-        uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, action.createdBlockNumber);
+        uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, action.creationTime);
 
         action.totalDisapprovals += weight;
         disapprovals[actionId][policyholder] = true;
