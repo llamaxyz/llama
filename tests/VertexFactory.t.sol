@@ -182,7 +182,8 @@ contract VertexFactoryTest is Test {
         permissionsToAdd2[0] = PermissionChangeData(0xffffffffffffffff, 0);
         initialBatchGrantData[0] = BatchGrantData({user: actionCreator, permissionsToAdd: permissionsToAdd});
         initialBatchGrantData[1] = BatchGrantData({user: policyholder1, permissionsToAdd: permissionsToAdd2});
-        initialPolicies = initialBatchGrantData;
+        initialPolicies.push(initialBatchGrantData[0]);
+        initialPolicies.push(initialBatchGrantData[1]);
         return initialBatchGrantData;
     }
 }
