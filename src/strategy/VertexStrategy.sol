@@ -28,19 +28,19 @@ contract VertexStrategy is IVertexStrategy {
     VertexPolicyNFT public immutable policy;
 
     /// @notice Minimum time between queueing and execution of action.
-    uint256 public immutable queuingDuration;
+    uint256 public immutable queuingPeriod;
 
     /// @notice Time after executionTime that action can be executed before permanently expiring.
-    uint256 public immutable expirationDelay;
+    uint256 public immutable expirationPeriod;
 
     /// @notice Length of approval period in blocks.
     uint256 public immutable approvalPeriod;
 
-    /// @notice Minimum percentage of total approval weight / total approval supply at createdBlockNumber of the action for it to be queued. In bps, where
+    /// @notice Minimum percentage of total approval weight / total approval supply at creationTime of the action for it to be queued. In bps, where
     /// 100_00 == 100%.
     uint256 public immutable minApprovalPct;
 
-    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at createdBlockNumber of the action for it to be canceled. In bps,
+    /// @notice Minimum percentage of total disapproval weight / total disapproval supply at creationTime of the action for it to be canceled. In bps,
     /// where 100_00
     /// == 100%.
     uint256 public immutable minDisapprovalPct;
@@ -59,8 +59,8 @@ contract VertexStrategy is IVertexStrategy {
 
     /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
     constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
-        queuingDuration = strategyConfig.queuingDuration;
-        expirationDelay = strategyConfig.expirationDelay;
+        queuingPeriod = strategyConfig.queuingPeriod;
+        expirationPeriod = strategyConfig.expirationPeriod;
         isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
         approvalPeriod = strategyConfig.approvalPeriod;
         policy = _policy;
@@ -117,12 +117,12 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getApprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+    function getApprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256) {
         if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
         uint256 permissionsLength = approvalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
-                if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], timestamp)) {
                     return approvalWeightByPermission[approvalPermissions[i]];
                 }
             }
@@ -132,12 +132,12 @@ contract VertexStrategy is IVertexStrategy {
     }
 
     /// @inheritdoc IVertexStrategy
-    function getDisapprovalWeightAt(address policyholder, uint256 blockNumber) external view returns (uint256) {
+    function getDisapprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256) {
         if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
         uint256 permissionsLength = disapprovalPermissions.length;
         unchecked {
             for (uint256 i; i < permissionsLength; ++i) {
-                if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], blockNumber)) {
+                if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], timestamp)) {
                     return disapprovalWeightByPermission[disapprovalPermissions[i]];
                 }
             }

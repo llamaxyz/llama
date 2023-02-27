@@ -45,9 +45,9 @@ contract VertexFactoryTest is Test {
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
     // Strategy config
-    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
-    uint256 public constant queuingDuration = 4 days;
-    uint256 public constant expirationDelay = 8 days;
+    uint256 public constant approvalPeriod = 2 days;
+    uint256 public constant queuingPeriod = 4 days;
+    uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
     uint256 public constant minApprovalPct = 40_00;
     uint256 public constant minDisapprovalPct = 20_00;
@@ -137,8 +137,8 @@ contract VertexFactoryTest is Test {
 
         initialStrategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: queuingDuration,
-            expirationDelay: expirationDelay,
+            queuingPeriod: queuingPeriod,
+            expirationPeriod: expirationPeriod,
             isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
             minApprovalPct: minApprovalPct,
             minDisapprovalPct: minDisapprovalPct,
@@ -148,8 +148,8 @@ contract VertexFactoryTest is Test {
 
         initialStrategies[1] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: 0,
-            expirationDelay: 1 days,
+            queuingPeriod: 0,
+            expirationPeriod: 1 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 80_00,
             minDisapprovalPct: 10001,
@@ -195,7 +195,7 @@ contract Deploy is VertexFactoryTest {
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
     address constant NEW_VERTEX = 0xB4ca0F7303E6F3456654a5cbB49E648821CA39A7;
-    address constant NEW_POLICY = 0x677303f46892B0A4B51dc71FE12c0a19c7Ed3929;
+    address constant NEW_POLICY = 0x41bc205dD6449f6A5cCa84AD79c565dAfDC10762;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
