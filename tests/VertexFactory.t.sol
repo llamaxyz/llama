@@ -40,9 +40,9 @@ contract VertexFactoryTest is Test {
     uint256[] public policyIds;
 
     // Strategy config
-    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
-    uint256 public constant queuingDuration = 4 days;
-    uint256 public constant expirationDelay = 8 days;
+    uint256 public constant approvalPeriod = 2 days;
+    uint256 public constant queuingPeriod = 4 days;
+    uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
     uint256 public constant minApprovalPct = 40_00;
     uint256 public constant minDisapprovalPct = 20_00;
@@ -170,8 +170,8 @@ contract VertexFactoryTest is Test {
 
         _strategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: queuingDuration,
-            expirationDelay: expirationDelay,
+            queuingPeriod: queuingPeriod,
+            expirationPeriod: expirationPeriod,
             isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
             minApprovalPct: minApprovalPct,
             minDisapprovalPct: minDisapprovalPct,
@@ -181,8 +181,8 @@ contract VertexFactoryTest is Test {
 
         _strategies[1] = Strategy({
             approvalPeriod: approvalPeriod,
-            queuingDuration: 0,
-            expirationDelay: 1 days,
+            queuingPeriod: 0,
+            expirationPeriod: 1 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 80_00,
             minDisapprovalPct: 10001,
