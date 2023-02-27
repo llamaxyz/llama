@@ -34,21 +34,19 @@ contract VertexPolicyNFTTest is Test {
 
     function _buildPermissionChangeData() internal returns (PermissionChangeData[] memory permissionChangeData) {
         PermissionData memory _permission = PermissionData(
-          // TODO These values should be function inputs so they can fuzzed over.
-          address(0xdeadbeef),
-          bytes4(0x08080808),
-          VertexStrategy(address(0xdeadbeefdeadbeef))
+            // TODO These values should be function inputs so they can fuzzed over.
+            address(0xdeadbeef),
+            bytes4(0x08080808),
+            VertexStrategy(address(0xdeadbeefdeadbeef))
         );
         permissionChangeData = new PermissionChangeData[](1);
-        permissionChangeData[0] = PermissionChangeData({
-          permissionId: vertexPolicyNFT.hashPermission(_permission),
-          expirationTimestamp: 0
-        });
+        // we cant call vertexPolicyNFT.hashPermission(_permission) because we have not yet deployed the contract
+        permissionChangeData[0] = PermissionChangeData({permissionId: bytes8(keccak256(abi.encode(_permission))), expirationTimestamp: 0});
     }
 
     function _buildBatchGrantData(address _user) internal returns (BatchGrantData[] memory _batchGrantData) {
-      _batchGrantData = new BatchGrantData[](1);
-      _batchGrantData[0] = BatchGrantData(_user, _buildPermissionChangeData());
+        _batchGrantData = new BatchGrantData[](1);
+        _batchGrantData[0] = BatchGrantData(_user, _buildPermissionChangeData());
     }
 
     function generateGenericPermissionArray() internal {
@@ -67,7 +65,6 @@ contract VertexPolicyNFTTest is Test {
         vertexPolicyNFT.setVertex(address(this));
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
         generateGenericPermissionArray();
-        vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
         policyIds.push(ADDRESS_THIS_TOKEN_ID);
     }
 
@@ -226,17 +223,14 @@ contract VertexPolicyNFTTest is Test {
         uint256 _newExpirationTimestamp = block.timestamp + 1 days;
         address _newAddress = address(0xdeadbeef);
 
-        PermissionChangeData[] memory _changes = new PermissionChangeData[](0);
+        PermissionChangeData[] memory _changes = new PermissionChangeData[](1);
         _changes[0] = PermissionChangeData(permissionSignature[0], _newExpirationTimestamp);
 
         BatchGrantData[] memory initialBatchGrantData = new BatchGrantData[](1);
         initialBatchGrantData[0] = BatchGrantData(_newAddress, _changes);
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
 
-        assertEq(
-          vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]),
-          _newExpirationTimestamp
-        );
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]), _newExpirationTimestamp);
     }
 
     // function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
