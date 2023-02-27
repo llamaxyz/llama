@@ -89,7 +89,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     // For a given permission ID and timestamp, the sum of that permission's quantity over all users
     // with that permission should equal the total supply of that permission ID.
-    function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public {
+    function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public view {
         bytes8[] memory allPermissionIds = handler.getPermissionIds();
         for (uint256 i = 0; i < allPermissionIds.length; i++) {
             PermissionIdCheckpoint[] memory checkpoints = policy.getTokenPermissionSupplyCheckpoints(allPermissionIds[i]);
