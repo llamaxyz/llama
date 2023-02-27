@@ -39,9 +39,9 @@
 | createAndAuthorizeStrategies                | 2606508         | 2606508 | 2606508 | 2606508 | 1       |
 | executeAction                               | 454             | 20042   | 13174   | 37727   | 7       |
 | getAction                                   | 3950            | 7925    | 3950    | 21950   | 54      |
-| initialize                                  | 2037448         | 2064664 | 2037448 | 2240245 | 170     |
-| name                                        | 3277            | 3277    | 3277    | 3277    | 1       |
-| policy                                      | 350             | 357     | 350     | 2350    | 270     |
+| initialize                                  | 1935            | 2052601 | 2037448 | 2240245 | 171     |
+| name                                        | 1277            | 1943    | 1277    | 3277    | 3       |
+| policy                                      | 350             | 357     | 350     | 2350    | 271     |
 | queueAction                                 | 521             | 52637   | 55028   | 83528   | 13      |
 | submitApproval                              | 2802            | 43192   | 42575   | 70525   | 42      |
 | submitDisapproval                           | 2584            | 44190   | 60313   | 62313   | 9       |
@@ -74,6 +74,7 @@
 | 2412018                                                 | 15515           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
 | balanceOf                                               | 673             | 1693   | 2673   | 2673   | 49      |
+| baseURI                                                 | 3011            | 3011   | 3011   | 3011   | 1       |
 | batchGrantPolicies                                      | 3638            | 635167 | 877563 | 970471 | 154     |
 | batchRevokePolicies                                     | 3037            | 39469  | 59005  | 70605  | 5       |
 | batchUpdatePermissions                                  | 13808           | 60453  | 34228  | 159548 | 4       |
@@ -83,12 +84,13 @@
 | hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 58      |
 | holderHasPermissionAt                                   | 1647            | 2398   | 2431   | 3086   | 4       |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
-| setBaseURI                                              | 69597           | 69597  | 69597  | 69597  | 1       |
+| setBaseURI                                              | 25211           | 25211  | 25211  | 25211  | 1       |
 | setVertex                                               | 22669           | 22669  | 22669  | 22669  | 227     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
-| tokenURI                                                | 5804            | 5804   | 5804   | 5804   | 1       |
+| tokenURI                                                | 5336            | 5336   | 5336   | 5336   | 1       |
 | totalSupply                                             | 349             | 755    | 349    | 2349   | 59      |
 | transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
+| vertex                                                  | 426             | 426    | 426    | 426    | 2       |
 
 
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
@@ -111,15 +113,3 @@
 
 
 
-
-Failing tests:
-Encountered 7 failing tests in tests/VertexFactory.t.sol:Deploy
-[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysPolicy() (gas: 4899256)
-[31m[FAIL. Reason: EvmError: Revert][0m test_DeploysVertexCore() (gas: 4899256)
-[31m[FAIL. Reason: Log != expected log][0m test_EmitsVertexCreatedEvent() (gas: 4886561)
-[31m[FAIL. Reason: EvmError: Revert][0m test_InitializesVertexCore() (gas: 4886841)
-[31m[FAIL. Reason: EvmError: Revert][0m test_ReturnsAddressOfTheNewVertexCoreContract() (gas: 4899063)
-[31m[FAIL. Reason: EvmError: Revert][0m test_SetsPolicyAddressOnVertexCore() (gas: 4886809)
-[31m[FAIL. Reason: EvmError: Revert][0m test_SetsVertexCoreAddressOnThePolicy() (gas: 4886810)
-
-Encountered a total of [31m7[0m failing tests, [32m246[0m tests succeeded
