@@ -94,26 +94,28 @@ contract VertexFactoryTest is Test {
         vm.label(actionCreator, "Action Creator");
     }
 
-    function _computeStrategyAddress(Strategy memory _strategy) internal returns(address _address) {
+    function _computeStrategyAddress(Strategy memory _strategy) internal returns (address _address) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),
                 address(rootVertex),
                 keccak256(abi.encode(_strategy)), // strategy salt
-                keccak256(abi.encodePacked(
-                    type(VertexStrategy).creationCode, // bytecode
-                    abi.encode(_strategy, rootVertex.policy(), address(rootVertex)))
+                keccak256(
+                    abi.encodePacked(
+                        type(VertexStrategy).creationCode, // bytecode
+                        abi.encode(_strategy, rootVertex.policy(), address(rootVertex))
+                    )
                 )
             )
         );
         _address = address(uint160(uint256(hash)));
-      }
+    }
 
     struct TestHelperVars {
-      PermissionData pausePermissionData;
-      PermissionData failPermissionData;
-      PermissionChangeData[] defaultPermissions;
-      PermissionChangeData[] creatorPermissions;
+        PermissionData pausePermissionData;
+        PermissionData failPermissionData;
+        PermissionChangeData[] defaultPermissions;
+        PermissionChangeData[] creatorPermissions;
     }
 
     function createPolicies() internal {
@@ -121,32 +123,24 @@ contract VertexFactoryTest is Test {
 
         TestHelperVars memory _vars;
 
-        _vars.pausePermissionData = PermissionData({
-          target: address(protocol),
-          selector: pauseSelector,
-          strategy: strategies[0]
-        });
-        _vars.failPermissionData = PermissionData({
-          target: address(protocol),
-          selector: failSelector,
-          strategy: strategies[0]
-        });
+        _vars.pausePermissionData = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
+        _vars.failPermissionData = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
         permissions.push(_vars.pausePermissionData);
 
         _vars.creatorPermissions = new PermissionChangeData[](2);
         _vars.creatorPermissions[0] = PermissionChangeData({
-          permissionId: policy.hashPermission(_vars.failPermissionData),
-          expirationTimestamp: 0 // no expiration
+            permissionId: policy.hashPermission(_vars.failPermissionData),
+            expirationTimestamp: 0 // no expiration
         });
         _vars.creatorPermissions[1] = PermissionChangeData({
-          permissionId: policy.hashPermission(_vars.pausePermissionData),
-          expirationTimestamp: 0 // no expiration
+            permissionId: policy.hashPermission(_vars.pausePermissionData),
+            expirationTimestamp: 0 // no expiration
         });
 
         _vars.defaultPermissions = new PermissionChangeData[](1);
         _vars.defaultPermissions[0] = PermissionChangeData({
-          permissionId: policy.hashPermission(_vars.pausePermissionData),
-          expirationTimestamp: 0 // no expiration
+            permissionId: policy.hashPermission(_vars.pausePermissionData),
+            expirationTimestamp: 0 // no expiration
         });
 
         addresses.push(actionCreator);
@@ -212,8 +206,8 @@ contract VertexFactoryTest is Test {
         secondPermissions[0] = PermissionChangeData(0xffffffffffffffff, 0);
 
         initialBatchGrantData = new BatchGrantData[](2);
-        initialBatchGrantData[0] = BatchGrantData({user: addresses[0], permissionsToAdd: firstPermissions});
-        initialBatchGrantData[1] = BatchGrantData({user: addresses[1], permissionsToAdd: secondPermissions});
+        initialBatchGrantData[0] = BatchGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
+        initialBatchGrantData[1] = BatchGrantData({user: policyholder1, permissionsToAdd: secondPermissions});
     }
 }
 
@@ -244,7 +238,7 @@ contract Deploy is VertexFactoryTest {
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
     address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-    address constant NEW_POLICY = 0x81EC35Df972Dffbc14AB1A516Da8f3285DF65A25;
+    address constant NEW_POLICY = 0xE594b7EDb096469f65416607ca269E5FEBbC0a50;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
@@ -271,14 +265,14 @@ contract Deploy is VertexFactoryTest {
 
     function test_DeploysPolicy() public {
         assertEq(NEW_POLICY.code.length, 0);
-        deployVertex();
+        VertexCore _vertex = deployVertex();
         assertGt(NEW_POLICY.code.length, 0);
         VertexPolicyNFT(NEW_POLICY).baseURI(); // Sanity check that this doesn't revert.
     }
 
     function test_DeploysVertexCore() public {
         assertEq(NEW_VERTEX.code.length, 0);
-        deployVertex();
+        VertexCore _vertex = deployVertex();
         assertGt(NEW_VERTEX.code.length, 0);
         VertexCore(NEW_VERTEX).name(); // Sanity check that this doesn't revert.
     }
