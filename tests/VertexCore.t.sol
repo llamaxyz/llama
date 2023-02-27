@@ -22,7 +22,6 @@ contract VertexCoreTest is Test {
     VertexStrategy[] public strategies;
     VertexAccount[] public accounts;
     VertexPolicyNFT public policy;
-    BatchGrantData[] public initialPolicyData;
 
     // Mock protocol for action targets.
     ProtocolXYZ public targetProtocol;
@@ -95,10 +94,21 @@ contract VertexCoreTest is Test {
         initialAccounts[0] = "VertexAccount0";
         initialAccounts[1] = "VertexAccount1";
 
+        // We don't instantiate any initial policies b/c we can't compute the strategy addresses yet.
+        BatchGrantData[] memory initialPolicyData = new BatchGrantData[](0);
+
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
         vertexAccountImplementation = new VertexAccount();
-        vertexFactory = new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicyData);
+        vertexFactory = new VertexFactory(
+          vertexCore,
+          vertexAccountImplementation,
+          "ProtocolXYZ",
+          "VXP",
+          initialStrategies,
+          initialAccounts,
+          initialPolicyData
+        );
         vertex = VertexCore(vertexFactory.rootVertex());
         targetProtocol = new ProtocolXYZ(address(vertex));
 
@@ -112,7 +122,8 @@ contract VertexCoreTest is Test {
         policy = vertex.policy();
 
         // Create and assign policies
-        _grantPermissions();
+        _grantPermissions(strategies[0], policy);
+        vm.stopPrank();
 
         vm.label(actionCreator, "Action Creator");
         vm.label(address(targetProtocol), "ProtocolXYZ");
@@ -133,31 +144,27 @@ contract VertexCoreTest is Test {
         );
     }
 
-    function _grantPermissions() public {
-        vm.startPrank(address(vertex));
-
+    function _grantPermissions(VertexStrategy initialStrategy, VertexPolicyNFT policy) public {
         PermissionChangeData[] memory creatorPermissions = new PermissionChangeData[](3);
         PermissionChangeData[] memory pauserPermissions = new PermissionChangeData[](1);
 
-        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: strategies[0]});
-        PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: strategies[0]});
-        PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: strategies[0]});
+        PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: initialStrategy});
+        PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: initialStrategy});
+        PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: initialStrategy});
         creatorPermissions[0] = PermissionChangeData(policy.hashPermission(failPermission), 0);
-        pauserPermissions[0] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
         creatorPermissions[1] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
         creatorPermissions[2] = PermissionChangeData(policy.hashPermission(receiveETHPermission), 0);
+        pauserPermissions[0] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
 
-        address[] memory batchedAddresses = new address[](5);
-        bytes8[][] memory batchedSignatures = new bytes8[][](5);
+        BatchGrantData[] memory initialPolicyData = new BatchGrantData[](5);
+        initialPolicyData[0] = BatchGrantData(actionCreator, creatorPermissions);
+        initialPolicyData[1] = BatchGrantData(policyholder1, pauserPermissions);
+        initialPolicyData[2] = BatchGrantData(policyholder2, pauserPermissions);
+        initialPolicyData[3] = BatchGrantData(policyholder3, pauserPermissions);
+        initialPolicyData[4] = BatchGrantData(policyholder4, pauserPermissions);
 
-        initialPolicyData.push(BatchGrantData(actionCreator, creatorPermissions));
-        initialPolicyData.push(BatchGrantData(policyholder1, pauserPermissions));
-        initialPolicyData.push(BatchGrantData(policyholder2, pauserPermissions));
-        initialPolicyData.push(BatchGrantData(policyholder3, pauserPermissions));
-        initialPolicyData.push(BatchGrantData(policyholder4, pauserPermissions));
-
+        vm.prank(address(vertex));
         policy.batchGrantPolicies(initialPolicyData);
-        vm.stopPrank();
     }
 
     function _approveAction(address _policyholder, uint256 _actionId) public {
