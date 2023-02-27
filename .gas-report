@@ -1,5 +1,5 @@
 | src/account/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
-| ---------------------------------------------------- | --------------- | ----- | ------ | ----- | ------- |
+|------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                      | Deployment Size |       |        |       |         |
 | 1977433                                              | 10105           |       |        |       |         |
 | Function Name                                        | min             | avg   | median | max   | # calls |
@@ -25,8 +25,9 @@
 | transferERC20                                        | 2708            | 4221  | 2743   | 7212  | 3       |
 | transferERC721                                       | 2620            | 5676  | 2655   | 11754 | 3       |
 
+
 | src/core/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
-| ------------------------------------------- | --------------- | ------- | ------- | ------- | ------- |
+|---------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                             | Deployment Size |         |         |         |         |
 | 3682284                                     | 18619           |         |         |         |         |
 | Function Name                               | min             | avg     | median  | max     | # calls |
@@ -46,8 +47,9 @@
 | submitDisapproval                           | 2584            | 44190   | 60313   | 62313   | 9       |
 | unauthorizeStrategies                       | 8069            | 8069    | 8069    | 8069    | 1       |
 
+
 | src/factory/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
-| ---------------------------------------------------- | --------------- | ------- | ------- | ------- | ------- |
+|------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                      | Deployment Size |         |         |         |         |
 | 8417107                                              | 39498           |         |         |         |         |
 | Function Name                                        | min             | avg     | median  | max     | # calls |
@@ -57,15 +59,17 @@
 | vertexCoreLogic                                      | 249             | 249     | 249     | 249     | 1       |
 | vertexCount                                          | 361             | 1694    | 2361    | 2361    | 3       |
 
+
 | src/mock/scripts/TestScript.sol:TestScript contract |                 |     |        |     |         |
-| --------------------------------------------------- | --------------- | --- | ------ | --- | ------- |
+|-----------------------------------------------------|-----------------|-----|--------|-----|---------|
 | Deployment Cost                                     | Deployment Size |     |        |     |         |
 | 15669                                               | 107             |     |        |     |         |
 | Function Name                                       | min             | avg | median | max | # calls |
 | fallback                                            | 70              | 70  | 70     | 70  | 1       |
 
+
 | src/policy/VertexPolicyNFT.sol:VertexPolicyNFT contract |                 |        |        |        |         |
-| ------------------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+|---------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                         | Deployment Size |        |        |        |         |
 | 2412018                                                 | 15515           |        |        |        |         |
 | Function Name                                           | min             | avg    | median | max    | # calls |
@@ -79,15 +83,16 @@
 | hashPermissions                                         | 1774            | 1774   | 1774   | 1774   | 58      |
 | holderHasPermissionAt                                   | 1647            | 2398   | 2431   | 3086   | 4       |
 | ownerOf                                                 | 557             | 557    | 557    | 557    | 1       |
-| setBaseURI                                              | 47452           | 47452  | 47452  | 47452  | 1       |
+| setBaseURI                                              | 69597           | 69597  | 69597  | 69597  | 1       |
 | setVertex                                               | 22669           | 22669  | 22669  | 22669  | 227     |
 | tokenToPermissionExpirationTimestamp                    | 731             | 1531   | 731    | 2731   | 5       |
-| tokenURI                                                | 5631            | 5631   | 5631   | 5631   | 1       |
+| tokenURI                                                | 5804            | 5804   | 5804   | 5804   | 1       |
 | totalSupply                                             | 349             | 755    | 349    | 2349   | 59      |
 | transferFrom                                            | 570             | 570    | 570    | 570    | 1       |
 
+
 | src/strategy/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
-| ------------------------------------------------------- | --------------- | ----- | ------ | ----- | ------- |
+|---------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                         | Deployment Size |       |        |       |         |
 | 804747                                                  | 5774            |       |        |       |         |
 | Function Name                                           | min             | avg   | median | max   | # calls |
@@ -103,6 +108,9 @@
 | isFixedLengthApprovalPeriod                             | 235             | 235   | 235    | 235   | 45      |
 | minDisapprovalPct                                       | 307             | 307   | 307    | 307   | 7       |
 | queuingPeriod                                           | 217             | 217   | 217    | 217   | 17      |
+
+
+
 
 Failing tests:
 Encountered 7 failing tests in tests/VertexFactory.t.sol:Deploy
