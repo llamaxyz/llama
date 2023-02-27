@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
-import {PermissionData, PermissionIdCheckpoint} from "src/utils/Structs.sol";
+import {PermissionData, PermissionIdCheckpoint, PermissionChangeData, BatchUpdateData} from "src/utils/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)
@@ -110,33 +110,14 @@ contract VertexPolicyNFT is VertexPolicy {
     }
 
     /// @inheritdoc VertexPolicy
-    function batchUpdatePermissions(
-        uint256[] calldata _policyIds,
-        bytes8[][] calldata permissions,
-        bytes8[][] calldata permissionsToRemove,
-        uint256[][] calldata expirationTimestamps
-    ) public override onlyVertex {
-        uint256 length = _policyIds.length;
-        if (
-            length != permissions.length && (expirationTimestamps.length == 0 || expirationTimestamps.length == length)
-                && (permissionsToRemove.length == 0 || permissionsToRemove.length == length)
-        ) {
-            revert InvalidInput();
-        }
+    function batchUpdatePermissions(BatchUpdateData[] calldata updateData) public override onlyVertex {
+        uint256 length = updateData.length;
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
-                uint256[] memory expiration;
-                bytes8[] memory _permissionsToRemove;
-                if (expirationTimestamps.length > 0) {
-                    expiration = expirationTimestamps[i];
-                }
-                if (permissionsToRemove.length > 0) {
-                    _permissionsToRemove = permissionsToRemove[i];
-                }
-                updatePermissions(_policyIds[i], permissions[i], _permissionsToRemove, expiration);
+                updatePermissions(updateData[i]);
+                emit PermissionUpdated(updateData[i]);
             }
         }
-        emit PermissionsUpdated(_policyIds, permissions, permissionsToRemove, expirationTimestamps);
     }
 
     /// @inheritdoc VertexPolicy
@@ -181,38 +162,31 @@ contract VertexPolicyNFT is VertexPolicy {
 
     /// @notice updates a policyID with a new set of permissions
     /// @notice will delete and add permissions as needed
-    /// @param policyId the policy token id being updated
-    /// @param newPermissionSignatures the new permissions array to be set
-    function updatePermissions(
-        uint256 policyId,
-        bytes8[] calldata newPermissionSignatures,
-        bytes8[] memory permissionsToRemove,
-        uint256[] memory expirationTimestamps
-    ) private onlyVertex {
-        if (ownerOf(policyId) == address(0)) revert InvalidInput();
-        uint256 newPermissionSignaturesLength = newPermissionSignatures.length;
-        uint256 expirationTimestampsLength = expirationTimestamps.length;
-        uint256 removeLength = permissionsToRemove.length;
-        if (expirationTimestampsLength != 0 && newPermissionSignaturesLength != expirationTimestampsLength) revert InvalidInput();
+    /// @param updateData the policy token Id being updated
+    function updatePermissions(BatchUpdateData calldata updateData) private {
+        if (ownerOf(updateData.policyId) == address(0)) revert InvalidInput();
+        uint256 permissionsToAddLength = updateData.permissionsToAdd.length;
+        uint256 permissionsToRemoveLength = updateData.permissionsToRemove.length;
         unchecked {
-            for (uint256 i; i < removeLength; ++i) {
-                tokenPermissionCheckpoints[policyId][permissionsToRemove[i]].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
-                PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionsToRemove[i]];
+            for (uint256 i; i < permissionsToRemoveLength; ++i) {
+                PermissionChangeData calldata data = updateData.permissionsToRemove[i];
+                tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
+                PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[data.permissionId];
                 uint256 supplyIndex = supplyCheckpoint.length > 0 ? supplyCheckpoint.length - 1 : 0;
                 supplyCheckpoint.push(PermissionIdCheckpoint(uint224(block.timestamp), supplyCheckpoint[supplyIndex].quantity - 1));
             }
-            for (uint256 j; j < newPermissionSignaturesLength; ++j) {
-                bool _hasPermission = hasPermission(policyId, newPermissionSignatures[j]);
-                uint256 expiration = calculateExpiration(expirationTimestamps, j);
+            for (uint256 j; j < permissionsToAddLength; ++j) {
+                PermissionChangeData calldata data = updateData.permissionsToAdd[j];
+                bool _hasPermission = hasPermission(updateData.policyId, data.permissionId);
                 if (!_hasPermission) {
-                    tokenPermissionCheckpoints[policyId][newPermissionSignatures[j]].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
-                    PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[newPermissionSignatures[j]];
+                    tokenPermissionCheckpoints[updateData.policyId][data.permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 1));
+                    PermissionIdCheckpoint[] storage checkpoints = permissionSupplyCheckpoints[data.permissionId];
                     uint32 quantity = checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].quantity : 0;
                     checkpoints.push(PermissionIdCheckpoint(uint224(block.timestamp), quantity + 1));
                 }
-                if (expiration > 0 && expiration != tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[j]]) {
-                    if (expiration < block.timestamp) revert Expired();
-                    tokenToPermissionExpirationTimestamp[policyId][newPermissionSignatures[j]] = expiration;
+                if (data.expirationTimestamp > 0 && data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]) {
+                    if (data.expirationTimestamp < block.timestamp) revert Expired();
+                    tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId] = data.expirationTimestamp;
                 }
             }
         }

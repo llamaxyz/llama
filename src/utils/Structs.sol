@@ -46,3 +46,14 @@ struct Strategy {
     WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the validation process for disapproval.
     bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
 }
+
+struct PermissionChangeData {
+    bytes8 permissionId;
+    uint256 expirationTimestamp;
+}
+
+struct BatchUpdateData {
+    uint256 policyId;
+    PermissionChangeData[] permissionsToAdd;
+    PermissionChangeData[] permissionsToRemove;
+}

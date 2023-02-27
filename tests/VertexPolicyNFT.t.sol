@@ -6,12 +6,12 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {PermissionData} from "src/utils/Structs.sol";
+import {PermissionData, BatchUpdateData, PermissionChangeData} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
     event PoliciesAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionsUpdated(uint256[] policyIds, bytes8[][] permissionSignatures, bytes8[][] permissionsRemoved, uint256[][] expirationTimestamps);
+    event PermissionUpdated(BatchUpdateData updateData);
     event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
 
     VertexPolicyNFT public vertexPolicyNFT;
@@ -402,12 +402,21 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];
         permissionSignatures[0] = permissionSignature;
 
+        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
+
+        toAdd[0] = PermissionChangeData(permissionSignature[0], 0);
+        toRemove[0] = PermissionChangeData(oldPermissionSignature, 0);
+
+        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
+        updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
+
         vm.warp(block.timestamp + 100);
 
         vm.expectEmit(true, true, true, true);
-        emit PermissionsUpdated(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
+        emit PermissionUpdated(updateData[0]);
 
-        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
+        vertexPolicyNFT.batchUpdatePermissions(updateData);
 
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), false);
         assertEq(vertexPolicyNFT.hasPermission(policyIds[0], permissionSignature[0]), true);
@@ -417,26 +426,61 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
     }
 
-    // TODO This should go away if/when we switch to passing in arrays of structs instead of nested arrays.
-    function test_RevertIf_ArraysLengthsDoNotMatch() public {
-        policyIds.push(uint256(uint160(address(0xdeadbeef))));
-        vm.expectRevert(VertexPolicy.InvalidInput.selector);
-        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, initialExpirationTimestamps);
+    function test_updatesTimeStamp() public {
+        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
+
+        uint256 newExpiration = block.timestamp + 1 days;
+        toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);
+
+        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
+        updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
+
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
+        vertexPolicyNFT.batchUpdatePermissions(updateData);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpiration);
     }
 
-    function test_updatesTimeStamp() public {
-        uint256[] memory newExpirationTimestamp = new uint256[](1);
-        newExpirationTimestamp[0] = block.timestamp + 1 days;
-        expirationTimestamps.push(newExpirationTimestamp);
+    function test_ExpirationTimestampDoesNotHavePermissionIfExpired() public {
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
-        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, expirationTimestamps);
-        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
+        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
+
+        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
+
+        uint256 newExpiration = block.timestamp + 1 days;
+        toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);
+
+        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
+        updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
+
+        vertexPolicyNFT.batchUpdatePermissions(updateData);
+
+        vm.warp(block.timestamp + 2 days);
+
+        assertEq(newExpiration < block.timestamp, true);
+        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpiration);
+        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
+    }
+
+    function test_PermissionRemovalUpdatesTokenPermissionCheckpoints() public {
+        // TODO
     }
 
     function test_RevertIf_TimestampIsExpired() public {
+        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
+        PermissionChangeData[] memory toRemove = new PermissionChangeData[](0);
+
+        uint256 newExpiration = block.timestamp;
+        toAdd[0] = PermissionChangeData(permissionSignature[0], newExpiration);
+
+        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
+        updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
+
         uint256[] memory newExpirationTimestamp = new uint256[](1);
-        newExpirationTimestamp[0] = block.timestamp;
+        newExpirationTimestamp[0] = newExpiration;
         expirationTimestamps.push(newExpirationTimestamp);
+
         address[] memory newAddresses = new address[](1);
         newAddresses[0] = address(0xdeadbeef);
         addresses = newAddresses;
@@ -445,31 +489,9 @@ contract BatchUpdatePermissions is VertexPolicyNFTTest {
 
         vm.expectRevert(VertexPolicy.Expired.selector);
         vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
-        newExpirationTimestamp[0] = block.timestamp - 1 seconds;
-        expirationTimestamps[0] = newExpirationTimestamp;
         assertEq(block.timestamp > newExpirationTimestamp[0], true);
         vm.expectRevert(VertexPolicy.Expired.selector);
-        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, expirationTimestamps);
-    }
-
-    function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
-        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
-        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
-
-        uint256[] memory newExpirationTimestamp = new uint256[](1);
-        newExpirationTimestamp[0] = block.timestamp + 1 days;
-        expirationTimestamps.push(newExpirationTimestamp);
-        vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke, expirationTimestamps);
-
-        vm.warp(block.timestamp + 2 days);
-
-        assertEq(newExpirationTimestamp[0] < block.timestamp, true);
-        assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), newExpirationTimestamp[0]);
-        assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
-    }
-
-    function test_PermissionRemovalUpdatesTokenPermissionCheckpoints() public {
-        // TODO
+        vertexPolicyNFT.batchUpdatePermissions(updateData);
     }
 
     function test_PermissionRemovalUpdatesPermissionSupplyCheckpoints() public {
