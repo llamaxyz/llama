@@ -37,5 +37,3 @@ wrap_comments = true
 
 [doc]
 title = "Vertex v1 Documentation"
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
