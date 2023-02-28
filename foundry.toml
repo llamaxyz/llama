@@ -19,7 +19,6 @@ yul = true
 optimizer = false
 via_ir = false
 
-
 invariant = { runs = 50, fail_on_revert = true }
 
 [profile.ci]
