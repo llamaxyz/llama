@@ -29,11 +29,11 @@ contract VertexPolicyNFTHandler is BaseHandler {
 
     function callSummary() public view override {
         BaseHandler.callSummary();
-        console2.log("vertexPolicyNFT_batchGrantPolicies", calls["vertexPolicyNFT_batchGrantPolicies"]);
-        console2.log("vertexPolicyNFT_batchUpdatePermissions", calls["vertexPolicyNFT_batchUpdatePermissions"]);
-        console2.log("vertexPolicyNFT_batchRevokePolicies", calls["vertexPolicyNFT_batchRevokePolicies"]);
-        console2.log("vertexPolicyNFT_revokeExpiredPermission", calls["vertexPolicyNFT_revokeExpiredPermission"]);
-        console2.log("vertexPolicyNFT_setBaseURI       ", calls["vertexPolicyNFT_setBaseURI"]);
+        console2.log("vertexPolicyNFT_batchGrantPolicies      ", calls["vertexPolicyNFT_batchGrantPolicies"]);
+        console2.log("vertexPolicyNFT_batchUpdatePermissions  ", calls["vertexPolicyNFT_batchUpdatePermissions"]);
+        console2.log("vertexPolicyNFT_batchRevokePolicies     ", calls["vertexPolicyNFT_batchRevokePolicies"]);
+        console2.log("vertexPolicyNFT_revokeExpiredPermission ", calls["vertexPolicyNFT_revokeExpiredPermission"]);
+        console2.log("vertexPolicyNFT_setBaseURI              ", calls["vertexPolicyNFT_setBaseURI"]);
         console2.log("-----------------------------------------------");
         console2.log("policyholdersHadBalanceOf_0      ", calls["policyholdersHadBalanceOf_0"]);
         console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
