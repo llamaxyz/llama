@@ -5,7 +5,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 
@@ -49,7 +49,7 @@ contract VertexCore is IVertexCore, Initializable {
   VertexAccount public vertexAccountImplementation;
 
   /// @notice The NFT contract that defines the policies for this Vertex system.
-  VertexPolicyNFT public policy;
+  VertexPolicy public policy;
 
   /// @notice Name of this Vertex system.
   string public name;
@@ -77,14 +77,14 @@ contract VertexCore is IVertexCore, Initializable {
 
   constructor() initializer {}
 
-  modifier onlyOwner() {
+  modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
     _;
   }
 
   function initialize(
     string memory _name,
-    VertexPolicyNFT _policy,
+    VertexPolicy _policy,
     VertexAccount _vertexAccountImplementation,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
@@ -232,12 +232,12 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyOwner {
+  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
     _deployStrategies(strategies, policy);
   }
 
   /// @inheritdoc IVertexCore
-  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyOwner {
+  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyVertex {
     uint256 strategiesLength = strategies.length;
     unchecked {
       for (uint256 i = 0; i < strategiesLength; ++i) {
@@ -248,7 +248,7 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyOwner {
+  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
     _deployAccounts(accounts);
   }
 
@@ -331,7 +331,7 @@ contract VertexCore is IVertexCore, Initializable {
     }
   }
 
-  function _deployStrategies(Strategy[] calldata strategies, VertexPolicyNFT _policy) internal {
+  function _deployStrategies(Strategy[] calldata strategies, VertexPolicy _policy) internal {
     uint256 strategyLength = strategies.length;
     unchecked {
       for (uint256 i; i < strategyLength; ++i) {

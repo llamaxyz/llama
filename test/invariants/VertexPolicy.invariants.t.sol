@@ -8,13 +8,13 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {PermissionIdCheckpoint, Strategy} from "src/lib/Structs.sol";
 
 import {VertexCoreTest} from "test/VertexCore.t.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 
-contract VertexPolicyNFTHandler is BaseHandler {
+contract VertexPolicyHandler is BaseHandler {
   // =============================
   // ======== Constructor ========
   // =============================
@@ -44,17 +44,17 @@ contract VertexPolicyNFTHandler is BaseHandler {
   // =====================================
 
   function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(policy.owner()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(policy.owner()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(policy.owner()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
@@ -64,7 +64,7 @@ contract VertexPolicyNFTHandler is BaseHandler {
   }
 
   function vertexPolicyNFT_setBaseURI(string calldata baseURI) public recordCall("vertexPolicyNFT_setBaseURI") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(policy.owner()));
     policy.setBaseURI(baseURI);
   }
 }
@@ -74,11 +74,11 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
 
-  VertexPolicyNFTHandler public handler;
+  VertexPolicyHandler public handler;
 
   function setUp() public override {
     VertexCoreTest.setUp();
-    handler = new VertexPolicyNFTHandler(vertexFactory, vertex);
+    handler = new VertexPolicyHandler(vertexFactory, vertex);
 
     // TODO Set this up and write tests.
     targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being

@@ -35,7 +35,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     owner = _owner;
   }
 
-  modifier onlyOwner() {
+  modifier onlyVertex() {
     if (msg.sender != owner) revert OnlyVertex();
     _;
   }
@@ -48,7 +48,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   receive() external payable {}
 
   /// @inheritdoc IVertexAccount
-  function transfer(address payable recipient, uint256 amount) external onlyOwner {
+  function transfer(address payable recipient, uint256 amount) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     recipient.sendValue(amount);
   }
@@ -58,7 +58,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyOwner {
+  function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     token.safeTransfer(recipient, amount);
   }
@@ -66,7 +66,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   /// @inheritdoc IVertexAccount
   function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
     external
-    onlyOwner
+    onlyVertex
   {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
@@ -79,14 +79,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyOwner {
+  function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
     token.safeApprove(recipient, amount);
   }
 
   /// @inheritdoc IVertexAccount
   function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
     external
-    onlyOwner
+    onlyVertex
   {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
@@ -102,7 +102,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyOwner {
+  function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     token.transferFrom(address(this), recipient, tokenId);
   }
@@ -110,7 +110,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   /// @inheritdoc IVertexAccount
   function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
     external
-    onlyOwner
+    onlyVertex
   {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
@@ -123,14 +123,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyOwner {
+  function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
     token.approve(recipient, tokenId);
   }
 
   /// @inheritdoc IVertexAccount
   function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
     external
-    onlyOwner
+    onlyVertex
   {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
@@ -142,7 +142,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyOwner {
+  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
     token.setApprovalForAll(recipient, approved);
   }
 
@@ -151,7 +151,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     IERC721[] calldata tokens,
     address[] calldata recipients,
     bool[] calldata approved
-  ) external onlyOwner {
+  ) external onlyVertex {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
     unchecked {
@@ -168,7 +168,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   /// @inheritdoc IVertexAccount
   function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data)
     external
-    onlyOwner
+    onlyVertex
   {
     if (recipient == address(0)) revert Invalid0xRecipient();
     token.safeTransferFrom(address(this), recipient, tokenId, amount, data);
@@ -181,7 +181,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     uint256[] calldata tokenIds,
     uint256[] calldata amounts,
     bytes calldata data
-  ) external onlyOwner {
+  ) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     token.safeBatchTransferFrom(address(this), recipient, tokenIds, amounts, data);
   }
@@ -193,7 +193,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     uint256[][] calldata tokenIds,
     uint256[][] calldata amounts,
     bytes[] calldata data
-  ) external onlyOwner {
+  ) external onlyVertex {
     uint256 length = tokens.length;
     if (
       length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length
@@ -208,7 +208,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external onlyOwner {
+  function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
     token.setApprovalForAll(recipient, approved);
   }
 
@@ -217,7 +217,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     IERC1155[] calldata tokens,
     address[] calldata recipients,
     bool[] calldata approved
-  ) external onlyOwner {
+  ) external onlyVertex {
     uint256 length = tokens.length;
     if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
     unchecked {
@@ -235,7 +235,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   function execute(address target, bytes calldata callData, bool withDelegatecall)
     external
     payable
-    onlyOwner
+    onlyVertex
     returns (bytes memory)
   {
     bool success;

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 
 interface IVertexStrategy {
-  event NewStrategyCreated(IVertexCore vertex, VertexPolicyNFT policy);
+  event NewStrategyCreated(IVertexCore vertex, VertexPolicy policy);
 
   error NoPolicy();
 

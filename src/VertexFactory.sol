@@ -5,7 +5,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -63,12 +63,12 @@ contract VertexFactory is IVertexFactory {
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
     bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-    VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicies);
+    VertexPolicy policy = new VertexPolicy{salt: salt}(name, symbol, initialPolicies);
 
     vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
-    policy.setVertex(address(vertex));
+    policy.setOwner(address(vertex));
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
