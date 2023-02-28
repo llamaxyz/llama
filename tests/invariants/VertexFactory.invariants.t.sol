@@ -9,7 +9,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Strategy} from "src/utils/Structs.sol";
+import {Strategy, PolicyGrantData} from "src/utils/Structs.sol";
 
 import {VertexCoreTest} from "tests/VertexCore.t.sol";
 import {BaseHandler} from "tests/invariants/BaseHandler.sol";
@@ -58,7 +58,8 @@ contract VertexFactoryHandler is BaseHandler {
     function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
         // We don't care about the parameters, we just need it to execute successfully.
         vm.prank(address(vertexFactory.rootVertex()));
-        vertexFactory.deploy(name(), name(), new Strategy[](0), new string[](0), new address[](0), new bytes8[][](0), new uint256[][](0));
+        PolicyGrantData[] memory _policyGrantData = new PolicyGrantData[](0);
+        vertexFactory.deploy(name(), name(), new Strategy[](0), new string[](0), _policyGrantData);
         vertexCounts.push(vertexFactory.vertexCount());
     }
 }
