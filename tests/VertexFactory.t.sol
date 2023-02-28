@@ -239,7 +239,7 @@ contract Deploy is VertexFactoryTest {
     // will need to be updated.
     address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
     address constant NEW_POLICY = 0x299Fe82767DA2c8239E4D98b9F528eA6f30187ff;
-    
+
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = buildInitialAccounts();
