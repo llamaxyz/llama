@@ -5,5 +5,5 @@ import {Ownable2Step} from "@openzeppelin/access/Ownable2Step.sol";
 import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 
 contract OwnableProtocol is Ownable2Step, ProtocolXYZ {
-    constructor(address _vertex) ProtocolXYZ(_vertex) {}
+  constructor(address _vertex) ProtocolXYZ(_vertex) {}
 }
