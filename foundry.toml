@@ -4,7 +4,7 @@ test = 'tests'
 out = 'out'
 libs = ['lib']
 solc = "0.8.17"
-ignored_error_codes = ["unreachable", "func-mutability"] # Ignore build errors due to unimplemented policy functions
+ignored_error_codes = ["unreachable"] # Ignore build errors due to unimplemented policy functions
 solc_version = '0.8.17'
 bytecode_hash = 'none'
 

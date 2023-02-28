@@ -73,7 +73,6 @@ contract VertexCore is IVertexCore, Initializable {
     /// @notice Mapping of actionId's and bool that indicates if action is queued.
     mapping(uint256 => bool) public queuedActions;
 
-    // solhint-disable-next-line no-empty-blocks
     constructor() initializer {}
 
     modifier onlyVertex() {
@@ -157,7 +156,6 @@ contract VertexCore is IVertexCore, Initializable {
         action.executed = true;
         queuedActions[actionId] = false;
 
-        // solhint-disable avoid-low-level-calls
         (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
         if (!success) revert FailedActionExecution();

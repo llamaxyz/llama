@@ -28,7 +28,6 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     /// @notice Vertex system
     address public vertex;
 
-    // solhint-disable-next-line no-empty-blocks
     constructor() initializer {}
 
     function initialize(string memory _name, address _vertex) external override initializer {
@@ -209,10 +208,8 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
         bytes memory result;
 
         if (withDelegatecall) {
-            // solhint-disable avoid-low-level-calls
             (success, result) = target.delegatecall(callData);
         } else {
-            // solhint-disable avoid-low-level-calls
             (success, result) = target.call{value: msg.value}(callData);
         }
 
