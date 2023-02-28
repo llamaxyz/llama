@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
-import {VertexPolicy} from "src/interfaces/VertexPolicy.sol";
+import {IVertexPolicyNFT} from "src/interfaces/IVertexPolicyNFT.sol";
 import {
   PermissionData,
   PermissionIdCheckpoint,
@@ -17,7 +17,15 @@ import {
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicyNFT is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
-contract VertexPolicyNFT is VertexPolicy {
+contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
+  error SoulboundToken();
+  error InvalidInput(); // TODO: Probably need more than one error?
+  error OnlyVertex();
+  error OnlyOnePolicyPerHolder();
+  error OnlyVertexFactory();
+  error AlreadyInitialized();
+  error Expired();
+
   mapping(uint256 => mapping(bytes8 => PermissionIdCheckpoint[])) private tokenPermissionCheckpoints;
   mapping(bytes8 => PermissionIdCheckpoint[]) private permissionSupplyCheckpoints;
   mapping(uint256 => mapping(bytes8 => uint256)) public tokenToPermissionExpirationTimestamp;
@@ -45,7 +53,7 @@ contract VertexPolicyNFT is VertexPolicy {
     vertex = _vertex;
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 timestamp)
     external
     view
@@ -72,7 +80,7 @@ contract VertexPolicyNFT is VertexPolicy {
     return hasQuantity && !expired;
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function getSupplyByPermissions(bytes8[] calldata _permissions) external view override returns (uint256) {
     uint256 permissionLength = _permissions.length;
     uint256 supply;
@@ -86,7 +94,7 @@ contract VertexPolicyNFT is VertexPolicy {
     return supply;
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function batchGrantPolicies(PolicyGrantData[] memory policyData) public override onlyVertex {
     uint256 length = policyData.length;
     for (uint256 i = 0; i < length; ++i) {
@@ -95,7 +103,7 @@ contract VertexPolicyNFT is VertexPolicy {
     }
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public override onlyVertex {
     uint256 length = updateData.length;
     unchecked {
@@ -109,7 +117,7 @@ contract VertexPolicyNFT is VertexPolicy {
     }
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public override onlyVertex {
     uint256 length = policyData.length;
     unchecked {
@@ -139,7 +147,7 @@ contract VertexPolicyNFT is VertexPolicy {
     return output;
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
     PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];
     uint256 length = _permissionIdCheckpoint.length;
@@ -246,7 +254,7 @@ contract VertexPolicyNFT is VertexPolicy {
     return _expiration < block.timestamp && _expiration != 0;
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature)
     external
     override
@@ -276,7 +284,7 @@ contract VertexPolicyNFT is VertexPolicy {
     revert SoulboundToken();
   }
 
-  /// @inheritdoc VertexPolicy
+  /// @inheritdoc IVertexPolicyNFT
   function totalSupply() public view override returns (uint256) {
     return _totalSupply;
   }

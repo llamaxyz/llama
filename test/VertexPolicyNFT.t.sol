@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import "lib/forge-std/src/console.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {VertexPolicy} from "src/interfaces/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {
@@ -82,7 +81,7 @@ contract VertexPolicyNFTTest is Test {
   }
 
   function test_grantPermission_RevertIfPolicyAlreadyGranted() public {
-    vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
+    vm.expectRevert(VertexPolicyNFT.OnlyOnePolicyPerHolder.selector);
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
     vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
   }
@@ -104,7 +103,7 @@ contract VertexPolicyNFTTest is Test {
   }
 
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicyNFT.SoulboundToken.selector);
     vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
   }
 
@@ -175,7 +174,7 @@ contract VertexPolicyNFTTest is Test {
 
   // function test_batchUpdatePermissions_RevertIfArraysLengthMismatch() public {
   //     policyIds.push(uint256(uint160(address(0xdeadbeef))));
-  //     vm.expectRevert(VertexPolicy.InvalidInput.selector);
+  //     vm.expectRevert(VertexPolicyNFT.InvalidInput.selector);
   //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // initialExpirationTimestamps);
   // }
@@ -212,7 +211,7 @@ contract VertexPolicyNFTTest is Test {
   function test_onlyVertex_RevertIfNotVertex() public {
     string memory baseURI = "https://vertex.link/policy/";
     vm.prank(address(0xdeadbeef));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    vm.expectRevert(VertexPolicyNFT.OnlyVertex.selector);
     vertexPolicyNFT.setBaseURI(baseURI);
   }
 
@@ -262,12 +261,12 @@ contract VertexPolicyNFTTest is Test {
 
   //     vm.warp(block.timestamp + 1 days);
 
-  //     vm.expectRevert(VertexPolicy.Expired.selector);
+  //     vm.expectRevert(VertexPolicyNFT.Expired.selector);
   //     vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
   //     newExpirationTimestamp[0] = block.timestamp - 1 seconds;
   //     expirationTimestamps[0] = newExpirationTimestamp;
   //     assertEq(block.timestamp > newExpirationTimestamp[0], true);
-  //     vm.expectRevert(VertexPolicy.Expired.selector);
+  //     vm.expectRevert(VertexPolicyNFT.Expired.selector);
   //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // expirationTimestamps);
   // }
