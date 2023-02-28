@@ -84,8 +84,8 @@ contract VertexPolicyNFT is VertexPolicy {
         uint256 length = policyData.length;
         for (uint256 i = 0; i < length; ++i) {
             grantPolicy(policyData[i]);
+            emit PolicyAdded(policyData[i]);
         }
-        emit PoliciesAdded(policyData);
     }
 
     /// @inheritdoc VertexPolicy
@@ -100,7 +100,6 @@ contract VertexPolicyNFT is VertexPolicy {
                 emit PermissionUpdated(updateData[i]);
             }
         }
-        emit PermissionsUpdated(updateData);
     }
 
     /// @inheritdoc VertexPolicy
@@ -109,9 +108,9 @@ contract VertexPolicyNFT is VertexPolicy {
         unchecked {
             for (uint256 i = 0; i < length; ++i) {
                 revokePolicy(policyData[i]);
+                emit PolicyRevoked(policyData[i]);
             }
         }
-        emit PoliciesRevoked(policyData);
     }
 
     /// @dev hashes a permission

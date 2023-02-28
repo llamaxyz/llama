@@ -5,9 +5,9 @@ import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {PermissionData, BatchUpdateData, BatchGrantData, BatchRevokeData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PoliciesAdded(BatchGrantData[] grantData);
-    event PermissionsUpdated(BatchUpdateData[] updateData);
-    event PoliciesRevoked(BatchRevokeData[] revokeData);
+    event PolicyAdded(BatchGrantData grantData);
+    event PermissionUpdated(BatchUpdateData updateData);
+    event PolicyRevoked(BatchRevokeData revokeData);
 
     error SoulboundToken();
     error InvalidInput(); // TODO: Probably need more than one error?
