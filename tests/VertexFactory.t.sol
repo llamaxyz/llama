@@ -40,7 +40,7 @@ contract VertexFactoryTest is Test {
     uint256[] public policyIds;
 
     // Strategy config
-    uint256 public constant approvalPeriod = 2 days;
+    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingPeriod = 4 days;
     uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
@@ -238,7 +238,7 @@ contract Deploy is VertexFactoryTest {
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
     address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-    address constant NEW_POLICY = 0xE594b7EDb096469f65416607ca269E5FEBbC0a50;
+    address constant NEW_POLICY = 0xCe106D844C6e583622db1768603557AB39dAE079;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
