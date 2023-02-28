@@ -19,22 +19,6 @@ yul = true
 optimizer = false
 via_ir = false
 
-# If the optimizer_detail default values aren't restored, solc will ignore the
-# `optimizer = false` flag above and still use the optimizer. And, since
-# there is no built-in way to restore the optimizer defaults all at once we have
-# to do it manually by setting each one. The default values can be found here:
-#   https://docs.soliditylang.org/en/latest/using-the-compiler.html#compiler-input-and-output-json-description
-# See inputJSON["settings"]["optimizer"] for these values.
-[profile.test.optimizer_details]
-peephole = true
-inliner = true
-jumpdest_remover = true
-order_literals = false
-deduplicate = false
-cse = false
-constant_optimizer = false
-yul = false
-
 [profile.ci]
 fuzz = { runs = 5000 }
 invariant = { runs = 1000 }
