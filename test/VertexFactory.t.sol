@@ -2,13 +2,13 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {VertexCore} from "src/core/VertexCore.sol";
-import {IVertexCore} from "src/core/IVertexCore.sol";
-import {VertexFactory} from "src/factory/VertexFactory.sol";
-import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
-import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {VertexAccount} from "src/account/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {IVertexCore} from "src/interfaces/IVertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
 import {
   Action,
   Strategy,
@@ -16,7 +16,7 @@ import {
   WeightByPermission,
   PolicyGrantData,
   PermissionMetadata
-} from "src/utils/Structs.sol";
+} from "src/lib/Structs.sol";
 
 contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);

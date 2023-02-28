@@ -1,15 +1,10 @@
 [profile.default]
   bytecode_hash = 'none'
-  ignored_error_codes = [
-    "unreachable",
-  ] # Ignore build errors due to unimplemented policy functions
-  libs = ['lib']
+  # Ignore unreachable warning due to unimplemented transfer functions
+  ignored_error_codes = ["unreachable"]
   optimizer = true
-  out = 'out'
   solc = "0.8.17"
   solc_version = '0.8.17'
-  src = 'src'
-  test = 'tests'
   via_ir = true
 
 [profile.default.optimizer_details]
@@ -18,9 +13,9 @@
 
 # Use this profile to run tests locally (not on CI) without the optimizer for quick build times.
 [profile.test]
+  invariant = { runs = 50, fail_on_revert = true }
   optimizer = false
   via_ir = false
-  invariant = { runs = 50, fail_on_revert = true }
 
 [profile.ci]
   fuzz = { runs = 5000 }

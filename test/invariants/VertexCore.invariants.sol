@@ -6,13 +6,13 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
-import {VertexCore} from "src/core/VertexCore.sol";
-import {VertexFactory} from "src/factory/VertexFactory.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {PermissionIdCheckpoint, Strategy} from "src/utils/Structs.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {PermissionIdCheckpoint, Strategy} from "src/lib/Structs.sol";
 
-import {VertexCoreTest} from "tests/VertexCore.t.sol";
-import {BaseHandler} from "tests/invariants/BaseHandler.sol";
+import {VertexCoreTest} from "test/VertexCore.t.sol";
+import {BaseHandler} from "test/invariants/BaseHandler.sol";
 
 contract VertexCoreHandler is BaseHandler {
   // =============================

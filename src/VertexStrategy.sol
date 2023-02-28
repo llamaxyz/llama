@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IVertexCore} from "src/core/IVertexCore.sol";
-import {IVertexStrategy} from "src/strategy/IVertexStrategy.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, WeightByPermission, Strategy} from "src/utils/Structs.sol";
+import {IVertexCore} from "src/interfaces/IVertexCore.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {Action, WeightByPermission, Strategy} from "src/lib/Structs.sol";
 
 /// @title A strategy definition of a Vertex system.
 /// @author Llama (vertex@llama.xyz)

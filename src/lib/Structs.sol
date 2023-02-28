@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 
 struct PermissionData {
   address target;

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/utils/Structs.sol";
+import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/lib/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
   event PolicyAdded(PolicyGrantData grantData);

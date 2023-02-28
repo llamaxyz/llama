@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
-import {VertexPolicy} from "src/policy/VertexPolicy.sol";
+import {VertexPolicy} from "src/interfaces/VertexPolicy.sol";
 import {
   PermissionData,
   PermissionIdCheckpoint,
@@ -11,7 +11,7 @@ import {
   PolicyUpdateData,
   PolicyGrantData,
   PolicyRevokeData
-} from "src/utils/Structs.sol";
+} from "src/lib/Structs.sol";
 
 /// @title VertexPolicyNFT
 /// @author Llama (vertex@llama.xyz)

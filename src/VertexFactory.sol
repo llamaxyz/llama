@@ -2,11 +2,11 @@
 pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
-import {VertexCore} from "src/core/VertexCore.sol";
-import {VertexAccount} from "src/account/VertexAccount.sol";
-import {IVertexFactory} from "src/factory/IVertexFactory.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Strategy, PolicyGrantData} from "src/utils/Structs.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)

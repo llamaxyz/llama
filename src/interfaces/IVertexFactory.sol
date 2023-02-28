@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexCore} from "src/core/VertexCore.sol";
-import {Strategy, PolicyGrantData} from "src/utils/Structs.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 interface IVertexFactory {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);

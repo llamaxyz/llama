@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {VertexAccount} from "src/account/VertexAccount.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy} from "src/utils/Structs.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {Action, Strategy} from "src/lib/Structs.sol";
 
 interface IVertexCore {
   enum ActionState {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
-import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 
 contract VertexStrategyTest is Test {
   function setUp() public virtual {

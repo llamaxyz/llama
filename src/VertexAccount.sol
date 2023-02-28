@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-import {IVertexAccount} from "src/account/IVertexAccount.sol";
+import {IVertexAccount} from "src/interfaces/IVertexAccount.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
