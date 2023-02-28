@@ -8,11 +8,7 @@ import {VertexPolicy} from "src/interfaces/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {
-  PermissionData,
-  PolicyUpdateData,
-  PermissionMetadata,
-  PolicyGrantData,
-  PolicyRevokeData
+  PermissionData, PolicyUpdateData, PermissionMetadata, PolicyGrantData, PolicyRevokeData
 } from "src/lib/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
