@@ -32,10 +32,10 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
   uint256[] public policyIds;
   string public baseURI;
   uint256 private _totalSupply;
-  address public vertex;
+  address public owner;
 
-  modifier onlyVertex() {
-    if (msg.sender != vertex) revert OnlyVertex();
+  modifier onlyOwner() {
+    if (msg.sender != owner) revert OnlyVertex();
     _;
   }
 
@@ -48,9 +48,9 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
     }
   }
 
-  function setVertex(address _vertex) external {
-    if (vertex != address(0)) revert AlreadyInitialized();
-    vertex = _vertex;
+  function setOwner(address _owner) external {
+    if (owner != address(0)) revert AlreadyInitialized();
+    owner = _owner;
   }
 
   /// @inheritdoc IVertexPolicyNFT
@@ -95,7 +95,7 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
   }
 
   /// @inheritdoc IVertexPolicyNFT
-  function batchGrantPolicies(PolicyGrantData[] memory policyData) public override onlyVertex {
+  function batchGrantPolicies(PolicyGrantData[] memory policyData) public override onlyOwner {
     uint256 length = policyData.length;
     for (uint256 i = 0; i < length; ++i) {
       grantPolicy(policyData[i]);
@@ -104,7 +104,7 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
   }
 
   /// @inheritdoc IVertexPolicyNFT
-  function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public override onlyVertex {
+  function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public override onlyOwner {
     uint256 length = updateData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
@@ -118,7 +118,7 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
   }
 
   /// @inheritdoc IVertexPolicyNFT
-  function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public override onlyVertex {
+  function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public override onlyOwner {
     uint256 length = policyData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
@@ -274,7 +274,7 @@ contract VertexPolicyNFT is ERC721, IVertexPolicyNFT {
 
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
-  function setBaseURI(string calldata _baseURI) public override onlyVertex {
+  function setBaseURI(string calldata _baseURI) public override onlyOwner {
     baseURI = _baseURI;
   }
 
