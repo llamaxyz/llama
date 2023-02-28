@@ -2,12 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData, BatchUpdateData, BatchGrantData, BatchRevokeData} from "src/utils/Structs.sol";
+import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PolicyAdded(BatchGrantData grantData);
-    event PermissionUpdated(BatchUpdateData updateData);
-    event PolicyRevoked(BatchRevokeData revokeData);
+    event PolicyAdded(PolicyGrantData grantData);
+    event PermissionUpdated(PolicyUpdateData updateData);
+    event PolicyRevoked(PolicyRevokeData revokeData);
 
     error SoulboundToken();
     error InvalidInput(); // TODO: Probably need more than one error?
@@ -18,18 +18,18 @@ abstract contract VertexPolicy is ERC721 {
     error Expired();
 
     /// @notice updates the permissions for a policy token
-    /// @param updateData array of BatchUpdateData struct to update permissions
-    function batchUpdatePermissions(BatchUpdateData[] calldata updateData) public virtual;
+    /// @param updateData array of PolicyUpdateData struct to update permissions
+    function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
-    /// @param policyData array of BatchGrantData struct to mint policy tokens
-    function batchGrantPolicies(BatchGrantData[] memory policyData) public virtual;
+    /// @param policyData array of PolicyGrantData struct to mint policy tokens
+    function batchGrantPolicies(PolicyGrantData[] memory policyData) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
     /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a
     /// policy was ever reissued to the same address
-    /// @param policyData array of BatchRevokeData struct to revoke permissions
-    function batchRevokePolicies(BatchRevokeData[] calldata policyData) public virtual;
+    /// @param policyData array of PolicyRevokeData struct to revoke permissions
+    function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public virtual;
 
     /// @notice Check if a holder has a permissionSignature at a specific timestamp
     /// @param policyholder the address of the policy holder

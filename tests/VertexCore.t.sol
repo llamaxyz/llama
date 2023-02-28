@@ -11,7 +11,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
@@ -41,7 +41,7 @@ contract VertexCoreTest is Test {
     uint256[] public policyIds;
 
     address[] public initialPolicies;
-    BatchGrantData[] public initialPermissions;
+    PolicyGrantData[] public initialPermissions;
     // Strategy config
     // TODO fuzz over these values rather than hardcoding
     uint256 public constant approvalPeriod = 2 days;
@@ -95,7 +95,7 @@ contract VertexCoreTest is Test {
         initialAccounts[1] = "VertexAccount1";
 
         // We don't instantiate any initial policies b/c we can't compute the strategy addresses yet.
-        BatchGrantData[] memory initialPolicyData = new BatchGrantData[](0);
+        PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](0);
 
         // Deploy vertex and mock protocol
         vertexCore = new VertexCore();
@@ -144,27 +144,27 @@ contract VertexCoreTest is Test {
         );
     }
 
-    function _grantPermissions(VertexStrategy initialStrategy, VertexPolicyNFT policy) public {
-        PermissionChangeData[] memory creatorPermissions = new PermissionChangeData[](3);
-        PermissionChangeData[] memory pauserPermissions = new PermissionChangeData[](1);
+    function _grantPermissions(VertexStrategy initialStrategy, VertexPolicyNFT _policy) public {
+        PermissionMetadata[] memory creatorPermissions = new PermissionMetadata[](3);
+        PermissionMetadata[] memory pauserPermissions = new PermissionMetadata[](1);
 
         PermissionData memory pausePermission = PermissionData({target: address(targetProtocol), selector: pauseSelector, strategy: initialStrategy});
         PermissionData memory failPermission = PermissionData({target: address(targetProtocol), selector: failSelector, strategy: initialStrategy});
         PermissionData memory receiveETHPermission = PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: initialStrategy});
-        creatorPermissions[0] = PermissionChangeData(policy.hashPermission(failPermission), 0);
-        creatorPermissions[1] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
-        creatorPermissions[2] = PermissionChangeData(policy.hashPermission(receiveETHPermission), 0);
-        pauserPermissions[0] = PermissionChangeData(policy.hashPermission(pausePermission), 0);
+        creatorPermissions[0] = PermissionMetadata(_policy.hashPermission(failPermission), 0);
+        creatorPermissions[1] = PermissionMetadata(_policy.hashPermission(pausePermission), 0);
+        creatorPermissions[2] = PermissionMetadata(_policy.hashPermission(receiveETHPermission), 0);
+        pauserPermissions[0] = PermissionMetadata(_policy.hashPermission(pausePermission), 0);
 
-        BatchGrantData[] memory initialPolicyData = new BatchGrantData[](5);
-        initialPolicyData[0] = BatchGrantData(actionCreator, creatorPermissions);
-        initialPolicyData[1] = BatchGrantData(policyholder1, pauserPermissions);
-        initialPolicyData[2] = BatchGrantData(policyholder2, pauserPermissions);
-        initialPolicyData[3] = BatchGrantData(policyholder3, pauserPermissions);
-        initialPolicyData[4] = BatchGrantData(policyholder4, pauserPermissions);
+        PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](5);
+        initialPolicyData[0] = PolicyGrantData(actionCreator, creatorPermissions);
+        initialPolicyData[1] = PolicyGrantData(policyholder1, pauserPermissions);
+        initialPolicyData[2] = PolicyGrantData(policyholder2, pauserPermissions);
+        initialPolicyData[3] = PolicyGrantData(policyholder3, pauserPermissions);
+        initialPolicyData[4] = PolicyGrantData(policyholder4, pauserPermissions);
 
         vm.prank(address(vertex));
-        policy.batchGrantPolicies(initialPolicyData);
+        _policy.batchGrantPolicies(initialPolicyData);
     }
 
     function _approveAction(address _policyholder, uint256 _actionId) public {

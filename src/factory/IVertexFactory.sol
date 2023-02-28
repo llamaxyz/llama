@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {VertexCore} from "src/core/VertexCore.sol";
-import {Strategy, BatchGrantData} from "src/utils/Structs.sol";
+import {Strategy, PolicyGrantData} from "src/utils/Structs.sol";
 
 interface IVertexFactory {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -19,6 +19,6 @@ interface IVertexFactory {
         string memory policySymbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        BatchGrantData[] memory initialPolicies
+        PolicyGrantData[] memory initialPolicies
     ) external returns (VertexCore);
 }

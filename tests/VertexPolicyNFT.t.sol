@@ -7,13 +7,13 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexPolicy} from "src/policy/VertexPolicy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {PermissionData, BatchUpdateData, PermissionChangeData, BatchGrantData, BatchRevokeData, PermissionChangeData} from "src/utils/Structs.sol";
+import {PermissionData, PolicyUpdateData, PermissionMetadata, PolicyGrantData, PolicyRevokeData} from "src/utils/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyNFTTest is Test {
-    event PolicyAdded(BatchGrantData grantData);
-    event PermissionUpdated(BatchUpdateData updateData);
-    event PolicyRevoked(BatchRevokeData revokeData);
+    event PolicyAdded(PolicyGrantData grantData);
+    event PermissionUpdated(PolicyUpdateData updateData);
+    event PolicyRevoked(PolicyRevokeData revokeData);
 
     VertexPolicyNFT public vertexPolicyNFT;
     PermissionData public permission;
@@ -28,25 +28,25 @@ contract VertexPolicyNFTTest is Test {
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
-    BatchRevokeData[] public batchRevokeData;
+    PolicyRevokeData[] public policyRevokeData;
     uint256 ADDRESS_THIS_TOKEN_ID;
     uint256 constant DEADBEEF_TOKEN_ID = uint256(uint160(address(0xdeadbeef)));
 
-    function _buildPermissionChangeData() internal returns (PermissionChangeData[] memory permissionChangeData) {
+    function _buildPermissionMetadata() internal pure returns (PermissionMetadata[] memory permissionMetadata) {
         PermissionData memory _permission = PermissionData(
             // TODO These values should be function inputs so they can fuzzed over.
             address(0xdeadbeef),
             bytes4(0x08080808),
             VertexStrategy(address(0xdeadbeefdeadbeef))
         );
-        permissionChangeData = new PermissionChangeData[](1);
+        permissionMetadata = new PermissionMetadata[](1);
         // we cant call vertexPolicyNFT.hashPermission(_permission) because we have not yet deployed the contract
-        permissionChangeData[0] = PermissionChangeData({permissionId: bytes8(keccak256(abi.encode(_permission))), expirationTimestamp: 0});
+        permissionMetadata[0] = PermissionMetadata({permissionId: bytes8(keccak256(abi.encode(_permission))), expirationTimestamp: 0});
     }
 
-    function _buildBatchGrantData(address _user) internal returns (BatchGrantData[] memory _batchGrantData) {
-        _batchGrantData = new BatchGrantData[](1);
-        _batchGrantData[0] = BatchGrantData(_user, _buildPermissionChangeData());
+    function _buildBatchGrantData(address _user) internal pure returns (PolicyGrantData[] memory _batchGrantData) {
+        _batchGrantData = new PolicyGrantData[](1);
+        _batchGrantData[0] = PolicyGrantData(_user, _buildPermissionMetadata());
     }
 
     function generateGenericPermissionArray() internal {
@@ -56,11 +56,11 @@ contract VertexPolicyNFTTest is Test {
         permissionSignature.push(vertexPolicyNFT.hashPermissions(permissions)[0]);
         permissionSignatures.push(permissionSignature);
         addresses.push(address(this));
-        batchRevokeData.push(BatchRevokeData(uint256(uint160(address(this))), permissionSignature));
+        policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionSignature));
     }
 
     function setUp() public {
-        BatchGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
+        PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
         vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", initialBatchGrantData);
         vertexPolicyNFT.setVertex(address(this));
         ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
@@ -70,7 +70,7 @@ contract VertexPolicyNFTTest is Test {
 
     function test_grantPermission_CorrectlyGrantsPermission() public {
         addresses[0] = address(0xdeadbeef);
-        BatchGrantData[] memory initialBatchGrantData = _buildBatchGrantData(addresses[0]);
+        PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(addresses[0]);
         vm.expectEmit(true, true, true, true);
         emit PolicyAdded(initialBatchGrantData[0]);
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
@@ -80,24 +80,24 @@ contract VertexPolicyNFTTest is Test {
 
     function test_grantPermission_RevertIfPolicyAlreadyGranted() public {
         vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
-        BatchGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
+        PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
     }
 
     function test_Revoke_CorrectlyRevokesPolicy() public {
         vm.expectEmit(true, true, true, true);
-        emit PolicyRevoked(batchRevokeData[0]);
+        emit PolicyRevoked(policyRevokeData[0]);
 
-        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
+        vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
         assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
     }
 
     function test_revoke_RevertIfPolicyNotGranted() public {
         uint256 mockPolicyId = uint256(uint160(address(0xdeadbeef)));
         policyIds[0] = mockPolicyId;
-        batchRevokeData[0] = BatchRevokeData(mockPolicyId, permissionSignature);
+        policyRevokeData[0] = PolicyRevokeData(mockPolicyId, permissionSignature);
         vm.expectRevert("NOT_MINTED");
-        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
+        vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
     }
 
     function test_transferFrom_RevertIfTransferFrom() public {
@@ -111,9 +111,9 @@ contract VertexPolicyNFTTest is Test {
         addresses[0] = address(0xdeadbeef);
         vm.warp(block.timestamp + 100);
 
-        BatchGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
+        PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
+        vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
 
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
         assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
@@ -124,10 +124,10 @@ contract VertexPolicyNFTTest is Test {
     function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
         addresses[0] = address(0xdeadbeef);
-        BatchGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
+        PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 2);
-        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
+        vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
         assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
     }
 
@@ -142,14 +142,14 @@ contract VertexPolicyNFTTest is Test {
         permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];
         permissionSignatures[0] = permissionSignature;
 
-        PermissionChangeData[] memory toAdd = new PermissionChangeData[](1);
-        PermissionChangeData[] memory toRemove = new PermissionChangeData[](1);
+        PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
+        PermissionMetadata[] memory toRemove = new PermissionMetadata[](1);
 
-        toAdd[0] = PermissionChangeData(permissionSignature[0], 0);
-        toRemove[0] = PermissionChangeData(oldPermissionSignature, 0);
+        toAdd[0] = PermissionMetadata(permissionSignature[0], 0);
+        toRemove[0] = PermissionMetadata(oldPermissionSignature, 0);
 
-        BatchUpdateData[] memory updateData = new BatchUpdateData[](1);
-        updateData[0] = BatchUpdateData(policyIds[0], toAdd, toRemove);
+        PolicyUpdateData[] memory updateData = new PolicyUpdateData[](1);
+        updateData[0] = PolicyUpdateData(policyIds[0], toAdd, toRemove);
 
         vm.warp(block.timestamp + 100);
 
@@ -192,7 +192,7 @@ contract VertexPolicyNFTTest is Test {
         addresses[0] = address(0xdeadbeef);
         vertexPolicyNFT.batchGrantPolicies(_buildBatchGrantData(addresses[0]));
         assertEq(vertexPolicyNFT.totalSupply(), 2);
-        vertexPolicyNFT.batchRevokePolicies(batchRevokeData);
+        vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
         assertEq(vertexPolicyNFT.totalSupply(), 1);
     }
 
@@ -223,11 +223,11 @@ contract VertexPolicyNFTTest is Test {
         uint256 _newExpirationTimestamp = block.timestamp + 1 days;
         address _newAddress = address(0xdeadbeef);
 
-        PermissionChangeData[] memory _changes = new PermissionChangeData[](1);
-        _changes[0] = PermissionChangeData(permissionSignature[0], _newExpirationTimestamp);
+        PermissionMetadata[] memory _changes = new PermissionMetadata[](1);
+        _changes[0] = PermissionMetadata(permissionSignature[0], _newExpirationTimestamp);
 
-        BatchGrantData[] memory initialBatchGrantData = new BatchGrantData[](1);
-        initialBatchGrantData[0] = BatchGrantData(_newAddress, _changes);
+        PolicyGrantData[] memory initialBatchGrantData = new PolicyGrantData[](1);
+        initialBatchGrantData[0] = PolicyGrantData(_newAddress, _changes);
         vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
 
         assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]), _newExpirationTimestamp);

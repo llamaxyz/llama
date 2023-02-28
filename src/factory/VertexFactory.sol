@@ -6,7 +6,7 @@ import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {IVertexFactory} from "src/factory/IVertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Strategy, BatchGrantData} from "src/utils/Structs.sol";
+import {Strategy, PolicyGrantData} from "src/utils/Structs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -33,7 +33,7 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        BatchGrantData[] memory initialPolicies
+        PolicyGrantData[] memory initialPolicies
     ) {
         vertexCoreLogic = _vertexCoreLogic;
         vertexAccountLogic = _vertexAccountLogic;
@@ -50,7 +50,7 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        BatchGrantData[] memory initialPolicies
+        PolicyGrantData[] memory initialPolicies
     ) external onlyRootVertex returns (VertexCore) {
         return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
     }
@@ -60,7 +60,7 @@ contract VertexFactory is IVertexFactory {
         string memory symbol,
         Strategy[] memory initialStrategies,
         string[] memory initialAccounts,
-        BatchGrantData[] memory initialPolicies
+        PolicyGrantData[] memory initialPolicies
     ) internal returns (VertexCore vertex) {
         bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
         VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicies);

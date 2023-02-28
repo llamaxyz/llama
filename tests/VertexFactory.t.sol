@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, Strategy, PermissionData, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -64,7 +64,7 @@ contract VertexFactoryTest is Test {
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
 
-        BatchGrantData[] memory initialPolicies = buildInitialBatchGrantData();
+        PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
 
         // Deploy vertex and mock protocol
         vertexFactory = new VertexFactory(
@@ -94,7 +94,7 @@ contract VertexFactoryTest is Test {
         vm.label(actionCreator, "Action Creator");
     }
 
-    function _computeStrategyAddress(Strategy memory _strategy) internal returns (address _address) {
+    function _computeStrategyAddress(Strategy memory _strategy) internal view returns (address _address) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),
@@ -114,8 +114,8 @@ contract VertexFactoryTest is Test {
     struct TestHelperVars {
         PermissionData pausePermissionData;
         PermissionData failPermissionData;
-        PermissionChangeData[] defaultPermissions;
-        PermissionChangeData[] creatorPermissions;
+        PermissionMetadata[] defaultPermissions;
+        PermissionMetadata[] creatorPermissions;
     }
 
     function createPolicies() internal {
@@ -127,18 +127,18 @@ contract VertexFactoryTest is Test {
         _vars.failPermissionData = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
         permissions.push(_vars.pausePermissionData);
 
-        _vars.creatorPermissions = new PermissionChangeData[](2);
-        _vars.creatorPermissions[0] = PermissionChangeData({
+        _vars.creatorPermissions = new PermissionMetadata[](2);
+        _vars.creatorPermissions[0] = PermissionMetadata({
             permissionId: policy.hashPermission(_vars.failPermissionData),
             expirationTimestamp: 0 // no expiration
         });
-        _vars.creatorPermissions[1] = PermissionChangeData({
+        _vars.creatorPermissions[1] = PermissionMetadata({
             permissionId: policy.hashPermission(_vars.pausePermissionData),
             expirationTimestamp: 0 // no expiration
         });
 
-        _vars.defaultPermissions = new PermissionChangeData[](1);
-        _vars.defaultPermissions[0] = PermissionChangeData({
+        _vars.defaultPermissions = new PermissionMetadata[](1);
+        _vars.defaultPermissions[0] = PermissionMetadata({
             permissionId: policy.hashPermission(_vars.pausePermissionData),
             expirationTimestamp: 0 // no expiration
         });
@@ -149,12 +149,12 @@ contract VertexFactoryTest is Test {
         addresses.push(policyholder3);
         addresses.push(policyholder4);
 
-        BatchGrantData[] memory initialPolicies = new BatchGrantData[](5);
-        initialPolicies[0] = BatchGrantData(actionCreator, _vars.creatorPermissions);
-        initialPolicies[1] = BatchGrantData(policyholder1, _vars.defaultPermissions);
-        initialPolicies[2] = BatchGrantData(policyholder2, _vars.defaultPermissions);
-        initialPolicies[3] = BatchGrantData(policyholder3, _vars.defaultPermissions);
-        initialPolicies[4] = BatchGrantData(policyholder4, _vars.defaultPermissions);
+        PolicyGrantData[] memory initialPolicies = new PolicyGrantData[](5);
+        initialPolicies[0] = PolicyGrantData(actionCreator, _vars.creatorPermissions);
+        initialPolicies[1] = PolicyGrantData(policyholder1, _vars.defaultPermissions);
+        initialPolicies[2] = PolicyGrantData(policyholder2, _vars.defaultPermissions);
+        initialPolicies[3] = PolicyGrantData(policyholder3, _vars.defaultPermissions);
+        initialPolicies[4] = PolicyGrantData(policyholder4, _vars.defaultPermissions);
 
         policy.batchGrantPolicies(initialPolicies);
 
@@ -198,16 +198,16 @@ contract VertexFactoryTest is Test {
         return initialAccounts;
     }
 
-    function buildInitialBatchGrantData() internal returns (BatchGrantData[] memory initialBatchGrantData) {
-        PermissionChangeData[] memory firstPermissions = new PermissionChangeData[](1);
-        firstPermissions[0] = PermissionChangeData(0xa9cc4718a9cc4718, 0);
+    function buildInitialPolicyGrantData() internal pure returns (PolicyGrantData[] memory initialPolicyGrantData) {
+        PermissionMetadata[] memory firstPermissions = new PermissionMetadata[](1);
+        firstPermissions[0] = PermissionMetadata(0xa9cc4718a9cc4718, 0);
 
-        PermissionChangeData[] memory secondPermissions = new PermissionChangeData[](1);
-        secondPermissions[0] = PermissionChangeData(0xffffffffffffffff, 0);
+        PermissionMetadata[] memory secondPermissions = new PermissionMetadata[](1);
+        secondPermissions[0] = PermissionMetadata(0xffffffffffffffff, 0);
 
-        initialBatchGrantData = new BatchGrantData[](2);
-        initialBatchGrantData[0] = BatchGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
-        initialBatchGrantData[1] = BatchGrantData({user: policyholder1, permissionsToAdd: secondPermissions});
+        initialPolicyGrantData = new PolicyGrantData[](2);
+        initialPolicyGrantData[0] = PolicyGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
+        initialPolicyGrantData[1] = PolicyGrantData({user: policyholder1, permissionsToAdd: secondPermissions});
     }
 }
 
@@ -244,7 +244,7 @@ contract Deploy is VertexFactoryTest {
         Strategy[] memory initialStrategies = createInitialStrategies();
         string[] memory initialAccounts = buildInitialAccounts();
         vm.prank(address(rootVertex));
-        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, buildInitialBatchGrantData());
+        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
     }
 
     function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
@@ -254,7 +254,7 @@ contract Deploy is VertexFactoryTest {
 
         vm.prank(address(caller));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialBatchGrantData());
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
     }
 
     function test_IncrementsVertexCountByOne() public {
@@ -265,14 +265,14 @@ contract Deploy is VertexFactoryTest {
 
     function test_DeploysPolicy() public {
         assertEq(NEW_POLICY.code.length, 0);
-        VertexCore _vertex = deployVertex();
+        deployVertex();
         assertGt(NEW_POLICY.code.length, 0);
         VertexPolicyNFT(NEW_POLICY).baseURI(); // Sanity check that this doesn't revert.
     }
 
     function test_DeploysVertexCore() public {
         assertEq(NEW_VERTEX.code.length, 0);
-        VertexCore _vertex = deployVertex();
+        deployVertex();
         assertGt(NEW_VERTEX.code.length, 0);
         VertexCore(NEW_VERTEX).name(); // Sanity check that this doesn't revert.
     }

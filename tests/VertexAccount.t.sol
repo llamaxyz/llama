@@ -6,7 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
-import {Strategy, WeightByPermission, BatchGrantData, PermissionChangeData} from "src/utils/Structs.sol";
+import {Strategy, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
@@ -73,7 +73,7 @@ contract VertexAccountTest is Test {
     address[] public initialPolicies;
     bytes8[][] public initialPermissions;
     uint256[][] public initialExpirationTimestamps;
-    BatchGrantData[] public initialPolicyData;
+    PolicyGrantData[] public initialPolicyData;
 
     // Strategy config
     uint256 public constant approvalPeriod = 2 days;
