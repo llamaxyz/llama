@@ -6,6 +6,7 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
+import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Strategy} from "src/utils/Structs.sol";
@@ -29,7 +30,7 @@ contract VertexFactoryHandler is BaseHandler {
     // ======== Constructor ========
     // =============================
 
-    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, _vertexPolicyNFT) {
+    constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
         vertexCounts.push(vertexFactory.vertexCount());
     }
 
@@ -71,7 +72,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     function setUp() public override {
         VertexCoreTest.setUp();
-        handler = new VertexFactoryHandler(vertexFactory, policy);
+        handler = new VertexFactoryHandler(vertexFactory, vertex);
 
         // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
         // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

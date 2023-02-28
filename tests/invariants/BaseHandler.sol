@@ -6,6 +6,7 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
+import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {Strategy} from "src/utils/Structs.sol";
@@ -18,7 +19,8 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
 
     // Protocol contracts.
     VertexFactory public immutable vertexFactory;
-    VertexPolicyNFT public immutable vertexPolicyNFT;
+    VertexCore public immutable vertexCore;
+    VertexPolicyNFT public immutable policy;
 
     // Handler state.
     address[] internal actors;
@@ -35,9 +37,10 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     // ======== Constructor ========
     // =============================
 
-    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) {
+    constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) {
         vertexFactory = _vertexFactory;
-        vertexPolicyNFT = _vertexPolicyNFT;
+        vertexCore = _vertexCore;
+        policy = vertexCore.policy();
     }
 
     // =================================================

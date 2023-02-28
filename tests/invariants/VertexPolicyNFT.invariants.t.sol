@@ -6,6 +6,7 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
+import {VertexCore} from "src/core/VertexCore.sol";
 import {VertexFactory} from "src/factory/VertexFactory.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {PermissionIdCheckpoint, Strategy} from "src/utils/Structs.sol";
@@ -18,7 +19,7 @@ contract VertexPolicyNFTHandler is BaseHandler {
     // ======== Constructor ========
     // =============================
 
-    constructor(VertexFactory _vertexFactory, VertexPolicyNFT _vertexPolicyNFT) BaseHandler(_vertexFactory, _vertexPolicyNFT) {
+    constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
         // TODO Set some initial permissions, each actor is a policyholder.
     }
 
@@ -43,27 +44,27 @@ contract VertexPolicyNFTHandler is BaseHandler {
     // =====================================
 
     function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-        vm.prank(address(vertexFactory.rootVertex()));
+        vm.prank(address(policy.vertex()));
         // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-        vm.prank(address(vertexFactory.rootVertex()));
+        vm.prank(address(policy.vertex()));
         // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-        vm.prank(address(vertexFactory.rootVertex()));
+        vm.prank(address(policy.vertex()));
         // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
     }
 
     function vertexPolicyNFT_revokeExpiredPermission() public recordCall("vertexPolicyNFT_revokeExpiredPermission") {
-        // TODO Is revokeExpiredPermission actually needed?
+        // TODO Is revokeExpiredPermission actually needed? Discussion/tracking in https://github.com/llama-community/vertex-v1/issues/92
     }
 
     function vertexPolicyNFT_setBaseURI(string calldata baseURI) public recordCall("vertexPolicyNFT_setBaseURI") {
-        vm.prank(address(vertexFactory.rootVertex()));
-        vertexPolicyNFT.setBaseURI(baseURI);
+        vm.prank(address(policy.vertex()));
+        policy.setBaseURI(baseURI);
     }
 }
 
@@ -76,7 +77,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     function setUp() public override {
         VertexCoreTest.setUp();
-        handler = new VertexPolicyNFTHandler(vertexFactory, policy);
+        handler = new VertexPolicyNFTHandler(vertexFactory, vertex);
 
         // TODO Set this up and write tests.
         targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being deployed to a sender's address?
@@ -120,7 +121,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     // For a given permission ID,the tokenPermissionCheckpoints array should always be sorted by
     // timestamp in ascending order, with no duplicate timestamps.
-    function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp() public {
+    function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp() public view {
         uint256[] memory allPolicyIds = handler.getPolicyIds();
         bytes8[] memory allPermissionIds = handler.getPermissionIds();
         for (uint256 i = 0; i < allPolicyIds.length; i++) {
