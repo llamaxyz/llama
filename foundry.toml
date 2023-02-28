@@ -19,6 +19,8 @@ yul = true
 optimizer = false
 via_ir = false
 
+
+
 [profile.ci]
 fuzz = { runs = 5000 }
 invariant = { runs = 1000 }
