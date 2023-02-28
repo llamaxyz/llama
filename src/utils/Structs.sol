@@ -47,13 +47,23 @@ struct Strategy {
     bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
 }
 
-struct PermissionChangeData {
+struct PermissionMetadata {
     bytes8 permissionId;
     uint256 expirationTimestamp;
 }
 
-struct BatchUpdateData {
+struct PolicyUpdateData {
     uint256 policyId;
-    PermissionChangeData[] permissionsToAdd;
-    PermissionChangeData[] permissionsToRemove;
+    PermissionMetadata[] permissionsToAdd;
+    PermissionMetadata[] permissionsToRemove;
+}
+
+struct PolicyGrantData {
+    address user;
+    PermissionMetadata[] permissionsToAdd;
+}
+
+struct PolicyRevokeData {
+    uint256 policyId;
+    bytes8[] permissionIds;
 }

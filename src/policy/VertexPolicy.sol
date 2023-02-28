@@ -2,15 +2,15 @@
 pragma solidity ^0.8.17;
 
 import {ERC721} from "@solmate/tokens/ERC721.sol";
-import {PermissionData, BatchUpdateData} from "src/utils/Structs.sol";
+import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/utils/Structs.sol";
 
 abstract contract VertexPolicy is ERC721 {
-    event PoliciesAdded(address[] users, bytes8[][] permissionSignatures, uint256[][] expirationTimestamps);
-    event PermissionUpdated(BatchUpdateData updateData);
-    event PoliciesRevoked(uint256[] policyIds, bytes8[][] permissionSignatures);
+    event PolicyAdded(PolicyGrantData grantData);
+    event PermissionUpdated(PolicyUpdateData updateData);
+    event PolicyRevoked(PolicyRevokeData revokeData);
 
     error SoulboundToken();
-    error InvalidInput();
+    error InvalidInput(); // TODO: Probably need more than one error?
     error OnlyVertex();
     error OnlyOnePolicyPerHolder();
     error OnlyVertexFactory();
@@ -18,21 +18,18 @@ abstract contract VertexPolicy is ERC721 {
     error Expired();
 
     /// @notice updates the permissions for a policy token
-    /// @param updateData array of BatchUpdateData struct to update permissions
-    function batchUpdatePermissions(BatchUpdateData[] calldata updateData) public virtual;
+    /// @param updateData array of PolicyUpdateData struct to update permissions
+    function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public virtual;
 
     /// @notice mints multiple policy token with the given permissions
-    /// @param to the addresses to mint the policy token to
-    /// @param userPermissions the permissions to be granted to the policy token
-    /// @param expirationTimestamps the expiration timestamps to be set for the policy token
-    function batchGrantPolicies(address[] calldata to, bytes8[][] memory userPermissions, uint256[][] memory expirationTimestamps) public virtual;
+    /// @param policyData array of PolicyGrantData struct to mint policy tokens
+    function batchGrantPolicies(PolicyGrantData[] memory policyData) public virtual;
 
     /// @notice revokes all permissions from multiple policy tokens
     /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission not passed being available if a
     /// policy was ever reissued to the same address
-    /// @param _policyIds the ids of the policy tokens to revoke permissions from
-    /// @param permissionsToRevoke the permissions to revoke from the policy tokens
-    function batchRevokePolicies(uint256[] calldata _policyIds, bytes8[][] calldata permissionsToRevoke) public virtual;
+    /// @param policyData array of PolicyRevokeData struct to revoke permissions
+    function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public virtual;
 
     /// @notice Check if a holder has a permissionSignature at a specific timestamp
     /// @param policyholder the address of the policy holder

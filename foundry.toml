@@ -7,6 +7,18 @@ solc = "0.8.17"
 ignored_error_codes = ["unreachable"] # Ignore build errors due to unimplemented policy functions
 solc_version = '0.8.17'
 bytecode_hash = 'none'
+optimizer = true
+via_ir = true
+
+[profile.default.optimizer_details]
+constantOptimizer = true
+yul = true
+
+# Use this profile to run tests locally (not on CI) without the optimizer for quick build times.
+[profile.test]
+optimizer = false
+via_ir = false
+
 invariant = { runs = 50, fail_on_revert = true }
 
 [profile.ci]
@@ -25,5 +37,3 @@ wrap_comments = true
 
 [doc]
 title = "Vertex v1 Documentation"
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config

@@ -9,7 +9,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, Strategy, PermissionData, WeightByPermission} from "src/utils/Structs.sol";
+import {Action, Strategy, PermissionData, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
 
 contract VertexFactoryTest is Test {
     event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -36,16 +36,11 @@ contract VertexFactoryTest is Test {
 
     PermissionData public permission;
     PermissionData[] public permissions;
-    bytes8[] public permissionSignature;
-    bytes8[][] public permissionSignatures;
     address[] public addresses;
     uint256[] public policyIds;
 
-    address[] public initialPolicies;
-    bytes8[][] public initialPermissions;
-    uint256[][] public initialExpirationTimestamps;
     // Strategy config
-    uint256 public constant approvalPeriod = 2 days;
+    uint256 public constant approvalPeriod = 14400; // 2 days in blocks
     uint256 public constant queuingPeriod = 4 days;
     uint256 public constant expirationPeriod = 8 days;
     bool public constant isFixedLengthApprovalPeriod = true;
@@ -68,103 +63,151 @@ contract VertexFactoryTest is Test {
 
         // Setup strategy parameters
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+
+        PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
 
         // Deploy vertex and mock protocol
-        vertexFactory =
-        new VertexFactory(vertexCoreLogic, vertexAccountLogic, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory = new VertexFactory(
+          vertexCoreLogic,
+          vertexAccountLogic,
+          "ProtocolXYZ",
+          "VXP",
+          initialStrategies,
+          buildInitialAccounts(),
+          initialPolicies
+        );
+
         rootVertex = VertexCore(vertexFactory.rootVertex());
         protocol = new ProtocolXYZ(address(rootVertex));
 
         // Use create2 to get vertex strategy addresses
         for (uint256 i; i < initialStrategies.length; i++) {
-            bytes32 strategySalt = bytes32(keccak256(abi.encode(initialStrategies[i])));
-            bytes memory bytecode = type(VertexStrategy).creationCode;
-            bytes32 hash = keccak256(
-                abi.encodePacked(
-                    bytes1(0xff),
-                    address(rootVertex),
-                    strategySalt,
-                    keccak256(abi.encodePacked(bytecode, abi.encode(initialStrategies[i], rootVertex.policy(), address(rootVertex))))
-                )
-            );
-            strategies.push(VertexStrategy(address(uint160(uint256(hash)))));
+            strategies.push(VertexStrategy(_computeStrategyAddress(initialStrategies[i])));
         }
+
         // Set vertex's policy
         policy = rootVertex.policy();
 
         // Create and assign policies
-        createPolicies();
+        // createPolicies();
 
         vm.label(actionCreator, "Action Creator");
     }
 
+    function _computeStrategyAddress(Strategy memory _strategy) internal view returns (address _address) {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0xff),
+                address(rootVertex),
+                keccak256(abi.encode(_strategy)), // strategy salt
+                keccak256(
+                    abi.encodePacked(
+                        type(VertexStrategy).creationCode, // bytecode
+                        abi.encode(_strategy, rootVertex.policy(), address(rootVertex))
+                    )
+                )
+            )
+        );
+        _address = address(uint160(uint256(hash)));
+    }
+
+    struct TestHelperVars {
+        PermissionData pausePermissionData;
+        PermissionData failPermissionData;
+        PermissionMetadata[] defaultPermissions;
+        PermissionMetadata[] creatorPermissions;
+    }
+
     function createPolicies() internal {
         vm.startPrank(address(rootVertex));
-        permission = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
-        permissions.push(permission);
-        permissionSignature.push(policy.hashPermission(permission));
-        for (uint256 i; i < 5; i++) {
-            if (i == 0) {
-                bytes8[] memory creatorPermissions = new bytes8[](2);
-                PermissionData memory failPermission = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
-                creatorPermissions[0] = policy.hashPermission(failPermission);
-                creatorPermissions[1] = policy.hashPermission(permission);
-                permissionSignatures.push(creatorPermissions);
-            } else {
-                permissionSignatures.push(permissionSignature);
-            }
-        }
+
+        TestHelperVars memory _vars;
+
+        _vars.pausePermissionData = PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
+        _vars.failPermissionData = PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
+        permissions.push(_vars.pausePermissionData);
+
+        _vars.creatorPermissions = new PermissionMetadata[](2);
+        _vars.creatorPermissions[0] = PermissionMetadata({
+            permissionId: policy.hashPermission(_vars.failPermissionData),
+            expirationTimestamp: 0 // no expiration
+        });
+        _vars.creatorPermissions[1] = PermissionMetadata({
+            permissionId: policy.hashPermission(_vars.pausePermissionData),
+            expirationTimestamp: 0 // no expiration
+        });
+
+        _vars.defaultPermissions = new PermissionMetadata[](1);
+        _vars.defaultPermissions[0] = PermissionMetadata({
+            permissionId: policy.hashPermission(_vars.pausePermissionData),
+            expirationTimestamp: 0 // no expiration
+        });
+
         addresses.push(actionCreator);
         addresses.push(policyholder1);
         addresses.push(policyholder2);
         addresses.push(policyholder3);
         addresses.push(policyholder4);
-        policy.batchGrantPolicies(addresses, permissionSignatures, initialExpirationTimestamps);
+
+        PolicyGrantData[] memory initialPolicies = new PolicyGrantData[](5);
+        initialPolicies[0] = PolicyGrantData(actionCreator, _vars.creatorPermissions);
+        initialPolicies[1] = PolicyGrantData(policyholder1, _vars.defaultPermissions);
+        initialPolicies[2] = PolicyGrantData(policyholder2, _vars.defaultPermissions);
+        initialPolicies[3] = PolicyGrantData(policyholder3, _vars.defaultPermissions);
+        initialPolicies[4] = PolicyGrantData(policyholder4, _vars.defaultPermissions);
+
+        policy.batchGrantPolicies(initialPolicies);
+
         vm.stopPrank();
     }
 
-    function createInitialStrategies() internal pure returns (Strategy[] memory) {
-        bytes8 permissionSig = 0xa9cc4718a9cc4718;
-        WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](2);
-        approvalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint256(2)});
-        approvalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
+    function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
+        WeightByPermission[] memory _permissionsWithWeights = new WeightByPermission[](2);
+        _permissionsWithWeights[0] = WeightByPermission({permissionSignature: 0xa9cc4718a9cc4718, weight: uint256(2)});
+        _permissionsWithWeights[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
 
-        WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](2);
-        disapprovalWeightByPermission[0] = WeightByPermission({permissionSignature: permissionSig, weight: uint256(2)});
-        disapprovalWeightByPermission[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
-        Strategy[] memory initialStrategies = new Strategy[](2);
+        _strategies = new Strategy[](2);
 
-        initialStrategies[0] = Strategy({
+        _strategies[0] = Strategy({
             approvalPeriod: approvalPeriod,
             queuingPeriod: queuingPeriod,
             expirationPeriod: expirationPeriod,
             isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
             minApprovalPct: minApprovalPct,
             minDisapprovalPct: minDisapprovalPct,
-            approvalWeightByPermission: approvalWeightByPermission,
-            disapprovalWeightByPermission: disapprovalWeightByPermission
+            approvalWeightByPermission: _permissionsWithWeights,
+            disapprovalWeightByPermission: _permissionsWithWeights
         });
 
-        initialStrategies[1] = Strategy({
+        _strategies[1] = Strategy({
             approvalPeriod: approvalPeriod,
             queuingPeriod: 0,
             expirationPeriod: 1 days,
             isFixedLengthApprovalPeriod: false,
             minApprovalPct: 80_00,
             minDisapprovalPct: 10001,
-            approvalWeightByPermission: approvalWeightByPermission,
-            disapprovalWeightByPermission: disapprovalWeightByPermission
+            approvalWeightByPermission: _permissionsWithWeights,
+            disapprovalWeightByPermission: _permissionsWithWeights
         });
-
-        return initialStrategies;
     }
 
-    function createInitialAccounts() internal pure returns (string[] memory) {
+    function buildInitialAccounts() internal pure returns (string[] memory) {
         string[] memory initialAccounts = new string[](2);
         initialAccounts[0] = "VertexAccount0";
         initialAccounts[1] = "VertexAccount1";
         return initialAccounts;
+    }
+
+    function buildInitialPolicyGrantData() internal pure returns (PolicyGrantData[] memory initialPolicyGrantData) {
+        PermissionMetadata[] memory firstPermissions = new PermissionMetadata[](1);
+        firstPermissions[0] = PermissionMetadata(0xa9cc4718a9cc4718, 0);
+
+        PermissionMetadata[] memory secondPermissions = new PermissionMetadata[](1);
+        secondPermissions[0] = PermissionMetadata(0xffffffffffffffff, 0);
+
+        initialPolicyGrantData = new PolicyGrantData[](2);
+        initialPolicyGrantData[0] = PolicyGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
+        initialPolicyGrantData[1] = PolicyGrantData({user: policyholder1, permissionsToAdd: secondPermissions});
     }
 }
 
@@ -195,23 +238,23 @@ contract Deploy is VertexFactoryTest {
     // helper method, so if those parameters change, or we change the constructor signature, these
     // will need to be updated.
     address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-    address constant NEW_POLICY = 0xfC3Fb7DeCfFEEe8AC37d488d37522164DB0eB57E;
+    address constant NEW_POLICY = 0xC7E6EC40aF0c3dFcbAF2068Afe112FB0108E5621;
 
     function deployVertex() internal returns (VertexCore) {
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
         vm.prank(address(rootVertex));
-        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
     }
 
     function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
         vm.assume(caller != address(rootVertex));
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
 
         vm.prank(address(caller));
         vm.expectRevert(VertexFactory.OnlyVertex.selector);
-        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicies, initialPermissions, initialExpirationTimestamps);
+        vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
     }
 
     function test_IncrementsVertexCountByOne() public {
@@ -239,7 +282,7 @@ contract Deploy is VertexFactoryTest {
         assertEq(VertexCore(NEW_VERTEX).name(), "NewProject");
 
         Strategy[] memory initialStrategies = createInitialStrategies();
-        string[] memory initialAccounts = createInitialAccounts();
+        string[] memory initialAccounts = buildInitialAccounts();
         vm.expectRevert("Initializable: contract is already initialized");
         VertexCore(NEW_VERTEX).initialize("NewProject", VertexPolicyNFT(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts);
     }
