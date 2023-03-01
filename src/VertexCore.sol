@@ -77,7 +77,7 @@ contract VertexCore is IVertexCore, Initializable {
 
   constructor() initializer {}
 
-  modifier onlyOwner() {
+  modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
     _;
   }
@@ -232,12 +232,12 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyOwner {
+  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
     _deployStrategies(strategies, policy);
   }
 
   /// @inheritdoc IVertexCore
-  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyOwner {
+  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyVertex {
     uint256 strategiesLength = strategies.length;
     unchecked {
       for (uint256 i = 0; i < strategiesLength; ++i) {
@@ -248,7 +248,7 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyOwner {
+  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
     _deployAccounts(accounts);
   }
 

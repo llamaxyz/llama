@@ -208,7 +208,7 @@ contract VertexPolicyNFTTest is Test {
     assertEq(vertexPolicyNFT.totalSupply(), 1);
   }
 
-  function test_onlyOwner_RevertIfNotVertex() public {
+  function test_onlyVertex_RevertIfNotVertex() public {
     string memory baseURI = "https://vertex.link/policy/";
     vm.prank(address(0xdeadbeef));
     vm.expectRevert(VertexPolicyNFT.OnlyVertex.selector);
