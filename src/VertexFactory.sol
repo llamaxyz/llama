@@ -5,7 +5,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
@@ -67,7 +67,7 @@ contract VertexFactory is IVertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
-    VertexPolicyNFT policy = new VertexPolicyNFT{salt: keccak256(abi.encode(symbol))}(name, symbol, initialPolicies);
+    VertexPolicy policy = new VertexPolicy{salt: keccak256(abi.encode(symbol))}(name, symbol, initialPolicies);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
       // salt)
@@ -92,10 +92,10 @@ contract VertexFactory is IVertexFactory {
     string memory _name,
     string memory _symbol,
     PolicyGrantData[] memory _initialPolicies
-  ) external view returns (VertexPolicyNFT) {
-    bytes memory bytecode = type(VertexPolicyNFT).creationCode;
+  ) external view returns (VertexPolicy) {
+    bytes memory bytecode = type(VertexPolicy).creationCode;
 
-    return VertexPolicyNFT(
+    return VertexPolicy(
       computeCreate2Address(
         bytes32(keccak256(abi.encode(_symbol))), // salt
         keccak256(abi.encodePacked(bytecode, abi.encode(_name, _symbol, _initialPolicies))),
@@ -104,7 +104,7 @@ contract VertexFactory is IVertexFactory {
     );
   }
 
-  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicyNFT _policy, VertexCore _vertex)
+  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex)
     external
     pure
     returns (VertexStrategy)
