@@ -331,22 +331,6 @@ contract VertexCore is IVertexCore, Initializable {
     }
   }
 
-  /*
-  struct Strategy {
-  uint256 approvalPeriod; // The length of time of the approval period.
-  uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
-    // enabled.
-  uint256 expirationPeriod; // The length of time an action can be executed before it expires.
-  uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
-  uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
-  WeightByPermission[] approvalWeightByPermission; // List of permissionSignatures and weights that define the
-    // validation process for approval.
-  WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the
-    // validation process for disapproval.
-  bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
-  }
-  */
-
   function _deployStrategies(Strategy[] calldata strategies, VertexPolicyNFT _policy) internal {
     uint256 strategyLength = strategies.length;
     unchecked {
