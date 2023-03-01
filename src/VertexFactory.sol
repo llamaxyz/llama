@@ -6,7 +6,9 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -25,6 +27,9 @@ contract VertexFactory is IVertexFactory {
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
+
+  // Used by default when deploying with create2, https://github.com/Arachnid/deterministic-deployment-proxy.
+  address private constant CREATE2_FACTORY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
   constructor(
     VertexCore _vertexCoreLogic,
@@ -72,5 +77,72 @@ contract VertexFactory is IVertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
+  }
+
+  function computeVertexCoreAddress(string memory name) public view returns (VertexCore) {
+    address _computedAddress = Clones.predictDeterministicAddress(
+      address(vertexCoreLogic),
+      bytes32(keccak256(abi.encode(name))), // salt
+      address(this) // deployer
+    );
+    return VertexCore(_computedAddress);
+  }
+
+  function computeVertexPolicyAddress(
+    string memory _name,
+    string memory _symbol,
+    PolicyGrantData[] memory _initialPolicies
+  ) external view returns (VertexPolicyNFT) {
+    bytes memory bytecode = type(VertexPolicyNFT).creationCode;
+
+    return VertexPolicyNFT(
+      computeCreate2Address(
+        bytes32(keccak256(abi.encode(_symbol))), // salt
+        keccak256(abi.encodePacked(bytecode, abi.encode(_name, _symbol, _initialPolicies))),
+        address(this) // deployer
+      )
+    );
+  }
+
+  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicyNFT _policy, VertexCore _vertex)
+    external
+    pure
+    returns (VertexStrategy)
+  {
+    bytes memory bytecode = type(VertexStrategy).creationCode;
+    return VertexStrategy(
+      computeCreate2Address(
+        keccak256(
+          abi.encodePacked(
+            _strategy.approvalPeriod,
+            _strategy.queuingPeriod,
+            _strategy.expirationPeriod,
+            _strategy.minApprovalPct,
+            _strategy.minDisapprovalPct,
+            _strategy.isFixedLengthApprovalPeriod
+          )
+        ), // salt
+        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, _policy, address(_vertex)))),
+        address(_vertex) // deployer
+      )
+    );
+  }
+
+  // pulled from the foundry StdUtils.sol contract
+  function computeCreate2Address(bytes32 salt, bytes32 initCodeHash) internal pure returns (address) {
+    return computeCreate2Address(salt, initCodeHash, CREATE2_FACTORY);
+  }
+
+  function computeCreate2Address(bytes32 salt, bytes32 initcodeHash, address deployer)
+    internal
+    pure
+    virtual
+    returns (address)
+  {
+    return addressFromLast20Bytes(keccak256(abi.encodePacked(bytes1(0xff), deployer, salt, initcodeHash)));
+  }
+
+  function addressFromLast20Bytes(bytes32 bytesValue) private pure returns (address) {
+    return address(uint160(uint256(bytesValue)));
   }
 }

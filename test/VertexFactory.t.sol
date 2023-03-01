@@ -21,6 +21,7 @@ import {
 
 contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
+  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
 
   // Vertex system
   VertexCore public rootVertex;
@@ -339,22 +340,32 @@ contract ComputeAddress is VertexFactoryTest {
   // One those methods exist we can fill in the tests for them here.
 
   function test_ComputesExpectedAddressForVertexCore() public {
-    VertexCore computedVertexCore = computeVertexCoreAddress("NewProject");
+    VertexCore computedVertexCore = vertexFactory.computeVertexCoreAddress("NewProject");
     VertexCore deployedVertexCore = deployVertex();
     assertEq(address(computedVertexCore), address(deployedVertexCore));
   }
 
   function test_ComputesExpectedAddressForPolicy() public {
-    VertexCore computedVertexCore = computeVertexCoreAddress("NewProject");
-    PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
-    VertexPolicyNFT computedVertexPolicy = computeVertexPolicyAddress("NewProject", "NP", initialPolicies);
+    VertexPolicyNFT computedVertexPolicy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
     VertexCore deployedVertexCore = deployVertex();
     VertexPolicyNFT deployedVertexPolicy = VertexPolicyNFT(VertexCore(deployedVertexCore).policy());
     assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
   }
 
-  function test_ComputeVertexStrategyAddress() internal view {
-    //TODO
+  function test_ComputeVertexStrategyAddress() public {
+    // Strategy memory _strategy, VertexPolicyNFT _policy, VertexCore _vertex
+    Strategy[] memory initialStrategies = createInitialStrategies();
+    VertexPolicyNFT computedVertexPolicy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    VertexCore computedVertexCore = vertexFactory.computeVertexCoreAddress("NewProject");
+
+    VertexStrategy computedVertexStrategy =
+      vertexFactory.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, computedVertexCore);
+    console2.logAddress(address(computedVertexStrategy));
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(computedVertexStrategy, initialStrategies[0]);
+    VertexCore deployedVertexCore = deployVertex();
   }
 
   function deployVertex() public returns (VertexCore) {
