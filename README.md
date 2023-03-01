@@ -16,6 +16,10 @@ You can get Solidity support for Visual Studio Code by installing the [VSCode So
 $ git clone https://github.com/llama-community/vertex-v1.git
 $ cd vertex-v1
 $ forge install
+
+# Configure git to ignore commits that aren't relevant to git blame. Read the
+# comments in the `.git-blame-ignore-revs` file for more information.
+$ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ## Setup
@@ -29,7 +33,7 @@ Duplicate `.env.example` and rename to `.env`:
 ### Commands
 
 - `forge build` - build the project
-- `forge test`  - run tests
+- `forge test` - run tests
 
 ### Deploy and Verify
 
