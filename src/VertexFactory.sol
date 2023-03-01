@@ -28,9 +28,6 @@ contract VertexFactory is IVertexFactory {
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
 
-  // Used by default when deploying with create2, https://github.com/Arachnid/deterministic-deployment-proxy.
-  address private constant CREATE2_FACTORY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-
   constructor(
     VertexCore _vertexCoreLogic,
     VertexAccount _vertexAccountLogic,
@@ -129,8 +126,8 @@ contract VertexFactory is IVertexFactory {
   }
 
   // pulled from the foundry StdUtils.sol contract
-  function computeCreate2Address(bytes32 salt, bytes32 initCodeHash) internal pure returns (address) {
-    return computeCreate2Address(salt, initCodeHash, CREATE2_FACTORY);
+  function computeCreate2Address(bytes32 salt, bytes32 initCodeHash) internal view returns (address) {
+    return computeCreate2Address(salt, initCodeHash, address(this));
   }
 
   function computeCreate2Address(bytes32 salt, bytes32 initcodeHash, address deployer)
