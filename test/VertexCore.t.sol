@@ -10,7 +10,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {
   Action,
   Strategy,
@@ -28,7 +28,7 @@ contract VertexCoreTest is Test {
   VertexFactory public vertexFactory;
   VertexStrategy[] public strategies;
   VertexAccount[] public accounts;
-  VertexPolicyNFT public policy;
+  VertexPolicy public policy;
 
   // Mock protocol for action targets.
   ProtocolXYZ public targetProtocol;
@@ -161,7 +161,7 @@ contract VertexCoreTest is Test {
     );
   }
 
-  function _grantPermissions(VertexStrategy initialStrategy, VertexPolicyNFT _policy) public {
+  function _grantPermissions(VertexStrategy initialStrategy, VertexPolicy _policy) public {
     PermissionMetadata[] memory creatorPermissions = new PermissionMetadata[](3);
     PermissionMetadata[] memory pauserPermissions = new PermissionMetadata[](1);
 

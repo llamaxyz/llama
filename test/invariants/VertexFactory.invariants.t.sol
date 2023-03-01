@@ -8,7 +8,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 import {VertexCoreTest} from "test/VertexCore.t.sol";
@@ -84,7 +84,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
       // deployed to a sender's address?
 
     excludeArtifact("VertexCore");
-    excludeArtifact("VertexPolicyNFT");
+    excludeArtifact("VertexPolicy");
     excludeArtifact("VertexStrategy");
     excludeArtifact("VertexAccount");
 
