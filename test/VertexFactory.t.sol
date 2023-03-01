@@ -8,7 +8,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {
   Action,
@@ -29,7 +29,7 @@ contract VertexFactoryTest is Test {
   VertexAccount public vertexAccountLogic;
   VertexFactory public vertexFactory;
   VertexStrategy[] public strategies;
-  VertexPolicyNFT public policy;
+  VertexPolicy public policy;
 
   // Mock protocol
   ProtocolXYZ public protocol;
@@ -254,6 +254,7 @@ contract Constructor is VertexFactoryTest {
 }
 
 contract Deploy is VertexFactoryTest {
+
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory initialStrategies = createInitialStrategies();
     string[] memory initialAccounts = buildInitialAccounts();

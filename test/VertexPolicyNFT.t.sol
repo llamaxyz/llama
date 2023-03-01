@@ -4,20 +4,19 @@ pragma solidity ^0.8.17;
 import "lib/forge-std/src/console.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {VertexPolicy} from "src/interfaces/VertexPolicy.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {
   PermissionData, PolicyUpdateData, PermissionMetadata, PolicyGrantData, PolicyRevokeData
 } from "src/lib/Structs.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
-contract VertexPolicyNFTTest is Test {
+contract VertexPolicyTest is Test {
   event PolicyAdded(PolicyGrantData grantData);
   event PermissionUpdated(PolicyUpdateData updateData);
   event PolicyRevoked(PolicyRevokeData revokeData);
 
-  VertexPolicyNFT public vertexPolicyNFT;
+  VertexPolicy public vertexPolicyNFT;
   PermissionData public permission;
   PermissionData[] public permissions;
   PermissionData[][] public permissionsArray;
@@ -64,7 +63,7 @@ contract VertexPolicyNFTTest is Test {
 
   function setUp() public {
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
-    vertexPolicyNFT = new VertexPolicyNFT("Test", "TST", initialBatchGrantData);
+    vertexPolicyNFT = new VertexPolicy("Test", "TST", initialBatchGrantData);
     vertexPolicyNFT.setVertex(address(this));
     ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
     generateGenericPermissionArray();
