@@ -6,13 +6,6 @@ Vertex v1 is a smart contract access control and administration framework.
 
 It requires [Foundry](https://github.com/gakonst/foundry) installed to run. You can find instructions here [Foundry installation](https://github.com/gakonst/foundry#installation).
 
-MacOS users can follow [this guide](https://tecadmin.net/install-nvm-macos-with-homebrew/) to install Node.js and NPM. Once installed, ensure you're running the correct versions:
-
-```sh
-$ node -v # v16.15.1 or higher
-$ npm -v # v8.12.2 or higher
-```
-
 ### VS Code
 
 You can get Solidity support for Visual Studio Code by installing the [VSCode Solidity extension](https://github.com/juanfranblanco/vscode-solidity).
