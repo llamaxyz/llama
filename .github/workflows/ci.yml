@@ -33,7 +33,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run tests
-        run: FOUNDRY_PROFILE=ci forge test -vvv
+        run: FOUNDRY_PROFILE=test forge test -vvv
 
   coverage:
     runs-on: ubuntu-latest
