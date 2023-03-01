@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Clones} from "@openzeppelin/proxy/contracts/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
@@ -338,10 +339,85 @@ contract ComputeAddress is VertexFactoryTest {
   // One those methods exist we can fill in the tests for them here.
 
   function test_ComputesExpectedAddressForVertexCore() public {
-    // TODO
+    VertexCore computedVertexCore = computeVertexCoreAddress("NewProject");
+    VertexCore deployedVertexCore = deployVertex();
+    assertEq(address(computedVertexCore), address(deployedVertexCore));
   }
 
   function test_ComputesExpectedAddressForPolicy() public {
-    // TODO
+    VertexCore computedVertexCore = computeVertexCoreAddress("NewProject");
+    VertexPolicyNFT computedVertexPolicy =
+      computeVertexPolicyAddress("NewProject", "NP", addresses, initialPermissions, initialExpirationTimestamps);
+    VertexCore deployedVertexCore = deployVertex();
+    VertexPolicyNFT deployedVertexPolicy = VertexPolicyNFT(VertexCore(deployedVertexCore).policy());
+    assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
+  }
+
+  function test_ComputeVertexStrategyAddress() internal view {
+    //TODO
+  }
+
+  function deployVertex() public returns (VertexCore) {
+    Strategy[] memory initialStrategies = createInitialStrategies();
+    string[] memory initialAccounts = buildInitialAccounts();
+    PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
+    vm.prank(address(rootVertex));
+    return
+      vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPolicies);
+  }
+
+  function computeVertexCoreAddress(string memory name) public view returns (VertexCore) {
+    address _computedAddress = Clones.predictDeterministicAddress(
+      address(vertexCoreLogic),
+      bytes32(keccak256(abi.encode(name))), // salt
+      address(vertexFactory) // deployer
+    );
+    return VertexCore(_computedAddress);
+  }
+
+  function computeVertexPolicyAddress(
+    string memory _name,
+    string memory _symbol,
+    address[] memory _initialPolicyholders,
+    bytes8[][] memory _initialPermissions,
+    uint256[][] memory _initialExpirationTimestamps
+  ) public view returns (VertexPolicyNFT) {
+    bytes memory bytecode = type(VertexPolicyNFT).creationCode;
+    return VertexPolicyNFT(
+      computeCreate2Address(
+        bytes32(keccak256(abi.encode(symbol))), // salt
+        keccak256(
+          abi.encodePacked(
+            bytecode,
+            abi.encode(_name, _symbol, _initialPolicyholders, _initialPermissions, _initialExpirationTimestamps)
+          )
+        ),
+        address(vertexFactory) // deployer
+      )
+    );
+  }
+
+  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicyNFT _policy, VertexCore _vertex)
+    internal
+    view
+    returns (VertexStrategy)
+  {
+    bytes memory bytecode = type(VertexStrategy).creationCode;
+    return VertexStrategy(
+      computeCreate2Address(
+        keccak256(
+          abi.encodePacked(
+            _strategy.approvalPeriod,
+            _strategy.queuingDuration,
+            _strategy.expirationDelay,
+            _strategy.minApprovalPct,
+            _strategy.minDisapprovalPct,
+            _strategy.isFixedLengthApprovalPeriod
+          )
+        ), // salt
+        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, address(_vertex)))),
+        address(_vertex) // deployer
+      )
+    );
   }
 }
