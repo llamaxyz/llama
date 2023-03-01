@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Clones} from "@openzeppelin/proxy/contracts/Clones.sol";
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
@@ -346,8 +346,8 @@ contract ComputeAddress is VertexFactoryTest {
 
   function test_ComputesExpectedAddressForPolicy() public {
     VertexCore computedVertexCore = computeVertexCoreAddress("NewProject");
-    VertexPolicyNFT computedVertexPolicy =
-      computeVertexPolicyAddress("NewProject", "NP", addresses, initialPermissions, initialExpirationTimestamps);
+    PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
+    VertexPolicyNFT computedVertexPolicy = computeVertexPolicyAddress("NewProject", "NP", initialPolicies);
     VertexCore deployedVertexCore = deployVertex();
     VertexPolicyNFT deployedVertexPolicy = VertexPolicyNFT(VertexCore(deployedVertexCore).policy());
     assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
@@ -362,8 +362,7 @@ contract ComputeAddress is VertexFactoryTest {
     string[] memory initialAccounts = buildInitialAccounts();
     PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
     vm.prank(address(rootVertex));
-    return
-      vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies, initialPolicies);
+    return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies);
   }
 
   function computeVertexCoreAddress(string memory name) public view returns (VertexCore) {
@@ -378,20 +377,14 @@ contract ComputeAddress is VertexFactoryTest {
   function computeVertexPolicyAddress(
     string memory _name,
     string memory _symbol,
-    address[] memory _initialPolicyholders,
-    bytes8[][] memory _initialPermissions,
-    uint256[][] memory _initialExpirationTimestamps
+    PolicyGrantData[] memory _initialPolicies
   ) public view returns (VertexPolicyNFT) {
     bytes memory bytecode = type(VertexPolicyNFT).creationCode;
+
     return VertexPolicyNFT(
       computeCreate2Address(
-        bytes32(keccak256(abi.encode(symbol))), // salt
-        keccak256(
-          abi.encodePacked(
-            bytecode,
-            abi.encode(_name, _symbol, _initialPolicyholders, _initialPermissions, _initialExpirationTimestamps)
-          )
-        ),
+        bytes32(keccak256(abi.encode(_symbol))), // salt
+        keccak256(abi.encodePacked(bytecode, abi.encode(_name, _symbol, _initialPolicies))),
         address(vertexFactory) // deployer
       )
     );
@@ -408,8 +401,8 @@ contract ComputeAddress is VertexFactoryTest {
         keccak256(
           abi.encodePacked(
             _strategy.approvalPeriod,
-            _strategy.queuingDuration,
-            _strategy.expirationDelay,
+            _strategy.queuingPeriod,
+            _strategy.expirationPeriod,
             _strategy.minApprovalPct,
             _strategy.minDisapprovalPct,
             _strategy.isFixedLengthApprovalPeriod

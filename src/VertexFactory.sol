@@ -62,10 +62,10 @@ contract VertexFactory is IVertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
-    bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-    VertexPolicyNFT policy = new VertexPolicyNFT{salt: salt}(name, symbol, initialPolicies);
+    VertexPolicyNFT policy = new VertexPolicyNFT{salt: keccak256(abi.encode(symbol))}(name, symbol, initialPolicies);
 
-    vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
+    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
+      // salt)
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
