@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/lib/Structs.sol";
 
-interface IVertexPolicyNFT {
+interface IVertexPolicy {
   event PolicyAdded(PolicyGrantData grantData);
   event PermissionUpdated(PolicyUpdateData updateData);
   event PolicyRevoked(PolicyRevokeData revokeData);

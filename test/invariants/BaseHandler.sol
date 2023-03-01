@@ -8,7 +8,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Strategy} from "src/lib/Structs.sol";
 import {VertexCoreTest} from "test/VertexCore.t.sol";
 
@@ -20,7 +20,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // Protocol contracts.
   VertexFactory public immutable vertexFactory;
   VertexCore public immutable vertexCore;
-  VertexPolicyNFT public immutable policy;
+  VertexPolicy public immutable policy;
 
   // Handler state.
   address[] internal actors;

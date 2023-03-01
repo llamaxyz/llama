@@ -7,7 +7,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {
   Action,
@@ -27,7 +27,7 @@ contract VertexFactoryTest is Test {
   VertexAccount public vertexAccountLogic;
   VertexFactory public vertexFactory;
   VertexStrategy[] public strategies;
-  VertexPolicyNFT public policy;
+  VertexPolicy public policy;
 
   // Mock protocol
   ProtocolXYZ public protocol;
@@ -286,7 +286,7 @@ contract Deploy is VertexFactoryTest {
     assertEq(NEW_POLICY.code.length, 0);
     deployVertex();
     assertGt(NEW_POLICY.code.length, 0);
-    VertexPolicyNFT(NEW_POLICY).baseURI(); // Sanity check that this doesn't revert.
+    VertexPolicy(NEW_POLICY).baseURI(); // Sanity check that this doesn't revert.
   }
 
   function test_DeploysVertexCore() public {
@@ -304,13 +304,13 @@ contract Deploy is VertexFactoryTest {
     string[] memory initialAccounts = buildInitialAccounts();
     vm.expectRevert("Initializable: contract is already initialized");
     VertexCore(NEW_VERTEX).initialize(
-      "NewProject", VertexPolicyNFT(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts
+      "NewProject", VertexPolicy(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts
     );
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
     deployVertex();
-    assertEq(VertexPolicyNFT(NEW_POLICY).vertex(), NEW_VERTEX);
+    assertEq(VertexPolicy(NEW_POLICY).vertex(), NEW_VERTEX);
   }
 
   function test_SetsPolicyAddressOnVertexCore() public {
@@ -327,7 +327,7 @@ contract Deploy is VertexFactoryTest {
   function test_ReturnsAddressOfTheNewVertexCoreContract() public {
     address newVertex = address(deployVertex());
     assertEq(newVertex, NEW_VERTEX);
-    assertEq(newVertex, VertexPolicyNFT(NEW_POLICY).vertex());
+    assertEq(newVertex, VertexPolicy(NEW_POLICY).vertex());
   }
 }
 
