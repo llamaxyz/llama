@@ -254,13 +254,6 @@ contract Constructor is VertexFactoryTest {
 }
 
 contract Deploy is VertexFactoryTest {
-  // These are the expected addresses of the contracts deployed by the `deployVertex` helper
-  // method. The addresses are functions of the constructor parameters in the `deployVertex`
-  // helper method, so if those parameters change, or we change the constructor signature, these
-  // will need to be updated.
-  address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-  address constant NEW_POLICY = 0xC7E6EC40aF0c3dFcbAF2068Afe112FB0108E5621;
-
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory initialStrategies = createInitialStrategies();
     string[] memory initialAccounts = buildInitialAccounts();
@@ -285,51 +278,64 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_DeploysPolicy() public {
-    assertEq(NEW_POLICY.code.length, 0);
+    VertexPolicyNFT _policy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    assertEq(address(_policy).code.length, 0);
     deployVertex();
-    assertGt(NEW_POLICY.code.length, 0);
-    VertexPolicyNFT(NEW_POLICY).baseURI(); // Sanity check that this doesn't revert.
+    assertGt(address(_policy).code.length, 0);
+    VertexPolicyNFT(_policy).baseURI(); // Sanity check that this doesn't revert.
   }
 
   function test_DeploysVertexCore() public {
-    assertEq(NEW_VERTEX.code.length, 0);
+    VertexCore _vertex = vertexFactory.computeVertexCoreAddress("NewProject");
+    assertEq(address(_vertex).code.length, 0);
     deployVertex();
-    assertGt(NEW_VERTEX.code.length, 0);
-    VertexCore(NEW_VERTEX).name(); // Sanity check that this doesn't revert.
+    assertGt(address(_vertex).code.length, 0);
+    VertexCore(address(_vertex)).name(); // Sanity check that this doesn't revert.
   }
 
   function test_InitializesVertexCore() public {
-    deployVertex();
-    assertEq(VertexCore(NEW_VERTEX).name(), "NewProject");
+    VertexCore _vertex = deployVertex();
+    assertEq(_vertex.name(), "NewProject");
 
     Strategy[] memory initialStrategies = createInitialStrategies();
     string[] memory initialAccounts = buildInitialAccounts();
+    VertexPolicyNFT _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    VertexCore(NEW_VERTEX).initialize(
-      "NewProject", VertexPolicyNFT(NEW_POLICY), vertexAccountLogic, initialStrategies, initialAccounts
-    );
+    _vertex.initialize("NewProject", _policy, vertexAccountLogic, initialStrategies, initialAccounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
-    deployVertex();
-    assertEq(VertexPolicyNFT(NEW_POLICY).vertex(), NEW_VERTEX);
+    VertexCore _vertex = deployVertex();
+    VertexPolicyNFT _policy = _vertex.policy();
+    VertexCore _vertexFromPolicy = VertexCore(_policy.vertex());
+    assertEq(address(_vertexFromPolicy), address(_vertex));
   }
 
   function test_SetsPolicyAddressOnVertexCore() public {
-    deployVertex();
-    assertEq(address(VertexCore(NEW_VERTEX).policy()), NEW_POLICY);
+    VertexPolicyNFT computedPolicy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    VertexCore _vertex = deployVertex();
+    assertEq(address(_vertex.policy()), address(computedPolicy));
   }
 
   function test_EmitsVertexCreatedEvent() public {
     vm.expectEmit(true, true, true, true);
-    emit VertexCreated(1, "NewProject", NEW_VERTEX, NEW_POLICY);
+    VertexCore computedVertex = vertexFactory.computeVertexCoreAddress("NewProject");
+    VertexPolicyNFT computedPolicy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    emit VertexCreated(1, "NewProject", address(computedVertex), address(computedPolicy));
     deployVertex();
   }
 
   function test_ReturnsAddressOfTheNewVertexCoreContract() public {
-    address newVertex = address(deployVertex());
-    assertEq(newVertex, NEW_VERTEX);
-    assertEq(newVertex, VertexPolicyNFT(NEW_POLICY).vertex());
+    VertexCore computedVertex = vertexFactory.computeVertexCoreAddress("NewProject");
+    VertexPolicyNFT computedPolicy =
+      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    VertexCore newVertex = deployVertex();
+    assertEq(address(newVertex), address(computedVertex));
+    assertEq(address(computedVertex), VertexPolicyNFT(computedVertex.policy()).vertex());
+    assertEq(address(computedVertex), VertexPolicyNFT(newVertex.policy()).vertex());
   }
 }
 
