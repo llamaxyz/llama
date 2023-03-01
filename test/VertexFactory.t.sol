@@ -254,6 +254,7 @@ contract Constructor is VertexFactoryTest {
 }
 
 contract Deploy is VertexFactoryTest {
+
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory initialStrategies = createInitialStrategies();
     string[] memory initialAccounts = buildInitialAccounts();
@@ -278,6 +279,7 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_DeploysPolicy() public {
+  
     VertexPolicyNFT _policy =
       vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
     assertEq(address(_policy).code.length, 0);

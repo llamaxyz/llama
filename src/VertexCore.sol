@@ -347,6 +347,7 @@ contract VertexCore is IVertexCore, Initializable {
             )
           )
         );
+        bytes32 salt = bytes32(keccak256(abi.encode(strategies[i])));
         VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
