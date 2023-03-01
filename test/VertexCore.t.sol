@@ -254,7 +254,16 @@ contract VertexCoreTest is Test {
     bytes memory bytecode = type(VertexStrategy).creationCode;
     return VertexStrategy(
       computeCreate2Address(
-        keccak256(abi.encode(_strategy)), // salt
+        keccak256(
+          abi.encodePacked(
+            _strategy.approvalPeriod,
+            _strategy.queuingPeriod,
+            _strategy.expirationPeriod,
+            _strategy.minApprovalPct,
+            _strategy.minDisapprovalPct,
+            _strategy.isFixedLengthApprovalPeriod
+          )
+        ), // salt
         keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, vertex.policy(), address(vertex)))),
         address(vertex) // deployer
       )

@@ -3,11 +3,11 @@ pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-import {IVertexCore} from "src/core/IVertexCore.sol";
-import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
-import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, PermissionData, Strategy} from "src/utils/Structs.sol";
+import {IVertexCore} from "src/interfaces/IVertexCore.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
