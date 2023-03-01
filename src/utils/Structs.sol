@@ -9,6 +9,16 @@ struct PermissionData {
     VertexStrategy strategy;
 }
 
+enum ActionState {
+    Active, // Action created and approval period begins.
+    Canceled, // Action canceled by creator or disapproved.
+    Failed, // Action approval failed.
+    Approved, // Action approval succeeded and ready to be queued.
+    Queued, // Action queued for queueing duration and disapproval period begins.
+    Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
+    Executed // Action has executed succesfully.
+}
+
 struct PermissionIdCheckpoint {
     uint224 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
     uint32 quantity; // Quantity of the permission ID held at the timestamp.
@@ -16,8 +26,7 @@ struct PermissionIdCheckpoint {
 
 struct Action {
     address creator; // msg.sender of createAction.
-    bool executed; // has action executed.
-    bool canceled; // is action canceled.
+    ActionState state; // The state of the action.
     bytes4 selector; // The function selector that will be called when the action is executed.
     VertexStrategy strategy; // strategy that determines the validation process of this action.
     address target; // The contract called when the action is executed

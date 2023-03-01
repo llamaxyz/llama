@@ -4,18 +4,9 @@ pragma solidity ^0.8.17;
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {Action, Strategy} from "src/utils/Structs.sol";
+import {Action, ActionState, Strategy} from "src/utils/Structs.sol";
 
 interface IVertexCore {
-    enum ActionState {
-        Active, // Action created and approval period begins.
-        Canceled, // Action canceled by creator or disapproved.
-        Failed, // Action approval failed.
-        Approved, // Action approval succeeded and ready to be queued.
-        Queued, // Action queued for queueing duration and disapproval period begins.
-        Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
-        Executed // Action has executed succesfully.
-    }
 
     event ActionCreated(uint256 id, address indexed creator, VertexStrategy indexed strategy, address target, uint256 value, bytes4 selector, bytes data);
     event ActionCanceled(uint256 id);

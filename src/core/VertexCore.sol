@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {Action, PermissionData, Strategy} from "src/utils/Structs.sol";
+import {ActionState, Action, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -69,9 +69,6 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @notice Mapping of all authorized strategies.
     mapping(VertexStrategy => bool) public authorizedStrategies;
-
-    /// @notice Mapping of actionId's and bool that indicates if action is queued.
-    mapping(uint256 => bool) public queuedActions;
 
     constructor() initializer {}
 
@@ -139,7 +136,8 @@ contract VertexCore is IVertexCore, Initializable {
         Action storage action = actions[actionId];
         uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
-        queuedActions[actionId] = true;
+
+        action.state = ActionState.Queued;
         action.executionTime = executionTime;
 
         emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
@@ -147,14 +145,13 @@ contract VertexCore is IVertexCore, Initializable {
 
     /// @inheritdoc IVertexCore
     function executeAction(uint256 actionId) external payable override returns (bytes memory) {
-        if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
+        if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
         Action storage action = actions[actionId];
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
         if (msg.value < action.value) revert InsufficientMsgValue();
 
-        action.executed = true;
-        queuedActions[actionId] = false;
+        action.state = ActionState.Executed;
 
         (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
@@ -175,8 +172,7 @@ contract VertexCore is IVertexCore, Initializable {
         Action storage action = actions[actionId];
         if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) revert ActionCannotBeCanceled();
 
-        action.canceled = true;
-        queuedActions[actionId] = false;
+        action.state = ActionState.Canceled;
 
         emit ActionCanceled(actionId);
     }
@@ -257,7 +253,7 @@ contract VertexCore is IVertexCore, Initializable {
         Action storage action = actions[actionId];
         uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
 
-        if (action.canceled) {
+        if (action.state == ActionState.Canceled) {
             return ActionState.Canceled;
         }
 
@@ -273,7 +269,7 @@ contract VertexCore is IVertexCore, Initializable {
             return ActionState.Approved;
         }
 
-        if (action.executed) {
+        if (action.state == ActionState.Executed) {
             return ActionState.Executed;
         }
 
