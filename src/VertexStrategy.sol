@@ -5,6 +5,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, WeightByPermission, Strategy} from "src/lib/Structs.sol";
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 /// @title A strategy definition of a Vertex system.
 /// @author Llama (vertex@llama.xyz)
@@ -146,7 +147,8 @@ contract VertexStrategy is IVertexStrategy {
 
   /// @inheritdoc IVertexStrategy
   function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
-    return supply * minPct / ONE_HUNDRED_IN_BPS;
+    // Rounding Up
+    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
   }
 
   /// @inheritdoc IVertexStrategy
