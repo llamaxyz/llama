@@ -148,7 +148,7 @@ contract VertexStrategy is IVertexStrategy {
   /// @inheritdoc IVertexStrategy
   function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
     // Rounding Up
-    return FixedPointMathLib.divWadUp((supply * minPct), ONE_HUNDRED_IN_BPS);
+    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
   }
 
   /// @inheritdoc IVertexStrategy
