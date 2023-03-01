@@ -12,20 +12,20 @@ contract ProtocolXYZ {
     vertex = _vertex;
   }
 
-  modifier onlyVertex() {
+  modifier onlyOwner() {
     if (msg.sender != address(vertex)) revert OnlyVertex();
     _;
   }
 
-  function receiveEth() external payable onlyVertex returns (uint256) {
+  function receiveEth() external payable onlyOwner returns (uint256) {
     return msg.value;
   }
 
-  function pause(bool isPaused) external onlyVertex {
+  function pause(bool isPaused) external onlyOwner {
     paused = isPaused;
   }
 
-  function fail() external view onlyVertex {
+  function fail() external view onlyOwner {
     revert Failed();
   }
 }

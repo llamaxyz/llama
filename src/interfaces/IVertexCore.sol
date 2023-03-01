@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
 
 interface IVertexCore {
@@ -45,7 +45,7 @@ interface IVertexCore {
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory name,
-    VertexPolicy policy,
+    VertexPolicyNFT policy,
     VertexAccount vertexAccountImplementation,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts

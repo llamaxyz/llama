@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexPolicyNFT} from "src/VertexPolicyNFT.sol";
 import {Action, WeightByPermission, Strategy} from "src/lib/Structs.sol";
 
 /// @title A strategy definition of a Vertex system.
@@ -25,7 +25,7 @@ contract VertexStrategy is IVertexStrategy {
   IVertexCore public immutable vertex;
 
   /// @notice Policy NFT for this Vertex system.
-  VertexPolicy public immutable policy;
+  VertexPolicyNFT public immutable policy;
 
   /// @notice Minimum time between queueing and execution of action.
   uint256 public immutable queuingPeriod;
@@ -60,7 +60,7 @@ contract VertexStrategy is IVertexStrategy {
   mapping(bytes8 => uint256) public disapprovalWeightByPermission;
 
   /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
-  constructor(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex) {
+  constructor(Strategy memory strategyConfig, VertexPolicyNFT _policy, IVertexCore _vertex) {
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
