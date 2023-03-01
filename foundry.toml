@@ -16,6 +16,7 @@
   invariant = { runs = 50, fail_on_revert = true }
   optimizer = false
   via_ir = false
+  ignored_error_codes = ["code-size"]
 
 [profile.ci]
   fuzz = { runs = 5000 }
