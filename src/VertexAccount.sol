@@ -10,7 +10,7 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
-import {ERC20Data, ERC721Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -127,21 +127,16 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
-    token.setApprovalForAll(recipient, approved);
+  function approveOperatorERC721(ERC721OperatorData calldata erc721OperatorData) external onlyVertex {
+    erc721OperatorData.token.setApprovalForAll(erc721OperatorData.recipient, erc721OperatorData.approved);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveOperatorERC721(
-    IERC721[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+  function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyVertex {
+    uint256 length = erc721OperatorData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].setApprovalForAll(recipients[i], approved[i]);
+        erc721OperatorData[i].token.setApprovalForAll(erc721OperatorData[i].recipient, erc721OperatorData[i].approved);
       }
     }
   }

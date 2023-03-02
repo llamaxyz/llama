@@ -12,7 +12,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "test/mock/scripts/TestScript.sol";
 import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
-import {ERC20Data, ERC721Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData} from "src/lib/Structs.sol";
 
 contract VertexAccountTest is Test {
   // Testing Parameters
@@ -416,60 +416,28 @@ contract VertexAccountTest is Test {
 
   function test_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, true);
+    accounts[0].approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
   }
 
   // batch approve operator ERC721 unit tests
   function test_batchApproveOperatorERC721_ApproveBAYCAndNOUNS() public {
-    IERC721[] memory tokens = new IERC721[](2);
-    tokens[0] = BAYC;
-    tokens[1] = NOUNS;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = BAYC_WHALE;
-    recipients[1] = NOUNS_WHALE;
-
-    bool[] memory approvals = new bool[](2);
-    approvals[0] = true;
-    approvals[1] = true;
+    ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
+    erc721OperatorData[0] = ERC721OperatorData(BAYC, BAYC_WHALE, true);
+    erc721OperatorData[1] = ERC721OperatorData(NOUNS, NOUNS_WHALE, true);
 
     // Approve NFTs from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
+    accounts[0].batchApproveOperatorERC721(erc721OperatorData);
     assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), true);
     assertEq(NOUNS.isApprovedForAll(address(accounts[0]), NOUNS_WHALE), true);
     vm.stopPrank();
   }
 
   function test_batchApproveOperatorERC721_RevertIfNotVertexMsgSender() public {
-    IERC721[] memory tokens = new IERC721[](2);
-    address[] memory recipients = new address[](2);
-    bool[] memory approvals = new bool[](2);
+    ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
-  }
-
-  function test_batchApproveOperatorERC721_RevertIfZeroInputLength() public {
-    IERC721[] memory tokens = new IERC721[](0);
-    address[] memory recipients = new address[](0);
-    bool[] memory approvals = new bool[](0);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
-    vm.stopPrank();
-  }
-
-  function test_batchApproveOperatorERC721_RevertIfInvalidInputLength() public {
-    IERC721[] memory tokens = new IERC721[](1);
-    address[] memory recipients = new address[](2);
-    bool[] memory approvals = new bool[](2);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveOperatorERC721(tokens, recipients, approvals);
-    vm.stopPrank();
+    accounts[0].batchApproveOperatorERC721(erc721OperatorData);
   }
 
   // transfer ERC1155 unit tests
@@ -948,7 +916,7 @@ contract VertexAccountTest is Test {
 
   function _approveOperatorBAYCToRecipient(bool approved) public {
     vm.startPrank(address(vertex));
-    accounts[0].approveOperatorERC721(BAYC, BAYC_WHALE, approved);
+    accounts[0].approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
     assertEq(BAYC.isApprovedForAll(address(accounts[0]), BAYC_WHALE), approved);
     vm.stopPrank();
   }

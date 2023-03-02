@@ -84,3 +84,9 @@ struct ERC721Data {
   address recipient; // The address to transfer the token to
   uint256 tokenId; // The tokenId of the token to transfer
 }
+
+struct ERC721OperatorData {
+  IERC721 token; // The ERC721 token to transfer
+  address recipient; // The address to transfer the token to
+  bool approved; // Whether to approve or revoke allowance
+}

@@ -6,7 +6,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
-import {ERC20Data, ERC721Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData} from "src/lib/Structs.sol";
 
 interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   /// @notice Initializes a new VertexAccount clone.
@@ -67,20 +67,12 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external;
 
   /// @notice Function for Vertex to give ERC721 operator allowance to other parties
-  /// @param token The address of the token to give allowance from
-  /// @param recipient Allowance's recipient
-  /// @param approved Whether to approve or revoke allowance
-  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external;
+  /// @param erc721OperatorData The data of the ERC721 operator allowance
+  function approveOperatorERC721(ERC721OperatorData calldata erc721OperatorData) external;
 
   /// @notice Function for Vertex to batch give ERC721 operator allowance to other parties
-  /// @param tokens The addresses of the tokens to give allowance from
-  /// @param recipients Allowances' recipients
-  /// @param approved Whether to approve or revoke allowance
-  function batchApproveOperatorERC721(
-    IERC721[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external;
+  /// @param erc721OperatorData The data of the ERC721 operator allowances
+  function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external;
 
   // -------------------------------------------------------------------------
   // ERC1155 Token
