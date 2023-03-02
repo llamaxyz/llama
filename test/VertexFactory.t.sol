@@ -10,6 +10,7 @@ import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {
   Action,
   Strategy,
@@ -28,6 +29,7 @@ contract VertexFactoryTest is Test {
   VertexCore public vertexCoreLogic;
   VertexAccount public vertexAccountLogic;
   VertexFactory public vertexFactory;
+  VertexLens public vertexLens;
   VertexStrategy[] public strategies;
   VertexPolicy public policy;
 
@@ -95,6 +97,8 @@ contract VertexFactoryTest is Test {
           buildInitialAccounts(),
           initialPolicies
         );
+
+    vertexLens = new VertexLens();
 
     rootVertex = VertexCore(vertexFactory.rootVertex());
     protocol = new ProtocolXYZ(address(rootVertex));
@@ -278,7 +282,8 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_DeploysPolicy() public {
-    VertexPolicy _policy = vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    VertexPolicy _policy =
+      vertexLens.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData(), address(vertexFactory));
     assertEq(address(_policy).code.length, 0);
     deployVertex();
     assertGt(address(_policy).code.length, 0);
@@ -286,7 +291,8 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_DeploysVertexCore() public {
-    VertexCore _vertex = vertexFactory.computeVertexCoreAddress("NewProject");
+    VertexCore _vertex =
+      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
     assertEq(address(_vertex).code.length, 0);
     deployVertex();
     assertGt(address(_vertex).code.length, 0);
@@ -313,28 +319,36 @@ contract Deploy is VertexFactoryTest {
 
   function test_SetsPolicyAddressOnVertexCore() public {
     VertexPolicy computedPolicy =
-      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+      vertexLens.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData(), address(vertexFactory));
     VertexCore _vertex = deployVertex();
     assertEq(address(_vertex.policy()), address(computedPolicy));
   }
 
   function test_EmitsVertexCreatedEvent() public {
     vm.expectEmit(true, true, true, true);
-    VertexCore computedVertex = vertexFactory.computeVertexCoreAddress("NewProject");
+    VertexCore computedVertex =
+      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
     VertexPolicy computedPolicy =
-      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+      vertexLens.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData(), address(vertexFactory));
     emit VertexCreated(1, "NewProject", address(computedVertex), address(computedPolicy));
     deployVertex();
   }
 
   function test_ReturnsAddressOfTheNewVertexCoreContract() public {
-    VertexCore computedVertex = vertexFactory.computeVertexCoreAddress("NewProject");
-    VertexPolicy computedPolicy =
-      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+    VertexCore computedVertex =
+      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
     VertexCore newVertex = deployVertex();
     assertEq(address(newVertex), address(computedVertex));
     assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
     assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
+  }
+
+  function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
+    // Strategy[] memory initialStrategies = createInitialStrategies();
+    // string[] memory initialAccounts = buildInitialAccounts();
+    // VertexCore _vertex = deployVertex();
+    // assertEq(_vertex.strategies().length, initialStrategies.length);
+    // assertEq(_vertex.accounts().length, initialAccounts.length);
   }
 }
 
@@ -345,14 +359,15 @@ contract ComputeAddress is VertexFactoryTest {
   // One those methods exist we can fill in the tests for them here.
 
   function test_ComputesExpectedAddressForVertexCore() public {
-    VertexCore computedVertexCore = vertexFactory.computeVertexCoreAddress("NewProject");
+    VertexCore computedVertexCore =
+      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
     VertexCore deployedVertexCore = deployVertex();
     assertEq(address(computedVertexCore), address(deployedVertexCore));
   }
 
   function test_ComputesExpectedAddressForPolicy() public {
     VertexPolicy computedVertexPolicy =
-      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
+      vertexLens.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData(), address(vertexFactory));
     VertexCore deployedVertexCore = deployVertex();
     VertexPolicy deployedVertexPolicy = VertexPolicy(VertexCore(deployedVertexCore).policy());
     assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
@@ -362,15 +377,16 @@ contract ComputeAddress is VertexFactoryTest {
     // Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex
     Strategy[] memory initialStrategies = createInitialStrategies();
     VertexPolicy computedVertexPolicy =
-      vertexFactory.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData());
-    VertexCore computedVertexCore = vertexFactory.computeVertexCoreAddress("NewProject");
+      vertexLens.computeVertexPolicyAddress("NewProject", "NP", buildInitialPolicyGrantData(), address(vertexFactory));
+    VertexCore computedVertexCore =
+      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
 
     VertexStrategy computedVertexStrategy =
-      vertexFactory.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, computedVertexCore);
+      vertexLens.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, computedVertexCore);
     console2.logAddress(address(computedVertexStrategy));
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(computedVertexStrategy, initialStrategies[0]);
-    VertexCore deployedVertexCore = deployVertex();
+    deployVertex();
   }
 
   function deployVertex() public returns (VertexCore) {
