@@ -10,7 +10,7 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
-import {ERC20Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -95,41 +95,33 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.transferFrom(address(this), recipient, tokenId);
+  function transferERC721(ERC721Data calldata erc721Data) external onlyVertex {
+    if (erc721Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc721Data.token.transferFrom(address(this), erc721Data.recipient, erc721Data.tokenId);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+  function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
+    uint256 length = erc721Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].transferFrom(address(this), recipients[i], tokenIds[i]);
+        if (erc721Data[i].recipient == address(0)) revert Invalid0xRecipient();
+        erc721Data[i].token.transferFrom(address(this), erc721Data[i].recipient, erc721Data[i].tokenId);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
-    token.approve(recipient, tokenId);
+  function approveERC721(ERC721Data calldata erc721Data) external onlyVertex {
+    erc721Data.token.approve(erc721Data.recipient, erc721Data.tokenId);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+  function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
+    uint256 length = erc721Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].approve(recipients[i], tokenIds[i]);
+        erc721Data[i].token.approve(erc721Data[i].recipient, erc721Data[i].tokenId);
       }
     }
   }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 
 struct PermissionData {
   address target;
@@ -76,4 +77,10 @@ struct ERC20Data {
   IERC20 token; // The ERC20 token to transfer
   address recipient; // The address to transfer the token to
   uint256 amount; // The amount of tokens to transfer
+}
+
+struct ERC721Data {
+  IERC721 token; // The ERC721 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256 tokenId; // The tokenId of the token to transfer
 }

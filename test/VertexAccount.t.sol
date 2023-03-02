@@ -12,7 +12,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "test/mock/scripts/TestScript.sol";
 import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
-import {ERC20Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data} from "src/lib/Structs.sol";
 
 contract VertexAccountTest is Test {
   // Testing Parameters
@@ -307,7 +307,7 @@ contract VertexAccountTest is Test {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].transferERC721(BAYC, BAYC_WHALE, BAYC_ID);
+    accounts[0].transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
     assertEq(BAYC.balanceOf(address(accounts[0])), 0);
     assertEq(BAYC.balanceOf(address(accounts[0])), accountNFTBalance - 1);
     assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 1);
@@ -317,13 +317,13 @@ contract VertexAccountTest is Test {
 
   function test_transferERC721_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].transferERC721(BAYC, BAYC_WHALE, BAYC_ID);
+    accounts[0].transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
   function test_transferERC721_RevertIfToZeroAddress() public {
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].transferERC721(BAYC, address(0), BAYC_ID);
+    accounts[0].transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
 
@@ -337,21 +337,13 @@ contract VertexAccountTest is Test {
     uint256 accountNOUNSBalance = NOUNS.balanceOf(address(accounts[0]));
     uint256 whaleNOUNSBalance = NOUNS.balanceOf(NOUNS_WHALE);
 
-    IERC721[] memory tokens = new IERC721[](2);
-    tokens[0] = BAYC;
-    tokens[1] = NOUNS;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = BAYC_WHALE;
-    recipients[1] = NOUNS_WHALE;
-
-    uint256[] memory ids = new uint256[](2);
-    ids[0] = BAYC_ID;
-    ids[1] = NOUNS_ID;
+    ERC721Data[] memory erc721Data = new ERC721Data[](2);
+    erc721Data[0] = ERC721Data(BAYC, BAYC_WHALE, BAYC_ID);
+    erc721Data[1] = ERC721Data(NOUNS, NOUNS_WHALE, NOUNS_ID);
 
     // Transfer NFTs from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchTransferERC721(tokens, recipients, ids);
+    accounts[0].batchTransferERC721(erc721Data);
     assertEq(BAYC.balanceOf(address(accounts[0])), accountBAYCBalance - 1);
     assertEq(BAYC.balanceOf(BAYC_WHALE), whaleBAYCBalance + 1);
     assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
@@ -362,49 +354,19 @@ contract VertexAccountTest is Test {
   }
 
   function test_batchTransferERC721_RevertIfNotVertexMsgSender() public {
-    IERC721[] memory tokens = new IERC721[](2);
-    address[] memory recipients = new address[](2);
-    uint256[] memory ids = new uint256[](2);
+    ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchTransferERC721(tokens, recipients, ids);
-  }
-
-  function test_batchTransferERC721_RevertIfZeroInputLength() public {
-    IERC721[] memory tokens = new IERC721[](0);
-    address[] memory recipients = new address[](0);
-    uint256[] memory ids = new uint256[](0);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchTransferERC721(tokens, recipients, ids);
-    vm.stopPrank();
-  }
-
-  function test_batchTransferERC721_RevertIfInvalidInputLength() public {
-    IERC721[] memory tokens = new IERC721[](1);
-    address[] memory recipients = new address[](2);
-    uint256[] memory ids = new uint256[](2);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchTransferERC721(tokens, recipients, ids);
-    vm.stopPrank();
+    accounts[0].batchTransferERC721(erc721Data);
   }
 
   function test_batchTransferERC721_RevertIfToZeroAddress() public {
-    IERC721[] memory tokens = new IERC721[](1);
-    tokens[0] = BAYC;
-
-    address[] memory recipients = new address[](1);
-    recipients[0] = address(0);
-
-    uint256[] memory ids = new uint256[](1);
-    ids[0] = BAYC_ID;
+    ERC721Data[] memory erc721Data = new ERC721Data[](1);
+    erc721Data[0] = ERC721Data(BAYC, address(0), BAYC_ID);
 
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].batchTransferERC721(tokens, recipients, ids);
+    accounts[0].batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
 
@@ -416,7 +378,7 @@ contract VertexAccountTest is Test {
 
   function test_approveERC721_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].approveERC721(BAYC, BAYC_WHALE, BAYC_ID);
+    accounts[0].approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
   // batch approve ERC721 unit tests
@@ -424,55 +386,23 @@ contract VertexAccountTest is Test {
     _transferBAYCToAccount(BAYC_ID);
     _transferNOUNSToAccount(NOUNS_ID);
 
-    IERC721[] memory tokens = new IERC721[](2);
-    tokens[0] = BAYC;
-    tokens[1] = NOUNS;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = BAYC_WHALE;
-    recipients[1] = NOUNS_WHALE;
-
-    uint256[] memory ids = new uint256[](2);
-    ids[0] = BAYC_ID;
-    ids[1] = NOUNS_ID;
+    ERC721Data[] memory erc721Data = new ERC721Data[](2);
+    erc721Data[0] = ERC721Data(BAYC, BAYC_WHALE, BAYC_ID);
+    erc721Data[1] = ERC721Data(NOUNS, NOUNS_WHALE, NOUNS_ID);
 
     // Approve NFTs from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchApproveERC721(tokens, recipients, ids);
+    accounts[0].batchApproveERC721(erc721Data);
     assertEq(BAYC.getApproved(BAYC_ID), BAYC_WHALE);
     assertEq(NOUNS.getApproved(NOUNS_ID), NOUNS_WHALE);
     vm.stopPrank();
   }
 
   function test_batchApproveERC721_RevertIfNotVertexMsgSender() public {
-    IERC721[] memory tokens = new IERC721[](2);
-    address[] memory recipients = new address[](2);
-    uint256[] memory ids = new uint256[](2);
+    ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchApproveERC721(tokens, recipients, ids);
-  }
-
-  function test_batchApproveERC721_RevertIfZeroInputLength() public {
-    IERC721[] memory tokens = new IERC721[](0);
-    address[] memory recipients = new address[](0);
-    uint256[] memory ids = new uint256[](0);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveERC721(tokens, recipients, ids);
-    vm.stopPrank();
-  }
-
-  function test_batchApproveERC721_RevertIfInvalidInputLength() public {
-    IERC721[] memory tokens = new IERC721[](1);
-    address[] memory recipients = new address[](2);
-    uint256[] memory ids = new uint256[](2);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveERC721(tokens, recipients, ids);
-    vm.stopPrank();
+    accounts[0].batchApproveERC721(erc721Data);
   }
 
   // approve operator ERC721 unit tests
@@ -1011,7 +941,7 @@ contract VertexAccountTest is Test {
 
   function _approveBAYCToRecipient(uint256 id) public {
     vm.startPrank(address(vertex));
-    accounts[0].approveERC721(BAYC, BAYC_WHALE, id);
+    accounts[0].approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
     assertEq(BAYC.getApproved(id), BAYC_WHALE);
     vm.stopPrank();
   }
