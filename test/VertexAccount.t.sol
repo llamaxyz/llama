@@ -12,7 +12,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "test/mock/scripts/TestScript.sol";
 import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
-import {ERC20TransferData} from "src/lib/Structs.sol";
+import {ERC20Data} from "src/lib/Structs.sol";
 
 contract VertexAccountTest is Test {
   // Testing Parameters
@@ -181,7 +181,7 @@ contract VertexAccountTest is Test {
 
     // Transfer USDC from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].transferERC20(ERC20TransferData(USDC, USDC_WHALE, USDC_AMOUNT));
+    accounts[0].transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
     assertEq(USDC.balanceOf(address(accounts[0])), 0);
     assertEq(USDC.balanceOf(address(accounts[0])), accountUSDCBalance - USDC_AMOUNT);
     assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
@@ -190,13 +190,13 @@ contract VertexAccountTest is Test {
 
   function test_transferERC20_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].transferERC20(ERC20TransferData(USDC, USDC_WHALE, USDC_AMOUNT));
+    accounts[0].transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
   function test_transferERC20_RevertIfToZeroAddress() public {
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].transferERC20(ERC20TransferData(USDC, address(0), USDC_AMOUNT));
+    accounts[0].transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
 
@@ -210,9 +210,9 @@ contract VertexAccountTest is Test {
     uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
     uint256 whaleUSDTBalance = UNI.balanceOf(UNI_WHALE);
 
-    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](2);
-    erc20TransferData[0] = ERC20TransferData(USDC, USDC_WHALE, USDC_AMOUNT);
-    erc20TransferData[1] = ERC20TransferData(UNI, UNI_WHALE, UNI_AMOUNT);
+    ERC20Data[] memory erc20TransferData = new ERC20Data[](2);
+    erc20TransferData[0] = ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT);
+    erc20TransferData[1] = ERC20Data(UNI, UNI_WHALE, UNI_AMOUNT);
 
     // Transfer USDC and USDT from account to whale
     vm.startPrank(address(vertex));
@@ -227,15 +227,15 @@ contract VertexAccountTest is Test {
   }
 
   function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
-    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](2);
+    ERC20Data[] memory erc20TransferData = new ERC20Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     accounts[0].batchTransferERC20(erc20TransferData);
   }
 
   function test_batchTransferERC20_RevertIfToZeroAddress() public {
-    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](1);
-    erc20TransferData[0] = ERC20TransferData(USDC, address(0), USDC_AMOUNT);
+    ERC20Data[] memory erc20TransferData = new ERC20Data[](1);
+    erc20TransferData[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
