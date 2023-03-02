@@ -59,37 +59,33 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC20(ERC20Data calldata erc20TransferData) external onlyVertex {
-    if (erc20TransferData.recipient == address(0)) revert Invalid0xRecipient();
-    erc20TransferData.token.safeTransfer(erc20TransferData.recipient, erc20TransferData.amount);
+  function transferERC20(ERC20Data calldata erc20Data) external onlyVertex {
+    if (erc20Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc20Data.token.safeTransfer(erc20Data.recipient, erc20Data.amount);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferERC20(ERC20Data[] calldata erc20TransferData) external onlyVertex {
-    uint256 length = erc20TransferData.length;
+  function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
+    uint256 length = erc20Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (erc20TransferData[i].recipient == address(0)) revert Invalid0xRecipient();
-        erc20TransferData[i].token.safeTransfer(erc20TransferData[i].recipient, erc20TransferData[i].amount);
+        if (erc20Data[i].recipient == address(0)) revert Invalid0xRecipient();
+        erc20Data[i].token.safeTransfer(erc20Data[i].recipient, erc20Data[i].amount);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC20(ERC20Data calldata erc20ApproveData) external onlyVertex {
-    erc20ApproveData.token.safeApprove(erc20ApproveData.recipient, erc20ApproveData.amount);
+  function approveERC20(ERC20Data calldata erc20Data) external onlyVertex {
+    erc20Data.token.safeApprove(erc20Data.recipient, erc20Data.amount);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+  function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
+    uint256 length = erc20Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].safeApprove(recipients[i], amounts[i]);
+        erc20Data[i].token.safeApprove(erc20Data[i].recipient, erc20Data[i].amount);
       }
     }
   }

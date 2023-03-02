@@ -210,13 +210,13 @@ contract VertexAccountTest is Test {
     uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
     uint256 whaleUSDTBalance = UNI.balanceOf(UNI_WHALE);
 
-    ERC20Data[] memory erc20TransferData = new ERC20Data[](2);
-    erc20TransferData[0] = ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT);
-    erc20TransferData[1] = ERC20Data(UNI, UNI_WHALE, UNI_AMOUNT);
+    ERC20Data[] memory erc20Data = new ERC20Data[](2);
+    erc20Data[0] = ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT);
+    erc20Data[1] = ERC20Data(UNI, UNI_WHALE, UNI_AMOUNT);
 
     // Transfer USDC and USDT from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchTransferERC20(erc20TransferData);
+    accounts[0].batchTransferERC20(erc20Data);
     assertEq(USDC.balanceOf(address(accounts[0])), 0);
     assertEq(UNI.balanceOf(address(accounts[0])), 0);
     assertEq(USDC.balanceOf(address(accounts[0])), accountUSDCBalance - USDC_AMOUNT);
@@ -227,19 +227,19 @@ contract VertexAccountTest is Test {
   }
 
   function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
-    ERC20Data[] memory erc20TransferData = new ERC20Data[](2);
+    ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchTransferERC20(erc20TransferData);
+    accounts[0].batchTransferERC20(erc20Data);
   }
 
   function test_batchTransferERC20_RevertIfToZeroAddress() public {
-    ERC20Data[] memory erc20TransferData = new ERC20Data[](1);
-    erc20TransferData[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
+    ERC20Data[] memory erc20Data = new ERC20Data[](1);
+    erc20Data[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].batchTransferERC20(erc20TransferData);
+    accounts[0].batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
 
@@ -279,55 +279,23 @@ contract VertexAccountTest is Test {
 
   // batch approve ERC20 unit tests
   function test_batchApproveERC20_ApproveUSDCAndUNI() public {
-    IERC20[] memory tokens = new IERC20[](2);
-    tokens[0] = USDC;
-    tokens[1] = UNI;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = USDC_WHALE;
-    recipients[1] = UNI_WHALE;
-
-    uint256[] memory amounts = new uint256[](2);
-    amounts[0] = USDC_AMOUNT;
-    amounts[1] = UNI_AMOUNT;
+    ERC20Data[] memory erc20Data = new ERC20Data[](2);
+    erc20Data[0] = ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT);
+    erc20Data[1] = ERC20Data(UNI, UNI_WHALE, UNI_AMOUNT);
 
     // Approve USDC and UNI to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchApproveERC20(tokens, recipients, amounts);
+    accounts[0].batchApproveERC20(erc20Data);
     assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), USDC_AMOUNT);
     assertEq(UNI.allowance(address(accounts[0]), UNI_WHALE), UNI_AMOUNT);
     vm.stopPrank();
   }
 
   function test_batchApproveERC20_RevertIfNotVertexMsgSender() public {
-    IERC20[] memory tokens = new IERC20[](2);
-    address[] memory recipients = new address[](2);
-    uint256[] memory amounts = new uint256[](2);
+    ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchApproveERC20(tokens, recipients, amounts);
-  }
-
-  function test_batchApproveERC20_RevertIfZeroInputLength() public {
-    IERC20[] memory tokens = new IERC20[](0);
-    address[] memory recipients = new address[](0);
-    uint256[] memory amounts = new uint256[](0);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveERC20(tokens, recipients, amounts);
-    vm.stopPrank();
-  }
-
-  function test_batchApproveERC20_RevertIfInvalidInputLength() public {
-    IERC20[] memory tokens = new IERC20[](1);
-    address[] memory recipients = new address[](2);
-    uint256[] memory amounts = new uint256[](2);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveERC20(tokens, recipients, amounts);
-    vm.stopPrank();
+    accounts[0].batchApproveERC20(erc20Data);
   }
 
   // transfer ERC721 unit tests
