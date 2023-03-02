@@ -3,9 +3,9 @@
   # Ignore unreachable warning due to unimplemented transfer functions
   ignored_error_codes = ["unreachable"]
   optimizer = true
+  via_ir = true
   solc = "0.8.17"
   solc_version = '0.8.17'
-  via_ir = true
 
 [profile.default.optimizer_details]
   constantOptimizer = true
