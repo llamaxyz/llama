@@ -210,21 +210,13 @@ contract VertexAccountTest is Test {
     uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
     uint256 whaleUSDTBalance = UNI.balanceOf(UNI_WHALE);
 
-    IERC20[] memory tokens = new IERC20[](2);
-    tokens[0] = USDC;
-    tokens[1] = UNI;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = USDC_WHALE;
-    recipients[1] = UNI_WHALE;
-
-    uint256[] memory amounts = new uint256[](2);
-    amounts[0] = USDC_AMOUNT;
-    amounts[1] = UNI_AMOUNT;
+    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](2);
+    erc20TransferData[0] = ERC20TransferData(USDC, USDC_WHALE, USDC_AMOUNT);
+    erc20TransferData[1] = ERC20TransferData(UNI, UNI_WHALE, UNI_AMOUNT);
 
     // Transfer USDC and USDT from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].batchTransferERC20(tokens, recipients, amounts);
+    accounts[0].batchTransferERC20(erc20TransferData);
     assertEq(USDC.balanceOf(address(accounts[0])), 0);
     assertEq(UNI.balanceOf(address(accounts[0])), 0);
     assertEq(USDC.balanceOf(address(accounts[0])), accountUSDCBalance - USDC_AMOUNT);
@@ -235,49 +227,19 @@ contract VertexAccountTest is Test {
   }
 
   function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
-    IERC20[] memory tokens = new IERC20[](2);
-    address[] memory recipients = new address[](2);
-    uint256[] memory amounts = new uint256[](2);
+    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchTransferERC20(tokens, recipients, amounts);
-  }
-
-  function test_batchTransferERC20_RevertIfZeroInputLength() public {
-    IERC20[] memory tokens = new IERC20[](0);
-    address[] memory recipients = new address[](0);
-    uint256[] memory amounts = new uint256[](0);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchTransferERC20(tokens, recipients, amounts);
-    vm.stopPrank();
-  }
-
-  function test_batchTransferERC20_RevertIfInvalidInputLength() public {
-    IERC20[] memory tokens = new IERC20[](1);
-    address[] memory recipients = new address[](2);
-    uint256[] memory amounts = new uint256[](2);
-
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchTransferERC20(tokens, recipients, amounts);
-    vm.stopPrank();
+    accounts[0].batchTransferERC20(erc20TransferData);
   }
 
   function test_batchTransferERC20_RevertIfToZeroAddress() public {
-    IERC20[] memory tokens = new IERC20[](1);
-    tokens[0] = USDC;
-
-    address[] memory recipients = new address[](1);
-    recipients[0] = address(0);
-
-    uint256[] memory amounts = new uint256[](1);
-    amounts[0] = USDC_AMOUNT;
+    ERC20TransferData[] memory erc20TransferData = new ERC20TransferData[](1);
+    erc20TransferData[0] = ERC20TransferData(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].batchTransferERC20(tokens, recipients, amounts);
+    accounts[0].batchTransferERC20(erc20TransferData);
     vm.stopPrank();
   }
 

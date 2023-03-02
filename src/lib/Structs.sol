@@ -73,7 +73,7 @@ struct PolicyRevokeData {
 }
 
 struct ERC20TransferData {
-  IERC20 token;
-  address recipient;
-  uint256 amount;
+  IERC20 token; // The ERC20 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256 amount; // The amount of tokens to transfer
 }

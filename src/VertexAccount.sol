@@ -65,16 +65,12 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+  function batchTransferERC20(ERC20TransferData[] calldata erc20TransferData) external onlyVertex {
+    uint256 length = erc20TransferData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].safeTransfer(recipients[i], amounts[i]);
+        if (erc20TransferData[i].recipient == address(0)) revert Invalid0xRecipient();
+        erc20TransferData[i].token.safeTransfer(erc20TransferData[i].recipient, erc20TransferData[i].amount);
       }
     }
   }
