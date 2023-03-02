@@ -12,7 +12,14 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "test/mock/scripts/TestScript.sol";
 import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
-import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data, ERC1155BatchData} from "src/lib/Structs.sol";
+import {
+  ERC20Data,
+  ERC721Data,
+  ERC721OperatorData,
+  ERC1155Data,
+  ERC1155BatchData,
+  ERC1155OperatorData
+} from "src/lib/Structs.sol";
 
 contract VertexAccountTest is Test {
   // Testing Parameters
@@ -601,47 +608,26 @@ contract VertexAccountTest is Test {
 
   function test_approveOperatorERC1155_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].approveOperatorERC1155(RARI, RARI_WHALE, true);
+    accounts[0].approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
   }
 
   // batch approve operator ERC1155 unit tests
   function test_batchApproveOperatorERC1155_ApproveRARIAndOPENSTORE() public {
-    IERC1155[] memory tokens = new IERC1155[](2);
-    tokens[0] = RARI;
-    tokens[1] = OPENSTORE;
-
-    address[] memory recipients = new address[](2);
-    recipients[0] = RARI_WHALE;
-    recipients[1] = OPENSTORE_WHALE;
-
-    bool[] memory approvals = new bool[](2);
-    approvals[0] = true;
-    approvals[1] = true;
+    ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
+    erc1155OperatorData[0] = ERC1155OperatorData(RARI, RARI_WHALE, true);
+    erc1155OperatorData[1] = ERC1155OperatorData(OPENSTORE, OPENSTORE_WHALE, true);
 
     vm.startPrank(address(vertex));
-    accounts[0].batchApproveOperatorERC1155(tokens, recipients, approvals);
+    accounts[0].batchApproveOperatorERC1155(erc1155OperatorData);
     assertEq(RARI.isApprovedForAll(address(accounts[0]), RARI_WHALE), true);
     assertEq(OPENSTORE.isApprovedForAll(address(accounts[0]), OPENSTORE_WHALE), true);
     vm.stopPrank();
   }
 
   function test_batchApproveOperatorERC1155_RevertIfNotVertexMsgSender() public {
+    ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].batchApproveOperatorERC1155(new IERC1155[](0), new address[](0), new bool[](0));
-  }
-
-  function test_batchApproveOperatorERC1155_RevertIfZeroInputLength() public {
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveOperatorERC1155(new IERC1155[](0), new address[](0), new bool[](0));
-    vm.stopPrank();
-  }
-
-  function test_batchApproveOperatorERC1155_RevertIfInvalidInputLength() public {
-    vm.startPrank(address(vertex));
-    vm.expectRevert(VertexAccount.InvalidInput.selector);
-    accounts[0].batchApproveOperatorERC1155(new IERC1155[](1), new address[](2), new bool[](1));
-    vm.stopPrank();
+    accounts[0].batchApproveOperatorERC1155(erc1155OperatorData);
   }
 
   // generic execute unit tests
@@ -928,7 +914,7 @@ contract VertexAccountTest is Test {
 
   function _approveRARIToRecipient(bool approved) public {
     vm.startPrank(address(vertex));
-    accounts[0].approveOperatorERC1155(RARI, RARI_WHALE, approved);
+    accounts[0].approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
     assertEq(RARI.isApprovedForAll(address(accounts[0]), RARI_WHALE), approved);
     vm.stopPrank();
   }

@@ -10,7 +10,14 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
-import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data, ERC1155BatchData} from "src/lib/Structs.sol";
+import {
+  ERC20Data,
+  ERC721Data,
+  ERC721OperatorData,
+  ERC1155Data,
+  ERC1155BatchData,
+  ERC1155OperatorData
+} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -21,7 +28,6 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
   error OnlyVertex();
   error Invalid0xRecipient();
-  error InvalidInput();
   error FailedExecution(bytes result);
 
   /// @notice Name of this Vertex Account.
@@ -183,21 +189,18 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
-    token.setApprovalForAll(recipient, approved);
+  function approveOperatorERC1155(ERC1155OperatorData calldata erc1155OperatorData) external onlyVertex {
+    erc1155OperatorData.token.setApprovalForAll(erc1155OperatorData.recipient, erc1155OperatorData.approved);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveOperatorERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+  function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyVertex {
+    uint256 length = erc1155OperatorData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].setApprovalForAll(recipients[i], approved[i]);
+        erc1155OperatorData[i].token.setApprovalForAll(
+          erc1155OperatorData[i].recipient, erc1155OperatorData[i].approved
+        );
       }
     }
   }
