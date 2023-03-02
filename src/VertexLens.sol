@@ -7,7 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {Strategy, PolicyGrantData, PermissionData} from "src/lib/Structs.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 /// @title Vertex Lens
@@ -15,8 +15,12 @@ import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 /// @notice Utility contract to compute Vertex contract addresses.
 
 contract VertexLens is IVertexLens {
+  function hashPermission(PermissionData calldata permission) external pure returns (bytes8) {
+    return bytes8(keccak256(abi.encode(permission)));
+  }
+
   function computeVertexCoreAddress(string memory name, address vertexCoreLogic, address factory)
-    public
+    external
     pure
     returns (VertexCore)
   {

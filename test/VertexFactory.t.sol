@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
@@ -154,17 +155,17 @@ contract VertexFactoryTest is Test {
 
     _vars.creatorPermissions = new PermissionMetadata[](2);
     _vars.creatorPermissions[0] = PermissionMetadata({
-      permissionId: policy.hashPermission(_vars.failPermissionData),
+      permissionId: vertexLens.hashPermission(_vars.failPermissionData),
       expirationTimestamp: 0 // no expiration
     });
     _vars.creatorPermissions[1] = PermissionMetadata({
-      permissionId: policy.hashPermission(_vars.pausePermissionData),
+      permissionId: vertexLens.hashPermission(_vars.pausePermissionData),
       expirationTimestamp: 0 // no expiration
     });
 
     _vars.defaultPermissions = new PermissionMetadata[](1);
     _vars.defaultPermissions[0] = PermissionMetadata({
-      permissionId: policy.hashPermission(_vars.pausePermissionData),
+      permissionId: vertexLens.hashPermission(_vars.pausePermissionData),
       expirationTimestamp: 0 // no expiration
     });
 
@@ -342,14 +343,6 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
     assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
   }
-
-  function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
-    // Strategy[] memory initialStrategies = createInitialStrategies();
-    // string[] memory initialAccounts = buildInitialAccounts();
-    // VertexCore _vertex = deployVertex();
-    // assertEq(_vertex.strategies().length, initialStrategies.length);
-    // assertEq(_vertex.accounts().length, initialAccounts.length);
-  }
 }
 
 contract ComputeAddress is VertexFactoryTest {
@@ -396,4 +389,34 @@ contract ComputeAddress is VertexFactoryTest {
     vm.prank(address(rootVertex));
     return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies);
   }
+}
+
+contract Intergration is VertexFactoryTest {
+// function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
+//   ERC20Mock token = new ERC20Mock();
+//   VertexCore computedVertexCore =
+//     vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
+//   bytes8 permissionId =
+//   PermissionMetadata[] memory _permissionMetadata = PermissionMetadata[](1);
+//   _permissionMetadata[0] = PermissionMetadata("Mint", 0);
+//   PolicyGrantData[] memory _initialPolicies = PolicyGrantData[](2);
+//   VertexPolicy computedVertexPolicy =
+//     vertexLens.computeVertexPolicyAddress("Integration Test", "IT", _initialPolicies, address(vertexFactory));
+//   Strategy strategyData = Strategy(
+//     1 days, // The length of time of the approval period.
+//     1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
+//     1 days, // The length of time an action can be executed before it expires.
+//     5000, // Minimum percentage of total approval weight / total approval supply.
+//     5000, // Minimum percentage of total disapproval weight / total disapproval supply.
+//     WeightByPermission[](0), // List of permissionSignatures and weights that define the validation process for
+//       // approval.
+//     WeightByPermission[](0), // List of permissionSignatures and weights that define the validation process for
+//       // disapproval.
+//     false // Determines if an action be queued before approvalEndTime.
+//   );
+//   VertexStrategy computedStrategy =
+//     VertexLens.computeVertexStrategyAddress(strategyData, address(vertexPolicy), address(vertexCore));
+
+//   PermissionData mintERC20 = PermissionData(address(token), token.mint.selector, address(strategy));
+// }
 }

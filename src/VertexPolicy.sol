@@ -128,25 +128,6 @@ contract VertexPolicy is ERC721, IVertexPolicy {
     }
   }
 
-  /// @dev hashes a permission
-  /// @param _permission the permission to hash
-  function hashPermission(PermissionData calldata _permission) public pure returns (bytes8) {
-    return bytes8(keccak256(abi.encode(_permission)));
-  }
-
-  /// @dev hashes an array of permissions
-  /// @param _permissions the permissions array to hash
-  function hashPermissions(PermissionData[] calldata _permissions) external pure returns (bytes8[] memory) {
-    uint256 length = _permissions.length;
-    bytes8[] memory output = new bytes8[](length);
-    unchecked {
-      for (uint256 i; i < length; ++i) {
-        output[i] = hashPermission(_permissions[i]);
-      }
-    }
-    return output;
-  }
-
   /// @inheritdoc IVertexPolicy
   function hasPermission(uint256 policyId, bytes8 permissionSignature) public view override returns (bool) {
     PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionSignature];

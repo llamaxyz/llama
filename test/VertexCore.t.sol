@@ -11,6 +11,7 @@ import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {
   Action,
   Strategy,
@@ -29,6 +30,7 @@ contract VertexCoreTest is Test {
   VertexStrategy[] public strategies;
   VertexAccount[] public accounts;
   VertexPolicy public policy;
+  VertexLens public lens = new VertexLens();
 
   // Mock protocol for action targets.
   ProtocolXYZ public targetProtocol;
@@ -171,10 +173,10 @@ contract VertexCoreTest is Test {
       PermissionData({target: address(targetProtocol), selector: failSelector, strategy: initialStrategy});
     PermissionData memory receiveETHPermission =
       PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: initialStrategy});
-    creatorPermissions[0] = PermissionMetadata(_policy.hashPermission(failPermission), 0);
-    creatorPermissions[1] = PermissionMetadata(_policy.hashPermission(pausePermission), 0);
-    creatorPermissions[2] = PermissionMetadata(_policy.hashPermission(receiveETHPermission), 0);
-    pauserPermissions[0] = PermissionMetadata(_policy.hashPermission(pausePermission), 0);
+    creatorPermissions[0] = PermissionMetadata(lens.hashPermission(failPermission), 0);
+    creatorPermissions[1] = PermissionMetadata(lens.hashPermission(pausePermission), 0);
+    creatorPermissions[2] = PermissionMetadata(lens.hashPermission(receiveETHPermission), 0);
+    pauserPermissions[0] = PermissionMetadata(lens.hashPermission(pausePermission), 0);
 
     PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](5);
     initialPolicyData[0] = PolicyGrantData(actionCreator, creatorPermissions);

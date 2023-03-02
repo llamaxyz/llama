@@ -6,6 +6,7 @@ import {Test} from "lib/forge-std/src/Test.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {
   PermissionData, PolicyUpdateData, PermissionMetadata, PolicyGrantData, PolicyRevokeData
 } from "src/lib/Structs.sol";
@@ -17,6 +18,7 @@ contract VertexPolicyTest is Test {
   event PolicyRevoked(PolicyRevokeData revokeData);
 
   VertexPolicy public vertexPolicyNFT;
+  VertexLens public vertexLens;
   PermissionData public permission;
   PermissionData[] public permissions;
   PermissionData[][] public permissionsArray;
@@ -41,7 +43,6 @@ contract VertexPolicyTest is Test {
       VertexStrategy(address(0xdeadbeefdeadbeef))
     );
     permissionMetadata = new PermissionMetadata[](1);
-    // we cant call vertexPolicyNFT.hashPermission(_permission) because we have not yet deployed the contract
     permissionMetadata[0] =
       PermissionMetadata({permissionId: bytes8(keccak256(abi.encode(_permission))), expirationTimestamp: 0});
   }
@@ -55,13 +56,14 @@ contract VertexPolicyTest is Test {
     permission = PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
     permissions.push(permission);
     permissionsArray.push(permissions);
-    permissionSignature.push(vertexPolicyNFT.hashPermissions(permissions)[0]);
+    permissionSignature.push(vertexLens.hashPermission(permission));
     permissionSignatures.push(permissionSignature);
     addresses.push(address(this));
     policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionSignature));
   }
 
   function setUp() public {
+    vertexLens = new VertexLens();
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
     vertexPolicyNFT = new VertexPolicy("Test", "TST", initialBatchGrantData);
     vertexPolicyNFT.setVertex(address(this));
@@ -145,7 +147,7 @@ contract VertexPolicyTest is Test {
     );
     permissions[0] = permission;
     permissionsArray[0] = permissions;
-    permissionSignature[0] = vertexPolicyNFT.hashPermissions(permissions)[0];
+    permissionSignature[0] = vertexLens.hashPermission(permission);
     permissionSignatures[0] = permissionSignature;
 
     PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
