@@ -10,7 +10,7 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
-import {ERC20Data, ERC721Data, ERC721OperatorData} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -146,12 +146,11 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data)
-    external
-    onlyVertex
-  {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.safeTransferFrom(address(this), recipient, tokenId, amount, data);
+  function transferERC1155(ERC1155Data calldata erc1155Data) external onlyVertex {
+    if (erc1155Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc1155Data.token.safeTransferFrom(
+      address(this), erc1155Data.recipient, erc1155Data.tokenId, erc1155Data.amount, erc1155Data.data
+    );
   }
 
   /// @inheritdoc IVertexAccount

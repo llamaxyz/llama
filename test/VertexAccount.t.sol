@@ -12,7 +12,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {TestScript} from "test/mock/scripts/TestScript.sol";
 import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
-import {ERC20Data, ERC721Data, ERC721OperatorData} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data} from "src/lib/Structs.sol";
 
 contract VertexAccountTest is Test {
   // Testing Parameters
@@ -449,7 +449,7 @@ contract VertexAccountTest is Test {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(vertex));
-    accounts[0].transferERC1155(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, "");
+    accounts[0].transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), 0);
     assertEq(RARI.balanceOf(address(accounts[0]), RARI_ID_1), accountNFTBalance - RARI_ID_1_AMOUNT);
     assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance + RARI_ID_1_AMOUNT);
@@ -458,13 +458,13 @@ contract VertexAccountTest is Test {
 
   function test_transferERC1155_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].transferERC1155(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, "");
+    accounts[0].transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
   }
 
   function test_transferERC1155_RevertIfToZeroAddress() public {
     vm.startPrank(address(vertex));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    accounts[0].transferERC1155(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, "");
+    accounts[0].transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
 
