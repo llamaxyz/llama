@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
 struct PermissionData {
   address target;
@@ -69,4 +70,10 @@ struct PolicyGrantData {
 struct PolicyRevokeData {
   uint256 policyId;
   bytes8[] permissionIds;
+}
+
+struct ERC20TransferData {
+  IERC20 token;
+  address recipient;
+  uint256 amount;
 }

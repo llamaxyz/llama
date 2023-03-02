@@ -6,6 +6,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {ERC20TransferData} from "src/lib/Structs.sol";
 
 interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   /// @notice Initializes a new VertexAccount clone.
@@ -30,10 +31,8 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   // -------------------------------------------------------------------------
 
   /// @notice Function for Vertex to transfer ERC20 tokens to other parties
-  /// @param token The address of the token to transfer
-  /// @param recipient Transfer's recipient
-  /// @param amount Amount to transfer
-  function transferERC20(IERC20 token, address recipient, uint256 amount) external;
+  /// @param erc20TransferData The data of the ERC20 transfer
+  function transferERC20(ERC20TransferData calldata erc20TransferData) external;
 
   /// @notice Function for Vertex to batch transfer ERC20 tokens to other parties
   /// @param tokens The addresses of the tokens to transfer
