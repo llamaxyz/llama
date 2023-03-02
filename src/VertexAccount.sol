@@ -10,7 +10,7 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
-import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data} from "src/lib/Structs.sol";
+import {ERC20Data, ERC721Data, ERC721OperatorData, ERC1155Data, ERC1155BatchData} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -154,34 +154,30 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferSingleERC1155(
-    IERC1155 token,
-    address recipient,
-    uint256[] calldata tokenIds,
-    uint256[] calldata amounts,
-    bytes calldata data
-  ) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.safeBatchTransferFrom(address(this), recipient, tokenIds, amounts, data);
+  function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) external onlyVertex {
+    if (erc1155BatchData.recipient == address(0)) revert Invalid0xRecipient();
+    erc1155BatchData.token.safeBatchTransferFrom(
+      address(this),
+      erc1155BatchData.recipient,
+      erc1155BatchData.tokenIds,
+      erc1155BatchData.amounts,
+      erc1155BatchData.data
+    );
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferMultipleERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    uint256[][] calldata tokenIds,
-    uint256[][] calldata amounts,
-    bytes[] calldata data
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (
-      length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length
-        || length != data.length
-    ) revert InvalidInput();
+  function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyVertex {
+    uint256 length = erc1155BatchData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].safeBatchTransferFrom(address(this), recipients[i], tokenIds[i], amounts[i], data[i]);
+        if (erc1155BatchData[i].recipient == address(0)) revert Invalid0xRecipient();
+        erc1155BatchData[i].token.safeBatchTransferFrom(
+          address(this),
+          erc1155BatchData[i].recipient,
+          erc1155BatchData[i].tokenIds,
+          erc1155BatchData[i].amounts,
+          erc1155BatchData[i].data
+        );
       }
     }
   }

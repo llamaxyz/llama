@@ -99,3 +99,11 @@ struct ERC1155Data {
   uint256 amount; // The amount of tokens to transfer
   bytes data; // The data to pass to the ERC1155 token
 }
+
+struct ERC1155BatchData {
+  IERC1155 token; // The ERC1155 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256[] tokenIds; // The tokenId of the token to transfer
+  uint256[] amounts; // The amount of tokens to transfer
+  bytes data; // The data to pass to the ERC1155 token
+}
