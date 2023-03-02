@@ -274,7 +274,7 @@ contract VertexAccountTest is Test {
 
   function test_approveERC20_RevertIfNotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    accounts[0].approveERC20(USDC, USDC_WHALE, USDC_AMOUNT);
+    accounts[0].approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
   // batch approve ERC20 unit tests
@@ -1009,14 +1009,14 @@ contract VertexAccountTest is Test {
 
   function _approveUSDCToRecipient(uint256 amount) public {
     vm.startPrank(address(vertex));
-    accounts[0].approveERC20(USDC, USDC_WHALE, amount);
+    accounts[0].approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
     assertEq(USDC.allowance(address(accounts[0]), USDC_WHALE), amount);
     vm.stopPrank();
   }
 
   function _approveUSDTToRecipient(uint256 amount) public {
     vm.startPrank(address(vertex));
-    accounts[0].approveERC20(USDT, USDT_WHALE, amount);
+    accounts[0].approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
     assertEq(USDT.allowance(address(accounts[0]), USDT_WHALE), amount);
     vm.stopPrank();
   }
