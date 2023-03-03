@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ERC721} from "@solmate/tokens/ERC721.sol";
+import {ERC721MinimalProxy} from "src/lib/ERC721MinimalProxy.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {
@@ -17,7 +17,7 @@ import {
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
-contract VertexPolicy is ERC721, IVertexPolicy {
+contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   error SoulboundToken();
   error InvalidInput(); // TODO: Probably need more than one error?
   error OnlyVertex();
@@ -39,9 +39,12 @@ contract VertexPolicy is ERC721, IVertexPolicy {
     _;
   }
 
-  constructor(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
-    ERC721(_name, _symbol)
+  function initialize(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
+    external
+    initializer
   {
+    name = _name;
+    symbol = _symbol;
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       grantPolicy(initialPolicies[i]);

@@ -10,6 +10,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {
   PermissionData, PolicyUpdateData, PermissionMetadata, PolicyGrantData, PolicyRevokeData
 } from "src/lib/Structs.sol";
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 contract VertexPolicyTest is Test {
@@ -17,7 +18,8 @@ contract VertexPolicyTest is Test {
   event PermissionUpdated(PolicyUpdateData updateData);
   event PolicyRevoked(PolicyRevokeData revokeData);
 
-  VertexPolicy public vertexPolicyNFT;
+  VertexPolicy public vertexPolicyLogic;
+  VertexPolicy public vertexPolicy;
   VertexLens public vertexLens;
   PermissionData public permission;
   PermissionData[] public permissions;
@@ -65,8 +67,11 @@ contract VertexPolicyTest is Test {
   function setUp() public {
     vertexLens = new VertexLens();
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
-    vertexPolicyNFT = new VertexPolicy("Test", "TST", initialBatchGrantData);
-    vertexPolicyNFT.setVertex(address(this));
+    vertexPolicyLogic = new VertexPolicy();
+    VertexPolicy vertexPolicy =
+      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode("TST")))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
+    vertexPolicy.initialize("Test", "TST", initialBatchGrantData);
+    vertexPolicy.setVertex(address(this));
     ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
     generateGenericPermissionArray();
     policyIds.push(ADDRESS_THIS_TOKEN_ID);
@@ -77,23 +82,23 @@ contract VertexPolicyTest is Test {
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(addresses[0]);
     vm.expectEmit(true, true, true, true);
     emit PolicyAdded(initialBatchGrantData[0]);
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-    assertEq(vertexPolicyNFT.balanceOf(address(0xdeadbeef)), 1);
-    assertEq(vertexPolicyNFT.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));
+    vertexPolicy.batchGrantPolicies(initialBatchGrantData);
+    assertEq(vertexPolicy.balanceOf(address(0xdeadbeef)), 1);
+    assertEq(vertexPolicy.ownerOf(DEADBEEF_TOKEN_ID), address(0xdeadbeef));
   }
 
   function test_grantPermission_RevertIfPolicyAlreadyGranted() public {
     vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
+    vertexPolicy.batchGrantPolicies(initialBatchGrantData);
   }
 
   function test_Revoke_CorrectlyRevokesPolicy() public {
     vm.expectEmit(true, true, true, true);
     emit PolicyRevoked(policyRevokeData[0]);
 
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
-    assertEq(vertexPolicyNFT.balanceOf(address(this)), 0);
+    vertexPolicy.batchRevokePolicies(policyRevokeData);
+    assertEq(vertexPolicy.balanceOf(address(this)), 0);
   }
 
   function test_revoke_RevertIfPolicyNotGranted() public {
@@ -101,45 +106,45 @@ contract VertexPolicyTest is Test {
     policyIds[0] = mockPolicyId;
     policyRevokeData[0] = PolicyRevokeData(mockPolicyId, permissionSignature);
     vm.expectRevert("NOT_MINTED");
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
+    vertexPolicy.batchRevokePolicies(policyRevokeData);
   }
 
   function test_transferFrom_RevertIfTransferFrom() public {
     vm.expectRevert(VertexPolicy.SoulboundToken.selector);
-    vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
+    vertexPolicy.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
   }
 
   function test_holderHasPermissionAt_ReturnsCorrectBool() public {
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
     addresses[0] = address(0xdeadbeef);
     vm.warp(block.timestamp + 100);
 
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
+    vertexPolicy.batchGrantPolicies(initialBatchGrantData);
+    vertexPolicy.batchRevokePolicies(policyRevokeData);
 
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 99), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 99), true);
     assertEq(
-      vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp - 99), false
+      vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp - 99), false
     );
   }
 
   function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 1);
     addresses[0] = address(0xdeadbeef);
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 2);
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionSignature), 1);
+    vertexPolicy.batchGrantPolicies(initialBatchGrantData);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 2);
+    vertexPolicy.batchRevokePolicies(policyRevokeData);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 1);
   }
 
   function test_batchUpdatePermissions_UpdatesPermissionsCorrectly() public {
     bytes8 oldPermissionSignature = permissionSignature[0];
-    assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
+    assertEq(vertexPolicy.hasPermission(policyIds[0], oldPermissionSignature), true);
     permissionsToRevoke = permissionSignatures;
 
     permission = PermissionData(
@@ -164,20 +169,20 @@ contract VertexPolicyTest is Test {
     vm.expectEmit(true, true, true, true);
     emit PermissionUpdated(updateData[0]);
 
-    vertexPolicyNFT.batchUpdatePermissions(updateData);
+    vertexPolicy.batchUpdatePermissions(updateData);
 
-    assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), false);
-    assertEq(vertexPolicyNFT.hasPermission(policyIds[0], permissionSignature[0]), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp - 100), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 100), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
+    assertEq(vertexPolicy.hasPermission(policyIds[0], oldPermissionSignature), false);
+    assertEq(vertexPolicy.hasPermission(policyIds[0], permissionSignature[0]), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp - 100), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 100), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
   }
 
   // function test_batchUpdatePermissions_RevertIfArraysLengthMismatch() public {
   //     policyIds.push(uint256(uint160(address(0xdeadbeef))));
   //     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-  //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
+  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // initialExpirationTimestamps);
   // }
 
@@ -185,55 +190,53 @@ contract VertexPolicyTest is Test {
   //     uint256[] memory newExpirationTimestamp = new uint256[](1);
   //     newExpirationTimestamp[0] = block.timestamp + 1 days;
   //     expirationTimestamps.push(newExpirationTimestamp);
-  //     assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
   // 0);
-  //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
+  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // expirationTimestamps);
-  //     assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
   // newExpirationTimestamp[0]);
   // }
 
   function test_tokenURI_ReturnsCorrectURI() public {
     string memory baseURI = "https://vertex.link/policy/";
-    vertexPolicyNFT.setBaseURI(baseURI);
-    assertEq(
-      vertexPolicyNFT.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(baseURI, vm.toString(ADDRESS_THIS_TOKEN_ID))
-    );
+    vertexPolicy.setBaseURI(baseURI);
+    assertEq(vertexPolicy.tokenURI(ADDRESS_THIS_TOKEN_ID), string.concat(baseURI, vm.toString(ADDRESS_THIS_TOKEN_ID)));
   }
 
   function test_totalSupply_ReturnsCorrectSupply() public {
-    assertEq(vertexPolicyNFT.totalSupply(), 1);
+    assertEq(vertexPolicy.totalSupply(), 1);
     addresses[0] = address(0xdeadbeef);
-    vertexPolicyNFT.batchGrantPolicies(_buildBatchGrantData(addresses[0]));
-    assertEq(vertexPolicyNFT.totalSupply(), 2);
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
-    assertEq(vertexPolicyNFT.totalSupply(), 1);
+    vertexPolicy.batchGrantPolicies(_buildBatchGrantData(addresses[0]));
+    assertEq(vertexPolicy.totalSupply(), 2);
+    vertexPolicy.batchRevokePolicies(policyRevokeData);
+    assertEq(vertexPolicy.totalSupply(), 1);
   }
 
   function test_onlyVertex_RevertIfNotVertex() public {
     string memory baseURI = "https://vertex.link/policy/";
     vm.prank(address(0xdeadbeef));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    vertexPolicyNFT.setBaseURI(baseURI);
+    vertexPolicy.setBaseURI(baseURI);
   }
 
   // function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
-  //     assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
   // 0);
-  //     assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
+  //     assertEq(vertexPolicy.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), true);
 
   //     uint256[] memory newExpirationTimestamp = new uint256[](1);
   //     newExpirationTimestamp[0] = block.timestamp + 1 days;
   //     expirationTimestamps.push(newExpirationTimestamp);
-  //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
+  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // expirationTimestamps);
 
   //     vm.warp(block.timestamp + 2 days);
 
   //     assertEq(newExpirationTimestamp[0] < block.timestamp, true);
-  //     assertEq(vertexPolicyNFT.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
   // newExpirationTimestamp[0]);
-  //     assertEq(vertexPolicyNFT.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
+  //     assertEq(vertexPolicy.hasPermission(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), false);
   // }
 
   function test_grantPermissions_GrantsTokenWithExpiration() public {
@@ -245,10 +248,10 @@ contract VertexPolicyTest is Test {
 
     PolicyGrantData[] memory initialBatchGrantData = new PolicyGrantData[](1);
     initialBatchGrantData[0] = PolicyGrantData(_newAddress, _changes);
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
+    vertexPolicy.batchGrantPolicies(initialBatchGrantData);
 
     assertEq(
-      vertexPolicyNFT.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]),
+      vertexPolicy.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]),
       _newExpirationTimestamp
     );
   }
@@ -264,12 +267,12 @@ contract VertexPolicyTest is Test {
   //     vm.warp(block.timestamp + 1 days);
 
   //     vm.expectRevert(VertexPolicy.Expired.selector);
-  //     vertexPolicyNFT.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
+  //     vertexPolicy.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
   //     newExpirationTimestamp[0] = block.timestamp - 1 seconds;
   //     expirationTimestamps[0] = newExpirationTimestamp;
   //     assertEq(block.timestamp > newExpirationTimestamp[0], true);
   //     vm.expectRevert(VertexPolicy.Expired.selector);
-  //     vertexPolicyNFT.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
+  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
   // expirationTimestamps);
   // }
 }

@@ -32,21 +32,17 @@ contract VertexLens is IVertexLens {
     return VertexCore(_computedAddress);
   }
 
-  function computeVertexPolicyAddress(
-    string memory _name,
-    string memory _symbol,
-    PolicyGrantData[] memory _initialPolicies,
-    address factory
-  ) external pure returns (VertexPolicy) {
-    bytes memory bytecode = type(VertexPolicy).creationCode;
-
-    return VertexPolicy(
-      computeCreate2Address(
-        bytes32(keccak256(abi.encode(_symbol))), // salt
-        keccak256(abi.encodePacked(bytecode, abi.encode(_name, _symbol, _initialPolicies))),
-        factory // deployer
-      )
+  function computeVertexPolicyAddress(string memory symbol, address vertexPolicyLogic, address factory)
+    external
+    pure
+    returns (VertexPolicy)
+  {
+    address _computedAddress = Clones.predictDeterministicAddress(
+      vertexPolicyLogic,
+      bytes32(keccak256(abi.encode(symbol))), // salt
+      factory // deployer
     );
+    return VertexPolicy(_computedAddress);
   }
 
   function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex)

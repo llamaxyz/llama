@@ -22,6 +22,9 @@ contract VertexFactory is IVertexFactory {
   /// @notice The Vertex Account implementation (logic) contract.
   VertexAccount public immutable vertexAccountLogic;
 
+  /// @notice The Vertex Policy implementation (logic) contract.
+  VertexPolicy public immutable vertexPolicyLogic;
+
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
@@ -31,6 +34,7 @@ contract VertexFactory is IVertexFactory {
   constructor(
     VertexCore _vertexCoreLogic,
     VertexAccount _vertexAccountLogic,
+    VertexPolicy _vertexPolicyLogic,
     string memory name,
     string memory symbol,
     Strategy[] memory initialStrategies,
@@ -39,6 +43,7 @@ contract VertexFactory is IVertexFactory {
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexAccountLogic = _vertexAccountLogic;
+    vertexPolicyLogic = _vertexPolicyLogic;
     rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
   }
 
@@ -64,8 +69,9 @@ contract VertexFactory is IVertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
-    VertexPolicy policy = new VertexPolicy{salt: keccak256(abi.encode(symbol))}(name, symbol, initialPolicies);
-
+    VertexPolicy policy =
+      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(symbol)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
+    policy.initialize(name, symbol, initialPolicies);
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
       // salt)
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);

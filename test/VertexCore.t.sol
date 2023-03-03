@@ -26,6 +26,7 @@ contract VertexCoreTest is Test {
   VertexCore public vertex;
   VertexCore public vertexCore;
   VertexAccount public vertexAccountImplementation;
+  VertexPolicy public vertexPolicyImplementation;
   VertexFactory public vertexFactory;
   VertexStrategy[] public strategies;
   VertexAccount[] public accounts;
@@ -119,9 +120,11 @@ contract VertexCoreTest is Test {
     // Deploy vertex and mock protocol
     vertexCore = new VertexCore();
     vertexAccountImplementation = new VertexAccount();
+    vertexPolicyImplementation = new VertexPolicy();
     vertexFactory = new VertexFactory(
           vertexCore,
           vertexAccountImplementation,
+          vertexPolicyImplementation,
           "ProtocolXYZ",
           "VXP",
           initialStrategies,
