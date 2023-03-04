@@ -9,6 +9,12 @@ struct PermissionData {
     VertexStrategy strategy;
 }
 
+enum CachedActionState {
+    Queued, // Action queued for queueing duration and disapproval period begins.
+    Executed, // Action has executed succesfully.
+    Canceled // Action canceled by creator or disapproved.
+}
+
 enum ActionState {
     Active, // Action created and approval period begins.
     Canceled, // Action canceled by creator or disapproved.
@@ -26,7 +32,7 @@ struct PermissionIdCheckpoint {
 
 struct Action {
     address creator; // msg.sender of createAction.
-    ActionState state; // The state of the action.
+    CachedActionState cachedState; // The last known state of the action.
     bytes4 selector; // The function selector that will be called when the action is executed.
     VertexStrategy strategy; // strategy that determines the validation process of this action.
     address target; // The contract called when the action is executed

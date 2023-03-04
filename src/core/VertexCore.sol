@@ -7,7 +7,7 @@ import {IVertexCore} from "src/core/IVertexCore.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
-import {ActionState, Action, PermissionData, Strategy} from "src/utils/Structs.sol";
+import {CachedActionState, ActionState, Action, PermissionData, Strategy} from "src/utils/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -137,7 +137,7 @@ contract VertexCore is IVertexCore, Initializable {
         uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
 
-        action.state = ActionState.Queued;
+        action.cachedState = CachedActionState.Queued;
         action.executionTime = executionTime;
 
         emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
@@ -151,7 +151,7 @@ contract VertexCore is IVertexCore, Initializable {
         if (block.timestamp < action.executionTime) revert TimelockNotFinished();
         if (msg.value < action.value) revert InsufficientMsgValue();
 
-        action.state = ActionState.Executed;
+        action.cachedState = CachedActionState.Executed;
 
         (bool success, bytes memory result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
 
@@ -172,7 +172,7 @@ contract VertexCore is IVertexCore, Initializable {
         Action storage action = actions[actionId];
         if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) revert ActionCannotBeCanceled();
 
-        action.state = ActionState.Canceled;
+        action.cachedState = CachedActionState.Canceled;
 
         emit ActionCanceled(actionId);
     }
@@ -253,7 +253,7 @@ contract VertexCore is IVertexCore, Initializable {
         Action storage action = actions[actionId];
         uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
 
-        if (action.state == ActionState.Canceled) {
+        if (action.cachedState == CachedActionState.Canceled) {
             return ActionState.Canceled;
         }
 
@@ -269,7 +269,7 @@ contract VertexCore is IVertexCore, Initializable {
             return ActionState.Approved;
         }
 
-        if (action.state == ActionState.Executed) {
+        if (action.cachedState == CachedActionState.Executed) {
             return ActionState.Executed;
         }
 
