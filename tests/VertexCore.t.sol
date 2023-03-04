@@ -11,7 +11,7 @@ import {ProtocolXYZ} from "src/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/strategy/VertexStrategy.sol";
 import {VertexAccount} from "src/account/VertexAccount.sol";
 import {VertexPolicyNFT} from "src/policy/VertexPolicyNFT.sol";
-import {CachedActionState, ActionState, Action, Strategy, PermissionData, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
+import {CachedActionState, Action, Strategy, PermissionData, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/utils/Structs.sol";
 
 contract VertexCoreTest is Test {
     // Vertex system
