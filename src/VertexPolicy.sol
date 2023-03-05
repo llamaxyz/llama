@@ -22,7 +22,6 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   error InvalidInput(); // TODO: Probably need more than one error?
   error OnlyVertex();
   error OnlyOnePolicyPerHolder();
-  error OnlyVertexFactory();
   error AlreadyInitialized();
   error Expired();
 

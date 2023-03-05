@@ -25,6 +25,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
   /// @notice Name of this Vertex Account.
   string public name;
+
   /// @notice Vertex system
   address public vertex;
 

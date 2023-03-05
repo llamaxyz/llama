@@ -2,10 +2,10 @@
   bytecode_hash = 'none'
   # Ignore unreachable warning due to unimplemented transfer functions
   ignored_error_codes = ["unreachable"]
-  optimizer = true
   solc = "0.8.17"
   solc_version = '0.8.17'
-  via_ir = true
+  optimizer = false
+  via_ir = false
 
 [profile.default.optimizer_details]
   constantOptimizer = true
@@ -14,12 +14,14 @@
 # Use this profile to run tests locally (not on CI) without the optimizer for quick build times.
 [profile.test]
   invariant = { runs = 50, fail_on_revert = true }
-  optimizer = false
-  via_ir = false
+  optimizer = true
+  via_ir = true
 
 [profile.ci]
   fuzz = { runs = 5000 }
   invariant = { runs = 1000, depth = 100 }
+  optimizer = true
+  via_ir = true
 
 [rpc_endpoints]
   mainnet = "${MAINNET_RPC_URL}"

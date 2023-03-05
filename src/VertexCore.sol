@@ -114,14 +114,6 @@ contract VertexCore is IVertexCore, Initializable {
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
 
-    uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getApprovalPermissions());
-
-    uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getDisapprovalPermissions());
-
     newAction.creator = msg.sender;
     newAction.strategy = strategy;
     newAction.target = target;
@@ -129,8 +121,8 @@ contract VertexCore is IVertexCore, Initializable {
     newAction.selector = selector;
     newAction.data = data;
     newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+    newAction.approvalPolicySupply = _getSupplyByPermissions(strategy.getApprovalPermissions());
+    newAction.disapprovalPolicySupply = _getSupplyByPermissions(strategy.getDisapprovalPermissions());
 
     unchecked {
       ++actionsCount;
