@@ -2,6 +2,9 @@
 pragma solidity ^0.8.17;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 struct PermissionData {
   address target;
@@ -69,4 +72,44 @@ struct PolicyGrantData {
 struct PolicyRevokeData {
   uint256 policyId;
   bytes8[] permissionIds;
+}
+
+struct ERC20Data {
+  IERC20 token; // The ERC20 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256 amount; // The amount of tokens to transfer
+}
+
+struct ERC721Data {
+  IERC721 token; // The ERC721 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256 tokenId; // The tokenId of the token to transfer
+}
+
+struct ERC721OperatorData {
+  IERC721 token; // The ERC721 token to transfer
+  address recipient; // The address to transfer the token to
+  bool approved; // Whether to approve or revoke allowance
+}
+
+struct ERC1155Data {
+  IERC1155 token; // The ERC1155 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256 tokenId; // The tokenId of the token to transfer
+  uint256 amount; // The amount of tokens to transfer
+  bytes data; // The data to pass to the ERC1155 token
+}
+
+struct ERC1155BatchData {
+  IERC1155 token; // The ERC1155 token to transfer
+  address recipient; // The address to transfer the token to
+  uint256[] tokenIds; // The tokenId of the token to transfer
+  uint256[] amounts; // The amount of tokens to transfer
+  bytes data; // The data to pass to the ERC1155 token
+}
+
+struct ERC1155OperatorData {
+  IERC1155 token; // The ERC1155 token to transfer
+  address recipient; // The address to transfer the token to
+  bool approved; // Whether to approve or revoke allowance
 }

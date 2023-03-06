@@ -173,7 +173,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_AllInvariants() public {
+  function invariant_AllInvariants() public view {
     assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
     assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
     assertInvariant_DeterministicPolicyIds();

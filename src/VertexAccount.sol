@@ -10,6 +10,14 @@ import {ERC721Holder} from "@openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
+import {
+  ERC20Data,
+  ERC721Data,
+  ERC721OperatorData,
+  ERC1155Data,
+  ERC1155BatchData,
+  ERC1155OperatorData
+} from "src/lib/Structs.sol";
 
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
@@ -20,7 +28,6 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
   error OnlyVertex();
   error Invalid0xRecipient();
-  error InvalidInput();
   error FailedExecution(bytes result);
 
   /// @notice Name of this Vertex Account.
@@ -58,41 +65,32 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.safeTransfer(recipient, amount);
+  function transferERC20(ERC20Data calldata erc20Data) public onlyVertex {
+    if (erc20Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc20Data.token.safeTransfer(erc20Data.recipient, erc20Data.amount);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+  function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
+    uint256 length = erc20Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].safeTransfer(recipients[i], amounts[i]);
+        transferERC20(erc20Data[i]);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC20(IERC20 token, address recipient, uint256 amount) external onlyVertex {
-    token.safeApprove(recipient, amount);
+  function approveERC20(ERC20Data calldata erc20Data) public onlyVertex {
+    erc20Data.token.safeApprove(erc20Data.recipient, erc20Data.amount);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != amounts.length) revert InvalidInput();
+  function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
+    uint256 length = erc20Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].safeApprove(recipients[i], amounts[i]);
+        approveERC20(erc20Data[i]);
       }
     }
   }
@@ -102,61 +100,47 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.transferFrom(address(this), recipient, tokenId);
+  function transferERC721(ERC721Data calldata erc721Data) public onlyVertex {
+    if (erc721Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc721Data.token.transferFrom(address(this), erc721Data.recipient, erc721Data.tokenId);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+  function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
+    uint256 length = erc721Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].transferFrom(address(this), recipients[i], tokenIds[i]);
+        transferERC721(erc721Data[i]);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveERC721(IERC721 token, address recipient, uint256 tokenId) external onlyVertex {
-    token.approve(recipient, tokenId);
+  function approveERC721(ERC721Data calldata erc721Data) public onlyVertex {
+    erc721Data.token.approve(erc721Data.recipient, erc721Data.tokenId);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external
-    onlyVertex
-  {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != tokenIds.length) revert InvalidInput();
+  function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
+    uint256 length = erc721Data.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].approve(recipients[i], tokenIds[i]);
+        approveERC721(erc721Data[i]);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external onlyVertex {
-    token.setApprovalForAll(recipient, approved);
+  function approveOperatorERC721(ERC721OperatorData calldata erc721OperatorData) public onlyVertex {
+    erc721OperatorData.token.setApprovalForAll(erc721OperatorData.recipient, erc721OperatorData.approved);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveOperatorERC721(
-    IERC721[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+  function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyVertex {
+    uint256 length = erc721OperatorData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].setApprovalForAll(recipients[i], approved[i]);
+        approveOperatorERC721(erc721OperatorData[i]);
       }
     }
   }
@@ -166,63 +150,46 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // -------------------------------------------------------------------------
 
   /// @inheritdoc IVertexAccount
-  function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data)
-    external
-    onlyVertex
-  {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.safeTransferFrom(address(this), recipient, tokenId, amount, data);
+  function transferERC1155(ERC1155Data calldata erc1155Data) external onlyVertex {
+    if (erc1155Data.recipient == address(0)) revert Invalid0xRecipient();
+    erc1155Data.token.safeTransferFrom(
+      address(this), erc1155Data.recipient, erc1155Data.tokenId, erc1155Data.amount, erc1155Data.data
+    );
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferSingleERC1155(
-    IERC1155 token,
-    address recipient,
-    uint256[] calldata tokenIds,
-    uint256[] calldata amounts,
-    bytes calldata data
-  ) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    token.safeBatchTransferFrom(address(this), recipient, tokenIds, amounts, data);
+  function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) public onlyVertex {
+    if (erc1155BatchData.recipient == address(0)) revert Invalid0xRecipient();
+    erc1155BatchData.token.safeBatchTransferFrom(
+      address(this),
+      erc1155BatchData.recipient,
+      erc1155BatchData.tokenIds,
+      erc1155BatchData.amounts,
+      erc1155BatchData.data
+    );
   }
 
   /// @inheritdoc IVertexAccount
-  function batchTransferMultipleERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    uint256[][] calldata tokenIds,
-    uint256[][] calldata amounts,
-    bytes[] calldata data
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (
-      length == 0 || length != recipients.length || length != tokenIds.length || length != amounts.length
-        || length != data.length
-    ) revert InvalidInput();
+  function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyVertex {
+    uint256 length = erc1155BatchData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        if (recipients[i] == address(0)) revert Invalid0xRecipient();
-        tokens[i].safeBatchTransferFrom(address(this), recipients[i], tokenIds[i], amounts[i], data[i]);
+        batchTransferSingleERC1155(erc1155BatchData[i]);
       }
     }
   }
 
   /// @inheritdoc IVertexAccount
-  function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external onlyVertex {
-    token.setApprovalForAll(recipient, approved);
+  function approveOperatorERC1155(ERC1155OperatorData calldata erc1155OperatorData) public onlyVertex {
+    erc1155OperatorData.token.setApprovalForAll(erc1155OperatorData.recipient, erc1155OperatorData.approved);
   }
 
   /// @inheritdoc IVertexAccount
-  function batchApproveOperatorERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external onlyVertex {
-    uint256 length = tokens.length;
-    if (length == 0 || length != recipients.length || length != approved.length) revert InvalidInput();
+  function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyVertex {
+    uint256 length = erc1155OperatorData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        tokens[i].setApprovalForAll(recipients[i], approved[i]);
+        approveOperatorERC1155(erc1155OperatorData[i]);
       }
     }
   }
