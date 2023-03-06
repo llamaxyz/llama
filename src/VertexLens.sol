@@ -10,10 +10,10 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData, PermissionData} from "src/lib/Structs.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexLens} from "src/interfaces/IVertexLens.sol";
+
 /// @title Vertex Lens
 /// @author Llama (vertex@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
-
 contract VertexLens is IVertexLens {
   function hashPermission(PermissionData calldata permission) external pure returns (bytes8) {
     return bytes8(keccak256(abi.encode(permission)));

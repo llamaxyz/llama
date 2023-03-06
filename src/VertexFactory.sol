@@ -8,7 +8,6 @@ import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)

@@ -394,7 +394,7 @@ contract ComputeAddress is VertexFactoryTest {
   }
 }
 
-contract Intergration is VertexFactoryTest {
+contract Integration is VertexFactoryTest {
 // function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
 //   ERC20Mock token = new ERC20Mock();
 //   VertexCore computedVertexCore =
