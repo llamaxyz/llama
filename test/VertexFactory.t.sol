@@ -424,7 +424,6 @@ contract Integration is VertexFactoryTest {
     newWeights[2] = WeightByPermission(permissionId3, 2);
 
     PermissionMetadata[] memory permissionMetadata = new PermissionMetadata[](3);
-    PermissionMetadata[] memory emptyPermissionMetadata = new PermissionMetadata[](0);
     {
       permissionMetadata[0] = PermissionMetadata(permissionId1, 0);
       permissionMetadata[1] = PermissionMetadata(permissionId2, 0);
@@ -433,7 +432,7 @@ contract Integration is VertexFactoryTest {
     return (newWeights, permissionMetadata);
   }
 
-  function buildInitialStrategies(Strategy memory strategyData) public view returns (Strategy[] memory) {
+  function buildInitialStrategies(Strategy memory strategyData) public pure returns (Strategy[] memory) {
     Strategy[] memory initialStrategies = new Strategy[](1);
     initialStrategies[0] = strategyData;
     return initialStrategies;
