@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {CommonBase} from "forge-std/Base.sol";
@@ -173,7 +173,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_AllInvariants() public {
+  function invariant_AllInvariants() public view {
     assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
     assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
     assertInvariant_DeterministicPolicyIds();

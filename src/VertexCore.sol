@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
@@ -71,9 +71,6 @@ contract VertexCore is IVertexCore, Initializable {
 
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
-
-  /// @notice Mapping of actionId's and bool that indicates if action is queued.
-  mapping(uint256 => bool) public queuedActions;
 
   constructor() initializer {}
 
@@ -147,7 +144,6 @@ contract VertexCore is IVertexCore, Initializable {
     Action storage action = actions[actionId];
     uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
-    queuedActions[actionId] = true;
     action.executionTime = executionTime;
 
     emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
@@ -155,14 +151,13 @@ contract VertexCore is IVertexCore, Initializable {
 
   /// @inheritdoc IVertexCore
   function executeAction(uint256 actionId) external payable override returns (bytes memory) {
-    if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
+    if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
     action.executed = true;
-    queuedActions[actionId] = false;
 
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
@@ -188,7 +183,6 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     action.canceled = true;
-    queuedActions[actionId] = false;
 
     emit ActionCanceled(actionId);
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {Ownable2Step} from "@openzeppelin/access/Ownable2Step.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
