@@ -25,6 +25,7 @@ contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, string name);
+  event PolicyAdded(PolicyGrantData grantData);
 
   // Vertex system
   VertexCore public rootVertex;
@@ -396,10 +397,9 @@ contract ComputeAddress is VertexFactoryTest {
 }
 
 contract Integration is VertexFactoryTest {
-  Strategy[1] initialStrategies;
   string[] initialAccounts;
-  PolicyGrantData[] initialPolicies;
   WeightByPermission[] emptyWeights;
+  PermissionMetadata[] emptyPermissions;
   address user1 = address(0x1); // admin
   address user2 = address(0x2); // empty policy
 
@@ -409,7 +409,34 @@ contract Integration is VertexFactoryTest {
       vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
     VertexPolicy computedVertexPolicy =
       vertexLens.computeVertexPolicyAddress("Integration Test", address(vertexPolicyLogic), address(vertexFactory));
-    Strategy memory strategyData = Strategy(
+    VertexAccount computedVertexAccount = vertexLens.computeVertexAccountAddress(
+      address(vertexAccountLogic), initialAccounts[0], address(computedVertexCore)
+    );
+    Strategy memory strategyData = buildStrategyData();
+    VertexStrategy computedStrategy =
+      vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+    ERC20Mock token = new ERC20Mock("Mock", "MCK", address(computedVertexAccount), 100000);
+    (WeightByPermission[] memory newWeights, PermissionMetadata[] memory permissionMetadata) =
+      buildNewWeightsAndPermissions(computedVertexAccount, computedStrategy, computedVertexPolicy);
+    strategyData.approvalWeightByPermission = newWeights;
+    strategyData.disapprovalWeightByPermission = newWeights;
+    Strategy[] memory initialStrategies = buildInitialStrategies(strategyData);
+    PolicyGrantData[] memory initialPolicies = buildInitialPolicies(permissionMetadata);
+    vm.prank(address(rootVertex));
+    vm.expectEmit(true, true, true, true);
+    emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
+    emit StrategyAuthorized(computedStrategy, strategyData);
+    emit AccountAuthorized(computedVertexAccount, initialAccounts[0]);
+    emit PolicyAdded(initialPolicies[0]);
+    emit PolicyAdded(initialPolicies[1]);
+    VertexCore newVertex =
+      vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+    assertEq(address(newVertex), address(computedVertexCore));
+    assertEq(address(newVertex.policy()), address(computedVertexPolicy));
+  }
+
+  function buildStrategyData() public view returns (Strategy memory) {
+    return Strategy(
       1 days, // The length of time of the approval period.
       1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
       1 days, // The length of time an action can be executed before it expires.
@@ -421,58 +448,52 @@ contract Integration is VertexFactoryTest {
         // disapproval.
       false // Determines if an action be queued before approvalEndTime.
     );
-    VertexAccount computedVertexAccount = vertexLens.computeVertexAccountAddress(
-      address(vertexAccountLogic), initialAccounts[0], address(computedVertexCore)
-    );
-    // ERC20Mock token = new ERC20Mock("Mock", "MCK", address(computedVertexAccount), 100000);
-    VertexStrategy computedStrategy =
-      vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+  }
+
+  function buildNewWeightsAndPermissions(
+    VertexAccount computedVertexAccount,
+    VertexStrategy computedStrategy,
+    VertexPolicy computedVertexPolicy
+  ) public view returns (WeightByPermission[] memory, PermissionMetadata[] memory) {
+    PermissionData memory approveERC20Permission =
+      PermissionData(address(computedVertexAccount), computedVertexAccount.approveERC20.selector, computedStrategy);
+    PermissionData memory transferERC20Permission =
+      PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
+    PermissionData memory revokePolicyPermission =
+      PermissionData(address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy);
+    bytes8 permissionId1 = vertexLens.hashPermission(approveERC20Permission);
+    bytes8 permissionId2 = vertexLens.hashPermission(transferERC20Permission);
+    bytes8 permissionId3 = vertexLens.hashPermission(revokePolicyPermission);
+    WeightByPermission[] memory newWeights = new WeightByPermission[](3);
+    newWeights[0] = WeightByPermission(permissionId1, 2);
+    newWeights[1] = WeightByPermission(permissionId2, 2);
+    newWeights[2] = WeightByPermission(permissionId3, 2);
+
+    PermissionMetadata[] memory permissionMetadata = new PermissionMetadata[](3);
+    PermissionMetadata[] memory emptyPermissionMetadata = new PermissionMetadata[](0);
     {
-      PermissionData memory approveERC20Permission =
-        PermissionData(address(computedVertexAccount), computedVertexAccount.approveERC20.selector, computedStrategy);
-      PermissionData memory transferERC20Permission =
-        PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
-      PermissionData memory revokePolicyPermission = PermissionData(
-        address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy
-      );
-      bytes8 permissionId1 = vertexLens.hashPermission(approveERC20Permission);
-      bytes8 permissionId2 = vertexLens.hashPermission(transferERC20Permission);
-      bytes8 permissionId3 = vertexLens.hashPermission(revokePolicyPermission);
-      {
-        WeightByPermission[] memory newWeights = new WeightByPermission[](3);
-        newWeights[0] = WeightByPermission(permissionId1, 2);
-        newWeights[1] = WeightByPermission(permissionId2, 2);
-        newWeights[2] = WeightByPermission(permissionId3, 2);
-        strategyData.approvalWeightByPermission = newWeights;
-        strategyData.disapprovalWeightByPermission = newWeights;
-      }
-      {
-        initialStrategies[0].approvalPeriod = strategyData.approvalPeriod;
-        initialStrategies[0].queuingPeriod = strategyData.queuingPeriod;
-        initialStrategies[0].expirationPeriod = strategyData.expirationPeriod;
-        initialStrategies[0].minApprovalPct = strategyData.minApprovalPct;
-        initialStrategies[0].minDisapprovalPct = strategyData.minDisapprovalPct;
-        // initialStrategies[0].approvalWeightByPermission[0].permissionSignature =
-        //   strategyData.approvalWeightByPermission[0].permissionSignature;
-        // initialStrategies[0].approvalWeightByPermission[0].weight =
-        // strategyData.approvalWeightByPermission[0].weight;
-        initialStrategies[0].isFixedLengthApprovalPeriod = strategyData.isFixedLengthApprovalPeriod;
-      }
-      PermissionMetadata[] memory _permissionMetadata = new PermissionMetadata[](3);
-      PermissionMetadata[] memory emptyPermissionMetadata = new PermissionMetadata[](0);
-      {
-        _permissionMetadata[0] = PermissionMetadata(permissionId1, 0);
-        _permissionMetadata[1] = PermissionMetadata(permissionId2, 0);
-        _permissionMetadata[1] = PermissionMetadata(permissionId3, 0);
-      }
-      initialPolicies.push(PolicyGrantData(user1, _permissionMetadata));
-      // initialPolicies.push(PolicyGrantData(user2, emptyPermissionMetadata));
+      permissionMetadata[0] = PermissionMetadata(permissionId1, 0);
+      permissionMetadata[1] = PermissionMetadata(permissionId2, 0);
+      permissionMetadata[1] = PermissionMetadata(permissionId3, 0);
     }
-    // vm.expectEmit(true, true, true, true);
-    // emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
-    // emit StrategyAuthorized(computedStrategy, strategyData);
-    // emit AccountAuthorized(computedVertexAccount, "Integration Test Account");
-    // vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+    return (newWeights, permissionMetadata);
+  }
+
+  function buildInitialStrategies(Strategy memory strategyData) public view returns (Strategy[] memory) {
+    Strategy[] memory initialStrategies = new Strategy[](1);
+    initialStrategies[0] = strategyData;
+    return initialStrategies;
+  }
+
+  function buildInitialPolicies(PermissionMetadata[] memory permissionMetadata)
+    public
+    view
+    returns (PolicyGrantData[] memory)
+  {
+    PolicyGrantData[] memory initialPolicies = new PolicyGrantData[](2);
+    initialPolicies[0] = PolicyGrantData(user1, permissionMetadata);
+    initialPolicies[1] = PolicyGrantData(user2, emptyPermissions);
+    return initialPolicies;
   }
 }
 
