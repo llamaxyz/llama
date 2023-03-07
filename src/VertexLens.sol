@@ -15,7 +15,7 @@ import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens is IVertexLens {
-  function hashPermission(PermissionData calldata permission) external pure returns (bytes8) {
+  function computePermissionId(PermissionData calldata permission) external pure returns (bytes8) {
     return bytes8(keccak256(abi.encode(permission)));
   }
 

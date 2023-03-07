@@ -176,10 +176,10 @@ contract VertexCoreTest is Test {
       PermissionData({target: address(targetProtocol), selector: failSelector, strategy: initialStrategy});
     PermissionData memory receiveETHPermission =
       PermissionData({target: address(targetProtocol), selector: receiveETHSelector, strategy: initialStrategy});
-    creatorPermissions[0] = PermissionMetadata(lens.hashPermission(failPermission), 0);
-    creatorPermissions[1] = PermissionMetadata(lens.hashPermission(pausePermission), 0);
-    creatorPermissions[2] = PermissionMetadata(lens.hashPermission(receiveETHPermission), 0);
-    pauserPermissions[0] = PermissionMetadata(lens.hashPermission(pausePermission), 0);
+    creatorPermissions[0] = PermissionMetadata(lens.computePermissionId(failPermission), 0);
+    creatorPermissions[1] = PermissionMetadata(lens.computePermissionId(pausePermission), 0);
+    creatorPermissions[2] = PermissionMetadata(lens.computePermissionId(receiveETHPermission), 0);
+    pauserPermissions[0] = PermissionMetadata(lens.computePermissionId(pausePermission), 0);
 
     PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](5);
     initialPolicyData[0] = PolicyGrantData(actionCreator, creatorPermissions);

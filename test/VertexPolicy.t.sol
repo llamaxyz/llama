@@ -58,7 +58,7 @@ contract VertexPolicyTest is Test {
     permission = PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
     permissions.push(permission);
     permissionsArray.push(permissions);
-    permissionSignature.push(vertexLens.hashPermission(permission));
+    permissionSignature.push(vertexLens.computePermissionId(permission));
     permissionSignatures.push(permissionSignature);
     addresses.push(address(this));
     policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionSignature));
@@ -150,7 +150,7 @@ contract VertexPolicyTest is Test {
     );
     permissions[0] = permission;
     permissionsArray[0] = permissions;
-    permissionSignature[0] = vertexLens.hashPermission(permission);
+    permissionSignature[0] = vertexLens.computePermissionId(permission);
     permissionSignatures[0] = permissionSignature;
 
     PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
@@ -178,7 +178,7 @@ contract VertexPolicyTest is Test {
   }
 
   function test_batchUpdatePermissions_updatesTimeStamp() public {
-    bytes8 _permissionId = vertexLens.hashPermission(
+    bytes8 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 
@@ -220,7 +220,7 @@ contract VertexPolicyTest is Test {
   }
 
   function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
-    bytes8 _permissionId = vertexLens.hashPermission(
+    bytes8 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 
@@ -268,7 +268,7 @@ contract VertexPolicyTest is Test {
   function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
     vm.warp(block.timestamp + 1 days);
 
-    bytes8 _permissionId = vertexLens.hashPermission(
+    bytes8 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 

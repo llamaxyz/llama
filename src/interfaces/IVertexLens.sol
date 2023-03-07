@@ -13,7 +13,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 interface IVertexLens {
   /// @notice hashes a permission
   /// @param permission the permission to hash
-  function hashPermission(PermissionData calldata permission) external pure returns (bytes8);
+  function computePermissionId(PermissionData calldata permission) external pure returns (bytes8);
   /// @notice computes the address of a vertex core with a name value.
   /// @param name The name of this Vertex instance.
   /// @param vertexCoreLogic The VertexCore logic contract.

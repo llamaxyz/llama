@@ -160,17 +160,17 @@ contract VertexFactoryTest is Test {
 
     _vars.creatorPermissions = new PermissionMetadata[](2);
     _vars.creatorPermissions[0] = PermissionMetadata({
-      permissionId: vertexLens.hashPermission(_vars.failPermissionData),
+      permissionId: vertexLens.computePermissionId(_vars.failPermissionData),
       expirationTimestamp: 0 // no expiration
     });
     _vars.creatorPermissions[1] = PermissionMetadata({
-      permissionId: vertexLens.hashPermission(_vars.pausePermissionData),
+      permissionId: vertexLens.computePermissionId(_vars.pausePermissionData),
       expirationTimestamp: 0 // no expiration
     });
 
     _vars.defaultPermissions = new PermissionMetadata[](1);
     _vars.defaultPermissions[0] = PermissionMetadata({
-      permissionId: vertexLens.hashPermission(_vars.pausePermissionData),
+      permissionId: vertexLens.computePermissionId(_vars.pausePermissionData),
       expirationTimestamp: 0 // no expiration
     });
 
@@ -425,9 +425,9 @@ contract Integration is VertexFactoryTest {
       PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
     PermissionData memory revokePolicyPermission =
       PermissionData(address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy);
-    bytes8 permissionId1 = vertexLens.hashPermission(approveERC20Permission);
-    bytes8 permissionId2 = vertexLens.hashPermission(transferERC20Permission);
-    bytes8 permissionId3 = vertexLens.hashPermission(revokePolicyPermission);
+    bytes8 permissionId1 = vertexLens.computePermissionId(approveERC20Permission);
+    bytes8 permissionId2 = vertexLens.computePermissionId(transferERC20Permission);
+    bytes8 permissionId3 = vertexLens.computePermissionId(revokePolicyPermission);
     WeightByPermission[] memory newWeights = new WeightByPermission[](3);
     newWeights[0] = WeightByPermission(permissionId1, 2);
     newWeights[1] = WeightByPermission(permissionId2, 2);
