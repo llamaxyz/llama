@@ -51,7 +51,7 @@ interface IVertexCore {
     string[] memory initialAccounts
   ) external;
 
-  /// @notice Creates an action. The creator needs to hold a policy with the permissionSignature of the provided
+  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
   /// strategy, target, selector.
   /// @param strategy The VertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.

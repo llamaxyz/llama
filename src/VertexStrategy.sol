@@ -83,8 +83,8 @@ contract VertexStrategy is IVertexStrategy {
         for (uint256 i; i < approvalPermissionsLength; ++i) {
           WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
 
-          if (weightByPermission.weight > 0) approvalPermissions.push(weightByPermission.permissionSignature);
-          approvalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
+          if (weightByPermission.weight > 0) approvalPermissions.push(weightByPermission.permissionId);
+          approvalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
         }
       }
     }
@@ -94,8 +94,8 @@ contract VertexStrategy is IVertexStrategy {
         for (uint256 i; i < disapprovalPermissionsLength; ++i) {
           WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
 
-          if (weightByPermission.weight > 0) disapprovalPermissions.push(weightByPermission.permissionSignature);
-          disapprovalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
+          if (weightByPermission.weight > 0) disapprovalPermissions.push(weightByPermission.permissionId);
+          disapprovalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
         }
       }
     }

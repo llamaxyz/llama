@@ -32,7 +32,7 @@ struct Action {
 }
 
 struct WeightByPermission {
-  bytes8 permissionSignature; // Policyholder's permission signature.
+  bytes8 permissionId; // Policyholder's permission signature.
   uint256 weight; // Approval or disapproval weight of policyholder.
 }
 
@@ -43,9 +43,9 @@ struct Strategy {
   uint256 expirationPeriod; // The length of time an action can be executed before it expires.
   uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
   uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
-  WeightByPermission[] approvalWeightByPermission; // List of permissionSignatures and weights that define the
+  WeightByPermission[] approvalWeightByPermission; // List of permissionIds and weights that define the
     // validation process for approval.
-  WeightByPermission[] disapprovalWeightByPermission; // List of permissionSignatures and weights that define the
+  WeightByPermission[] disapprovalWeightByPermission; // List of permissionIds and weights that define the
     // validation process for disapproval.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
 }

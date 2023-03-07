@@ -103,10 +103,8 @@ contract VertexCore is IVertexCore, Initializable {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
-    bytes8 permissionSignature = policy.hashPermission(permission);
-    if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) {
-      revert PolicyholderDoesNotHavePermission();
-    }
+    bytes8 permissionId = policy.hashPermission(permission);
+    if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionId)) revert PolicyholderDoesNotHavePermission();
 
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];

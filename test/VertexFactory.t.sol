@@ -182,8 +182,8 @@ contract VertexFactoryTest is Test {
 
   function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
     WeightByPermission[] memory _permissionsWithWeights = new WeightByPermission[](2);
-    _permissionsWithWeights[0] = WeightByPermission({permissionSignature: 0xa9cc4718a9cc4718, weight: uint256(2)});
-    _permissionsWithWeights[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
+    _permissionsWithWeights[0] = WeightByPermission({permissionId: 0xa9cc4718a9cc4718, weight: uint256(2)});
+    _permissionsWithWeights[1] = WeightByPermission({permissionId: 0xffffffffffffffff, weight: uint256(0)});
 
     _strategies = new Strategy[](2);
 
@@ -257,7 +257,7 @@ contract Deploy is VertexFactoryTest {
   // helper method, so if those parameters change, or we change the constructor signature, these
   // will need to be updated.
   address constant NEW_VERTEX = 0x5Fa39CD9DD20a3A77BA0CaD164bD5CF0d7bb3303;
-  address constant NEW_POLICY = 0x6fa5F00AbBBdB99764977A89cBD0b9ff2254BEf7;
+  address constant NEW_POLICY = 0xbEe36a83F255755a370bA9f4EcCA06da09443474;
 
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory initialStrategies = createInitialStrategies();
