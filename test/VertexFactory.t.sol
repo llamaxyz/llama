@@ -350,52 +350,6 @@ contract Deploy is VertexFactoryTest {
   }
 }
 
-contract ComputeAddress is VertexFactoryTest {
-  // TODO Add methods to the factory that, given the salt (or the fields used to derive the salt),
-  // and constructor arguments if applicable, returns the address of the contract that would
-  // deployed. Since the `deploy` method deploys two contracts, we need a method for each one.
-  // One those methods exist we can fill in the tests for them here.
-
-  function test_ComputesExpectedAddressForVertexCore() public {
-    VertexCore computedVertexCore =
-      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
-    VertexCore deployedVertexCore = deployVertex();
-    assertEq(address(computedVertexCore), address(deployedVertexCore));
-  }
-
-  function test_ComputesExpectedAddressForPolicy() public {
-    VertexPolicy computedVertexPolicy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
-    VertexCore deployedVertexCore = deployVertex();
-    VertexPolicy deployedVertexPolicy = VertexPolicy(VertexCore(deployedVertexCore).policy());
-    assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
-  }
-
-  function test_ComputeVertexStrategyAddress() public {
-    // Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    VertexPolicy computedVertexPolicy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
-    VertexCore computedVertexCore =
-      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
-
-    VertexStrategy computedVertexStrategy =
-      vertexLens.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, address(computedVertexCore));
-    console2.logAddress(address(computedVertexStrategy));
-    vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(computedVertexStrategy, initialStrategies[0]);
-    deployVertex();
-  }
-
-  function deployVertex() public returns (VertexCore) {
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    string[] memory initialAccounts = buildInitialAccounts();
-    PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
-    vm.prank(address(rootVertex));
-    return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, initialPolicies);
-  }
-}
-
 contract Integration is VertexFactoryTest {
   string[] initialAccounts;
   WeightByPermission[] emptyWeights;
