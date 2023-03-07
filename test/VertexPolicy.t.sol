@@ -177,24 +177,25 @@ contract VertexPolicyTest is Test {
     assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
   }
 
-  // function test_batchUpdatePermissions_RevertIfArraysLengthMismatch() public {
-  //     policyIds.push(uint256(uint160(address(0xdeadbeef))));
-  //     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
-  // initialExpirationTimestamps);
-  // }
+  function test_batchUpdatePermissions_updatesTimeStamp() public {
+    bytes8 _permissionId = vertexLens.hashPermission(
+      PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
+    ); // same permission as in setup
 
-  // function test_batchUpdatePermissions_updatesTimeStamp() public {
-  //     uint256[] memory newExpirationTimestamp = new uint256[](1);
-  //     newExpirationTimestamp[0] = block.timestamp + 1 days;
-  //     expirationTimestamps.push(newExpirationTimestamp);
-  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
-  // 0);
-  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
-  // expirationTimestamps);
-  //     assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
-  // newExpirationTimestamp[0]);
-  // }
+    PermissionMetadata[] memory permissionsToAdd = new PermissionMetadata[](1);
+    permissionsToAdd[0] = PermissionMetadata(bytes8(keccak256(abi.encode(_permissionId))), block.timestamp + 1 days);
+
+    PolicyUpdateData memory updateData =
+      PolicyUpdateData(ADDRESS_THIS_TOKEN_ID, permissionsToAdd, new PermissionMetadata[](0));
+    PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
+    updateDataArray[0] = updateData;
+    assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
+    vertexPolicy.batchUpdatePermissions(updateDataArray);
+    assertEq(
+      vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+      block.timestamp + 1 days
+    );
+  }
 
   function test_tokenURI_ReturnsCorrectURI() public {
     string memory baseURI = "https://vertex.link/policy/";
