@@ -2,8 +2,8 @@
   bytecode_hash = 'none'
   # Ignore unreachable warning due to unimplemented transfer functions
   ignored_error_codes = ["unreachable", "code-size"]
-  solc = "0.8.19"
-  solc_version = '0.8.19'
+  solc = "0.8.17"
+  solc_version = '0.8.17'
   optimizer = false
   via_ir = false
 

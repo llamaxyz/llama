@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.17;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexAccount} from "src/interfaces/IVertexAccount.sol";

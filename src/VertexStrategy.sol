@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
