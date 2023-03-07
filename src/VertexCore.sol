@@ -7,6 +7,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
+import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
