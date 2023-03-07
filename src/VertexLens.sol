@@ -32,20 +32,20 @@ contract VertexLens is IVertexLens {
     return VertexCore(_computedAddress);
   }
 
-  function computeVertexPolicyAddress(string memory symbol, address vertexPolicyLogic, address factory)
+  function computeVertexPolicyAddress(string memory name, address vertexPolicyLogic, address factory)
     external
     pure
     returns (VertexPolicy)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexPolicyLogic,
-      bytes32(keccak256(abi.encode(symbol))), // salt
+      bytes32(keccak256(abi.encode(name))), // salt
       factory // deployer
     );
     return VertexPolicy(_computedAddress);
   }
 
-  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex)
+  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, address _vertex)
     external
     pure
     returns (VertexStrategy)
@@ -63,8 +63,25 @@ contract VertexLens is IVertexLens {
             _strategy.isFixedLengthApprovalPeriod
           )
         ), // salt
-        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, _policy, address(_vertex)))),
-        address(_vertex) // deployer
+        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, _policy, _vertex))),
+        _vertex // deployer
+      )
+    );
+  }
+
+  function computeVertexAccountAddress(address accountLogic, string calldata _account, address _vertexCore)
+    external
+    pure
+    returns (VertexAccount)
+  {
+    bytes memory bytecode = type(VertexAccount).creationCode;
+    return VertexAccount(
+      payable(
+        Clones.predictDeterministicAddress(
+          accountLogic,
+          keccak256(abi.encodePacked(_account)), // salt
+          address(_vertexCore) // deployer
+        )
       )
     );
   }

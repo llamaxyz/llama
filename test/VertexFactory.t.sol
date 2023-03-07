@@ -24,6 +24,7 @@ import {
 contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event AccountAuthorized(VertexAccount indexed account, string name);
 
   // Vertex system
   VertexCore public rootVertex;
@@ -287,7 +288,7 @@ contract Deploy is VertexFactoryTest {
 
   function test_DeploysPolicy() public {
     VertexPolicy _policy =
-      vertexLens.computeVertexPolicyAddress("NP", address(vertexPolicyLogic), address(vertexFactory));
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     assertEq(address(_policy).code.length, 0);
     deployVertex();
     assertGt(address(_policy).code.length, 0);
@@ -323,7 +324,7 @@ contract Deploy is VertexFactoryTest {
 
   function test_SetsPolicyAddressOnVertexCore() public {
     VertexPolicy computedPolicy =
-      vertexLens.computeVertexPolicyAddress("NP", address(vertexPolicyLogic), address(vertexFactory));
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     VertexCore _vertex = deployVertex();
     assertEq(address(_vertex.policy()), address(computedPolicy));
   }
@@ -333,7 +334,7 @@ contract Deploy is VertexFactoryTest {
     VertexCore computedVertex =
       vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
     VertexPolicy computedPolicy =
-      vertexLens.computeVertexPolicyAddress("NP", address(vertexPolicyLogic), address(vertexFactory));
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     emit VertexCreated(1, "NewProject", address(computedVertex), address(computedPolicy));
     deployVertex();
   }
@@ -363,7 +364,7 @@ contract ComputeAddress is VertexFactoryTest {
 
   function test_ComputesExpectedAddressForPolicy() public {
     VertexPolicy computedVertexPolicy =
-      vertexLens.computeVertexPolicyAddress("NP", address(vertexPolicyLogic), address(vertexFactory));
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     VertexCore deployedVertexCore = deployVertex();
     VertexPolicy deployedVertexPolicy = VertexPolicy(VertexCore(deployedVertexCore).policy());
     assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
@@ -373,12 +374,12 @@ contract ComputeAddress is VertexFactoryTest {
     // Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex
     Strategy[] memory initialStrategies = createInitialStrategies();
     VertexPolicy computedVertexPolicy =
-      vertexLens.computeVertexPolicyAddress("NP", address(vertexPolicyLogic), address(vertexFactory));
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     VertexCore computedVertexCore =
       vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
 
     VertexStrategy computedVertexStrategy =
-      vertexLens.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, computedVertexCore);
+      vertexLens.computeVertexStrategyAddress(initialStrategies[0], computedVertexPolicy, address(computedVertexCore));
     console2.logAddress(address(computedVertexStrategy));
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(computedVertexStrategy, initialStrategies[0]);
@@ -395,31 +396,75 @@ contract ComputeAddress is VertexFactoryTest {
 }
 
 contract Integration is VertexFactoryTest {
-// function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
-//   ERC20Mock token = new ERC20Mock();
-//   VertexCore computedVertexCore =
-//     vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
-//   bytes8 permissionId =
-//   PermissionMetadata[] memory _permissionMetadata = PermissionMetadata[](1);
-//   _permissionMetadata[0] = PermissionMetadata("Mint", 0);
-//   PolicyGrantData[] memory _initialPolicies = PolicyGrantData[](2);
-//   VertexPolicy computedVertexPolicy =
-//     vertexLens.computeVertexPolicyAddress("Integration Test", "IT", _initialPolicies, address(vertexFactory));
-//   Strategy strategyData = Strategy(
-//     1 days, // The length of time of the approval period.
-//     1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
-//     1 days, // The length of time an action can be executed before it expires.
-//     5000, // Minimum percentage of total approval weight / total approval supply.
-//     5000, // Minimum percentage of total disapproval weight / total disapproval supply.
-//     WeightByPermission[](0), // List of permissionSignatures and weights that define the validation process for
-//       // approval.
-//     WeightByPermission[](0), // List of permissionSignatures and weights that define the validation process for
-//       // disapproval.
-//     false // Determines if an action be queued before approvalEndTime.
-//   );
-//   VertexStrategy computedStrategy =
-//     VertexLens.computeVertexStrategyAddress(strategyData, address(vertexPolicy), address(vertexCore));
-
-//   PermissionData mintERC20 = PermissionData(address(token), token.mint.selector, address(strategy));
-// }
+  function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
+    Strategy[] memory initialStrategies = new Strategy[](1);
+    string[] memory initialAccounts = new string[](1);
+    PolicyGrantData[] memory initialPolicies = new PolicyGrantData[](2);
+    initialAccounts[0] = "Integration Test Account";
+    VertexCore computedVertexCore =
+      vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
+    VertexPolicy computedVertexPolicy =
+      vertexLens.computeVertexPolicyAddress("Integration Test", address(vertexPolicyLogic), address(vertexFactory));
+    WeightByPermission[] memory emptyWeights = new WeightByPermission[](1);
+    Strategy memory strategyData = Strategy(
+      1 days, // The length of time of the approval period.
+      1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
+      1 days, // The length of time an action can be executed before it expires.
+      5000, // Minimum percentage of total approval weight / total approval supply.
+      5000, // Minimum percentage of total disapproval weight / total disapproval supply.
+      emptyWeights, // List of permissionSignatures and weights that define the validation process for
+        // approval.
+      emptyWeights, // List of permissionSignatures and weights that define the validation process for
+        // disapproval.
+      false // Determines if an action be queued before approvalEndTime.
+    );
+    VertexAccount computedVertexAccount = vertexLens.computeVertexAccountAddress(
+      address(vertexAccountLogic), initialAccounts[0], address(computedVertexCore)
+    );
+    ERC20Mock token = new ERC20Mock("Mock", "MCK", address(computedVertexAccount), 100000);
+    VertexStrategy computedStrategy =
+      vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+    {
+      PermissionData memory approveERC20Permission =
+        PermissionData(address(computedVertexAccount), computedVertexAccount.approveERC20.selector, computedStrategy);
+      PermissionData memory transferERC20Permission =
+        PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
+      PermissionData memory revokePolicyPermission = PermissionData(
+        address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy
+      );
+      bytes8 permissionId1 = vertexLens.hashPermission(approveERC20Permission);
+      bytes8 permissionId2 = vertexLens.hashPermission(transferERC20Permission);
+      bytes8 permissionId3 = vertexLens.hashPermission(revokePolicyPermission);
+      WeightByPermission[] memory newWeights = new WeightByPermission[](3);
+      newWeights[0] = WeightByPermission(permissionId1, 2);
+      newWeights[1] = WeightByPermission(permissionId2, 2);
+      newWeights[2] = WeightByPermission(permissionId3, 2);
+      strategyData.approvalWeightByPermission = newWeights;
+      strategyData.disapprovalWeightByPermission = newWeights;
+      initialStrategies[0] = strategyData;
+      PermissionMetadata[] memory _permissionMetadata = new PermissionMetadata[](3);
+      _permissionMetadata[0] = PermissionMetadata(permissionId1, 0);
+      _permissionMetadata[1] = PermissionMetadata(permissionId2, 0);
+      _permissionMetadata[1] = PermissionMetadata(permissionId3, 0);
+      address user1 = address(0x1); // admin
+      address user2 = address(0x2); // empty policy
+      initialPolicies[0] = PolicyGrantData(user1, _permissionMetadata);
+      initialPolicies[1] = PolicyGrantData(user2, new PermissionMetadata[](0));
+    }
+    vm.expectEmit(true, true, true, true);
+    emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
+    emit StrategyAuthorized(computedStrategy, strategyData);
+    emit AccountAuthorized(computedVertexAccount, "Integration Test Account");
+    vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+  }
 }
+
+// function deploy(
+//     string memory name,
+//     string memory symbol,
+//     Strategy[] memory initialStrategies,
+//     string[] memory initialAccounts,
+//     PolicyGrantData[] memory initialPolicies
+//   ) external onlyRootVertex returns (VertexCore) {
+//     return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
+//   }
