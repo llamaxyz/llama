@@ -5,9 +5,18 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
-import {ActionState} from "src/lib/Enums.sol";
 
 interface IVertexCore {
+  enum ActionState {
+    Active, // Action created and approval period begins.
+    Canceled, // Action canceled by creator or disapproved.
+    Failed, // Action approval failed.
+    Approved, // Action approval succeeded and ready to be queued.
+    Queued, // Action queued for queueing duration and disapproval period begins.
+    Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
+    Executed // Action has executed succesfully.
+  }
+
   event ActionCreated(
     uint256 id,
     address indexed creator,
