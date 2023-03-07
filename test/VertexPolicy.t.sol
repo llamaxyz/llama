@@ -68,7 +68,7 @@ contract VertexPolicyTest is Test {
     vertexLens = new VertexLens();
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
     vertexPolicyLogic = new VertexPolicy();
-    vertexPolicy = VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode("TST")))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
+    vertexPolicy = VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode("TST"))));
     vertexPolicy.initialize("Test", "TST", initialBatchGrantData);
     vertexPolicy.setVertex(address(this));
     ADDRESS_THIS_TOKEN_ID = uint256(uint160(address(this)));
