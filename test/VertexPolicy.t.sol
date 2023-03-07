@@ -95,7 +95,6 @@ contract VertexPolicyTest is Test {
   function test_Revoke_CorrectlyRevokesPolicy() public {
     vm.expectEmit(true, true, true, true);
     emit PolicyRevoked(policyRevokeData[0]);
-
     vertexPolicy.batchRevokePolicies(policyRevokeData);
     assertEq(vertexPolicy.balanceOf(address(this)), 0);
   }
