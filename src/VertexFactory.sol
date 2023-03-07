@@ -69,10 +69,9 @@ contract VertexFactory is IVertexFactory {
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
-      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
+      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
     policy.initialize(name, symbol, initialPolicies);
-    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name)))); //Clones.cloneDeterministic(address(vertexAccountImplementation),
-      // salt)
+    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
