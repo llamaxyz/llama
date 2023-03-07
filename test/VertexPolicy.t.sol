@@ -265,23 +265,33 @@ contract VertexPolicyTest is Test {
     );
   }
 
-  // function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
-  //     uint256[] memory newExpirationTimestamp = new uint256[](1);
-  //     newExpirationTimestamp[0] = block.timestamp;
-  //     expirationTimestamps.push(newExpirationTimestamp);
-  //     address[] memory newAddresses = new address[](1);
-  //     newAddresses[0] = address(0xdeadbeef);
-  //     addresses = newAddresses;
+  function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
+    vm.warp(block.timestamp + 1 days);
 
-  //     vm.warp(block.timestamp + 1 days);
+    bytes8 _permissionId = vertexLens.hashPermission(
+      PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
+    ); // same permission as in setup
 
-  //     vm.expectRevert(VertexPolicy.Expired.selector);
-  //     vertexPolicy.batchGrantPolicies(addresses, permissionSignatures, expirationTimestamps);
-  //     newExpirationTimestamp[0] = block.timestamp - 1 seconds;
-  //     expirationTimestamps[0] = newExpirationTimestamp;
-  //     assertEq(block.timestamp > newExpirationTimestamp[0], true);
-  //     vm.expectRevert(VertexPolicy.Expired.selector);
-  //     vertexPolicy.batchUpdatePermissions(policyIds, permissionSignatures, permissionsToRevoke,
-  // expirationTimestamps);
-  // }
+    assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, _permissionId), 0);
+    assertEq(vertexPolicy.hasPermission(ADDRESS_THIS_TOKEN_ID, _permissionId), true);
+
+    uint256 newExpirationTimestamp = block.timestamp - 1 days;
+
+    PermissionMetadata[] memory permissionsToAdd = new PermissionMetadata[](1);
+    permissionsToAdd[0] = PermissionMetadata(_permissionId, newExpirationTimestamp);
+
+    PolicyUpdateData memory updateData =
+      PolicyUpdateData(ADDRESS_THIS_TOKEN_ID, permissionsToAdd, new PermissionMetadata[](0));
+    PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
+    updateDataArray[0] = updateData;
+
+    PolicyGrantData[] memory grantData = new PolicyGrantData[](1);
+    grantData[0] = PolicyGrantData(address(0x1), permissionsToAdd);
+
+    vm.expectRevert(VertexPolicy.Expired.selector);
+    vertexPolicy.batchGrantPolicies(grantData);
+    assertEq(block.timestamp > newExpirationTimestamp, true);
+    vm.expectRevert(VertexPolicy.Expired.selector);
+    vertexPolicy.batchUpdatePermissions(updateDataArray);
+  }
 }
