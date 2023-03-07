@@ -281,6 +281,16 @@ contract Deploy is VertexFactoryTest {
     vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
   }
 
+  function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
+    Strategy[] memory initialStrategies = createInitialStrategies();
+    string[] memory initialAccounts = buildInitialAccounts();
+
+    vm.prank(address(rootVertex));
+    vertexFactory.deploy(name, "SYMBOL", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+    vm.expectRevert();
+    vertexFactory.deploy(name, "SYMBOL", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+  }
+
   function test_IncrementsVertexCountByOne() public {
     uint256 initialVertexCount = vertexFactory.vertexCount();
     deployVertex();
