@@ -460,12 +460,3 @@ contract Integration is VertexFactoryTest {
   }
 }
 
-// function deploy(
-//     string memory name,
-//     string memory symbol,
-//     Strategy[] memory initialStrategies,
-//     string[] memory initialAccounts,
-//     PolicyGrantData[] memory initialPolicies
-//   ) external onlyRootVertex returns (VertexCore) {
-//     return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
-//   }
