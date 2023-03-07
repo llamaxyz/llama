@@ -9,6 +9,7 @@ on:
 
 env:
   MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+  FOUNDRY_PROFILE: ci
 
 jobs:
   build:
@@ -22,7 +23,7 @@ jobs:
       - name: Build contracts
         run: |
           forge --version
-          FOUNDRY_PROFILE=ci forge build --sizes --skip test
+          FOUNDRY_PROFILE=$FOUNDRY_PROFILE forge build --sizes --skip test
 
   test:
     runs-on: ubuntu-latest
@@ -44,7 +45,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run coverage
-        run: FOUNDRY_PROFILE=ci forge coverage --report summary --report lcov
+        run: FOUNDRY_PROFILE=$FOUNDRY_PROFILE forge coverage --report summary --report lcov
 
       # To ignore coverage for certain directories modify the paths in this step as needed. The
       # below default ignores coverage results for the test and script directories. Alternatively,
