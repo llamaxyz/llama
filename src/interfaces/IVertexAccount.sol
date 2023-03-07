@@ -6,6 +6,14 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {
+  ERC20Data,
+  ERC721Data,
+  ERC721OperatorData,
+  ERC1155Data,
+  ERC1155BatchData,
+  ERC1155OperatorData
+} from "src/lib/Structs.sol";
 
 interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   /// @notice Initializes a new VertexAccount clone.
@@ -30,133 +38,72 @@ interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
   // -------------------------------------------------------------------------
 
   /// @notice Function for Vertex to transfer ERC20 tokens to other parties
-  /// @param token The address of the token to transfer
-  /// @param recipient Transfer's recipient
-  /// @param amount Amount to transfer
-  function transferERC20(IERC20 token, address recipient, uint256 amount) external;
+  /// @param erc20Data The data of the ERC20 transfer
+  function transferERC20(ERC20Data calldata erc20Data) external;
 
   /// @notice Function for Vertex to batch transfer ERC20 tokens to other parties
-  /// @param tokens The addresses of the tokens to transfer
-  /// @param recipients Transfers' recipients
-  /// @param amounts Amounts to transfer
-  function batchTransferERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external;
+  /// @param erc20Data The data of the ERC20 transfers
+  function batchTransferERC20(ERC20Data[] calldata erc20Data) external;
 
   /// @notice Function for Vertex to give ERC20 allowance to other parties
-  /// @param token The address of the token to give allowance from
-  /// @param recipient Allowance's recipient
-  /// @param amount Allowance to approve
-  function approveERC20(IERC20 token, address recipient, uint256 amount) external;
+  /// @param erc20Data The data of the ERC20 allowance
+  function approveERC20(ERC20Data calldata erc20Data) external;
 
   /// @notice Function for Vertex to batch give ERC20 allowance to other parties
-  /// @param tokens The addresses of the tokens to give allowance from
-  /// @param recipients Allowances' recipients
-  /// @param amounts Allowances to approve
-  function batchApproveERC20(IERC20[] calldata tokens, address[] calldata recipients, uint256[] calldata amounts)
-    external;
+  /// @param erc20Data The data of the ERC20 allowances
+  function batchApproveERC20(ERC20Data[] calldata erc20Data) external;
 
   // -------------------------------------------------------------------------
   // ERC721 Token
   // -------------------------------------------------------------------------
 
   /// @notice Function for Vertex to transfer ERC721 tokens to other parties
-  /// @param token The address of the token to transfer
-  /// @param recipient Transfer's recipient
-  /// @param tokenId Token ID to transfer
-  function transferERC721(IERC721 token, address recipient, uint256 tokenId) external;
+  /// @param erc721Data The data of the ERC721 transfer
+  function transferERC721(ERC721Data calldata erc721Data) external;
 
   /// @notice Function for Vertex to batch transfer ERC721 tokens to other parties
-  /// @param tokens The addresses of the tokens to transfer
-  /// @param recipients Transfers' recipients
-  /// @param tokenIds Token IDs to transfer
-  function batchTransferERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external;
+  /// @param erc721Data The data of the ERC721 transfers
+  function batchTransferERC721(ERC721Data[] calldata erc721Data) external;
 
   /// @notice Function for Vertex to give ERC721 allowance to other parties
-  /// @param token The address of the token to give allowance from
-  /// @param recipient Allowance's recipient
-  /// @param tokenId Token ID to give allowance for
-  function approveERC721(IERC721 token, address recipient, uint256 tokenId) external;
+  /// @param erc721Data The data of the ERC721 allowance
+  function approveERC721(ERC721Data calldata erc721Data) external;
 
   /// @notice Function for Vertex to batch give ERC721 allowance to other parties
-  /// @param tokens The addresses of the tokens to give allowance from
-  /// @param recipients Allowances' recipients
-  /// @param tokenIds Token IDs to give allowance for
-  function batchApproveERC721(IERC721[] calldata tokens, address[] calldata recipients, uint256[] calldata tokenIds)
-    external;
+  /// @param erc721Data The data of the ERC721 allowances
+  function batchApproveERC721(ERC721Data[] calldata erc721Data) external;
 
   /// @notice Function for Vertex to give ERC721 operator allowance to other parties
-  /// @param token The address of the token to give allowance from
-  /// @param recipient Allowance's recipient
-  /// @param approved Whether to approve or revoke allowance
-  function approveOperatorERC721(IERC721 token, address recipient, bool approved) external;
+  /// @param erc721OperatorData The data of the ERC721 operator allowance
+  function approveOperatorERC721(ERC721OperatorData calldata erc721OperatorData) external;
 
   /// @notice Function for Vertex to batch give ERC721 operator allowance to other parties
-  /// @param tokens The addresses of the tokens to give allowance from
-  /// @param recipients Allowances' recipients
-  /// @param approved Whether to approve or revoke allowance
-  function batchApproveOperatorERC721(
-    IERC721[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external;
+  /// @param erc721OperatorData The data of the ERC721 operator allowances
+  function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external;
 
   // -------------------------------------------------------------------------
   // ERC1155 Token
   // -------------------------------------------------------------------------
 
   /// @notice Function for Vertex to transfer ERC1155 tokens to other parties
-  /// @param token The address of the token to transfer
-  /// @param recipient Transfer's recipient
-  /// @param tokenId Token ID to transfer
-  /// @param amount Amount to transfer
-  /// @param data Data to pass to the receiver
-  function transferERC1155(IERC1155 token, address recipient, uint256 tokenId, uint256 amount, bytes calldata data)
-    external;
+  /// @param erc1155Data The data of the ERC1155 transfer
+  function transferERC1155(ERC1155Data calldata erc1155Data) external;
 
   /// @notice Function for Vertex to batch transfer ERC1155 tokens of a single ERC1155 collection to other parties
-  /// @param token The address of the token to transfer
-  /// @param recipient Transfer's recipient
-  /// @param tokenIds Token IDs to transfer
-  /// @param amounts Amounts to transfer
-  /// @param data Data to pass to the receiver
-  function batchTransferSingleERC1155(
-    IERC1155 token,
-    address recipient,
-    uint256[] calldata tokenIds,
-    uint256[] calldata amounts,
-    bytes calldata data
-  ) external;
+  /// @param erc1155BatchData The data of the ERC1155 batch transfer
+  function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) external;
 
   /// @notice Function for Vertex to batch transfer ERC1155 tokens of multiple ERC1155 collections to other parties
-  /// @param tokens The addresses of the tokens to transfer
-  /// @param recipients Transfers' recipients
-  /// @param tokenIds Token IDs to transfer
-  /// @param amounts Amounts to transfer
-  /// @param data Data to pass to the receiver
-  function batchTransferMultipleERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    uint256[][] calldata tokenIds,
-    uint256[][] calldata amounts,
-    bytes[] calldata data
-  ) external;
+  /// @param erc1155BatchData The data of the ERC1155 batch transfers
+  function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external;
 
   /// @notice Function for Vertex to give ERC1155 operator allowance to other parties
-  /// @param token The address of the token to give allowance from
-  /// @param recipient Allowance's recipient
-  /// @param approved Whether to approve or revoke allowance
-  function approveOperatorERC1155(IERC1155 token, address recipient, bool approved) external;
+  /// @param erc1155OperatorData The data of the ERC1155 operator allowance
+  function approveOperatorERC1155(ERC1155OperatorData calldata erc1155OperatorData) external;
 
   /// @notice Function for Vertex to batch give ERC1155 operator allowance to other parties
-  /// @param tokens The addresses of the tokens to give allowance from
-  /// @param recipients Allowances' recipients
-  /// @param approved Whether to approve or revoke allowance
-  function batchApproveOperatorERC1155(
-    IERC1155[] calldata tokens,
-    address[] calldata recipients,
-    bool[] calldata approved
-  ) external;
+  /// @param erc1155OperatorData The data of the ERC1155 operator allowances
+  function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external;
 
   // -------------------------------------------------------------------------
   // Generic Execution
