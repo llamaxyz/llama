@@ -23,20 +23,20 @@ interface IVertexPolicy {
   /// @param policyData array of PolicyRevokeData struct to revoke permissions
   function batchRevokePolicies(PolicyRevokeData[] calldata policyData) external;
 
-  /// @notice Check if a holder has a permissionSignature at a specific timestamp
+  /// @notice Check if a holder has a permissionId at a specific timestamp
   /// @param policyholder the address of the policy holder
-  /// @param permissionSignature the signature of the permission
+  /// @param permissionId the signature of the permission
   /// @param timestamp the block number to query
-  function holderHasPermissionAt(address policyholder, bytes8 permissionSignature, uint256 timestamp)
+  function holderHasPermissionAt(address policyholder, bytes8 permissionId, uint256 timestamp)
     external
     view
     returns (bool);
 
-  /// @notice Check if a holder has an expired permissionSignature and removes their permission if it is expired
+  /// @notice Check if a holder has an expired permissionId and removes their permission if it is expired
   /// @dev should be called periodically to remove expired permissions
   /// @param policyId the address of the policy holder
-  /// @param permissionSignature the signature of the permission
-  function revokeExpiredPermission(uint256 policyId, bytes8 permissionSignature) external returns (bool expired);
+  /// @param permissionId the signature of the permission
+  function revokeExpiredPermission(uint256 policyId, bytes8 permissionId) external returns (bool expired);
 
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
@@ -51,6 +51,6 @@ interface IVertexPolicy {
 
   /// @dev checks if a token has a permission
   /// @param policyId the id of the token
-  /// @param permissionSignature the signature of the permission
-  function hasPermission(uint256 policyId, bytes8 permissionSignature) external view returns (bool);
+  /// @param permissionId the signature of the permission
+  function hasPermission(uint256 policyId, bytes8 permissionId) external view returns (bool);
 }

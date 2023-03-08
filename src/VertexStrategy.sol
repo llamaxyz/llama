@@ -14,7 +14,7 @@ contract VertexStrategy is IVertexStrategy {
   error InvalidPermissionSignature();
 
   /// @notice Equivalent to 100%, but in basis points.
-  uint256 private constant ONE_HUNDRED_IN_BPS = 10_000;
+  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice Permission signature value that determines weight of all unspecified policyholders.
   bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
@@ -83,8 +83,8 @@ contract VertexStrategy is IVertexStrategy {
         for (uint256 i; i < approvalPermissionsLength; ++i) {
           WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
 
-          if (weightByPermission.weight > 0) approvalPermissions.push(weightByPermission.permissionSignature);
-          approvalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
+          if (weightByPermission.weight > 0) approvalPermissions.push(weightByPermission.permissionId);
+          approvalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
         }
       }
     }
@@ -94,8 +94,8 @@ contract VertexStrategy is IVertexStrategy {
         for (uint256 i; i < disapprovalPermissionsLength; ++i) {
           WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
 
-          if (weightByPermission.weight > 0) disapprovalPermissions.push(weightByPermission.permissionSignature);
-          disapprovalWeightByPermission[weightByPermission.permissionSignature] = weightByPermission.weight;
+          if (weightByPermission.weight > 0) disapprovalPermissions.push(weightByPermission.permissionId);
+          disapprovalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
         }
       }
     }
