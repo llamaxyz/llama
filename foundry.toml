@@ -3,7 +3,6 @@
   # Ignore unreachable warning due to unimplemented transfer functions
   ignored_error_codes = ["unreachable"]
   solc = "0.8.17"
-  solc_version = '0.8.17'
   optimizer = false
   via_ir = false
 
@@ -11,8 +10,8 @@
   constantOptimizer = true
   yul = true
 
-# Use this profile to run tests locally (not on CI) without the optimizer for quick build times.
-[profile.test]
+# Use this profile to run tests in CI with the optimizer.
+[profile.production]
   invariant = { runs = 50, fail_on_revert = true }
   optimizer = true
   via_ir = true
