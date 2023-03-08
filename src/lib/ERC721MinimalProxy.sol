@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// forgefmt: disable-start
 pragma solidity >=0.8.0;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
+/// @notice This contract is a modified version of Solmate's ERC721 contract
 /// @notice Modern, minimalist, and gas efficient ERC-721 implementation as a minimal proxy.
-/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
+/// @author Solmate / Llama (TODO: add commit hash here)
 abstract contract ERC721MinimalProxy is Initializable {
   /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -57,6 +59,11 @@ abstract contract ERC721MinimalProxy is Initializable {
     //////////////////////////////////////////////////////////////*/
 
   constructor() initializer {}
+  
+  function __initializeERC721MinimalProxy (string memory _name, string memory _symbol) internal {
+    name = _name;
+    symbol = _symbol;
+  }
 
   /*//////////////////////////////////////////////////////////////
                               ERC721 LOGIC

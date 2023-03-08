@@ -43,8 +43,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     external
     initializer
   {
-    name = _name;
-    symbol = _symbol;
+    __initializeERC721MinimalProxy(_name, _symbol);
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       grantPolicy(initialPolicies[i]);

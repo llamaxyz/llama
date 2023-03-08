@@ -76,6 +76,17 @@ contract VertexPolicyTest is Test {
     policyIds.push(ADDRESS_THIS_TOKEN_ID);
   }
 
+  function test_initialize_SetsNameAndSymbol() public {
+    assertEq(vertexPolicy.name(), "Test");
+    assertEq(vertexPolicy.symbol(), "TST");
+  }
+
+  function test_initialize_CannotInitializeTwice() public {
+    PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(this));
+    vm.expectRevert("Initializable: contract is already initialized");
+    vertexPolicy.initialize("Test", "TST", initialBatchGrantData);
+  }
+
   function test_grantPermission_CorrectlyGrantsPermission() public {
     addresses[0] = address(0xdeadbeef);
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(addresses[0]);
