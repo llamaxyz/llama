@@ -32,7 +32,7 @@ interface IVertexLens {
   /// @return the computed address of the VertexPolicy contract.
   function computeVertexPolicyAddress(string memory symbol, address vertexPolicyLogic, address factory)
     external
-    view
+    pure
     returns (VertexPolicy);
 
   /// @notice computes the address of a vertex strategy with a strategy value.
