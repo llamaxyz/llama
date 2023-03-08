@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// forgefmt: disable-start
 // slightly modified version of solmate's ERC721.t.sol test file
 // https://github.com/transmissions11/solmate/blob/d155ee8d58f96426f57c015b34dee8a410c1eacc/src/test/ERC721.t.sol
 // refactored one invariant test to a fuzz to test the name and symbol are initialized correctly
@@ -364,13 +365,13 @@ contract ERC721Test is DSTestPlus {
     token.ownerOf(1337);
   }
 
-  // function testMetadata(string memory name, string memory symbol) public {
-  //     MockERC721 tkn = new MockERC721();
-  //     tkn.initialize(name, symbol);
+  function testMetadata(string memory name, string memory symbol) public {
+      MockERC721 tkn = new MockERC721();
+      tkn.initialize(name, symbol);
 
-  //     assertEq(tkn.name(), name);
-  //     assertEq(tkn.symbol(), symbol);
-  // }
+      assertEq(tkn.name(), name);
+      assertEq(tkn.symbol(), symbol);
+  }
 
   function testMint(address to, uint256 id) public {
     if (to == address(0)) to = address(0xBEEF);

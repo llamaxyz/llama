@@ -312,7 +312,9 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(_vertex).code.length, 0);
     deployVertex();
     assertGt(address(_vertex).code.length, 0);
+    assertGt(address(_vertex.policy()).code.length, 0);
     VertexCore(address(_vertex)).name(); // Sanity check that this doesn't revert.
+    VertexCore(address(_vertex.policy())).name(); // Sanity check that this doesn't revert.
   }
 
   function test_InitializesVertexCore() public {
