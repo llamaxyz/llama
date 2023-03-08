@@ -25,12 +25,12 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   error AlreadyInitialized();
   error Expired();
 
-  mapping(uint256 => mapping(bytes8 => PermissionIdCheckpoint[])) private tokenPermissionCheckpoints;
-  mapping(bytes8 => PermissionIdCheckpoint[]) private permissionSupplyCheckpoints;
+  mapping(uint256 => mapping(bytes8 => PermissionIdCheckpoint[])) internal tokenPermissionCheckpoints;
+  mapping(bytes8 => PermissionIdCheckpoint[]) internal permissionSupplyCheckpoints;
   mapping(uint256 => mapping(bytes8 => uint256)) public tokenToPermissionExpirationTimestamp;
   uint256[] public policyIds;
   string public baseURI;
-  uint256 private _totalSupply;
+  uint256 internal _totalSupply;
   address public vertex;
 
   modifier onlyVertex() {
@@ -43,7 +43,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   {
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
-      grantPolicy(initialPolicies[i]);
+      _grantPolicy(initialPolicies[i]);
     }
   }
 
@@ -110,7 +110,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
         if (updateData[i].permissionsToAdd.length == 0 && updateData[i].permissionsToRemove.length == 0) {
           revert InvalidInput();
         }
-        updatePermissions(updateData[i]);
+        _updatePermissions(updateData[i]);
         emit PermissionUpdated(updateData[i]);
       }
     }
@@ -121,7 +121,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
     uint256 length = policyData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
-        revokePolicy(policyData[i]);
+        _revokePolicy(policyData[i]);
         emit PolicyRevoked(policyData[i]);
       }
     }
@@ -150,7 +150,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   function hasPermission(uint256 policyId, bytes8 permissionId) public view override returns (bool) {
     PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionId];
     uint256 length = _permissionIdCheckpoint.length;
-    bool expired = isPermissionExpired(policyId, permissionId);
+    bool expired = _isPermissionExpired(policyId, permissionId);
     bool hasQuantity = length > 0 ? _permissionIdCheckpoint[length - 1].quantity > 0 : false;
     return hasQuantity && !expired;
   }
@@ -158,7 +158,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   /// @notice updates a policyID with a new set of permissions
   /// @notice will delete and add permissions as needed
   /// @param updateData the policy token Id being updated
-  function updatePermissions(PolicyUpdateData calldata updateData) internal {
+  function _updatePermissions(PolicyUpdateData calldata updateData) internal {
     if (ownerOf(updateData.policyId) == address(0)) revert InvalidInput();
     uint256 permissionsToAddLength = updateData.permissionsToAdd.length;
     uint256 permissionsToRemoveLength = updateData.permissionsToRemove.length;
@@ -198,7 +198,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
 
   /// @notice mints a new policy token with the given permissions
   /// @param policyData the policy data to mint
-  function grantPolicy(PolicyGrantData memory policyData) internal {
+  function _grantPolicy(PolicyGrantData memory policyData) internal {
     if (balanceOf(policyData.user) != 0) revert OnlyOnePolicyPerHolder();
     uint256 length = policyData.permissionsToAdd.length;
     uint256 policyId = uint256(uint160(policyData.user));
@@ -226,7 +226,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
 
   /// @notice revokes given permissions from a policy token
   /// @param policyData the policy data to revoke
-  function revokePolicy(PolicyRevokeData calldata policyData) internal {
+  function _revokePolicy(PolicyRevokeData calldata policyData) internal {
     if (ownerOf(policyData.policyId) == address(0)) revert InvalidInput();
     unchecked {
       uint256 permissionsLength = policyData.permissionIds.length;
@@ -244,14 +244,14 @@ contract VertexPolicy is ERC721, IVertexPolicy {
     }
   }
 
-  function isPermissionExpired(uint256 _policyId, bytes8 _permissionId) internal view returns (bool) {
+  function _isPermissionExpired(uint256 _policyId, bytes8 _permissionId) internal view returns (bool) {
     uint256 _expiration = tokenToPermissionExpirationTimestamp[_policyId][_permissionId];
     return _expiration < block.timestamp && _expiration != 0;
   }
 
   /// @inheritdoc IVertexPolicy
   function revokeExpiredPermission(uint256 policyId, bytes8 permissionId) external override returns (bool expired) {
-    expired = isPermissionExpired(policyId, permissionId);
+    expired = _isPermissionExpired(policyId, permissionId);
     if (expired) {
       tokenPermissionCheckpoints[policyId][permissionId].push(PermissionIdCheckpoint(uint224(block.timestamp), 0));
       PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionId];

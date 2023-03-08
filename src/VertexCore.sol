@@ -44,7 +44,7 @@ contract VertexCore is IVertexCore, Initializable {
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
   /// @notice Equivalent to 100%, but scaled for precision
-  uint256 private constant ONE_HUNDRED_IN_BPS = 10_000;
+  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice The Vertex Account implementation contract.
   VertexAccount public vertexAccountImplementation;
