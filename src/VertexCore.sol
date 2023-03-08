@@ -110,7 +110,6 @@ contract VertexCore is IVertexCore, Initializable {
       revert PolicyholderDoesNotHavePermission();
     }
 
-
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
 
