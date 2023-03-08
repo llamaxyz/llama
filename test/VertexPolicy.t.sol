@@ -136,9 +136,7 @@ contract VertexPolicyTest is Test {
     assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp), false);
     assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp), true);
     assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp - 99), true);
-    assertEq(
-      vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp - 99), false
-    );
+    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp - 99), false);
   }
 
   function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
