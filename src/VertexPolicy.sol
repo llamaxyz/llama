@@ -97,7 +97,7 @@ contract VertexPolicy is ERC721, IVertexPolicy {
   function batchGrantPolicies(PolicyGrantData[] memory policyData) public override onlyVertex {
     uint256 length = policyData.length;
     for (uint256 i = 0; i < length; ++i) {
-      grantPolicy(policyData[i]);
+      _grantPolicy(policyData[i]);
       emit PolicyAdded(policyData[i]);
     }
   }
