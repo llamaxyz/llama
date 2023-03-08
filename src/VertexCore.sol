@@ -7,6 +7,7 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
+import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
@@ -43,7 +44,7 @@ contract VertexCore is IVertexCore, Initializable {
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
   /// @notice Equivalent to 100%, but scaled for precision
-  uint256 private constant ONE_HUNDRED_IN_BPS = 10_000;
+  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice The Vertex Account implementation contract.
   VertexAccount public vertexAccountImplementation;
@@ -71,9 +72,6 @@ contract VertexCore is IVertexCore, Initializable {
 
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
-
-  /// @notice Mapping of actionId's and bool that indicates if action is queued.
-  mapping(uint256 => bool) public queuedActions;
 
   constructor() initializer {}
 
@@ -106,10 +104,12 @@ contract VertexCore is IVertexCore, Initializable {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
+
     bytes8 permissionSignature = bytes8(keccak256(abi.encode(permission)));
     if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionSignature)) {
       revert PolicyholderDoesNotHavePermission();
     }
+
 
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
@@ -147,7 +147,6 @@ contract VertexCore is IVertexCore, Initializable {
     Action storage action = actions[actionId];
     uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
-    queuedActions[actionId] = true;
     action.executionTime = executionTime;
 
     emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
@@ -155,14 +154,13 @@ contract VertexCore is IVertexCore, Initializable {
 
   /// @inheritdoc IVertexCore
   function executeAction(uint256 actionId) external payable override returns (bytes memory) {
-    if (getActionState(actionId) != ActionState.Queued || !queuedActions[actionId]) revert OnlyQueuedActions();
+    if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
     action.executed = true;
-    queuedActions[actionId] = false;
 
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
@@ -188,7 +186,6 @@ contract VertexCore is IVertexCore, Initializable {
     }
 
     action.canceled = true;
-    queuedActions[actionId] = false;
 
     emit ActionCanceled(actionId);
   }

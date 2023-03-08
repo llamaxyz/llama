@@ -194,8 +194,8 @@ contract VertexFactoryTest is Test {
 
   function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
     WeightByPermission[] memory _permissionsWithWeights = new WeightByPermission[](2);
-    _permissionsWithWeights[0] = WeightByPermission({permissionSignature: 0xa9cc4718a9cc4718, weight: uint256(2)});
-    _permissionsWithWeights[1] = WeightByPermission({permissionSignature: 0xffffffffffffffff, weight: uint256(0)});
+    _permissionsWithWeights[0] = WeightByPermission({permissionId: 0xa9cc4718a9cc4718, weight: uint256(2)});
+    _permissionsWithWeights[1] = WeightByPermission({permissionId: 0xffffffffffffffff, weight: uint256(0)});
 
     _strategies = new Strategy[](2);
 

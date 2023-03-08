@@ -38,7 +38,7 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Helpers =========
   // ==========================
 
-  function name() private returns (string memory currentName) {
+  function name() internal returns (string memory currentName) {
     currentName = string.concat("NAME_", vm.toString(nextNameCounter++));
   }
 

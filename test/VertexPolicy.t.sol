@@ -24,8 +24,8 @@ contract VertexPolicyTest is Test {
   PermissionData public permission;
   PermissionData[] public permissions;
   PermissionData[][] public permissionsArray;
-  bytes8[] public permissionSignature;
-  bytes8[][] public permissionSignatures;
+  bytes8[] public permissionId;
+  bytes8[][] public permissionIds;
   bytes8[][] public permissionsToRevoke;
   uint256[][] public expirationTimestamps;
   address[] public addresses;
@@ -61,7 +61,7 @@ contract VertexPolicyTest is Test {
     permissionSignature.push(vertexLens.computePermissionId(permission));
     permissionSignatures.push(permissionSignature);
     addresses.push(address(this));
-    policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionSignature));
+    policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionId));
   }
 
   function setUp() public {
@@ -113,7 +113,7 @@ contract VertexPolicyTest is Test {
   function test_revoke_RevertIfPolicyNotGranted() public {
     uint256 mockPolicyId = uint256(uint160(address(0xdeadbeef)));
     policyIds[0] = mockPolicyId;
-    policyRevokeData[0] = PolicyRevokeData(mockPolicyId, permissionSignature);
+    policyRevokeData[0] = PolicyRevokeData(mockPolicyId, permissionId);
     vm.expectRevert("NOT_MINTED");
     vertexPolicy.batchRevokePolicies(policyRevokeData);
   }
@@ -167,7 +167,7 @@ contract VertexPolicyTest is Test {
     PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
     PermissionMetadata[] memory toRemove = new PermissionMetadata[](1);
 
-    toAdd[0] = PermissionMetadata(permissionSignature[0], 0);
+    toAdd[0] = PermissionMetadata(permissionId[0], 0);
     toRemove[0] = PermissionMetadata(oldPermissionSignature, 0);
 
     PolicyUpdateData[] memory updateData = new PolicyUpdateData[](1);
@@ -264,7 +264,7 @@ contract VertexPolicyTest is Test {
     address _newAddress = address(0xdeadbeef);
 
     PermissionMetadata[] memory _changes = new PermissionMetadata[](1);
-    _changes[0] = PermissionMetadata(permissionSignature[0], _newExpirationTimestamp);
+    _changes[0] = PermissionMetadata(permissionId[0], _newExpirationTimestamp);
 
     PolicyGrantData[] memory initialBatchGrantData = new PolicyGrantData[](1);
     initialBatchGrantData[0] = PolicyGrantData(_newAddress, _changes);
