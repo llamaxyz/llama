@@ -58,8 +58,8 @@ contract VertexPolicyTest is Test {
     permission = PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)));
     permissions.push(permission);
     permissionsArray.push(permissions);
-    permissionSignature.push(vertexLens.computePermissionId(permission));
-    permissionSignatures.push(permissionSignature);
+    permissionId.push(vertexLens.computePermissionId(permission));
+    permissionIds.push(permissionId);
     addresses.push(address(this));
     policyRevokeData.push(PolicyRevokeData(uint256(uint160(address(this))), permissionId));
   }
@@ -124,8 +124,8 @@ contract VertexPolicyTest is Test {
   }
 
   function test_holderHasPermissionAt_ReturnsCorrectBool() public {
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.number), true);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.number), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.number), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.number), false);
     addresses[0] = address(0xdeadbeef);
     vm.warp(block.timestamp + 100);
 
@@ -133,42 +133,42 @@ contract VertexPolicyTest is Test {
     vertexPolicy.batchGrantPolicies(initialBatchGrantData);
     vertexPolicy.batchRevokePolicies(policyRevokeData);
 
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), false);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp), true);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 99), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp - 99), true);
     assertEq(
-      vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionSignature[0], block.timestamp - 99), false
+      vertexPolicy.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp - 99), false
     );
   }
 
   function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
-    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 1);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionId), 1);
     addresses[0] = address(0xdeadbeef);
     PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
     vertexPolicy.batchGrantPolicies(initialBatchGrantData);
-    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 2);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionId), 2);
     vertexPolicy.batchRevokePolicies(policyRevokeData);
-    assertEq(vertexPolicy.getSupplyByPermissions(permissionSignature), 1);
+    assertEq(vertexPolicy.getSupplyByPermissions(permissionId), 1);
   }
 
   function test_batchUpdatePermissions_UpdatesPermissionsCorrectly() public {
-    bytes8 oldPermissionSignature = permissionSignature[0];
-    assertEq(vertexPolicy.hasPermission(policyIds[0], oldPermissionSignature), true);
-    permissionsToRevoke = permissionSignatures;
+    bytes8 oldpermissionId = permissionId[0];
+    assertEq(vertexPolicy.hasPermission(policyIds[0], oldpermissionId), true);
+    permissionsToRevoke = permissionIds;
 
     permission = PermissionData(
       address(0xdeadbeefdeadbeef), bytes4(0x09090909), VertexStrategy(address(0xdeadbeefdeadbeefdeafbeef))
     );
     permissions[0] = permission;
     permissionsArray[0] = permissions;
-    permissionSignature[0] = vertexLens.computePermissionId(permission);
-    permissionSignatures[0] = permissionSignature;
+    permissionId[0] = vertexLens.computePermissionId(permission);
+    permissionIds[0] = permissionId;
 
     PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
     PermissionMetadata[] memory toRemove = new PermissionMetadata[](1);
 
     toAdd[0] = PermissionMetadata(permissionId[0], 0);
-    toRemove[0] = PermissionMetadata(oldPermissionSignature, 0);
+    toRemove[0] = PermissionMetadata(oldpermissionId, 0);
 
     PolicyUpdateData[] memory updateData = new PolicyUpdateData[](1);
     updateData[0] = PolicyUpdateData(policyIds[0], toAdd, toRemove);
@@ -180,12 +180,12 @@ contract VertexPolicyTest is Test {
 
     vertexPolicy.batchUpdatePermissions(updateData);
 
-    assertEq(vertexPolicy.hasPermission(policyIds[0], oldPermissionSignature), false);
-    assertEq(vertexPolicy.hasPermission(policyIds[0], permissionSignature[0]), true);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp - 100), true);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp), false);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp - 100), false);
-    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionSignature[0], block.timestamp), true);
+    assertEq(vertexPolicy.hasPermission(policyIds[0], oldpermissionId), false);
+    assertEq(vertexPolicy.hasPermission(policyIds[0], permissionId[0]), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldpermissionId, block.timestamp - 100), true);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), oldpermissionId, block.timestamp), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp - 100), false);
+    assertEq(vertexPolicy.holderHasPermissionAt(address(this), permissionId[0], block.timestamp), true);
   }
 
   function test_batchUpdatePermissions_updatesTimeStamp() public {
@@ -200,10 +200,10 @@ contract VertexPolicyTest is Test {
       PolicyUpdateData(ADDRESS_THIS_TOKEN_ID, permissionsToAdd, new PermissionMetadata[](0));
     PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
     updateDataArray[0] = updateData;
-    assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]), 0);
+    assertEq(vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionId[0]), 0);
     vertexPolicy.batchUpdatePermissions(updateDataArray);
     assertEq(
-      vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionSignature[0]),
+      vertexPolicy.tokenToPermissionExpirationTimestamp(ADDRESS_THIS_TOKEN_ID, permissionId[0]),
       block.timestamp + 1 days
     );
   }
@@ -271,7 +271,7 @@ contract VertexPolicyTest is Test {
     vertexPolicy.batchGrantPolicies(initialBatchGrantData);
 
     assertEq(
-      vertexPolicy.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionSignature[0]),
+      vertexPolicy.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionId[0]),
       _newExpirationTimestamp
     );
   }
