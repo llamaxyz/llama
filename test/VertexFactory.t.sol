@@ -9,14 +9,7 @@ import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {
-  Action,
-  Strategy,
-  PermissionData,
-  WeightByPermission,
-  PolicyGrantData,
-  PermissionMetadata
-} from "src/lib/Structs.sol";
+import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 
 contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -181,10 +174,6 @@ contract VertexFactoryTest is Test {
   }
 
   function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
-    WeightByPermission[] memory _permissionsWithWeights = new WeightByPermission[](2);
-    _permissionsWithWeights[0] = WeightByPermission({permissionId: 0xa9cc4718a9cc4718, weight: uint256(2)});
-    _permissionsWithWeights[1] = WeightByPermission({permissionId: 0xffffffffffffffff, weight: uint256(0)});
-
     _strategies = new Strategy[](2);
 
     _strategies[0] = Strategy({
@@ -194,8 +183,10 @@ contract VertexFactoryTest is Test {
       isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
       minApprovalPct: minApprovalPct,
       minDisapprovalPct: minDisapprovalPct,
-      approvalWeightByPermission: _permissionsWithWeights,
-      disapprovalWeightByPermission: _permissionsWithWeights
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
 
     _strategies[1] = Strategy({
@@ -205,8 +196,10 @@ contract VertexFactoryTest is Test {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 8000,
       minDisapprovalPct: 10_001,
-      approvalWeightByPermission: _permissionsWithWeights,
-      disapprovalWeightByPermission: _permissionsWithWeights
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
   }
 
@@ -219,10 +212,10 @@ contract VertexFactoryTest is Test {
 
   function buildInitialPolicyGrantData() internal pure returns (PolicyGrantData[] memory initialPolicyGrantData) {
     PermissionMetadata[] memory firstPermissions = new PermissionMetadata[](1);
-    firstPermissions[0] = PermissionMetadata(0xa9cc4718a9cc4718, 0);
+    firstPermissions[0] = PermissionMetadata("a9cc4718a9cc4718", 0);
 
     PermissionMetadata[] memory secondPermissions = new PermissionMetadata[](1);
-    secondPermissions[0] = PermissionMetadata(0xffffffffffffffff, 0);
+    secondPermissions[0] = PermissionMetadata("ffffffffffffffff", 0);
 
     initialPolicyGrantData = new PolicyGrantData[](2);
     initialPolicyGrantData[0] = PolicyGrantData({user: actionCreator, permissionsToAdd: firstPermissions});

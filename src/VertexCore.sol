@@ -31,6 +31,8 @@ contract VertexCore is IVertexCore, Initializable {
   error DisapproveDisabled();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
+  error ApprovalRoleHasZeroSupply();
+  error DisapprovalRoleHasZeroSupply();
 
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
@@ -104,19 +106,16 @@ contract VertexCore is IVertexCore, Initializable {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
-    bytes8 permissionId = policy.hashPermission(permission);
+    bytes32 permissionId = policy.hashPermission(permission);
     if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionId)) revert PolicyholderDoesNotHavePermission();
 
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
 
-    uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getApprovalPermissions());
-
-    uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getDisapprovalPermissions());
+    uint256 approvalPolicySupply = policy.totalSupplyAt(strategy.approvalRole(), block.timestamp);
+    if (approvalPolicySupply == 0) revert ApprovalRoleHasZeroSupply();
+    uint256 disapprovalPolicySupply = policy.totalSupplyAt(strategy.disapprovalRole(), block.timestamp);
+    if (disapprovalPolicySupply == 0) revert DisapprovalRoleHasZeroSupply();
 
     newAction.creator = msg.sender;
     newAction.strategy = strategy;
@@ -177,6 +176,7 @@ contract VertexCore is IVertexCore, Initializable {
     ) revert InvalidCancelation();
 
     Action storage action = actions[actionId];
+
     if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) {
       revert ActionCannotBeCanceled();
     }
@@ -187,12 +187,12 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function submitApproval(uint256 actionId) external override {
-    return _submitApproval(msg.sender, actionId);
+  function submitApproval(uint256 actionId, bytes32 role) external override {
+    return _submitApproval(msg.sender, role, actionId);
   }
 
   /// @inheritdoc IVertexCore
-  function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
+  function submitApprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external override {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -202,16 +202,19 @@ contract VertexCore is IVertexCore, Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0)) revert InvalidSignature();
-    return _submitApproval(signer, actionId);
+    return _submitApproval(signer, role, actionId);
   }
 
   /// @inheritdoc IVertexCore
-  function submitDisapproval(uint256 actionId) external override {
-    return _submitDisapproval(msg.sender, actionId);
+  function submitDisapproval(uint256 actionId, bytes32 role) external override {
+    return _submitDisapproval(msg.sender, role, actionId);
   }
 
   /// @inheritdoc IVertexCore
-  function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
+  function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s)
+    external
+    override
+  {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -221,7 +224,7 @@ contract VertexCore is IVertexCore, Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0)) revert InvalidSignature();
-    return _submitDisapproval(signer, actionId);
+    return _submitDisapproval(signer, role, actionId);
   }
 
   /// @inheritdoc IVertexCore
@@ -280,21 +283,23 @@ contract VertexCore is IVertexCore, Initializable {
     return ActionState.Queued;
   }
 
-  function _submitApproval(address policyholder, uint256 actionId) internal {
+  function _submitApproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
-    uint256 weight = action.strategy.getApprovalWeightAt(policyholder, action.creationTime);
+    uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
-    action.totalApprovals += weight;
+    action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
+      ? type(uint256).max
+      : action.totalApprovals + weight;
     approvals[actionId][policyholder] = true;
 
     emit PolicyholderApproved(actionId, policyholder, weight);
   }
 
-  function _submitDisapproval(address policyholder, uint256 actionId) internal {
+  function _submitDisapproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
@@ -303,9 +308,11 @@ contract VertexCore is IVertexCore, Initializable {
 
     if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
-    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, action.creationTime);
+    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
 
-    action.totalDisapprovals += weight;
+    action.totalDisapprovals = action.totalDisapprovals == type(uint256).max || weight == type(uint256).max
+      ? type(uint256).max
+      : action.totalDisapprovals + weight;
     disapprovals[actionId][policyholder] = true;
 
     emit PolicyholderDisapproved(actionId, policyholder, weight);
@@ -334,9 +341,5 @@ contract VertexCore is IVertexCore, Initializable {
         emit StrategyAuthorized(strategy, strategies[i]);
       }
     }
-  }
-
-  function _getSupplyByPermissions(bytes8[] memory permissions) internal view returns (uint256) {
-    return policy.getSupplyByPermissions(permissions);
   }
 }

@@ -20,14 +20,14 @@ contract VertexPolicyTest is Test {
   PermissionData public permission;
   PermissionData[] public permissions;
   PermissionData[][] public permissionsArray;
-  bytes8[] public permissionId;
-  bytes8[][] public permissionIds;
-  bytes8[][] public permissionsToRevoke;
+  bytes32[] public permissionId;
+  bytes32[][] public permissionIds;
+  bytes32[][] public permissionsToRevoke;
   uint256[][] public expirationTimestamps;
   address[] public addresses;
   uint256[] public policyIds;
   address[] public initialPolicies;
-  bytes8[][] public initialPermissions;
+  bytes32[][] public initialPermissions;
   uint256[][] public initialExpirationTimestamps;
   PolicyRevokeData[] public policyRevokeData;
   uint256 ADDRESS_THIS_TOKEN_ID;
@@ -107,9 +107,9 @@ contract VertexPolicyTest is Test {
     vertexPolicyNFT.transferFrom(address(this), address(0xdeadbeef), ADDRESS_THIS_TOKEN_ID);
   }
 
-  function test_holderHasPermissionAt_ReturnsCorrectBool() public {
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionId[0], block.number), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.number), false);
+  function test_holderWeightAt_ReturnsCorrectValue() public {
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), permissionId[0], block.number), 1);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(0xdeadbeef), permissionId[0], block.number), 0);
     addresses[0] = address(0xdeadbeef);
     vm.warp(block.timestamp + 100);
 
@@ -117,24 +117,14 @@ contract VertexPolicyTest is Test {
     vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
     vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
 
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionId[0], block.timestamp), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionId[0], block.timestamp - 99), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(0xdeadbeef), permissionId[0], block.timestamp - 99), false);
-  }
-
-  function test_getSupplyByPermissions_ReturnsCorrectSupply() public {
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionId), 1);
-    addresses[0] = address(0xdeadbeef);
-    PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(address(0xdeadbeef));
-    vertexPolicyNFT.batchGrantPolicies(initialBatchGrantData);
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionId), 2);
-    vertexPolicyNFT.batchRevokePolicies(policyRevokeData);
-    assertEq(vertexPolicyNFT.getSupplyByPermissions(permissionId), 1);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), permissionId[0], block.timestamp), 0);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(0xdeadbeef), permissionId[0], block.timestamp), 1);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), permissionId[0], block.timestamp - 99), 1);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(0xdeadbeef), permissionId[0], block.timestamp - 99), 0);
   }
 
   function test_batchUpdatePermissions_UpdatesPermissionsCorrectly() public {
-    bytes8 oldPermissionSignature = permissionId[0];
+    bytes32 oldPermissionSignature = permissionId[0];
     assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), true);
     permissionsToRevoke = permissionIds;
 
@@ -164,10 +154,10 @@ contract VertexPolicyTest is Test {
 
     assertEq(vertexPolicyNFT.hasPermission(policyIds[0], oldPermissionSignature), false);
     assertEq(vertexPolicyNFT.hasPermission(policyIds[0], permissionId[0]), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp - 100), true);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), oldPermissionSignature, block.timestamp), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionId[0], block.timestamp - 100), false);
-    assertEq(vertexPolicyNFT.holderHasPermissionAt(address(this), permissionId[0], block.timestamp), true);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), oldPermissionSignature, block.timestamp - 100), 1);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), oldPermissionSignature, block.timestamp), 0);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), permissionId[0], block.timestamp - 100), 0);
+    assertEq(vertexPolicyNFT.holderWeightAt(address(this), permissionId[0], block.timestamp), 1);
   }
 
   // function test_batchUpdatePermissions_RevertIfArraysLengthMismatch() public {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Action, WeightByPermission, Strategy} from "src/lib/Structs.sol";
+import {Action, Strategy} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 /// @title A strategy definition of a Vertex system.
@@ -48,17 +48,10 @@ contract VertexStrategy is IVertexStrategy {
   /// == 100%.
   uint256 public immutable minDisapprovalPct;
 
-  /// @notice List of all permission signatures that are eligible for approvals.
-  bytes8[] public approvalPermissions;
-
-  /// @notice List of all permission signatures that are eligible for disapprovals.
-  bytes8[] public disapprovalPermissions;
-
-  /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-  mapping(bytes8 => uint256) public approvalWeightByPermission;
-
-  /// @notice Mapping of permission signatures to their weight. DEFAULT_OPERATOR is used as a catch all.
-  mapping(bytes8 => uint256) public disapprovalWeightByPermission;
+  bytes32 public immutable approvalRole;
+  bytes32 public immutable disapprovalRole;
+  mapping(bytes32 => bool) public forceApprovalRole;
+  mapping(bytes32 => bool) public forceDisapprovalRole;
 
   /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
   constructor(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex) {
@@ -71,33 +64,19 @@ contract VertexStrategy is IVertexStrategy {
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
-    uint256 approvalPermissionsLength = strategyConfig.approvalWeightByPermission.length;
-    uint256 disapprovalPermissionsLength = strategyConfig.disapprovalWeightByPermission.length;
+    approvalRole = strategyConfig.approvalRole;
+    disapprovalRole = strategyConfig.disapprovalRole;
 
-    // Initialize to 1, could be overwritten below
-    approvalWeightByPermission[DEFAULT_OPERATOR] = 1;
-    disapprovalWeightByPermission[DEFAULT_OPERATOR] = 1;
-
-    if (approvalPermissionsLength > 0) {
-      unchecked {
-        for (uint256 i; i < approvalPermissionsLength; ++i) {
-          WeightByPermission memory weightByPermission = strategyConfig.approvalWeightByPermission[i];
-
-          if (weightByPermission.weight > 0) approvalPermissions.push(weightByPermission.permissionId);
-          approvalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
-        }
-      }
+    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i++) {
+      bytes32 role = strategyConfig.forceApprovalRoles[i];
+      forceApprovalRole[role] = true;
+      emit ForceApprovalRoleAdded(role);
     }
 
-    if (disapprovalPermissionsLength > 0) {
-      unchecked {
-        for (uint256 i; i < disapprovalPermissionsLength; ++i) {
-          WeightByPermission memory weightByPermission = strategyConfig.disapprovalWeightByPermission[i];
-
-          if (weightByPermission.weight > 0) disapprovalPermissions.push(weightByPermission.permissionId);
-          disapprovalWeightByPermission[weightByPermission.permissionId] = weightByPermission.weight;
-        }
-      }
+    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i++) {
+      bytes32 role = strategyConfig.forceDisapprovalRoles[i];
+      forceDisapprovalRole[role] = true;
+      emit ForceDisapprovalRoleAdded(role);
     }
 
     emit NewStrategyCreated(_vertex, _policy);
@@ -116,48 +95,24 @@ contract VertexStrategy is IVertexStrategy {
   }
 
   /// @inheritdoc IVertexStrategy
-  function getApprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256) {
-    if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
-    uint256 permissionsLength = approvalPermissions.length;
-    unchecked {
-      for (uint256 i; i < permissionsLength; ++i) {
-        if (policy.holderHasPermissionAt(policyholder, approvalPermissions[i], timestamp)) {
-          return approvalWeightByPermission[approvalPermissions[i]];
-        }
-      }
-    }
-
-    return approvalWeightByPermission[DEFAULT_OPERATOR];
+  function getApprovalWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256) {
+    if (forceApprovalRole[role]) return type(uint256).max;
+    return policy.holderWeightAt(policyholder, role, timestamp);
   }
 
   /// @inheritdoc IVertexStrategy
-  function getDisapprovalWeightAt(address policyholder, uint256 timestamp) external view returns (uint256) {
-    if (policy.balanceOf(policyholder) == 0) revert NoPolicy();
-    uint256 permissionsLength = disapprovalPermissions.length;
-    unchecked {
-      for (uint256 i; i < permissionsLength; ++i) {
-        if (policy.holderHasPermissionAt(policyholder, disapprovalPermissions[i], timestamp)) {
-          return disapprovalWeightByPermission[disapprovalPermissions[i]];
-        }
-      }
-    }
-
-    return disapprovalWeightByPermission[DEFAULT_OPERATOR];
+  function getDisapprovalWeightAt(address policyholder, bytes32 role, uint256 timestamp)
+    external
+    view
+    returns (uint256)
+  {
+    if (forceDisapprovalRole[role]) return type(uint256).max;
+    return policy.holderWeightAt(policyholder, role, timestamp);
   }
 
   /// @inheritdoc IVertexStrategy
   function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure override returns (uint256) {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function getApprovalPermissions() public view override returns (bytes8[] memory) {
-    return approvalPermissions;
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function getDisapprovalPermissions() public view override returns (bytes8[] memory) {
-    return disapprovalPermissions;
   }
 }
