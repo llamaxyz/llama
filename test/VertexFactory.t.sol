@@ -417,9 +417,9 @@ contract Integration is VertexFactoryTest {
       1 days, // The length of time an action can be executed before it expires.
       5000, // Minimum percentage of total approval weight / total approval supply.
       5000, // Minimum percentage of total disapproval weight / total disapproval supply.
-      emptyWeights, // List of permissionSignatures and weights that define the validation process for
+      emptyWeights, // List of permissionIds and weights that define the validation process for
         // approval.
-      emptyWeights, // List of permissionSignatures and weights that define the validation process for
+      emptyWeights, // List of permissionIds and weights that define the validation process for
         // disapproval.
       false // Determines if an action be queued before approvalEndTime.
     );
