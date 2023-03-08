@@ -38,6 +38,8 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     _;
   }
 
+  constructor() initializer {}
+
   function initialize(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
     external
     initializer

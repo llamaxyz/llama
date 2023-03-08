@@ -12,6 +12,8 @@ import {MockERC721} from "./mock/MockERC721MinimalProxy.sol";
 
 import {ERC721TokenReceiver} from "lib/solmate/src/tokens/ERC721.sol";
 
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 contract ERC721Recipient is ERC721TokenReceiver {
   address public operator;
   address public from;
@@ -49,15 +51,18 @@ contract NonERC721Recipient {}
 
 contract ERC721Test is DSTestPlus {
   MockERC721 token;
+  MockERC721 tokenLogic;
 
   function setUp() public {
-    token = new MockERC721();
+    tokenLogic = new MockERC721();
+    token = MockERC721(Clones.cloneDeterministic(address(tokenLogic), keccak256(abi.encode("Token"))));
     token.initialize("Token", "TKN");
   }
 
   function initializesWithCorrectNameAndSymbol(string memory name, string memory symbol) public {
-    token = new MockERC721();
-    token.initialize(name, symbol);
+    tokenLogic = new MockERC721();
+    token = MockERC721(Clones.cloneDeterministic(address(tokenLogic), keccak256(abi.encode(name))));
+    token.initialize("Token", "TKN");
     assertEq(token.name(), name);
     assertEq(token.symbol(), symbol);
   }
