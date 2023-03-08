@@ -368,6 +368,7 @@ contract Integration is VertexFactoryTest {
   address user2 = address(0x2); // empty policy
 
   function test_DeploysInstanceWithFullySpecificiedStrategiesAndPolicies() public {
+    // compute core, policy, and account contract addresses
     initialAccounts.push("Integration Test Account");
     VertexCore computedVertexCore =
       vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
@@ -376,25 +377,35 @@ contract Integration is VertexFactoryTest {
     VertexAccount computedVertexAccount = vertexLens.computeVertexAccountAddress(
       address(vertexAccountLogic), initialAccounts[0], address(computedVertexCore)
     );
+
+    // compute strategy data and strategy addresses
     Strategy memory strategyData = buildStrategyData();
     VertexStrategy computedStrategy =
       vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
-    ERC20Mock token = new ERC20Mock("Mock", "MCK", address(computedVertexAccount), 100000);
+
+    // compute new weights and permission metadata
     (WeightByPermission[] memory newWeights, PermissionMetadata[] memory permissionMetadata) =
       buildNewWeightsAndPermissions(computedVertexAccount, computedStrategy, computedVertexPolicy);
     strategyData.approvalWeightByPermission = newWeights;
     strategyData.disapprovalWeightByPermission = newWeights;
+
+    // compute initial strategies and policy data
     Strategy[] memory initialStrategies = buildInitialStrategies(strategyData);
     PolicyGrantData[] memory initialPolicies = buildInitialPolicies(permissionMetadata);
+
+    // deploy the instance
     vm.prank(address(rootVertex));
+
     vm.expectEmit(true, true, true, true);
     emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
     emit StrategyAuthorized(computedStrategy, strategyData);
     emit AccountAuthorized(computedVertexAccount, initialAccounts[0]);
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
+
     VertexCore newVertex =
       vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+      
     assertEq(address(newVertex), address(computedVertexCore));
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));
   }
