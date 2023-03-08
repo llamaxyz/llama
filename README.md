@@ -4,7 +4,7 @@ Vertex v1 is a smart contract access control and administration framework.
 
 ## Prerequisites
 
-It requires [Foundry](https://github.com/gakonst/foundry) installed to run. You can find instructions here: [Foundry installation](https://github.com/gakonst/foundry#installation).
+It requires [Foundry](https://github.com/foundry-rs/foundry) installed to run. You can find instructions here: [Foundry installation](https://book.getfoundry.sh/getting-started/installation).
 
 We use [just](https://github.com/casey/just) to save and run commands. You can find instructions here: [just installation](https://github.com/casey/just#packages).
 
