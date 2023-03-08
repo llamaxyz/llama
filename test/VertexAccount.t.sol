@@ -7,7 +7,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
+import {Strategy, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
@@ -83,7 +83,7 @@ contract VertexAccountTest is Test {
   VertexAccount[] public accounts;
 
   address[] public initialPolicies;
-  bytes8[][] public initialPermissions;
+  bytes32[][] public initialPermissions;
   uint256[][] public initialExpirationTimestamps;
   PolicyGrantData[] public initialPolicyData;
 
@@ -99,8 +99,6 @@ contract VertexAccountTest is Test {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 16_573_464);
 
     // Setup strategy parameters
-    WeightByPermission[] memory approvalWeightByPermission = new WeightByPermission[](0);
-    WeightByPermission[] memory disapprovalWeightByPermission = new WeightByPermission[](0);
     Strategy[] memory initialStrategies = new Strategy[](2);
     string[] memory initialAccounts = new string[](2);
 
@@ -111,8 +109,10 @@ contract VertexAccountTest is Test {
       isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
       minApprovalPct: minApprovalPct,
       minDisapprovalPct: minDisapprovalPct,
-      approvalWeightByPermission: approvalWeightByPermission,
-      disapprovalWeightByPermission: disapprovalWeightByPermission
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
 
     initialStrategies[1] = Strategy({
@@ -122,8 +122,10 @@ contract VertexAccountTest is Test {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 8000,
       minDisapprovalPct: 10_001,
-      approvalWeightByPermission: approvalWeightByPermission,
-      disapprovalWeightByPermission: disapprovalWeightByPermission
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
 
     initialAccounts[0] = "VertexAccount0";

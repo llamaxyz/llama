@@ -93,7 +93,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // For a given permission ID and timestamp, the sum of that permission's quantity over all users
   // with that permission should equal the total supply of that permission ID.
   function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public view {
-    bytes8[] memory allPermissionIds = handler.getPermissionIds();
+    bytes32[] memory allPermissionIds = handler.getPermissionIds();
     for (uint256 i = 0; i < allPermissionIds.length; i++) {
       PermissionIdCheckpoint[] memory checkpoints = policy.getTokenPermissionSupplyCheckpoints(allPermissionIds[i]);
 
@@ -103,7 +103,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
         for (uint256 k = 0; k < policyholders.length; k++) {
           bool hasPermission =
-            policy.holderHasPermissionAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp);
+            policy.holderWeightAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
           sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
         }
         require(
@@ -126,7 +126,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // timestamp in ascending order, with no duplicate timestamps.
   function assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp() public view {
     uint256[] memory allPolicyIds = handler.getPolicyIds();
-    bytes8[] memory allPermissionIds = handler.getPermissionIds();
+    bytes32[] memory allPermissionIds = handler.getPermissionIds();
     for (uint256 i = 0; i < allPolicyIds.length; i++) {
       // The use of `<` here instead of `<=` is intentional and disallows two checkpoints
       // with the same timestamp.

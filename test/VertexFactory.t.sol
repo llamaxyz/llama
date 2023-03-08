@@ -12,14 +12,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {
-  Action,
-  Strategy,
-  PermissionData,
-  WeightByPermission,
-  PolicyGrantData,
-  PermissionMetadata
-} from "src/lib/Structs.sol";
+import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 
 contract VertexFactoryTest is Test {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
@@ -193,10 +186,6 @@ contract VertexFactoryTest is Test {
   }
 
   function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
-    WeightByPermission[] memory _permissionsWithWeights = new WeightByPermission[](2);
-    _permissionsWithWeights[0] = WeightByPermission({permissionId: 0xa9cc4718a9cc4718, weight: uint256(2)});
-    _permissionsWithWeights[1] = WeightByPermission({permissionId: 0xffffffffffffffff, weight: uint256(0)});
-
     _strategies = new Strategy[](2);
 
     _strategies[0] = Strategy({
@@ -206,8 +195,10 @@ contract VertexFactoryTest is Test {
       isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
       minApprovalPct: minApprovalPct,
       minDisapprovalPct: minDisapprovalPct,
-      approvalWeightByPermission: _permissionsWithWeights,
-      disapprovalWeightByPermission: _permissionsWithWeights
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
 
     _strategies[1] = Strategy({
@@ -217,8 +208,10 @@ contract VertexFactoryTest is Test {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 8000,
       minDisapprovalPct: 10_001,
-      approvalWeightByPermission: _permissionsWithWeights,
-      disapprovalWeightByPermission: _permissionsWithWeights
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
     });
   }
 
@@ -231,10 +224,10 @@ contract VertexFactoryTest is Test {
 
   function buildInitialPolicyGrantData() internal pure returns (PolicyGrantData[] memory initialPolicyGrantData) {
     PermissionMetadata[] memory firstPermissions = new PermissionMetadata[](1);
-    firstPermissions[0] = PermissionMetadata(0xa9cc4718a9cc4718, 0);
+    firstPermissions[0] = PermissionMetadata("a9cc4718a9cc4718", 0);
 
     PermissionMetadata[] memory secondPermissions = new PermissionMetadata[](1);
-    secondPermissions[0] = PermissionMetadata(0xffffffffffffffff, 0);
+    secondPermissions[0] = PermissionMetadata("ffffffffffffffff", 0);
 
     initialPolicyGrantData = new PolicyGrantData[](2);
     initialPolicyGrantData[0] = PolicyGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
@@ -374,7 +367,6 @@ contract Deploy is VertexFactoryTest {
 
 contract Integration is VertexFactoryTest {
   string[] initialAccounts;
-  WeightByPermission[] emptyWeights;
   PermissionMetadata[] emptyPermissions;
   address user1 = address(0x1); // admin
   address user2 = address(0x2); // empty policy
@@ -396,10 +388,10 @@ contract Integration is VertexFactoryTest {
       vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
 
     // compute new weights and permission metadata
-    (WeightByPermission[] memory newWeights, PermissionMetadata[] memory permissionMetadata) =
+    PermissionMetadata[] memory permissionMetadata =
       buildNewWeightsAndPermissions(computedVertexAccount, computedStrategy, computedVertexPolicy);
-    strategyData.approvalWeightByPermission = newWeights;
-    strategyData.disapprovalWeightByPermission = newWeights;
+    // strategyData.approvalWeightByPermission = newWeights;
+    // strategyData.disapprovalWeightByPermission = newWeights;
 
     // compute initial strategies and policy data
     Strategy[] memory initialStrategies = buildInitialStrategies(strategyData);
@@ -422,26 +414,26 @@ contract Integration is VertexFactoryTest {
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));
   }
 
-  function buildStrategyData() public view returns (Strategy memory) {
-    return Strategy(
-      1 days, // The length of time of the approval period.
-      1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
-      1 days, // The length of time an action can be executed before it expires.
-      5000, // Minimum percentage of total approval weight / total approval supply.
-      5000, // Minimum percentage of total disapproval weight / total disapproval supply.
-      emptyWeights, // List of permissionIds and weights that define the validation process for
-        // approval.
-      emptyWeights, // List of permissionIds and weights that define the validation process for
-        // disapproval.
-      false // Determines if an action be queued before approvalEndTime.
-    );
+  function buildStrategyData() public view returns (Strategy memory strategy) {
+    // return Strategy(
+    //   1 days, // The length of time of the approval period.
+    //   1 days, // The length of time of the queuing period. The disapproval period is the queuing period when enabled.
+    //   1 days, // The length of time an action can be executed before it expires.
+    //   5000, // Minimum percentage of total approval weight / total approval supply.
+    //   5000, // Minimum percentage of total disapproval weight / total disapproval supply.
+    //   emptyWeights, // List of permissionIds and weights that define the validation process for
+    //     // approval.
+    //   emptyWeights, // List of permissionIds and weights that define the validation process for
+    //     // disapproval.
+    //   false // Determines if an action be queued before approvalEndTime.
+    // );
   }
 
   function buildNewWeightsAndPermissions(
     VertexAccount computedVertexAccount,
     VertexStrategy computedStrategy,
     VertexPolicy computedVertexPolicy
-  ) public view returns (WeightByPermission[] memory, PermissionMetadata[] memory) {
+  ) public view returns (PermissionMetadata[] memory) {
     PermissionData memory approveERC20Permission =
       PermissionData(address(computedVertexAccount), computedVertexAccount.approveERC20.selector, computedStrategy);
     PermissionData memory transferERC20Permission =
@@ -451,10 +443,6 @@ contract Integration is VertexFactoryTest {
     bytes8 permissionId1 = vertexLens.computePermissionId(approveERC20Permission);
     bytes8 permissionId2 = vertexLens.computePermissionId(transferERC20Permission);
     bytes8 permissionId3 = vertexLens.computePermissionId(revokePolicyPermission);
-    WeightByPermission[] memory newWeights = new WeightByPermission[](3);
-    newWeights[0] = WeightByPermission(permissionId1, 2);
-    newWeights[1] = WeightByPermission(permissionId2, 2);
-    newWeights[2] = WeightByPermission(permissionId3, 2);
 
     PermissionMetadata[] memory permissionMetadata = new PermissionMetadata[](3);
     {
@@ -462,7 +450,7 @@ contract Integration is VertexFactoryTest {
       permissionMetadata[1] = PermissionMetadata(permissionId2, 0);
       permissionMetadata[1] = PermissionMetadata(permissionId3, 0);
     }
-    return (newWeights, permissionMetadata);
+    return permissionMetadata;
   }
 
   function buildInitialStrategies(Strategy memory strategyData) public pure returns (Strategy[] memory) {
