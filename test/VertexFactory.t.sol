@@ -405,7 +405,7 @@ contract Integration is VertexFactoryTest {
 
     VertexCore newVertex =
       vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
-      
+
     assertEq(address(newVertex), address(computedVertexCore));
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));
   }
@@ -470,4 +470,3 @@ contract Integration is VertexFactoryTest {
     return initialPolicies;
   }
 }
-
