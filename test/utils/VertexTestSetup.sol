@@ -131,6 +131,12 @@ contract VertexTestSetup is Test {
   }
 
   function grantInitialPolicies() private {
+    PolicyGrantData[] memory policies = getDefaultPolicies();
+    vm.prank(address(core));
+    policy.batchGrantPolicies(policies);
+  }
+
+  function getDefaultPolicies() internal view returns (PolicyGrantData[] memory) {
     PermissionData memory pausePermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, strategy1);
     PermissionData memory failPermission = PermissionData(address(mockProtocol), FAIL_SELECTOR, strategy1);
     PermissionData memory receiveETHPermission = PermissionData(address(mockProtocol), RECEIVE_ETH_SELECTOR, strategy1);
@@ -147,14 +153,54 @@ contract VertexTestSetup is Test {
     pauserPermissions[1] = PermissionMetadata("approver", 0);
     pauserPermissions[2] = PermissionMetadata("disapprover", 0);
 
-    PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](5);
-    initialPolicyData[0] = PolicyGrantData(actionCreator, creatorPermissions);
-    initialPolicyData[1] = PolicyGrantData(policyHolderPam, pauserPermissions);
-    initialPolicyData[2] = PolicyGrantData(policyHolderPatty, pauserPermissions);
-    initialPolicyData[3] = PolicyGrantData(policyHolderPaul, pauserPermissions);
-    initialPolicyData[4] = PolicyGrantData(policyHolderPete, pauserPermissions);
+    PolicyGrantData[] memory policies = new PolicyGrantData[](5);
+    policies[0] = PolicyGrantData(actionCreator, creatorPermissions);
+    policies[1] = PolicyGrantData(policyHolderPam, pauserPermissions);
+    policies[2] = PolicyGrantData(policyHolderPatty, pauserPermissions);
+    policies[3] = PolicyGrantData(policyHolderPaul, pauserPermissions);
+    policies[4] = PolicyGrantData(policyHolderPete, pauserPermissions);
+    return policies;
+  }
 
-    vm.prank(address(core));
-    policy.batchGrantPolicies(initialPolicyData);
+  function getDefaultVertexDeployParameters()
+    internal
+    view
+    returns (Strategy[] memory, string[] memory, PolicyGrantData[] memory)
+  {
+    // Define two strategies.
+    Strategy memory strategy1Config = Strategy({
+      approvalPeriod: 2 days,
+      queuingPeriod: 4 days,
+      expirationPeriod: 8 days,
+      isFixedLengthApprovalPeriod: true,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+    Strategy memory strategy2Config = Strategy({
+      approvalPeriod: 2 days,
+      queuingPeriod: 0,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 8000,
+      minDisapprovalPct: 10_001,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+    Strategy[] memory strategies = new Strategy[](2);
+    strategies[0] = strategy1Config;
+    strategies[1] = strategy2Config;
+
+    // Define two accounts.
+    string[] memory accounts = new string[](2);
+    accounts[0] = "Root Account 1";
+    accounts[1] = "Root Account 2";
+
+    return (strategies, accounts, getDefaultPolicies());
   }
 }

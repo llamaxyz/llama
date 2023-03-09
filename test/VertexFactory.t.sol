@@ -13,49 +13,14 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
-contract VertexFactoryTest is Test {
+contract VertexFactoryTest is VertexTestSetup {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, string name);
   event PolicyAdded(PolicyGrantData grantData);
 
-  // Vertex system
-  VertexCore public rootVertex;
-  VertexCore public vertexCoreLogic;
-  VertexAccount public vertexAccountLogic;
-  VertexPolicy public vertexPolicyLogic;
-  VertexFactory public vertexFactory;
-  VertexLens public vertexLens;
-  VertexStrategy[] public strategies;
-  VertexPolicy public policy;
-
-  // Mock protocol
-  ProtocolXYZ public protocol;
-
-  // Testing agents
-  address public constant actionCreator = address(0x1337);
-  address public constant policyholder1 = address(0x1338);
-  address public constant policyholder2 = address(0x1339);
-  address public constant policyholder3 = address(0x1340);
-  address public constant policyholder4 = address(0x1341);
-  bytes4 public constant pauseSelector = 0x02329a29;
-  bytes4 public constant failSelector = 0xa9cc4718;
-
-  PermissionData public permission;
-  PermissionData[] public permissions;
-  address[] public addresses;
-  uint256[] public policyIds;
-
-  // Strategy config
-  uint256 public constant approvalPeriod = 14_400; // 2 days in blocks
-  uint256 public constant queuingPeriod = 4 days;
-  uint256 public constant expirationPeriod = 8 days;
-  bool public constant isFixedLengthApprovalPeriod = true;
-  uint256 public constant minApprovalPct = 4000;
-  uint256 public constant minDisapprovalPct = 2000;
-
-  // Events
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -74,244 +39,85 @@ contract VertexFactoryTest is Test {
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
   event StrategiesAuthorized(Strategy[] strategies);
   event StrategiesUnauthorized(VertexStrategy[] strategies);
-
-  function setUp() public {
-    vertexCoreLogic = new VertexCore();
-    vertexAccountLogic = new VertexAccount();
-    vertexPolicyLogic = new VertexPolicy();
-
-    // Setup strategy parameters
-    Strategy[] memory initialStrategies = createInitialStrategies();
-
-    PolicyGrantData[] memory initialPolicies = buildInitialPolicyGrantData();
-
-    // Deploy vertex and mock protocol
-    vertexFactory = new VertexFactory(
-          vertexCoreLogic,
-          vertexAccountLogic,
-          vertexPolicyLogic,
-          "ProtocolXYZ",
-          "VXP",
-          initialStrategies,
-          buildInitialAccounts(),
-          initialPolicies
-        );
-
-    vertexLens = new VertexLens();
-
-    rootVertex = VertexCore(vertexFactory.rootVertex());
-    protocol = new ProtocolXYZ(address(rootVertex));
-
-    // Use create2 to get vertex strategy addresses
-    for (uint256 i; i < initialStrategies.length; i++) {
-      strategies.push(VertexStrategy(_computeStrategyAddress(initialStrategies[i])));
-    }
-
-    // Set vertex's policy
-    policy = rootVertex.policy();
-
-    // Create and assign policies
-    // createPolicies();
-
-    vm.label(actionCreator, "Action Creator");
-  }
-
-  function _computeStrategyAddress(Strategy memory _strategy) internal view returns (address _address) {
-    bytes32 hash = keccak256(
-      abi.encodePacked(
-        bytes1(0xff),
-        address(rootVertex),
-        keccak256(abi.encode(_strategy)), // strategy salt
-        keccak256(
-          abi.encodePacked(
-            type(VertexStrategy).creationCode, // bytecode
-            abi.encode(_strategy, rootVertex.policy(), address(rootVertex))
-          )
-        )
-      )
-    );
-    _address = address(uint160(uint256(hash)));
-  }
-
-  struct TestHelperVars {
-    PermissionData pausePermissionData;
-    PermissionData failPermissionData;
-    PermissionMetadata[] defaultPermissions;
-    PermissionMetadata[] creatorPermissions;
-  }
-
-  function createPolicies() internal {
-    vm.startPrank(address(rootVertex));
-
-    TestHelperVars memory _vars;
-
-    _vars.pausePermissionData =
-      PermissionData({target: address(protocol), selector: pauseSelector, strategy: strategies[0]});
-    _vars.failPermissionData =
-      PermissionData({target: address(protocol), selector: failSelector, strategy: strategies[0]});
-    permissions.push(_vars.pausePermissionData);
-
-    _vars.creatorPermissions = new PermissionMetadata[](2);
-    _vars.creatorPermissions[0] = PermissionMetadata({
-      permissionId: vertexLens.computePermissionId(_vars.failPermissionData),
-      expirationTimestamp: 0 // no expiration
-    });
-    _vars.creatorPermissions[1] = PermissionMetadata({
-      permissionId: vertexLens.computePermissionId(_vars.pausePermissionData),
-      expirationTimestamp: 0 // no expiration
-    });
-
-    _vars.defaultPermissions = new PermissionMetadata[](1);
-    _vars.defaultPermissions[0] = PermissionMetadata({
-      permissionId: vertexLens.computePermissionId(_vars.pausePermissionData),
-      expirationTimestamp: 0 // no expiration
-    });
-
-    addresses.push(actionCreator);
-    addresses.push(policyholder1);
-    addresses.push(policyholder2);
-    addresses.push(policyholder3);
-    addresses.push(policyholder4);
-
-    PolicyGrantData[] memory initialPolicies = new PolicyGrantData[](5);
-    initialPolicies[0] = PolicyGrantData(actionCreator, _vars.creatorPermissions);
-    initialPolicies[1] = PolicyGrantData(policyholder1, _vars.defaultPermissions);
-    initialPolicies[2] = PolicyGrantData(policyholder2, _vars.defaultPermissions);
-    initialPolicies[3] = PolicyGrantData(policyholder3, _vars.defaultPermissions);
-    initialPolicies[4] = PolicyGrantData(policyholder4, _vars.defaultPermissions);
-
-    policy.batchGrantPolicies(initialPolicies);
-
-    vm.stopPrank();
-  }
-
-  function createInitialStrategies() internal pure returns (Strategy[] memory _strategies) {
-    _strategies = new Strategy[](2);
-
-    _strategies[0] = Strategy({
-      approvalPeriod: approvalPeriod,
-      queuingPeriod: queuingPeriod,
-      expirationPeriod: expirationPeriod,
-      isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
-      minApprovalPct: minApprovalPct,
-      minDisapprovalPct: minDisapprovalPct,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
-    });
-
-    _strategies[1] = Strategy({
-      approvalPeriod: approvalPeriod,
-      queuingPeriod: 0,
-      expirationPeriod: 1 days,
-      isFixedLengthApprovalPeriod: false,
-      minApprovalPct: 8000,
-      minDisapprovalPct: 10_001,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
-    });
-  }
-
-  function buildInitialAccounts() internal pure returns (string[] memory) {
-    string[] memory initialAccounts = new string[](2);
-    initialAccounts[0] = "VertexAccount0";
-    initialAccounts[1] = "VertexAccount1";
-    return initialAccounts;
-  }
-
-  function buildInitialPolicyGrantData() internal pure returns (PolicyGrantData[] memory initialPolicyGrantData) {
-    PermissionMetadata[] memory firstPermissions = new PermissionMetadata[](1);
-    firstPermissions[0] = PermissionMetadata("a9cc4718a9cc4718", 0);
-
-    PermissionMetadata[] memory secondPermissions = new PermissionMetadata[](1);
-    secondPermissions[0] = PermissionMetadata("ffffffffffffffff", 0);
-
-    initialPolicyGrantData = new PolicyGrantData[](2);
-    initialPolicyGrantData[0] = PolicyGrantData({user: actionCreator, permissionsToAdd: firstPermissions});
-    initialPolicyGrantData[1] = PolicyGrantData({user: policyholder1, permissionsToAdd: secondPermissions});
-  }
 }
 
 contract Constructor is VertexFactoryTest {
   function test_SetsVertexCoreLogicAddress() public {
-    assertEq(address(vertexFactory.vertexCoreLogic()), address(vertexCoreLogic));
+    assertEq(address(factory.vertexCoreLogic()), address(coreLogic));
   }
 
   function test_SetsVertexAccountLogicAddress() public {
-    assertEq(address(vertexFactory.vertexAccountLogic()), address(vertexAccountLogic));
+    assertEq(address(factory.vertexAccountLogic()), address(accountLogic));
   }
 
   function test_SetsRootVertexAddress() public {
-    assertEq(address(vertexFactory.rootVertex()), address(rootVertex));
+    assertEq(address(factory.rootVertex()), address(core));
   }
 
   function test_DeploysRootVertexViaInternalDeployMethod() public {
     // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
     // one side effect of that method as a sanity check it was called. If it was called, the
     // vertex count should no longer be zero.
-    assertEq(vertexFactory.vertexCount(), 1);
+    assertEq(factory.vertexCount(), 1);
   }
 }
 
 contract Deploy is VertexFactoryTest {
   function deployVertex() internal returns (VertexCore) {
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    string[] memory initialAccounts = buildInitialAccounts();
-    vm.prank(address(rootVertex));
-    return vertexFactory.deploy("NewProject", "NP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+    (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
+      getDefaultVertexDeployParameters();
+    vm.prank(address(core));
+    return factory.deploy("NewProject", "NP", strategies, accounts, policies);
   }
 
   function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
-    vm.assume(caller != address(rootVertex));
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    string[] memory initialAccounts = buildInitialAccounts();
+    vm.assume(caller != address(core));
+    (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
+      getDefaultVertexDeployParameters();
 
     vm.prank(address(caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    vertexFactory.deploy("ProtocolXYZ", "VXP", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+    factory.deploy("ProtocolXYZ", "VXP", strategies, accounts, policies);
   }
 
   function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    string[] memory initialAccounts = buildInitialAccounts();
+    (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
+      getDefaultVertexDeployParameters();
 
-    vm.prank(address(rootVertex));
-    vertexFactory.deploy(name, "SYMBOL", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+    vm.prank(address(core));
+    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
     vm.expectRevert();
-    vertexFactory.deploy(name, "SYMBOL", initialStrategies, initialAccounts, buildInitialPolicyGrantData());
+    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
   }
 
   function test_IncrementsVertexCountByOne() public {
-    uint256 initialVertexCount = vertexFactory.vertexCount();
+    uint256 initialVertexCount = factory.vertexCount();
     deployVertex();
-    assertEq(vertexFactory.vertexCount(), initialVertexCount + 1);
+    assertEq(factory.vertexCount(), initialVertexCount + 1);
   }
 
   function test_DeploysPolicy() public {
-    VertexPolicy _policy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
+    VertexPolicy _policy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
     assertEq(address(_policy).code.length, 0);
     deployVertex();
     assertGt(address(_policy).code.length, 0);
     VertexPolicy(_policy).baseURI(); // Sanity check that this doesn't revert.
   }
 
-  function test_initializes_VertexPolicy() public {
-    VertexPolicy _policy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
+  function test_InitializesVertexPolicy() public {
+    VertexPolicy _policy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
+
     assertEq(address(_policy).code.length, 0);
     deployVertex();
     assertGt(address(_policy).code.length, 0);
+
+    PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", "TST", buildInitialPolicyGrantData());
+    _policy.initialize("Test", "TST", policies);
   }
 
   function test_DeploysVertexCore() public {
-    VertexCore _vertex =
-      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
+    VertexCore _vertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     assertEq(address(_vertex).code.length, 0);
     deployVertex();
     assertGt(address(_vertex).code.length, 0);
@@ -324,11 +130,10 @@ contract Deploy is VertexFactoryTest {
     VertexCore _vertex = deployVertex();
     assertEq(_vertex.name(), "NewProject");
 
-    Strategy[] memory initialStrategies = createInitialStrategies();
-    string[] memory initialAccounts = buildInitialAccounts();
+    (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, vertexAccountLogic, initialStrategies, initialAccounts);
+    _vertex.initialize("NewProject", _policy, accountLogic, strategies, accounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
@@ -339,25 +144,21 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_SetsPolicyAddressOnVertexCore() public {
-    VertexPolicy computedPolicy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
+    VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
     VertexCore _vertex = deployVertex();
     assertEq(address(_vertex.policy()), address(computedPolicy));
   }
 
   function test_EmitsVertexCreatedEvent() public {
     vm.expectEmit(true, true, true, true);
-    VertexCore computedVertex =
-      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
-    VertexPolicy computedPolicy =
-      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
+    VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
+    VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
     emit VertexCreated(1, "NewProject", address(computedVertex), address(computedPolicy));
     deployVertex();
   }
 
   function test_ReturnsAddressOfTheNewVertexCoreContract() public {
-    VertexCore computedVertex =
-      vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
+    VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexCore newVertex = deployVertex();
     assertEq(address(newVertex), address(computedVertex));
     assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
@@ -375,17 +176,16 @@ contract Integration is VertexFactoryTest {
     // compute core, policy, and account contract addresses
     initialAccounts.push("Integration Test Account");
     VertexCore computedVertexCore =
-      vertexLens.computeVertexCoreAddress("Integration Test", address(vertexCoreLogic), address(vertexFactory));
+      lens.computeVertexCoreAddress("Integration Test", address(coreLogic), address(factory));
     VertexPolicy computedVertexPolicy =
-      vertexLens.computeVertexPolicyAddress("Integration Test", address(vertexPolicyLogic), address(vertexFactory));
-    VertexAccount computedVertexAccount = vertexLens.computeVertexAccountAddress(
-      address(vertexAccountLogic), initialAccounts[0], address(computedVertexCore)
-    );
+      lens.computeVertexPolicyAddress("Integration Test", address(policyLogic), address(factory));
+    VertexAccount computedVertexAccount =
+      lens.computeVertexAccountAddress(address(accountLogic), initialAccounts[0], address(computedVertexCore));
 
     // compute strategy data and strategy addresses
     Strategy memory strategyData = buildStrategyData();
     VertexStrategy computedStrategy =
-      vertexLens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+      lens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
 
     // compute new weights and permission metadata
     PermissionMetadata[] memory permissionMetadata =
@@ -398,7 +198,7 @@ contract Integration is VertexFactoryTest {
     PolicyGrantData[] memory initialPolicies = buildInitialPolicies(permissionMetadata);
 
     // deploy the instance
-    vm.prank(address(rootVertex));
+    vm.prank(address(core));
 
     vm.expectEmit(true, true, true, true);
     emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
@@ -407,8 +207,7 @@ contract Integration is VertexFactoryTest {
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
 
-    VertexCore newVertex =
-      vertexFactory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+    VertexCore newVertex = factory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
 
     assertEq(address(newVertex), address(computedVertexCore));
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));
@@ -440,9 +239,9 @@ contract Integration is VertexFactoryTest {
       PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
     PermissionData memory revokePolicyPermission =
       PermissionData(address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy);
-    bytes32 permissionId1 = vertexLens.computePermissionId(approveERC20Permission);
-    bytes32 permissionId2 = vertexLens.computePermissionId(transferERC20Permission);
-    bytes32 permissionId3 = vertexLens.computePermissionId(revokePolicyPermission);
+    bytes32 permissionId1 = lens.computePermissionId(approveERC20Permission);
+    bytes32 permissionId2 = lens.computePermissionId(transferERC20Permission);
+    bytes32 permissionId3 = lens.computePermissionId(revokePolicyPermission);
 
     PermissionMetadata[] memory permissionMetadata = new PermissionMetadata[](3);
     {
