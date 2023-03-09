@@ -11,7 +11,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is IVertexStrategy {
-  error InvalidPermissionSignature();
+  error InvalidPermissionId();
 
   /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;

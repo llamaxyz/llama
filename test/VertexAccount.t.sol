@@ -6,6 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Strategy, WeightByPermission, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
@@ -77,6 +78,7 @@ contract VertexAccountTest is Test {
   VertexCore public vertex;
   VertexCore public vertexCore;
   VertexAccount public vertexAccountImplementation;
+  VertexPolicy public vertexPolicyImplementation;
   VertexFactory public vertexFactory;
   VertexAccount[] public accounts;
 
@@ -130,8 +132,9 @@ contract VertexAccountTest is Test {
     // Deploy vertex and mock protocol
     vertexCore = new VertexCore();
     vertexAccountImplementation = new VertexAccount();
+    vertexPolicyImplementation = new VertexPolicy();
     vertexFactory =
-    new VertexFactory(vertexCore, vertexAccountImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicyData);
+    new VertexFactory(vertexCore, vertexAccountImplementation, vertexPolicyImplementation, "ProtocolXYZ", "VXP", initialStrategies, initialAccounts, initialPolicyData);
     vertex = VertexCore(vertexFactory.rootVertex());
 
     // Use create2 to get vertex account addresses

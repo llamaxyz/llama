@@ -6,6 +6,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -20,6 +21,9 @@ contract VertexFactory is IVertexFactory {
   /// @notice The Vertex Account implementation (logic) contract.
   VertexAccount public immutable vertexAccountLogic;
 
+  /// @notice The Vertex Policy implementation (logic) contract.
+  VertexPolicy public immutable vertexPolicyLogic;
+
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
@@ -29,6 +33,7 @@ contract VertexFactory is IVertexFactory {
   constructor(
     VertexCore _vertexCoreLogic,
     VertexAccount _vertexAccountLogic,
+    VertexPolicy _vertexPolicyLogic,
     string memory name,
     string memory symbol,
     Strategy[] memory initialStrategies,
@@ -37,6 +42,7 @@ contract VertexFactory is IVertexFactory {
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexAccountLogic = _vertexAccountLogic;
+    vertexPolicyLogic = _vertexPolicyLogic;
     rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
   }
 
@@ -62,10 +68,10 @@ contract VertexFactory is IVertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
-    bytes32 salt = bytes32(keccak256(abi.encode(name, symbol)));
-    VertexPolicy policy = new VertexPolicy{salt: salt}(name, symbol, initialPolicies);
-
-    vertex = VertexCore(Clones.clone(address(vertexCoreLogic)));
+    VertexPolicy policy =
+      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
+    policy.initialize(name, symbol, initialPolicies);
+    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
