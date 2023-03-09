@@ -306,6 +306,16 @@ contract Deploy is VertexFactoryTest {
     VertexPolicy(_policy).baseURI(); // Sanity check that this doesn't revert.
   }
 
+    function test_initializes_VertexPolicy() public {
+      VertexPolicy _policy =
+      vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
+    assertEq(address(_policy).code.length, 0);
+    deployVertex();
+    assertGt(address(_policy).code.length, 0);
+    vm.expectRevert("Initializable: contract is already initialized");
+    _policy.initialize("Test", "TST", buildInitialPolicyGrantData());
+  }
+
   function test_DeploysVertexCore() public {
     VertexCore _vertex =
       vertexLens.computeVertexCoreAddress("NewProject", address(vertexCoreLogic), address(vertexFactory));
