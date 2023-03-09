@@ -177,7 +177,7 @@ contract VertexPolicyTest is Test {
   }
 
   function test_batchUpdatePermissions_updatesTimeStamp() public {
-    bytes8 _permissionId = vertexLens.computePermissionId(
+    bytes32 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 
@@ -219,7 +219,7 @@ contract VertexPolicyTest is Test {
   }
 
   function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
-    bytes8 _permissionId = vertexLens.computePermissionId(
+    bytes32 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 
@@ -267,7 +267,7 @@ contract VertexPolicyTest is Test {
   function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
     vm.warp(block.timestamp + 1 days);
 
-    bytes8 _permissionId = vertexLens.computePermissionId(
+    bytes32 _permissionId = vertexLens.computePermissionId(
       PermissionData(address(0xdeadbeef), bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
     ); // same permission as in setup
 

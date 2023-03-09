@@ -73,7 +73,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
   function setUp() public override {
     VertexCoreTest.setUp();
-    handler = new VertexFactoryHandler(vertexFactory, vertex);
+    handler = new VertexFactoryHandler(factory, core);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

@@ -78,7 +78,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
   function setUp() public override {
     VertexCoreTest.setUp();
-    handler = new VertexPolicyHandler(vertexFactory, vertex);
+    handler = new VertexPolicyHandler(factory, core);
 
     // TODO Set this up and write tests.
     targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being

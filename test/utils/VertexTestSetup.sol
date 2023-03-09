@@ -11,6 +11,7 @@ import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 
 contract VertexTestSetup is Test {
@@ -21,6 +22,7 @@ contract VertexTestSetup is Test {
 
   // Core Protocol.
   VertexFactory factory;
+  VertexLens lens;
 
   // Vertex instance.
   VertexCore core;
@@ -33,11 +35,26 @@ contract VertexTestSetup is Test {
   // Mock protocol for action targets.
   ProtocolXYZ public mockProtocol;
 
+  // Users.
+  address actionCreator = makeAddr("action creator");
+  address policyHolderPam = makeAddr("policy holder pam");
+  address policyHolderPatty = makeAddr("policy holder patty");
+  address policyHolderPaul = makeAddr("policy holder paul");
+  address policyHolderPete = makeAddr("policy holder pete");
+
+  // Function selectors used in tests.
+  bytes4 public constant PAUSE_SELECTOR = 0x02329a29; // pause(bool)
+  bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
+  bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
+
   function setUp() public virtual {
     // Deploy logic contracts.
     coreLogic = new VertexCore();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
+
+    // Deploy lens.
+    lens = new VertexLens();
 
     // Define two strategies.
     Strategy memory strategy1Config = Strategy({
@@ -88,6 +105,10 @@ contract VertexTestSetup is Test {
       if (i == 1) account2 = VertexAccount(payable(account));
     }
 
+    // Set vertex strategy addresses.
+    strategy1 = lens.computeVertexStrategyAddress(strategy1Config, policy, address(core));
+    strategy2 = lens.computeVertexStrategyAddress(strategy2Config, policy, address(core));
+
     // Deploy mock protocol that uses VertexCore as the admin.
     mockProtocol = new ProtocolXYZ(address(core));
 
@@ -95,13 +116,45 @@ contract VertexTestSetup is Test {
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(coreLogic) != address(0), "coreLogic not set");
     require(address(accountLogic) != address(0), "accountLogic not set");
+    require(address(lens) != address(0), "lens not set");
     require(address(factory) != address(0), "factory not set");
     require(address(core) != address(0), "core not set");
     require(address(policy) != address(0), "policy not set");
-    // require(address(strategy1) != address(0), "strategy1 not set");
-    // require(address(strategy2) != address(0), "strategy2 not set");
+    require(address(strategy1) != address(0), "strategy1 not set");
+    require(address(strategy2) != address(0), "strategy2 not set");
     require(address(account1) != address(0), "account1 not set");
     require(address(account2) != address(0), "account2 not set");
     require(address(mockProtocol) != address(0), "mockProtocol not set");
+
+    // Now we give the action creator permission to create actions.
+    grantInitialPolicies();
+  }
+
+  function grantInitialPolicies() private {
+    PermissionData memory pausePermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, strategy1);
+    PermissionData memory failPermission = PermissionData(address(mockProtocol), FAIL_SELECTOR, strategy1);
+    PermissionData memory receiveETHPermission = PermissionData(address(mockProtocol), RECEIVE_ETH_SELECTOR, strategy1);
+
+    PermissionMetadata[] memory creatorPermissions = new PermissionMetadata[](5);
+    creatorPermissions[0] = PermissionMetadata(lens.computePermissionId(failPermission), 0);
+    creatorPermissions[1] = PermissionMetadata(lens.computePermissionId(pausePermission), 0);
+    creatorPermissions[2] = PermissionMetadata(lens.computePermissionId(receiveETHPermission), 0);
+    creatorPermissions[3] = PermissionMetadata("approver", 0);
+    creatorPermissions[4] = PermissionMetadata("disapprover", 0);
+
+    PermissionMetadata[] memory pauserPermissions = new PermissionMetadata[](3);
+    pauserPermissions[0] = PermissionMetadata(lens.computePermissionId(pausePermission), 0);
+    pauserPermissions[1] = PermissionMetadata("approver", 0);
+    pauserPermissions[2] = PermissionMetadata("disapprover", 0);
+
+    PolicyGrantData[] memory initialPolicyData = new PolicyGrantData[](5);
+    initialPolicyData[0] = PolicyGrantData(actionCreator, creatorPermissions);
+    initialPolicyData[1] = PolicyGrantData(policyHolderPam, pauserPermissions);
+    initialPolicyData[2] = PolicyGrantData(policyHolderPatty, pauserPermissions);
+    initialPolicyData[3] = PolicyGrantData(policyHolderPaul, pauserPermissions);
+    initialPolicyData[4] = PolicyGrantData(policyHolderPete, pauserPermissions);
+
+    vm.prank(address(core));
+    policy.batchGrantPolicies(initialPolicyData);
   }
 }

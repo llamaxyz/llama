@@ -440,9 +440,9 @@ contract Integration is VertexFactoryTest {
       PermissionData(address(computedVertexAccount), computedVertexAccount.transferERC20.selector, computedStrategy);
     PermissionData memory revokePolicyPermission =
       PermissionData(address(computedVertexPolicy), computedVertexPolicy.batchRevokePolicies.selector, computedStrategy);
-    bytes8 permissionId1 = vertexLens.computePermissionId(approveERC20Permission);
-    bytes8 permissionId2 = vertexLens.computePermissionId(transferERC20Permission);
-    bytes8 permissionId3 = vertexLens.computePermissionId(revokePolicyPermission);
+    bytes32 permissionId1 = vertexLens.computePermissionId(approveERC20Permission);
+    bytes32 permissionId2 = vertexLens.computePermissionId(transferERC20Permission);
+    bytes32 permissionId3 = vertexLens.computePermissionId(revokePolicyPermission);
 
     PermissionMetadata[] memory permissionMetadata = new PermissionMetadata[](3);
     {
