@@ -15,9 +15,11 @@ import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens is IVertexLens {
+  /// @inheritdoc IVertexLens
   function computePermissionId(PermissionData calldata permission) external pure returns (bytes8) {
     return bytes8(keccak256(abi.encode(permission)));
   }
+  /// @inheritdoc IVertexLens
 
   function computeVertexCoreAddress(string memory name, address vertexCoreLogic, address factory)
     external
@@ -32,6 +34,7 @@ contract VertexLens is IVertexLens {
     return VertexCore(_computedAddress);
   }
 
+  /// @inheritdoc IVertexLens
   function computeVertexPolicyAddress(string memory name, address vertexPolicyLogic, address factory)
     external
     pure
@@ -45,6 +48,7 @@ contract VertexLens is IVertexLens {
     return VertexPolicy(_computedAddress);
   }
 
+  /// @inheritdoc IVertexLens
   function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, address _vertex)
     external
     pure
@@ -69,6 +73,7 @@ contract VertexLens is IVertexLens {
     );
   }
 
+  /// @inheritdoc IVertexLens
   function computeVertexAccountAddress(address accountLogic, string calldata _account, address _vertexCore)
     external
     pure

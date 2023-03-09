@@ -14,12 +14,12 @@ interface IVertexLens {
   /// @notice hashes a permission
   /// @param permission the permission to hash
   function computePermissionId(PermissionData calldata permission) external pure returns (bytes8);
+
   /// @notice computes the address of a vertex core with a name value.
   /// @param name The name of this Vertex instance.
   /// @param vertexCoreLogic The VertexCore logic contract.
   /// @param factory The factory address.
   /// @return the computed address of the VertexCore contract.
-
   function computeVertexCoreAddress(string memory name, address vertexCoreLogic, address factory)
     external
     pure
@@ -45,6 +45,11 @@ interface IVertexLens {
     pure
     returns (VertexStrategy);
 
+  /// @notice computes the address of a vertex account with a name (account) value.
+  /// @param accountLogic The VertexAccount logic contract.
+  /// @param _account The account to be set.
+  /// @param _vertexCore The vertex core to be set.
+  /// @return the computed address of the VertexAccount contract.
   function computeVertexAccountAddress(address accountLogic, string calldata _account, address _vertexCore)
     external
     pure
