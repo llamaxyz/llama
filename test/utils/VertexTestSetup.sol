@@ -42,6 +42,9 @@ contract VertexTestSetup is Test {
   address policyHolderPaul = makeAddr("policy holder paul");
   address policyHolderPete = makeAddr("policy holder pete");
 
+  // Constants.
+  uint256 SELF_TOKEN_ID = uint256(uint160(address(this)));
+
   // Function selectors used in tests.
   bytes4 public constant PAUSE_SELECTOR = 0x02329a29; // pause(bool)
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
