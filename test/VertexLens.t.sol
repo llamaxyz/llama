@@ -8,9 +8,12 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
-contract ComputeAddress is VertexFactoryTest {
+contract ComputeAddress is VertexTestSetup {
   // TODO Tests for Vertex Lens.
+
+  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
 
   function test_ComputesExpectedAddressForVertexCore() public {
     VertexCore computedVertexCore = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
