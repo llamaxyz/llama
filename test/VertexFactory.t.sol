@@ -306,8 +306,8 @@ contract Deploy is VertexFactoryTest {
     VertexPolicy(_policy).baseURI(); // Sanity check that this doesn't revert.
   }
 
-    function test_initializes_VertexPolicy() public {
-      VertexPolicy _policy =
+  function test_initializes_VertexPolicy() public {
+    VertexPolicy _policy =
       vertexLens.computeVertexPolicyAddress("NewProject", address(vertexPolicyLogic), address(vertexFactory));
     assertEq(address(_policy).code.length, 0);
     deployVertex();
