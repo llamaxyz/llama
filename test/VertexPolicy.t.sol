@@ -76,6 +76,12 @@ contract VertexPolicyTest is Test {
     policyIds.push(ADDRESS_THIS_TOKEN_ID);
   }
 
+  function test_initializes_VertexPolicy() public {
+    assertGt(address(vertexPolicy).code.length, 0);
+    vm.expectRevert("Initializable: contract is already initialized");
+    vertexPolicy.initialize("Test", "TST", _buildBatchGrantData(address(this)));
+  }
+
   function test_initialize_SetsNameAndSymbol() public {
     assertEq(vertexPolicy.name(), "Test");
     assertEq(vertexPolicy.symbol(), "TST");
