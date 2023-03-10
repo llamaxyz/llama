@@ -306,5 +306,6 @@ contract VertexPolicyTest is Test {
 
   function test_tokenURI_SVGReturnsCorrectly() public {
     string memory uri = vertexPolicy.tokenURI(ADDRESS_THIS_TOKEN_ID);
+    //TODO: test SVG
   }
 }
