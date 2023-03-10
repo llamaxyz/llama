@@ -54,6 +54,30 @@ interface IVertexCore {
     external
     returns (uint256);
 
+  /// @notice Creates an action via an offchain selector. The creator needs to hold a policy with the permissionId of
+  /// the provided
+  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param selector The function selector that will be called when the action is executed.
+  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @param user The user that will be the creator of the action.
+  /// @param v v part of the user's signature.
+  /// @param r r part of the user's signature.
+  /// @param s s part of the user's signature.
+  /// @return actionId of the newly created action.
+  function createActionBySignature(
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external returns (uint256);
+
   /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
   /// @param actionId Id of the action to cancel.
   function cancelAction(uint256 actionId) external;

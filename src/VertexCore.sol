@@ -36,6 +36,11 @@ contract VertexCore is IVertexCore, Initializable {
   bytes32 public constant DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
+  /// @notice EIP-712 createAction typehash.
+  bytes32 public constant CREATE_ACTION_EMITTED_TYPEHASH = keccak256(
+    "ActionCreated(address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder)"
+  );
+
   /// @notice EIP-712 approval typehash.
   bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,address policyholder)");
 
@@ -101,41 +106,33 @@ contract VertexCore is IVertexCore, Initializable {
     override
     returns (uint256)
   {
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+    return _createAction(msg.sender, strategy, target, value, selector, data);
+  }
 
-    PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
-
-    bytes8 permissionId = bytes8(keccak256(abi.encode(permission)));
-    if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionId)) revert PolicyholderDoesNotHavePermission();
-
-    uint256 previousActionCount = actionsCount;
-    Action storage newAction = actions[previousActionCount];
-
-    uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getApprovalPermissions());
-
-    uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
-      ? policy.totalSupply()
-      : _getSupplyByPermissions(strategy.getDisapprovalPermissions());
-
-    newAction.creator = msg.sender;
-    newAction.strategy = strategy;
-    newAction.target = target;
-    newAction.value = value;
-    newAction.selector = selector;
-    newAction.data = data;
-    newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
-
-    unchecked {
-      ++actionsCount;
-    }
-
-    emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, selector, data);
-
-    return previousActionCount;
+  /// @inheritdoc IVertexCore
+  function createActionBySignature(
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external override returns (uint256) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
+        keccak256(
+          abi.encode(CREATE_ACTION_EMITTED_TYPEHASH, address(strategy), target, value, selector, keccak256(data), user)
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    return _createAction(signer, strategy, target, value, selector, data);
   }
 
   /// @inheritdoc IVertexCore
@@ -279,6 +276,50 @@ contract VertexCore is IVertexCore, Initializable {
     if (isActionExpired(actionId)) return ActionState.Expired;
 
     return ActionState.Queued;
+  }
+
+  function _createAction(
+    address policyholder,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data
+  ) internal returns (uint256) {
+    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+
+    PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
+    bytes8 permissionId = policy.hashPermission(permission);
+    if (!policy.hasPermission(uint256(uint160(policyholder)), permissionId)) revert PolicyholderDoesNotHavePermission();
+
+    uint256 previousActionCount = actionsCount;
+    Action storage newAction = actions[previousActionCount];
+
+    uint256 approvalPolicySupply = strategy.approvalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
+      ? policy.totalSupply()
+      : _getSupplyByPermissions(strategy.getApprovalPermissions());
+
+    uint256 disapprovalPolicySupply = strategy.disapprovalWeightByPermission(strategy.DEFAULT_OPERATOR()) > 0
+      ? policy.totalSupply()
+      : _getSupplyByPermissions(strategy.getDisapprovalPermissions());
+
+    newAction.creator = policyholder;
+    newAction.strategy = strategy;
+    newAction.target = target;
+    newAction.value = value;
+    newAction.selector = selector;
+    newAction.data = data;
+    newAction.creationTime = block.timestamp;
+    newAction.approvalPolicySupply = approvalPolicySupply;
+    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    unchecked {
+      ++actionsCount;
+    }
+
+    emit ActionCreated(previousActionCount, policyholder, strategy, target, value, selector, data);
+
+    return previousActionCount;
   }
 
   function _submitApproval(address policyholder, uint256 actionId) internal {
