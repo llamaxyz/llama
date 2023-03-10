@@ -35,7 +35,6 @@ contract VertexFactory is IVertexFactory {
     VertexAccount _vertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
@@ -43,7 +42,7 @@ contract VertexFactory is IVertexFactory {
     vertexCoreLogic = _vertexCoreLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
+    rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
   modifier onlyRootVertex() {
@@ -53,24 +52,22 @@ contract VertexFactory is IVertexFactory {
 
   function deploy(
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) external onlyRootVertex returns (VertexCore) {
-    return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
+    return _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
   function _deploy(
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, symbol, initialPolicies);
+    policy.initialize(name, vertexCount, initialPolicies);
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
 

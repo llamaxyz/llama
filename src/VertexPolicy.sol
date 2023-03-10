@@ -40,10 +40,12 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
 
   constructor() initializer {}
 
-  function initialize(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
+  /// @inheritdoc IVertexPolicy
+  function initialize(string memory _name, uint256 instance, PolicyGrantData[] memory initialPolicies)
     external
     initializer
   {
+    _symbol = string.concat("V", )
     __initializeERC721MinimalProxy(_name, _symbol);
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
@@ -51,6 +53,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     }
   }
 
+  /// @inheritdoc IVertexPolicy
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;

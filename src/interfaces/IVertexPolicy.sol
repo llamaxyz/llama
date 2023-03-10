@@ -8,6 +8,16 @@ interface IVertexPolicy {
   event PermissionUpdated(PolicyUpdateData updateData);
   event PolicyRevoked(PolicyRevokeData revokeData);
 
+  /// @notice initializes the contract
+  /// @param _name the name of the contract
+  /// @param instance the vertexCount from the factory
+  /// @param initialPolicies the initial policies to mint
+  function initialize(string memory _name, uint256 instance, PolicyGrantData[] memory initialPolicies) external;
+
+  /// @notice sets the vertexCore address
+  /// @param _vertex the address of the vertexCore
+  function setVertex(address _vertex) external;
+
   /// @notice updates the permissions for a policy token
   /// @param updateData array of PolicyUpdateData struct to update permissions
   function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) external;
