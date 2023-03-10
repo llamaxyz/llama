@@ -97,10 +97,11 @@ interface IVertexCore {
 
   /// @notice How policyholders add their support of the approval of an action via an offchain selector.
   /// @param actionId The id of the action.
+  /// @param user The user that will be approving the action.
   /// @param v v part of the policyholder selector
   /// @param r r part of the policyholder selector
   /// @param s s part of the policyholder selector
-  function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
+  function submitApprovalBySignature(uint256 actionId, address user, uint8 v, bytes32 r, bytes32 s) external;
 
   /// @notice How policyholders add their support of the disapproval of an action.
   /// @param actionId The id of the action.
@@ -108,10 +109,11 @@ interface IVertexCore {
 
   /// @notice How policyholders add their support of the disapproval of an action via an offchain selector.
   /// @param actionId The id of the action.
+  /// @param user The user that will be disapproving the action.
   /// @param v v part of the policyholder selector
   /// @param r r part of the policyholder selector
   /// @param s s part of the policyholder selector
-  function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
+  function submitDisapprovalBySignature(uint256 actionId, address user, uint8 v, bytes32 r, bytes32 s) external;
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param strategies list of new Strategys to be authorized.

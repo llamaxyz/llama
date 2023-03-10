@@ -190,16 +190,16 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
+  function submitApprovalBySignature(uint256 actionId, address user, uint8 v, bytes32 r, bytes32 s) external override {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
         keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, user))
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
+    if (signer == address(0) || signer != user) revert InvalidSignature();
     return _submitApproval(signer, actionId);
   }
 
@@ -209,16 +209,19 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external override {
+  function submitDisapprovalBySignature(uint256 actionId, address user, uint8 v, bytes32 r, bytes32 s)
+    external
+    override
+  {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
         keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, user))
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
+    if (signer == address(0) || signer != user) revert InvalidSignature();
     return _submitDisapproval(signer, actionId);
   }
 
