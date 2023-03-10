@@ -13,8 +13,8 @@ struct PermissionData {
 }
 
 struct PermissionIdCheckpoint {
-  uint224 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
-  uint32 quantity; // Quantity of the permission ID held at the timestamp.
+  uint128 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
+  uint128 quantity; // Quantity of the permission ID held at the timestamp.
 }
 
 struct Action {
@@ -34,11 +34,6 @@ struct Action {
   uint256 disapprovalPolicySupply; // The total amount of policyholders eligible to disapprove.
 }
 
-struct WeightByPermission {
-  bytes8 permissionId; // Policyholder's permission signature.
-  uint256 weight; // Approval or disapproval weight of policyholder.
-}
-
 struct Strategy {
   uint256 approvalPeriod; // The length of time of the approval period.
   uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
@@ -46,15 +41,15 @@ struct Strategy {
   uint256 expirationPeriod; // The length of time an action can be executed before it expires.
   uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
   uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
-  WeightByPermission[] approvalWeightByPermission; // List of permissionIds and weights that define the
-    // validation process for approval.
-  WeightByPermission[] disapprovalWeightByPermission; // List of permissionIds and weights that define the
-    // validation process for disapproval.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
+  bytes32 approvalRole; // Anyone with this role can vote to approve an action.
+  bytes32 disapprovalRole; // Anyone with this role can vote to disapprove an action.
+  bytes32[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
+  bytes32[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }
 
 struct PermissionMetadata {
-  bytes8 permissionId;
+  bytes32 permissionId;
   uint256 expirationTimestamp;
 }
 
@@ -71,7 +66,7 @@ struct PolicyGrantData {
 
 struct PolicyRevokeData {
   uint256 policyId;
-  bytes8[] permissionIds;
+  bytes32[] permissionIds;
 }
 
 struct ERC20Data {

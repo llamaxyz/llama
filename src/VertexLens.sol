@@ -16,8 +16,8 @@ import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens is IVertexLens {
   /// @inheritdoc IVertexLens
-  function computePermissionId(PermissionData calldata permission) external pure returns (bytes8) {
-    return bytes8(keccak256(abi.encode(permission)));
+  function computePermissionId(PermissionData calldata permission) external pure returns (bytes32) {
+    return keccak256(abi.encode(permission));
   }
   /// @inheritdoc IVertexLens
 
@@ -79,7 +79,6 @@ contract VertexLens is IVertexLens {
     pure
     returns (VertexAccount)
   {
-    bytes memory bytecode = type(VertexAccount).creationCode;
     return VertexAccount(
       payable(
         Clones.predictDeterministicAddress(

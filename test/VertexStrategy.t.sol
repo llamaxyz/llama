@@ -3,9 +3,10 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
-contract VertexStrategyTest is Test {
-  function setUp() public virtual {
+contract VertexStrategyTest is VertexTestSetup {
+  function setUp() public virtual override {
     // TODO shared setup
   }
 

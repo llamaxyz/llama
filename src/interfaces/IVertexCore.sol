@@ -69,25 +69,29 @@ interface IVertexCore {
 
   /// @notice How policyholders add their support of the approval of an action.
   /// @param actionId The id of the action.
-  function submitApproval(uint256 actionId) external;
+  /// @param role The role the policyholder uses to submit their approval.
+  function submitApproval(uint256 actionId, bytes32 role) external;
 
-  /// @notice How policyholders add their support of the approval of an action via an offchain selector.
+  /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
   /// @param actionId The id of the action.
-  /// @param v v part of the policyholder selector
-  /// @param r r part of the policyholder selector
-  /// @param s s part of the policyholder selector
-  function submitApprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
+  /// @param role The role the policyholder uses to submit their approval.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  function submitApprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external;
 
   /// @notice How policyholders add their support of the disapproval of an action.
   /// @param actionId The id of the action.
-  function submitDisapproval(uint256 actionId) external;
+  /// @param role The role the policyholder uses to submit their disapproval.
+  function submitDisapproval(uint256 actionId, bytes32 role) external;
 
-  /// @notice How policyholders add their support of the disapproval of an action via an offchain selector.
+  /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
   /// @param actionId The id of the action.
-  /// @param v v part of the policyholder selector
-  /// @param r r part of the policyholder selector
-  /// @param s s part of the policyholder selector
-  function submitDisapprovalBySignature(uint256 actionId, uint8 v, bytes32 r, bytes32 s) external;
+  /// @param role The role the policyholder uses to submit their disapproval.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external;
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param strategies list of new Strategys to be authorized.
