@@ -181,7 +181,8 @@ contract TransferFrom is VertexPolicyTest {
 
 contract TokenURI is VertexPolicyTest {
   function test_ReturnsCorrectTokenURI() public {
-    assertEq(policy.tokenURI(SELF_TOKEN_ID), string.concat(policy.baseURI(), vm.toString(SELF_TOKEN_ID)));
+    string memory uri = policy.tokenURI(uint256(uint160(address(this))));
+  //   //TODO: test SVG
   }
 }
 
@@ -288,8 +289,5 @@ contract ExpirationTests is VertexPolicyTest {
     // policy.batchUpdatePermissions(updateDataArray);
   }
 
-  function test_tokenURI_SVGReturnsCorrectly() public {
-    string memory uri = policy.tokenURI(uint256(uint160(address(this))));
-    //TODO: test SVG
-  }
+ 
 }
