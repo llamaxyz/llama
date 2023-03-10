@@ -290,7 +290,11 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
 
     parts[10] = "</text></svg>";
 
-    string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]));
+    string memory output = string(
+      abi.encodePacked(
+        parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]
+      )
+    );
 
     console.log(output);
 
