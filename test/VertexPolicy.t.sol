@@ -289,7 +289,7 @@ contract ExpirationTests is VertexPolicyTest {
   }
 
   function test_tokenURI_SVGReturnsCorrectly() public {
-    string memory uri = vertexPolicy.tokenURI(ADDRESS_THIS_TOKEN_ID);
+    string memory uri = policy.tokenURI(uint256(uint160(address(this))));
     //TODO: test SVG
   }
 }
