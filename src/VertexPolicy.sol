@@ -13,7 +13,6 @@ import {
   PolicyGrantData,
   PolicyRevokeData
 } from "src/lib/Structs.sol";
-import {console} from "lib/forge-std/src/console.sol";
 
 /// @title VertexPolicy
 /// @author Llama (vertex@llama.xyz)
@@ -295,8 +294,6 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
         parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9], parts[10]
       )
     );
-
-    console.log(output);
 
     string memory json = Base64.encode(
       bytes(
