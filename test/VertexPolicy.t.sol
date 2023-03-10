@@ -303,4 +303,8 @@ contract VertexPolicyTest is Test {
     vm.expectRevert(VertexPolicy.Expired.selector);
     vertexPolicy.batchUpdatePermissions(updateDataArray);
   }
+
+  function test_tokenURI_SVGReturnsCorrectly() public {
+    string memory uri = vertexPolicy.tokenURI(ADDRESS_THIS_TOKEN_ID);
+  }
 }
