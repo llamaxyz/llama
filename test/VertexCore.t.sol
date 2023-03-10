@@ -414,6 +414,26 @@ contract CreateAction is VertexCoreTest {
   }
 }
 
+contract CreateActionBySignature is VertexCoreTest {
+  function test_SuccessfulCreateActionBySignature() public {
+    // TODO
+    // This is a happy path test.
+    // Assert changes to Action storage.
+    // Assert changes to Approval storage.
+    // Assert event emission.
+  }
+
+  function test_RevertsIfSignerIsNotPolicyHolder() public {
+    // TODO
+    // Reverts if user!=signer
+  }
+
+  function test_RevertsIfSignerIsZeroAddress() public {
+    // TODO
+    // Reverts if signer == address(0)
+  }
+}
+
 contract CancelAction is VertexCoreTest {
   function setUp() public override {
     VertexCoreTest.setUp();
