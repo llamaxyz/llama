@@ -25,26 +25,19 @@ interface IVertexPolicy {
 
   /// @notice Check if a holder has a permissionId at a specific timestamp
   /// @param policyholder the address of the policy holder
-  /// @param permissionId the signature of the permission
+  /// @param role the signature of the permission
   /// @param timestamp the block number to query
-  function holderHasPermissionAt(address policyholder, bytes8 permissionId, uint256 timestamp)
-    external
-    view
-    returns (bool);
+  function holderWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256);
 
-  /// @notice Check if a holder has an expired permissionId and removes their permission if it is expired
+  /// @notice Check if a holder has an expired role and removes their permission if it is expired
   /// @dev should be called periodically to remove expired permissions
   /// @param policyId the address of the policy holder
-  /// @param permissionId the signature of the permission
-  function revokeExpiredPermission(uint256 policyId, bytes8 permissionId) external returns (bool expired);
+  /// @param role the signature of the permission
+  function revokeExpiredPermission(uint256 policyId, bytes32 role) external returns (bool expired);
 
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
   function setBaseURI(string calldata _baseURI) external;
-
-  /// @notice Total number of policy NFTs at that have at least 1 of these permissions at specific block number
-  /// @param permissions the permissions we are querying for
-  function getSupplyByPermissions(bytes8[] calldata permissions) external view returns (uint256);
 
   /// @dev returns the total token supply of the contract
   function totalSupply() external view returns (uint256);
@@ -52,5 +45,5 @@ interface IVertexPolicy {
   /// @dev checks if a token has a permission
   /// @param policyId the id of the token
   /// @param permissionId the signature of the permission
-  function hasPermission(uint256 policyId, bytes8 permissionId) external view returns (bool);
+  function hasPermission(uint256 policyId, bytes32 permissionId) external view returns (bool);
 }
