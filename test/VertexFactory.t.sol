@@ -67,7 +67,7 @@ contract Deploy is VertexFactoryTest {
     (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
       getDefaultVertexDeployParameters();
     vm.prank(address(core));
-    return factory.deploy("NewProject", "NP", strategies, accounts, policies);
+    return factory.deploy("NewProject", strategies, accounts, policies);
   }
 
   function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
@@ -77,7 +77,7 @@ contract Deploy is VertexFactoryTest {
 
     vm.prank(address(caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    factory.deploy("ProtocolXYZ", "VXP", strategies, accounts, policies);
+    factory.deploy("ProtocolXYZ", strategies, accounts, policies);
   }
 
   function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
@@ -85,9 +85,9 @@ contract Deploy is VertexFactoryTest {
       getDefaultVertexDeployParameters();
 
     vm.prank(address(core));
-    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
+    factory.deploy(name, strategies, accounts, policies);
     vm.expectRevert();
-    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
+    factory.deploy(name, strategies, accounts, policies);
   }
 
   function test_IncrementsVertexCountByOne() public {
@@ -113,7 +113,7 @@ contract Deploy is VertexFactoryTest {
 
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", "TST", policies);
+    _policy.initialize("Test", 1, policies);
   }
 
   function test_DeploysVertexCore() public {
@@ -207,7 +207,7 @@ contract Integration is VertexFactoryTest {
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
 
-    VertexCore newVertex = factory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+    VertexCore newVertex = factory.deploy("Integration Test", initialStrategies, initialAccounts, initialPolicies);
 
     assertEq(address(newVertex), address(computedVertexCore));
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));

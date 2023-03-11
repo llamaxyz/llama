@@ -48,6 +48,6 @@ contract ComputeAddress is VertexTestSetup {
     (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
       getDefaultVertexDeployParameters();
     vm.prank(address(core));
-    return factory.deploy("NewProject", "NP", strategies, accounts, policies);
+    return factory.deploy("NewProject", strategies, accounts, policies);
   }
 }

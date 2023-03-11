@@ -10,9 +10,9 @@ interface IVertexPolicy {
 
   /// @notice initializes the contract
   /// @param _name the name of the contract
-  /// @param instance the vertexCount from the factory
+  /// @param instanceCount the vertexCount from the factory
   /// @param initialPolicies the initial policies to mint
-  function initialize(string memory _name, uint256 instance, PolicyGrantData[] memory initialPolicies) external;
+  function initialize(string memory _name, uint256 instanceCount, PolicyGrantData[] memory initialPolicies) external;
 
   /// @notice sets the vertexCore address
   /// @param _vertex the address of the vertexCore
