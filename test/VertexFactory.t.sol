@@ -113,7 +113,7 @@ contract Deploy is VertexFactoryTest {
 
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", 1, policies);
+    _policy.initialize("Test", policies);
   }
 
   function test_DeploysVertexCore() public {

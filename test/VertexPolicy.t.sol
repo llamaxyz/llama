@@ -41,13 +41,13 @@ contract VertexPolicyTest is VertexTestSetup {
 contract Initialize is VertexPolicyTest {
   function test_SetsNameAndSymbol() public {
     assertEq(policy.name(), "Root Vertex");
-    assertEq(policy.symbol(), "V_Roo_0");
+    assertEq(policy.symbol(), "V_Roo");
   }
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    policy.initialize("Test", 1, policies);
+    policy.initialize("Test", policies);
   }
 }
 
