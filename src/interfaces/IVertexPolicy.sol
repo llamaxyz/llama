@@ -38,7 +38,6 @@ interface IVertexPolicy {
   /// @param timestamp the block number to query
   function holderWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256);
 
-
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
   function setBaseURI(string calldata _baseURI) external;

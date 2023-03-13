@@ -171,7 +171,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
           checkpoints.push(PermissionIdCheckpoint(uint128(block.timestamp), quantity + 1));
         }
         if (data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]) {
-          if (data.expirationTimestamp != 0 &&  data.expirationTimestamp < block.timestamp) revert Expired();
+          if (data.expirationTimestamp != 0 && data.expirationTimestamp < block.timestamp) revert Expired();
           tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId] = data.expirationTimestamp;
         }
       }

@@ -145,6 +145,10 @@ contract BatchUpdatePermissions is VertexPolicyTest {
     // policy.batchUpdatePermissions(updateDataArray);
     // assertEq(policy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, permissionId1), block.timestamp + 1 days);
   }
+
+  function test_canSetPermissionWithExpirationDateToInifiteExpiration() public {
+    // TODO after matt's PR merges
+  }
 }
 
 contract BatchRevokePolicies is VertexPolicyTest {
