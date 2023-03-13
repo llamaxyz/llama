@@ -258,6 +258,15 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     revert SoulboundToken();
   }
 
+  /// @dev overriding approve to disable approvals for SBTs
+  function approve(address, /* spender */ uint256 /* id */) public override {
+    revert SoulboundToken();
+  }
+
+  function setApprovalForAll(address, /* operator */ bool /* approved */) public override {
+    revert SoulboundToken();
+  }
+
   /// @inheritdoc IVertexPolicy
   function totalSupply() public view override returns (uint256) {
     return _totalSupply;

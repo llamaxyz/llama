@@ -179,6 +179,20 @@ contract TransferFrom is VertexPolicyTest {
   }
 }
 
+contract Approve is VertexPolicyTest {
+  function test_tranapprovesferFrom_RevertIfApprove() public {
+    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
+  }
+}
+
+contract SetApprovalForAll is VertexPolicyTest {
+  function test_setApprovalForAll_RevertIfSetApprovalForAll() public {
+    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    policy.setApprovalForAll(address(0xdeadbeef), true);
+  }
+}
+
 contract TokenURI is VertexPolicyTest {
   function test_ReturnsCorrectTokenURI() public {
     assertEq(policy.tokenURI(SELF_TOKEN_ID), string.concat(policy.baseURI(), vm.toString(SELF_TOKEN_ID)));
