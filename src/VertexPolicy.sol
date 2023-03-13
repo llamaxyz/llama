@@ -41,14 +41,9 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   constructor() initializer {}
 
   /// @inheritdoc IVertexPolicy
-  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies)
-    external
-    initializer
-  {
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies) external initializer {
     string memory firstThreeLetters = LibString.slice(_name, 0, 3);
-    __initializeERC721MinimalProxy(
-      _name, string.concat("V_", firstThreeLetters)
-    );
+    __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
@@ -264,11 +259,11 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   }
 
   /// @dev overriding approve to disable approvals for SBTs
-  function approve(address, /* spender */ uint256 /* id */) public override {
+  function approve(address, /* spender */ uint256 /* id */ ) public override {
     revert SoulboundToken();
   }
 
-  function setApprovalForAll(address, /* operator */ bool /* approved */) public override {
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public override {
     revert SoulboundToken();
   }
 
