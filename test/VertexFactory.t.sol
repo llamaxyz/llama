@@ -185,7 +185,7 @@ contract Integration is VertexFactoryTest {
     // compute strategy data and strategy addresses
     Strategy memory strategyData = buildStrategyData();
     VertexStrategy computedStrategy =
-      lens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+      lens.computeVertexStrategyAddress(address(strategyLogic), strategyData, address(computedVertexCore));
 
     // compute new weights and permission metadata
     PermissionMetadata[] memory permissionMetadata =
