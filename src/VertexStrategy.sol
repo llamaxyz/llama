@@ -21,36 +21,36 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
 
   /// @notice Can action be queued before approvalEndTime.
-  bool public immutable isFixedLengthApprovalPeriod;
+  bool public isFixedLengthApprovalPeriod;
 
   /// @notice The strategy's Vertex system.
-  IVertexCore public immutable vertex;
+  IVertexCore public vertex;
 
   /// @notice Policy NFT for this Vertex system.
-  VertexPolicy public immutable policy;
+  VertexPolicy public policy;
 
   /// @notice Minimum time between queueing and execution of action.
-  uint256 public immutable queuingPeriod;
+  uint256 public queuingPeriod;
 
   /// @notice Time after executionTime that action can be executed before permanently expiring.
-  uint256 public immutable expirationPeriod;
+  uint256 public expirationPeriod;
 
   /// @notice Length of approval period in blocks.
-  uint256 public immutable approvalPeriod;
+  uint256 public approvalPeriod;
 
   /// @notice Minimum percentage of total approval weight / total approval supply at creationTime of the action for it
   /// to be queued. In bps, where
   /// 100_00 == 100%.
-  uint256 public immutable minApprovalPct;
+  uint256 public minApprovalPct;
 
   /// @notice Minimum percentage of total disapproval weight / total disapproval supply at creationTime of the action
   /// for it to be canceled. In bps,
   /// where 100_00
   /// == 100%.
-  uint256 public immutable minDisapprovalPct;
+  uint256 public minDisapprovalPct;
 
-  bytes32 public immutable approvalRole;
-  bytes32 public immutable disapprovalRole;
+  bytes32 public approvalRole;
+  bytes32 public disapprovalRole;
   mapping(bytes32 => bool) public forceApprovalRole;
   mapping(bytes32 => bool) public forceDisapprovalRole;
 
