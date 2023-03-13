@@ -8,7 +8,7 @@ pragma solidity ^0.8.0;
  * time, and later looking up past values by block timestamp. See {Votes} as an example.
  *
  * To create a history of checkpoints define a variable type `Checkpoints.History` in your contract, and store a new
- * checkpoint for the current transaction block using the {push} function.
+ * checkpoint for the current transaction timestamp using the {push} function.
  *
  * @dev This was created by modifying then running the OpenZeppelin `Checkpoints.js` script, which generated a version
  * of this library that uses a 64 bit `timestamp` and 128 bit `quantity` field in the `Checkpoint` struct. The struct
@@ -23,12 +23,13 @@ library Checkpoints {
 
     struct Checkpoint {
         uint64 timestamp;
+        uint64 expiration;
         uint128 quantity;
     }
 
     /**
-     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that block, the closest one
-     * before it is returned, or zero otherwise.
+     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that timestamp, the
+     * closest one before it is returned, or zero otherwise.
      */
     function getAtTimestamp(History storage self, uint256 timestamp) internal view returns (uint256) {
         require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
@@ -40,10 +41,31 @@ library Checkpoints {
     }
 
     /**
-     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that block, the closest one
-     * before it is returned, or zero otherwise. Similar to {upperLookup} but optimized for the case when the searched
-     * checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where N is the timestamp of
-     * checkpoints.
+     * @dev Returns the quantity and expiration at a given block timestamp. If a checkpoint is not available at that
+     * timestamp, the closest one before it is returned, or zero otherwise.
+     * @dev This is identical to the `getAtTimestamp` method, but returns the expiration as well.
+     */
+    function getCheckpointAtTimestamp(History storage self, uint256 timestamp)
+        internal
+        view
+        returns (uint256 quantity, uint256 expiration)
+    {
+        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
+        uint64 _timestamp = toUint64(timestamp);
+
+        uint256 len = self._checkpoints.length;
+        uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, 0, len);
+
+        if (pos == 0) return (0, 0);
+        Checkpoint storage ckpt = _unsafeAccess(self._checkpoints, pos - 1);
+        return (ckpt.quantity, ckpt.expiration);
+    }
+
+    /**
+     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that time, the closest
+     * one before it is returned, or zero otherwise. Similar to {upperLookup} but optimized for the case when the
+     * searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where N is the
+     * timestamp of checkpoints.
      */
     function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint256) {
         require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
@@ -69,26 +91,59 @@ library Checkpoints {
     }
 
     /**
-     * @dev Pushes a quantity onto a History so that it is stored as the checkpoint for the current block.
+     * @dev Returns the quantity and expiration at a given block timestamp. If a checkpoint is not available at that
+     * time, the closest one, before it is returned, or zero otherwise. Similar to {upperLookup} but optimized for the
+     * case when the searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where
+     * N is the timestamp of checkpoints.
+     * @dev This is identical to the `getAtProbablyRecentTimestamp` method, but returns the expiration as well.
+     */
+    function getCheckpointAtProbablyRecentTimestamp(History storage self, uint256 timestamp)
+        internal
+        view
+        returns (uint256 quantity, uint256 expiration)
+    {
+        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
+        uint64 _timestamp = toUint64(timestamp);
+
+        uint256 len = self._checkpoints.length;
+
+        uint256 low = 0;
+        uint256 high = len;
+
+        if (len > 5) {
+            uint256 mid = len - sqrt(len);
+            if (_timestamp < _unsafeAccess(self._checkpoints, mid).timestamp) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+
+        uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, low, high);
+
+        if (pos == 0) return (0, 0);
+        Checkpoint storage ckpt = _unsafeAccess(self._checkpoints, pos - 1);
+        return (ckpt.quantity, ckpt.expiration);
+    }
+
+    /**
+     * @dev Pushes a `quantity` and `expiration` onto a History so that it is stored as the checkpoint for the current
+     * `timestamp`.
+     *
+     * Returns previous quantity and new quantity.
+     */
+    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint256, uint256) {
+        return _insert(self._checkpoints, toUint64(block.timestamp), toUint64(expiration), toUint128(quantity));
+    }
+
+    /**
+     * @dev Pushes a `quantity` with no expiration onto a History so that it is stored as the checkpoint for the current
+     * `timestamp`.
      *
      * Returns previous quantity and new quantity.
      */
     function push(History storage self, uint256 quantity) internal returns (uint256, uint256) {
-        return _insert(self._checkpoints, toUint64(block.timestamp), toUint128(quantity));
-    }
-
-    /**
-     * @dev Pushes a quantity onto a History, by updating the latest quantity using binary operation `op`. The new
-     * quantity will be set to `op(latest, delta)`.
-     *
-     * Returns previous quantity and new quantity.
-     */
-    function push(
-        History storage self,
-        function(uint256, uint256) view returns (uint256) op,
-        uint256 delta
-    ) internal returns (uint256, uint256) {
-        return push(self, op(latest(self), delta));
+        return push(self, quantity, type(uint64).max);
     }
 
     /**
@@ -109,15 +164,16 @@ library Checkpoints {
         returns (
             bool exists,
             uint64 timestamp,
+            uint64 expiration,
             uint128 quantity
         )
     {
         uint256 pos = self._checkpoints.length;
         if (pos == 0) {
-            return (false, 0, 0);
+            return (false, 0, 0, 0);
         } else {
             Checkpoint memory ckpt = _unsafeAccess(self._checkpoints, pos - 1);
-            return (true, ckpt.timestamp, ckpt.quantity);
+            return (true, ckpt.timestamp, ckpt.expiration, ckpt.quantity);
         }
     }
 
@@ -129,12 +185,13 @@ library Checkpoints {
     }
 
     /**
-     * @dev Pushes a (`timestamp`, `quantity`) pair into an ordered list of checkpoints, either by inserting a new
+     * @dev Pushes a (`timestamp`, `expiration`, `quantity`) pair into an ordered list of checkpoints, either by inserting a new
      * checkpoint, or by updating the last one.
      */
     function _insert(
         Checkpoint[] storage self,
         uint64 timestamp,
+        uint64 expiration,
         uint128 quantity
     ) private returns (uint128, uint128) {
         uint256 pos = self.length;
@@ -148,13 +205,15 @@ library Checkpoints {
 
             // Update or push new checkpoint
             if (last.timestamp == timestamp) {
-                _unsafeAccess(self, pos - 1).quantity = quantity;
+                Checkpoint storage ckpt = _unsafeAccess(self, pos - 1);
+                ckpt.quantity = quantity;
+                ckpt.expiration = expiration;
             } else {
-                self.push(Checkpoint({timestamp: timestamp, quantity: quantity}));
+                self.push(Checkpoint({timestamp: timestamp, expiration: expiration, quantity: quantity}));
             }
             return (last.quantity, quantity);
         } else {
-            self.push(Checkpoint({timestamp: timestamp, quantity: quantity}));
+            self.push(Checkpoint({timestamp: timestamp, expiration: expiration, quantity: quantity}));
             return (0, quantity);
         }
     }
