@@ -234,18 +234,6 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     return _expiration < block.timestamp && _expiration != 0;
   }
 
-  /// @inheritdoc IVertexPolicy
-  function revokeExpiredPermission(uint256 policyId, bytes32 permissionId) external override returns (bool expired) {
-    expired = _isPermissionExpired(policyId, permissionId);
-    if (expired) {
-      tokenPermissionCheckpoints[policyId][permissionId].push(PermissionIdCheckpoint(uint128(block.timestamp), 0));
-      PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionId];
-      supplyCheckpoint.push(
-        PermissionIdCheckpoint(uint128(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1)
-      );
-    }
-  }
-
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
   function setBaseURI(string calldata _baseURI) public override onlyVertex {

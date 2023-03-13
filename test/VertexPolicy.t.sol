@@ -168,10 +168,6 @@ contract HasPermission is VertexPolicyTest {
 // TODO Add tests.
 }
 
-contract RevokeExpiredPermission is VertexPolicyTest {
-// TODO Add tests.
-}
-
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
     vm.expectRevert(VertexPolicy.SoulboundToken.selector);

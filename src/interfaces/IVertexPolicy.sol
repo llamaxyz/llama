@@ -38,11 +38,6 @@ interface IVertexPolicy {
   /// @param timestamp the block number to query
   function holderWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256);
 
-  /// @notice Check if a holder has an expired role and removes their permission if it is expired
-  /// @dev should be called periodically to remove expired permissions
-  /// @param policyId the address of the policy holder
-  /// @param role the signature of the permission
-  function revokeExpiredPermission(uint256 policyId, bytes32 role) external returns (bool expired);
 
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
