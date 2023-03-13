@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721MinimalProxy} from "src/lib/ERC721MinimalProxy.sol";
-import {Strings} from "@openzeppelin/utils/Strings.sol";
+import {LibString} from "@solady/utils/LibString.sol";
 import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {
   PermissionData,
@@ -45,8 +45,10 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     external
     initializer
   {
-    string memory firstThreeLetters = slice(_name, 0, 3);
-    __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters, "_", Strings.toString(instanceCount)));
+    string memory firstThreeLetters = LibString.slice(_name, 0, 3);
+    __initializeERC721MinimalProxy(
+      _name, string.concat("V_", firstThreeLetters, "_", LibString.toString(instanceCount))
+    );
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
@@ -269,7 +271,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   /// @notice returns the location of the policy metadata
   /// @param id the id of the policy token
   function tokenURI(uint256 id) public view override returns (string memory) {
-    return string(abi.encodePacked(baseURI, Strings.toString(id)));
+    return string(abi.encodePacked(baseURI, LibString.toString(id)));
   }
 
   function getTokenPermissionCheckpoints(uint256 policyId, bytes32 permissionId)
@@ -286,36 +288,5 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
     returns (PermissionIdCheckpoint[] memory)
   {
     return permissionSupplyCheckpoints[permissionId];
-  }
-
-  /// @notice taken from the solady library
-  /// https://github.com/Vectorized/solady/blob/437da9a26b0f223f7200b3fbd55ddcf800c97d88/src/utils/LibString.sol
-  /// @dev Returns a copy of `subject` sliced from `start` to `end` (exclusive).
-  /// `start` and `end` are byte offsets.
-  function slice(string memory subject, uint256 start, uint256 end) internal pure returns (string memory result) {
-    /// @solidity memory-safe-assembly
-    assembly {
-      let subjectLength := mload(subject)
-      if iszero(gt(subjectLength, end)) { end := subjectLength }
-      if iszero(gt(subjectLength, start)) { start := subjectLength }
-      if lt(start, end) {
-        result := mload(0x40)
-        let resultLength := sub(end, start)
-        mstore(result, resultLength)
-        subject := add(subject, start)
-        let w := not(31)
-        // Copy the `subject` one word at a time, backwards.
-        for { let o := and(add(resultLength, 31), w) } 1 {} {
-          mstore(add(result, o), mload(add(subject, o)))
-          o := add(o, w) // `sub(o, 0x20)`.
-          if iszero(o) { break }
-        }
-        // Zeroize the slot after the string.
-        mstore(add(add(result, 0x20), resultLength), 0)
-        // Allocate memory for the length and the bytes,
-        // rounded up to a multiple of 32.
-        mstore(0x40, add(result, and(add(resultLength, 63), w)))
-      }
-    }
   }
 }
