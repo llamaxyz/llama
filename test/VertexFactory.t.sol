@@ -133,7 +133,7 @@ contract Deploy is VertexFactoryTest {
     (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, accountLogic, strategies, accounts);
+    _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategies, accounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {

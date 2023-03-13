@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -10,7 +11,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 /// @title A strategy definition of a Vertex system.
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
-contract VertexStrategy is IVertexStrategy {
+contract VertexStrategy is IVertexStrategy, Initializable {
   error InvalidPermissionId();
 
   /// @notice Equivalent to 100%, but in basis points.
@@ -53,8 +54,14 @@ contract VertexStrategy is IVertexStrategy {
   mapping(bytes32 => bool) public forceApprovalRole;
   mapping(bytes32 => bool) public forceDisapprovalRole;
 
+  constructor() initializer {}
+
   /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
-  constructor(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex) {
+  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex)
+    external
+    override
+    initializer
+  {
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;

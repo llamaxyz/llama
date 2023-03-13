@@ -48,6 +48,9 @@ contract VertexCore is IVertexCore, Initializable {
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
+  /// @notice The Vertex Strategy implementation contract.
+  VertexStrategy vertexStrategyImplementation;
+
   /// @notice The Vertex Account implementation contract.
   VertexAccount public vertexAccountImplementation;
 
@@ -85,12 +88,14 @@ contract VertexCore is IVertexCore, Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
+    VertexStrategy _vertexStrategyImplementation,
     VertexAccount _vertexAccountImplementation,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external override initializer {
     name = _name;
     policy = _policy;
+    vertexStrategyImplementation = _vertexStrategyImplementation;
     vertexAccountImplementation = _vertexAccountImplementation;
 
     _deployStrategies(initialStrategies, _policy);
@@ -346,7 +351,9 @@ contract VertexCore is IVertexCore, Initializable {
             )
           )
         );
-        VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
+
+        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyImplementation), salt));
+        strategy.initialize(strategies[i], _policy, IVertexCore(address(this)));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }

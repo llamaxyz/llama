@@ -17,6 +17,7 @@ import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} f
 contract VertexTestSetup is Test {
   // Logic contracts.
   VertexCore coreLogic;
+  VertexStrategy strategyLogic;
   VertexAccount accountLogic;
   VertexPolicy policyLogic;
 
@@ -53,6 +54,7 @@ contract VertexTestSetup is Test {
   function setUp() public virtual {
     // Deploy logic contracts.
     coreLogic = new VertexCore();
+    strategyLogic = new VertexStrategy();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
 
@@ -96,7 +98,7 @@ contract VertexTestSetup is Test {
     // Deploy factory. The first two arguments are protocol parameters, the rest of the args
     // configure the root vertex instance.
     factory =
-    new VertexFactory(coreLogic, accountLogic, policyLogic, "Root Vertex", "RVTX", strategies, accounts, new PolicyGrantData[](0));
+    new VertexFactory(coreLogic, strategyLogic, accountLogic, policyLogic, "Root Vertex", "RVTX", strategies, accounts, new PolicyGrantData[](0));
     core = factory.rootVertex();
     policy = core.policy();
 

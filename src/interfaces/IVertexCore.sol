@@ -31,12 +31,14 @@ interface IVertexCore {
   /// @notice Initializes a new VertexCore clone.
   /// @param name The name of the VertexCore clone.
   /// @param policy This Vertex instance's policy contract.
+  /// @param vertexStrategyImplementation The VertexStrategy implementation contract.
   /// @param vertexAccountImplementation The VertexAccount implementation contract.
   /// @param initialStrategies The configuration of the initial strategies.
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory name,
     VertexPolicy policy,
+    VertexStrategy vertexStrategyImplementation,
     VertexAccount vertexAccountImplementation,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts
