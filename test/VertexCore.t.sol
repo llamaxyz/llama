@@ -239,9 +239,10 @@ contract CreateAction is VertexCoreTest {
     // TODO like the previous test, but deploy a real strategy and use that as unauthorizedStrategy
   }
 
-  function testFuzz_RevertIfPolicyholderNotMinted(address _notActionCreator) public {
-    vm.assume(_notActionCreator != actionCreator);
-    vm.prank(_notActionCreator);
+  function testFuzz_RevertIfPolicyholderNotMinted(address user) public {
+    if (user == address(0)) user = address(100); // Faster than vm.assume, since 0 comes up a lot.
+    vm.assume(policy.balanceOf(user) == 0);
+    vm.prank(user);
     vm.expectRevert(IVertexCore.PolicyholderDoesNotHavePermission.selector);
     core.createAction(strategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
