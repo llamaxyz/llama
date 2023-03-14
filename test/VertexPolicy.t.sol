@@ -174,21 +174,21 @@ contract RevokeExpiredPermission is VertexPolicyTest {
 
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.transferFrom(address(this), address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract Approve is VertexPolicyTest {
   function test_tranapprovesferFrom_RevertIfApprove() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract SetApprovalForAll is VertexPolicyTest {
   function test_setApprovalForAll_RevertIfSetApprovalForAll() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.setApprovalForAll(address(0xdeadbeef), true);
   }
 }
