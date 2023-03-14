@@ -174,7 +174,7 @@ contract HasPermission is VertexPolicyTest {
 
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.transferFrom(address(this), address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
