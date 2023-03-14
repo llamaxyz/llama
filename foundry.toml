@@ -3,20 +3,15 @@
   solc = "0.8.17"
   optimizer = false
   via_ir = false
+  gas_reports = ["VertexAccount", "VertexCore", "VertexFactory", "VertexLens", "VertexPolicy", "VertexStrategy"]
 
 [profile.default.optimizer_details]
   constantOptimizer = true
   yul = true
 
-# Use this profile to run tests in CI with the optimizer.
-[profile.production]
-  invariant = { runs = 50, fail_on_revert = true }
-  optimizer = true
-  via_ir = true
-
 [profile.ci]
   fuzz = { runs = 5000 }
-  invariant = { runs = 1000, depth = 100 }
+  invariant = { runs = 1000, depth = 100, fail_on_revert = true }
   optimizer = true
   via_ir = true
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ERC721MinimalProxy} from "src/lib/ERC721MinimalProxy.sol";
+import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {
@@ -17,7 +17,7 @@ import {
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
-contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
+contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
   mapping(uint256 => mapping(bytes32 => PermissionIdCheckpoint[])) internal tokenPermissionCheckpoints;
   mapping(bytes32 => PermissionIdCheckpoint[]) internal permissionSupplyCheckpoints;
   mapping(uint256 => mapping(bytes32 => uint256)) public tokenToPermissionExpirationTimestamp;
@@ -248,6 +248,20 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   /// @dev overriding transferFrom to disable transfers for SBTs
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
   function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ ) public pure override {
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
+    public
+    pure
+    override
+  {
     revert NonTransferableToken();
   }
 

@@ -8,7 +8,7 @@ pragma solidity ^0.8.17;
 import {DSTestPlus} from "lib/solmate/src/test/utils/DSTestPlus.sol";
 import {DSInvariantTest} from "lib/solmate/src/test/utils/DSInvariantTest.sol";
 
-import {MockERC721} from "./mock/MockERC721MinimalProxy.sol";
+import {MockERC721} from "./mock/MockERC721.sol";
 
 import {ERC721TokenReceiver} from "lib/solmate/src/tokens/ERC721.sol";
 

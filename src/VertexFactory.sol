@@ -49,6 +49,7 @@ contract VertexFactory is IVertexFactory {
     _;
   }
 
+  /// @inheritdoc IVertexFactory
   function deploy(
     string memory name,
     string memory symbol,
