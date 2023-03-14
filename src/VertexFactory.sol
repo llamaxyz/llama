@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -15,6 +16,9 @@ import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 contract VertexFactory is IVertexFactory {
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
+
+  /// @notice The Vertex Strategy implementation (logic) contract.
+  VertexStrategy public immutable vertexStrategyLogic;
 
   /// @notice The Vertex Account implementation (logic) contract.
   VertexAccount public immutable vertexAccountLogic;
@@ -30,18 +34,19 @@ contract VertexFactory is IVertexFactory {
 
   constructor(
     VertexCore _vertexCoreLogic,
+    VertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) {
     vertexCoreLogic = _vertexCoreLogic;
+    vertexStrategyLogic = _vertexStrategyLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    rootVertex = _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
+    rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
   modifier onlyRootVertex() {
@@ -52,26 +57,24 @@ contract VertexFactory is IVertexFactory {
   /// @inheritdoc IVertexFactory
   function deploy(
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) external onlyRootVertex returns (VertexCore) {
-    return _deploy(name, symbol, initialStrategies, initialAccounts, initialPolicies);
+    return _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
   function _deploy(
     string memory name,
-    string memory symbol,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, symbol, initialPolicies);
+    policy.initialize(name, initialPolicies);
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
-    vertex.initialize(name, policy, vertexAccountLogic, initialStrategies, initialAccounts);
+    vertex.initialize(name, policy, vertexStrategyLogic, vertexAccountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
     unchecked {

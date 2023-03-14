@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
-import {Strings} from "@openzeppelin/utils/Strings.sol";
+import {LibString} from "@solady/utils/LibString.sol";
 import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {
   PermissionData,
@@ -33,17 +33,17 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
   constructor() initializer {}
 
-  function initialize(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
-    external
-    initializer
-  {
-    __initializeERC721MinimalProxy(_name, _symbol);
+  /// @inheritdoc IVertexPolicy
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies) external initializer {
+    string memory firstThreeLetters = LibString.slice(_name, 0, 3);
+    __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
     }
   }
 
+  /// @inheritdoc IVertexPolicy
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;
@@ -68,7 +68,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
       if (_checkpoints[mid].timestamp <= timestamp) min = mid;
       else max = mid - 1;
     }
-    bool expired = tokenToPermissionExpirationTimestamp[policyId][role] == 0
+    bool expired = tokenToPermissionExpirationTimestamp[policyId][role] == 0 // 0 means no expiration
       ? false
       : tokenToPermissionExpirationTimestamp[policyId][role] < timestamp;
     return expired ? 0 : _checkpoints[min].quantity;
@@ -163,11 +163,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
           uint128 quantity = checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].quantity : 0;
           checkpoints.push(PermissionIdCheckpoint(uint128(block.timestamp), quantity + 1));
         }
-        if (
-          data.expirationTimestamp > 0
-            && data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]
-        ) {
-          if (data.expirationTimestamp < block.timestamp) revert Expired();
+        if (data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]) {
+          if (data.expirationTimestamp != 0 && data.expirationTimestamp < block.timestamp) revert Expired();
           tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId] = data.expirationTimestamp;
         }
       }
@@ -227,25 +224,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     return _expiration < block.timestamp && _expiration != 0;
   }
 
-  /// @inheritdoc IVertexPolicy
-  function revokeExpiredPermission(uint256 policyId, bytes32 permissionId) external override returns (bool expired) {
-    expired = _isPermissionExpired(policyId, permissionId);
-    if (expired) {
-      tokenPermissionCheckpoints[policyId][permissionId].push(PermissionIdCheckpoint(uint128(block.timestamp), 0));
-      PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionId];
-      supplyCheckpoint.push(
-        PermissionIdCheckpoint(uint128(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1)
-      );
-    }
-  }
-
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
   function setBaseURI(string calldata _baseURI) public override onlyVertex {
     baseURI = _baseURI;
   }
 
-  /// @dev overriding transferFrom to disable transfers for SBTs
+  /// @dev overriding transferFrom to disable transfers
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
   function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
     revert NonTransferableToken();
@@ -265,6 +250,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     revert NonTransferableToken();
   }
 
+  /// @dev overriding approve to disable approvals
+  function approve(address, /* spender */ uint256 /* id */ ) public pure override {
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding approve to disable approvals
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override {
+    revert NonTransferableToken();
+  }
+
   /// @inheritdoc IVertexPolicy
   function totalSupply() public view override returns (uint256) {
     return _totalSupply;
@@ -273,7 +268,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
   /// @notice returns the location of the policy metadata
   /// @param id the id of the policy token
   function tokenURI(uint256 id) public view override returns (string memory) {
-    return string(abi.encodePacked(baseURI, Strings.toString(id)));
+    return string(abi.encodePacked(baseURI, LibString.toString(id)));
   }
 
   function getTokenPermissionCheckpoints(uint256 policyId, bytes32 permissionId)

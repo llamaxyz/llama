@@ -693,7 +693,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] = _computeVertexStrategyAddress(newStrategies[i]);
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(address(strategyLogic), newStrategies[i], address(core));
     }
 
     vm.startPrank(address(core));
