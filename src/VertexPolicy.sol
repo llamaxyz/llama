@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721MinimalProxy} from "src/lib/ERC721MinimalProxy.sol";
-import {Strings} from "@openzeppelin/utils/Strings.sol";
+import {LibString} from "@solady/utils/LibString.sol";
 import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {
   PermissionData,
@@ -18,7 +18,7 @@ import {
 /// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
-  error SoulboundToken();
+  error NonTransferableToken();
   error InvalidInput(); // TODO: Probably need more than one error?
   error OnlyVertex();
   error OnlyOnePolicyPerHolder();
@@ -40,17 +40,17 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
 
   constructor() initializer {}
 
-  function initialize(string memory _name, string memory _symbol, PolicyGrantData[] memory initialPolicies)
-    external
-    initializer
-  {
-    __initializeERC721MinimalProxy(_name, _symbol);
+  /// @inheritdoc IVertexPolicy
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies) external initializer {
+    string memory firstThreeLetters = LibString.slice(_name, 0, 3);
+    __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
     }
   }
 
+  /// @inheritdoc IVertexPolicy
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;
@@ -255,7 +255,17 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   /// @dev overriding transferFrom to disable transfers for SBTs
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
   function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
-    revert SoulboundToken();
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding approve to disable approvals for SBTs
+  function approve(address, /* spender */ uint256 /* id */ ) public override {
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding approve to disable approvals for SBTs
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public override {
+    revert NonTransferableToken();
   }
 
   /// @inheritdoc IVertexPolicy
@@ -266,7 +276,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   /// @notice returns the location of the policy metadata
   /// @param id the id of the policy token
   function tokenURI(uint256 id) public view override returns (string memory) {
-    return string(abi.encodePacked(baseURI, Strings.toString(id)));
+    return string(abi.encodePacked(baseURI, LibString.toString(id)));
   }
 
   function getTokenPermissionCheckpoints(uint256 policyId, bytes32 permissionId)

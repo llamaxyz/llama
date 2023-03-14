@@ -98,7 +98,7 @@ contract VertexTestSetup is Test {
     // Deploy factory. The first two arguments are protocol parameters, the rest of the args
     // configure the root vertex instance.
     factory =
-    new VertexFactory(coreLogic, strategyLogic, accountLogic, policyLogic, "Root Vertex", "RVTX", strategies, accounts, new PolicyGrantData[](0));
+    new VertexFactory(coreLogic, strategyLogic, accountLogic, policyLogic, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
     core = factory.rootVertex();
     policy = core.policy();
 

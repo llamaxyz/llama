@@ -41,13 +41,13 @@ contract VertexPolicyTest is VertexTestSetup {
 contract Initialize is VertexPolicyTest {
   function test_SetsNameAndSymbol() public {
     assertEq(policy.name(), "Root Vertex");
-    assertEq(policy.symbol(), "RVTX");
+    assertEq(policy.symbol(), "V_Roo");
   }
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    policy.initialize("Test", "TST", policies);
+    policy.initialize("Test", policies);
   }
 }
 
@@ -174,8 +174,22 @@ contract RevokeExpiredPermission is VertexPolicyTest {
 
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.transferFrom(address(this), address(0xdeadbeef), SELF_TOKEN_ID);
+  }
+}
+
+contract Approve is VertexPolicyTest {
+  function test_tranapprovesferFrom_RevertIfApprove() public {
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
+    policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
+  }
+}
+
+contract SetApprovalForAll is VertexPolicyTest {
+  function test_setApprovalForAll_RevertIfSetApprovalForAll() public {
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
+    policy.setApprovalForAll(address(0xdeadbeef), true);
   }
 }
 
