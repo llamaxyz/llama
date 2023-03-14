@@ -17,6 +17,7 @@ import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} f
 contract VertexTestSetup is Test {
   // Logic contracts.
   VertexCore coreLogic;
+  VertexStrategy strategyLogic;
   VertexAccount accountLogic;
   VertexPolicy policyLogic;
 
@@ -53,6 +54,7 @@ contract VertexTestSetup is Test {
   function setUp() public virtual {
     // Deploy logic contracts.
     coreLogic = new VertexCore();
+    strategyLogic = new VertexStrategy();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
 
@@ -109,8 +111,8 @@ contract VertexTestSetup is Test {
     }
 
     // Set vertex strategy addresses.
-    strategy1 = lens.computeVertexStrategyAddress(strategy1Config, policy, address(core));
-    strategy2 = lens.computeVertexStrategyAddress(strategy2Config, policy, address(core));
+    strategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategy1Config, address(core));
+    strategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategy2Config, address(core));
 
     // Deploy mock protocol that uses VertexCore as the admin.
     mockProtocol = new ProtocolXYZ(address(core));

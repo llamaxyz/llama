@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {Strategy} from "src/lib/Structs.sol";
 
 interface IVertexStrategy {
   event ForceApprovalRoleAdded(bytes32 role);
@@ -10,6 +11,12 @@ interface IVertexStrategy {
   event NewStrategyCreated(IVertexCore vertex, VertexPolicy policy);
 
   error NoPolicy();
+
+  /// @notice Initializes a new VertexStrategy clone.
+  /// @param strategyConfig The strategy configuration.
+  /// @param policy The policy contract.
+  /// @param vertex The VertexCore contract.
+  function initialize(Strategy memory strategyConfig, VertexPolicy policy, IVertexCore vertex) external;
 
   /// @notice Get whether an action has passed the approval process.
   /// @param actionId id of the action.
