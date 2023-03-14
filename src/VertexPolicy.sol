@@ -75,7 +75,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
       if (_checkpoints[mid].timestamp <= timestamp) min = mid;
       else max = mid - 1;
     }
-    bool expired = tokenToPermissionExpirationTimestamp[policyId][role] == 0
+    bool expired = tokenToPermissionExpirationTimestamp[policyId][role] == 0 // 0 means no expiration
       ? false
       : tokenToPermissionExpirationTimestamp[policyId][role] < timestamp;
     return expired ? 0 : _checkpoints[min].quantity;
@@ -170,11 +170,8 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
           uint128 quantity = checkpoints.length > 0 ? checkpoints[checkpoints.length - 1].quantity : 0;
           checkpoints.push(PermissionIdCheckpoint(uint128(block.timestamp), quantity + 1));
         }
-        if (
-          data.expirationTimestamp > 0
-            && data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]
-        ) {
-          if (data.expirationTimestamp < block.timestamp) revert Expired();
+        if (data.expirationTimestamp != tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId]) {
+          if (data.expirationTimestamp != 0 && data.expirationTimestamp < block.timestamp) revert Expired();
           tokenToPermissionExpirationTimestamp[updateData.policyId][data.permissionId] = data.expirationTimestamp;
         }
       }
@@ -232,18 +229,6 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   function _isPermissionExpired(uint256 _policyId, bytes32 _permissionId) internal view returns (bool) {
     uint256 _expiration = tokenToPermissionExpirationTimestamp[_policyId][_permissionId];
     return _expiration < block.timestamp && _expiration != 0;
-  }
-
-  /// @inheritdoc IVertexPolicy
-  function revokeExpiredPermission(uint256 policyId, bytes32 permissionId) external override returns (bool expired) {
-    expired = _isPermissionExpired(policyId, permissionId);
-    if (expired) {
-      tokenPermissionCheckpoints[policyId][permissionId].push(PermissionIdCheckpoint(uint128(block.timestamp), 0));
-      PermissionIdCheckpoint[] storage supplyCheckpoint = permissionSupplyCheckpoints[permissionId];
-      supplyCheckpoint.push(
-        PermissionIdCheckpoint(uint128(block.timestamp), supplyCheckpoint[supplyCheckpoint.length - 1].quantity - 1)
-      );
-    }
   }
 
   /// @notice sets the base URI for the contract

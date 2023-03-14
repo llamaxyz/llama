@@ -145,6 +145,10 @@ contract BatchUpdatePermissions is VertexPolicyTest {
     // policy.batchUpdatePermissions(updateDataArray);
     // assertEq(policy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, permissionId1), block.timestamp + 1 days);
   }
+
+  function test_CanSetPermissionWithExpirationDateToInfiniteExpiration() public {
+    // TODO after matt's PR merges
+  }
 }
 
 contract BatchRevokePolicies is VertexPolicyTest {
@@ -168,10 +172,6 @@ contract HasPermission is VertexPolicyTest {
 // TODO Add tests.
 }
 
-contract RevokeExpiredPermission is VertexPolicyTest {
-// TODO Add tests.
-}
-
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
     vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
@@ -180,14 +180,14 @@ contract TransferFrom is VertexPolicyTest {
 }
 
 contract Approve is VertexPolicyTest {
-  function test_tranapprovesferFrom_RevertIfApprove() public {
+  function test_RevertIf_Called() public {
     vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract SetApprovalForAll is VertexPolicyTest {
-  function test_setApprovalForAll_RevertIfSetApprovalForAll() public {
+  function test_RevertIf_Called() public {
     vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.setApprovalForAll(address(0xdeadbeef), true);
   }
