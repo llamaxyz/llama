@@ -32,12 +32,10 @@ contract ComputeAddress is VertexTestSetup {
   function test_ComputeVertexStrategyAddress() public {
     // Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex
     (Strategy[] memory strategies,,) = getDefaultVertexDeployParameters();
-    VertexPolicy computedVertexPolicy =
-      lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
     VertexCore computedVertexCore = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
 
     VertexStrategy computedVertexStrategy =
-      lens.computeVertexStrategyAddress(strategies[0], computedVertexPolicy, address(computedVertexCore));
+      lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(computedVertexCore));
 
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(computedVertexStrategy, strategies[0]);

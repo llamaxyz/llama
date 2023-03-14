@@ -49,28 +49,26 @@ contract VertexLens is IVertexLens {
   }
 
   /// @inheritdoc IVertexLens
-  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, address _vertex)
+  function computeVertexStrategyAddress(address vertexStrategyLogic, Strategy memory _strategy, address _vertexCore)
     external
     pure
     returns (VertexStrategy)
   {
-    bytes memory bytecode = type(VertexStrategy).creationCode;
-    return VertexStrategy(
-      computeCreate2Address(
-        keccak256(
-          abi.encodePacked(
-            _strategy.approvalPeriod,
-            _strategy.queuingPeriod,
-            _strategy.expirationPeriod,
-            _strategy.minApprovalPct,
-            _strategy.minDisapprovalPct,
-            _strategy.isFixedLengthApprovalPeriod
-          )
-        ), // salt
-        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, _policy, _vertex))),
-        _vertex // deployer
-      )
+    address _computedAddress = Clones.predictDeterministicAddress(
+      vertexStrategyLogic,
+      keccak256(
+        abi.encodePacked(
+          _strategy.approvalPeriod,
+          _strategy.queuingPeriod,
+          _strategy.expirationPeriod,
+          _strategy.minApprovalPct,
+          _strategy.minDisapprovalPct,
+          _strategy.isFixedLengthApprovalPeriod
+        )
+      ), // salt
+      _vertexCore // deployer
     );
+    return VertexStrategy(_computedAddress);
   }
 
   /// @inheritdoc IVertexLens

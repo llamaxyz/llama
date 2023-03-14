@@ -37,11 +37,11 @@ interface IVertexLens {
     returns (VertexPolicy);
 
   /// @notice computes the address of a vertex strategy with a strategy value.
+  /// @param vertexStrategyLogic The Vertex Strategy logic contract.
   /// @param _strategy The strategy to be set.
-  /// @param _policy The policy to be set.
-  /// @param _vertex The vertex to be set.
+  /// @param _vertexCore The vertex core to be set.
   /// @return the computed address of the VertexStrategy contract.
-  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, address _vertex)
+  function computeVertexStrategyAddress(address vertexStrategyLogic, Strategy memory _strategy, address _vertexCore)
     external
     pure
     returns (VertexStrategy);

@@ -48,8 +48,11 @@ contract VertexCore is IVertexCore, Initializable {
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice The Vertex Account implementation contract.
-  VertexAccount public vertexAccountImplementation;
+  /// @notice The Vertex Strategy implementation (logic) contract.
+  VertexStrategy public vertexStrategyLogic;
+
+  /// @notice The Vertex Account implementation (logic) contract.
+  VertexAccount public vertexAccountLogic;
 
   /// @notice The NFT contract that defines the policies for this Vertex system.
   VertexPolicy public policy;
@@ -85,13 +88,15 @@ contract VertexCore is IVertexCore, Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
-    VertexAccount _vertexAccountImplementation,
+    VertexStrategy _vertexStrategyLogic,
+    VertexAccount _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external override initializer {
     name = _name;
     policy = _policy;
-    vertexAccountImplementation = _vertexAccountImplementation;
+    vertexStrategyLogic = _vertexStrategyLogic;
+    vertexAccountLogic = _vertexAccountLogic;
 
     _deployStrategies(initialStrategies, _policy);
     _deployAccounts(initialAccounts);
@@ -322,8 +327,7 @@ contract VertexCore is IVertexCore, Initializable {
     unchecked {
       for (uint256 i; i < accountLength; ++i) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account =
-          VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountImplementation), salt)));
+        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
         account.initialize(accounts[i], address(this));
         emit AccountAuthorized(account, accounts[i]);
       }
@@ -346,7 +350,9 @@ contract VertexCore is IVertexCore, Initializable {
             )
           )
         );
-        VertexStrategy strategy = new VertexStrategy{salt: salt}(strategies[i], _policy, IVertexCore(address(this)));
+
+        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
+        strategy.initialize(strategies[i], _policy, IVertexCore(address(this)));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }
