@@ -114,22 +114,22 @@
 | src/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
 |----------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                        | Deployment Size |         |         |         |         |
-| 5761974                                | 29346           |         |         |         |         |
+| 5855507                                | 29813           |         |         |         |         |
 | Function Name                          | min             | avg     | median  | max     | # calls |
 | actionsCount                           | 540             | 540     | 540     | 540     | 1       |
 | authorizedStrategies                   | 933             | 1377    | 933     | 2933    | 9       |
 | cancelAction                           | 2527            | 19840   | 17844   | 44952   | 10      |
-| createAction                           | 3668            | 206398  | 226808  | 267108  | 33      |
+| createAction                           | 3668            | 209707  | 226808  | 267108  | 35      |
 | createAndAuthorizeAccounts             | 355156          | 355156  | 355156  | 355156  | 2       |
 | createAndAuthorizeStrategies           | 2914999         | 2914999 | 2914999 | 2914999 | 1       |
 | executeAction                          | 680             | 28398   | 22859   | 50369   | 7       |
-| getAction                              | 6213            | 10188   | 6213    | 24213   | 54      |
-| initialize                             | 2939            | 2231233 | 2248359 | 2295254 | 190     |
+| getAction                              | 6213            | 9983    | 6213    | 24213   | 58      |
+| initialize                             | 2939            | 2231000 | 2248359 | 2250859 | 190     |
 | name                                   | 1469            | 2135    | 1469    | 3469    | 3       |
 | policy                                 | 716             | 726     | 716     | 2716    | 193     |
-| queueAction                            | 635             | 39703   | 39218   | 67718   | 13      |
-| submitApproval                         | 4083            | 51071   | 50204   | 80654   | 42      |
-| submitDisapproval                      | 3704            | 57548   | 77270   | 77270   | 9       |
+| queueAction                            | 635             | 39669   | 39218   | 67718   | 14      |
+| submitApproval                         | 6053            | 53759   | 53174   | 86624   | 46      |
+| submitDisapproval                      | 3704            | 57791   | 79240   | 79240   | 11      |
 | unauthorizeStrategies                  | 6458            | 6458    | 6458    | 6458    | 1       |
 
 
@@ -138,7 +138,7 @@
 | Deployment Cost                              | Deployment Size |         |         |         |         |
 | 3716223                                      | 14163           |         |         |         |         |
 | Function Name                                | min             | avg     | median  | max     | # calls |
-| deploy                                       | 30482           | 3562724 | 4231518 | 4320728 | 16      |
+| deploy                                       | 30482           | 3557148 | 4231518 | 4231518 | 16      |
 | rootVertex                                   | 556             | 556     | 556     | 556     | 176     |
 | vertexAccountLogic                           | 578             | 578     | 578     | 578     | 1       |
 | vertexCoreLogic                              | 600             | 600     | 600     | 600     | 1       |
@@ -162,18 +162,19 @@
 | Deployment Cost                            | Deployment Size |         |         |         |         |
 | 4343569                                    | 22264           |         |         |         |         |
 | Function Name                              | min             | avg     | median  | max     | # calls |
-| balanceOf                                  | 944             | 2277    | 2944    | 2944    | 6       |
+| balanceOf                                  | 944             | 2034    | 2944    | 2944    | 55      |
 | baseURI                                    | 1218            | 1968    | 1469    | 3218    | 3       |
 | batchGrantPolicies                         | 1766232         | 1766232 | 1766232 | 1766232 | 175     |
-| hasPermission                              | 2165            | 4656    | 2165    | 8165    | 32      |
-| holderWeightAt                             | 2725            | 6682    | 8725    | 8725    | 47      |
-| initialize                                 | 22372           | 192826  | 72460   | 1853472 | 191     |
+| getTokenPermissionSupplyCheckpoints        | 3191            | 3191    | 3191    | 3191    | 3       |
+| hasPermission                              | 2165            | 4862    | 3880    | 8165    | 34      |
+| holderWeightAt                             | 2725            | 6842    | 8725    | 8725    | 51      |
+| initialize                                 | 22372           | 192594  | 72460   | 1809078 | 191     |
 | name                                       | 1492            | 2492    | 2492    | 3492    | 2       |
 | setBaseURI                                 | 2742            | 14087   | 14087   | 25433   | 2       |
 | setVertex                                  | 22837           | 22837   | 22837   | 22837   | 189     |
 | symbol                                     | 3490            | 3490    | 3490    | 3490    | 1       |
 | tokenURI                                   | 10539           | 10539   | 10539   | 10539   | 1       |
-| totalSupplyAt                              | 5017            | 8945    | 5017    | 15017   | 56      |
+| totalSupplyAt                              | 5017            | 9350    | 5017    | 15017   | 60      |
 | transferFrom                               | 967             | 967     | 967     | 967     | 1       |
 | vertex                                     | 559             | 559     | 559     | 559     | 3       |
 
@@ -183,17 +184,17 @@
 | Deployment Cost                                | Deployment Size |       |        |       |         |
 | 899702                                         | 7438            |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| approvalPeriod                                 | 396             | 396   | 396    | 396   | 79      |
-| approvalRole                                   | 374             | 374   | 374    | 374   | 28      |
-| disapprovalRole                                | 397             | 397   | 397    | 397   | 28      |
-| expirationPeriod                               | 373             | 373   | 373    | 373   | 17      |
-| getApprovalWeightAt                            | 5084            | 10234 | 11084  | 18084 | 40      |
-| getDisapprovalWeightAt                         | 11128           | 12556 | 13128  | 13128 | 7       |
+| approvalPeriod                                 | 396             | 396   | 396    | 396   | 86      |
+| approvalRole                                   | 374             | 374   | 374    | 374   | 30      |
+| disapprovalRole                                | 397             | 397   | 397    | 397   | 30      |
+| expirationPeriod                               | 373             | 373   | 373    | 373   | 19      |
+| getApprovalWeightAt                            | 5084            | 9921  | 11084  | 13084 | 43      |
+| getDisapprovalWeightAt                         | 11128           | 12628 | 13128  | 13128 | 8       |
 | isActionCancelationValid                       | 11585           | 17585 | 11585  | 29585 | 3       |
-| isActionPassed                                 | 11583           | 15561 | 11744  | 29583 | 48      |
-| isFixedLengthApprovalPeriod                    | 424             | 424   | 424    | 424   | 45      |
-| minDisapprovalPct                              | 352             | 352   | 352    | 352   | 7       |
-| queuingPeriod                                  | 395             | 395   | 395    | 395   | 17      |
+| isActionPassed                                 | 11583           | 15332 | 11583  | 29583 | 52      |
+| isFixedLengthApprovalPeriod                    | 424             | 424   | 424    | 424   | 49      |
+| minDisapprovalPct                              | 352             | 352   | 352    | 352   | 8       |
+| queuingPeriod                                  | 395             | 395   | 395    | 395   | 19      |
 
 
 | test/ERC721MinimalProxy.t.sol:ERC721Recipient contract |                 |       |        |        |         |
@@ -201,10 +202,10 @@
 | Deployment Cost                                        | Deployment Size |       |        |        |         |
 | 441074                                                 | 2235            |       |        |        |         |
 | Function Name                                          | min             | avg   | median | max    | # calls |
-| data                                                   | 1194            | 1508  | 1319   | 2200   | 8       |
+| data                                                   | 1194            | 1335  | 1319   | 1507   | 8       |
 | from                                                   | 580             | 580   | 580    | 580    | 8       |
 | id                                                     | 473             | 473   | 473    | 473    | 8       |
-| onERC721Received                                       | 50630           | 92732 | 70538  | 179223 | 8       |
+| onERC721Received                                       | 50630           | 76072 | 70538  | 112582 | 8       |
 | operator                                               | 511             | 511   | 511    | 511    | 8       |
 
 
@@ -235,7 +236,7 @@
 | test/invariants/VertexCore.invariants.sol:VertexFactoryInvariants contract |                 |       |        |       |         |
 |----------------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                                            | Deployment Size |       |        |       |         |
-| 26708562                                                                   | 134005          |       |        |       |         |
+| 26802273                                                                   | 134472          |       |        |       |         |
 | Function Name                                                              | min             | avg   | median | max   | # calls |
 | invariant_AllInvariants                                                    | 328             | 328   | 328    | 328   | 1       |
 | invariant_CallSummary                                                      | 62778           | 62778 | 62778  | 62778 | 1       |
@@ -253,7 +254,7 @@
 | test/invariants/VertexFactory.invariants.t.sol:VertexFactoryInvariants contract |                 |       |        |       |         |
 |---------------------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                                                 | Deployment Size |       |        |       |         |
-| 27118366                                                                        | 136047          |       |        |       |         |
+| 27212102                                                                        | 136514          |       |        |       |         |
 | Function Name                                                                   | min             | avg   | median | max   | # calls |
 | invariant_CallSummary                                                           | 20160           | 20160 | 20160  | 20160 | 1       |
 | invariant_VertexCountMonotonicallyIncreases                                     | 61460           | 61460 | 61460  | 61460 | 1       |
@@ -262,10 +263,10 @@
 | test/invariants/VertexPolicy.invariants.t.sol:VertexFactoryInvariants contract |                 |       |        |       |         |
 |--------------------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                                                | Deployment Size |       |        |       |         |
-| 28269861                                                                       | 141784          |       |        |       |         |
+| 28363585                                                                       | 142251          |       |        |       |         |
 | Function Name                                                                  | min             | avg   | median | max   | # calls |
-| invariant_AllInvariants                                                        | 49287           | 49287 | 49287  | 49287 | 1       |
-| invariant_CallSummary                                                          | 92170           | 92170 | 92170  | 92170 | 1       |
+| invariant_AllInvariants                                                        | 51088           | 51088 | 51088  | 51088 | 1       |
+| invariant_CallSummary                                                          | 46004           | 46004 | 46004  | 46004 | 1       |
 
 
 | test/invariants/VertexPolicy.invariants.t.sol:VertexPolicyHandler contract |                 |       |        |       |         |
@@ -273,11 +274,10 @@
 | Deployment Cost                                                            | Deployment Size |       |        |       |         |
 | 2224735                                                                    | 11970           |       |        |       |         |
 | Function Name                                                              | min             | avg   | median | max   | # calls |
-| callSummary                                                                | 34738           | 34738 | 34738  | 34738 | 1       |
-| getActors                                                                  | 2014            | 4014  | 2014   | 8014  | 3       |
-| getPermissionIds                                                           | 942             | 1942  | 1942   | 2942  | 2       |
-| getPolicyIds                                                               | 8937            | 8937  | 8937   | 8937  | 1       |
-| recordMetric                                                               | 1863            | 12813 | 12813  | 23763 | 2       |
+| callSummary                                                                | 36738           | 36738 | 36738  | 36738 | 1       |
+| getActors                                                                  | 921             | 1587  | 921    | 2921  | 3       |
+| getPermissionIds                                                           | 2273            | 6273  | 6273   | 10273 | 2       |
+| getPolicyIds                                                               | 2971            | 2971  | 2971   | 2971  | 1       |
 
 
 | test/mock/MockERC721MinimalProxy.sol:MockERC721 contract |                 |       |        |        |         |
@@ -289,15 +289,15 @@
 | balanceOf                                                | 825             | 918   | 921    | 921    | 37      |
 | burn                                                     | 1060            | 3230  | 3060   | 4544   | 10      |
 | getApproved                                              | 907             | 907   | 907    | 907    | 16      |
-| initialize                                               | 71801           | 72954 | 71801  | 160589 | 77      |
+| initialize                                               | 71801           | 73242 | 71801  | 182789 | 77      |
 | isApprovedForAll                                         | 1246            | 1246  | 1246   | 1246   | 2       |
 | mint                                                     | 1014            | 43532 | 47386  | 47386  | 48      |
-| name                                                     | 1762            | 1762  | 1762   | 1762   | 1       |
+| name                                                     | 1993            | 1993  | 1993   | 1993   | 1       |
 | ownerOf                                                  | 923             | 1089  | 923    | 2976   | 26      |
 | safeMint(address,uint256)                                | 47543           | 59412 | 50248  | 99356  | 10      |
-| safeMint(address,uint256,bytes)                          | 49417           | 79188 | 51266  | 209316 | 8       |
+| safeMint(address,uint256,bytes)                          | 49417           | 70868 | 51313  | 142426 | 8       |
 | safeTransferFrom(address,address,uint256)                | 23133           | 35709 | 25055  | 80729  | 10      |
-| safeTransferFrom(address,address,uint256,bytes)          | 23869           | 54995 | 25348  | 189810 | 8       |
+| safeTransferFrom(address,address,uint256,bytes)          | 23869           | 46664 | 25352  | 123154 | 8       |
 | setApprovalForAll                                        | 24988           | 24988 | 24988  | 24988  | 10      |
 | symbol                                                   | 1805            | 1805  | 1805   | 1805   | 1       |
 | transferFrom                                             | 1402            | 11583 | 6061   | 23139  | 14      |
