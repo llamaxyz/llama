@@ -14,26 +14,6 @@ import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is IVertexCore, Initializable {
-  error InvalidStrategy();
-  error InvalidCancelation();
-  error InvalidActionId();
-  error OnlyQueuedActions();
-  error InvalidStateForQueue();
-  error ActionCannotBeCanceled();
-  error OnlyVertex();
-  error ActionNotActive();
-  error ActionNotQueued();
-  error InvalidSignature();
-  error TimelockNotFinished();
-  error FailedActionExecution();
-  error DuplicateApproval();
-  error DuplicateDisapproval();
-  error DisapproveDisabled();
-  error PolicyholderDoesNotHavePermission();
-  error InsufficientMsgValue();
-  error ApprovalRoleHasZeroSupply();
-  error DisapprovalRoleHasZeroSupply();
-
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -284,6 +264,7 @@ contract VertexCore is IVertexCore, Initializable {
 
   function _submitApproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
+    if (policy.balanceOf(policyholder) == 0) revert InvalidPolicyholder();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
 
@@ -300,6 +281,7 @@ contract VertexCore is IVertexCore, Initializable {
 
   function _submitDisapproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
+    if (policy.balanceOf(policyholder) == 0) revert InvalidPolicyholder();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
 

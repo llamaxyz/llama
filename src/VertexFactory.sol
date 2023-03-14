@@ -13,8 +13,6 @@ import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory is IVertexFactory {
-  error OnlyVertex();
-
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
 

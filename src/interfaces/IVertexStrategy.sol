@@ -5,6 +5,8 @@ import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 
 interface IVertexStrategy {
+  error InvalidPermissionId();
+
   event ForceApprovalRoleAdded(bytes32 role);
   event ForceDisapprovalRoleAdded(bytes32 role);
   event NewStrategyCreated(IVertexCore vertex, VertexPolicy policy);

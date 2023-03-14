@@ -18,13 +18,6 @@ import {
 /// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
 contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
-  error SoulboundToken();
-  error InvalidInput(); // TODO: Probably need more than one error?
-  error OnlyVertex();
-  error OnlyOnePolicyPerHolder();
-  error AlreadyInitialized();
-  error Expired();
-
   mapping(uint256 => mapping(bytes32 => PermissionIdCheckpoint[])) internal tokenPermissionCheckpoints;
   mapping(bytes32 => PermissionIdCheckpoint[]) internal permissionSupplyCheckpoints;
   mapping(uint256 => mapping(bytes32 => uint256)) public tokenToPermissionExpirationTimestamp;
@@ -255,7 +248,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
   /// @dev overriding transferFrom to disable transfers for SBTs
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
   function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
-    revert SoulboundToken();
+    revert NonTransferableToken();
   }
 
   /// @inheritdoc IVertexPolicy

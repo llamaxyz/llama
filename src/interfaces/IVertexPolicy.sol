@@ -4,6 +4,13 @@ pragma solidity ^0.8.17;
 import {PermissionData, PolicyUpdateData, PolicyGrantData, PolicyRevokeData} from "src/lib/Structs.sol";
 
 interface IVertexPolicy {
+  error NonTransferableToken();
+  error InvalidInput(); // TODO: Probably need more than one error?
+  error OnlyVertex();
+  error OnlyOnePolicyPerHolder();
+  error AlreadyInitialized();
+  error Expired();
+
   event PolicyAdded(PolicyGrantData grantData);
   event PermissionUpdated(PolicyUpdateData updateData);
   event PolicyRevoked(PolicyRevokeData revokeData);

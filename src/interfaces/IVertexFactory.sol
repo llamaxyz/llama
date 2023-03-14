@@ -5,6 +5,8 @@ import {VertexCore} from "src/VertexCore.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 interface IVertexFactory {
+  error OnlyVertex();
+
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
 
   /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
