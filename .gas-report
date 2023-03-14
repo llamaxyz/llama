@@ -1,0 +1,113 @@
+| src/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
+|----------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                              | Deployment Size |       |        |       |         |
+| 3165246                                      | 16380           |       |        |       |         |
+| Function Name                                | min             | avg   | median | max   | # calls |
+| approveERC20                                 | 2676            | 26110 | 29416  | 48416 | 15      |
+| approveERC721                                | 2654            | 19658 | 28160  | 28160 | 3       |
+| approveOperatorERC1155                       | 2632            | 18722 | 20353  | 31553 | 4       |
+| approveOperatorERC721                        | 2631            | 18592 | 20179  | 31379 | 4       |
+| batchApproveERC20                            | 2785            | 42156 | 42156  | 81527 | 2       |
+| batchApproveERC721                           | 2786            | 28099 | 28099  | 53412 | 2       |
+| batchApproveOperatorERC1155                  | 2720            | 31797 | 31797  | 60875 | 2       |
+| batchApproveOperatorERC721                   | 2809            | 31851 | 31851  | 60894 | 2       |
+| batchTransferERC20                           | 2807            | 7184  | 3430   | 15316 | 3       |
+| batchTransferERC721                          | 2698            | 11579 | 3321   | 28720 | 3       |
+| batchTransferMultipleERC1155                 | 2764            | 9891  | 3498   | 23413 | 3       |
+| batchTransferSingleERC1155                   | 2602            | 5912  | 2944   | 12190 | 3       |
+| execute                                      | 3096            | 5002  | 4310   | 8291  | 4       |
+| initialize                                   | 2116            | 69813 | 70687  | 70687 | 388     |
+| onERC1155Received                            | 1996            | 1996  | 1996   | 1996  | 10      |
+| onERC721Received                             | 1869            | 1869  | 1869   | 1869  | 1       |
+| receive                                      | 55              | 55    | 55     | 55    | 2       |
+| transfer                                     | 2851            | 5262  | 2886   | 10050 | 3       |
+| transferERC1155                              | 2668            | 4664  | 3010   | 8316  | 3       |
+| transferERC20                                | 2566            | 4592  | 2908   | 8303  | 3       |
+| transferERC721                               | 2610            | 6128  | 2952   | 12824 | 3       |
+
+
+| src/VertexCore.sol:VertexCore contract |                 |         |         |         |         |
+|----------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                        | Deployment Size |         |         |         |         |
+| 5852907                                | 29800           |         |         |         |         |
+| Function Name                          | min             | avg     | median  | max     | # calls |
+| actionsCount                           | 540             | 540     | 540     | 540     | 1       |
+| authorizedStrategies                   | 933             | 1377    | 933     | 2933    | 9       |
+| cancelAction                           | 2527            | 19840   | 17844   | 44952   | 10      |
+| createAction                           | 3668            | 209564  | 226808  | 267108  | 35      |
+| createAndAuthorizeAccounts             | 355156          | 355156  | 355156  | 355156  | 2       |
+| createAndAuthorizeStrategies           | 2914999         | 2914999 | 2914999 | 2914999 | 1       |
+| executeAction                          | 680             | 28398   | 22859   | 50369   | 7       |
+| getAction                              | 6213            | 9983    | 6213    | 24213   | 58      |
+| initialize                             | 2939            | 2231233 | 2248359 | 2295254 | 190     |
+| name                                   | 1469            | 2135    | 1469    | 3469    | 3       |
+| policy                                 | 716             | 726     | 716     | 2716    | 193     |
+| queueAction                            | 635             | 39669   | 39218   | 67718   | 14      |
+| submitApproval                         | 4083            | 54575   | 54273   | 86723   | 46      |
+| submitDisapproval                      | 3704            | 59253   | 81339   | 81339   | 11      |
+| unauthorizeStrategies                  | 6458            | 6458    | 6458    | 6458    | 1       |
+
+
+| src/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
+|----------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                              | Deployment Size |         |         |         |         |
+| 3716223                                      | 14163           |         |         |         |         |
+| Function Name                                | min             | avg     | median  | max     | # calls |
+| deploy                                       | 30482           | 3562724 | 4231518 | 4320728 | 16      |
+| rootVertex                                   | 556             | 556     | 556     | 556     | 176     |
+| vertexAccountLogic                           | 578             | 578     | 578     | 578     | 1       |
+| vertexCoreLogic                              | 600             | 600     | 600     | 600     | 1       |
+| vertexCount                                  | 517             | 1317    | 517     | 2517    | 5       |
+
+
+| src/VertexLens.sol:VertexLens contract |                 |       |        |       |         |
+|----------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                        | Deployment Size |       |        |       |         |
+| 2430813                                | 12173           |       |        |       |         |
+| Function Name                          | min             | avg   | median | max   | # calls |
+| computePermissionId                    | 2105            | 2105  | 2105   | 2105  | 775     |
+| computeVertexAccountAddress            | 1984            | 1984  | 1984   | 1984  | 1       |
+| computeVertexCoreAddress               | 2756            | 2756  | 2756   | 2756  | 6       |
+| computeVertexPolicyAddress             | 2734            | 2734  | 2734   | 2734  | 7       |
+| computeVertexStrategyAddress           | 30801           | 30801 | 30801  | 30801 | 352     |
+
+
+| src/VertexPolicy.sol:VertexPolicy contract |                 |         |         |         |         |
+|--------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                            | Deployment Size |         |         |         |         |
+| 4152112                                    | 21308           |         |         |         |         |
+| Function Name                              | min             | avg     | median  | max     | # calls |
+| balanceOf                                  | 944             | 2372    | 2944    | 2944    | 7       |
+| baseURI                                    | 1218            | 1968    | 1469    | 3218    | 3       |
+| batchGrantPolicies                         | 1766232         | 1766232 | 1766232 | 1766232 | 175     |
+| getTokenPermissionCheckpoints              | 3397            | 3397    | 3397    | 3397    | 2       |
+| getTokenPermissionSupplyCheckpoints        | 3191            | 3191    | 3191    | 3191    | 1       |
+| hasPermission                              | 2165            | 4862    | 3880    | 8165    | 34      |
+| holderWeightAt                             | 2725            | 4758    | 2725    | 8725    | 104     |
+| initialize                                 | 22372           | 192826  | 72460   | 1853472 | 191     |
+| name                                       | 1492            | 2492    | 2492    | 3492    | 2       |
+| setBaseURI                                 | 2742            | 14087   | 14087   | 25433   | 2       |
+| setVertex                                  | 22837           | 22837   | 22837   | 22837   | 189     |
+| symbol                                     | 3490            | 3490    | 3490    | 3490    | 1       |
+| tokenURI                                   | 10539           | 10539   | 10539   | 10539   | 1       |
+| totalSupplyAt                              | 5017            | 9350    | 5017    | 15017   | 60      |
+| transferFrom                               | 967             | 967     | 967     | 967     | 1       |
+| vertex                                     | 559             | 559     | 559     | 559     | 3       |
+
+
+| src/VertexStrategy.sol:VertexStrategy contract |                 |       |        |       |         |
+|------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                | Deployment Size |       |        |       |         |
+| 899702                                         | 7438            |       |        |       |         |
+| Function Name                                  | min             | avg   | median | max   | # calls |
+| approvalPeriod                                 | 396             | 396   | 396    | 396   | 86      |
+| approvalRole                                   | 374             | 374   | 374    | 374   | 30      |
+| disapprovalRole                                | 397             | 397   | 397    | 397   | 30      |
+| expirationPeriod                               | 373             | 373   | 373    | 373   | 19      |
+| getApprovalWeightAt                            | 5084            | 6153  | 7084   | 7084  | 43      |
+| getDisapprovalWeightAt                         | 5128            | 6628  | 7128   | 7128  | 8       |
+| isActionCancelationValid                       | 11585           | 17585 | 11585  | 29585 | 3       |
+| isActionPassed                                 | 11583           | 15332 | 11583  | 29583 | 52      |
+| isFixedLengthApprovalPeriod                    | 424             | 424   | 424    | 424   | 49      |
+| minDisapprovalPct                              | 352             | 352   | 352    | 352   | 8       |
+| queuingPeriod                                  | 395             | 395   | 395    | 395   | 19      |
