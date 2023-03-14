@@ -245,6 +245,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     nonTransferableToken
   {}
 
+<<<<<<< HEAD
   /// @dev overriding safeTransferFrom to disable transfers
   function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
     public
@@ -266,6 +267,17 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
   /// @dev overriding approve to disable approvals
   function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
+=======
+  /// @dev overriding approve to disable approvals for SBTs
+  function approve(address, /* spender */ uint256 /* id */ ) public pure override {
+    revert NonTransferableToken();
+  }
+
+  /// @dev overriding approve to disable approvals for SBTs
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override {
+    revert NonTransferableToken();
+  }
+>>>>>>> 18562e7 (Fixing warnings in Vertex Policy)
 
   /// @inheritdoc IVertexPolicy
   function totalSupply() public view override returns (uint256) {
