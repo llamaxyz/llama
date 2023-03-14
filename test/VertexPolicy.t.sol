@@ -187,7 +187,7 @@ contract Approve is VertexPolicyTest {
 }
 
 contract SetApprovalForAll is VertexPolicyTest {
-  function test_setApprovalForAll_RevertIfSetApprovalForAll() public {
+  function test_RevertIf_Called() public {
     vm.expectRevert(VertexPolicy.SoulboundToken.selector);
     policy.setApprovalForAll(address(0xdeadbeef), true);
   }
