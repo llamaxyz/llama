@@ -180,7 +180,7 @@ contract TransferFrom is VertexPolicyTest {
 }
 
 contract Approve is VertexPolicyTest {
-  function test_tranapprovesferFrom_RevertIfApprove() public {
+  function test_RevertIf_Called() public {
     vm.expectRevert(VertexPolicy.SoulboundToken.selector);
     policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
   }
