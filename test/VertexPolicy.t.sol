@@ -181,14 +181,14 @@ contract TransferFrom is VertexPolicyTest {
 
 contract Approve is VertexPolicyTest {
   function test_RevertIf_Called() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract SetApprovalForAll is VertexPolicyTest {
   function test_RevertIf_Called() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.setApprovalForAll(address(0xdeadbeef), true);
   }
 }

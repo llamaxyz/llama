@@ -255,11 +255,11 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
 
   /// @dev overriding approve to disable approvals for SBTs
   function approve(address, /* spender */ uint256 /* id */ ) public override {
-    revert SoulboundToken();
+    revert NonTransferableToken();
   }
 
   function setApprovalForAll(address, /* operator */ bool /* approved */ ) public override {
-    revert SoulboundToken();
+    revert NonTransferableToken();
   }
 
   /// @inheritdoc IVertexPolicy
