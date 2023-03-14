@@ -264,11 +264,12 @@ contract VertexCore is IVertexCore, Initializable {
 
   function _submitApproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
-    if (policy.balanceOf(policyholder) == 0) revert InvalidPolicyholder();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
+    // TODO @mds1 update based on policy contract refactor
+    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
@@ -281,11 +282,12 @@ contract VertexCore is IVertexCore, Initializable {
 
   function _submitDisapproval(address policyholder, bytes32 role, uint256 actionId) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
-    if (policy.balanceOf(policyholder) == 0) revert InvalidPolicyholder();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
 
     Action storage action = actions[actionId];
+    // TODO @mds1 update based on policy contract refactor
+    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
 
     if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
