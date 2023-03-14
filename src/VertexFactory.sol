@@ -32,6 +32,12 @@ contract VertexFactory is IVertexFactory {
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
 
+  /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
+  mapping(address => bool) public authorizedStrategyLogics;
+
+  /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
+  mapping(address => bool) public authorizedAccountLogics;
+
   constructor(
     VertexCore _vertexCoreLogic,
     VertexStrategy _vertexStrategyLogic,
@@ -60,8 +66,32 @@ contract VertexFactory is IVertexFactory {
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
-  ) external onlyRootVertex returns (VertexCore) {
+  ) external override onlyRootVertex returns (VertexCore) {
     return _deploy(name, initialStrategies, initialAccounts, initialPolicies);
+  }
+
+  /// @inheritdoc IVertexFactory
+  function authorizeStrategyLogic(address strategyLogic) external override onlyRootVertex {
+    authorizedStrategyLogics[strategyLogic] = true;
+    emit StrategyLogicAuthorized(strategyLogic);
+  }
+
+  /// @inheritdoc IVertexFactory
+  function unauthorizeStrategyLogic(address strategyLogic) external override onlyRootVertex {
+    delete authorizedStrategyLogics[strategyLogic];
+    emit StrategyLogicUnauthorized(strategyLogic);
+  }
+
+  /// @inheritdoc IVertexFactory
+  function authorizeAccountLogic(address accountLogic) external override onlyRootVertex {
+    authorizedAccountLogics[accountLogic] = true;
+    emit AccountLogicAuthorized(accountLogic);
+  }
+
+  /// @inheritdoc IVertexFactory
+  function unauthorizeAccountLogic(address accountLogic) external override onlyRootVertex {
+    delete authorizedAccountLogics[accountLogic];
+    emit AccountLogicUnauthorized(accountLogic);
   }
 
   function _deploy(
