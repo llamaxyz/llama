@@ -1,6 +1,6 @@
 [profile.default]
   bytecode_hash = 'none'
-  solc = "0.8.17"
+  solc = "0.8.19"
   optimizer = false
   via_ir = false
   ffi = true

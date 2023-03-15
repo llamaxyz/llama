@@ -6,6 +6,23 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
+struct SetRoleHolder {
+  bytes32 role; // Name of the role to set.
+  address user; // User to assign the role to.
+  uint64 expiration; // When the role expires, or zero to remove the role.
+}
+
+struct SetRolePermission {
+  bytes32 role; // Name of the role to set.
+  bytes32 permissionId; // Permission ID to assign to the role.
+  bool hasPermission; // Whether to assign the permission or remove the permission.
+}
+
+struct ExpiredRole {
+  bytes32 role;
+  address user;
+}
+
 struct PermissionData {
   address target;
   bytes4 selector;
