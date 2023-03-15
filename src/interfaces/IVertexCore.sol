@@ -8,6 +8,27 @@ import {ActionState} from "src/lib/Enums.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
 
 interface IVertexCore {
+  error InvalidStrategy();
+  error InvalidPolicyholder();
+  error InvalidCancelation();
+  error InvalidActionId();
+  error OnlyQueuedActions();
+  error InvalidStateForQueue();
+  error ActionCannotBeCanceled();
+  error OnlyVertex();
+  error ActionNotActive();
+  error ActionNotQueued();
+  error InvalidSignature();
+  error TimelockNotFinished();
+  error FailedActionExecution();
+  error DuplicateApproval();
+  error DuplicateDisapproval();
+  error DisapproveDisabled();
+  error PolicyholderDoesNotHavePermission();
+  error InsufficientMsgValue();
+  error ApprovalRoleHasZeroSupply();
+  error DisapprovalRoleHasZeroSupply();
+
   event ActionCreated(
     uint256 id,
     address indexed creator,

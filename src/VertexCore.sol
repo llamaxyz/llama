@@ -14,26 +14,6 @@ import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is IVertexCore, Initializable {
-  error InvalidStrategy();
-  error InvalidCancelation();
-  error InvalidActionId();
-  error OnlyQueuedActions();
-  error InvalidStateForQueue();
-  error ActionCannotBeCanceled();
-  error OnlyVertex();
-  error ActionNotActive();
-  error ActionNotQueued();
-  error InvalidSignature();
-  error TimelockNotFinished();
-  error FailedActionExecution();
-  error DuplicateApproval();
-  error DuplicateDisapproval();
-  error DisapproveDisabled();
-  error PolicyholderDoesNotHavePermission();
-  error InsufficientMsgValue();
-  error ApprovalRoleHasZeroSupply();
-  error DisapprovalRoleHasZeroSupply();
-
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -293,6 +273,8 @@ contract VertexCore is IVertexCore, Initializable {
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
+    // TODO @mds1 update based on policy contract refactor
+    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
@@ -309,6 +291,8 @@ contract VertexCore is IVertexCore, Initializable {
     if (hasDisapproved) revert DuplicateDisapproval();
 
     Action storage action = actions[actionId];
+    // TODO @mds1 update based on policy contract refactor
+    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
 
     if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 

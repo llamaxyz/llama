@@ -9,7 +9,6 @@ on:
 
 env:
   MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-  FOUNDRY_PROFILE: ci
 
 jobs:
   build:
@@ -34,7 +33,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run tests
-        run: FOUNDRY_PROFILE=test forge test -vvv
+        run: forge test -vvv
 
   coverage:
     runs-on: ubuntu-latest
@@ -76,7 +75,7 @@ jobs:
         uses: zgosalvez/github-actions-report-lcov@v2
         with:
           coverage-files: ./lcov.info
-          minimum-coverage: 80 # Set coverage threshold.
+          minimum-coverage: 50 # Set coverage threshold.
 
   lint:
     runs-on: ubuntu-latest

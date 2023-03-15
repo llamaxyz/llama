@@ -16,6 +16,10 @@ import {
 } from "src/lib/Structs.sol";
 
 interface IVertexAccount is IERC721Receiver, IERC1155Receiver {
+  error OnlyVertex();
+  error Invalid0xRecipient();
+  error FailedExecution(bytes result);
+
   /// @notice Initializes a new VertexAccount clone.
   /// @param name The name of the VertexAccount clone.
   /// @param vertex This Vertex instance's core contract
