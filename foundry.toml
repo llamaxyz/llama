@@ -3,6 +3,7 @@
   solc = "0.8.17"
   optimizer = false
   via_ir = false
+  ffi = true
   gas_reports = ["VertexAccount", "VertexCore", "VertexFactory", "VertexLens", "VertexPolicy", "VertexStrategy"]
 
 [profile.default.optimizer_details]
