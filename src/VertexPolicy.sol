@@ -279,7 +279,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
     parts[2] = '<text x="10" y="60" class="base">';
 
-    parts[3] = string.concat("Policy Id: ", Strings.toString(tokenId));
+    parts[3] = string.concat("Policy Id: ", LibString.toString(tokenId));
 
     parts[5] = '</text><text x="10" y="80" class="base">';
 
@@ -302,7 +302,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
         string(
           abi.encodePacked(
             '{"name": "Vertex Policy ID: ',
-            Strings.toString(tokenId),
+            LibString.toString(tokenId),
             '", "description": "Vertex is a identity access system for privledged smart contract functions", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
