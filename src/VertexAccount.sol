@@ -34,6 +34,7 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
   constructor() initializer {}
 
+  /// @inheritdoc IVertexAccount
   function initialize(string memory _name, address _vertex) external override initializer {
     name = _name;
     vertex = _vertex;

@@ -15,6 +15,7 @@ interface IVertexStrategy {
   error NoPolicy();
 
   /// @notice Initializes a new VertexStrategy clone.
+  /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
   /// @param strategyConfig The strategy configuration.
   /// @param policy The policy contract.
   /// @param vertex The VertexCore contract.

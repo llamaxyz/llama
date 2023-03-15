@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -28,6 +29,8 @@ interface IVertexCore {
   error InsufficientMsgValue();
   error ApprovalRoleHasZeroSupply();
   error DisapprovalRoleHasZeroSupply();
+  error UnauthorizedStrategyLogic();
+  error UnauthorizedAccountLogic();
 
   event ActionCreated(
     uint256 id,
@@ -51,16 +54,18 @@ interface IVertexCore {
 
   /// @notice Initializes a new VertexCore clone.
   /// @param name The name of the VertexCore clone.
+  /// @param factory The VertexFactory contract.
   /// @param policy This Vertex instance's policy contract.
-  /// @param vertexStrategyLogic The Vertex Strategy implementation (logic) contract.
-  /// @param vertexAccountLogic The Vertex Account implementation (logic) contract.
+  /// @param vertexStrategyLogic The strategy logic contract to use.
+  /// @param vertexAccountLogic The account logic contract to use.
   /// @param initialStrategies The configuration of the initial strategies.
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory name,
+    IVertexFactory factory,
     VertexPolicy policy,
-    VertexStrategy vertexStrategyLogic,
-    VertexAccount vertexAccountLogic,
+    address vertexStrategyLogic,
+    address vertexAccountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts
   ) external;
@@ -117,16 +122,18 @@ interface IVertexCore {
   function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external;
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
+  /// @param vertexStrategyLogic The strategy logic contract to use.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(Strategy[] memory strategies) external;
+  function createAndAuthorizeStrategies(address vertexStrategyLogic, Strategy[] memory strategies) external;
 
   /// @notice Remove strategies from the mapping of authorized strategies.
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
   function unauthorizeStrategies(VertexStrategy[] memory strategies) external;
 
   /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
+  /// @param vertexAccountLogic The account logic contract to use.
   /// @param accounts list of new accounts to be authorized.
-  function createAndAuthorizeAccounts(string[] memory accounts) external;
+  function createAndAuthorizeAccounts(address vertexAccountLogic, string[] memory accounts) external;
 
   /// @notice Get an Action struct by actionId.
   /// @param actionId id of the action.

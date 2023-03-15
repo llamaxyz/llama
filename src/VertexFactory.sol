@@ -17,20 +17,8 @@ contract VertexFactory is IVertexFactory {
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
 
-  /// @notice The Vertex Strategy implementation (logic) contract.
-  VertexStrategy public immutable vertexStrategyLogic;
-
-  /// @notice The Vertex Account implementation (logic) contract.
-  VertexAccount public immutable vertexAccountLogic;
-
   /// @notice The Vertex Policy implementation (logic) contract.
   VertexPolicy public immutable vertexPolicyLogic;
-
-  /// @notice The Vertex instance responsible for deploying new Vertex instances.
-  VertexCore public immutable rootVertex;
-
-  /// @notice The current number of vertex systems created.
-  uint256 public vertexCount;
 
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
   mapping(address => bool) public authorizedStrategyLogics;
@@ -38,10 +26,16 @@ contract VertexFactory is IVertexFactory {
   /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
   mapping(address => bool) public authorizedAccountLogics;
 
+  /// @notice The Vertex instance responsible for deploying new Vertex instances.
+  VertexCore public immutable rootVertex;
+
+  /// @notice The current number of vertex systems created.
+  uint256 public vertexCount;
+
   constructor(
     VertexCore _vertexCoreLogic,
-    VertexStrategy _vertexStrategyLogic,
-    VertexAccount _vertexAccountLogic,
+    address initialVertexStrategyLogic,
+    address initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
     string memory name,
     Strategy[] memory initialStrategies,
@@ -49,10 +43,13 @@ contract VertexFactory is IVertexFactory {
     PolicyGrantData[] memory initialPolicies
   ) {
     vertexCoreLogic = _vertexCoreLogic;
-    vertexStrategyLogic = _vertexStrategyLogic;
-    vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
+    authorizedStrategyLogics[initialVertexStrategyLogic] = true;
+    authorizedAccountLogics[initialVertexAccountLogic] = true;
+
+    rootVertex = _deploy(
+      name, initialVertexStrategyLogic, initialVertexAccountLogic, initialStrategies, initialAccounts, initialPolicies
+    );
   }
 
   modifier onlyRootVertex() {
@@ -63,11 +60,13 @@ contract VertexFactory is IVertexFactory {
   /// @inheritdoc IVertexFactory
   function deploy(
     string memory name,
+    address strategyLogic,
+    address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) external override onlyRootVertex returns (VertexCore) {
-    return _deploy(name, initialStrategies, initialAccounts, initialPolicies);
+    return _deploy(name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialPolicies);
   }
 
   /// @inheritdoc IVertexFactory
@@ -96,17 +95,32 @@ contract VertexFactory is IVertexFactory {
 
   function _deploy(
     string memory name,
+    address vertexStrategyLogic,
+    address vertexAccountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
+    if (!authorizedStrategyLogics[vertexStrategyLogic]) revert UnauthorizedStrategyLogic();
+    if (!authorizedAccountLogics[vertexAccountLogic]) revert UnauthorizedAccountLogic();
+
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
     policy.initialize(name, initialPolicies);
+
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
-    vertex.initialize(name, policy, vertexStrategyLogic, vertexAccountLogic, initialStrategies, initialAccounts);
+    vertex.initialize(
+      name,
+      IVertexFactory(address(this)),
+      policy,
+      vertexStrategyLogic,
+      vertexAccountLogic,
+      initialStrategies,
+      initialAccounts
+    );
 
     policy.setVertex(address(vertex));
+
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }

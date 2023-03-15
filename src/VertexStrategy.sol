@@ -54,7 +54,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
 
   constructor() initializer {}
 
-  /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
+  /// @inheritdoc IVertexStrategy
   function initialize(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex)
     external
     override

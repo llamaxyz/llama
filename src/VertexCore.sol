@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
+import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
@@ -28,11 +29,8 @@ contract VertexCore is IVertexCore, Initializable {
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice The Vertex Strategy implementation (logic) contract.
-  VertexStrategy public vertexStrategyLogic;
-
-  /// @notice The Vertex Account implementation (logic) contract.
-  VertexAccount public vertexAccountLogic;
+  /// @notice The VertexFactory contract that deployed this Vertex system.
+  IVertexFactory public factory;
 
   /// @notice The NFT contract that defines the policies for this Vertex system.
   VertexPolicy public policy;
@@ -65,21 +63,22 @@ contract VertexCore is IVertexCore, Initializable {
     _;
   }
 
+  /// @inheritdoc IVertexCore
   function initialize(
     string memory _name,
+    IVertexFactory _factory,
     VertexPolicy _policy,
-    VertexStrategy _vertexStrategyLogic,
-    VertexAccount _vertexAccountLogic,
+    address _vertexStrategyLogic,
+    address _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external override initializer {
     name = _name;
+    factory = _factory;
     policy = _policy;
-    vertexStrategyLogic = _vertexStrategyLogic;
-    vertexAccountLogic = _vertexAccountLogic;
 
-    _deployStrategies(initialStrategies, _policy);
-    _deployAccounts(initialAccounts);
+    _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
+    _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
 
   /// @inheritdoc IVertexCore
@@ -212,8 +211,12 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
-    _deployStrategies(strategies, policy);
+  function createAndAuthorizeStrategies(address vertexStrategyLogic, Strategy[] calldata strategies)
+    external
+    override
+    onlyVertex
+  {
+    _deployStrategies(vertexStrategyLogic, strategies, policy);
   }
 
   /// @inheritdoc IVertexCore
@@ -228,8 +231,12 @@ contract VertexCore is IVertexCore, Initializable {
   }
 
   /// @inheritdoc IVertexCore
-  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
-    _deployAccounts(accounts);
+  function createAndAuthorizeAccounts(address vertexAccountLogic, string[] calldata accounts)
+    external
+    override
+    onlyVertex
+  {
+    _deployAccounts(vertexAccountLogic, accounts);
   }
 
   /// @inheritdoc IVertexCore
@@ -306,19 +313,25 @@ contract VertexCore is IVertexCore, Initializable {
     emit PolicyholderDisapproved(actionId, policyholder, weight);
   }
 
-  function _deployAccounts(string[] calldata accounts) internal {
+  function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
+    if (!factory.authorizedAccountLogics(vertexAccountLogic)) revert UnauthorizedAccountLogic();
+
     uint256 accountLength = accounts.length;
     unchecked {
       for (uint256 i; i < accountLength; ++i) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
+        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
         account.initialize(accounts[i], address(this));
         emit AccountAuthorized(account, accounts[i]);
       }
     }
   }
 
-  function _deployStrategies(Strategy[] calldata strategies, VertexPolicy _policy) internal {
+  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
+    internal
+  {
+    if (!factory.authorizedStrategyLogics(vertexStrategyLogic)) revert UnauthorizedStrategyLogic();
+
     uint256 strategyLength = strategies.length;
     unchecked {
       for (uint256 i; i < strategyLength; ++i) {
@@ -335,7 +348,7 @@ contract VertexCore is IVertexCore, Initializable {
           )
         );
 
-        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
+        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
         strategy.initialize(strategies[i], _policy, IVertexCore(address(this)));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
