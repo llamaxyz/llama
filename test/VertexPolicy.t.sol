@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "lib/forge-std/src/console.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
-import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {
@@ -87,7 +87,7 @@ contract BatchGrantPolicies is VertexPolicyTest {
 
   function test_RevertIfPolicyAlreadyGranted() public {
     // PolicyGrantData[] memory policies;
-    // vm.expectRevert(IVertexPolicy.OnlyOnePolicyPerHolder.selector);
+    // vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
     // policy.batchGrantPolicies(policies);
   }
 }
@@ -175,21 +175,21 @@ contract HasPermission is VertexPolicyTest {
 
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.transferFrom(address(this), address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract Approve is VertexPolicyTest {
   function test_RevertIf_Called() public {
-    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
   }
 }
 
 contract SetApprovalForAll is VertexPolicyTest {
   function test_RevertIf_Called() public {
-    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
+    vm.expectRevert(VertexPolicy.NonTransferableToken.selector);
     policy.setApprovalForAll(address(0xdeadbeef), true);
   }
 }
@@ -273,7 +273,7 @@ contract SetBaseURI is VertexPolicyTest {
   function test_RevertIf_CallerIsNotVertex() public {
     string memory baseURI = "https://vertex.link/policy/";
     vm.prank(address(0xdeadbeef));
-    vm.expectRevert(IVertexPolicy.OnlyVertex.selector);
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
     policy.setBaseURI(baseURI);
   }
 
@@ -354,10 +354,10 @@ contract ExpirationTests is VertexPolicyTest {
     // PolicyGrantData[] memory grantData = new PolicyGrantData[](1);
     // grantData[0] = PolicyGrantData(address(0x1), permissionsToAdd);
 
-    // vm.expectRevert(IVertexPolicy.Expired.selector);
+    // vm.expectRevert(VertexPolicy.Expired.selector);
     // policy.batchGrantPolicies(grantData);
     // assertEq(block.timestamp > newExpirationTimestamp, true);
-    // vm.expectRevert(IVertexPolicy.Expired.selector);
+    // vm.expectRevert(VertexPolicy.Expired.selector);
     // policy.batchUpdatePermissions(updateDataArray);
   }
 }
