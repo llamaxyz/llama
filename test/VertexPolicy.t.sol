@@ -196,7 +196,6 @@ contract SetApprovalForAll is VertexPolicyTest {
 }
 
 contract TokenURI is VertexPolicyTest {
-
   // The token's JSON metadata.
   // The `image` field is the *decoded* SVG image, but in the contract it's base64-encoded.
   struct Metadata {
@@ -204,7 +203,7 @@ contract TokenURI is VertexPolicyTest {
     string description;
     string image; // Decoded SVG.
   }
-  
+
   function parseMetadata(string memory uri) internal returns (Metadata memory) {
     string[] memory inputs = new string[](3);
     inputs[0] = "node";
@@ -212,7 +211,7 @@ contract TokenURI is VertexPolicyTest {
     inputs[2] = uri;
     return abi.decode(vm.ffi(inputs), (Metadata));
   }
-  
+
   // function assertEq(Metadata memory a, Metadata memory b) internal {
   //   assertEq(a.name, b.name, "name");
   //   assertEq(a.description, b.description, "description");
@@ -221,14 +220,14 @@ contract TokenURI is VertexPolicyTest {
   //   assertEq(a.external_url, b.external_url, "external_url");
   //   assertEq(a.image, b.image, "image");
   // }
-  
+
   function test_ReturnsCorrectTokenURI() public {
     string memory uri = policy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
-    assertEq(metadata.name, LibString.concat("Vertex Policy ID: ",LibString.toString(uint256(uint160(address(this))))));
+    assertEq(metadata.name, LibString.concat("Vertex Policy ID: ", LibString.toString(uint256(uint160(address(this))))));
     assertEq(metadata.description, "Vertex is a identity access system for privledged smart contract functions");
 
-     string[11] memory parts;
+    string[11] memory parts;
 
     parts[0] =
       '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" />';
@@ -258,7 +257,6 @@ contract TokenURI is VertexPolicyTest {
 
     assertEq(metadata.image, svg);
   }
-
 }
 
 contract TotalSupply is VertexPolicyTest {
