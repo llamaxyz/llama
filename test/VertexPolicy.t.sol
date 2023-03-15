@@ -197,7 +197,7 @@ contract SetApprovalForAll is VertexPolicyTest {
 
 contract TokenURI is VertexPolicyTest {
 
-    // The token's JSON metadata.
+  // The token's JSON metadata.
   // The `image` field is the *decoded* SVG image, but in the contract it's base64-encoded.
   struct Metadata {
     string name;
