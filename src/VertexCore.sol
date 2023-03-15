@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
@@ -13,7 +12,48 @@ import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
-contract VertexCore is IVertexCore, Initializable {
+contract VertexCore is Initializable {
+  error InvalidStrategy();
+  error InvalidPolicyholder();
+  error InvalidCancelation();
+  error InvalidActionId();
+  error OnlyQueuedActions();
+  error InvalidStateForQueue();
+  error ActionCannotBeCanceled();
+  error OnlyVertex();
+  error ActionNotActive();
+  error ActionNotQueued();
+  error InvalidSignature();
+  error TimelockNotFinished();
+  error FailedActionExecution();
+  error DuplicateApproval();
+  error DuplicateDisapproval();
+  error DisapproveDisabled();
+  error PolicyholderDoesNotHavePermission();
+  error InsufficientMsgValue();
+  error ApprovalRoleHasZeroSupply();
+  error DisapprovalRoleHasZeroSupply();
+
+  event ActionCreated(
+    uint256 id,
+    address indexed creator,
+    VertexStrategy indexed strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes data
+  );
+  event ActionCanceled(uint256 id);
+  event ActionQueued(
+    uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+  );
+  event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
+  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
+  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event StrategyUnauthorized(VertexStrategy indexed strategy);
+  event AccountAuthorized(VertexAccount indexed account, string name);
+
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -65,6 +105,13 @@ contract VertexCore is IVertexCore, Initializable {
     _;
   }
 
+  /// @notice Initializes a new VertexCore clone.
+  /// @param _name The name of the VertexCore clone.
+  /// @param _policy This Vertex instance's policy contract.
+  /// @param _vertexStrategyLogic The Vertex Strategy implementation (logic) contract.
+  /// @param _vertexAccountLogic The Vertex Account implementation (logic) contract.
+  /// @param initialStrategies The configuration of the initial strategies.
+  /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory _name,
     VertexPolicy _policy,
@@ -72,7 +119,7 @@ contract VertexCore is IVertexCore, Initializable {
     VertexAccount _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
-  ) external override initializer {
+  ) external initializer {
     name = _name;
     policy = _policy;
     vertexStrategyLogic = _vertexStrategyLogic;
@@ -82,10 +129,16 @@ contract VertexCore is IVertexCore, Initializable {
     _deployAccounts(initialAccounts);
   }
 
-  /// @inheritdoc IVertexCore
+  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
+  /// strategy, target, selector.
+  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param selector The function selector that will be called when the action is executed.
+  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @return actionId of the newly created action.
   function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
     external
-    override
     returns (uint256)
   {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
@@ -121,8 +174,9 @@ contract VertexCore is IVertexCore, Initializable {
     return previousActionCount;
   }
 
-  /// @inheritdoc IVertexCore
-  function queueAction(uint256 actionId) external override {
+  /// @notice Queue an action by actionId if it's in Approved state.
+  /// @param actionId Id of the action to queue.
+  function queueAction(uint256 actionId) external {
     if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
     Action storage action = actions[actionId];
     uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
@@ -132,8 +186,10 @@ contract VertexCore is IVertexCore, Initializable {
     emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
   }
 
-  /// @inheritdoc IVertexCore
-  function executeAction(uint256 actionId) external payable override returns (bytes memory) {
+  /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
+  /// @param actionId Id of the action to execute.
+  /// @return The result returned from the call to the target contract.
+  function executeAction(uint256 actionId) external payable returns (bytes memory) {
     if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
@@ -152,8 +208,9 @@ contract VertexCore is IVertexCore, Initializable {
     return result;
   }
 
-  /// @inheritdoc IVertexCore
-  function cancelAction(uint256 actionId) external override {
+  /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
+  /// @param actionId Id of the action to cancel.
+  function cancelAction(uint256 actionId) external {
     ActionState state = getActionState(actionId);
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
@@ -170,13 +227,20 @@ contract VertexCore is IVertexCore, Initializable {
     emit ActionCanceled(actionId);
   }
 
-  /// @inheritdoc IVertexCore
-  function submitApproval(uint256 actionId, bytes32 role) external override {
+  /// @notice How policyholders add their support of the approval of an action.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to submit their approval.
+  function submitApproval(uint256 actionId, bytes32 role) external {
     return _submitApproval(msg.sender, role, actionId);
   }
 
-  /// @inheritdoc IVertexCore
-  function submitApprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external override {
+  /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to submit their approval.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  function submitApprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -189,16 +253,20 @@ contract VertexCore is IVertexCore, Initializable {
     return _submitApproval(signer, role, actionId);
   }
 
-  /// @inheritdoc IVertexCore
-  function submitDisapproval(uint256 actionId, bytes32 role) external override {
+  /// @notice How policyholders add their support of the disapproval of an action.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to submit their disapproval.
+  function submitDisapproval(uint256 actionId, bytes32 role) external {
     return _submitDisapproval(msg.sender, role, actionId);
   }
 
-  /// @inheritdoc IVertexCore
-  function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s)
-    external
-    override
-  {
+  /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to submit their disapproval.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -211,13 +279,15 @@ contract VertexCore is IVertexCore, Initializable {
     return _submitDisapproval(signer, role, actionId);
   }
 
-  /// @inheritdoc IVertexCore
-  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external override onlyVertex {
+  /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
+  /// @param strategies list of new Strategys to be authorized.
+  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external onlyVertex {
     _deployStrategies(strategies, policy);
   }
 
-  /// @inheritdoc IVertexCore
-  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external override onlyVertex {
+  /// @notice Remove strategies from the mapping of authorized strategies.
+  /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
+  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external onlyVertex {
     uint256 strategiesLength = strategies.length;
     unchecked {
       for (uint256 i = 0; i < strategiesLength; ++i) {
@@ -227,24 +297,31 @@ contract VertexCore is IVertexCore, Initializable {
     }
   }
 
-  /// @inheritdoc IVertexCore
-  function createAndAuthorizeAccounts(string[] calldata accounts) external override onlyVertex {
+  /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
+  /// @param accounts list of new accounts to be authorized.
+  function createAndAuthorizeAccounts(string[] calldata accounts) external onlyVertex {
     _deployAccounts(accounts);
   }
 
-  /// @inheritdoc IVertexCore
-  function isActionExpired(uint256 actionId) public view override returns (bool) {
+  /// @notice Get whether an action has expired and can no longer be executed.
+  /// @param actionId id of the action.
+  /// @return Boolean value that is true if the action has expired.
+  function isActionExpired(uint256 actionId) public view returns (bool) {
     Action storage action = actions[actionId];
     return block.timestamp >= action.executionTime + action.strategy.expirationPeriod();
   }
 
-  /// @inheritdoc IVertexCore
-  function getAction(uint256 actionId) external view override returns (Action memory) {
+  /// @notice Get an Action struct by actionId.
+  /// @param actionId id of the action.
+  /// @return The Action struct.
+  function getAction(uint256 actionId) external view returns (Action memory) {
     return actions[actionId];
   }
 
-  /// @inheritdoc IVertexCore
-  function getActionState(uint256 actionId) public view override returns (ActionState) {
+  /// @notice Get the current ActionState of an action by its actionId.
+  /// @param actionId id of the action.
+  /// @return The current ActionState of the action.
+  function getActionState(uint256 actionId) public view returns (ActionState) {
     if (actionId >= actionsCount) revert InvalidActionId();
     Action storage action = actions[actionId];
     uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
@@ -336,7 +413,7 @@ contract VertexCore is IVertexCore, Initializable {
         );
 
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
-        strategy.initialize(strategies[i], _policy, IVertexCore(address(this)));
+        strategy.initialize(strategies[i], _policy, VertexCore(address(this)));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }

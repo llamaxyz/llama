@@ -7,7 +7,6 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData, PermissionData} from "src/lib/Structs.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexLens} from "src/interfaces/IVertexLens.sol";
 
 /// @title Vertex Lens

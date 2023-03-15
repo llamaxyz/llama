@@ -6,7 +6,6 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexCore} from "src/VertexCore.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";

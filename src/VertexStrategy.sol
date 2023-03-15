@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
@@ -22,7 +22,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice The strategy's Vertex system.
-  IVertexCore public vertex;
+  VertexCore public vertex;
 
   /// @notice Policy NFT for this Vertex system.
   VertexPolicy public policy;
@@ -55,7 +55,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   constructor() initializer {}
 
   /// @notice Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
-  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, IVertexCore _vertex)
+  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, VertexCore _vertex)
     external
     override
     initializer
