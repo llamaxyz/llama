@@ -299,7 +299,7 @@ contract VertexPolicy is ERC721MinimalProxy, IVertexPolicy {
       bytes(
         string(
           abi.encodePacked(
-            '{"name": "Vertex Policy ID:',
+            '{"name": "Vertex Policy ID: ',
             Strings.toString(tokenId),
             '", "description": "Vertex is a identity access system for privledged smart contract functions", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),

@@ -5,6 +5,7 @@
   solc = "0.8.17"
   optimizer = false
   via_ir = false
+  ffi = true
 
 [profile.default.optimizer_details]
   constantOptimizer = true
