@@ -32,6 +32,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     _;
   }
 
+  modifier nonTransferableToken() {
+    _; // we put this ahead of the revert so we don't get an unreachable code warning
+    revert NonTransferableToken();
+  }
+
   constructor() initializer {}
 
   /// @inheritdoc IVertexPolicy
@@ -233,33 +238,34 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
   /// @dev overriding transferFrom to disable transfers
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
-  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ ) public pure override {
-    revert NonTransferableToken();
-  }
+  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
 
   /// @dev overriding safeTransferFrom to disable transfers
-  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ ) public pure override {
-    revert NonTransferableToken();
-  }
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
 
   /// @dev overriding safeTransferFrom to disable transfers
   function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
     public
     pure
     override
-  {
-    revert NonTransferableToken();
-  }
+    nonTransferableToken
+  {}
 
   /// @dev overriding approve to disable approvals
-  function approve(address, /* spender */ uint256 /* id */ ) public pure override {
-    revert NonTransferableToken();
-  }
+  function approve(address, /* spender */ uint256 /* id */ ) public pure override nonTransferableToken {}
 
   /// @dev overriding approve to disable approvals
-  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override {
-    revert NonTransferableToken();
-  }
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
 
   /// @inheritdoc IVertexPolicy
   function totalSupply() public view override returns (uint256) {
