@@ -26,10 +26,6 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   using SafeERC20 for IERC20;
   using Address for address payable;
 
-  error OnlyVertex();
-  error Invalid0xRecipient();
-  error FailedExecution(bytes result);
-
   /// @notice Name of this Vertex Account.
   string public name;
 

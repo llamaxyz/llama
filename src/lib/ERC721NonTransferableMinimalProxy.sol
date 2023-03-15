@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 /// @notice This contract is a modified version of Solmate's ERC721 contract
 /// @notice Modern, minimalist, and gas efficient ERC-721 implementation as a minimal proxy.
 /// @author Solmate / Llama (https://github.com/transmissions11/solmate/blob/34d20fc027fe8d50da71428687024a29dc01748b/src/tokens/ERC721.sol)
-abstract contract ERC721MinimalProxy is Initializable {
+abstract contract ERC721NonTransferableMinimalProxy is Initializable {
   /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -105,27 +105,9 @@ abstract contract ERC721MinimalProxy is Initializable {
     emit Transfer(from, to, id);
   }
 
-  function safeTransferFrom(address from, address to, uint256 id) public virtual {
-    transferFrom(from, to, id);
+  function safeTransferFrom(address from, address to, uint256 id) public virtual;
 
-    require(
-      to.code.length == 0
-        || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, "")
-          == ERC721TokenReceiver.onERC721Received.selector,
-      "UNSAFE_RECIPIENT"
-    );
-  }
-
-  function safeTransferFrom(address from, address to, uint256 id, bytes calldata data) public virtual {
-    transferFrom(from, to, id);
-
-    require(
-      to.code.length == 0
-        || ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data)
-          == ERC721TokenReceiver.onERC721Received.selector,
-      "UNSAFE_RECIPIENT"
-    );
-  }
+  function safeTransferFrom(address from, address to, uint256 id, bytes calldata data) public virtual;
 
   /*//////////////////////////////////////////////////////////////
                               ERC165 LOGIC

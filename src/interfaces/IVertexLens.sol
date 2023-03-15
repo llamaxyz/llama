@@ -26,22 +26,22 @@ interface IVertexLens {
     pure
     returns (VertexCore);
 
-  /// @notice computes the address of a vertex policy with a name and symbol value.
-  /// @param symbol The symbol of this Vertex instance.
+  /// @notice computes the address of a vertex policy with a name value.
+  /// @param name The name of this Vertex instance.
   /// @param vertexPolicyLogic The VertexPolicy logic contract.
   /// @param factory The factory address.
   /// @return the computed address of the VertexPolicy contract.
-  function computeVertexPolicyAddress(string memory symbol, address vertexPolicyLogic, address factory)
+  function computeVertexPolicyAddress(string memory name, address vertexPolicyLogic, address factory)
     external
     pure
     returns (VertexPolicy);
 
   /// @notice computes the address of a vertex strategy with a strategy value.
+  /// @param vertexStrategyLogic The Vertex Strategy logic contract.
   /// @param _strategy The strategy to be set.
-  /// @param _policy The policy to be set.
-  /// @param _vertex The vertex to be set.
+  /// @param _vertexCore The vertex core to be set.
   /// @return the computed address of the VertexStrategy contract.
-  function computeVertexStrategyAddress(Strategy memory _strategy, VertexPolicy _policy, address _vertex)
+  function computeVertexStrategyAddress(address vertexStrategyLogic, Strategy memory _strategy, address _vertexCore)
     external
     pure
     returns (VertexStrategy);

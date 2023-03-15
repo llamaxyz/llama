@@ -6,7 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
+import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -67,7 +67,7 @@ contract Deploy is VertexFactoryTest {
     (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
       getDefaultVertexDeployParameters();
     vm.prank(address(core));
-    return factory.deploy("NewProject", "NP", strategies, accounts, policies);
+    return factory.deploy("NewProject", strategies, accounts, policies);
   }
 
   function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
@@ -76,8 +76,8 @@ contract Deploy is VertexFactoryTest {
       getDefaultVertexDeployParameters();
 
     vm.prank(address(caller));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    factory.deploy("ProtocolXYZ", "VXP", strategies, accounts, policies);
+    vm.expectRevert(IVertexFactory.OnlyVertex.selector);
+    factory.deploy("ProtocolXYZ", strategies, accounts, policies);
   }
 
   function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
@@ -85,9 +85,9 @@ contract Deploy is VertexFactoryTest {
       getDefaultVertexDeployParameters();
 
     vm.prank(address(core));
-    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
+    factory.deploy(name, strategies, accounts, policies);
     vm.expectRevert();
-    factory.deploy(name, "SYMBOL", strategies, accounts, policies);
+    factory.deploy(name, strategies, accounts, policies);
   }
 
   function test_IncrementsVertexCountByOne() public {
@@ -113,7 +113,7 @@ contract Deploy is VertexFactoryTest {
 
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", "TST", policies);
+    _policy.initialize("Test", policies);
   }
 
   function test_DeploysVertexCore() public {
@@ -133,7 +133,7 @@ contract Deploy is VertexFactoryTest {
     (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, accountLogic, strategies, accounts);
+    _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategies, accounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
@@ -185,7 +185,7 @@ contract Integration is VertexFactoryTest {
     // compute strategy data and strategy addresses
     Strategy memory strategyData = buildStrategyData();
     VertexStrategy computedStrategy =
-      lens.computeVertexStrategyAddress(strategyData, computedVertexPolicy, address(computedVertexCore));
+      lens.computeVertexStrategyAddress(address(strategyLogic), strategyData, address(computedVertexCore));
 
     // compute new weights and permission metadata
     PermissionMetadata[] memory permissionMetadata =
@@ -207,7 +207,7 @@ contract Integration is VertexFactoryTest {
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
 
-    VertexCore newVertex = factory.deploy("Integration Test", "IT", initialStrategies, initialAccounts, initialPolicies);
+    VertexCore newVertex = factory.deploy("Integration Test", initialStrategies, initialAccounts, initialPolicies);
 
     assertEq(address(newVertex), address(computedVertexCore));
     assertEq(address(newVertex.policy()), address(computedVertexPolicy));

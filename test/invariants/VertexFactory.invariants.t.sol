@@ -59,7 +59,7 @@ contract VertexFactoryHandler is BaseHandler {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(vertexFactory.rootVertex()));
     PolicyGrantData[] memory _policyGrantData = new PolicyGrantData[](0);
-    vertexFactory.deploy(name(), name(), new Strategy[](0), new string[](0), _policyGrantData);
+    vertexFactory.deploy(name(), new Strategy[](0), new string[](0), _policyGrantData);
     vertexCounts.push(vertexFactory.vertexCount());
   }
 }

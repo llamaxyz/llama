@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "lib/forge-std/src/console.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {
@@ -43,13 +43,13 @@ contract VertexPolicyTest is VertexTestSetup {
 contract Initialize is VertexPolicyTest {
   function test_SetsNameAndSymbol() public {
     assertEq(policy.name(), "Root Vertex");
-    assertEq(policy.symbol(), "RVTX");
+    assertEq(policy.symbol(), "V_Roo");
   }
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    policy.initialize("Test", "TST", policies);
+    policy.initialize("Test", policies);
   }
 }
 
@@ -88,7 +88,7 @@ contract BatchGrantPolicies is VertexPolicyTest {
 
   function test_RevertIfPolicyAlreadyGranted() public {
     // PolicyGrantData[] memory policies;
-    // vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
+    // vm.expectRevert(IVertexPolicy.OnlyOnePolicyPerHolder.selector);
     // policy.batchGrantPolicies(policies);
   }
 }
@@ -147,6 +147,10 @@ contract BatchUpdatePermissions is VertexPolicyTest {
     // policy.batchUpdatePermissions(updateDataArray);
     // assertEq(policy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, permissionId1), block.timestamp + 1 days);
   }
+
+  function test_CanSetPermissionWithExpirationDateToInfiniteExpiration() public {
+    // TODO after matt's PR merges
+  }
 }
 
 contract BatchRevokePolicies is VertexPolicyTest {
@@ -170,14 +174,24 @@ contract HasPermission is VertexPolicyTest {
 // TODO Add tests.
 }
 
-contract RevokeExpiredPermission is VertexPolicyTest {
-// TODO Add tests.
-}
-
 contract TransferFrom is VertexPolicyTest {
   function test_transferFrom_RevertIfTransferFrom() public {
-    vm.expectRevert(VertexPolicy.SoulboundToken.selector);
+    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
     policy.transferFrom(address(this), address(0xdeadbeef), SELF_TOKEN_ID);
+  }
+}
+
+contract Approve is VertexPolicyTest {
+  function test_RevertIf_Called() public {
+    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
+    policy.approve(address(0xdeadbeef), SELF_TOKEN_ID);
+  }
+}
+
+contract SetApprovalForAll is VertexPolicyTest {
+  function test_RevertIf_Called() public {
+    vm.expectRevert(IVertexPolicy.NonTransferableToken.selector);
+    policy.setApprovalForAll(address(0xdeadbeef), true);
   }
 }
 
@@ -262,7 +276,7 @@ contract SetBaseURI is VertexPolicyTest {
   function test_RevertIf_CallerIsNotVertex() public {
     string memory baseURI = "https://vertex.link/policy/";
     vm.prank(address(0xdeadbeef));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    vm.expectRevert(IVertexPolicy.OnlyVertex.selector);
     policy.setBaseURI(baseURI);
   }
 
@@ -343,10 +357,10 @@ contract ExpirationTests is VertexPolicyTest {
     // PolicyGrantData[] memory grantData = new PolicyGrantData[](1);
     // grantData[0] = PolicyGrantData(address(0x1), permissionsToAdd);
 
-    // vm.expectRevert(VertexPolicy.Expired.selector);
+    // vm.expectRevert(IVertexPolicy.Expired.selector);
     // policy.batchGrantPolicies(grantData);
     // assertEq(block.timestamp > newExpirationTimestamp, true);
-    // vm.expectRevert(VertexPolicy.Expired.selector);
+    // vm.expectRevert(IVertexPolicy.Expired.selector);
     // policy.batchUpdatePermissions(updateDataArray);
   }
 }

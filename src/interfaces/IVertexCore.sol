@@ -8,6 +8,27 @@ import {ActionState} from "src/lib/Enums.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
 
 interface IVertexCore {
+  error InvalidStrategy();
+  error InvalidPolicyholder();
+  error InvalidCancelation();
+  error InvalidActionId();
+  error OnlyQueuedActions();
+  error InvalidStateForQueue();
+  error ActionCannotBeCanceled();
+  error OnlyVertex();
+  error ActionNotActive();
+  error ActionNotQueued();
+  error InvalidSignature();
+  error TimelockNotFinished();
+  error FailedActionExecution();
+  error DuplicateApproval();
+  error DuplicateDisapproval();
+  error DisapproveDisabled();
+  error PolicyholderDoesNotHavePermission();
+  error InsufficientMsgValue();
+  error ApprovalRoleHasZeroSupply();
+  error DisapprovalRoleHasZeroSupply();
+
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -31,13 +52,15 @@ interface IVertexCore {
   /// @notice Initializes a new VertexCore clone.
   /// @param name The name of the VertexCore clone.
   /// @param policy This Vertex instance's policy contract.
-  /// @param vertexAccountImplementation The VertexAccount implementation contract.
+  /// @param vertexStrategyLogic The Vertex Strategy implementation (logic) contract.
+  /// @param vertexAccountLogic The Vertex Account implementation (logic) contract.
   /// @param initialStrategies The configuration of the initial strategies.
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory name,
     VertexPolicy policy,
-    VertexAccount vertexAccountImplementation,
+    VertexStrategy vertexStrategyLogic,
+    VertexAccount vertexAccountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts
   ) external;
