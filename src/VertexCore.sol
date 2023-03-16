@@ -390,7 +390,10 @@ contract VertexCore is Initializable {
   }
 
   function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
-    if (!factory.authorizedAccountLogics(vertexAccountLogic)) revert UnauthorizedAccountLogic();
+    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
+      // Only check if the factory is deployed
+      revert UnauthorizedAccountLogic();
+    }
 
     uint256 accountLength = accounts.length;
     unchecked {
@@ -406,7 +409,10 @@ contract VertexCore is Initializable {
   function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
     internal
   {
-    if (!factory.authorizedStrategyLogics(vertexStrategyLogic)) revert UnauthorizedStrategyLogic();
+    if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
+      // Only check if the factory is deployed
+      revert UnauthorizedStrategyLogic();
+    }
 
     uint256 strategyLength = strategies.length;
     unchecked {
