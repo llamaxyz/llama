@@ -49,11 +49,11 @@ contract Constructor is VertexFactoryTest {
     assertEq(address(factory.vertexPolicyLogic()), address(policyLogic));
   }
 
-  function test_SetsVertexStrategyLogicAddress() public {
+  function test_SetsVertexStrategyLogicAddress() public view {
     assert(factory.authorizedStrategyLogics(address(strategyLogic)));
   }
 
-  function test_SetsVertexAccountLogicAddress() public {
+  function test_SetsVertexAccountLogicAddress() public view {
     assert(factory.authorizedAccountLogics(address(accountLogic)));
   }
 
