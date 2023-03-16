@@ -65,13 +65,13 @@ contract VertexStrategy is Initializable {
   /// @param strategyConfig The strategy configuration.
   /// @param _policy The policy contract.
   /// @param _vertex The VertexCore contract.
-  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, VertexCore _vertex) external initializer {
+  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, address _vertex) external initializer {
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
     policy = _policy;
-    vertex = _vertex;
+    vertex = VertexCore(_vertex);
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
@@ -90,7 +90,7 @@ contract VertexStrategy is Initializable {
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit NewStrategyCreated(_vertex, _policy);
+    emit NewStrategyCreated(vertex, _policy);
   }
 
   /// @notice Get whether an action has passed the approval process.

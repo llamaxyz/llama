@@ -115,7 +115,7 @@ contract VertexCore is Initializable {
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory _name,
-    VertexFactory _factory,
+    address _factory,
     VertexPolicy _policy,
     address _vertexStrategyLogic,
     address _vertexAccountLogic,
@@ -123,7 +123,7 @@ contract VertexCore is Initializable {
     string[] calldata initialAccounts
   ) external initializer {
     name = _name;
-    factory = _factory;
+    factory = VertexFactory(_factory);
     policy = _policy;
 
     _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
@@ -425,7 +425,7 @@ contract VertexCore is Initializable {
         );
 
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
-        strategy.initialize(strategies[i], _policy, VertexCore(address(this)));
+        strategy.initialize(strategies[i], _policy, address(this));
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }

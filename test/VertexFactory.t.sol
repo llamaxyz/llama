@@ -141,7 +141,7 @@ contract Deploy is VertexFactoryTest {
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
     _vertex.initialize(
-      "NewProject", factory, _policy, address(strategyLogic), address(accountLogic), strategies, accounts
+      "NewProject", address(factory), _policy, address(strategyLogic), address(accountLogic), strategies, accounts
     );
   }
 
