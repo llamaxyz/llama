@@ -107,7 +107,6 @@ contract VertexCore is Initializable {
 
   /// @notice Initializes a new VertexCore clone.
   /// @param _name The name of the VertexCore clone.
-  /// @param _factory The VertexFactory contract that deployed this Vertex system.
   /// @param _policy This Vertex instance's policy contract.
   /// @param _vertexStrategyLogic The Vertex Strategy implementation (logic) contract.
   /// @param _vertexAccountLogic The Vertex Account implementation (logic) contract.
@@ -115,15 +114,14 @@ contract VertexCore is Initializable {
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory _name,
-    address _factory,
     VertexPolicy _policy,
     address _vertexStrategyLogic,
     address _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
+    factory = VertexFactory(msg.sender);
     name = _name;
-    factory = VertexFactory(_factory);
     policy = _policy;
 
     _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);

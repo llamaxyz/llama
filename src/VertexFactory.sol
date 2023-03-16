@@ -129,7 +129,7 @@ contract VertexFactory {
     policy.initialize(name, initialPolicies);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
-    vertex.initialize(name, address(this), policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+    vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
 
