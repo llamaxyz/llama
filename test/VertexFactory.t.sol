@@ -4,9 +4,8 @@ pragma solidity ^0.8.17;
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexCore} from "src/VertexCore.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -76,7 +75,7 @@ contract Deploy is VertexFactoryTest {
       getDefaultVertexDeployParameters();
 
     vm.prank(address(caller));
-    vm.expectRevert(IVertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
     factory.deploy("ProtocolXYZ", strategies, accounts, policies);
   }
 

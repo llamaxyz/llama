@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LibString} from "@solady/utils/LibString.sol";
-import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 import {
   PermissionData,
@@ -18,7 +17,18 @@ import {
 /// @author Llama (vertex@llama.xyz)
 /// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
 /// @notice The permissions determine how the token can interact with the vertex administrator contract
-contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
+contract VertexPolicy is ERC721NonTransferableMinimalProxy {
+  error NonTransferableToken();
+  error InvalidInput(); // TODO: Probably need more than one error?
+  error OnlyVertex();
+  error OnlyOnePolicyPerHolder();
+  error AlreadyInitialized();
+  error Expired();
+
+  event PolicyAdded(PolicyGrantData grantData);
+  event PermissionUpdated(PolicyUpdateData updateData);
+  event PolicyRevoked(PolicyRevokeData revokeData);
+
   mapping(uint256 => mapping(bytes32 => PermissionIdCheckpoint[])) internal tokenPermissionCheckpoints;
   mapping(bytes32 => PermissionIdCheckpoint[]) internal permissionSupplyCheckpoints;
   mapping(uint256 => mapping(bytes32 => uint256)) public tokenToPermissionExpirationTimestamp;
@@ -39,7 +49,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
   constructor() initializer {}
 
-  /// @inheritdoc IVertexPolicy
+  /// @notice initializes the contract
+  /// @param _name the name of the contract
+  /// @param initialPolicies the initial policies to mint
   function initialize(string memory _name, PolicyGrantData[] memory initialPolicies) external initializer {
     string memory firstThreeLetters = LibString.slice(_name, 0, 3);
     __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
@@ -49,19 +61,18 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     }
   }
 
-  /// @inheritdoc IVertexPolicy
+  /// @notice sets the vertexCore address
+  /// @param _vertex the address of the vertexCore
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;
   }
 
-  /// @inheritdoc IVertexPolicy
-  function holderWeightAt(address policyholder, bytes32 role, uint256 timestamp)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  /// @notice Check if a holder has a permissionId at a specific timestamp
+  /// @param policyholder the address of the policy holder
+  /// @param role the signature of the permission
+  /// @param timestamp the block number to query
+  function holderWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256) {
     uint256 policyId = uint256(uint160(policyholder));
     PermissionIdCheckpoint[] storage _checkpoints = tokenPermissionCheckpoints[policyId][role];
     uint256 length = _checkpoints.length;
@@ -80,6 +91,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     return expired ? 0 : _checkpoints[min].quantity;
   }
 
+  /// @notice Returns the total supply of a role at a specific timestamp
+  /// @param role the signature of the permission
+  /// @param timestamp the block number to query
+  /// @return the total supply of the role at the given timestamp
   function totalSupplyAt(bytes32 role, uint256 timestamp) external view returns (uint256) {
     PermissionIdCheckpoint[] storage _checkpoints = permissionSupplyCheckpoints[role];
     uint256 length = _checkpoints.length;
@@ -96,8 +111,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     return _checkpoints[min].quantity;
   }
 
-  /// @inheritdoc IVertexPolicy
-  function batchGrantPolicies(PolicyGrantData[] memory policyData) public override onlyVertex {
+  /// @notice mints multiple policy token with the given permissions
+  /// @param policyData array of PolicyGrantData struct to mint policy tokens
+  function batchGrantPolicies(PolicyGrantData[] memory policyData) public onlyVertex {
     uint256 length = policyData.length;
     for (uint256 i = 0; i < length; ++i) {
       _grantPolicy(policyData[i]);
@@ -105,8 +121,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     }
   }
 
-  /// @inheritdoc IVertexPolicy
-  function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public override onlyVertex {
+  /// @notice updates the permissions for a policy token
+  /// @param updateData array of PolicyUpdateData struct to update permissions
+  function batchUpdatePermissions(PolicyUpdateData[] calldata updateData) public onlyVertex {
     uint256 length = updateData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
@@ -119,8 +136,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     }
   }
 
-  /// @inheritdoc IVertexPolicy
-  function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public override onlyVertex {
+  /// @notice revokes all permissions from multiple policy tokens
+  /// @dev all permissions that the policy holds must be passed to the permissionsToRevoke array to avoid a permission
+  /// not passed being available if a
+  /// policy was ever reissued to the same address
+  /// @param policyData array of PolicyRevokeData struct to revoke permissions
+  function batchRevokePolicies(PolicyRevokeData[] calldata policyData) public onlyVertex {
     uint256 length = policyData.length;
     unchecked {
       for (uint256 i = 0; i < length; ++i) {
@@ -130,8 +151,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
     }
   }
 
-  /// @inheritdoc IVertexPolicy
-  function hasPermission(uint256 policyId, bytes32 permissionId) public view override returns (bool) {
+  /// @dev checks if a token has a permission
+  /// @param policyId the id of the token
+  /// @param permissionId the signature of the permission
+  function hasPermission(uint256 policyId, bytes32 permissionId) public view returns (bool) {
     PermissionIdCheckpoint[] storage _permissionIdCheckpoint = tokenPermissionCheckpoints[policyId][permissionId];
     uint256 length = _permissionIdCheckpoint.length;
     bool expired = _isPermissionExpired(policyId, permissionId);
@@ -232,7 +255,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
 
   /// @notice sets the base URI for the contract
   /// @param _baseURI the base URI string to set
-  function setBaseURI(string calldata _baseURI) public override onlyVertex {
+  function setBaseURI(string calldata _baseURI) public onlyVertex {
     baseURI = _baseURI;
   }
 
@@ -267,8 +290,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy, IVertexPolicy {
   /// @dev overriding approve to disable approvals
   function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
 
-  /// @inheritdoc IVertexPolicy
-  function totalSupply() public view override returns (uint256) {
+  /// @dev returns the total token supply of the contract
+  function totalSupply() public view returns (uint256) {
     return _totalSupply;
   }
 

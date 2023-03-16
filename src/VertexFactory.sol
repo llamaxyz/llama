@@ -5,7 +5,6 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {IVertexFactory} from "src/interfaces/IVertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
@@ -13,7 +12,11 @@ import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
-contract VertexFactory is IVertexFactory {
+contract VertexFactory {
+  error OnlyVertex();
+
+  event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
+
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
 
@@ -54,7 +57,12 @@ contract VertexFactory is IVertexFactory {
     _;
   }
 
-  /// @inheritdoc IVertexFactory
+  /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
+  /// @param name The name of this Vertex system.
+  /// @param initialStrategies The list of initial strategies.
+  /// @param initialAccounts The list of initial accounts.
+  /// @param initialPolicies The list of initial policies.
+  /// @return the address of the VertexCore contract of the newly created system.
   function deploy(
     string memory name,
     Strategy[] memory initialStrategies,

@@ -5,7 +5,6 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -231,7 +230,7 @@ contract CreateAction is VertexCoreTest {
   function test_RevertIfStrategyUnauthorized() public {
     VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreator);
-    vm.expectRevert(IVertexCore.InvalidStrategy.selector);
+    vm.expectRevert(VertexCore.InvalidStrategy.selector);
     core.createAction(unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
@@ -243,27 +242,27 @@ contract CreateAction is VertexCoreTest {
     if (user == address(0)) user = address(100); // Faster than vm.assume, since 0 comes up a lot.
     vm.assume(policy.balanceOf(user) == 0);
     vm.prank(user);
-    vm.expectRevert(IVertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     core.createAction(strategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function test_RevertIfNoPermissionForStrategy() public {
     vm.prank(actionCreator);
-    vm.expectRevert(IVertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     core.createAction(strategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfNoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreator);
-    vm.expectRevert(IVertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     core.createAction(strategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
     vm.assume(_badSelector != PAUSE_SELECTOR && _badSelector != FAIL_SELECTOR && _badSelector != RECEIVE_ETH_SELECTOR);
     vm.prank(actionCreator);
-    vm.expectRevert(IVertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     core.createAction(strategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
   }
 
@@ -293,14 +292,14 @@ contract CancelAction is VertexCoreTest {
   function testFuzz_RevertIfNotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreator);
     vm.prank(_randomCaller);
-    vm.expectRevert(IVertexCore.ActionCannotBeCanceled.selector);
+    vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
     core.cancelAction(0);
   }
 
   // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
   function test_RevertIfInvalidActionId() public {
     vm.startPrank(actionCreator);
-    vm.expectRevert(IVertexCore.InvalidActionId.selector);
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
     core.cancelAction(1);
     vm.stopPrank();
   }
@@ -308,7 +307,7 @@ contract CancelAction is VertexCoreTest {
   function test_RevertIfAlreadyCanceled() public {
     vm.startPrank(actionCreator);
     core.cancelAction(0);
-    vm.expectRevert(IVertexCore.InvalidCancelation.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     core.cancelAction(0);
     vm.stopPrank();
   }
@@ -317,7 +316,7 @@ contract CancelAction is VertexCoreTest {
     _executeCompleteActionFlow();
 
     vm.startPrank(actionCreator);
-    vm.expectRevert(IVertexCore.InvalidCancelation.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     core.cancelAction(0);
     vm.stopPrank();
   }
@@ -336,7 +335,7 @@ contract CancelAction is VertexCoreTest {
     vm.warp(block.timestamp + 15 days);
 
     vm.startPrank(actionCreator);
-    vm.expectRevert(IVertexCore.InvalidCancelation.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     core.cancelAction(0);
     vm.stopPrank();
   }
@@ -348,7 +347,7 @@ contract CancelAction is VertexCoreTest {
 
     assertEq(strategy1.isActionPassed(0), false);
 
-    vm.expectRevert(IVertexCore.InvalidCancelation.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     core.cancelAction(0);
   }
 
@@ -379,7 +378,7 @@ contract CancelAction is VertexCoreTest {
     assertEq(strategy1.isActionPassed(0), true);
     _queueAction();
 
-    vm.expectRevert(IVertexCore.ActionCannotBeCanceled.selector);
+    vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
     core.cancelAction(0);
   }
 }
@@ -391,7 +390,7 @@ contract QueueAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(IVertexCore.InvalidStateForQueue.selector);
+    vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
     core.queueAction(0);
   }
 
@@ -404,7 +403,7 @@ contract QueueAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(IVertexCore.InvalidActionId.selector);
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
     core.queueAction(1);
   }
 }
@@ -434,7 +433,7 @@ contract ExecuteAction is VertexCoreTest {
 
   function test_RevertIfNotQueued() public {
     // TODO assert action state
-    vm.expectRevert(IVertexCore.OnlyQueuedActions.selector);
+    vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
     core.executeAction(actionId);
   }
 
@@ -444,7 +443,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(IVertexCore.InvalidActionId.selector);
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
     core.executeAction(actionId + 1);
   }
 
@@ -454,7 +453,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 hours);
 
-    vm.expectRevert(IVertexCore.TimelockNotFinished.selector);
+    vm.expectRevert(VertexCore.TimelockNotFinished.selector);
     core.executeAction(actionId);
   }
 
@@ -471,7 +470,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(IVertexCore.InsufficientMsgValue.selector);
+    vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
     core.executeAction(actionId);
   }
 
@@ -496,7 +495,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(IVertexCore.FailedActionExecution.selector);
+    vm.expectRevert(VertexCore.FailedActionExecution.selector);
     core.executeAction(actionId);
   }
 
@@ -533,7 +532,7 @@ contract SubmitApproval is VertexCoreTest {
 
     core.queueAction(actionId);
 
-    vm.expectRevert(IVertexCore.ActionNotActive.selector);
+    vm.expectRevert(VertexCore.ActionNotActive.selector);
     core.submitApproval(actionId, "approver");
   }
 
@@ -541,7 +540,7 @@ contract SubmitApproval is VertexCoreTest {
     actionId = _createAction();
     _approveAction(policyHolderPam, actionId);
 
-    vm.expectRevert(IVertexCore.DuplicateApproval.selector);
+    vm.expectRevert(VertexCore.DuplicateApproval.selector);
     vm.prank(policyHolderPam);
     core.submitApproval(actionId, "approver");
   }
@@ -551,7 +550,7 @@ contract SubmitApproval is VertexCoreTest {
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
-    vm.expectRevert(IVertexCore.InvalidPolicyholder.selector);
+    vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
     core.submitApproval(actionId, "approver");
 
     vm.prank(policyHolderPam);
@@ -599,7 +598,7 @@ contract SubmitDisapproval is VertexCoreTest {
   function test_RevertIfActionNotQueued() public {
     actionId = _createAction();
 
-    vm.expectRevert(IVertexCore.ActionNotQueued.selector);
+    vm.expectRevert(VertexCore.ActionNotQueued.selector);
     core.submitDisapproval(actionId, "disapprover");
   }
 
@@ -608,7 +607,7 @@ contract SubmitDisapproval is VertexCoreTest {
 
     _disapproveAction(policyHolderPam, actionId);
 
-    vm.expectRevert(IVertexCore.DuplicateDisapproval.selector);
+    vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
     vm.prank(policyHolderPam);
     core.submitDisapproval(actionId, "disapprover");
   }
@@ -618,7 +617,7 @@ contract SubmitDisapproval is VertexCoreTest {
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
-    vm.expectRevert(IVertexCore.InvalidPolicyholder.selector);
+    vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
     core.submitDisapproval(actionId, "disapprover");
 
     vm.prank(policyHolderPam);

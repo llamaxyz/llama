@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
-import {IVertexAccount} from "src/interfaces/IVertexAccount.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Strategy, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
@@ -104,13 +104,13 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_transfer_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
   }
 
   function test_transfer_RevertIfToZeroAddress() public {
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.transfer(payable(address(0)), ETH_AMOUNT);
     vm.stopPrank();
   }
@@ -132,13 +132,13 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_transferERC20_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
   function test_transferERC20_RevertIfToZeroAddress() public {
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
@@ -172,7 +172,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchTransferERC20(erc20Data);
   }
 
@@ -181,7 +181,7 @@ contract VertexAccountTest is VertexTestSetup {
     erc20Data[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
@@ -216,7 +216,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_approveERC20_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
@@ -237,7 +237,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_batchApproveERC20_RevertIfNotVertexMsgSender() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchApproveERC20(erc20Data);
   }
 
@@ -259,13 +259,13 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_transferERC721_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
   function test_transferERC721_RevertIfToZeroAddress() public {
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
@@ -299,7 +299,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_batchTransferERC721_RevertIfNotVertexMsgSender() public {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchTransferERC721(erc721Data);
   }
 
@@ -308,7 +308,7 @@ contract VertexAccountTest is VertexTestSetup {
     erc721Data[0] = ERC721Data(BAYC, address(0), BAYC_ID);
 
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
@@ -320,7 +320,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_approveERC721_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
@@ -344,7 +344,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_batchApproveERC721_RevertIfNotVertexMsgSender() public {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchApproveERC721(erc721Data);
   }
 
@@ -358,7 +358,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
   }
 
@@ -379,7 +379,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_batchApproveOperatorERC721_RevertIfNotVertexMsgSender() public {
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchApproveOperatorERC721(erc721OperatorData);
   }
 
@@ -400,13 +400,13 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_transferERC1155_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
   }
 
   function test_transferERC1155_RevertIfToZeroAddress() public {
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
@@ -450,7 +450,7 @@ contract VertexAccountTest is VertexTestSetup {
     amounts[0] = RARI_ID_1_AMOUNT;
     amounts[1] = RARI_ID_2_AMOUNT;
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
   }
 
@@ -464,7 +464,7 @@ contract VertexAccountTest is VertexTestSetup {
     amounts[1] = RARI_ID_2_AMOUNT;
 
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
     vm.stopPrank();
   }
@@ -517,7 +517,7 @@ contract VertexAccountTest is VertexTestSetup {
 
   function test_batchTransferMultipleERC1155_RevertIfNotVertexMsgSender() public {
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchTransferMultipleERC1155(erc1155BatchData);
   }
 
@@ -528,7 +528,7 @@ contract VertexAccountTest is VertexTestSetup {
     erc1155BatchData[0] = ERC1155BatchData(RARI, address(0), tokenIDs, amounts, "");
 
     vm.startPrank(address(core));
-    vm.expectRevert(IVertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     account1.batchTransferMultipleERC1155(erc1155BatchData);
     vm.stopPrank();
   }
@@ -543,7 +543,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function test_approveOperatorERC1155_RevertIfNotVertexMsgSender() public {
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
   }
 
@@ -562,7 +562,7 @@ contract VertexAccountTest is VertexTestSetup {
 
   function test_batchApproveOperatorERC1155_RevertIfNotVertexMsgSender() public {
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.batchApproveOperatorERC1155(erc1155OperatorData);
   }
 
@@ -599,7 +599,7 @@ contract VertexAccountTest is VertexTestSetup {
   function test_execute_RevertIfNotVertexMsgSender() public {
     TestScript testScript = new TestScript();
 
-    vm.expectRevert(IVertexAccount.OnlyVertex.selector);
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     account1.execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
   }
 
@@ -607,7 +607,7 @@ contract VertexAccountTest is VertexTestSetup {
     TestScript testScript = new TestScript();
 
     vm.startPrank(address(core));
-    vm.expectRevert(abi.encodeWithSelector(IVertexAccount.FailedExecution.selector, ""));
+    vm.expectRevert(abi.encodeWithSelector(VertexAccount.FailedExecution.selector, ""));
     account1.execute(address(testScript), abi.encodePacked("", ""), true);
     vm.stopPrank();
   }

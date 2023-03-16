@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-import {IVertexAccount} from "src/interfaces/IVertexAccount.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
@@ -22,9 +21,13 @@ import {
 /// @title Vertex Account
 /// @author Llama (vertex@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
-contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializable {
+contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   using SafeERC20 for IERC20;
   using Address for address payable;
+
+  error OnlyVertex();
+  error Invalid0xRecipient();
+  error FailedExecution(bytes result);
 
   /// @notice Name of this Vertex Account.
   string public name;
@@ -34,7 +37,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
 
   constructor() initializer {}
 
-  function initialize(string memory _name, address _vertex) external override initializer {
+  /// @notice Initializes a new VertexAccount clone.
+  /// @param _name The name of the VertexAccount clone.
+  /// @param _vertex This Vertex instance's core contract
+  function initialize(string memory _name, address _vertex) external initializer {
     name = _name;
     vertex = _vertex;
   }
@@ -48,10 +54,12 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // Native Token
   // -------------------------------------------------------------------------
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex Account to receive native token
   receive() external payable {}
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to transfer native tokens to other parties
+  /// @param recipient Transfer's recipient
+  /// @param amount Amount to transfer
   function transfer(address payable recipient, uint256 amount) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     recipient.sendValue(amount);
@@ -61,13 +69,15 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // ERC20 Token
   // -------------------------------------------------------------------------
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to transfer ERC20 tokens to other parties
+  /// @param erc20Data The data of the ERC20 transfer
   function transferERC20(ERC20Data calldata erc20Data) public onlyVertex {
     if (erc20Data.recipient == address(0)) revert Invalid0xRecipient();
     erc20Data.token.safeTransfer(erc20Data.recipient, erc20Data.amount);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch transfer ERC20 tokens to other parties
+  /// @param erc20Data The data of the ERC20 transfers
   function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
     uint256 length = erc20Data.length;
     unchecked {
@@ -77,12 +87,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to give ERC20 allowance to other parties
+  /// @param erc20Data The data of the ERC20 allowance
   function approveERC20(ERC20Data calldata erc20Data) public onlyVertex {
     erc20Data.token.safeApprove(erc20Data.recipient, erc20Data.amount);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch give ERC20 allowance to other parties
+  /// @param erc20Data The data of the ERC20 allowances
   function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
     uint256 length = erc20Data.length;
     unchecked {
@@ -96,13 +108,15 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // ERC721 Token
   // -------------------------------------------------------------------------
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to transfer ERC721 tokens to other parties
+  /// @param erc721Data The data of the ERC721 transfer
   function transferERC721(ERC721Data calldata erc721Data) public onlyVertex {
     if (erc721Data.recipient == address(0)) revert Invalid0xRecipient();
     erc721Data.token.transferFrom(address(this), erc721Data.recipient, erc721Data.tokenId);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch transfer ERC721 tokens to other parties
+  /// @param erc721Data The data of the ERC721 transfers
   function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
     uint256 length = erc721Data.length;
     unchecked {
@@ -112,12 +126,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to give ERC721 allowance to other parties
+  /// @param erc721Data The data of the ERC721 allowance
   function approveERC721(ERC721Data calldata erc721Data) public onlyVertex {
     erc721Data.token.approve(erc721Data.recipient, erc721Data.tokenId);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch give ERC721 allowance to other parties
+  /// @param erc721Data The data of the ERC721 allowances
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
     uint256 length = erc721Data.length;
     unchecked {
@@ -127,12 +143,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to give ERC721 operator allowance to other parties
+  /// @param erc721OperatorData The data of the ERC721 operator allowance
   function approveOperatorERC721(ERC721OperatorData calldata erc721OperatorData) public onlyVertex {
     erc721OperatorData.token.setApprovalForAll(erc721OperatorData.recipient, erc721OperatorData.approved);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch give ERC721 operator allowance to other parties
+  /// @param erc721OperatorData The data of the ERC721 operator allowances
   function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyVertex {
     uint256 length = erc721OperatorData.length;
     unchecked {
@@ -146,7 +164,8 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // ERC1155 Token
   // -------------------------------------------------------------------------
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to transfer ERC1155 tokens to other parties
+  /// @param erc1155Data The data of the ERC1155 transfer
   function transferERC1155(ERC1155Data calldata erc1155Data) external onlyVertex {
     if (erc1155Data.recipient == address(0)) revert Invalid0xRecipient();
     erc1155Data.token.safeTransferFrom(
@@ -154,7 +173,8 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     );
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch transfer ERC1155 tokens of a single ERC1155 collection to other parties
+  /// @param erc1155BatchData The data of the ERC1155 batch transfer
   function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) public onlyVertex {
     if (erc1155BatchData.recipient == address(0)) revert Invalid0xRecipient();
     erc1155BatchData.token.safeBatchTransferFrom(
@@ -166,7 +186,8 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     );
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch transfer ERC1155 tokens of multiple ERC1155 collections to other parties
+  /// @param erc1155BatchData The data of the ERC1155 batch transfers
   function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyVertex {
     uint256 length = erc1155BatchData.length;
     unchecked {
@@ -176,12 +197,14 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
     }
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to give ERC1155 operator allowance to other parties
+  /// @param erc1155OperatorData The data of the ERC1155 operator allowance
   function approveOperatorERC1155(ERC1155OperatorData calldata erc1155OperatorData) public onlyVertex {
     erc1155OperatorData.token.setApprovalForAll(erc1155OperatorData.recipient, erc1155OperatorData.approved);
   }
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to batch give ERC1155 operator allowance to other parties
+  /// @param erc1155OperatorData The data of the ERC1155 operator allowances
   function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyVertex {
     uint256 length = erc1155OperatorData.length;
     unchecked {
@@ -195,7 +218,10 @@ contract VertexAccount is IVertexAccount, ERC721Holder, ERC1155Holder, Initializ
   // Generic Execution
   // -------------------------------------------------------------------------
 
-  /// @inheritdoc IVertexAccount
+  /// @notice Function for Vertex to execute arbitrary calls
+  /// @param target The address of the contract to call
+  /// @param callData The call data to pass to the contract
+  /// @param withDelegatecall Whether to use delegatecall or call
   function execute(address target, bytes calldata callData, bool withDelegatecall)
     external
     payable
