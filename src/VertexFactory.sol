@@ -7,6 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -32,6 +33,8 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
+  VertexLens public lens;
+
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
 
@@ -43,13 +46,15 @@ contract VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    PolicyGrantData[] memory initialPolicies
+    PolicyGrantData[] memory initialPolicies,
+    VertexLens _lens
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexStrategyLogic = _vertexStrategyLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
     rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
+    lens = _lens;
   }
 
   modifier onlyRootVertex() {
@@ -80,7 +85,7 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, initialPolicies);
+    policy.initialize(name, initialPolicies, lens);
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexStrategyLogic, vertexAccountLogic, initialStrategies, initialAccounts);
 
@@ -88,5 +93,9 @@ contract VertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
+  }
+
+  function setLens(VertexLens _lens) public onlyRootVertex {
+    lens = _lens;
   }
 }
