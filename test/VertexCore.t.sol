@@ -704,7 +704,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
 
-    core.createAndAuthorizeStrategies(newStrategies);
+    core.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
 
     assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
@@ -779,7 +779,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
-    core.createAndAuthorizeAccounts(newAccounts);
+    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
   function test_RevertIfReinitialized() public {
@@ -797,7 +797,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     }
 
     vm.startPrank(address(core));
-    core.createAndAuthorizeAccounts(newAccounts);
+    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[0].initialize(newAccounts[0], address(core));
