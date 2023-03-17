@@ -1,51 +1,67 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {VertexFactoryTest} from "./VertexFactory.t.sol";
 import {Test, console2} from "forge-std/Test.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {Strategy} from "src/lib/Structs.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
-contract ComputeAddress is VertexTestSetup {
-  // TODO Tests for Vertex Lens.
+contract VertexLensTestSetup is VertexTestSetup {}
 
-  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+contract ComputeVertexCoreAddress is VertexLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    address expected = address(lens.computeVertexCoreAddress("Root Vertex", address(coreLogic), address(factory)));
+    assertEq(expected, address(rootCore));
 
-  function test_ComputesExpectedAddressForVertexCore() public {
-    VertexCore computedVertexCore = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
-    VertexCore deployedVertexCore = deployVertex();
-    assertEq(address(computedVertexCore), address(deployedVertexCore));
+    expected = address(lens.computeVertexCoreAddress("Mock Protocol Vertex", address(coreLogic), address(factory)));
+    assertEq(expected, address(mpCore));
   }
+}
 
-  function test_ComputesExpectedAddressForPolicy() public {
-    VertexPolicy computedVertexPolicy =
-      lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    VertexCore deployedVertexCore = deployVertex();
-    VertexPolicy deployedVertexPolicy = VertexPolicy(VertexCore(deployedVertexCore).policy());
-    assertEq(address(computedVertexPolicy), address(deployedVertexPolicy));
+contract ComputeVertexPolicyAddress is VertexLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    address expected = address(lens.computeVertexPolicyAddress("Root Vertex", address(policyLogic), address(factory)));
+    assertEq(expected, address(rootPolicy));
+
+    expected = address(lens.computeVertexPolicyAddress("Mock Protocol Vertex", address(policyLogic), address(factory)));
+    assertEq(expected, address(mpPolicy));
   }
+}
 
-  function test_ComputeVertexStrategyAddress() public {
-    // Strategy memory _strategy, VertexPolicy _policy, VertexCore _vertex
-    (Strategy[] memory strategies,,) = getDefaultVertexDeployParameters();
-    VertexCore computedVertexCore = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
+contract ComputeVertexStrategyAddress is VertexLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    Strategy[] memory strategies = defaultStrategies();
+    address expected =
+      address(lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore)));
+    assertEq(expected, address(rootStrategy1));
 
-    VertexStrategy computedVertexStrategy =
-      lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(computedVertexCore));
+    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore)));
+    assertEq(expected, address(rootStrategy2));
 
-    vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(computedVertexStrategy, address(strategyLogic), strategies[0]);
-    deployVertex();
+    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore)));
+    assertEq(expected, address(mpStrategy1));
+
+    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore)));
+    assertEq(expected, address(mpStrategy2));
   }
+}
 
-  function deployVertex() public returns (VertexCore) {
-    (Strategy[] memory strategies, string[] memory accounts, PolicyGrantData[] memory policies) =
-      getDefaultVertexDeployParameters();
-    vm.prank(address(core));
-    return factory.deploy("NewProject", address(strategyLogic), address(accountLogic), strategies, accounts, policies);
+contract ComputeVertexAccountAddress is VertexLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    address expected =
+      address(lens.computeVertexAccountAddress(address(accountLogic), "Llama Treasury", address(rootCore)));
+    assertEq(expected, address(rootAccount1));
+
+    expected = address(lens.computeVertexAccountAddress(address(accountLogic), "Llama Grants", address(rootCore)));
+    assertEq(expected, address(rootAccount2));
+
+    expected = address(lens.computeVertexAccountAddress(address(accountLogic), "MP Treasury", address(mpCore)));
+    assertEq(expected, address(mpAccount1));
+
+    expected = address(lens.computeVertexAccountAddress(address(accountLogic), "MP Grants", address(mpCore)));
+    assertEq(expected, address(mpAccount2));
   }
 }

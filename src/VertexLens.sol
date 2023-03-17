@@ -31,7 +31,7 @@ contract VertexLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexCoreLogic,
-      bytes32(keccak256(abi.encode(name))), // salt
+      keccak256(abi.encode(name)), // salt
       factory // deployer
     );
     return VertexCore(_computedAddress);
@@ -49,7 +49,7 @@ contract VertexLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexPolicyLogic,
-      bytes32(keccak256(abi.encode(name))), // salt
+      keccak256(abi.encode(name)), // salt
       factory // deployer
     );
     return VertexPolicy(_computedAddress);

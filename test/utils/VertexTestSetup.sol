@@ -109,19 +109,17 @@ contract VertexTestSetup is Test {
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     SetRoleHolder[] memory mpRoleHolders = defaultAdminRoleHolder(adminAlice);
 
-    factory = new VertexFactory(
-      coreLogic,
+    vm.prank(address(rootCore));
+    mpCore = factory.deploy(
+      "Mock Protocol Vertex",
       address(strategyLogic),
       address(accountLogic),
-      policyLogic,
-      "Mock Protocol Vertex",
       strategies,
       mpAccounts,
       mpRoleHolders,
       new SetRolePermission[](0)
     );
-    mpCore = factory.rootVertex();
-    mpPolicy = rootCore.policy();
+    mpPolicy = mpCore.policy();
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));
