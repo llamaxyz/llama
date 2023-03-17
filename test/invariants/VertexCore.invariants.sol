@@ -33,10 +33,10 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("vertexCore_queueAction                  ", calls["vertexCore_queueAction"]);
     console2.log("vertexCore_executeAction                ", calls["vertexCore_executeAction"]);
     console2.log("vertexCore_cancelAction                 ", calls["vertexCore_cancelAction"]);
-    console2.log("vertexCore_castApproval               ", calls["vertexCore_castApproval"]);
-    console2.log("vertexCore_castApprovalBySig    ", calls["vertexCore_castApprovalBySig"]);
-    console2.log("vertexCore_castDisapproval            ", calls["vertexCore_castDisapproval"]);
-    console2.log("vertexCore_castDisapprovalBySig ", calls["vertexCore_castDisapprovalBySig"]);
+    console2.log("vertexCore_castApproval                 ", calls["vertexCore_castApproval"]);
+    console2.log("vertexCore_castApprovalBySig            ", calls["vertexCore_castApprovalBySig"]);
+    console2.log("vertexCore_castDisapproval              ", calls["vertexCore_castDisapproval"]);
+    console2.log("vertexCore_castDisapprovalBySig         ", calls["vertexCore_castDisapprovalBySig"]);
     console2.log("vertexCore_createAndAuthorizeStrategies ", calls["vertexCore_createAndAuthorizeStrategies"]);
     console2.log("vertexCore_unauthorizeStrategies        ", calls["vertexCore_unauthorizeStrategies"]);
     console2.log("vertexCore_createAndAuthorizeAccounts   ", calls["vertexCore_createAndAuthorizeAccounts"]);
