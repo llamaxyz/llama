@@ -64,14 +64,13 @@ contract VertexStrategy is Initializable {
   /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
   /// @param strategyConfig The strategy configuration.
   /// @param _policy The policy contract.
-  /// @param _vertex The VertexCore contract.
-  function initialize(Strategy memory strategyConfig, VertexPolicy _policy, address _vertex) external initializer {
+  function initialize(Strategy memory strategyConfig, VertexPolicy _policy) external initializer {
+    vertex = VertexCore(msg.sender);
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
     policy = _policy;
-    vertex = VertexCore(_vertex);
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 

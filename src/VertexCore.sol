@@ -398,7 +398,7 @@ contract VertexCore is Initializable {
       for (uint256 i; i < accountLength; ++i) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
         VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
-        account.initialize(accounts[i], address(this));
+        account.initialize(accounts[i]);
         emit AccountAuthorized(account, accounts[i]);
       }
     }
@@ -429,7 +429,7 @@ contract VertexCore is Initializable {
         );
 
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
-        strategy.initialize(strategies[i], _policy, address(this));
+        strategy.initialize(strategies[i], _policy);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }

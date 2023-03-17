@@ -155,10 +155,10 @@ contract Setup is VertexCoreTest {
     assertTrue(core.authorizedStrategies(strategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account1.initialize("VertexAccount0", address(core));
+    account1.initialize("VertexAccount0");
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account2.initialize("VertexAccount1", address(core));
+    account2.initialize("VertexAccount1");
   }
 }
 
@@ -800,13 +800,13 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[0].initialize(newAccounts[0], address(core));
+    accountAddresses[0].initialize(newAccounts[0]);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[1].initialize(newAccounts[1], address(core));
+    accountAddresses[1].initialize(newAccounts[1]);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[2].initialize(newAccounts[2], address(core));
+    accountAddresses[2].initialize(newAccounts[2]);
   }
 
   function test_UniquenessOfInput() public {
