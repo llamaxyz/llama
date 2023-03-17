@@ -17,9 +17,7 @@ contract VertexFactory {
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(address indexed strategyLogic);
-  event StrategyLogicUnauthorized(address indexed strategyLogic);
   event AccountLogicAuthorized(address indexed accountLogic);
-  event AccountLogicUnauthorized(address indexed accountLogic);
 
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
@@ -90,25 +88,11 @@ contract VertexFactory {
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
-  /// @notice Unauthorizes a strategy logic contract.
-  /// @param strategyLogic The strategy logic contract to unauthorize.
-  function unauthorizeStrategyLogic(address strategyLogic) external onlyRootVertex {
-    delete authorizedStrategyLogics[strategyLogic];
-    emit StrategyLogicUnauthorized(strategyLogic);
-  }
-
   /// @notice Authorizes an account logic contract.
   /// @param accountLogic The account logic contract to authorize.
   function authorizeAccountLogic(address accountLogic) external onlyRootVertex {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
-  }
-
-  /// @notice Unauthorizes an account logic contract.
-  /// @param accountLogic The account logic contract to unauthorize.
-  function unauthorizeAccountLogic(address accountLogic) external onlyRootVertex {
-    delete authorizedAccountLogics[accountLogic];
-    emit AccountLogicUnauthorized(accountLogic);
   }
 
   function _deploy(
