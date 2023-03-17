@@ -155,10 +155,10 @@ contract Setup is VertexCoreTest {
     assertTrue(core.authorizedStrategies(strategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account1.initialize("VertexAccount0", address(core));
+    account1.initialize("VertexAccount0");
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account2.initialize("VertexAccount1", address(core));
+    account2.initialize("VertexAccount1");
   }
 }
 
@@ -704,7 +704,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
 
-    core.createAndAuthorizeStrategies(newStrategies);
+    core.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
 
     assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
@@ -779,7 +779,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
-    core.createAndAuthorizeAccounts(newAccounts);
+    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
   function test_RevertIfReinitialized() public {
@@ -797,16 +797,16 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     }
 
     vm.startPrank(address(core));
-    core.createAndAuthorizeAccounts(newAccounts);
+    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[0].initialize(newAccounts[0], address(core));
+    accountAddresses[0].initialize(newAccounts[0]);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[1].initialize(newAccounts[1], address(core));
+    accountAddresses[1].initialize(newAccounts[1]);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    accountAddresses[2].initialize(newAccounts[2], address(core));
+    accountAddresses[2].initialize(newAccounts[2]);
   }
 
   function test_UniquenessOfInput() public {

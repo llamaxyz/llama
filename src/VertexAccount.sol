@@ -39,10 +39,9 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
 
   /// @notice Initializes a new VertexAccount clone.
   /// @param _name The name of the VertexAccount clone.
-  /// @param _vertex This Vertex instance's core contract
-  function initialize(string memory _name, address _vertex) external initializer {
+  function initialize(string memory _name) external initializer {
+    vertex = msg.sender;
     name = _name;
-    vertex = _vertex;
   }
 
   modifier onlyVertex() {

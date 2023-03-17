@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
@@ -33,6 +34,8 @@ contract VertexCore is Initializable {
   error InsufficientMsgValue();
   error ApprovalRoleHasZeroSupply();
   error DisapprovalRoleHasZeroSupply();
+  error UnauthorizedStrategyLogic();
+  error UnauthorizedAccountLogic();
 
   event ActionCreated(
     uint256 id,
@@ -68,11 +71,8 @@ contract VertexCore is Initializable {
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice The Vertex Strategy implementation (logic) contract.
-  VertexStrategy public vertexStrategyLogic;
-
-  /// @notice The Vertex Account implementation (logic) contract.
-  VertexAccount public vertexAccountLogic;
+  /// @notice The VertexFactory contract that deployed this Vertex system.
+  VertexFactory public factory;
 
   /// @notice The NFT contract that defines the policies for this Vertex system.
   VertexPolicy public policy;
@@ -115,18 +115,17 @@ contract VertexCore is Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
-    VertexStrategy _vertexStrategyLogic,
-    VertexAccount _vertexAccountLogic,
+    address _vertexStrategyLogic,
+    address _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
+    factory = VertexFactory(msg.sender);
     name = _name;
     policy = _policy;
-    vertexStrategyLogic = _vertexStrategyLogic;
-    vertexAccountLogic = _vertexAccountLogic;
 
-    _deployStrategies(initialStrategies, _policy);
-    _deployAccounts(initialAccounts);
+    _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
+    _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
 
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
@@ -280,9 +279,13 @@ contract VertexCore is Initializable {
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
+  /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(Strategy[] calldata strategies) external onlyVertex {
-    _deployStrategies(strategies, policy);
+  function createAndAuthorizeStrategies(address vertexStrategyLogic, Strategy[] calldata strategies)
+    external
+    onlyVertex
+  {
+    _deployStrategies(vertexStrategyLogic, strategies, policy);
   }
 
   /// @notice Remove strategies from the mapping of authorized strategies.
@@ -298,9 +301,10 @@ contract VertexCore is Initializable {
   }
 
   /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
+  /// @param vertexAccountLogic address of the Vertex Account logic contract.
   /// @param accounts list of new accounts to be authorized.
-  function createAndAuthorizeAccounts(string[] calldata accounts) external onlyVertex {
-    _deployAccounts(accounts);
+  function createAndAuthorizeAccounts(address vertexAccountLogic, string[] calldata accounts) external onlyVertex {
+    _deployAccounts(vertexAccountLogic, accounts);
   }
 
   /// @notice Get whether an action has expired and can no longer be executed.
@@ -383,19 +387,33 @@ contract VertexCore is Initializable {
     emit PolicyholderDisapproved(actionId, policyholder, weight);
   }
 
-  function _deployAccounts(string[] calldata accounts) internal {
+  function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
+    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
+      // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
+      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
+      revert UnauthorizedAccountLogic();
+    }
+
     uint256 accountLength = accounts.length;
     unchecked {
       for (uint256 i; i < accountLength; ++i) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
-        account.initialize(accounts[i], address(this));
+        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
+        account.initialize(accounts[i]);
         emit AccountAuthorized(account, accounts[i]);
       }
     }
   }
 
-  function _deployStrategies(Strategy[] calldata strategies, VertexPolicy _policy) internal {
+  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
+    internal
+  {
+    if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
+      // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
+      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
+      revert UnauthorizedStrategyLogic();
+    }
+
     uint256 strategyLength = strategies.length;
     unchecked {
       for (uint256 i; i < strategyLength; ++i) {
@@ -412,8 +430,8 @@ contract VertexCore is Initializable {
           )
         );
 
-        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
-        strategy.initialize(strategies[i], _policy, VertexCore(address(this)));
+        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
+        strategy.initialize(strategies[i], _policy);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, strategies[i]);
       }
