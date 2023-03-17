@@ -53,7 +53,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice initializes the contract
   /// @param _name the name of the contract
   /// @param initialPolicies the initial policies to mint
-  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, VertexLens _lens) external initializer {
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, VertexLens _lens)
+    external
+    initializer
+  {
     string memory firstThreeLetters = LibString.slice(_name, 0, 3);
     __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
     lens = _lens;
