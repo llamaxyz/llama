@@ -149,7 +149,9 @@ contract VertexCoreTest is VertexTestSetup {
 
 contract Setup is VertexCoreTest {
   function test_setUp() public {
+    assertEq(address(core.factory()), address(factory));
     assertEq(core.name(), "Root Vertex");
+    assertEq(address(core.policy()), address(policy));
 
     assertTrue(core.authorizedStrategies(strategy1));
     assertTrue(core.authorizedStrategies(strategy1));
