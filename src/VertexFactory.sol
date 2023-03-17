@@ -14,8 +14,6 @@ import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory {
   error OnlyVertex();
-  error UnauthorizedStrategyLogic();
-  error UnauthorizedAccountLogic();
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(address indexed strategyLogic);
@@ -121,9 +119,6 @@ contract VertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
-    if (!authorizedStrategyLogics[strategyLogic]) revert UnauthorizedStrategyLogic();
-    if (!authorizedAccountLogics[accountLogic]) revert UnauthorizedAccountLogic();
-
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
     policy.initialize(name, initialPolicies);
