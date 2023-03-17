@@ -38,6 +38,8 @@ contract VertexFactoryTest is VertexTestSetup {
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategiesAuthorized(Strategy[] strategies);
   event StrategiesUnauthorized(VertexStrategy[] strategies);
+  event StrategyLogicAuthorized(address indexed strategyLogic);
+  event AccountLogicAuthorized(address indexed accountLogic);
 }
 
 contract Constructor is VertexFactoryTest {
@@ -170,6 +172,48 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(newVertex), address(computedVertex));
     assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
     assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
+  }
+}
+
+contract AuthorizeStrategyLogic is VertexFactoryTest {
+  function test_RevertIf_CallerIsNotVertex() public {
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.authorizeStrategyLogic(address(0x1));
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(factory.authorizedStrategyLogics(address(0x1)), false);
+    vm.prank(address(core));
+    factory.authorizeStrategyLogic(address(0x1));
+    assertEq(factory.authorizedStrategyLogics(address(0x1)), true);
+  }
+
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    vm.prank(address(core));
+    vm.expectEmit(true, true, true, true);
+    emit StrategyLogicAuthorized(address(0x1));
+    factory.authorizeStrategyLogic(address(0x1));
+  }
+}
+
+contract AuthorizeAccountLogic is VertexFactoryTest {
+  function test_RevertIf_CallerIsNotVertex() public {
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.authorizeAccountLogic(address(0x1));
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(factory.authorizedAccountLogics(address(0x1)), false);
+    vm.prank(address(core));
+    factory.authorizeAccountLogic(address(0x1));
+    assertEq(factory.authorizedAccountLogics(address(0x1)), true);
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.prank(address(core));
+    vm.expectEmit(true, true, true, true);
+    emit AccountLogicAuthorized(address(0x1));
+    factory.authorizeAccountLogic(address(0x1));
   }
 }
 
