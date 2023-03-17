@@ -114,7 +114,7 @@ contract VertexLens {
     return address(uint160(uint256(bytesValue)));
   }
 
-  function getTokenURI(string calldata name, string calldata symbol, uint256 tokenId) external view returns (string memory) {
+  function getTokenURI(string memory name, string memory symbol, uint256 tokenId) external view returns (string memory) {
     string[11] memory parts;
 
     parts[0] =

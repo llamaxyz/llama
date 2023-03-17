@@ -99,7 +99,7 @@ contract VertexTestSetup is Test {
     factory =
     new VertexFactory(coreLogic, strategyLogic, accountLogic, policyLogic, "Root Vertex", strategies, accounts, new PolicyGrantData[](0), lens);
     core = factory.rootVertex();
-    policy = core.policy();
+    policy = core.policy(); 
 
     // Set vertex account addresses.
     for (uint256 i; i < accounts.length; i++) {
