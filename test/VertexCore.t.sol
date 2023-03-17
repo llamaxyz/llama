@@ -145,6 +145,20 @@ contract VertexCoreTest is VertexTestSetup {
     );
     return VertexAccount(payable(_computedAddress));
   }
+
+  function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
+    VertexStrategy additionalStrategyLogic = new VertexStrategy();
+    vm.prank(address(core));
+    factory.authorizeStrategyLogic(address(additionalStrategyLogic));
+    return address(additionalStrategyLogic);
+  }
+
+  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address) {
+    VertexAccount additionalAccountLogic = new VertexAccount();
+    vm.prank(address(core));
+    factory.authorizeAccountLogic(address(additionalAccountLogic));
+    return address(additionalAccountLogic);
+  }
 }
 
 contract Setup is VertexCoreTest {
@@ -727,6 +741,59 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
+  }
+
+  function test_CreateNewStrategyWithAdditionalStrategyLogic() public {
+    address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
+
+    Strategy[] memory newStrategies = new Strategy[](1);
+
+    newStrategies[0] = Strategy({
+      approvalPeriod: 7 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    VertexStrategy strategyAddress =
+      lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[0], address(core));
+
+    vm.startPrank(address(core));
+
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddress, newStrategies[0]);
+
+    core.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
+
+    assertEq(core.authorizedStrategies(strategyAddress), true);
+  }
+
+  function test_RevertIf_StrategyLogicNotAuthorized() public {
+    Strategy[] memory newStrategies = new Strategy[](1);
+
+    newStrategies[0] = Strategy({
+      approvalPeriod: 7 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    vm.startPrank(address(core));
+
+    vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
+    core.createAndAuthorizeStrategies(address(0x1), newStrategies);
   }
 
   function test_UniquenessOfInput() public {
