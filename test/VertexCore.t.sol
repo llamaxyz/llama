@@ -117,35 +117,6 @@ contract VertexCoreTest is VertexTestSetup {
     _executeAction();
   }
 
-  function _computeVertexStrategyAddress(Strategy memory _strategy) internal view returns (VertexStrategy) {
-    bytes memory bytecode = type(VertexStrategy).creationCode;
-    return VertexStrategy(
-      computeCreate2Address(
-        keccak256(
-          abi.encodePacked(
-            _strategy.approvalPeriod,
-            _strategy.queuingPeriod,
-            _strategy.expirationPeriod,
-            _strategy.minApprovalPct,
-            _strategy.minDisapprovalPct,
-            _strategy.isFixedLengthApprovalPeriod
-          )
-        ), // salt
-        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, core.policy(), address(core)))),
-        address(core) // deployer
-      )
-    );
-  }
-
-  function _computeVertexAccountAddress(string memory _name) internal view returns (VertexAccount) {
-    address _computedAddress = Clones.predictDeterministicAddress(
-      address(accountLogic),
-      keccak256(abi.encode(_name)), // salt
-      address(core) // deployer
-    );
-    return VertexAccount(payable(_computedAddress));
-  }
-
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     VertexStrategy additionalStrategyLogic = new VertexStrategy();
     vm.prank(address(core));
@@ -853,7 +824,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = _computeVertexAccountAddress(newAccounts[i]);
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
     }
 
     vm.startPrank(address(core));
@@ -876,9 +847,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
-      bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
-      accountAddresses[i] =
-        VertexAccount(payable(Clones.predictDeterministicAddress(address(accountLogic), accountSalt, address(core))));
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
     }
 
     vm.startPrank(address(core));
