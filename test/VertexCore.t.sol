@@ -894,6 +894,31 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     accountAddresses[2].initialize(newAccounts[2]);
   }
 
+  function test_CreateNewAccountsWithAdditionalAccountLogic() public {
+    address additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
+
+    string[] memory newAccounts = new string[](3);
+    VertexAccount[] memory accountAddresses = new VertexAccount[](3);
+
+    newAccounts[0] = "VertexAccount2";
+    newAccounts[1] = "VertexAccount3";
+    newAccounts[2] = "VertexAccount4";
+
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeVertexAccountAddress(additionalAccountLogic, newAccounts[i], address(core));
+    }
+
+    vm.startPrank(address(core));
+
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[0], newAccounts[0]);
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
+    core.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
+  }
+
   function test_UniquenessOfInput() public {
     // TODO
     // What happens if duplicate account names are in the input array?
