@@ -86,7 +86,7 @@ contract Constructor is VertexFactoryTest {
     // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
     // one side effect of that method as a sanity check it was called. If it was called, the
     // vertex count should no longer be zero.
-    assertEq(factory.vertexCount(), 1);
+    assertEq(factory.vertexCount(), 2);
   }
 }
 
@@ -207,7 +207,7 @@ contract Deploy is VertexFactoryTest {
     vm.expectEmit(true, true, true, true);
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    emit VertexCreated(1, "NewProject", address(computedVertex), address(computedPolicy));
+    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy));
     deployVertex();
   }
 

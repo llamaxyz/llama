@@ -9,9 +9,9 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy} from "src/lib/Structs.sol";
+import {Strategy, SetRoleHolder, SetRolePermission} from "src/lib/Structs.sol";
 
-import {VertexCoreTest} from "test/VertexCore.t.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 
 contract VertexFactoryHandler is BaseHandler {
@@ -58,13 +58,17 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(vertexFactory.rootVertex()));
-    PolicyGrantData[] memory _policyGrantData = new PolicyGrantData[](0);
-    vertexFactory.deploy(name(), address(0), address(0), new Strategy[](0), new string[](0), _policyGrantData);
+    SetRoleHolder[] memory roleHolders = new SetRoleHolder[](1);
+    roleHolders[0] = SetRoleHolder(Roles.Admin, makeAddr("dummyAdmin"), type(uint64).max);
+
+    vertexFactory.deploy(
+      name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new SetRolePermission[](0)
+    );
     vertexCounts.push(vertexFactory.vertexCount());
   }
 }
 
-contract VertexFactoryInvariants is VertexCoreTest {
+contract VertexFactoryInvariants is VertexTestSetup {
   // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
@@ -72,8 +76,8 @@ contract VertexFactoryInvariants is VertexCoreTest {
   VertexFactoryHandler public handler;
 
   function setUp() public override {
-    VertexCoreTest.setUp();
-    handler = new VertexFactoryHandler(factory, core);
+    VertexTestSetup.setUp();
+    handler = new VertexFactoryHandler(factory, mpCore);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

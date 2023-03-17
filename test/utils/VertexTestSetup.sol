@@ -60,9 +60,12 @@ contract VertexTestSetup is Test {
 
   // Mock protocol users.
   address adminAlice = makeAddr("adminAlice");
+  address actionCreatorAaron = makeAddr("actionCreatorAaron");
+
   address approverAdam = makeAddr("approverAdam");
   address approverAlicia = makeAddr("approverAlicia");
   address approverAndy = makeAddr("approverAndy");
+
   address disapproverDave = makeAddr("disapproverDave");
   address disapproverDiane = makeAddr("disapproverDiane");
   address disapproverDrake = makeAddr("disapproverDrake");
@@ -76,9 +79,9 @@ contract VertexTestSetup is Test {
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
 
   // Permission IDs for those selectors.
-  // bytes32 pausePermissionId;
-  // bytes32 failPermissionId;
-  // bytes32 receiveEthPermissionId;
+  bytes32 pausePermissionId;
+  bytes32 failPermissionId;
+  bytes32 receiveEthPermissionId;
 
   address randomLogicAddress = makeAddr("randomLogicAddress");
 
@@ -129,19 +132,30 @@ contract VertexTestSetup is Test {
     mpPolicy = mpCore.policy();
 
     // Add approvers and disapprovers to the mock protocol's vertex.
-    SetRoleHolder[] memory mpRoleHoldersNew = new SetRoleHolder[](6);
-    mpRoleHoldersNew[0] = SetRoleHolder(Roles.Approver, approverAdam, type(uint64).max);
-    mpRoleHoldersNew[1] = SetRoleHolder(Roles.Approver, approverAlicia, type(uint64).max);
-    mpRoleHoldersNew[2] = SetRoleHolder(Roles.Approver, approverAndy, type(uint64).max);
-    mpRoleHoldersNew[3] = SetRoleHolder(Roles.Disapprover, disapproverDave, type(uint64).max);
-    mpRoleHoldersNew[4] = SetRoleHolder(Roles.Disapprover, disapproverDiane, type(uint64).max);
-    mpRoleHoldersNew[5] = SetRoleHolder(Roles.Disapprover, disapproverDrake, type(uint64).max);
+    SetRoleHolder[] memory mpRoleHoldersNew = new SetRoleHolder[](7);
+    mpRoleHoldersNew[0] = SetRoleHolder(Roles.ActionCreator, actionCreatorAaron, type(uint64).max);
+    mpRoleHoldersNew[1] = SetRoleHolder(Roles.Approver, approverAdam, type(uint64).max);
+    mpRoleHoldersNew[2] = SetRoleHolder(Roles.Approver, approverAlicia, type(uint64).max);
+    mpRoleHoldersNew[3] = SetRoleHolder(Roles.Approver, approverAndy, type(uint64).max);
+    mpRoleHoldersNew[4] = SetRoleHolder(Roles.Disapprover, disapproverDave, type(uint64).max);
+    mpRoleHoldersNew[5] = SetRoleHolder(Roles.Disapprover, disapproverDiane, type(uint64).max);
+    mpRoleHoldersNew[6] = SetRoleHolder(Roles.Disapprover, disapproverDrake, type(uint64).max);
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(mpRoleHoldersNew);
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));
+
+    // With the protocol deployed, we can set special permissions.
+    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
+    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
+    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
+
+    SetRolePermission[] memory rolePermissions = new SetRolePermission[](3);
+    rolePermissions[0] = SetRolePermission(Roles.ActionCreator, pausePermissionId, true);
+    rolePermissions[1] = SetRolePermission(Roles.ActionCreator, failPermissionId, true);
+    rolePermissions[2] = SetRolePermission(Roles.ActionCreator, receiveEthPermissionId, true);
 
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
@@ -154,6 +168,9 @@ contract VertexTestSetup is Test {
     rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
     mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
     mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+
+    // Skip forward 1 second so the most recent checkpoints are in the past.
+    vm.warp(block.timestamp + 1);
 
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
