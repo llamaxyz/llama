@@ -173,6 +173,10 @@ contract Initialize is VertexCoreTest {
     // TODO confirm strategies are authorized
   }
 
+  function test_RevertIf_StrategyLogicIsNotAuthorized() public {
+    // TODO confirm revert if strategy logic is not authorized
+  }
+
   function test_AccountsAreDeployedAtExpectedAddress() public {
     // TODO confirm accounts have been deployed at expected addresses
   }
@@ -191,6 +195,10 @@ contract Initialize is VertexCoreTest {
 
   function test_AccountsAreAuthorizedByVertexCore() public {
     // TODO confirm accounts are authorized
+  }
+
+  function test_RevertIf_AccountLogicIsNotAuthorized() public {
+    // TODO confirm revert if account logic is not authorized
   }
 }
 
