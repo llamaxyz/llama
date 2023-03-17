@@ -43,8 +43,8 @@
 | name                                   | 1469            | 2135    | 1469    | 3469    | 3       |
 | policy                                 | 716             | 726     | 716     | 2716    | 193     |
 | queueAction                            | 635             | 39669   | 39218   | 67718   | 14      |
-| submitApproval                         | 4083            | 54575   | 54273   | 86723   | 46      |
-| submitDisapproval                      | 3704            | 59253   | 81339   | 81339   | 11      |
+| castApproval                         | 4083            | 54575   | 54273   | 86723   | 46      |
+| castDisapproval                      | 3704            | 59253   | 81339   | 81339   | 11      |
 | unauthorizeStrategies                  | 6458            | 6458    | 6458    | 6458    | 1       |
 
 

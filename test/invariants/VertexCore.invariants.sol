@@ -33,10 +33,10 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("vertexCore_queueAction                  ", calls["vertexCore_queueAction"]);
     console2.log("vertexCore_executeAction                ", calls["vertexCore_executeAction"]);
     console2.log("vertexCore_cancelAction                 ", calls["vertexCore_cancelAction"]);
-    console2.log("vertexCore_submitApproval               ", calls["vertexCore_submitApproval"]);
-    console2.log("vertexCore_submitApprovalBySignature    ", calls["vertexCore_submitApprovalBySignature"]);
-    console2.log("vertexCore_submitDisapproval            ", calls["vertexCore_submitDisapproval"]);
-    console2.log("vertexCore_submitDisapprovalBySignature ", calls["vertexCore_submitDisapprovalBySignature"]);
+    console2.log("vertexCore_castApproval               ", calls["vertexCore_castApproval"]);
+    console2.log("vertexCore_castApprovalBySig    ", calls["vertexCore_castApprovalBySig"]);
+    console2.log("vertexCore_castDisapproval            ", calls["vertexCore_castDisapproval"]);
+    console2.log("vertexCore_castDisapprovalBySig ", calls["vertexCore_castDisapprovalBySig"]);
     console2.log("vertexCore_createAndAuthorizeStrategies ", calls["vertexCore_createAndAuthorizeStrategies"]);
     console2.log("vertexCore_unauthorizeStrategies        ", calls["vertexCore_unauthorizeStrategies"]);
     console2.log("vertexCore_createAndAuthorizeAccounts   ", calls["vertexCore_createAndAuthorizeAccounts"]);
@@ -53,10 +53,10 @@ contract VertexCoreHandler is BaseHandler {
   function vertexCore_queueAction() public recordCall("vertexCore_queueAction") {}
   function vertexCore_executeAction() public recordCall("vertexCore_executeAction") {}
   function vertexCore_cancelAction() public recordCall("vertexCore_cancelAction") {}
-  function vertexCore_submitApproval() public recordCall("vertexCore_submitApproval") {}
-  function vertexCore_submitApprovalBySignature() public recordCall("vertexCore_submitApprovalBySignature") {}
-  function vertexCore_submitDisapproval() public recordCall("vertexCore_submitDisapproval") {}
-  function vertexCore_submitDisapprovalBySignature() public recordCall("vertexCore_submitDisapprovalBySignature") {}
+  function vertexCore_castApproval() public recordCall("vertexCore_castApproval") {}
+  function vertexCore_castApprovalBySig() public recordCall("vertexCore_castApprovalBySig") {}
+  function vertexCore_castDisapproval() public recordCall("vertexCore_castDisapproval") {}
+  function vertexCore_castDisapprovalBySig() public recordCall("vertexCore_castDisapprovalBySig") {}
   function vertexCore_createAndAuthorizeStrategies() public recordCall("vertexCore_createAndAuthorizeStrategies") {}
   function vertexCore_unauthorizeStrategies() public recordCall("vertexCore_unauthorizeStrategies") {}
   function vertexCore_createAndAuthorizeAccounts() public recordCall("vertexCore_createAndAuthorizeAccounts") {}

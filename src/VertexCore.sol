@@ -51,8 +51,8 @@ contract VertexCore is Initializable {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
-  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
+  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, string name);
@@ -228,18 +228,26 @@ contract VertexCore is Initializable {
 
   /// @notice How policyholders add their support of the approval of an action.
   /// @param actionId The id of the action.
-  /// @param role The role the policyholder uses to submit their approval.
-  function submitApproval(uint256 actionId, bytes32 role) external {
-    return _submitApproval(msg.sender, role, actionId);
+  /// @param role The role the policyholder uses to cast their approval.
+  function castApproval(uint256 actionId, bytes32 role) external {
+    return _castApproval(msg.sender, role, actionId, "");
+  }
+
+  /// @notice How policyholders add their support of the approval of an action with a reason.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to cast their approval.
+  /// @param reason The reason given for the approval by the policyholder.
+  function castApproval(uint256 actionId, bytes32 role, string calldata reason) external {
+    return _castApproval(msg.sender, role, actionId, reason);
   }
 
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
   /// @param actionId The id of the action.
-  /// @param role The role the policyholder uses to submit their approval.
+  /// @param role The role the policyholder uses to cast their approval.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function submitApprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castApprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -249,23 +257,31 @@ contract VertexCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0)) revert InvalidSignature();
-    return _submitApproval(signer, role, actionId);
+    return _castApproval(signer, role, actionId, "");
   }
 
   /// @notice How policyholders add their support of the disapproval of an action.
   /// @param actionId The id of the action.
-  /// @param role The role the policyholder uses to submit their disapproval.
-  function submitDisapproval(uint256 actionId, bytes32 role) external {
-    return _submitDisapproval(msg.sender, role, actionId);
+  /// @param role The role the policyholder uses to cast their disapproval.
+  function castDisapproval(uint256 actionId, bytes32 role) external {
+    return _castDisapproval(msg.sender, role, actionId, "");
+  }
+
+  /// @notice How policyholders add their support of the disapproval of an action with a reason.
+  /// @param actionId The id of the action.
+  /// @param role The role the policyholder uses to cast their disapproval.
+  /// @param reason The reason given for the disapproval by the policyholder.
+  function castDisapproval(uint256 actionId, bytes32 role, string calldata reason) external {
+    return _castDisapproval(msg.sender, role, actionId, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
   /// @param actionId The id of the action.
-  /// @param role The role the policyholder uses to submit their disapproval.
+  /// @param role The role the policyholder uses to cast their disapproval.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function submitDisapprovalBySignature(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castDisapprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -275,7 +291,7 @@ contract VertexCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0)) revert InvalidSignature();
-    return _submitDisapproval(signer, role, actionId);
+    return _castDisapproval(signer, role, actionId, "");
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
@@ -348,7 +364,7 @@ contract VertexCore is Initializable {
     return ActionState.Queued;
   }
 
-  function _submitApproval(address policyholder, bytes32 role, uint256 actionId) internal {
+  function _castApproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
@@ -363,10 +379,10 @@ contract VertexCore is Initializable {
       : action.totalApprovals + weight;
     approvals[actionId][policyholder] = true;
 
-    emit PolicyholderApproved(actionId, policyholder, weight);
+    emit PolicyholderApproved(actionId, policyholder, weight, reason);
   }
 
-  function _submitDisapproval(address policyholder, bytes32 role, uint256 actionId) internal {
+  function _castDisapproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
@@ -384,7 +400,7 @@ contract VertexCore is Initializable {
       : action.totalDisapprovals + weight;
     disapprovals[actionId][policyholder] = true;
 
-    emit PolicyholderDisapproved(actionId, policyholder, weight);
+    emit PolicyholderDisapproved(actionId, policyholder, weight, reason);
   }
 
   function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
