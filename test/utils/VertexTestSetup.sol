@@ -11,6 +11,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
 
 contract VertexTestSetup is Test {
@@ -22,6 +23,7 @@ contract VertexTestSetup is Test {
 
   // Core Protocol.
   VertexFactory factory;
+  VertexPolicyMetadata policyMetadata;
   VertexLens lens;
 
   // Vertex instance.
@@ -56,6 +58,7 @@ contract VertexTestSetup is Test {
     strategyLogic = new VertexStrategy();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
+    policyMetadata = new VertexPolicyMetadata();
 
     // Deploy lens.
     lens = new VertexLens();
@@ -97,7 +100,7 @@ contract VertexTestSetup is Test {
     // Deploy factory. The first two arguments are protocol parameters, the rest of the args
     // configure the root vertex instance.
     factory =
-    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
+    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, policyMetadata, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
     core = factory.rootVertex();
     policy = core.policy();
 

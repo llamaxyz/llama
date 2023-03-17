@@ -22,8 +22,8 @@ jobs:
       - name: Build contracts
         run: |
           forge --version
-          # forge build test
-        #  TODO: add --size flag back ^
+          forge build --sizes --skip test
+
   test:
     runs-on: ubuntu-latest
     steps:

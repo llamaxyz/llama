@@ -7,6 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -34,6 +35,8 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
+  VertexPolicyMetadata public vertexPolicyMetadata;
+
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
 
@@ -42,6 +45,7 @@ contract VertexFactory {
     address initialVertexStrategyLogic,
     address initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
+    VertexPolicyMetadata _vertexPolicyMetadata,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -49,6 +53,8 @@ contract VertexFactory {
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
+    vertexPolicyMetadata = _vertexPolicyMetadata;
+
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);
 
@@ -103,8 +109,7 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, initialPolicies);
-
+    policy.initialize(name, initialPolicies, address(this));
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
@@ -113,6 +118,14 @@ contract VertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
+  }
+
+  function tokenURI(string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
+    return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
+  }
+
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
+    vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 
   function _authorizeStrategyLogic(address strategyLogic) internal {

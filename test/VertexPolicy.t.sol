@@ -48,7 +48,7 @@ contract Initialize is VertexPolicyTest {
   function test_RevertsIf_InitializeIsCalledTwice() public {
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    policy.initialize("Test", policies);
+    policy.initialize("Test", policies, address(factory));
   }
 }
 
