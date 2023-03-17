@@ -53,9 +53,9 @@ contract VertexCore is Initializable {
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
-  event AccountAuthorized(VertexAccount indexed account, string name);
+  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
@@ -416,7 +416,7 @@ contract VertexCore is Initializable {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
         VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
         account.initialize(accounts[i]);
-        emit AccountAuthorized(account, accounts[i]);
+        emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
       }
     }
   }
@@ -449,7 +449,7 @@ contract VertexCore is Initializable {
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
         strategy.initialize(strategies[i], _policy);
         authorizedStrategies[strategy] = true;
-        emit StrategyAuthorized(strategy, strategies[i]);
+        emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
       }
     }
   }

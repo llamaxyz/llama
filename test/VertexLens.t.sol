@@ -13,7 +13,7 @@ import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 contract ComputeAddress is VertexTestSetup {
   // TODO Tests for Vertex Lens.
 
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
 
   function test_ComputesExpectedAddressForVertexCore() public {
     VertexCore computedVertexCore = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
@@ -38,7 +38,7 @@ contract ComputeAddress is VertexTestSetup {
       lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(computedVertexCore));
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(computedVertexStrategy, strategies[0]);
+    emit StrategyAuthorized(computedVertexStrategy, address(strategyLogic), strategies[0]);
     deployVertex();
   }
 

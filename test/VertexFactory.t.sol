@@ -16,8 +16,8 @@ import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
-  event AccountAuthorized(VertexAccount indexed account, string name);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
   event PolicyAdded(PolicyGrantData grantData);
 
   event ActionCreated(
@@ -46,7 +46,7 @@ contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
     (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
     return
-    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
+    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, policyMetadata, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
   }
 
   function test_SetsVertexCoreLogicAddress() public {
@@ -271,8 +271,8 @@ contract Integration is VertexFactoryTest {
 
     vm.expectEmit(true, true, true, true);
     emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
-    emit StrategyAuthorized(computedStrategy, strategyData);
-    emit AccountAuthorized(computedVertexAccount, initialAccounts[0]);
+    emit StrategyAuthorized(computedStrategy, address(strategyLogic), strategyData);
+    emit AccountAuthorized(computedVertexAccount, address(accountLogic), initialAccounts[0]);
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
 

@@ -31,9 +31,9 @@ contract VertexCoreTest is VertexTestSetup {
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
-  event AccountAuthorized(VertexAccount indexed account, string name);
+  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
   function setUp() public virtual override {
     VertexTestSetup.setUp();
@@ -701,11 +701,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+    emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), newStrategies[0]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+    emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
+    emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
     core.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
 
@@ -766,11 +766,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+    emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, newStrategies[0]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+    emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
+    emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
 
     core.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
 
@@ -864,11 +864,11 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[0], newAccounts[0]);
+    emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
+    emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
+    emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
     core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
@@ -914,11 +914,11 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[0], newAccounts[0]);
+    emit AccountAuthorized(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
+    emit AccountAuthorized(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
+    emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
     core.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
   }
 
