@@ -31,9 +31,9 @@ contract VertexCoreTest is VertexTestSetup {
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
-  event AccountAuthorized(VertexAccount indexed account, string name);
+  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
   function setUp() public virtual override {
     VertexTestSetup.setUp();
@@ -117,39 +117,26 @@ contract VertexCoreTest is VertexTestSetup {
     _executeAction();
   }
 
-  function _computeVertexStrategyAddress(Strategy memory _strategy) internal view returns (VertexStrategy) {
-    bytes memory bytecode = type(VertexStrategy).creationCode;
-    return VertexStrategy(
-      computeCreate2Address(
-        keccak256(
-          abi.encodePacked(
-            _strategy.approvalPeriod,
-            _strategy.queuingPeriod,
-            _strategy.expirationPeriod,
-            _strategy.minApprovalPct,
-            _strategy.minDisapprovalPct,
-            _strategy.isFixedLengthApprovalPeriod
-          )
-        ), // salt
-        keccak256(abi.encodePacked(bytecode, abi.encode(_strategy, core.policy(), address(core)))),
-        address(core) // deployer
-      )
-    );
+  function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
+    VertexStrategy additionalStrategyLogic = new VertexStrategy();
+    vm.prank(address(core));
+    factory.authorizeStrategyLogic(address(additionalStrategyLogic));
+    return address(additionalStrategyLogic);
   }
 
-  function _computeVertexAccountAddress(string memory _name) internal view returns (VertexAccount) {
-    address _computedAddress = Clones.predictDeterministicAddress(
-      address(accountLogic),
-      keccak256(abi.encode(_name)), // salt
-      address(core) // deployer
-    );
-    return VertexAccount(payable(_computedAddress));
+  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address) {
+    VertexAccount additionalAccountLogic = new VertexAccount();
+    vm.prank(address(core));
+    factory.authorizeAccountLogic(address(additionalAccountLogic));
+    return address(additionalAccountLogic);
   }
 }
 
 contract Setup is VertexCoreTest {
   function test_setUp() public {
+    assertEq(address(core.factory()), address(factory));
     assertEq(core.name(), "Root Vertex");
+    assertEq(address(core.policy()), address(policy));
 
     assertTrue(core.authorizedStrategies(strategy1));
     assertTrue(core.authorizedStrategies(strategy1));
@@ -186,6 +173,10 @@ contract Initialize is VertexCoreTest {
     // TODO confirm strategies are authorized
   }
 
+  function test_RevertIf_StrategyLogicIsNotAuthorized() public {
+    // TODO confirm revert if strategy logic is not authorized
+  }
+
   function test_AccountsAreDeployedAtExpectedAddress() public {
     // TODO confirm accounts have been deployed at expected addresses
   }
@@ -204,6 +195,10 @@ contract Initialize is VertexCoreTest {
 
   function test_AccountsAreAuthorizedByVertexCore() public {
     // TODO confirm accounts are authorized
+  }
+
+  function test_RevertIf_AccountLogicIsNotAuthorized() public {
+    // TODO confirm revert if account logic is not authorized
   }
 }
 
@@ -714,17 +709,104 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+    emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), newStrategies[0]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+    emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
+    emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
     core.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
 
     assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
     assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
+  }
+
+  function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
+    address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
+
+    Strategy[] memory newStrategies = new Strategy[](3);
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](3);
+
+    newStrategies[0] = Strategy({
+      approvalPeriod: 4 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    newStrategies[1] = Strategy({
+      approvalPeriod: 5 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    newStrategies[2] = Strategy({
+      approvalPeriod: 6 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    for (uint256 i; i < newStrategies.length; i++) {
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[i], address(core));
+    }
+
+    vm.startPrank(address(core));
+
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, newStrategies[0]);
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
+
+    core.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
+
+    assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
+  }
+
+  function test_RevertIf_StrategyLogicNotAuthorized() public {
+    Strategy[] memory newStrategies = new Strategy[](1);
+
+    newStrategies[0] = Strategy({
+      approvalPeriod: 4 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    vm.startPrank(address(core));
+
+    vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
+    core.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
   }
 
   function test_UniquenessOfInput() public {
@@ -784,17 +866,17 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = _computeVertexAccountAddress(newAccounts[i]);
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
     }
 
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[0], newAccounts[0]);
+    emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[1], newAccounts[1]);
+    emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
     vm.expectEmit(true, true, true, true);
-    emit AccountAuthorized(accountAddresses[2], newAccounts[2]);
+    emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
     core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
@@ -807,9 +889,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
-      bytes32 accountSalt = bytes32(keccak256(abi.encode(newAccounts[i])));
-      accountAddresses[i] =
-        VertexAccount(payable(Clones.predictDeterministicAddress(address(accountLogic), accountSalt, address(core))));
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
     }
 
     vm.startPrank(address(core));
@@ -823,6 +903,44 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[2].initialize(newAccounts[2]);
+  }
+
+  function test_CreateNewAccountsWithAdditionalAccountLogic() public {
+    address additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
+
+    string[] memory newAccounts = new string[](3);
+    VertexAccount[] memory accountAddresses = new VertexAccount[](3);
+
+    newAccounts[0] = "VertexAccount2";
+    newAccounts[1] = "VertexAccount3";
+    newAccounts[2] = "VertexAccount4";
+
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeVertexAccountAddress(additionalAccountLogic, newAccounts[i], address(core));
+    }
+
+    vm.startPrank(address(core));
+
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
+    vm.expectEmit(true, true, true, true);
+    emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
+    core.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
+  }
+
+  function test_RevertIf_AccountLogicNotAuthorized() public {
+    string[] memory newAccounts = new string[](3);
+
+    newAccounts[0] = "VertexAccount2";
+    newAccounts[1] = "VertexAccount3";
+    newAccounts[2] = "VertexAccount4";
+
+    vm.startPrank(address(core));
+
+    vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
+    core.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
   }
 
   function test_UniquenessOfInput() public {
