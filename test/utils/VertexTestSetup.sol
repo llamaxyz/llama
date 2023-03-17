@@ -19,6 +19,7 @@ import {Action, Strategy, PermissionData, SetRoleHolder, SetRolePermission} from
 library Roles {
   bytes32 public constant Admin = "admin";
   bytes32 public constant ActionCreator = "action creator";
+  bytes32 public constant AllHolders = "all-policy-holders";
   bytes32 public constant Approver = "approver";
   bytes32 public constant Disapprover = "disapprover";
 }
@@ -57,8 +58,14 @@ contract VertexTestSetup is Test {
   // Root vertex admin.
   address rootVertexAdmin = makeAddr("rootVertexAdmin");
 
-  // Mock protocol roles.
+  // Mock protocol users.
   address adminAlice = makeAddr("adminAlice");
+  address approverAdam = makeAddr("approverAdam");
+  address approverAlicia = makeAddr("approverAlicia");
+  address approverAndy = makeAddr("approverAndy");
+  address disapproverDave = makeAddr("disapproverDave");
+  address disapproverDiane = makeAddr("disapproverDiane");
+  address disapproverDrake = makeAddr("disapproverDrake");
 
   // Constants.
   uint256 SELF_TOKEN_ID = uint256(uint160(address(this)));
@@ -120,6 +127,18 @@ contract VertexTestSetup is Test {
       new SetRolePermission[](0)
     );
     mpPolicy = mpCore.policy();
+
+    // Add approvers and disapprovers to the mock protocol's vertex.
+    SetRoleHolder[] memory mpRoleHoldersNew = new SetRoleHolder[](6);
+    mpRoleHoldersNew[0] = SetRoleHolder(Roles.Approver, approverAdam, type(uint64).max);
+    mpRoleHoldersNew[1] = SetRoleHolder(Roles.Approver, approverAlicia, type(uint64).max);
+    mpRoleHoldersNew[2] = SetRoleHolder(Roles.Approver, approverAndy, type(uint64).max);
+    mpRoleHoldersNew[3] = SetRoleHolder(Roles.Disapprover, disapproverDave, type(uint64).max);
+    mpRoleHoldersNew[4] = SetRoleHolder(Roles.Disapprover, disapproverDiane, type(uint64).max);
+    mpRoleHoldersNew[5] = SetRoleHolder(Roles.Disapprover, disapproverDrake, type(uint64).max);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(mpRoleHoldersNew);
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));

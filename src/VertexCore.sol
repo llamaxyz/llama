@@ -152,18 +152,17 @@ contract VertexCore is Initializable {
     PermissionData memory permission = PermissionData(target, selector, strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
 
-    if (
-      !policy.hasPermissionId(msg.sender, role, permissionId)
-        && !policy.hasRole(msg.sender, ADMIN_ROLE, block.timestamp)
-    ) revert PolicyholderDoesNotHavePermission();
+    if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
+      revert PolicyholderDoesNotHavePermission();
+    }
 
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
 
-    uint256 approvalPolicySupply = policy.getPastSupply(strategy.approvalRole(), block.timestamp);
+    uint256 approvalPolicySupply = policy.getSupply(strategy.approvalRole());
     if (approvalPolicySupply == 0) revert ApprovalRoleHasZeroSupply();
 
-    uint256 disapprovalPolicySupply = policy.getPastSupply(strategy.disapprovalRole(), block.timestamp);
+    uint256 disapprovalPolicySupply = policy.getSupply(strategy.disapprovalRole());
     if (disapprovalPolicySupply == 0) revert DisapprovalRoleHasZeroSupply();
 
     newAction.creator = msg.sender;

@@ -3,8 +3,6 @@ pragma solidity ^0.8.17;
 
 import "lib/forge-std/src/console.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
-import {IVertexCore} from "src/interfaces/IVertexCore.sol";
-import {IVertexPolicy} from "src/interfaces/IVertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {SetRoleHolder, SetRolePermission, ExpiredRole} from "src/lib/Structs.sol";

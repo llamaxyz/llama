@@ -11,8 +11,8 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {Action, Strategy, PermissionData, PolicyGrantData, PermissionMetadata} from "src/lib/Structs.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {Action, Strategy, PermissionData} from "src/lib/Structs.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexCoreTest is VertexTestSetup {
   event ActionCreated(
@@ -44,21 +44,23 @@ contract VertexCoreTest is VertexTestSetup {
     //////////////////////////////////////////////////////////////*/
 
   function _createAction() public returns (uint256 actionId) {
-    vm.prank(actionCreator);
-    actionId = core.createAction(
-      strategy1,
+    vm.prank(adminAlice);
+    actionId = mpCore.createAction(
+      Roles.Admin,
+      mpStrategy1,
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
       abi.encode(true)
     );
+    vm.warp(block.timestamp + 1);
   }
 
   function _approveAction(address _policyholder, uint256 _actionId) public {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    core.castApproval(_actionId, "approver");
+    mpCore.castApproval(_actionId, "approver");
   }
 
   function _approveAction(address _policyholder) public {
@@ -70,7 +72,7 @@ contract VertexCoreTest is VertexTestSetup {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    core.castDisapproval(_actionId, "disapprover");
+    mpCore.castDisapproval(_actionId, "disapprover");
   }
 
   function _disapproveAction(address _policyholder) public {
@@ -79,10 +81,10 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _queueAction(uint256 _actionId) public {
-    uint256 executionTime = block.timestamp + strategy1.queuingPeriod();
+    uint256 executionTime = block.timestamp + mpStrategy1.queuingPeriod();
     vm.expectEmit(true, true, true, true);
-    emit ActionQueued(_actionId, address(this), strategy1, actionCreator, executionTime);
-    core.queueAction(_actionId);
+    emit ActionQueued(_actionId, address(this), mpStrategy1, adminAlice, executionTime);
+    mpCore.queueAction(_actionId);
   }
 
   function _queueAction() public {
@@ -92,25 +94,25 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _executeAction() public {
     vm.expectEmit(true, true, true, true);
-    emit ActionExecuted(0, address(this), strategy1, actionCreator);
-    core.executeAction(0);
+    emit ActionExecuted(0, address(this), mpStrategy1, adminAlice);
+    mpCore.executeAction(0);
 
-    Action memory action = core.getAction(0);
+    Action memory action = mpCore.getAction(0);
     assertEq(action.executed, true);
   }
 
   function _executeCompleteActionFlow() internal {
     _createAction();
 
-    _approveAction(policyHolderPam);
-    _approveAction(policyHolderPatty);
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    _disapproveAction(policyHolderPam);
+    _disapproveAction(disapproverDave);
 
     vm.warp(block.timestamp + 5 days);
 
@@ -134,18 +136,16 @@ contract VertexCoreTest is VertexTestSetup {
 
 contract Setup is VertexCoreTest {
   function test_setUp() public {
-    assertEq(address(core.factory()), address(factory));
     assertEq(core.name(), "Root Vertex");
-    assertEq(address(core.policy()), address(policy));
 
-    assertTrue(core.authorizedStrategies(strategy1));
-    assertTrue(core.authorizedStrategies(strategy1));
-
-    vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account1.initialize("VertexAccount0");
+    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
+    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    account2.initialize("VertexAccount1");
+    mpAccount1.initialize("VertexAccount0");
+
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    mpAccount2.initialize("VertexAccount1");
   }
 }
 
@@ -154,7 +154,7 @@ contract Initialize is VertexCoreTest {
   // without initializing it, then allows the test functions below to initialize
 
   function test_StrategiesAreDeployedAtExpectedAddress() public {
-    // TODO confirm strateges have been deployed at expected addresses
+    // TODO confirm strategies have been deployed at expected addresses
   }
 
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
@@ -203,30 +203,33 @@ contract Initialize is VertexCoreTest {
 }
 
 contract CreateAction is VertexCoreTest {
-  // TODO fuzz
-  // function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data)
   function test_CreatesAnAction() public {
     vm.expectEmit(true, true, true, true);
-    emit ActionCreated(0, actionCreator, strategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
-    vm.prank(actionCreator);
-    uint256 _actionId = core.createAction(strategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    emit ActionCreated(0, adminAlice, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    vm.prank(adminAlice);
+    uint256 _actionId =
+      mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
 
-    Action memory action = core.getAction(_actionId);
+    Action memory action = mpCore.getAction(_actionId);
     uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
 
     assertEq(_actionId, 0);
-    assertEq(core.actionsCount(), 1);
+    assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalEndTime, block.timestamp + 2 days);
-    assertEq(action.approvalPolicySupply, 5);
-    assertEq(action.disapprovalPolicySupply, 5);
+    assertEq(action.approvalPolicySupply, 3);
+    assertEq(action.disapprovalPolicySupply, 3);
+  }
+
+  function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
+    // TODO fuzz
   }
 
   function test_RevertIfStrategyUnauthorized() public {
     VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
-    vm.prank(actionCreator);
+    vm.prank(adminAlice);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
-    core.createAction(unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(Roles.Admin, unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function test_RevertIfStrategyIsFromAnotherVertex() public {
@@ -235,30 +238,30 @@ contract CreateAction is VertexCoreTest {
 
   function testFuzz_RevertIfPolicyholderNotMinted(address user) public {
     if (user == address(0)) user = address(100); // Faster than vm.assume, since 0 comes up a lot.
-    vm.assume(policy.balanceOf(user) == 0);
+    vm.assume(mpPolicy.balanceOf(user) == 0);
     vm.prank(user);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    core.createAction(strategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function test_RevertIfNoPermissionForStrategy() public {
-    vm.prank(actionCreator);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    core.createAction(strategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(Roles.Admin, mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfNoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
-    vm.prank(actionCreator);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    core.createAction(strategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(Roles.Admin, mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
     vm.assume(_badSelector != PAUSE_SELECTOR && _badSelector != FAIL_SELECTOR && _badSelector != RECEIVE_ETH_SELECTOR);
-    vm.prank(actionCreator);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    core.createAction(strategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
+    mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
   }
 
   function testFuzz_RevertIfPermissionExpired(uint256 _expirationTimestamp) public {
@@ -276,130 +279,130 @@ contract CancelAction is VertexCoreTest {
   }
 
   function test_CreatorCancelFlow() public {
-    vm.startPrank(actionCreator);
+    vm.startPrank(adminAlice);
     vm.expectEmit(true, true, true, true);
     emit ActionCanceled(0);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
     vm.stopPrank();
     // TODO confirm storage changes, e.g. action.canceled, queuedActions
   }
 
   function testFuzz_RevertIfNotCreator(address _randomCaller) public {
-    vm.assume(_randomCaller != actionCreator);
+    vm.assume(_randomCaller != adminAlice);
     vm.prank(_randomCaller);
     vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
   }
 
   // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
   function test_RevertIfInvalidActionId() public {
-    vm.startPrank(actionCreator);
+    vm.startPrank(adminAlice);
     vm.expectRevert(VertexCore.InvalidActionId.selector);
-    core.cancelAction(1);
+    mpCore.cancelAction(1);
     vm.stopPrank();
   }
 
   function test_RevertIfAlreadyCanceled() public {
-    vm.startPrank(actionCreator);
-    core.cancelAction(0);
+    vm.startPrank(adminAlice);
+    mpCore.cancelAction(0);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
     vm.stopPrank();
   }
 
   function test_RevertIfActionExecuted() public {
     _executeCompleteActionFlow();
 
-    vm.startPrank(actionCreator);
+    vm.startPrank(adminAlice);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
     vm.stopPrank();
   }
 
   function test_RevertIfActionExpired() public {
-    _approveAction(policyHolderPam);
-    _approveAction(policyHolderPatty);
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    _disapproveAction(policyHolderPam);
+    _disapproveAction(disapproverDave);
 
     vm.warp(block.timestamp + 15 days);
 
-    vm.startPrank(actionCreator);
+    vm.startPrank(adminAlice);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
     vm.stopPrank();
   }
 
   function test_RevertIfActionFailed() public {
-    _approveAction(policyHolderPam);
+    _approveAction(approverAdam);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(0), false);
+    assertEq(mpStrategy1.isActionPassed(0), false);
 
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
   }
 
   function test_CancelIfDisapproved() public {
-    _approveAction(policyHolderPam);
-    _approveAction(policyHolderPatty);
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    _disapproveAction(policyHolderPam);
-    _disapproveAction(policyHolderPatty);
-    _disapproveAction(policyHolderPaul);
+    _disapproveAction(disapproverDave);
+    _disapproveAction(disapproverDiane);
+    _disapproveAction(disapproverDrake);
 
     vm.expectEmit(true, true, true, true);
     emit ActionCanceled(0);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
   }
 
   function test_RevertIfDisapprovalDoesNotReachQuorum() public {
-    _approveAction(policyHolderPam);
-    _approveAction(policyHolderPatty);
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
     vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
-    core.cancelAction(0);
+    mpCore.cancelAction(0);
   }
 }
 
 contract QueueAction is VertexCoreTest {
   function test_RevertIfNotApproved() public {
     _createAction();
-    _approveAction(policyHolderPam);
+    _approveAction(approverAdam);
 
     vm.warp(block.timestamp + 6 days);
 
     vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
-    core.queueAction(0);
+    mpCore.queueAction(0);
   }
 
   // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
   function test_RevertIfInvalidActionId() public {
     _createAction();
-    _approveAction(policyHolderPam);
-    _approveAction(policyHolderPatty);
-    _approveAction(policyHolderPaul);
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
+    _approveAction(approverAndy);
 
     vm.warp(block.timestamp + 6 days);
 
     vm.expectRevert(VertexCore.InvalidActionId.selector);
-    core.queueAction(1);
+    mpCore.queueAction(1);
   }
 }
 
@@ -410,12 +413,12 @@ contract ExecuteAction is VertexCoreTest {
     VertexCoreTest.setUp();
 
     actionId = _createAction();
-    _approveAction(policyHolderPam, actionId);
-    _approveAction(policyHolderPatty, actionId);
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(actionId), true);
+    assertEq(mpStrategy1.isActionPassed(actionId), true);
   }
 
   function test_ActionExecution() public {
@@ -429,74 +432,78 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIfNotQueued() public {
     // TODO assert action state
     vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
-    core.executeAction(actionId);
+    mpCore.executeAction(actionId);
   }
 
   // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
   function test_RevertIfInvalidActionId() public {
-    core.queueAction(actionId);
+    mpCore.queueAction(actionId);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectRevert(VertexCore.InvalidActionId.selector);
-    core.executeAction(actionId + 1);
+    mpCore.executeAction(actionId + 1);
   }
 
-  // TODO fuzz over seconds jumped forward, only assert the revert if < exectionTime
+  // TODO fuzz over seconds jumped forward, only assert the revert if < executionTime
   function test_RevertIfTimelockNotFinished() public {
-    core.queueAction(actionId);
+    mpCore.queueAction(actionId);
 
     vm.warp(block.timestamp + 6 hours);
 
     vm.expectRevert(VertexCore.TimelockNotFinished.selector);
-    core.executeAction(actionId);
+    mpCore.executeAction(actionId);
   }
 
   function test_RevertIfInsufficientMsgValue() public {
-    vm.prank(actionCreator);
-    actionId = core.createAction(strategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true));
+    vm.prank(adminAlice);
+    actionId =
+      mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true));
+    vm.warp(block.timestamp + 1);
 
-    _approveAction(policyHolderPam, actionId);
-    _approveAction(policyHolderPatty, actionId);
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
 
     vm.warp(block.timestamp + 6 days);
 
-    core.queueAction(actionId);
+    mpCore.queueAction(actionId);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
-    core.executeAction(actionId);
+    mpCore.executeAction(actionId);
   }
 
   function test_RevertIfFailedActionExecution() public {
-    vm.prank(actionCreator);
-    actionId = core.createAction(
-      strategy1,
+    vm.prank(adminAlice);
+    actionId = mpCore.createAction(
+      Roles.Admin,
+      mpStrategy1,
       address(mockProtocol),
       0, // value
       FAIL_SELECTOR,
       abi.encode("")
     );
+    vm.warp(block.timestamp + 1);
 
-    _approveAction(policyHolderPam, actionId);
-    _approveAction(policyHolderPatty, actionId);
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(actionId), true);
+    assertEq(mpStrategy1.isActionPassed(actionId), true);
 
-    core.queueAction(actionId);
+    mpCore.queueAction(actionId);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectRevert(VertexCore.FailedActionExecution.selector);
-    core.executeAction(actionId);
+    mpCore.executeAction(actionId);
   }
 
   function test_HandlesReentrancy() public {
     // TODO
-    // What happens if somone queues an action to call core.executeAction?
+    // What happens if someone queues an action to call mpCore.executeAction?
     // Calling executeAction on that action should revert with OnlyQueuedActions.
     // We should confirm that nothing weird happens if this is done
   }
@@ -528,24 +535,24 @@ contract CastApproval is VertexCoreTest {
 
   function test_RevertIfActionNotActive() public {
     actionId = _createAction();
-    _approveAction(policyHolderPam, actionId);
-    _approveAction(policyHolderPatty, actionId);
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
 
     vm.warp(block.timestamp + 6 days);
 
-    core.queueAction(actionId);
+    mpCore.queueAction(actionId);
 
     vm.expectRevert(VertexCore.ActionNotActive.selector);
-    core.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, "approver");
   }
 
   function test_RevertIfDuplicateApproval() public {
     actionId = _createAction();
-    _approveAction(policyHolderPam, actionId);
+    _approveAction(approverAdam, actionId);
 
     vm.expectRevert(VertexCore.DuplicateApproval.selector);
-    vm.prank(policyHolderPam);
-    core.castApproval(actionId, "approver");
+    vm.prank(approverAdam);
+    mpCore.castApproval(actionId, "approver");
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -554,10 +561,10 @@ contract CastApproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    core.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, "approver");
 
-    vm.prank(policyHolderPam);
-    core.castApproval(actionId, "approver");
+    vm.prank(approverAdam);
+    mpCore.castApproval(actionId, "approver");
   }
 }
 
@@ -581,12 +588,12 @@ contract CastDisapproval is VertexCoreTest {
 
   function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
     _actionId = _createAction();
-    _approveAction(policyHolderPam, _actionId);
-    _approveAction(policyHolderPatty, _actionId);
+    _approveAction(approverAdam, _actionId);
+    _approveAction(approverAlicia, _actionId);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(strategy1.isActionPassed(_actionId), true);
+    assertEq(mpStrategy1.isActionPassed(_actionId), true);
     _queueAction(_actionId);
   }
 
@@ -610,17 +617,17 @@ contract CastDisapproval is VertexCoreTest {
     actionId = _createAction();
 
     vm.expectRevert(VertexCore.ActionNotQueued.selector);
-    core.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, "disapprover");
   }
 
   function test_RevertIfDuplicateDisapproval() public {
     actionId = _createApproveAndQueueAction();
 
-    _disapproveAction(policyHolderPam, actionId);
+    _disapproveAction(disapproverDrake, actionId);
 
     vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
-    vm.prank(policyHolderPam);
-    core.castDisapproval(actionId, "disapprover");
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(actionId, "disapprover");
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -629,10 +636,10 @@ contract CastDisapproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    core.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, "disapprover");
 
-    vm.prank(policyHolderPam);
-    core.castDisapproval(actionId, "disapprover");
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(actionId, "disapprover");
   }
 }
 
@@ -642,7 +649,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
     // This is a happy path test.
     // Sign a message and have one account cast a disapproval on behalf of another.
     // Assert changes to Action storage.
-    // Assert changes to Dispproval storage.
+    // Assert changes to Disapproval storage.
     // Assert event emission.
   }
 
@@ -703,10 +710,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(address(strategyLogic), newStrategies[i], address(core));
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), newStrategies[i], address(mpCore));
     }
 
-    vm.startPrank(address(core));
+    vm.startPrank(address(mpCore));
 
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), newStrategies[0]);
@@ -715,11 +723,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
-    core.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
 
-    assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
-    assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
   }
 
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
@@ -780,11 +788,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
 
-    core.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
+    mpCore.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
 
-    assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
-    assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
@@ -830,23 +838,23 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
 contract UnauthorizeStrategies is VertexCoreTest {
   function test_UnauthorizeStrategies() public {
-    vm.startPrank(address(core));
-    assertEq(core.authorizedStrategies(strategy1), true);
-    assertEq(core.authorizedStrategies(strategy1), true);
+    vm.startPrank(address(mpCore));
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+    assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyUnauthorized(strategy1);
+    emit StrategyUnauthorized(mpStrategy1);
     vm.expectEmit(true, true, true, true);
-    emit StrategyUnauthorized(strategy1);
+    emit StrategyUnauthorized(mpStrategy2);
 
     VertexStrategy[] memory strategies = new VertexStrategy[](2);
-    strategies[0] = strategy1;
-    strategies[1] = strategy1;
+    strategies[0] = mpStrategy1;
+    strategies[1] = mpStrategy2;
 
-    core.unauthorizeStrategies(strategies);
+    mpCore.unauthorizeStrategies(strategies);
 
-    assertEq(core.authorizedStrategies(strategy1), false);
-    assertEq(core.authorizedStrategies(strategy1), false);
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
+    assertEq(mpCore.authorizedStrategies(mpStrategy2), false);
 
     // TODO assert that calling createAction on a freshly unauthorized
     // strategy will revert with InvalidStrategy.
@@ -869,7 +877,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
       accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
     }
 
-    vm.startPrank(address(core));
+    vm.startPrank(address(mpCore));
 
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
@@ -877,7 +885,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
-    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
   function test_RevertIfReinitialized() public {
@@ -889,11 +897,11 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
-    vm.startPrank(address(core));
-    core.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    vm.startPrank(address(mpCore));
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[0].initialize(newAccounts[0]);
@@ -1008,16 +1016,16 @@ contract Integration is VertexCoreTest {
 
   function testFuzz_ETHSendFromAccountViaActionApproval(uint256 _ethAmount) public {
     // TODO test that funds can be moved from VertexAccounts via actions
-    // submitted and approved through VertextCore
+    // submitted and approved through VertexCore
   }
 
   function testFuzz_ERC20SendFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
     // TODO test that funds can be moved from VertexAccounts via actions
-    // submitted and approved through VertextCore
+    // submitted and approved through VertexCore
   }
 
   function testFuzz_ERC20ApprovalFromAccountViaActionApproval(uint256 _tokenAmount, IERC20 _token) public {
     // TODO test that funds can be approved + transferred from VertexAccounts via actions
-    // submitted and approved through VertextCore
+    // submitted and approved through VertexCore
   }
 }

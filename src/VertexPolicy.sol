@@ -90,6 +90,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     vertex = _vertex;
   }
 
+  /// @notice Returns the quantity of the `role` for the given `user`. The returned value is the
+  /// weight of the role when approving/disapproving (regardless of strategy).
+  /// @dev In the current implementation, this will always return 0 or 1 since quantities larger
+  /// than 1 are not supported.
+  function getWeight(address user, bytes32 role) external view returns (uint256) {
+    uint256 tokenId = _tokenId(user);
+    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
+    return exists && quantity > 0 && expiration > block.timestamp ? quantity : 0;
+  }
+
   /// @notice Returns the quantity of the `role` for the given `user` at `timestamp`. The returned
   /// value is the weight of the role when approving/disapproving (regardless of strategy).
   /// @dev In the current implementation, this will always return 0 or 1 since quantities larger
@@ -98,6 +108,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(user);
     (uint256 quantity, uint256 expiration) = roleBalanceCkpts[tokenId][role].getCheckpointAtTimestamp(timestamp);
     return quantity > 0 && expiration > block.timestamp ? quantity : 0;
+  }
+
+  /// @notice Returns the total supply of `role` holders at the given `timestamp`. The returned
+  /// value is the value used to determine if quorum has been reached when approving/disapproving.
+  /// @dev The value returned by this method must equal the sum of the quantity of the role for
+  /// across all policyholders at that timestamp.
+  function getSupply(bytes32 role) external view returns (uint256) {
+    (,,, uint128 quantity) = roleSupplyCkpts[role].latestCheckpoint();
+    return quantity;
   }
 
   /// @notice Returns the total supply of `role` holders at the given `timestamp`. The returned
@@ -163,9 +182,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return roleSupplyCkpts[role];
   }
 
+  /// @notice Returns true if the `user` has the `role`, false otherwise.
+  function hasRole(address user, bytes32 role) external view returns (bool) {
+    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return exists && quantity > 0 && expiration > block.timestamp;
+  }
+
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
   function hasRole(address user, bytes32 role, uint256 timestamp) external view returns (bool) {
-    (uint256 expiration, uint256 quantity) = roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
+    (uint256 quantity, uint256 expiration) = roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
     return quantity > 0 && expiration > block.timestamp;
   }
 
