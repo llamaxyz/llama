@@ -714,13 +714,14 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
   }
 
-  function test_CreateNewStrategyWithAdditionalStrategyLogic() public {
+  function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
     address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
 
-    Strategy[] memory newStrategies = new Strategy[](1);
+    Strategy[] memory newStrategies = new Strategy[](3);
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](3);
 
     newStrategies[0] = Strategy({
-      approvalPeriod: 7 days,
+      approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
       isFixedLengthApprovalPeriod: false,
@@ -732,24 +733,57 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       forceDisapprovalRoles: new bytes32[](0)
     });
 
-    VertexStrategy strategyAddress =
-      lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[0], address(core));
+    newStrategies[1] = Strategy({
+      approvalPeriod: 5 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    newStrategies[2] = Strategy({
+      approvalPeriod: 6 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: "approver",
+      disapprovalRole: "disapprover",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    for (uint256 i; i < newStrategies.length; i++) {
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[i], address(core));
+    }
 
     vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
-    emit StrategyAuthorized(strategyAddress, newStrategies[0]);
+    emit StrategyAuthorized(strategyAddresses[0], newStrategies[0]);
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddresses[1], newStrategies[1]);
+    vm.expectEmit(true, true, true, true);
+    emit StrategyAuthorized(strategyAddresses[2], newStrategies[2]);
 
     core.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
 
-    assertEq(core.authorizedStrategies(strategyAddress), true);
+    assertEq(core.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(core.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(core.authorizedStrategies(strategyAddresses[2]), true);
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
     Strategy[] memory newStrategies = new Strategy[](1);
 
     newStrategies[0] = Strategy({
-      approvalPeriod: 7 days,
+      approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
       isFixedLengthApprovalPeriod: false,
