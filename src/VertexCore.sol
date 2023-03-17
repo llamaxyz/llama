@@ -389,7 +389,8 @@ contract VertexCore is Initializable {
 
   function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
     if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
-      // Only check if the factory is deployed
+      // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
+      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
       revert UnauthorizedAccountLogic();
     }
 
@@ -408,7 +409,8 @@ contract VertexCore is Initializable {
     internal
   {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
-      // Only check if the factory is deployed
+      // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
+      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
       revert UnauthorizedStrategyLogic();
     }
 
