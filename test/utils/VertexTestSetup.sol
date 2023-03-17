@@ -52,6 +52,8 @@ contract VertexTestSetup is Test {
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
 
+  address randomLogicAddress = makeAddr("randomLogicAddress");
+
   function setUp() public virtual {
     // Deploy logic contracts.
     coreLogic = new VertexCore();

@@ -806,7 +806,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    core.createAndAuthorizeStrategies(address(0x1), newStrategies);
+    core.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
   }
 
   function test_UniquenessOfInput() public {
@@ -940,7 +940,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     vm.startPrank(address(core));
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
-    core.createAndAuthorizeAccounts(address(0x1), newAccounts);
+    core.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
   }
 
   function test_UniquenessOfInput() public {

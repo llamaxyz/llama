@@ -196,42 +196,42 @@ contract Deploy is VertexFactoryTest {
 contract AuthorizeStrategyLogic is VertexFactoryTest {
   function test_RevertIf_CallerIsNotVertex() public {
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    factory.authorizeStrategyLogic(address(0x1));
+    factory.authorizeStrategyLogic(randomLogicAddress);
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(address(0x1)), false);
+    assertEq(factory.authorizedStrategyLogics(randomLogicAddress), false);
     vm.prank(address(core));
-    factory.authorizeStrategyLogic(address(0x1));
-    assertEq(factory.authorizedStrategyLogics(address(0x1)), true);
+    factory.authorizeStrategyLogic(randomLogicAddress);
+    assertEq(factory.authorizedStrategyLogics(randomLogicAddress), true);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(core));
     vm.expectEmit(true, true, true, true);
-    emit StrategyLogicAuthorized(address(0x1));
-    factory.authorizeStrategyLogic(address(0x1));
+    emit StrategyLogicAuthorized(randomLogicAddress);
+    factory.authorizeStrategyLogic(randomLogicAddress);
   }
 }
 
 contract AuthorizeAccountLogic is VertexFactoryTest {
   function test_RevertIf_CallerIsNotVertex() public {
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    factory.authorizeAccountLogic(address(0x1));
+    factory.authorizeAccountLogic(randomLogicAddress);
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedAccountLogics(address(0x1)), false);
+    assertEq(factory.authorizedAccountLogics(randomLogicAddress), false);
     vm.prank(address(core));
-    factory.authorizeAccountLogic(address(0x1));
-    assertEq(factory.authorizedAccountLogics(address(0x1)), true);
+    factory.authorizeAccountLogic(randomLogicAddress);
+    assertEq(factory.authorizedAccountLogics(randomLogicAddress), true);
   }
 
   function test_EmitsAccountLogicAuthorizedEvent() public {
     vm.prank(address(core));
     vm.expectEmit(true, true, true, true);
-    emit AccountLogicAuthorized(address(0x1));
-    factory.authorizeAccountLogic(address(0x1));
+    emit AccountLogicAuthorized(randomLogicAddress);
+    factory.authorizeAccountLogic(randomLogicAddress);
   }
 }
 
