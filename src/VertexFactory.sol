@@ -7,7 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {PolicySVG} from "src/PolicySVG.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -33,7 +33,7 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
-  PolicySVG public policySVG;
+  VertexPolicyMetadata public vertexPolicyMetadata;
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
@@ -43,7 +43,7 @@ contract VertexFactory {
     VertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
-    PolicySVG _policySVG,
+    VertexPolicyMetadata _vertexPolicyMetadata,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -53,7 +53,7 @@ contract VertexFactory {
     vertexStrategyLogic = _vertexStrategyLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    policySVG = _policySVG;
+    vertexPolicyMetadata = _vertexPolicyMetadata;
     rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
@@ -85,7 +85,7 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, initialPolicies, policySVG);
+    policy.initialize(name, initialPolicies, address(this));
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexStrategyLogic, vertexAccountLogic, initialStrategies, initialAccounts);
 
@@ -95,7 +95,11 @@ contract VertexFactory {
     }
   }
 
-  function setPolicySVG(PolicySVG _policySVG) public onlyRootVertex {
-    policySVG = _policySVG;
+   function tokenURI (string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
+    return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
+  }
+
+  function setPolicyMetadata (VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
+    vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 }

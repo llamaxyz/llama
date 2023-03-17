@@ -3,8 +3,8 @@ pragma solidity 0.8.17;
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 
-contract PolicySVG {
-  function getTokenURI(string memory name, string memory symbol, uint256 tokenId) external pure returns (string memory) {
+contract VertexPolicyMetadata {
+  function tokenURI(string memory name, string memory symbol, uint256 tokenId) external pure returns (string memory) {
     string[11] memory parts;
 
     parts[0] =

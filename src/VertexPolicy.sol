@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
-import {PolicySVG} from "src/PolicySVG.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {
   PermissionData,
@@ -36,7 +36,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   string public baseURI;
   uint256 internal _totalSupply;
   address public vertex;
-  PolicySVG public policySVG;
+  VertexFactory public factory;
 
   modifier onlyVertex() {
     if (msg.sender != vertex) revert OnlyVertex();
@@ -53,14 +53,14 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice initializes the contract
   /// @param _name the name of the contract
   /// @param initialPolicies the initial policies to mint
-  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, PolicySVG _policySVG)
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, address _factory)
     external
     initializer
   {
     string memory firstThreeLetters = LibString.slice(_name, 0, 3);
     __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
-    policySVG = _policySVG;
     uint256 policyLength = initialPolicies.length;
+    factory = VertexFactory(_factory);
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
     }
@@ -264,10 +264,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     baseURI = _baseURI;
   }
 
-  function setPolicySVG(PolicySVG _policySVG) public onlyVertex {
-    policySVG = _policySVG;
-  }
-
   /// @dev overriding transferFrom to disable transfers
   /// @dev this is a temporary solution, we will need to conform to a Souldbound standard
   function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
@@ -307,7 +303,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice returns the location of the policy metadata
   /// @param tokenId the id of the policy token
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return policySVG.getTokenURI(name, symbol, tokenId);
+    return factory.tokenURI(name, symbol, tokenId);
   }
 
   function getTokenPermissionCheckpoints(uint256 policyId, bytes32 permissionId)
