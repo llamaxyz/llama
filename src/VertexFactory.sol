@@ -95,11 +95,11 @@ contract VertexFactory {
     }
   }
 
-   function tokenURI (string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
+  function tokenURI(string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
     return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
   }
 
-  function setPolicyMetadata (VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
     vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 }
