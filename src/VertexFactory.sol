@@ -53,8 +53,8 @@ contract VertexFactory {
     vertexStrategyLogic = _vertexStrategyLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
     lens = _lens;
+    rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
   modifier onlyRootVertex() {

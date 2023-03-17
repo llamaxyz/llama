@@ -222,7 +222,6 @@ contract TokenURI is VertexPolicyTest {
 
   function test_ReturnsCorrectTokenURI() public {
     vm.prank(address(core));
-    policy.setLens(lens);
     string memory uri = policy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
     assertEq(metadata.name, LibString.concat("Vertex Policy ID: ", LibString.toString(uint256(uint160(address(this))))));
