@@ -7,18 +7,21 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
-import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {Strategy, SetRoleHolder, SetRolePermission} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory {
+  error MissingAdmin();
   error OnlyVertex();
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(address indexed strategyLogic);
   event AccountLogicAuthorized(address indexed accountLogic);
+
+  /// @notice A special role to designate an Admin, who can always create actions.
+  bytes32 public constant ADMIN_ROLE = "admin";
 
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
@@ -49,7 +52,8 @@ contract VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    PolicyGrantData[] memory initialPolicies
+    SetRoleHolder[] memory initialRoleHolders,
+    SetRolePermission[] memory initialRolePermissions
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
@@ -59,7 +63,13 @@ contract VertexFactory {
     _authorizeAccountLogic(initialVertexAccountLogic);
 
     rootVertex = _deploy(
-      name, initialVertexStrategyLogic, initialVertexAccountLogic, initialStrategies, initialAccounts, initialPolicies
+      name,
+      initialVertexStrategyLogic,
+      initialVertexAccountLogic,
+      initialStrategies,
+      initialAccounts,
+      initialRoleHolders,
+      initialRolePermissions
     );
   }
 
@@ -74,7 +84,8 @@ contract VertexFactory {
   /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex system.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccounts The list of initial accounts.
-  /// @param initialPolicies The list of initial policies.
+  /// @param initialRoleHolders The list of initial role holders and their role expirations.
+  /// @param initialRolePermissions The list initial permissions given to roles.
   /// @return the address of the VertexCore contract of the newly created system.
   function deploy(
     string memory name,
@@ -82,9 +93,12 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    PolicyGrantData[] memory initialPolicies
+    SetRoleHolder[] memory initialRoleHolders,
+    SetRolePermission[] memory initialRolePermissions
   ) external onlyRootVertex returns (VertexCore) {
-    return _deploy(name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialPolicies);
+    return _deploy(
+      name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialRoleHolders, initialRolePermissions
+    );
   }
 
   /// @notice Authorizes a strategy logic contract.
@@ -105,11 +119,24 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    PolicyGrantData[] memory initialPolicies
+    SetRoleHolder[] memory initialRoleHolders,
+    SetRolePermission[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {
+    // Verify that at least one user is an admin to avoid the system being locked.
+    bool hasAdmin = false;
+    for (uint256 i = 0; i < initialRoleHolders.length; i++) {
+      if (initialRoleHolders[i].role == ADMIN_ROLE && initialRoleHolders[i].expiration == type(uint64).max) {
+        hasAdmin = true;
+        break;
+      }
+    }
+    if (!hasAdmin) revert MissingAdmin();
+
+    // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, initialPolicies, address(this));
+    policy.initialize(name, address(this), initialRoleHolders, initialRolePermissions);
+
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 

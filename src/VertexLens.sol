@@ -6,7 +6,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, PolicyGrantData, PermissionData} from "src/lib/Structs.sol";
+import {Strategy, PermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Lens
 /// @author Llama (vertex@llama.xyz)

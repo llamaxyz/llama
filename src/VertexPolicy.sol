@@ -21,7 +21,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev DO NOT assign users this role directly. Nothing bad will happen if you do, but it may be
   /// confusing since this is a special role used to (1) track the total supply of all policy
   /// holders, and (2) signal that all policyholders can approve/disapprove for a Strategy.
-  bytes32 public constant ALL_HOLDERS_ROLE = bytes32(uint256(keccak256("all-policy-holders")) - 1);
+  bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
+
+  /// @notice A special role to designate an Admin, who can always create actions.
+  bytes32 public constant ADMIN_ROLE = "admin";
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
   mapping(bytes32 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
@@ -150,9 +153,20 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return roleSupplyCkpts[role];
   }
 
-  /// @notice Returns true if the given `user` has a given `permissionId`, false otherwise.
-  function hasPermissionId(address user, bytes32 permissionId) external view returns (bool) {
-    return _hasPermission(user, permissionId);
+  /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
+  function hasRole(address user, bytes32 role, uint256 timestamp) external view returns (bool) {
+    (uint256 expiration, uint256 quantity) =
+      roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
+    return quantity > 0 && expiration > block.timestamp;
+  }
+
+  /// @notice Returns true if the given `user` has a given `permissionId` under the `permissionId`,
+  /// false otherwise.
+  function hasPermissionId(address user, bytes32 role, bytes32 permissionId) external view returns (bool) {
+    (bool exists, uint64 timestamp, uint64 expiration, uint128 quantity) =
+      roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    bool hasRole = exists && quantity > 0 && expiration > block.timestamp;
+    return hasRole && canCreateAction[role][permissionId];
   }
 
   function _setRoleHolder(SetRoleHolder memory roleHolder) internal {

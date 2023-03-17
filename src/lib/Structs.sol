@@ -65,27 +65,6 @@ struct Strategy {
   bytes32[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }
 
-struct PermissionMetadata {
-  bytes32 permissionId;
-  uint256 expirationTimestamp;
-}
-
-struct PolicyUpdateData {
-  uint256 policyId;
-  PermissionMetadata[] permissionsToAdd;
-  PermissionMetadata[] permissionsToRemove;
-}
-
-struct PolicyGrantData {
-  address user;
-  PermissionMetadata[] permissionsToAdd;
-}
-
-struct PolicyRevokeData {
-  uint256 policyId;
-  bytes32[] permissionIds;
-}
-
 struct ERC20Data {
   IERC20 token; // The ERC20 token to transfer
   address recipient; // The address to transfer the token to
