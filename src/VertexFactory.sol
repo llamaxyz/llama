@@ -49,8 +49,8 @@ contract VertexFactory {
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    authorizedStrategyLogics[initialVertexStrategyLogic] = true;
-    authorizedAccountLogics[initialVertexAccountLogic] = true;
+    _authorizeStrategyLogic(initialVertexStrategyLogic);
+    _authorizeAccountLogic(initialVertexAccountLogic);
 
     rootVertex = _deploy(
       name, initialVertexStrategyLogic, initialVertexAccountLogic, initialStrategies, initialAccounts, initialPolicies
@@ -84,15 +84,13 @@ contract VertexFactory {
   /// @notice Authorizes a strategy logic contract.
   /// @param strategyLogic The strategy logic contract to authorize.
   function authorizeStrategyLogic(address strategyLogic) external onlyRootVertex {
-    authorizedStrategyLogics[strategyLogic] = true;
-    emit StrategyLogicAuthorized(strategyLogic);
+    _authorizeStrategyLogic(strategyLogic);
   }
 
   /// @notice Authorizes an account logic contract.
   /// @param accountLogic The account logic contract to authorize.
   function authorizeAccountLogic(address accountLogic) external onlyRootVertex {
-    authorizedAccountLogics[accountLogic] = true;
-    emit AccountLogicAuthorized(accountLogic);
+    _authorizeAccountLogic(accountLogic);
   }
 
   function _deploy(
@@ -115,5 +113,15 @@ contract VertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
+  }
+
+  function _authorizeStrategyLogic(address strategyLogic) internal {
+    authorizedStrategyLogics[strategyLogic] = true;
+    emit StrategyLogicAuthorized(strategyLogic);
+  }
+
+  function _authorizeAccountLogic(address accountLogic) internal {
+    authorizedAccountLogics[accountLogic] = true;
+    emit AccountLogicAuthorized(accountLogic);
   }
 }
