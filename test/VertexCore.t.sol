@@ -29,8 +29,8 @@ contract VertexCoreTest is VertexTestSetup {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight);
-  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight);
+  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, string name);
@@ -56,9 +56,9 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _approveAction(address _policyholder, uint256 _actionId) public {
     vm.expectEmit(true, true, true, true);
-    emit PolicyholderApproved(_actionId, _policyholder, 1);
+    emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    core.submitApproval(_actionId, "approver");
+    core.castApproval(_actionId, "approver");
   }
 
   function _approveAction(address _policyholder) public {
@@ -68,9 +68,9 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _disapproveAction(address _policyholder, uint256 _actionId) public {
     vm.expectEmit(true, true, true, true);
-    emit PolicyholderDisapproved(_actionId, _policyholder, 1);
+    emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    core.submitDisapproval(_actionId, "disapprover");
+    core.castDisapproval(_actionId, "disapprover");
   }
 
   function _disapproveAction(address _policyholder) public {
@@ -512,7 +512,7 @@ contract ExecuteAction is VertexCoreTest {
   }
 }
 
-contract SubmitApproval is VertexCoreTest {
+contract CastApproval is VertexCoreTest {
   uint256 actionId;
 
   function test_SuccessfulApproval() public {
@@ -521,6 +521,14 @@ contract SubmitApproval is VertexCoreTest {
     // Assert changes to Action storage.
     // Assert changes to Approval storage.
     // Assert event emission.
+  }
+
+  function test_SuccessfulApprovalWithReason(string calldata reason) public {
+    actionId = _createAction();
+    vm.expectEmit(true, true, true, true);
+    emit PolicyholderApproved(actionId, policyHolderPam, 1, reason);
+    vm.prank(policyHolderPam);
+    core.castApproval(actionId, "approver", reason);
   }
 
   function test_RevertIfActionNotActive() public {
@@ -533,7 +541,7 @@ contract SubmitApproval is VertexCoreTest {
     core.queueAction(actionId);
 
     vm.expectRevert(VertexCore.ActionNotActive.selector);
-    core.submitApproval(actionId, "approver");
+    core.castApproval(actionId, "approver");
   }
 
   function test_RevertIfDuplicateApproval() public {
@@ -542,7 +550,7 @@ contract SubmitApproval is VertexCoreTest {
 
     vm.expectRevert(VertexCore.DuplicateApproval.selector);
     vm.prank(policyHolderPam);
-    core.submitApproval(actionId, "approver");
+    core.castApproval(actionId, "approver");
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -551,14 +559,14 @@ contract SubmitApproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    core.submitApproval(actionId, "approver");
+    core.castApproval(actionId, "approver");
 
     vm.prank(policyHolderPam);
-    core.submitApproval(actionId, "approver");
+    core.castApproval(actionId, "approver");
   }
 }
 
-contract SubmitApprovalBySignature is VertexCoreTest {
+contract CastApprovalBySig is VertexCoreTest {
   function test_SuccessfulApprovalBySignature() public {
     // TODO
     // This is a happy path test.
@@ -573,7 +581,7 @@ contract SubmitApprovalBySignature is VertexCoreTest {
   }
 }
 
-contract SubmitDisapproval is VertexCoreTest {
+contract CastDisapproval is VertexCoreTest {
   uint256 actionId;
 
   function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
@@ -595,11 +603,19 @@ contract SubmitDisapproval is VertexCoreTest {
     // Assert event emission.
   }
 
+  function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
+    actionId = _createApproveAndQueueAction();
+    vm.expectEmit(true, true, true, true);
+    emit PolicyholderDisapproved(actionId, policyHolderPam, 1, reason);
+    vm.prank(policyHolderPam);
+    core.castDisapproval(actionId, "disapprover", reason);
+  }
+
   function test_RevertIfActionNotQueued() public {
     actionId = _createAction();
 
     vm.expectRevert(VertexCore.ActionNotQueued.selector);
-    core.submitDisapproval(actionId, "disapprover");
+    core.castDisapproval(actionId, "disapprover");
   }
 
   function test_RevertIfDuplicateDisapproval() public {
@@ -609,7 +625,7 @@ contract SubmitDisapproval is VertexCoreTest {
 
     vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
     vm.prank(policyHolderPam);
-    core.submitDisapproval(actionId, "disapprover");
+    core.castDisapproval(actionId, "disapprover");
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -618,18 +634,18 @@ contract SubmitDisapproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    core.submitDisapproval(actionId, "disapprover");
+    core.castDisapproval(actionId, "disapprover");
 
     vm.prank(policyHolderPam);
-    core.submitDisapproval(actionId, "disapprover");
+    core.castDisapproval(actionId, "disapprover");
   }
 }
 
-contract SubmitDisapprovalBySignature is VertexCoreTest {
+contract CastDisapprovalBySig is VertexCoreTest {
   function test_SuccessfulDisapprovalBySignature() public {
     // TODO
     // This is a happy path test.
-    // Sign a message and have one account submit disapproval on behalf of another.
+    // Sign a message and have one account cast a disapproval on behalf of another.
     // Assert changes to Action storage.
     // Assert changes to Dispproval storage.
     // Assert event emission.
