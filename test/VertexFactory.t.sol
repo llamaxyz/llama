@@ -43,6 +43,12 @@ contract VertexFactoryTest is VertexTestSetup {
 }
 
 contract Constructor is VertexFactoryTest {
+  function deployVertexFactory() internal returns (VertexFactory) {
+    (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
+    return
+    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
+  }
+
   function test_SetsVertexCoreLogicAddress() public {
     assertEq(address(factory.vertexCoreLogic()), address(coreLogic));
   }
@@ -55,8 +61,20 @@ contract Constructor is VertexFactoryTest {
     assertTrue(factory.authorizedStrategyLogics(address(strategyLogic)));
   }
 
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    vm.expectEmit(true, true, true, true);
+    emit StrategyLogicAuthorized(address(strategyLogic));
+    deployVertexFactory();
+  }
+
   function test_SetsVertexAccountLogicAddress() public {
     assertTrue(factory.authorizedAccountLogics(address(accountLogic)));
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.expectEmit(true, true, true, true);
+    emit AccountLogicAuthorized(address(accountLogic));
+    deployVertexFactory();
   }
 
   function test_SetsRootVertexAddress() public {
