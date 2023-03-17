@@ -7,7 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexLens} from "src/VertexLens.sol";
+import {PolicySVG} from "src/PolicySVG.sol";
 import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
@@ -33,7 +33,7 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable rootVertex;
 
-  VertexLens public lens;
+  PolicySVG public policySVG;
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
@@ -43,17 +43,17 @@ contract VertexFactory {
     VertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
+    PolicySVG _policySVG,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    PolicyGrantData[] memory initialPolicies,
-    VertexLens _lens
+    PolicyGrantData[] memory initialPolicies
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexStrategyLogic = _vertexStrategyLogic;
     vertexAccountLogic = _vertexAccountLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
-    lens = _lens;
+    policySVG = _policySVG;
     rootVertex = _deploy(name, initialStrategies, initialAccounts, initialPolicies);
   }
 
@@ -85,7 +85,7 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, initialPolicies, lens);
+    policy.initialize(name, initialPolicies, policySVG);
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, vertexStrategyLogic, vertexAccountLogic, initialStrategies, initialAccounts);
 
@@ -95,7 +95,7 @@ contract VertexFactory {
     }
   }
 
-  function setLens(VertexLens _lens) public onlyRootVertex {
-    lens = _lens;
+  function setPolicySVG(PolicySVG _policySVG) public onlyRootVertex {
+    policySVG = _policySVG;
   }
 }

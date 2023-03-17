@@ -48,7 +48,7 @@ contract Initialize is VertexPolicyTest {
   function test_RevertsIf_InitializeIsCalledTwice() public {
     PolicyGrantData[] memory policies = getDefaultPolicies();
     vm.expectRevert("Initializable: contract is already initialized");
-    policy.initialize("Test", policies, lens);
+    policy.initialize("Test", policies, policySVG);
   }
 }
 
@@ -221,7 +221,6 @@ contract TokenURI is VertexPolicyTest {
   // }
 
   function test_ReturnsCorrectTokenURI() public {
-    vm.prank(address(core));
     string memory uri = policy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
     assertEq(metadata.name, LibString.concat("Vertex Policy ID: ", LibString.toString(uint256(uint160(address(this))))));

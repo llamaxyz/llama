@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
-import {VertexLens} from "src/VertexLens.sol";
+import {PolicySVG} from "src/PolicySVG.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {
   PermissionData,
@@ -36,7 +36,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   string public baseURI;
   uint256 internal _totalSupply;
   address public vertex;
-  VertexLens public lens;
+  PolicySVG public policySVG;
 
   modifier onlyVertex() {
     if (msg.sender != vertex) revert OnlyVertex();
@@ -53,13 +53,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice initializes the contract
   /// @param _name the name of the contract
   /// @param initialPolicies the initial policies to mint
-  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, VertexLens _lens)
+  function initialize(string memory _name, PolicyGrantData[] memory initialPolicies, PolicySVG _policySVG)
     external
     initializer
   {
     string memory firstThreeLetters = LibString.slice(_name, 0, 3);
     __initializeERC721MinimalProxy(_name, string.concat("V_", firstThreeLetters));
-    lens = _lens;
+    policySVG = _policySVG;
     uint256 policyLength = initialPolicies.length;
     for (uint256 i = 0; i < policyLength; ++i) {
       _grantPolicy(initialPolicies[i]);
@@ -264,8 +264,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     baseURI = _baseURI;
   }
 
-  function setLens(VertexLens _lens) public onlyVertex {
-    lens = _lens;
+  function setPolicySVG(PolicySVG _policySVG) public onlyVertex {
+    policySVG = _policySVG;
   }
 
   /// @dev overriding transferFrom to disable transfers
@@ -307,7 +307,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice returns the location of the policy metadata
   /// @param tokenId the id of the policy token
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return lens.getTokenURI(name, symbol, tokenId);
+    return policySVG.getTokenURI(name, symbol, tokenId);
   }
 
   function getTokenPermissionCheckpoints(uint256 policyId, bytes32 permissionId)
