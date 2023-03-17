@@ -445,7 +445,7 @@ contract VertexCore is Initializable {
       for (uint256 i; i < strategyLength; ++i) {
         bytes32 salt = bytes32(
           keccak256(
-            abi.encodePacked(
+            abi.encode(
               strategies[i].approvalPeriod,
               strategies[i].queuingPeriod,
               strategies[i].expirationPeriod,

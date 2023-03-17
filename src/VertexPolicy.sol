@@ -77,7 +77,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(_factory);
-    setRoleHoldersAndPermissions(roleHolders, rolePermissions);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      _setRoleHolder(roleHolders[i]);
+    }
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      _setRolePermission(rolePermissions[i]);
+    }
   }
 
   function setVertex(address _vertex) external {
@@ -104,14 +109,14 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Assigns roles to users.
-  function setRoleHolders(SetRoleHolder[] memory roleHolders) public onlyVertex {
+  function setRoleHolders(SetRoleHolder[] memory roleHolders) external onlyVertex {
     for (uint256 i = 0; i < roleHolders.length; i++) {
       _setRoleHolder(roleHolders[i]);
     }
   }
 
   /// @notice Sets the permissions for a given role.
-  function setRolePermissions(SetRolePermission[] memory rolePermissions) public onlyVertex {
+  function setRolePermissions(SetRolePermission[] memory rolePermissions) external onlyVertex {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       _setRolePermission(rolePermissions[i]);
     }
@@ -119,10 +124,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Assigns roles to users and sets permissions for roles.
   function setRoleHoldersAndPermissions(SetRoleHolder[] memory roleHolders, SetRolePermission[] memory rolePermissions)
-    public
+    external
+    onlyVertex
   {
-    setRoleHolders(roleHolders);
-    setRolePermissions(rolePermissions);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      _setRoleHolder(roleHolders[i]);
+    }
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      _setRolePermission(rolePermissions[i]);
+    }
   }
 
   /// @notice Revokes expired roles.
@@ -155,18 +165,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
   function hasRole(address user, bytes32 role, uint256 timestamp) external view returns (bool) {
-    (uint256 expiration, uint256 quantity) =
-      roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
+    (uint256 expiration, uint256 quantity) = roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
     return quantity > 0 && expiration > block.timestamp;
   }
 
   /// @notice Returns true if the given `user` has a given `permissionId` under the `permissionId`,
   /// false otherwise.
   function hasPermissionId(address user, bytes32 role, bytes32 permissionId) external view returns (bool) {
-    (bool exists, uint64 timestamp, uint64 expiration, uint128 quantity) =
-      roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    bool hasRole = exists && quantity > 0 && expiration > block.timestamp;
-    return hasRole && canCreateAction[role][permissionId];
+    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    bool userHasRole = exists && quantity > 0 && expiration > block.timestamp;
+    return userHasRole && canCreateAction[role][permissionId];
   }
 
   function _setRoleHolder(SetRoleHolder memory roleHolder) internal {

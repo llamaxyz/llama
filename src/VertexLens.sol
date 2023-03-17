@@ -68,7 +68,7 @@ contract VertexLens {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexStrategyLogic,
       keccak256(
-        abi.encodePacked(
+        abi.encode(
           _strategy.approvalPeriod,
           _strategy.queuingPeriod,
           _strategy.expirationPeriod,
@@ -87,15 +87,19 @@ contract VertexLens {
   /// @param _account The account to be set.
   /// @param _vertexCore The vertex core to be set.
   /// @return the computed address of the VertexAccount contract.
-  function computeVertexAccountAddress(address vertexAccountLogic, string calldata _account, address _vertexCore)
+  function computeVertexAccountAddress(address accountLogic, string calldata _account, address _vertexCore)
     external
     pure
     returns (VertexAccount)
   {
-    address _computedAddress = Clones.predictDeterministicAddress(
-      vertexAccountLogic,
-      keccak256(abi.encode(_account)), // salt
-      _vertexCore // deployer
+    return VertexAccount(
+      payable(
+        Clones.predictDeterministicAddress(
+          accountLogic,
+          keccak256(abi.encode(_account)), // salt
+          _vertexCore // deployer
+        )
+      )
     );
 
     return VertexAccount(payable(_computedAddress));
