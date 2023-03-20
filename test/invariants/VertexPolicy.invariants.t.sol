@@ -32,7 +32,6 @@ contract VertexPolicyHandler is BaseHandler {
     console2.log("vertexPolicyNFT_batchGrantPolicies      ", calls["vertexPolicyNFT_batchGrantPolicies"]);
     console2.log("vertexPolicyNFT_batchUpdatePermissions  ", calls["vertexPolicyNFT_batchUpdatePermissions"]);
     console2.log("vertexPolicyNFT_batchRevokePolicies     ", calls["vertexPolicyNFT_batchRevokePolicies"]);
-    console2.log("vertexPolicyNFT_setBaseURI              ", calls["vertexPolicyNFT_setBaseURI"]);
     console2.log("-----------------------------------------------");
     console2.log("policyholdersHadBalanceOf_0      ", calls["policyholdersHadBalanceOf_0"]);
     console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
@@ -55,11 +54,6 @@ contract VertexPolicyHandler is BaseHandler {
   function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
     vm.prank(address(policy.vertex()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
-  }
-
-  function vertexPolicyNFT_setBaseURI(string calldata baseURI) public recordCall("vertexPolicyNFT_setBaseURI") {
-    vm.prank(address(policy.vertex()));
-    policy.setBaseURI(baseURI);
   }
 }
 
