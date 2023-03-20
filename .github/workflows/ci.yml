@@ -93,5 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: crytic/slither-action@v0.3.0
+
+    run: slither .
     with:
       fail-on: none
