@@ -57,7 +57,7 @@ contract VertexFactoryHandler is BaseHandler {
 
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
-    vm.prank(address(vertexFactory.rootVertex()));
+    vm.prank(address(vertexFactory.ROOT_VERTEX()));
     PolicyGrantData[] memory _policyGrantData = new PolicyGrantData[](0);
     vertexFactory.deploy(name(), address(0), address(0), new Strategy[](0), new string[](0), _policyGrantData);
     vertexCounts.push(vertexFactory.vertexCount());

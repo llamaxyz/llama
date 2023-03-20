@@ -21,10 +21,10 @@ contract VertexFactory {
   event AccountLogicAuthorized(address indexed accountLogic);
 
   /// @notice The VertexCore implementation (logic) contract.
-  VertexCore public immutable vertexCoreLogic;
+  VertexCore public immutable VERTEX_CORE_LOGIC;
 
   /// @notice The Vertex Policy implementation (logic) contract.
-  VertexPolicy public immutable vertexPolicyLogic;
+  VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
   mapping(address => bool) public authorizedStrategyLogics;
@@ -33,7 +33,7 @@ contract VertexFactory {
   mapping(address => bool) public authorizedAccountLogics;
 
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
-  VertexCore public immutable rootVertex;
+  VertexCore public immutable ROOT_VERTEX;
 
   VertexPolicyMetadata public vertexPolicyMetadata;
 
@@ -51,20 +51,20 @@ contract VertexFactory {
     string[] memory initialAccounts,
     PolicyGrantData[] memory initialPolicies
   ) {
-    vertexCoreLogic = _vertexCoreLogic;
-    vertexPolicyLogic = _vertexPolicyLogic;
+    VERTEX_CORE_LOGIC = _vertexCoreLogic;
+    VERTEX_POLICY_LOGIC = _vertexPolicyLogic;
     vertexPolicyMetadata = _vertexPolicyMetadata;
 
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);
 
-    rootVertex = _deploy(
+    ROOT_VERTEX = _deploy(
       name, initialVertexStrategyLogic, initialVertexAccountLogic, initialStrategies, initialAccounts, initialPolicies
     );
   }
 
   modifier onlyRootVertex() {
-    if (msg.sender != address(rootVertex)) revert OnlyVertex();
+    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
     _;
   }
 
@@ -108,9 +108,9 @@ contract VertexFactory {
     PolicyGrantData[] memory initialPolicies
   ) internal returns (VertexCore vertex) {
     VertexPolicy policy =
-      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
+      VertexPolicy(Clones.cloneDeterministic(address(VERTEX_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(name, initialPolicies, address(this));
-    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
+    vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
