@@ -16,8 +16,8 @@ import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
-  event StrategyAuthorized(VertexStrategy indexed strategy, Strategy strategyData);
-  event AccountAuthorized(VertexAccount indexed account, string name);
+  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
   event PolicyAdded(PolicyGrantData grantData);
 
   event ActionCreated(
@@ -38,9 +38,17 @@ contract VertexFactoryTest is VertexTestSetup {
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategiesAuthorized(Strategy[] strategies);
   event StrategiesUnauthorized(VertexStrategy[] strategies);
+  event StrategyLogicAuthorized(address indexed strategyLogic);
+  event AccountLogicAuthorized(address indexed accountLogic);
 }
 
 contract Constructor is VertexFactoryTest {
+  function deployVertexFactory() internal returns (VertexFactory) {
+    (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
+    return
+    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, policyMetadata, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
+  }
+
   function test_SetsVertexCoreLogicAddress() public {
     assertEq(address(factory.vertexCoreLogic()), address(coreLogic));
   }
@@ -53,8 +61,20 @@ contract Constructor is VertexFactoryTest {
     assertTrue(factory.authorizedStrategyLogics(address(strategyLogic)));
   }
 
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    vm.expectEmit(true, true, true, true);
+    emit StrategyLogicAuthorized(address(strategyLogic));
+    deployVertexFactory();
+  }
+
   function test_SetsVertexAccountLogicAddress() public {
     assertTrue(factory.authorizedAccountLogics(address(accountLogic)));
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.expectEmit(true, true, true, true);
+    emit AccountLogicAuthorized(address(accountLogic));
+    deployVertexFactory();
   }
 
   function test_SetsRootVertexAddress() public {
@@ -173,6 +193,48 @@ contract Deploy is VertexFactoryTest {
   }
 }
 
+contract AuthorizeStrategyLogic is VertexFactoryTest {
+  function test_RevertIf_CallerIsNotVertex() public {
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.authorizeStrategyLogic(randomLogicAddress);
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(factory.authorizedStrategyLogics(randomLogicAddress), false);
+    vm.prank(address(core));
+    factory.authorizeStrategyLogic(randomLogicAddress);
+    assertEq(factory.authorizedStrategyLogics(randomLogicAddress), true);
+  }
+
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    vm.prank(address(core));
+    vm.expectEmit(true, true, true, true);
+    emit StrategyLogicAuthorized(randomLogicAddress);
+    factory.authorizeStrategyLogic(randomLogicAddress);
+  }
+}
+
+contract AuthorizeAccountLogic is VertexFactoryTest {
+  function test_RevertIf_CallerIsNotVertex() public {
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.authorizeAccountLogic(randomLogicAddress);
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(factory.authorizedAccountLogics(randomLogicAddress), false);
+    vm.prank(address(core));
+    factory.authorizeAccountLogic(randomLogicAddress);
+    assertEq(factory.authorizedAccountLogics(randomLogicAddress), true);
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.prank(address(core));
+    vm.expectEmit(true, true, true, true);
+    emit AccountLogicAuthorized(randomLogicAddress);
+    factory.authorizeAccountLogic(randomLogicAddress);
+  }
+}
+
 contract Integration is VertexFactoryTest {
   string[] initialAccounts;
   PermissionMetadata[] emptyPermissions;
@@ -209,8 +271,8 @@ contract Integration is VertexFactoryTest {
 
     vm.expectEmit(true, true, true, true);
     emit VertexCreated(1, "Integration Test", address(computedVertexCore), address(computedVertexPolicy));
-    emit StrategyAuthorized(computedStrategy, strategyData);
-    emit AccountAuthorized(computedVertexAccount, initialAccounts[0]);
+    emit StrategyAuthorized(computedStrategy, address(strategyLogic), strategyData);
+    emit AccountAuthorized(computedVertexAccount, address(accountLogic), initialAccounts[0]);
     emit PolicyAdded(initialPolicies[0]);
     emit PolicyAdded(initialPolicies[1]);
 
