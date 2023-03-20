@@ -12,7 +12,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {Action, SetRoleHolder, SetRolePermission, Strategy, PermissionData} from "src/lib/Structs.sol";
+import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
@@ -94,7 +94,7 @@ contract Deploy is VertexFactoryTest {
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    SetRoleHolder[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
 
     vm.prank(address(rootCore));
     return factory.deploy(
@@ -104,7 +104,7 @@ contract Deploy is VertexFactoryTest {
       strategies,
       accounts,
       roleHolders,
-      new SetRolePermission[](0)
+      new RolePermissionData[](0)
     );
   }
 
@@ -112,7 +112,7 @@ contract Deploy is VertexFactoryTest {
     vm.assume(caller != address(rootCore));
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    SetRoleHolder[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
 
     vm.prank(address(caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
@@ -123,23 +123,35 @@ contract Deploy is VertexFactoryTest {
       strategies,
       accounts,
       roleHolders,
-      new SetRolePermission[](0)
+      new RolePermissionData[](0)
     );
   }
 
   function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    SetRoleHolder[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
 
     vm.prank(address(rootCore));
     factory.deploy(
-      name, address(strategyLogic), address(accountLogic), strategies, accounts, roleHolders, new SetRolePermission[](0)
+      name,
+      address(strategyLogic),
+      address(accountLogic),
+      strategies,
+      accounts,
+      roleHolders,
+      new RolePermissionData[](0)
     );
 
     vm.expectRevert();
     factory.deploy(
-      name, address(strategyLogic), address(accountLogic), strategies, accounts, roleHolders, new SetRolePermission[](0)
+      name,
+      address(strategyLogic),
+      address(accountLogic),
+      strategies,
+      accounts,
+      roleHolders,
+      new RolePermissionData[](0)
     );
   }
 
@@ -165,7 +177,7 @@ contract Deploy is VertexFactoryTest {
     assertGt(address(_policy).code.length, 0);
 
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", address(factory), new SetRoleHolder[](0), new SetRolePermission[](0));
+    _policy.initialize("Test", address(factory), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
   function test_DeploysVertexCore() public {

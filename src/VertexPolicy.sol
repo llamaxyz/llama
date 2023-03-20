@@ -5,7 +5,7 @@ import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMi
 import {VertexFactory} from "src/VertexFactory.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
-import {ExpiredRole, SetRoleHolder, SetRolePermission} from "src/lib/Structs.sol";
+import {ExpiredRole, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 
 /// @title VertexPolicy
@@ -54,8 +54,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error OnlyVertex();
 
   event RoleAssigned(address indexed user, bytes32 indexed role, uint256 expiration, uint256 roleSupply);
-  event RolePermissionSet(bytes32 indexed role, bytes32 indexed permissionId, bool hasPermission);
-
+  event RolePermissionAssigned(bytes32 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   modifier onlyVertex() {
     if (msg.sender != vertex) revert OnlyVertex();
@@ -72,8 +71,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   function initialize(
     string memory _name,
     address _factory,
-    SetRoleHolder[] memory roleHolders,
-    SetRolePermission[] memory rolePermissions
+    RoleHolderData[] memory roleHolders,
+    RolePermissionData[] memory rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(_factory);
@@ -128,24 +127,24 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Assigns roles to users.
-  function setRoleHolders(SetRoleHolder[] memory roleHolders) external onlyVertex {
+  function setRoleHolders(RoleHolderData[] memory roleHolders) external onlyVertex {
     for (uint256 i = 0; i < roleHolders.length; i++) {
       _setRoleHolder(roleHolders[i]);
     }
   }
 
   /// @notice Sets the permissions for a given role.
-  function setRolePermissions(SetRolePermission[] memory rolePermissions) external onlyVertex {
+  function setRolePermissions(RolePermissionData[] memory rolePermissions) external onlyVertex {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       _setRolePermission(rolePermissions[i]);
     }
   }
 
   /// @notice Assigns roles to users and sets permissions for roles.
-  function setRoleHoldersAndPermissions(SetRoleHolder[] memory roleHolders, SetRolePermission[] memory rolePermissions)
-    external
-    onlyVertex
-  {
+  function setRoleHoldersAndPermissions(
+    RoleHolderData[] memory roleHolders,
+    RolePermissionData[] memory rolePermissions
+  ) external onlyVertex {
     for (uint256 i = 0; i < roleHolders.length; i++) {
       _setRoleHolder(roleHolders[i]);
     }
@@ -166,7 +165,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// list of roles held by user.
   function revokePolicy(address user, bytes32[] memory roles) external {
     for (uint256 i = 0; i < roles.length; i++) {
-      _setRoleHolder(SetRoleHolder(roles[i], user, 0));
+      _setRoleHolder(RoleHolderData(roles[i], user, 0));
     }
     _burn(_tokenId(user));
   }
@@ -202,7 +201,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return userHasRole && canCreateAction[role][permissionId];
   }
 
-  function _setRoleHolder(SetRoleHolder memory roleHolder) internal {
+  function _setRoleHolder(RoleHolderData memory roleHolder) internal {
     (bytes32 role, address user, uint256 expiration) = (roleHolder.role, roleHolder.user, roleHolder.expiration);
     if (expiration > 0 && expiration <= block.timestamp) revert InvalidInput();
 
@@ -230,12 +229,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     emit RoleAssigned(user, role, expiration, newRoleSupply);
   }
 
-  function _setRolePermission(SetRolePermission memory rolePermission) internal {
+  function _setRolePermission(RolePermissionData memory rolePermission) internal {
     (bytes32 role, bytes32 permissionId, bool hasPermission) =
       (rolePermission.role, rolePermission.permissionId, rolePermission.hasPermission);
 
     canCreateAction[role][permissionId] = hasPermission;
-    emit RolePermissionSet(role, permissionId, hasPermission);
+    emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
   function _revokeExpiredRole(ExpiredRole memory expiredRole) internal {
@@ -243,7 +242,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(expiredRole.user);
     (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][expiredRole.role].latestCheckpoint();
     if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
-    _setRoleHolder(SetRoleHolder(expiredRole.role, expiredRole.user, 0));
+    _setRoleHolder(RoleHolderData(expiredRole.role, expiredRole.user, 0));
   }
 
   function _tokenId(address user) internal pure returns (uint256) {

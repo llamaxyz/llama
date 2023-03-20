@@ -9,7 +9,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy, SetRoleHolder, SetRolePermission} from "src/lib/Structs.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
@@ -58,11 +58,11 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(vertexFactory.rootVertex()));
-    SetRoleHolder[] memory roleHolders = new SetRoleHolder[](1);
-    roleHolders[0] = SetRoleHolder(Roles.Admin, makeAddr("dummyAdmin"), type(uint64).max);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("dummyAdmin"), type(uint64).max);
 
     vertexFactory.deploy(
-      name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new SetRolePermission[](0)
+      name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new RolePermissionData[](0)
     );
     vertexCounts.push(vertexFactory.vertexCount());
   }

@@ -7,7 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, SetRoleHolder, SetRolePermission} from "src/lib/Structs.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -52,8 +52,8 @@ contract VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    SetRoleHolder[] memory initialRoleHolders,
-    SetRolePermission[] memory initialRolePermissions
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions
   ) {
     vertexCoreLogic = _vertexCoreLogic;
     vertexPolicyLogic = _vertexPolicyLogic;
@@ -93,8 +93,8 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    SetRoleHolder[] memory initialRoleHolders,
-    SetRolePermission[] memory initialRolePermissions
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions
   ) external onlyRootVertex returns (VertexCore) {
     return _deploy(
       name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialRoleHolders, initialRolePermissions
@@ -119,8 +119,8 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    SetRoleHolder[] memory initialRoleHolders,
-    SetRolePermission[] memory initialRolePermissions
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {
     // Verify that at least one user is an admin to avoid the system being locked.
     bool hasAdmin = false;
