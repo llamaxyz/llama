@@ -88,18 +88,16 @@ jobs:
       - name: Check formatting
         run: forge fmt --check
 
-    slither-analyze:
-      runs-on: ubuntu-latest
-      # permissions:
-      #   security-events: write
-      steps:
-        - uses: actions/checkout@v3
-
-          with:
-            fail-on: none # Required to avoid failing the CI run regardless of findings.
-            sarif: results.sarif
-            slither-args: --exclude naming-convention
-            target: src/
-
-        - name: Upload SARIF file
-          uses: github/codeql-action/upload-sarif@v2
+  slither-analyze:
+    runs-on: ubuntu-latest
+    # permissions:
+    #   security-events: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fail-on: none # Required to avoid failing the CI run regardless of findings.
+          sarif: results.sarif
+          slither-args: --exclude naming-convention
+          target: src/
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
