@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Solarray} from "solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -121,14 +122,14 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     VertexStrategy additionalStrategyLogic = new VertexStrategy();
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     factory.authorizeStrategyLogic(address(additionalStrategyLogic));
     return address(additionalStrategyLogic);
   }
 
   function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address) {
     VertexAccount additionalAccountLogic = new VertexAccount();
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     factory.authorizeAccountLogic(address(additionalAccountLogic));
     return address(additionalAccountLogic);
   }
@@ -136,7 +137,7 @@ contract VertexCoreTest is VertexTestSetup {
 
 contract Setup is VertexCoreTest {
   function test_setUp() public {
-    assertEq(core.name(), "Root Vertex");
+    assertEq(mpCore.name(), "Mock Protocol Vertex");
 
     assertTrue(mpCore.authorizedStrategies(mpStrategy1));
     assertTrue(mpCore.authorizedStrategies(mpStrategy1));
@@ -528,9 +529,9 @@ contract CastApproval is VertexCoreTest {
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
     actionId = _createAction();
     vm.expectEmit(true, true, true, true);
-    emit PolicyholderApproved(actionId, policyHolderPam, 1, reason);
-    vm.prank(policyHolderPam);
-    core.castApproval(actionId, "approver", reason);
+    emit PolicyholderApproved(actionId, approverAdam, 1, reason);
+    vm.prank(approverAdam);
+    mpCore.castApproval(actionId, "approver", reason);
   }
 
   function test_RevertIfActionNotActive() public {
@@ -608,9 +609,9 @@ contract CastDisapproval is VertexCoreTest {
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
     actionId = _createApproveAndQueueAction();
     vm.expectEmit(true, true, true, true);
-    emit PolicyholderDisapproved(actionId, policyHolderPam, 1, reason);
-    vm.prank(policyHolderPam);
-    core.castDisapproval(actionId, "disapprover", reason);
+    emit PolicyholderDisapproved(actionId, disapproverDrake, 1, reason);
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(actionId, "disapprover", reason);
   }
 
   function test_RevertIfActionNotQueued() public {
@@ -776,10 +777,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[i], address(core));
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(additionalStrategyLogic, newStrategies[i], address(mpCore));
     }
 
-    vm.startPrank(address(core));
+    vm.startPrank(address(mpCore));
 
     vm.expectEmit(true, true, true, true);
     emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, newStrategies[0]);
@@ -811,10 +813,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       forceDisapprovalRoles: new bytes32[](0)
     });
 
-    vm.startPrank(address(core));
+    vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    core.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
+    mpCore.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
   }
 
   function test_UniquenessOfInput() public {
@@ -866,18 +868,12 @@ contract UnauthorizeStrategies is VertexCoreTest {
 
 contract CreateAndAuthorizeAccounts is VertexCoreTest {
   function test_CreateNewAccounts() public {
-    string[] memory newAccounts = new string[](3);
+    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);
 
-    newAccounts[0] = "VertexAccount2";
-    newAccounts[1] = "VertexAccount3";
-    newAccounts[2] = "VertexAccount4";
-
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(core));
+      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
-
-    vm.startPrank(address(mpCore));
 
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
@@ -885,16 +881,14 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
+
+    vm.prank(address(mpCore));
     mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
   function test_RevertIfReinitialized() public {
-    string[] memory newAccounts = new string[](3);
+    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);
-
-    newAccounts[0] = "VertexAccount2";
-    newAccounts[1] = "VertexAccount3";
-    newAccounts[2] = "VertexAccount4";
 
     for (uint256 i; i < newAccounts.length; i++) {
       accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
@@ -916,18 +910,12 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
   function test_CreateNewAccountsWithAdditionalAccountLogic() public {
     address additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
 
-    string[] memory newAccounts = new string[](3);
+    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);
 
-    newAccounts[0] = "VertexAccount2";
-    newAccounts[1] = "VertexAccount3";
-    newAccounts[2] = "VertexAccount4";
-
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeVertexAccountAddress(additionalAccountLogic, newAccounts[i], address(core));
+      accountAddresses[i] = lens.computeVertexAccountAddress(additionalAccountLogic, newAccounts[i], address(mpCore));
     }
-
-    vm.startPrank(address(core));
 
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
@@ -935,20 +923,17 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
     vm.expectEmit(true, true, true, true);
     emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
-    core.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
+
+    vm.prank(address(mpCore));
+    mpCore.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
-    string[] memory newAccounts = new string[](3);
-
-    newAccounts[0] = "VertexAccount2";
-    newAccounts[1] = "VertexAccount3";
-    newAccounts[2] = "VertexAccount4";
-
-    vm.startPrank(address(core));
+    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
-    core.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
+    vm.prank(address(mpCore));
+    mpCore.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
   }
 
   function test_UniquenessOfInput() public {

@@ -106,6 +106,7 @@ contract VertexTestSetup is Test {
       address(strategyLogic),
       address(accountLogic),
       policyLogic,
+      policyMetadata,
       "Root Vertex",
       strategies,
       rootAccounts,

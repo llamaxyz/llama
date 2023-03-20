@@ -7,6 +7,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Factory

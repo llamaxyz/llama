@@ -19,7 +19,6 @@ contract VertexFactoryTest is VertexTestSetup {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
-  event PolicyAdded(PolicyGrantData grantData);
 
   event ActionCreated(
     uint256 id,
@@ -45,9 +44,21 @@ contract VertexFactoryTest is VertexTestSetup {
 
 contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
-    (Strategy[] memory strategies, string[] memory accounts,) = getDefaultVertexDeployParameters();
-    return
-    new VertexFactory(coreLogic, address(strategyLogic), address(accountLogic), policyLogic, policyMetadata, "Root Vertex", strategies, accounts, new PolicyGrantData[](0));
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    return new VertexFactory(
+      coreLogic,
+      address(strategyLogic),
+      address(accountLogic),
+      policyLogic,
+      policyMetadata,
+      "Root Vertex",
+      strategies,
+      accounts,
+      roleHolders,
+      new RolePermissionData[](0)
+    );
   }
 
   function test_SetsVertexCoreLogicAddress() public {
@@ -240,13 +251,13 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 
   function test_SetsValueInStorageMappingToTrue() public {
     assertEq(factory.authorizedStrategyLogics(randomLogicAddress), false);
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     factory.authorizeStrategyLogic(randomLogicAddress);
     assertEq(factory.authorizedStrategyLogics(randomLogicAddress), true);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     vm.expectEmit(true, true, true, true);
     emit StrategyLogicAuthorized(randomLogicAddress);
     factory.authorizeStrategyLogic(randomLogicAddress);
@@ -261,13 +272,13 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
 
   function test_SetsValueInStorageMappingToTrue() public {
     assertEq(factory.authorizedAccountLogics(randomLogicAddress), false);
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     factory.authorizeAccountLogic(randomLogicAddress);
     assertEq(factory.authorizedAccountLogics(randomLogicAddress), true);
   }
 
   function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.prank(address(core));
+    vm.prank(address(rootCore));
     vm.expectEmit(true, true, true, true);
     emit AccountLogicAuthorized(randomLogicAddress);
     factory.authorizeAccountLogic(randomLogicAddress);

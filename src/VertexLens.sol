@@ -101,8 +101,6 @@ contract VertexLens {
         )
       )
     );
-
-    return VertexAccount(payable(_computedAddress));
   }
 
   // pulled from the foundry StdUtils.sol contract
