@@ -88,6 +88,30 @@ jobs:
       - name: Check formatting
         run: forge fmt --check
 
+  scopelint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install scopelint
+        uses: engineerd/configurator@v0.0.8
+        with:
+          name: scopelint
+          repo: ScopeLift/scopelint
+          fromGitHubReleases: true
+          version: latest
+          pathInArchive: scopelint-x86_64-linux/scopelint
+          urlTemplate: https://github.com/ScopeLift/scopelint/releases/download/{{version}}/scopelint-x86_64-linux.tar.xz
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check formatting
+        run: |
+          scopelint --version
+          scopelint check
+
   slither-analyze:
     runs-on: ubuntu-latest
     # permissions:
