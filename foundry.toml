@@ -1,10 +1,17 @@
 [profile.default]
   bytecode_hash = 'none'
-  solc = "0.8.17"
-  optimizer = false
-  via_ir = false
   ffi = true
-  gas_reports = ["VertexAccount", "VertexCore", "VertexFactory", "VertexLens", "VertexPolicy", "VertexStrategy"]
+  gas_reports = [
+    "VertexAccount",
+    "VertexCore",
+    "VertexFactory",
+    "VertexLens",
+    "VertexPolicy",
+    "VertexStrategy",
+  ]
+  optimizer = false
+  solc = "0.8.17"
+  via_ir = false
 
 [profile.default.optimizer_details]
   constantOptimizer = true
