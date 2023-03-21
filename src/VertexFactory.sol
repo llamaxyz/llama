@@ -125,7 +125,7 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     // Verify that at least one user is an admin to avoid the system being locked.
     bool hasAdmin = false;
-    for (uint256 i = 0; i < initialRoleHolders.length; i++) {
+    for (uint256 i = 0; i < initialRoleHolders.length; i = _uncheckedIncrement(i)) {
       if (initialRoleHolders[i].role == ADMIN_ROLE && initialRoleHolders[i].expiration == type(uint64).max) {
         hasAdmin = true;
         break;
@@ -164,5 +164,11 @@ contract VertexFactory {
   function _authorizeAccountLogic(address accountLogic) internal {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
+  }
+
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
+    }
   }
 }
