@@ -41,6 +41,7 @@ contract VertexPolicyTest is VertexTestSetup {
     roleHolder = new RoleHolderData[](1);
     roleHolder[0] = RoleHolderData("testRole", user, toUint64(expiration));
   }
+
   function generateRoleHolder(address user, bytes32 role, uint256 expiration)
     internal
     pure
@@ -277,40 +278,103 @@ contract GetSupply is VertexPolicyTest {
 
     // Assigning a role increases supply.
     vm.warp(100);
-    mpPolicy.setRoleHolders(generateRoleHolder(105));
+    mpPolicy.setRoleHolders(generateRoleHolder(150));
     assertEq(mpPolicy.getSupply("testRole"), 1);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Updating the role does not change supply.
-    vm.warp(101);
-    mpPolicy.setRoleHolders(generateRoleHolder(140));
+    vm.warp(110);
+    mpPolicy.setRoleHolders(generateRoleHolder(160));
     assertEq(mpPolicy.getSupply("testRole"), 1);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Assigning the role to a new person increases supply.
-    vm.warp(102);
+    vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
     mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, 200));
     assertEq(mpPolicy.getSupply("testRole"), 2);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
     // Assigning new role to the same person does not change supply.
-    vm.warp(103);
+    vm.warp(130);
     mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, "otherRole", 300));
     assertEq(mpPolicy.getSupply("testRole"), 2);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
-    // TODO Pretty sure total supply is not updated properly when revoking roles/policies.
     // Revoking all roles from the user should only decrease supply by 1.
-    vm.warp(104);
+    vm.warp(140);
     mpPolicy.revokePolicy(newRoleHolder, Solarray.bytes32s("testRole", "otherRole"));
     assertEq(mpPolicy.getSupply("testRole"), 1);
+    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
+
+    // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
+    // it doesn't change the total supply.
+    vm.warp(200);
+    mpPolicy.revokeExpiredRoles(generateExpiredRole(arbitraryUser, "testRole"));
+    assertEq(mpPolicy.getSupply("testRole"), 0);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
   }
 }
 
 contract GetPastSupply is VertexPolicyTest {
-// TODO
+  function setUp() public override {
+    VertexPolicyTest.setUp();
+    vm.startPrank(address(mpCore));
+  }
+
+  function test_IncrementsWhenRolesAreAddedAndDecrementsWhenRolesAreRemoved() public {
+    // This is similar to the `getSupply` test, but with all warps/role setting first, then
+    // assertions after using `getPastSupply`
+    assertEq(mpPolicy.getSupply("testRole"), 0);
+    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
+
+    // Assigning a role increases supply.
+    vm.warp(100);
+    mpPolicy.setRoleHolders(generateRoleHolder(150));
+
+    // Updating the role does not change supply.
+    vm.warp(110);
+    mpPolicy.setRoleHolders(generateRoleHolder(160));
+
+    // Assigning the role to a new person increases supply.
+    vm.warp(120);
+    address newRoleHolder = makeAddr("newRoleHolder");
+    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, 200));
+
+    // Assigning new role to the same person does not change supply.
+    vm.warp(130);
+    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, "otherRole", 300));
+
+    // Revoking all roles from the user should only decrease supply by 1.
+    vm.warp(140);
+    mpPolicy.revokePolicy(newRoleHolder, Solarray.bytes32s("testRole", "otherRole"));
+
+    // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
+    // it doesn't change the total supply.
+    vm.warp(200);
+    mpPolicy.revokeExpiredRoles(generateExpiredRole(arbitraryUser, "testRole"));
+
+    vm.warp(201);
+
+    // Now we assert the past supply.
+    assertEq(mpPolicy.getPastSupply("testRole", 100), 1);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 100), initPolicySupply + 1);
+
+    assertEq(mpPolicy.getPastSupply("testRole", 110), 1);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 110), initPolicySupply + 1);
+
+    assertEq(mpPolicy.getPastSupply("testRole", 120), 2);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 120), initPolicySupply + 2);
+
+    assertEq(mpPolicy.getPastSupply("testRole", 130), 2);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 130), initPolicySupply + 2);
+
+    assertEq(mpPolicy.getPastSupply("testRole", 140), 1);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 140), initPolicySupply + 1);
+
+    assertEq(mpPolicy.getPastSupply("testRole", 200), 0);
+    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 200), initPolicySupply + 1);
+  }
 }
 
 contract RoleBalanceCheckpoints is VertexPolicyTest {

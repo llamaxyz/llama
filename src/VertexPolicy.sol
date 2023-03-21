@@ -18,9 +18,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
 
   /// @notice A special role used to reference all policy holders.
-  /// @dev DO NOT assign users this role directly. Nothing bad will happen if you do, but it may be
-  /// confusing since this is a special role used to (1) track the total supply of all policy
-  /// holders, and (2) signal that all policyholders can approve/disapprove for a Strategy.
+  /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
+  /// values for this role.
   bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
 
   /// @notice A special role to designate an Admin, who can always create actions.
@@ -121,6 +120,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Revokes expired roles.
+  /// @dev WARNING: The contract cannot enumerate all expired roles for a user, so the caller MUST
+  /// provide the full list of expired roles to revoke. Not properly providing this data can result
+  /// in an inconsistent internal state. It is expected that roles are revoked as needed before
+  /// creating an action that uses that role as the `approvalRole` or `disapprovalRole`. Not doing
+  /// so would mean the total supply is higher than expected. Depending on the strategy
+  /// configuration this may not be a big deal, or it may mean it's impossible to reach quorum. It's
+  /// not a big issue if quorum cannot be reached, because a new action can be created.
   function revokeExpiredRoles(ExpiredRole[] memory expiredRoles) external {
     for (uint256 i = 0; i < expiredRoles.length; i++) {
       _revokeExpiredRole(expiredRoles[i]);
@@ -128,8 +134,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Revokes all roles from the user and burns their policy.
-  /// @dev The contract cannot enumerate all roles for a user, so the caller MUST provide the full
-  /// list of roles held by user.
+  /// @dev WARNING: The contract cannot enumerate all roles for a user, so the caller MUST provide
+  /// the full list of roles held by user. Not properly providing this data can result in an
+  /// inconsistent internal state. It is expected that policies are revoked as needed before
+  // creating an action using the `ALL_HOLDERS_ROLE`.
   function revokePolicy(address user, bytes32[] memory roles) external {
     for (uint256 i = 0; i < roles.length; i++) {
       _setRoleHolder(RoleHolderData(roles[i], user, 0));
@@ -268,10 +276,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     (bytes32 role, address user, uint256 expiration) = (roleHolder.role, roleHolder.user, roleHolder.expiration);
     if (expiration > 0 && expiration <= block.timestamp) revert InvalidInput();
 
-    // Check if the user currently holds this role.
+    // Save off whether or not the user has a nonzero quantity of this role. This is used below when
+    // updating the total supply of the role.
     uint256 tokenId = _tokenId(user);
-    (,, uint64 currentExpiration, uint128 currentQuantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    bool hadRole = currentQuantity > 0 && currentExpiration > block.timestamp;
+    uint128 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
+    bool hadRoleQuantity = initialQuantity > 0;
 
     // If the expiration is zero, the role is being removed. Otherwise, the role is being added.
     bool willHaveRole = expiration != 0;
@@ -280,15 +289,17 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     if (balanceOf(user) == 0) _mint(user);
     roleBalanceCkpts[tokenId][role].push(willHaveRole ? 1 : 0, expiration);
 
-    // Lastly we update the total supply of the role. If the expiration is zero, it means the role was removed.
+    // Lastly we update the total supply of the role. If the expiration is zero, it means the role
+    // was removed. Determining how to update total supply requires knowing if the user currently
+    //has a nonzero quantity of this role. This is strictly a quantity check and ignores the expiration because this is
+    // used to determine whether or not to update the total supply.
     uint128 currentRoleSupply = roleSupplyCkpts[role].latest();
     uint128 newRoleSupply;
-    if (hadRole && !willHaveRole) newRoleSupply = currentRoleSupply - 1;
-    else if (!hadRole && willHaveRole) newRoleSupply = currentRoleSupply + 1;
+    if (hadRoleQuantity && !willHaveRole) newRoleSupply = currentRoleSupply - 1;
+    else if (!hadRoleQuantity && willHaveRole) newRoleSupply = currentRoleSupply + 1;
     else newRoleSupply = currentRoleSupply;
 
     roleSupplyCkpts[role].push(newRoleSupply);
-
     emit RoleAssigned(user, role, expiration, newRoleSupply);
   }
 
@@ -313,8 +324,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() + 1);
   }
 
-  function _burn(address user) internal {
-    _burn(_tokenId(user));
+  function _burn(uint256 id) internal override {
+    ERC721NonTransferableMinimalProxy._burn(id);
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() - 1);
   }
 
