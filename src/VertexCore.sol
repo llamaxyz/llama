@@ -71,6 +71,9 @@ contract VertexCore is Initializable {
   /// @notice A special role to designate an Admin, who can always create actions.
   bytes32 public constant ADMIN_ROLE = "admin";
 
+  /// @notice A special role used to reference all policy holders.
+  bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
+
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
@@ -381,7 +384,9 @@ contract VertexCore is Initializable {
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
-    if (policy.getPastWeight(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
+    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    if (!hasRole) revert InvalidPolicyholder();
+
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
@@ -398,7 +403,8 @@ contract VertexCore is Initializable {
     if (hasDisapproved) revert DuplicateDisapproval();
 
     Action storage action = actions[actionId];
-    if (policy.getPastWeight(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
+    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    if (!hasRole) revert InvalidPolicyholder();
 
     if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
