@@ -92,15 +92,12 @@ contract VertexLens {
     pure
     returns (VertexAccount)
   {
-    return VertexAccount(
-      payable(
-        Clones.predictDeterministicAddress(
-          vertexAccountLogic,
-          keccak256(abi.encode(_account)), // salt
-          _vertexCore // deployer
-        )
-      )
+    address _computedAddress = Clones.predictDeterministicAddress(
+      vertexAccountLogic,
+      keccak256(abi.encode(_account)), // salt
+      _vertexCore // deployer
     );
+    return VertexAccount(payable(_computedAddress));
   }
 
   // pulled from the foundry StdUtils.sol contract
