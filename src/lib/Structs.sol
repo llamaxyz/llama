@@ -19,14 +19,14 @@ struct RolePermissionData {
 }
 
 struct ExpiredRole {
-  bytes32 role;
-  address user;
+  bytes32 role; // Role that has expired.
+  address user; // User that held the role.
 }
 
 struct PermissionData {
-  address target;
-  bytes4 selector;
-  VertexStrategy strategy;
+  address target; // Contract being called by an action.
+  bytes4 selector; // Selector of the function being called by an action.
+  VertexStrategy strategy; // Strategy used to govern the action.
 }
 
 struct PermissionIdCheckpoint {
