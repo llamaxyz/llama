@@ -200,7 +200,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// value is the value used to determine if quorum has been reached when approving/disapproving.
   /// @dev The value returned by this method must equal the sum of the quantity of the role
   /// across all policyholders at that timestamp.
-  function getSupply(bytes32 role) external view returns (uint256) {
+  function getSupply(bytes32 role) public view returns (uint256) {
     (,,, uint128 quantity) = roleSupplyCkpts[role].latestCheckpoint();
     return quantity;
   }
@@ -245,8 +245,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the total number of policies in existence.
+  /// @dev This is just an alias for convenience/familiarity.
   function totalSupply() public view returns (uint256) {
-    return roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
+    return getSupply(ALL_HOLDERS_ROLE);
   }
 
   // =================================
