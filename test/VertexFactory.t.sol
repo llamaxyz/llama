@@ -177,7 +177,6 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(_policy).code.length, 0);
     deployVertex();
     assertGt(address(_policy).code.length, 0);
-    VertexPolicy(_policy).baseURI(); // Sanity check that this doesn't revert.
   }
 
   function test_InitializesVertexPolicy() public {

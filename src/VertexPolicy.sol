@@ -39,12 +39,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// the role for each token ID that holds the role.
   mapping(bytes32 role => Checkpoints.History) internal roleSupplyCkpts;
 
-  /// @notice The base URI for all tokens.
-  string public baseURI;
-
   /// @notice The address of the `VertexCore` instance that governs this contract.
   address public vertex;
 
+  /// @notice The address of the `VertexFactory` contract.
   VertexFactory public factory;
 
   error AlreadyInitialized();
