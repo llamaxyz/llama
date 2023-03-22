@@ -202,9 +202,15 @@ contract VertexAccountTest is VertexTestSetup {
   }
 }
 
-  /*///////////////////////////////////////////////////////////////
-                            Unit tests
-    //////////////////////////////////////////////////////////////*/
+contract Initialize is VertexAccountTest {
+  function test_SetsVertexCore() public {
+    assertEq(mpAccount1.vertex(), address(mpCore));
+  }
+
+  function test_SetsAccountName() public {
+    assertEq(mpAccount1.name(), "MP Treasury");
+  }
+}
 
 contract Transfer is VertexAccountTest {
   function test_TransferETH() public {
