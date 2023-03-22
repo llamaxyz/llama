@@ -210,6 +210,11 @@ contract Initialize is VertexAccountTest {
   function test_SetsAccountName() public {
     assertEq(mpAccount1.name(), "MP Treasury");
   }
+
+  function test_RevertIf_AlreadyInitialized() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    mpAccount1.initialize("MP Treasury");
+  }
 }
 
 contract Transfer is VertexAccountTest {
