@@ -84,11 +84,130 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   /*///////////////////////////////////////////////////////////////
+                            Helpers
+    //////////////////////////////////////////////////////////////*/
+
+  function _transferETHToAccount(uint256 amount) public {
+    assertEq(mpAccount1Addr.balance, 0);
+
+    vm.startPrank(ETH_WHALE);
+    (bool success,) = mpAccount1Addr.call{value: amount}("");
+    assertTrue(success);
+    assertEq(mpAccount1Addr.balance, amount);
+    vm.stopPrank();
+  }
+
+  function _transferUSDCToAccount(uint256 amount) public {
+    assertEq(USDC.balanceOf(mpAccount1Addr), 0);
+
+    vm.startPrank(USDC_WHALE);
+    USDC.transfer(mpAccount1Addr, amount);
+    assertEq(USDC.balanceOf(mpAccount1Addr), amount);
+    vm.stopPrank();
+  }
+
+  function _approveUSDCToRecipient(uint256 amount) public {
+    vm.startPrank(address(mpCore));
+    mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
+    assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), amount);
+    vm.stopPrank();
+  }
+
+  function _approveUSDTToRecipient(uint256 amount) public {
+    vm.startPrank(address(mpCore));
+    mpAccount1.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
+    assertEq(USDT.allowance(mpAccount1Addr, USDT_WHALE), amount);
+    vm.stopPrank();
+  }
+
+  function _transferUNIToAccount(uint256 amount) public {
+    assertEq(UNI.balanceOf(mpAccount1Addr), 0);
+
+    vm.startPrank(UNI_WHALE);
+    UNI.transfer(mpAccount1Addr, amount);
+    assertEq(UNI.balanceOf(mpAccount1Addr), amount);
+    vm.stopPrank();
+  }
+
+  function _transferBAYCToAccount(uint256 id) public {
+    assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
+    assertEq(BAYC.ownerOf(id), BAYC_WHALE);
+
+    vm.startPrank(BAYC_WHALE);
+    BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, id);
+    assertEq(BAYC.balanceOf(mpAccount1Addr), 1);
+    assertEq(BAYC.ownerOf(id), mpAccount1Addr);
+    vm.stopPrank();
+  }
+
+  function _approveBAYCToRecipient(uint256 id) public {
+    vm.startPrank(address(mpCore));
+    mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
+    assertEq(BAYC.getApproved(id), BAYC_WHALE);
+    vm.stopPrank();
+  }
+
+  function _approveOperatorBAYCToRecipient(bool approved) public {
+    vm.startPrank(address(mpCore));
+    mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
+    assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), approved);
+    vm.stopPrank();
+  }
+
+  function _transferNOUNSToAccount(uint256 id) public {
+    assertEq(NOUNS.balanceOf(mpAccount1Addr), 0);
+    assertEq(NOUNS.ownerOf(id), NOUNS_WHALE);
+
+    vm.startPrank(NOUNS_WHALE);
+    NOUNS.transferFrom(NOUNS_WHALE, mpAccount1Addr, id);
+    assertEq(NOUNS.balanceOf(mpAccount1Addr), 1);
+    assertEq(NOUNS.ownerOf(id), mpAccount1Addr);
+    vm.stopPrank();
+  }
+
+  function _transferPUNKToAccount(uint256 id) public {
+    assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
+    assertEq(PUNK.punkIndexToAddress(id), PUNK_WHALE);
+
+    vm.startPrank(PUNK_WHALE);
+    PUNK.transferPunk(mpAccount1Addr, id);
+    assertEq(PUNK.balanceOf(mpAccount1Addr), 1);
+    assertEq(PUNK.punkIndexToAddress(id), mpAccount1Addr);
+    vm.stopPrank();
+  }
+
+  function _transferRARIToAccount(uint256 id, uint256 amount) public {
+    assertEq(RARI.balanceOf(mpAccount1Addr, id), 0);
+
+    vm.startPrank(RARI_WHALE);
+    RARI.safeTransferFrom(RARI_WHALE, mpAccount1Addr, id, amount, "");
+    assertEq(RARI.balanceOf(mpAccount1Addr, id), amount);
+    vm.stopPrank();
+  }
+
+  function _transferOPENSTOREToAccount(uint256 id, uint256 amount) public {
+    assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), 0);
+
+    vm.startPrank(OPENSTORE_WHALE);
+    OPENSTORE.safeTransferFrom(OPENSTORE_WHALE, mpAccount1Addr, id, amount, "");
+    assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), amount);
+    vm.stopPrank();
+  }
+
+  function _approveRARIToRecipient(bool approved) public {
+    vm.startPrank(address(mpCore));
+    mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
+    assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), approved);
+    vm.stopPrank();
+  }
+}
+
+  /*///////////////////////////////////////////////////////////////
                             Unit tests
     //////////////////////////////////////////////////////////////*/
 
-  // transfer Native unit tests
-  function test_transfer_TransferETH() public {
+contract Transfer is VertexAccountTest {
+  function test_TransferETH() public {
     _transferETHToAccount(ETH_AMOUNT);
 
     uint256 accountETHBalance = mpAccount1Addr.balance;
@@ -103,20 +222,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_transfer_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
   }
 
-  function test_transfer_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     mpAccount1.transfer(payable(address(0)), ETH_AMOUNT);
     vm.stopPrank();
   }
+}
 
-  // transfer ERC20 unit tests
-  function test_transferERC20_TransferUSDC() public {
+contract TransferERC20 is VertexAccountTest {
+  function test_TransferUSDC() public {
     _transferUSDCToAccount(USDC_AMOUNT);
 
     uint256 accountUSDCBalance = USDC.balanceOf(mpAccount1Addr);
@@ -131,20 +251,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_transferERC20_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
-  function test_transferERC20_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
+}
 
-  // batch transfer ERC20 unit tests
-  function test_batchTransferERC20_TransferUSDCAndUNI() public {
+contract BatchTransferERC20 is VertexAccountTest {
+  function test_TransferUSDCAndUNI() public {
     _transferUSDCToAccount(USDC_AMOUNT);
     _transferUNIToAccount(UNI_AMOUNT);
 
@@ -169,14 +290,14 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchTransferERC20_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchTransferERC20(erc20Data);
   }
 
-  function test_batchTransferERC20_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
     erc20Data[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
@@ -185,43 +306,45 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
-
-  // approve ERC20 unit tests
-  function test_approveERC20_ApproveUSDC() public {
+}
+  
+contract ApproveERC20 is VertexAccountTest {
+  function test_ApproveUSDC() public {
     _approveUSDCToRecipient(USDC_AMOUNT);
   }
 
-  function test_approveERC20_IncreaseUSDCAllowance() public {
+  function test_IncreaseUSDCAllowance() public {
     _approveUSDCToRecipient(USDC_AMOUNT);
     _approveUSDCToRecipient(0);
     _approveUSDCToRecipient(USDC_AMOUNT + 1);
   }
 
-  function test_approveERC20_DecreaseUSDCAllowance() public {
+  function test_DecreaseUSDCAllowance() public {
     _approveUSDCToRecipient(USDC_AMOUNT);
     _approveUSDCToRecipient(0);
     _approveUSDCToRecipient(USDC_AMOUNT - 1);
   }
 
-  function test_approveERC20_IncreaseUSDTAllowance() public {
+  function test_IncreaseUSDTAllowance() public {
     _approveUSDTToRecipient(USDT_AMOUNT);
     _approveUSDTToRecipient(0);
     _approveUSDTToRecipient(USDT_AMOUNT + 1);
   }
 
-  function test_approveERC20_DecreaseUSDTAllowance() public {
+  function test_DecreaseUSDTAllowance() public {
     _approveUSDTToRecipient(USDT_AMOUNT);
     _approveUSDTToRecipient(0);
     _approveUSDTToRecipient(USDT_AMOUNT - 1);
   }
 
-  function test_approveERC20_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
-
-  // batch approve ERC20 unit tests
-  function test_batchApproveERC20_ApproveUSDCAndUNI() public {
+}
+  
+contract BatchApproveERC20 is VertexAccountTest {
+  function test_ApproveUSDCAndUNI() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
     erc20Data[0] = ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT);
     erc20Data[1] = ERC20Data(UNI, UNI_WHALE, UNI_AMOUNT);
@@ -234,15 +357,16 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchApproveERC20_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchApproveERC20(erc20Data);
   }
-
-  // transfer ERC721 unit tests
-  function test_transferERC721_TransferBAYC() public {
+}
+  
+contract TransferERC721 is VertexAccountTest {
+  function test_TransferBAYC() public {
     _transferBAYCToAccount(BAYC_ID);
 
     uint256 accountNFTBalance = BAYC.balanceOf(mpAccount1Addr);
@@ -258,20 +382,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_transferERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
-  function test_transferERC721_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
-
-  // batch transfer ERC721 unit tests
-  function test_batchTransferERC721_TransferBAYCAndNOUNS() public {
+}
+  
+contract BatchTransferERC721 is VertexAccountTest {
+  function test_TransferBAYCAndNOUNS() public {
     _transferBAYCToAccount(BAYC_ID);
     _transferNOUNSToAccount(NOUNS_ID);
 
@@ -296,14 +421,14 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchTransferERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchTransferERC721(erc721Data);
   }
 
-  function test_batchTransferERC721_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     ERC721Data[] memory erc721Data = new ERC721Data[](1);
     erc721Data[0] = ERC721Data(BAYC, address(0), BAYC_ID);
 
@@ -312,20 +437,22 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
-
-  // approve ERC721 unit tests
-  function test_approveERC721_ApproveBAYC() public {
+}
+  
+contract ApproveERC721 is VertexAccountTest {
+  function test_ApproveBAYC() public {
     _transferBAYCToAccount(BAYC_ID);
     _approveBAYCToRecipient(BAYC_ID);
   }
 
-  function test_approveERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
-
-  // batch approve ERC721 unit tests
-  function test_batchApproveERC721_ApproveBAYCAndNOUNS() public {
+}
+  
+contract BatchApproveERC721 is VertexAccountTest {
+  function test_ApproveBAYCAndNOUNS() public {
     _transferBAYCToAccount(BAYC_ID);
     _transferNOUNSToAccount(NOUNS_ID);
 
@@ -341,29 +468,31 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchApproveERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchApproveERC721(erc721Data);
   }
-
-  // approve operator ERC721 unit tests
-  function test_approveOperatorERC721_ApproveBAYC() public {
+}
+  
+contract ApproveOperatorERC721 is VertexAccountTest {
+  function test_ApproveBAYC() public {
     _approveOperatorBAYCToRecipient(true);
   }
 
-  function test_approveOperatorERC721_DisapproveBAYC() public {
+  function test_DisapproveBAYC() public {
     _approveOperatorBAYCToRecipient(false);
   }
 
-  function test_approveOperatorERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
   }
+}
 
-  // batch approve operator ERC721 unit tests
-  function test_batchApproveOperatorERC721_ApproveBAYCAndNOUNS() public {
+contract BatchApproveOperatorERC721 is VertexAccountTest {
+  function test_ApproveBAYCAndNOUNS() public {
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
     erc721OperatorData[0] = ERC721OperatorData(BAYC, BAYC_WHALE, true);
     erc721OperatorData[1] = ERC721OperatorData(NOUNS, NOUNS_WHALE, true);
@@ -376,15 +505,16 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchApproveOperatorERC721_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchApproveOperatorERC721(erc721OperatorData);
   }
+}  
 
-  // transfer ERC1155 unit tests
-  function test_transferERC1155_TransferRARI() public {
+contract TransferERC1155 is VertexAccountTest {
+  function test_TransferRARI() public {
     _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
 
     uint256 accountNFTBalance = RARI.balanceOf(mpAccount1Addr, RARI_ID_1);
@@ -399,20 +529,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_transferERC1155_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
   }
 
-  function test_transferERC1155_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
-
-  // batch transfer single ERC1155 unit tests
-  function test_batchTransferSingleERC1155_TransferRARI() public {
+}
+  
+contract BatchTransferSingleERC1155 is VertexAccountTest {
+  function test_TransferRARI() public {
     _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
     _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
 
@@ -441,7 +572,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchTransferSingleERC1155_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     uint256[] memory tokenIDs = new uint256[](2);
     tokenIDs[0] = RARI_ID_1;
     tokenIDs[1] = RARI_ID_2;
@@ -454,7 +585,7 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
   }
 
-  function test_batchTransferSingleERC1155_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     uint256[] memory tokenIDs = new uint256[](2);
     tokenIDs[0] = RARI_ID_1;
     tokenIDs[1] = RARI_ID_2;
@@ -468,9 +599,10 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
     vm.stopPrank();
   }
+}
 
-  // batch transfer multiple ERC1155 unit tests
-  function test_batchTransferMultipleERC1155_TransferRARIAndOPENSTORE() public {
+contract BatchTransferMultipleERC1155 is VertexAccountTest {
+  function test_TransferRARIAndOPENSTORE() public {
     _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
     _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
     _transferOPENSTOREToAccount(OPENSTORE_ID_1, OPENSTORE_ID_1_AMOUNT);
@@ -515,13 +647,13 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchTransferMultipleERC1155_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
   }
 
-  function test_batchTransferMultipleERC1155_RevertIfToZeroAddress() public {
+  function test_RevertIf_ToZeroAddress() public {
     uint256[] memory tokenIDs = new uint256[](1);
     uint256[] memory amounts = new uint256[](1);
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](1);
@@ -532,23 +664,25 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
     vm.stopPrank();
   }
+}
 
-  // approve operator ERC1155 unit tests
-  function test_approveOperatorERC1155_ApproveRARI() public {
+contract ApproveOperatorERC1155 is VertexAccountTest {
+  function test_ApproveRARI() public {
     _approveRARIToRecipient(true);
   }
 
-  function test_approveOperatorERC1155_DisapproveRARI() public {
+  function test_DisapproveRARI() public {
     _approveRARIToRecipient(false);
   }
 
-  function test_approveOperatorERC1155_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
   }
-
-  // batch approve operator ERC1155 unit tests
-  function test_batchApproveOperatorERC1155_ApproveRARIAndOPENSTORE() public {
+}
+  
+contract BatchApproveOperatorERC1155 is VertexAccountTest {
+  function test_ApproveRARIAndOPENSTORE() public {
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
     erc1155OperatorData[0] = ERC1155OperatorData(RARI, RARI_WHALE, true);
     erc1155OperatorData[1] = ERC1155OperatorData(OPENSTORE, OPENSTORE_WHALE, true);
@@ -560,14 +694,15 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_batchApproveOperatorERC1155_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchApproveOperatorERC1155(erc1155OperatorData);
   }
-
-  // generic execute unit tests
-  function test_execute_CallCryptoPunk() public {
+}
+  
+contract Execute is VertexAccountTest {
+   function test_CallCryptoPunk() public {
     // Transfer Punk to Account to have it stuck in the Vertex Account
     _transferPUNKToAccount(PUNK_ID);
 
@@ -586,7 +721,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_execute_DelegateCallTestScript() public {
+  function test_DelegateCallTestScript() public {
     TestScript testScript = new TestScript();
 
     vm.startPrank(address(mpCore));
@@ -596,14 +731,14 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function test_execute_RevertIfNotVertexMsgSender() public {
+  function test_RevertIf_NotVertexMsgSender() public {
     TestScript testScript = new TestScript();
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
   }
 
-  function test_execute_RevertIfNotSuccess() public {
+  function test_RevertIf_NotSuccess() public {
     TestScript testScript = new TestScript();
 
     vm.startPrank(address(mpCore));
@@ -611,11 +746,9 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1.execute(address(testScript), abi.encodePacked("", ""), true);
     vm.stopPrank();
   }
+}
 
-  /*///////////////////////////////////////////////////////////////
-                            Integration tests
-    //////////////////////////////////////////////////////////////*/
-
+contract Integration is VertexAccountTest {
   // Test that VertexAccount can receive ETH
   function test_ReceiveETH() public {
     _transferETHToAccount(ETH_AMOUNT);
@@ -734,124 +867,6 @@ contract VertexAccountTest is VertexTestSetup {
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_2), 0);
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_2), accountNFTBalance2 - RARI_ID_2_AMOUNT);
     assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_2), whaleNFTBalance2 + RARI_ID_2_AMOUNT);
-    vm.stopPrank();
-  }
-
-  /*///////////////////////////////////////////////////////////////
-                            Helpers
-    //////////////////////////////////////////////////////////////*/
-
-  function _transferETHToAccount(uint256 amount) public {
-    assertEq(mpAccount1Addr.balance, 0);
-
-    vm.startPrank(ETH_WHALE);
-    (bool success,) = mpAccount1Addr.call{value: amount}("");
-    assertTrue(success);
-    assertEq(mpAccount1Addr.balance, amount);
-    vm.stopPrank();
-  }
-
-  function _transferUSDCToAccount(uint256 amount) public {
-    assertEq(USDC.balanceOf(mpAccount1Addr), 0);
-
-    vm.startPrank(USDC_WHALE);
-    USDC.transfer(mpAccount1Addr, amount);
-    assertEq(USDC.balanceOf(mpAccount1Addr), amount);
-    vm.stopPrank();
-  }
-
-  function _approveUSDCToRecipient(uint256 amount) public {
-    vm.startPrank(address(mpCore));
-    mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
-    assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), amount);
-    vm.stopPrank();
-  }
-
-  function _approveUSDTToRecipient(uint256 amount) public {
-    vm.startPrank(address(mpCore));
-    mpAccount1.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
-    assertEq(USDT.allowance(mpAccount1Addr, USDT_WHALE), amount);
-    vm.stopPrank();
-  }
-
-  function _transferUNIToAccount(uint256 amount) public {
-    assertEq(UNI.balanceOf(mpAccount1Addr), 0);
-
-    vm.startPrank(UNI_WHALE);
-    UNI.transfer(mpAccount1Addr, amount);
-    assertEq(UNI.balanceOf(mpAccount1Addr), amount);
-    vm.stopPrank();
-  }
-
-  function _transferBAYCToAccount(uint256 id) public {
-    assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
-    assertEq(BAYC.ownerOf(id), BAYC_WHALE);
-
-    vm.startPrank(BAYC_WHALE);
-    BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, id);
-    assertEq(BAYC.balanceOf(mpAccount1Addr), 1);
-    assertEq(BAYC.ownerOf(id), mpAccount1Addr);
-    vm.stopPrank();
-  }
-
-  function _approveBAYCToRecipient(uint256 id) public {
-    vm.startPrank(address(mpCore));
-    mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
-    assertEq(BAYC.getApproved(id), BAYC_WHALE);
-    vm.stopPrank();
-  }
-
-  function _approveOperatorBAYCToRecipient(bool approved) public {
-    vm.startPrank(address(mpCore));
-    mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
-    assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), approved);
-    vm.stopPrank();
-  }
-
-  function _transferNOUNSToAccount(uint256 id) public {
-    assertEq(NOUNS.balanceOf(mpAccount1Addr), 0);
-    assertEq(NOUNS.ownerOf(id), NOUNS_WHALE);
-
-    vm.startPrank(NOUNS_WHALE);
-    NOUNS.transferFrom(NOUNS_WHALE, mpAccount1Addr, id);
-    assertEq(NOUNS.balanceOf(mpAccount1Addr), 1);
-    assertEq(NOUNS.ownerOf(id), mpAccount1Addr);
-    vm.stopPrank();
-  }
-
-  function _transferPUNKToAccount(uint256 id) public {
-    assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
-    assertEq(PUNK.punkIndexToAddress(id), PUNK_WHALE);
-
-    vm.startPrank(PUNK_WHALE);
-    PUNK.transferPunk(mpAccount1Addr, id);
-    assertEq(PUNK.balanceOf(mpAccount1Addr), 1);
-    assertEq(PUNK.punkIndexToAddress(id), mpAccount1Addr);
-    vm.stopPrank();
-  }
-
-  function _transferRARIToAccount(uint256 id, uint256 amount) public {
-    assertEq(RARI.balanceOf(mpAccount1Addr, id), 0);
-
-    vm.startPrank(RARI_WHALE);
-    RARI.safeTransferFrom(RARI_WHALE, mpAccount1Addr, id, amount, "");
-    assertEq(RARI.balanceOf(mpAccount1Addr, id), amount);
-    vm.stopPrank();
-  }
-
-  function _transferOPENSTOREToAccount(uint256 id, uint256 amount) public {
-    assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), 0);
-
-    vm.startPrank(OPENSTORE_WHALE);
-    OPENSTORE.safeTransferFrom(OPENSTORE_WHALE, mpAccount1Addr, id, amount, "");
-    assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), amount);
-    vm.stopPrank();
-  }
-
-  function _approveRARIToRecipient(bool approved) public {
-    vm.startPrank(address(mpCore));
-    mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
-    assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), approved);
     vm.stopPrank();
   }
 }
