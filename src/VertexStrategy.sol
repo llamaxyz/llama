@@ -114,8 +114,9 @@ contract VertexStrategy is Initializable {
   /// @param timestamp The block number at which to get the approval weight.
   /// @return The weight of the policyholder's approval.
   function getApprovalWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256) {
-    if (forceApprovalRole[role]) return type(uint256).max;
-    return policy.holderWeightAt(policyholder, role, timestamp);
+    bool hasRole = policy.hasRole(policyholder, role, timestamp);
+    if (!hasRole) return 0;
+    return forceApprovalRole[role] ? type(uint256).max : 1;
   }
 
   /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
@@ -128,8 +129,9 @@ contract VertexStrategy is Initializable {
     view
     returns (uint256)
   {
-    if (forceDisapprovalRole[role]) return type(uint256).max;
-    return policy.holderWeightAt(policyholder, role, timestamp);
+    bool hasRole = policy.hasRole(policyholder, role, timestamp);
+    if (!hasRole) return 0;
+    return forceDisapprovalRole[role] ? type(uint256).max : 1;
   }
 
   /// @notice Determine the minimum weight needed for an action to reach quorum.

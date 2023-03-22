@@ -68,6 +68,12 @@ contract VertexCore is Initializable {
   bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
+  /// @notice A special role to designate an Admin, who can always create actions.
+  bytes32 public constant ADMIN_ROLE = "admin";
+
+  /// @notice A special role used to reference all policy holders.
+  bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
+
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
@@ -136,22 +142,30 @@ contract VertexCore is Initializable {
   /// @param selector The function selector that will be called when the action is executed.
   /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
   /// @return actionId of the newly created action.
-  function createAction(VertexStrategy strategy, address target, uint256 value, bytes4 selector, bytes calldata data)
-    external
-    returns (uint256)
-  {
+  function createAction(
+    bytes32 role,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data
+  ) external returns (uint256) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
-    PermissionData memory permission = PermissionData({target: target, selector: selector, strategy: strategy});
+    PermissionData memory permission = PermissionData(target, selector, strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
-    if (!policy.hasPermission(uint256(uint160(msg.sender)), permissionId)) revert PolicyholderDoesNotHavePermission();
+
+    if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
+      revert PolicyholderDoesNotHavePermission();
+    }
 
     uint256 previousActionCount = actionsCount;
     Action storage newAction = actions[previousActionCount];
 
-    uint256 approvalPolicySupply = policy.totalSupplyAt(strategy.approvalRole(), block.timestamp);
+    uint256 approvalPolicySupply = policy.getSupply(strategy.approvalRole());
     if (approvalPolicySupply == 0) revert ApprovalRoleHasZeroSupply();
-    uint256 disapprovalPolicySupply = policy.totalSupplyAt(strategy.disapprovalRole(), block.timestamp);
+
+    uint256 disapprovalPolicySupply = policy.getSupply(strategy.disapprovalRole());
     if (disapprovalPolicySupply == 0) revert DisapprovalRoleHasZeroSupply();
 
     newAction.creator = msg.sender;
@@ -370,8 +384,9 @@ contract VertexCore is Initializable {
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
-    // TODO @mds1 update based on policy contract refactor
-    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
+    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    if (!hasRole) revert InvalidPolicyholder();
+
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
@@ -388,8 +403,8 @@ contract VertexCore is Initializable {
     if (hasDisapproved) revert DuplicateDisapproval();
 
     Action storage action = actions[actionId];
-    // TODO @mds1 update based on policy contract refactor
-    if (policy.holderWeightAt(policyholder, role, action.creationTime) == 0) revert InvalidPolicyholder();
+    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    if (!hasRole) revert InvalidPolicyholder();
 
     if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
 
@@ -435,7 +450,7 @@ contract VertexCore is Initializable {
       for (uint256 i; i < strategyLength; ++i) {
         bytes32 salt = bytes32(
           keccak256(
-            abi.encodePacked(
+            abi.encode(
               strategies[i].approvalPeriod,
               strategies[i].queuingPeriod,
               strategies[i].expirationPeriod,
