@@ -6,7 +6,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {Strategy} from "src/lib/Structs.sol";
+import {Strategy, PermissionData} from "src/lib/Structs.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexLensTestSetup is VertexTestSetup {}
@@ -63,5 +63,17 @@ contract ComputeVertexAccountAddress is VertexLensTestSetup {
 
     expected = address(lens.computeVertexAccountAddress(address(accountLogic), "MP Grants", address(mpCore)));
     assertEq(expected, address(mpAccount2));
+  }
+}
+
+contract ComputePermissionId is VertexLensTestSetup {
+  function test_ProperlyComputesId() public {
+    PermissionData memory _pausePermission =
+      PermissionData(address(mpPolicy), mpPolicy.setRoleHoldersAndPermissions.selector, mpStrategy1);
+    bytes32 computedPausePermissionId = lens.computePermissionId(_pausePermission);
+    assertEq(
+      keccak256(abi.encode(address(mpPolicy), mpPolicy.setRoleHoldersAndPermissions.selector, mpStrategy1)),
+      computedPausePermissionId
+    );
   }
 }

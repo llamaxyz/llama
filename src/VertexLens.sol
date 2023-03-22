@@ -99,13 +99,4 @@ contract VertexLens {
     );
     return VertexAccount(payable(_computedAddress));
   }
-
-  // pulled from the foundry StdUtils.sol contract
-  function computeCreate2Address(bytes32 salt, bytes32 initCodeHash, address factory) internal pure returns (address) {
-    return addressFromLast20Bytes(keccak256(abi.encodePacked(bytes1(0xff), factory, salt, initCodeHash)));
-  }
-
-  function addressFromLast20Bytes(bytes32 bytesValue) private pure returns (address) {
-    return address(uint160(uint256(bytesValue)));
-  }
 }
