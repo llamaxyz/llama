@@ -318,7 +318,7 @@ contract BatchTransferERC20 is VertexAccountTest {
     vm.stopPrank();
   }
 }
-  
+
 contract ApproveERC20 is VertexAccountTest {
   function test_ApproveUSDC() public {
     _approveUSDCToRecipient(USDC_AMOUNT);
@@ -353,7 +353,7 @@ contract ApproveERC20 is VertexAccountTest {
     mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 }
-  
+
 contract BatchApproveERC20 is VertexAccountTest {
   function test_ApproveUSDCAndUNI() public {
     ERC20Data[] memory erc20Data = new ERC20Data[](2);
@@ -375,7 +375,7 @@ contract BatchApproveERC20 is VertexAccountTest {
     mpAccount1.batchApproveERC20(erc20Data);
   }
 }
-  
+
 contract TransferERC721 is VertexAccountTest {
   function test_TransferBAYC() public {
     _transferBAYCToAccount(BAYC_ID);
@@ -405,7 +405,7 @@ contract TransferERC721 is VertexAccountTest {
     vm.stopPrank();
   }
 }
-  
+
 contract BatchTransferERC721 is VertexAccountTest {
   function test_TransferBAYCAndNOUNS() public {
     _transferBAYCToAccount(BAYC_ID);
@@ -449,7 +449,7 @@ contract BatchTransferERC721 is VertexAccountTest {
     vm.stopPrank();
   }
 }
-  
+
 contract ApproveERC721 is VertexAccountTest {
   function test_ApproveBAYC() public {
     _transferBAYCToAccount(BAYC_ID);
@@ -461,7 +461,7 @@ contract ApproveERC721 is VertexAccountTest {
     mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 }
-  
+
 contract BatchApproveERC721 is VertexAccountTest {
   function test_ApproveBAYCAndNOUNS() public {
     _transferBAYCToAccount(BAYC_ID);
@@ -486,7 +486,7 @@ contract BatchApproveERC721 is VertexAccountTest {
     mpAccount1.batchApproveERC721(erc721Data);
   }
 }
-  
+
 contract ApproveOperatorERC721 is VertexAccountTest {
   function test_ApproveBAYC() public {
     _approveOperatorBAYCToRecipient(true);
@@ -522,7 +522,7 @@ contract BatchApproveOperatorERC721 is VertexAccountTest {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     mpAccount1.batchApproveOperatorERC721(erc721OperatorData);
   }
-}  
+}
 
 contract TransferERC1155 is VertexAccountTest {
   function test_TransferRARI() public {
@@ -552,7 +552,7 @@ contract TransferERC1155 is VertexAccountTest {
     vm.stopPrank();
   }
 }
-  
+
 contract BatchTransferSingleERC1155 is VertexAccountTest {
   function test_TransferRARI() public {
     _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
@@ -691,7 +691,7 @@ contract ApproveOperatorERC1155 is VertexAccountTest {
     mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
   }
 }
-  
+
 contract BatchApproveOperatorERC1155 is VertexAccountTest {
   function test_ApproveRARIAndOPENSTORE() public {
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
@@ -711,9 +711,9 @@ contract BatchApproveOperatorERC1155 is VertexAccountTest {
     mpAccount1.batchApproveOperatorERC1155(erc1155OperatorData);
   }
 }
-  
+
 contract Execute is VertexAccountTest {
-   function test_CallCryptoPunk() public {
+  function test_CallCryptoPunk() public {
     // Transfer Punk to Account to have it stuck in the Vertex Account
     _transferPUNKToAccount(PUNK_ID);
 
