@@ -136,7 +136,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// the full list of roles held by user. Not properly providing this data can result in an
   /// inconsistent internal state. It is expected that policies are revoked as needed before
   // creating an action using the `ALL_HOLDERS_ROLE`.
-  function revokePolicy(address user, bytes32[] calldata roles) external {
+  function revokePolicy(address user, bytes32[] calldata roles) external onlyVertex {
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0);
     }
