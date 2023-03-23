@@ -224,7 +224,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
   function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint64 _timestamp, bytes32 _role, address _nonPolicyHolder)
     public
   {
-    // reverting for unknown reason
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
 
@@ -238,15 +237,24 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     );
   }
 
-  // function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
-  //   uint256 _timestamp,
-  //   bytes8 _permission,
-  //   address _policyHolder
-  // ) public {
-  //   // TODO
-  //   // _policyHolder doesn't have a weight for _permission
-  //   // the function should return the default weight
-  // }
+  function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
+    uint256 _timestamp,
+    bytes32 _permission,
+    bytes32 _role,
+    address _policyHolder
+  ) public {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    vm.assume(_policyHolder != address(0));
+
+    deployStrategyAndSetRole(bytes32(0), bytes32(0), _policyHolder);
+
+    vm.warp(_timestamp);
+
+    assertEq(
+      newStrategy.getApprovalWeightAt(_policyHolder, _role, _timestamp - 1),
+      0 // the account should not have a weight
+    );
+  }
 }
 
 contract GetDisapprovalWeightAt is VertexStrategyTest {
