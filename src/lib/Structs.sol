@@ -9,7 +9,8 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 struct RoleHolderData {
   bytes32 role; // Name of the role to set.
   address user; // User to assign the role to.
-  uint64 expiration; // When the role expires, or zero to remove the role.
+  uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  uint64 expiration; // When the role expires.
 }
 
 struct RolePermissionData {

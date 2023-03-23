@@ -83,7 +83,10 @@ contract VertexTestSetup is Test {
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
 
+  // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
+  uint128 DEFAULT_ROLE_QTY = 1;
+  uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
     // Deploy logic contracts.
@@ -134,13 +137,14 @@ contract VertexTestSetup is Test {
 
     // Add approvers and disapprovers to the mock protocol's vertex.
     RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](7);
-    mpRoleHoldersNew[0] = RoleHolderData(Roles.ActionCreator, actionCreatorAaron, type(uint64).max);
-    mpRoleHoldersNew[1] = RoleHolderData(Roles.Approver, approverAdam, type(uint64).max);
-    mpRoleHoldersNew[2] = RoleHolderData(Roles.Approver, approverAlicia, type(uint64).max);
-    mpRoleHoldersNew[3] = RoleHolderData(Roles.Approver, approverAndy, type(uint64).max);
-    mpRoleHoldersNew[4] = RoleHolderData(Roles.Disapprover, disapproverDave, type(uint64).max);
-    mpRoleHoldersNew[5] = RoleHolderData(Roles.Disapprover, disapproverDiane, type(uint64).max);
-    mpRoleHoldersNew[6] = RoleHolderData(Roles.Disapprover, disapproverDrake, type(uint64).max);
+    mpRoleHoldersNew[0] =
+      RoleHolderData(Roles.ActionCreator, actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[1] = RoleHolderData(Roles.Approver, approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[2] = RoleHolderData(Roles.Approver, approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[3] = RoleHolderData(Roles.Approver, approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[4] = RoleHolderData(Roles.Disapprover, disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[5] = RoleHolderData(Roles.Disapprover, disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[6] = RoleHolderData(Roles.Disapprover, disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(mpRoleHoldersNew);
@@ -198,14 +202,14 @@ contract VertexTestSetup is Test {
     require(address(0) != address(mpAccount1), "mpAccount1 not set");
     require(address(0) != address(mpAccount2), "mpAccount2 not set");
 
-    // require(bytes32(0) != pausePermissionId, "pausePermissionId not set");
-    // require(bytes32(0) != failPermissionId, "failPermissionId not set");
-    // require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
+    require(bytes32(0) != pausePermissionId, "pausePermissionId not set");
+    require(bytes32(0) != failPermissionId, "failPermissionId not set");
+    require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
   }
 
-  function defaultAdminRoleHolder(address who) internal pure returns (RoleHolderData[] memory roleHolders) {
+  function defaultAdminRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(Roles.Admin, who, type(uint64).max);
+    roleHolders[0] = RoleHolderData(Roles.Admin, who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function defaultStrategies() internal pure returns (Strategy[] memory strategies) {

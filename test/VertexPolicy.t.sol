@@ -29,26 +29,28 @@ contract VertexPolicyTest is VertexTestSetup {
   }
 
   function generateRoleHolder(uint256 expiration) internal view returns (RoleHolderData[] memory roleHolder) {
+    // TODO Improve tests to test various quantities, we currently only test with a quantity of 1.
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData("testRole", arbitraryUser, toUint64(expiration));
+    uint128 quantity = expiration == 0 ? 0 : 1;
+    roleHolder[0] = RoleHolderData("testRole", arbitraryUser, quantity, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, uint256 expiration)
     internal
-    pure
+    view
     returns (RoleHolderData[] memory roleHolder)
   {
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData("testRole", user, toUint64(expiration));
+    roleHolder[0] = RoleHolderData("testRole", user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, bytes32 role, uint256 expiration)
     internal
-    pure
+    view
     returns (RoleHolderData[] memory roleHolder)
   {
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData(role, user, toUint64(expiration));
+    roleHolder[0] = RoleHolderData(role, user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateExpiredRole(address user, bytes32 role) internal pure returns (ExpiredRole[] memory expiredRole) {
