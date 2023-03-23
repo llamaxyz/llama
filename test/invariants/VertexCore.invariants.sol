@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {CommonBase} from "forge-std/Base.sol";
@@ -9,7 +9,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {PermissionIdCheckpoint, Strategy} from "src/lib/Structs.sol";
+import {Strategy} from "src/lib/Structs.sol";
 
 import {VertexCoreTest} from "test/VertexCore.t.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";

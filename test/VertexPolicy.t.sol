@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import "lib/forge-std/src/console.sol";
 import {Test, console2} from "lib/forge-std/src/Test.sol";
@@ -98,7 +98,7 @@ contract Initialize is VertexPolicyTest {
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize("Test", address(factory), new RoleHolderData[](0), new RolePermissionData[](0));
+    mpPolicy.initialize("Test", new RoleHolderData[](0), new RolePermissionData[](0));
   }
 }
 
