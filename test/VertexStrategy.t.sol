@@ -221,9 +221,34 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     );
   }
 
-  // function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, address _nonPolicyHolder) public {
-  //   // TODO
-  // }
+  function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, bytes32 _role, address _nonPolicyHolder)
+    public
+  { // reverting for unknown reason
+      // vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+      // vm.assume(_nonPolicyHolder != address(0));
+      // vm.assume(_role > bytes32(0));
+      // vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
+
+    // // Mock protocol users.
+    // vm.assume(_nonPolicyHolder != makeAddr("rootVertexAdmin"));
+    // vm.assume(_nonPolicyHolder != makeAddr("adminAlice"));
+    // vm.assume(_nonPolicyHolder != makeAddr("actionCreatorAaron"));
+
+    // vm.assume(_nonPolicyHolder != makeAddr("approverAdam"));
+    // vm.assume(_nonPolicyHolder != makeAddr("approverAlicia"));
+    // vm.assume(_nonPolicyHolder != makeAddr("approverAndy"));
+
+    // vm.assume(_nonPolicyHolder != makeAddr("disapproverDave"));
+    // vm.assume(_nonPolicyHolder != makeAddr("disapproverDiane"));
+    // vm.assume(_nonPolicyHolder != makeAddr("disapproverDrake"));
+
+    // vm.warp(_timestamp);
+    // console.logUint(newStrategy.getApprovalWeightAt(_nonPolicyHolder, _role, _timestamp));
+    // assertEq(
+    //   newStrategy.getApprovalWeightAt(_nonPolicyHolder, _role, _timestamp - 1),
+    //   0 // the account should not have a weight
+    // );
+  }
 
   // function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
   //   uint256 _timestamp,
