@@ -524,6 +524,10 @@ contract CastApproval is VertexCoreTest {
     // Assert changes to Action storage.
     // Assert changes to Approval storage.
     // Assert event emission.
+    actionId = _createAction();
+    _approveAction(approverAdam, actionId);
+    assertEq(mpCore.getAction(0).totalApprovals, 1);
+    assertEq(mpCore.approvals(0, approverAdam), true);
   }
 
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
