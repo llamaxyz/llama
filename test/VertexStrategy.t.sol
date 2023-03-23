@@ -295,7 +295,9 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     );
   }
 
-  function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, address _nonPolicyHolder) public {
+  function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, bytes32 _role, address _nonPolicyHolder)
+    public
+  {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
 
@@ -311,7 +313,8 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
 
   function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
     uint256 _timestamp,
-    bytes8 _permission,
+    bytes32 _permission,
+    bytes32 _role,
     address _policyHolder
   ) public {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
