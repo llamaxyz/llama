@@ -12,6 +12,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
+import {ActionState} from "src/lib/Enums.sol";
 import {Action, Strategy, PermissionData} from "src/lib/Structs.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
@@ -285,7 +286,9 @@ contract CancelAction is VertexCoreTest {
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
     vm.stopPrank();
-    // TODO confirm storage changes, e.g. action.canceled, queuedActions
+    uint256 state = uint256(mpCore.getActionState(0));
+    uint256 canceled = uint256(ActionState.Canceled);
+    assertEq(state, canceled);
   }
 
   function testFuzz_RevertIfNotCreator(address _randomCaller) public {
