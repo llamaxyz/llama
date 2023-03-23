@@ -13,7 +13,19 @@ contract VertexStrategyTest is VertexTestSetup {
   Strategy[] strategies;
   VertexStrategy newStrategy;
 
-  function deployStrategyAndSetRole(bytes32 _role, bytes32 _permission, address _policyHolder) public {
+  function deployStrategyAndSetRole(
+    bytes32 _role,
+    bytes32 _permission,
+    address _policyHolder,
+    uint256 _queuingDuration,
+    uint256 _expirationDelay,
+    uint256 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint256 _minApprovalPct,
+    uint256 _minDisapprovalPct,
+    bytes32[] memory _forceApprovalRoles,
+    bytes32[] memory _forceDisapprovalRoles
+  ) public {
     roleHolders.push(RoleHolderData(_role, _policyHolder, type(uint64).max));
     rolePermissions.push(RolePermissionData(_role, _permission, true));
 
@@ -22,16 +34,16 @@ contract VertexStrategyTest is VertexTestSetup {
     mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
 
     strategy = Strategy({
-      approvalPeriod: 1 days,
-      queuingPeriod: 2 days,
-      expirationPeriod: 4 days,
-      isFixedLengthApprovalPeriod: true,
-      minApprovalPct: 4000,
-      minDisapprovalPct: 2000,
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovalPct: _minApprovalPct,
+      minDisapprovalPct: _minDisapprovalPct,
       approvalRole: _role,
       disapprovalRole: _role,
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
     strategies.push(strategy);
@@ -51,23 +63,143 @@ contract VertexStrategyTest is VertexTestSetup {
 }
 
 contract Constructor is VertexStrategyTest {
-  function testFuzz_SetsStrategyStorageQueuingDuration(uint256 _queuingDuration) public {} // TODO
+  function testFuzz_SetsStrategyStorageQueuingDuration(uint256 _queuingDuration) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      _queuingDuration,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.queuingPeriod(), _queuingDuration);
+  }
 
-  function testFuzz_SetsStrategyStorageExpirationDelay(uint256 _expirationDelay) public {} // TODO
+  function testFuzz_SetsStrategyStorageExpirationDelay(uint256 _expirationDelay) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      _expirationDelay,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.expirationPeriod(), _expirationDelay);
+  }
 
-  function test_SetsStrategyStorageIsFixedLengthApprovalPeriodTrue() public {} // TODO
+  function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      _isFixedLengthApprovalPeriod,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
+  }
 
-  function test_SetsStrategyStorageIsFixedLengthApprovalPeriodFalse() public {} // TODO
+  function testFuzz_SetsStrategyStorageApprovalPeriod(uint256 _approvalPeriod) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      _approvalPeriod,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.approvalPeriod(), _approvalPeriod);
+  }
 
-  function testFuzz_SetsStrategyStorageApprovalPeriod(uint256 _approvalPeriod) public {} // TODO
+  function testFuzz_SetsStrategyStoragePolicy() public {
+    //TODO actually use fuzzing in this test
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(address(newStrategy.policy()), address(mpPolicy));
+  }
 
-  function testFuzz_SetsStrategyStoragePolicy(address _policy) public {} // TODO
+  function testFuzz_SetsStrategyStorageVertex(address _vertex) public {
+    //TODO actually use fuzzing in this test
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(address(newStrategy.vertex()), address(mpCore));
+  }
 
-  function testFuzz_SetsStrategyStorageVertex(address _vertex) public {} // TODO
+  function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      _percent,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.minApprovalPct(), _percent);
+  }
 
-  function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {} // TODO
-
-  function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint256 _percent) public {} // TODO
+  function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint256 _percent) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      _percent,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.minDisapprovalPct(), _percent);
+  }
 
   function test_SetsStrategyStorageDefaultOperatorWeights() public {
     // TODO
@@ -184,7 +316,9 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+    deployStrategyAndSetRole(
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new bytes32[](0), new bytes32[](0)
+    );
 
     assertEq(
       newStrategy.getApprovalWeightAt(_policyHolder, _role, _referenceTime),
@@ -204,7 +338,9 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
-    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+    deployStrategyAndSetRole(
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new bytes32[](0), new bytes32[](0)
+    );
     vm.warp(_timeSincePermission);
     assertEq(
       newStrategy.getApprovalWeightAt(
@@ -220,7 +356,19 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
 
-    deployStrategyAndSetRole(_role, bytes32(0), address(0xdeadbeef));
+    deployStrategyAndSetRole(
+      _role,
+      bytes32(0),
+      address(0xdeadbeef),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
 
     vm.warp(_timestamp);
 
@@ -239,7 +387,19 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
-    deployStrategyAndSetRole(bytes32(0), bytes32(0), _policyHolder);
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      _policyHolder,
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
 
     vm.warp(_timestamp);
 
@@ -265,7 +425,9 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+    deployStrategyAndSetRole(
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new bytes32[](0), new bytes32[](0)
+    );
 
     assertEq(
       newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _referenceTime),
@@ -285,7 +447,9 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
-    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+    deployStrategyAndSetRole(
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new bytes32[](0), new bytes32[](0)
+    );
     vm.warp(_timeSincePermission);
     assertEq(
       newStrategy.getDisapprovalWeightAt(
@@ -301,7 +465,19 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
 
-    deployStrategyAndSetRole(_role, bytes32(0), address(0xdeadbeef));
+    deployStrategyAndSetRole(
+      _role,
+      bytes32(0),
+      address(0xdeadbeef),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
 
     vm.warp(_timestamp);
 
@@ -320,7 +496,19 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
-    deployStrategyAndSetRole(bytes32(0), bytes32(0), _policyHolder);
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      _policyHolder,
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
 
     vm.warp(_timestamp);
 
