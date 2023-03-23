@@ -155,6 +155,14 @@ contract VertexCore is Initializable {
     PermissionData memory permission = PermissionData(target, selector, strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
 
+    // Typically (such as in Governor contracts) this should check that the caller has permission
+    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
+    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
+    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
+    // an action is created, as the order of transactions in the block then affects if action
+    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
+    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
+    // this race condition is unlikely to matter.
     if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
       revert PolicyholderDoesNotHavePermission();
     }
