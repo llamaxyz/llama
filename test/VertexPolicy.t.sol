@@ -98,7 +98,7 @@ contract Initialize is VertexPolicyTest {
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize("Test", address(factory), new RoleHolderData[](0), new RolePermissionData[](0));
+    mpPolicy.initialize("Test", new RoleHolderData[](0), new RolePermissionData[](0));
   }
 }
 

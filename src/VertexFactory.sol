@@ -136,7 +136,7 @@ contract VertexFactory {
     // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, address(this), initialRoleHolders, initialRolePermissions);
+    policy.initialize(name, initialRoleHolders, initialRolePermissions);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);

@@ -67,12 +67,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   function initialize(
     string calldata _name,
-    address _factory,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
-    factory = VertexFactory(_factory);
+    factory = VertexFactory(msg.sender);
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].expiration);
     }
