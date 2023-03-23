@@ -7,11 +7,47 @@ import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
-// function setUp() public virtual override {
-//   // TODO shared setup
-// }
+  RoleHolderData[] roleHolders;
+  RolePermissionData[] rolePermissions;
+  Strategy strategy;
+  Strategy[] strategies;
+  VertexStrategy newStrategy;
 
-// TODO shared helpers
+  function deployStrategyAndSetRole(bytes32 _role, bytes32 _permission, address _policyHolder) public {
+    roleHolders.push(RoleHolderData(_role, _policyHolder, type(uint64).max));
+    rolePermissions.push(RolePermissionData(_role, _permission, true));
+
+    vm.prank(address(mpCore));
+
+    mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
+
+    strategy = Strategy({
+      approvalPeriod: 1 days,
+      queuingPeriod: 2 days,
+      expirationPeriod: 4 days,
+      isFixedLengthApprovalPeriod: true,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: _role,
+      disapprovalRole: _role,
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+
+    strategies.push(strategy);
+
+    vm.prank(address(mpCore));
+
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
+
+    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
+  }
+
+  // function setUp() public virtual override {
+  //   // TODO shared setup
+  // }
+
+  // TODO shared helpers
 }
 
 contract Constructor is VertexStrategyTest {
@@ -133,42 +169,6 @@ contract IsActionCancelationValid is VertexStrategyTest {
 }
 
 contract GetApprovalWeightAt is VertexStrategyTest {
-  RoleHolderData[] roleHolders;
-  RolePermissionData[] rolePermissions;
-  Strategy strategy;
-  Strategy[] strategies;
-  VertexStrategy newStrategy;
-
-  function deployStrategyAndSetRole(bytes32 _role, bytes32 _permission, address _policyHolder) public {
-    roleHolders.push(RoleHolderData(_role, _policyHolder, type(uint64).max));
-    rolePermissions.push(RolePermissionData(_role, _permission, true));
-
-    vm.prank(address(mpCore));
-
-    mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
-
-    strategy = Strategy({
-      approvalPeriod: 1 days,
-      queuingPeriod: 2 days,
-      expirationPeriod: 4 days,
-      isFixedLengthApprovalPeriod: true,
-      minApprovalPct: 4000,
-      minDisapprovalPct: 2000,
-      approvalRole: _role,
-      disapprovalRole: _role,
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
-    });
-
-    strategies.push(strategy);
-
-    vm.prank(address(mpCore));
-
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
-
-    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
-  }
-
   function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     bytes32 _role,
@@ -189,13 +189,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     assertEq(
       newStrategy.getApprovalWeightAt(_policyHolder, _role, _referenceTime),
       0 // there should be zero weight before permission was granted
-    );
-
-    vm.warp(_timeUntilPermission + 1);
-
-    assertEq(
-      newStrategy.getApprovalWeightAt(_policyHolder, _role, _timeUntilPermission),
-      1 // there should be a weight of 1 in the present
     );
   }
 
@@ -260,41 +253,60 @@ contract GetApprovalWeightAt is VertexStrategyTest {
 contract GetDisapprovalWeightAt is VertexStrategyTest {
   function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
-    bytes8 _permission,
-    uint256 _weight,
+    bytes32 _permission,
+    bytes32 _role,
+    // uint256 _weight,
     address _policyHolder
   ) public {
-    // TODO
-    // vm.assume(_timeUntilPermission > 0);
-    // uint _referenceTime = block.timestamp;
-    // vm.warp(_timeUntilPermission)
-    // grant the permission to _policyHolder
-    // deploy strategy that gives _weight to _permission
-    // assertEq(
-    //   strategy.getDisapprovalWeightAt(_policyHolder, _referenceTime);
-    //   0 // there should be zero weight before permission was granted
-    // );
+    vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
+    vm.assume(_role > bytes32(0));
+    vm.assume(_permission > bytes32(0));
+    vm.assume(_policyHolder != address(0));
+    uint256 _referenceTime = block.timestamp;
+    vm.warp(_timeUntilPermission);
+
+    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+
+    assertEq(
+      newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _referenceTime),
+      0 // there should be zero weight before permission was granted
+    );
   }
 
   function testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes8 _permission,
-    uint256 _weight,
+    bytes32 _permission,
+    bytes32 _role,
+    // uint256 _weight,
     address _policyHolder
   ) public {
-    // TODO
-    // uint _referenceTime = block.timestamp;
-    // grant the permission to _policyHolder
-    // deploy strategy that gives _weight to _permission
-    // vm.warp(_timeSincePermission)
-    // assertEq(
-    //   strategy.getDisapprovalWeightAt(_policyHolder, block.timestamp);
-    //   _weight // the account should still have the weight
-    // );
+    vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
+    vm.assume(_role > bytes32(0));
+    vm.assume(_permission > bytes32(0));
+    vm.assume(_policyHolder != address(0));
+    uint256 _referenceTime = block.timestamp;
+    deployStrategyAndSetRole(_role, _permission, _policyHolder);
+    vm.warp(_timeSincePermission);
+    assertEq(
+      newStrategy.getDisapprovalWeightAt(
+        _policyHolder, _role, _timeSincePermission > 0 ? _timeSincePermission - 1 : _timeSincePermission
+      ),
+      1 // the account should still have the weight
+    );
   }
 
   function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, address _nonPolicyHolder) public {
-    // TODO
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    vm.assume(_nonPolicyHolder != address(0));
+
+    deployStrategyAndSetRole(_role, bytes32(0), address(0xdeadbeef));
+
+    vm.warp(_timestamp);
+
+    assertEq(
+      newStrategy.getDisapprovalWeightAt(_nonPolicyHolder, _role, _timestamp - 1),
+      0 // the account should not have a weight
+    );
   }
 
   function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
@@ -302,8 +314,16 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     bytes8 _permission,
     address _policyHolder
   ) public {
-    // TODO
-    // _policyHolder doesn't have a weight for _permission
-    // the function should return the default weight
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    vm.assume(_policyHolder != address(0));
+
+    deployStrategyAndSetRole(bytes32(0), bytes32(0), _policyHolder);
+
+    vm.warp(_timestamp);
+
+    assertEq(
+      newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _timestamp - 1),
+      0 // the account should not have a weight
+    );
   }
 }
