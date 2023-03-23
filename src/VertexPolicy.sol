@@ -187,8 +187,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// than 1 are not supported. This is to keep the implementation simple
   function getWeight(address user, bytes32 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    return exists && quantity > 0 && expiration > block.timestamp ? quantity : 0;
+    return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `user` at `timestamp`. The returned
@@ -197,8 +196,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// than 1 are not supported. This is to keep the implementation simple
   function getPastWeight(address user, bytes32 role, uint256 timestamp) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    (uint256 quantity, uint256 expiration) = roleBalanceCkpts[tokenId][role].getCheckpointAtTimestamp(timestamp);
-    return quantity > 0 && expiration > timestamp ? quantity : 0;
+    return roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
   }
 
   /// @notice Returns the total supply of `role` holders at the given `timestamp`. The returned
@@ -237,16 +235,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
   function hasRole(address user, bytes32 role, uint256 timestamp) external view returns (bool) {
-    (uint256 quantity, uint256 expiration) = roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
-    return quantity > 0 && expiration > block.timestamp;
+    uint256 quantity = roleBalanceCkpts[_tokenId(user)][role].getAtTimestamp(timestamp);
+    return quantity > 0;
   }
 
   /// @notice Returns true if the given `user` has a given `permissionId` under the `role`,
   /// false otherwise.
   function hasPermissionId(address user, bytes32 role, bytes32 permissionId) external view returns (bool) {
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    bool userHasRole = exists && quantity > 0 && expiration > block.timestamp;
-    return userHasRole && canCreateAction[role][permissionId];
+    uint128 quantity = roleBalanceCkpts[_tokenId(user)][role].latest();
+    return quantity > 0 && canCreateAction[role][permissionId];
   }
 
   /// @notice Returns the total number of policies in existence.
