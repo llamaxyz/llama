@@ -418,24 +418,6 @@ contract VertexCore is Initializable {
     emit PolicyholderDisapproved(actionId, policyholder, weight, reason);
   }
 
-  function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
-    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
-      // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
-      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
-      revert UnauthorizedAccountLogic();
-    }
-
-    uint256 accountLength = accounts.length;
-    unchecked {
-      for (uint256 i; i < accountLength; ++i) {
-        bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
-        account.initialize(accounts[i]);
-        emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
-      }
-    }
-  }
-
   function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
     internal
   {
@@ -465,6 +447,24 @@ contract VertexCore is Initializable {
         strategy.initialize(strategies[i], _policy);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
+      }
+    }
+  }
+
+  function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
+    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
+      // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
+      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
+      revert UnauthorizedAccountLogic();
+    }
+
+    uint256 accountLength = accounts.length;
+    unchecked {
+      for (uint256 i; i < accountLength; ++i) {
+        bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
+        account.initialize(accounts[i]);
+        emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
       }
     }
   }
