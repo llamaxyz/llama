@@ -29,11 +29,6 @@ struct PermissionData {
   VertexStrategy strategy; // Strategy used to govern the action.
 }
 
-struct PermissionIdCheckpoint {
-  uint128 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
-  uint128 quantity; // Quantity of the permission ID held at the timestamp.
-}
-
 struct Action {
   address creator; // msg.sender of createAction.
   bool executed; // has action executed.
