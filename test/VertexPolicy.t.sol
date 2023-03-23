@@ -483,7 +483,7 @@ contract TokenURI is VertexPolicyTest {
 // // contract BatchGrantPolicies is VertexPolicyTest {
 // //   function test_CorrectlyGrantsPermission() public {
 // //     // PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(policyHolderPam);
-// //     // vm.expectEmit(true, true, true, true);
+// //     // vm.expectEmit();
 // //     // emit PolicyAdded(initialBatchGrantData[0]);
 // //     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
 // //     // assertEq(mpPolicy.balanceOf(arbitraryAddress), 1);
@@ -522,7 +522,7 @@ contract TokenURI is VertexPolicyTest {
 
 // //     // vm.warp(block.timestamp + 100);
 
-// //     // vm.expectEmit(true, true, true, true);
+// //     // vm.expectEmit();
 // //     // emit PermissionUpdated(updateData[0]);
 
 // //     // mpPolicy.batchUpdatePermissions(updateData);
@@ -560,7 +560,7 @@ contract TokenURI is VertexPolicyTest {
 
 // // contract BatchRevokePolicies is VertexPolicyTest {
 // //   function test_CorrectlyRevokesPolicy() public {
-// //     // vm.expectEmit(true, true, true, true);
+// //     // vm.expectEmit();
 // //     // emit PolicyRevoked(policyRevokeData[0]);
 // //     // mpPolicy.batchRevokePolicies(policyRevokeData);
 // //     // assertEq(mpPolicy.balanceOf(address(this)), 0);
