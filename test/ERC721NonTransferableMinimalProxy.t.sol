@@ -3,7 +3,7 @@
 // slightly modified version of solmate's ERC721.t.sol test file
 // https://github.com/transmissions11/solmate/blob/d155ee8d58f96426f57c015b34dee8a410c1eacc/src/test/ERC721.t.sol
 // refactored one invariant test to a fuzz to test the name and symbol are initialized correctly
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {DSTestPlus} from "lib/solmate/src/test/utils/DSTestPlus.sol";
 import {DSInvariantTest} from "lib/solmate/src/test/utils/DSInvariantTest.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 /// @dev Tests in this contract mirror those in OpenZeppelin's Checkpoints.test.js, which is why
 /// the tests are written in a different style than the rest of the tests in this repo (i.e. they

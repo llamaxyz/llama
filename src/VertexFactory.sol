@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -136,7 +136,7 @@ contract VertexFactory {
     // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
-    policy.initialize(name, address(this), initialRoleHolders, initialRolePermissions);
+    policy.initialize(name, initialRoleHolders, initialRolePermissions);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);

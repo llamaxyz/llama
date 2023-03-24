@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
@@ -67,12 +67,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   function initialize(
     string calldata _name,
-    address _factory,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
-    factory = VertexFactory(_factory);
+    factory = VertexFactory(msg.sender);
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].expiration);
     }

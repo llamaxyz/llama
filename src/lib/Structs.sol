@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -27,11 +27,6 @@ struct PermissionData {
   address target; // Contract being called by an action.
   bytes4 selector; // Selector of the function being called by an action.
   VertexStrategy strategy; // Strategy used to govern the action.
-}
-
-struct PermissionIdCheckpoint {
-  uint128 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
-  uint128 quantity; // Quantity of the permission ID held at the timestamp.
 }
 
 struct Action {
