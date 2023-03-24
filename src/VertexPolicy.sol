@@ -269,7 +269,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       // the quantity is zero.
       bool case1 = quantity > 0 && expiration > block.timestamp;
       bool case2 = quantity == 0 && expiration == 0;
-      if (!case1 && !case2) revert InvalidInput();
+      if (!(case1 || case2)) revert InvalidInput();
     }
 
     // Save off whether or not the user has a nonzero quantity of this role. This is used below when
