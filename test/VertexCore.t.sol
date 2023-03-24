@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Solarray} from "solarray/Solarray.sol";
+import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -224,7 +224,11 @@ contract CreateAction is VertexCoreTest {
   }
 
   function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
-    // TODO fuzz
+    vm.assume(_target != address(mockProtocol));
+
+    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.prank(actionCreatorAaron);
+    mpCore.createAction(Roles.Admin, mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data));
   }
 
   function test_RevertIfStrategyUnauthorized() public {
@@ -235,7 +239,10 @@ contract CreateAction is VertexCoreTest {
   }
 
   function test_RevertIfStrategyIsFromAnotherVertex() public {
-    // TODO like the previous test, but deploy a real strategy and use that as unauthorizedStrategy
+    VertexStrategy unauthorizedStrategy = rootStrategy1;
+    vm.prank(adminAlice);
+    vm.expectRevert(VertexCore.InvalidStrategy.selector);
+    mpCore.createAction(Roles.Admin, unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfPolicyholderNotMinted(address user) public {
