@@ -2,8 +2,10 @@
 pragma solidity ^0.8.19;
 
 import {Test, console} from "forge-std/Test.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
@@ -12,6 +14,8 @@ contract VertexStrategyTest is VertexTestSetup {
   Strategy strategy;
   Strategy[] strategies;
   VertexStrategy newStrategy;
+
+  event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
 
   function deployStrategyAndSetRole(
     bytes32 _role,
@@ -53,6 +57,19 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
 
     newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
+  }
+
+  function _createAction() public returns (uint256 actionId) {
+    vm.prank(adminAlice);
+    actionId = mpCore.createAction(
+      Roles.Admin,
+      mpStrategy1,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
+    vm.warp(block.timestamp + 1);
   }
 
   // function setUp() public virtual override {
@@ -201,50 +218,100 @@ contract Constructor is VertexStrategyTest {
     assertEq(newStrategy.minDisapprovalPct(), _percent);
   }
 
-  function test_SetsStrategyStorageDefaultOperatorWeights() public {
-    // TODO
-    // assert approvalWeightByPermission[DEFAULT_OPERATOR] = 1;
-    // assert disapprovalWeightByPermission[DEFAULT_OPERATOR] = 1;
+  function testFuzz_SetsForceApprovalRoles(bytes32[] memory forceApprovalRoles) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      forceApprovalRoles,
+      new bytes32[](0)
+    );
+    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
+      assertEq(newStrategy.forceApprovalRole(forceApprovalRoles[i]), true);
+    }
   }
 
-  function testFuzz_CanOverrideDefaultOperatorWeights(uint256 _approvalWeight, uint256 _disapprovalWeight) public {
-    // TODO
-    // assert that the default weights can be overridden with the fuzz weights
-    // assert approvalWeightByPermission[DEFAULT_OPERATOR] = _approvalWeight;
-    // assert disapprovalWeightByPermission[DEFAULT_OPERATOR] = _disapprovalWeight;
+  function testFuzz_SetsForceDisapprovalRoles(bytes32[] memory forceDispprovalRoles) public {
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      forceDispprovalRoles
+    );
+    for (uint256 i = 0; i < forceDispprovalRoles.length; i++) {
+      assertEq(newStrategy.forceDisapprovalRole(forceDispprovalRoles[i]), true);
+    }
   }
 
-  function testFuzz_SetsApprovalPermissions( /*TODO decide on fuzz params*/ ) public {
-    // TODO
-    // deploy with strategyConfig.approvalWeightByPermission.length > 1
-    // assert approvalWeightByPermission is stored accordingly
+  function testFuzz_HandlesDuplicateApprovalRoles(bytes32 _role) public {
+    bytes32[] memory forceApprovalRoles = new bytes32[](2);
+    forceApprovalRoles[0] = _role;
+    forceApprovalRoles[1] = _role;
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      forceApprovalRoles,
+      new bytes32[](0)
+    );
+    assertEq(newStrategy.forceApprovalRole(_role), true);
   }
 
-  function testFuzz_HandlesDuplicateApprovalPermissions( /*TODO decide on fuzz params*/ ) public {
-    // TODO
-    // deploy with strategyConfig.approvalWeightByPermission.length > 1.
-    // The strategyConfig.approvalWeightByPermission array should include duplicate
-    // permissions with different weights.
-    // Assert that only the final weight in the array is saved.
+  function testFuzz_HandlesDuplicateDisapprovalRoles(bytes32 _role) public {
+    bytes32[] memory forceDispprovalRoles = new bytes32[](2);
+    forceDispprovalRoles[0] = _role;
+    forceDispprovalRoles[1] = _role;
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      forceDispprovalRoles
+    );
+    assertEq(newStrategy.forceDisapprovalRole(_role), true);
   }
 
-  function testFuzz_SetsDisapprovalPermissions( /*TODO decide on fuzz params*/ ) public {
-    // TODO
-    // deploy with strategyConfig.approvalWeightByPermission.length > 1
-    // assert disapprovalWeightByPermission is stored accordingly
-  }
-
-  function testFuzz_HandlesDuplicateDisapprovalPermissions( /*TODO decide on fuzz params*/ ) public {
-    // TODO
-    // deploy with strategyConfig.approvalWeightByPermission.length > 1.
-    // The strategyConfig.disapprovalWeightByPermission array should include duplicate
-    // permissions with different weights.
-    // Assert that only the final weight in the array is saved.
-  }
-
-  function testFuzz_EmitsNewStrategyCreatedEvent(address _vertex, address _policy) public {
-    // TODO
-    // assert emits NewStrategyCreated event
+  function testFuzz_EmitsNewStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
+    vm.expectEmit(true, true, true, true);
+    emit NewStrategyCreated(mpCore, mpPolicy);
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
   }
 }
 
@@ -355,6 +422,17 @@ contract GetApprovalWeightAt is VertexStrategyTest {
   {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
+
+    // Mock protocol users.
+    vm.assume(_nonPolicyHolder != makeAddr("rootVertexAdmin"));
+    vm.assume(_nonPolicyHolder != makeAddr("adminAlice"));
+    vm.assume(_nonPolicyHolder != makeAddr("actionCreatorAaron"));
+    vm.assume(_nonPolicyHolder != makeAddr("approverAdam"));
+    vm.assume(_nonPolicyHolder != makeAddr("approverAlicia"));
+    vm.assume(_nonPolicyHolder != makeAddr("approverAndy"));
+    vm.assume(_nonPolicyHolder != makeAddr("disapproverDave"));
+    vm.assume(_nonPolicyHolder != makeAddr("disapproverDiane"));
+    vm.assume(_nonPolicyHolder != makeAddr("disapproverDrake"));
 
     deployStrategyAndSetRole(
       _role,
