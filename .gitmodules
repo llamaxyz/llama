@@ -13,3 +13,6 @@
 	path = lib/solady
 	url = https://github.com/vectorized/solady
 	branch = v0.0.85
+[submodule "lib/solarray"]
+	path = lib/solarray
+	url = https://github.com/emo-eth/solarray
