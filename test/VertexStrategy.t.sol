@@ -7,6 +7,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
   RoleHolderData[] roleHolders;
@@ -594,5 +595,14 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
       newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _timestamp - 1),
       0 // the account should not have a weight
     );
+  }
+}
+
+contract GetMinimumAmountNeeded is VertexStrategyTest {
+  function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
+    vm.assume(minPct <= 10_000);
+    vm.assume(minPct == 0 || supply <= type(uint256).max / minPct); // avoid solmate revert statement
+    uint256 product = FixedPointMathLib.mulDivUp(supply, minPct, 10_000);
+    assertEq(newStrategy.getMinimumAmountNeeded(supply, minPct), product);
   }
 }
