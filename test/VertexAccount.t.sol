@@ -96,98 +96,87 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function approveUSDCToRecipient(uint256 amount) internal {
-    vm.startPrank(address(mpCore));
+    vm.prank(address(mpCore));
     mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
     assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), amount);
-    vm.stopPrank();
   }
 
   function approveUSDTToRecipient(uint256 amount) internal {
-    vm.startPrank(address(mpCore));
+    vm.prank(address(mpCore));
     mpAccount1.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
     assertEq(USDT.allowance(mpAccount1Addr, USDT_WHALE), amount);
-    vm.stopPrank();
   }
 
   function transferUNIToAccount(uint256 amount) internal {
     assertEq(UNI.balanceOf(mpAccount1Addr), 0);
 
-    vm.startPrank(UNI_WHALE);
+    vm.prank(UNI_WHALE);
     UNI.transfer(mpAccount1Addr, amount);
     assertEq(UNI.balanceOf(mpAccount1Addr), amount);
-    vm.stopPrank();
   }
 
   function transferBAYCToAccount(uint256 id) public {
     assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
     assertEq(BAYC.ownerOf(id), BAYC_WHALE);
 
-    vm.startPrank(BAYC_WHALE);
+    vm.prank(BAYC_WHALE);
     BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, id);
     assertEq(BAYC.balanceOf(mpAccount1Addr), 1);
     assertEq(BAYC.ownerOf(id), mpAccount1Addr);
-    vm.stopPrank();
   }
 
   function approveBAYCToRecipient(uint256 id) internal {
-    vm.startPrank(address(mpCore));
+    vm.prank(address(mpCore));
     mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
     assertEq(BAYC.getApproved(id), BAYC_WHALE);
-    vm.stopPrank();
   }
 
   function approveOperatorBAYCToRecipient(bool approved) internal {
-    vm.startPrank(address(mpCore));
+    vm.prank(address(mpCore));
     mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
     assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), approved);
-    vm.stopPrank();
   }
 
   function transferNOUNSToAccount(uint256 id) internal {
     assertEq(NOUNS.balanceOf(mpAccount1Addr), 0);
     assertEq(NOUNS.ownerOf(id), NOUNS_WHALE);
 
-    vm.startPrank(NOUNS_WHALE);
+    vm.prank(NOUNS_WHALE);
     NOUNS.transferFrom(NOUNS_WHALE, mpAccount1Addr, id);
     assertEq(NOUNS.balanceOf(mpAccount1Addr), 1);
     assertEq(NOUNS.ownerOf(id), mpAccount1Addr);
-    vm.stopPrank();
   }
 
   function transferPUNKToAccount(uint256 id) internal {
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
     assertEq(PUNK.punkIndexToAddress(id), PUNK_WHALE);
 
-    vm.startPrank(PUNK_WHALE);
+    vm.prank(PUNK_WHALE);
     PUNK.transferPunk(mpAccount1Addr, id);
     assertEq(PUNK.balanceOf(mpAccount1Addr), 1);
     assertEq(PUNK.punkIndexToAddress(id), mpAccount1Addr);
-    vm.stopPrank();
   }
 
   function transferRARIToAccount(uint256 id, uint256 amount) internal {
     assertEq(RARI.balanceOf(mpAccount1Addr, id), 0);
 
-    vm.startPrank(RARI_WHALE);
+    vm.prank(RARI_WHALE);
     RARI.safeTransferFrom(RARI_WHALE, mpAccount1Addr, id, amount, "");
     assertEq(RARI.balanceOf(mpAccount1Addr, id), amount);
-    vm.stopPrank();
   }
 
   function transferOPENSTOREToAccount(uint256 id, uint256 amount) internal {
     assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), 0);
 
-    vm.startPrank(OPENSTORE_WHALE);
+    vm.prank(OPENSTORE_WHALE);
     OPENSTORE.safeTransferFrom(OPENSTORE_WHALE, mpAccount1Addr, id, amount, "");
     assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), amount);
-    vm.stopPrank();
   }
 
   function approveRARIToRecipient(bool approved) internal {
-    vm.startPrank(address(mpCore));
+    vm.prank(address(mpCore));
     mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
     assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), approved);
-    vm.stopPrank();
   }
 }
 
