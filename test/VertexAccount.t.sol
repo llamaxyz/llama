@@ -88,13 +88,7 @@ contract VertexAccountTest is VertexTestSetup {
     //////////////////////////////////////////////////////////////*/
 
   function transferETHToAccount(uint256 amount) internal {
-    assertEq(mpAccount1Addr.balance, 0);
-
-    vm.startPrank(ETH_WHALE);
-    (bool success,) = mpAccount1Addr.call{value: amount}("");
-    assertTrue(success);
-    assertEq(mpAccount1Addr.balance, amount);
-    vm.stopPrank();
+    deal(mpAccount1Addr, amount);
   }
 
   function transferUSDCToAccount(uint256 amount) internal {
@@ -762,7 +756,12 @@ contract Execute is VertexAccountTest {
 contract Integration is VertexAccountTest {
   // Test that VertexAccount can receive ETH
   function test_ReceiveETH() public {
-    transferETHToAccount(ETH_AMOUNT);
+    assertEq(mpAccount1Addr.balance, 0);
+
+    vm.prank(ETH_WHALE);
+    (bool success,) = mpAccount1Addr.call{value: ETH_AMOUNT}("");
+    assertTrue(success);
+    assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
   }
 
   // Test that VertexAccount can receive ERC20 tokens
