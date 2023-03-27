@@ -336,31 +336,26 @@ contract Constructor is VertexStrategyTest {
 
 contract IsActionPassed is VertexStrategyTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, address[] memory _policyHolders) public {
-    vm.assume(_actionApprovals > 1);
-    vm.assume(_policyHolders.length < 100 && _policyHolders.length > 4); // limit to vm.assume with a
-      // safe margin
-    vm.assume(_policyHolders.length >= _actionApprovals);
-
     for (uint256 i = 0; i < _policyHolders.length; i++) {
       vm.assume(_policyHolders[i] != address(0));
-      if (
-        _policyHolders[i] != address(0) && mpPolicy.balanceOf(_policyHolders[i]) == 0
-          && isRoleHolder[_policyHolders[i]] == false
-      ) _generateRoleHolder(_policyHolders[i]);
+      if (mpPolicy.balanceOf(_policyHolders[i]) == 0 && isRoleHolder[_policyHolders[i]] == false) {
+        _generateRoleHolder(_policyHolders[i]);
+      }
     }
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(roleHolders);
 
-    vm.assume((roleHolders.length * 10_000) / _actionApprovals >= 4000);
-    vm.assume(roleHolders.length > 4);
+    console.logUint(roleHolders.length);
+    console.logUint(mpStrategy1.getMinimumAmountNeeded(roleHolders.length, 4000));
+
+    uint256 minimumAmountNeeded = mpStrategy1.getMinimumAmountNeeded(roleHolders.length, 4000);
+    uint256 actionId = _createAction();
+
+    vm.assume(_actionApprovals >= minimumAmountNeeded);
+    vm.assume(_actionApprovals <= roleHolders.length);
+    vm.assume(roleHolders.length < 100 && roleHolders.length > 2);
 
     assertEq(mpPolicy.getSupply("strategyTestRole"), roleHolders.length);
-
-    console.logUint(_actionApprovals);
-    console.logUint(roleHolders.length);
-    console.logUint((roleHolders.length * 10_000) / _actionApprovals);
-
-    uint256 actionId = _createAction();
 
     for (uint256 i = 0; i < _actionApprovals; i++) {
       _approveAction(roleHolders[i].user, actionId);
@@ -371,10 +366,33 @@ contract IsActionPassed is VertexStrategyTest {
     assertEq(isActionPassed, true);
   }
 
-  function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals) public {
-    // TODO
-    // call isActionPassed on an action that has insufficient (random) num of votes
-    // assert response is false
+  function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, address[] memory _policyHolders) public {
+    for (uint256 i = 0; i < _policyHolders.length; i++) {
+      vm.assume(_policyHolders[i] != address(0));
+      if (mpPolicy.balanceOf(_policyHolders[i]) == 0 && isRoleHolder[_policyHolders[i]] == false) {
+        _generateRoleHolder(_policyHolders[i]);
+      }
+    }
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(roleHolders);
+
+    vm.assume(roleHolders.length < 100 && roleHolders.length > 2);
+    vm.assume(_actionApprovals < mpStrategy1.getMinimumAmountNeeded(roleHolders.length, 4000));
+
+    assertEq(mpPolicy.getSupply("strategyTestRole"), roleHolders.length);
+
+    console.logUint(_actionApprovals);
+    console.logUint(roleHolders.length);
+
+    uint256 actionId = _createAction();
+
+    for (uint256 i = 0; i < _actionApprovals; i++) {
+      _approveAction(roleHolders[i].user, actionId);
+    }
+
+    bool isActionPassed = mpStrategy1.isActionPassed(actionId);
+
+    assertEq(isActionPassed, false);
   }
 
   function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
