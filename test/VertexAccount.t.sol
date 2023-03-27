@@ -108,11 +108,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function transferUNIToAccount(uint256 amount) internal {
-    assertEq(UNI.balanceOf(mpAccount1Addr), 0);
-
-    vm.prank(UNI_WHALE);
-    UNI.transfer(mpAccount1Addr, amount);
-    assertEq(UNI.balanceOf(mpAccount1Addr), amount);
+    deal(address(UNI), mpAccount1Addr, amount);
   }
 
   function transferBAYCToAccount(uint256 id) public {
