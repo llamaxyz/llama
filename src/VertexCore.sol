@@ -349,6 +349,7 @@ contract VertexCore is Initializable {
   /// @param actionId id of the action.
   /// @return The Action struct.
   function getAction(uint256 actionId) external view returns (Action memory) {
+    if (actionId >= actionsCount) revert InvalidActionId();
     return actions[actionId];
   }
 

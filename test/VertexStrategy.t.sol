@@ -367,7 +367,7 @@ contract IsActionPassed is VertexStrategyTest {
 
     vm.assume(_actionApprovals >= minimumAmountNeeded);
     vm.assume(_actionApprovals <= roleHolders.length);
-    vm.assume(roleHolders.length < 100 && roleHolders.length > 2);
+    vm.assume(roleHolders.length > 0);
 
     uint256 actionId = _createAction();
 
@@ -415,6 +415,13 @@ contract IsActionPassed is VertexStrategyTest {
     // TODO
     // what if nonexistent actionId is passed in? I think this will return true
     // currently but it should probably revert
+    vm.expectRevert();
+    vm.prank(adminAlice);
+    mpCore.castApproval(_actionId, "admin");
+
+    vm.expectRevert();
+    vm.prank(adminAlice);
+    mpStrategy1.isActionPassed(_actionId);
   }
 
   function testFuzz_RoundsCorrectly(uint256 _actionAppovals) public {
