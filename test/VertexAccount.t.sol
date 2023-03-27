@@ -87,7 +87,7 @@ contract VertexAccountTest is VertexTestSetup {
                             Helpers
     //////////////////////////////////////////////////////////////*/
 
-  function _transferETHToAccount(uint256 amount) public {
+  function transferETHToAccount(uint256 amount) internal {
     assertEq(mpAccount1Addr.balance, 0);
 
     vm.startPrank(ETH_WHALE);
@@ -97,7 +97,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _transferUSDCToAccount(uint256 amount) public {
+  function transferUSDCToAccount(uint256 amount) internal {
     assertEq(USDC.balanceOf(mpAccount1Addr), 0);
 
     vm.startPrank(USDC_WHALE);
@@ -106,21 +106,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _approveUSDCToRecipient(uint256 amount) public {
+  function approveUSDCToRecipient(uint256 amount) internal {
     vm.startPrank(address(mpCore));
     mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
     assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), amount);
     vm.stopPrank();
   }
 
-  function _approveUSDTToRecipient(uint256 amount) public {
+  function approveUSDTToRecipient(uint256 amount) internal {
     vm.startPrank(address(mpCore));
     mpAccount1.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
     assertEq(USDT.allowance(mpAccount1Addr, USDT_WHALE), amount);
     vm.stopPrank();
   }
 
-  function _transferUNIToAccount(uint256 amount) public {
+  function transferUNIToAccount(uint256 amount) internal {
     assertEq(UNI.balanceOf(mpAccount1Addr), 0);
 
     vm.startPrank(UNI_WHALE);
@@ -129,7 +129,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _transferBAYCToAccount(uint256 id) public {
+  function transferBAYCToAccount(uint256 id) public {
     assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
     assertEq(BAYC.ownerOf(id), BAYC_WHALE);
 
@@ -140,21 +140,21 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _approveBAYCToRecipient(uint256 id) public {
+  function approveBAYCToRecipient(uint256 id) internal {
     vm.startPrank(address(mpCore));
     mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
     assertEq(BAYC.getApproved(id), BAYC_WHALE);
     vm.stopPrank();
   }
 
-  function _approveOperatorBAYCToRecipient(bool approved) public {
+  function approveOperatorBAYCToRecipient(bool approved) internal {
     vm.startPrank(address(mpCore));
     mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
     assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), approved);
     vm.stopPrank();
   }
 
-  function _transferNOUNSToAccount(uint256 id) public {
+  function transferNOUNSToAccount(uint256 id) internal {
     assertEq(NOUNS.balanceOf(mpAccount1Addr), 0);
     assertEq(NOUNS.ownerOf(id), NOUNS_WHALE);
 
@@ -165,7 +165,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _transferPUNKToAccount(uint256 id) public {
+  function transferPUNKToAccount(uint256 id) internal {
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
     assertEq(PUNK.punkIndexToAddress(id), PUNK_WHALE);
 
@@ -176,7 +176,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _transferRARIToAccount(uint256 id, uint256 amount) public {
+  function transferRARIToAccount(uint256 id, uint256 amount) internal {
     assertEq(RARI.balanceOf(mpAccount1Addr, id), 0);
 
     vm.startPrank(RARI_WHALE);
@@ -185,7 +185,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _transferOPENSTOREToAccount(uint256 id, uint256 amount) public {
+  function transferOPENSTOREToAccount(uint256 id, uint256 amount) internal {
     assertEq(OPENSTORE.balanceOf(mpAccount1Addr, id), 0);
 
     vm.startPrank(OPENSTORE_WHALE);
@@ -194,7 +194,7 @@ contract VertexAccountTest is VertexTestSetup {
     vm.stopPrank();
   }
 
-  function _approveRARIToRecipient(bool approved) public {
+  function approveRARIToRecipient(bool approved) internal {
     vm.startPrank(address(mpCore));
     mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
     assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), approved);
@@ -219,7 +219,7 @@ contract Initialize is VertexAccountTest {
 
 contract Transfer is VertexAccountTest {
   function test_TransferETH() public {
-    _transferETHToAccount(ETH_AMOUNT);
+    transferETHToAccount(ETH_AMOUNT);
 
     uint256 accountETHBalance = mpAccount1Addr.balance;
     uint256 whaleETHBalance = ETH_WHALE.balance;
@@ -248,7 +248,7 @@ contract Transfer is VertexAccountTest {
 
 contract TransferERC20 is VertexAccountTest {
   function test_TransferUSDC() public {
-    _transferUSDCToAccount(USDC_AMOUNT);
+    transferUSDCToAccount(USDC_AMOUNT);
 
     uint256 accountUSDCBalance = USDC.balanceOf(mpAccount1Addr);
     uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
@@ -277,8 +277,8 @@ contract TransferERC20 is VertexAccountTest {
 
 contract BatchTransferERC20 is VertexAccountTest {
   function test_TransferUSDCAndUNI() public {
-    _transferUSDCToAccount(USDC_AMOUNT);
-    _transferUNIToAccount(UNI_AMOUNT);
+    transferUSDCToAccount(USDC_AMOUNT);
+    transferUNIToAccount(UNI_AMOUNT);
 
     uint256 accountUSDCBalance = USDC.balanceOf(mpAccount1Addr);
     uint256 accountUNIBalance = UNI.balanceOf(mpAccount1Addr);
@@ -321,31 +321,31 @@ contract BatchTransferERC20 is VertexAccountTest {
 
 contract ApproveERC20 is VertexAccountTest {
   function test_ApproveUSDC() public {
-    _approveUSDCToRecipient(USDC_AMOUNT);
+    approveUSDCToRecipient(USDC_AMOUNT);
   }
 
   function test_IncreaseUSDCAllowance() public {
-    _approveUSDCToRecipient(USDC_AMOUNT);
-    _approveUSDCToRecipient(0);
-    _approveUSDCToRecipient(USDC_AMOUNT + 1);
+    approveUSDCToRecipient(USDC_AMOUNT);
+    approveUSDCToRecipient(0);
+    approveUSDCToRecipient(USDC_AMOUNT + 1);
   }
 
   function test_DecreaseUSDCAllowance() public {
-    _approveUSDCToRecipient(USDC_AMOUNT);
-    _approveUSDCToRecipient(0);
-    _approveUSDCToRecipient(USDC_AMOUNT - 1);
+    approveUSDCToRecipient(USDC_AMOUNT);
+    approveUSDCToRecipient(0);
+    approveUSDCToRecipient(USDC_AMOUNT - 1);
   }
 
   function test_IncreaseUSDTAllowance() public {
-    _approveUSDTToRecipient(USDT_AMOUNT);
-    _approveUSDTToRecipient(0);
-    _approveUSDTToRecipient(USDT_AMOUNT + 1);
+    approveUSDTToRecipient(USDT_AMOUNT);
+    approveUSDTToRecipient(0);
+    approveUSDTToRecipient(USDT_AMOUNT + 1);
   }
 
   function test_DecreaseUSDTAllowance() public {
-    _approveUSDTToRecipient(USDT_AMOUNT);
-    _approveUSDTToRecipient(0);
-    _approveUSDTToRecipient(USDT_AMOUNT - 1);
+    approveUSDTToRecipient(USDT_AMOUNT);
+    approveUSDTToRecipient(0);
+    approveUSDTToRecipient(USDT_AMOUNT - 1);
   }
 
   function test_RevertIf_NotVertexMsgSender() public {
@@ -378,7 +378,7 @@ contract BatchApproveERC20 is VertexAccountTest {
 
 contract TransferERC721 is VertexAccountTest {
   function test_TransferBAYC() public {
-    _transferBAYCToAccount(BAYC_ID);
+    transferBAYCToAccount(BAYC_ID);
 
     uint256 accountNFTBalance = BAYC.balanceOf(mpAccount1Addr);
     uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
@@ -408,8 +408,8 @@ contract TransferERC721 is VertexAccountTest {
 
 contract BatchTransferERC721 is VertexAccountTest {
   function test_TransferBAYCAndNOUNS() public {
-    _transferBAYCToAccount(BAYC_ID);
-    _transferNOUNSToAccount(NOUNS_ID);
+    transferBAYCToAccount(BAYC_ID);
+    transferNOUNSToAccount(NOUNS_ID);
 
     uint256 accountBAYCBalance = BAYC.balanceOf(mpAccount1Addr);
     uint256 whaleBAYCBalance = BAYC.balanceOf(BAYC_WHALE);
@@ -452,8 +452,8 @@ contract BatchTransferERC721 is VertexAccountTest {
 
 contract ApproveERC721 is VertexAccountTest {
   function test_ApproveBAYC() public {
-    _transferBAYCToAccount(BAYC_ID);
-    _approveBAYCToRecipient(BAYC_ID);
+    transferBAYCToAccount(BAYC_ID);
+    approveBAYCToRecipient(BAYC_ID);
   }
 
   function test_RevertIf_NotVertexMsgSender() public {
@@ -464,8 +464,8 @@ contract ApproveERC721 is VertexAccountTest {
 
 contract BatchApproveERC721 is VertexAccountTest {
   function test_ApproveBAYCAndNOUNS() public {
-    _transferBAYCToAccount(BAYC_ID);
-    _transferNOUNSToAccount(NOUNS_ID);
+    transferBAYCToAccount(BAYC_ID);
+    transferNOUNSToAccount(NOUNS_ID);
 
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
     erc721Data[0] = ERC721Data(BAYC, BAYC_WHALE, BAYC_ID);
@@ -489,11 +489,11 @@ contract BatchApproveERC721 is VertexAccountTest {
 
 contract ApproveOperatorERC721 is VertexAccountTest {
   function test_ApproveBAYC() public {
-    _approveOperatorBAYCToRecipient(true);
+    approveOperatorBAYCToRecipient(true);
   }
 
   function test_DisapproveBAYC() public {
-    _approveOperatorBAYCToRecipient(false);
+    approveOperatorBAYCToRecipient(false);
   }
 
   function test_RevertIf_NotVertexMsgSender() public {
@@ -526,7 +526,7 @@ contract BatchApproveOperatorERC721 is VertexAccountTest {
 
 contract TransferERC1155 is VertexAccountTest {
   function test_TransferRARI() public {
-    _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
 
     uint256 accountNFTBalance = RARI.balanceOf(mpAccount1Addr, RARI_ID_1);
     uint256 whaleNFTBalance = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
@@ -555,8 +555,8 @@ contract TransferERC1155 is VertexAccountTest {
 
 contract BatchTransferSingleERC1155 is VertexAccountTest {
   function test_TransferRARI() public {
-    _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
-    _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+    transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
 
     uint256 accountNFTBalance1 = RARI.balanceOf(mpAccount1Addr, RARI_ID_1);
     uint256 whaleNFTBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
@@ -614,10 +614,10 @@ contract BatchTransferSingleERC1155 is VertexAccountTest {
 
 contract BatchTransferMultipleERC1155 is VertexAccountTest {
   function test_TransferRARIAndOPENSTORE() public {
-    _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
-    _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
-    _transferOPENSTOREToAccount(OPENSTORE_ID_1, OPENSTORE_ID_1_AMOUNT);
-    _transferOPENSTOREToAccount(OPENSTORE_ID_2, OPENSTORE_ID_2_AMOUNT);
+    transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+    transferOPENSTOREToAccount(OPENSTORE_ID_1, OPENSTORE_ID_1_AMOUNT);
+    transferOPENSTOREToAccount(OPENSTORE_ID_2, OPENSTORE_ID_2_AMOUNT);
 
     uint256 whaleRARIBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
     uint256 whaleRARIBalance2 = RARI.balanceOf(RARI_WHALE, RARI_ID_2);
@@ -679,11 +679,11 @@ contract BatchTransferMultipleERC1155 is VertexAccountTest {
 
 contract ApproveOperatorERC1155 is VertexAccountTest {
   function test_ApproveRARI() public {
-    _approveRARIToRecipient(true);
+    approveRARIToRecipient(true);
   }
 
   function test_DisapproveRARI() public {
-    _approveRARIToRecipient(false);
+    approveRARIToRecipient(false);
   }
 
   function test_RevertIf_NotVertexMsgSender() public {
@@ -715,7 +715,7 @@ contract BatchApproveOperatorERC1155 is VertexAccountTest {
 contract Execute is VertexAccountTest {
   function test_CallCryptoPunk() public {
     // Transfer Punk to Account to have it stuck in the Vertex Account
-    _transferPUNKToAccount(PUNK_ID);
+    transferPUNKToAccount(PUNK_ID);
 
     uint256 accountNFTBalance = PUNK.balanceOf(mpAccount1Addr);
     uint256 whaleNFTBalance = PUNK.balanceOf(PUNK_WHALE);
@@ -762,18 +762,18 @@ contract Execute is VertexAccountTest {
 contract Integration is VertexAccountTest {
   // Test that VertexAccount can receive ETH
   function test_ReceiveETH() public {
-    _transferETHToAccount(ETH_AMOUNT);
+    transferETHToAccount(ETH_AMOUNT);
   }
 
   // Test that VertexAccount can receive ERC20 tokens
   function test_ReceiveERC20() public {
-    _transferUSDCToAccount(USDC_AMOUNT);
+    transferUSDCToAccount(USDC_AMOUNT);
   }
 
   // Test that approved ERC20 tokens can be transferred from VertexAccount to a recipient
   function test_TransferApprovedERC20() public {
-    _transferUSDCToAccount(USDC_AMOUNT);
-    _approveUSDCToRecipient(USDC_AMOUNT);
+    transferUSDCToAccount(USDC_AMOUNT);
+    approveUSDCToRecipient(USDC_AMOUNT);
 
     uint256 accountUSDCBalance = USDC.balanceOf(mpAccount1Addr);
     uint256 whaleUSDCBalance = USDC.balanceOf(USDC_WHALE);
@@ -789,7 +789,7 @@ contract Integration is VertexAccountTest {
 
   // Test that VertexAccount can receive ERC721 tokens
   function test_ReceiveERC721() public {
-    _transferBAYCToAccount(BAYC_ID);
+    transferBAYCToAccount(BAYC_ID);
   }
 
   // Test that VertexAccount can safe receive ERC721 tokens
@@ -806,8 +806,8 @@ contract Integration is VertexAccountTest {
 
   // Test that approved ERC721 tokens can be transferred from VertexAccount to a recipient
   function test_TransferApprovedERC721() public {
-    _transferBAYCToAccount(BAYC_ID);
-    _approveBAYCToRecipient(BAYC_ID);
+    transferBAYCToAccount(BAYC_ID);
+    approveBAYCToRecipient(BAYC_ID);
 
     uint256 accountNFTBalance = BAYC.balanceOf(mpAccount1Addr);
     uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
@@ -828,7 +828,7 @@ contract Integration is VertexAccountTest {
     BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, BAYC_ID);
     BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, BAYC_ID_2);
     vm.stopPrank();
-    _approveOperatorBAYCToRecipient(true);
+    approveOperatorBAYCToRecipient(true);
 
     uint256 accountNFTBalance = BAYC.balanceOf(mpAccount1Addr);
     uint256 whaleNFTBalance = BAYC.balanceOf(BAYC_WHALE);
@@ -847,14 +847,14 @@ contract Integration is VertexAccountTest {
 
   // Test that VertexAccount can receive ERC1155 tokens
   function test_ReceiveERC1155() public {
-    _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
   }
 
   // Test that approved ERC1155 tokens can be transferred from VertexAccount to a recipient
   function test_TransferApprovedERC1155() public {
-    _transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
-    _transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
-    _approveRARIToRecipient(true);
+    transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
+    transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);
+    approveRARIToRecipient(true);
 
     uint256 accountNFTBalance1 = RARI.balanceOf(mpAccount1Addr, RARI_ID_1);
     uint256 whaleNFTBalance1 = RARI.balanceOf(RARI_WHALE, RARI_ID_1);
