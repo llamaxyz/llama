@@ -12,8 +12,9 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
@@ -98,6 +99,56 @@ contract Constructor is VertexFactoryTest {
     // one side effect of that method as a sanity check it was called. If it was called, the
     // vertex count should no longer be zero.
     assertEq(factory.vertexCount(), 2);
+  }
+
+  function _deployNewFactoryWithRoleHolders(RoleHolderData[] memory _holderData) private {
+    new VertexFactory(
+      coreLogic,
+      address(strategyLogic),
+      address(accountLogic),
+      policyLogic,
+      policyMetadata,
+      "Vertex without admin",
+      defaultStrategies(),
+      Solarray.strings("Llama Treasury", "Llama Grants"),
+      _holderData,
+      new RolePermissionData[](0)
+    );
+  }
+
+  function test_RevertsIf_MissingAdmin() public {
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    _deployNewFactoryWithRoleHolders(new RoleHolderData[](0)); // No role holders.
+  }
+
+  function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
+    vm.assume(_expirationTimestamp < type(uint64).max);
+    RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
+    _roleHolders[0] = RoleHolderData(
+      Roles.Admin,
+      makeAddr("expiring admin"),
+      _expirationTimestamp
+    );
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    _deployNewFactoryWithRoleHolders(_roleHolders);
+  }
+
+  function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolder(uint256 _roleSalt) public {
+    bytes32[] memory _nonAdminRoles = Solarray.bytes32s(
+      Roles.ActionCreator,
+      Roles.AllHolders,
+      Roles.Approver,
+      Roles.Disapprover
+    );
+    _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
+    RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
+    _roleHolders[0] = RoleHolderData(
+      _nonAdminRoles[_roleSalt],
+      makeAddr("non-admin"),
+      type(uint64).max
+    );
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    _deployNewFactoryWithRoleHolders(_roleHolders);
   }
 }
 
@@ -240,11 +291,75 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
     assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
   }
+
+  function test_RevertsIf_MissingAdmin() public {
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    vm.prank(address(rootCore));
+    factory.deploy(
+      "NewProject",
+      address(strategyLogic),
+      address(accountLogic),
+      defaultStrategies(),
+      Solarray.strings("Account1", "Account2"),
+      new RoleHolderData[](0), // No role holders.
+      new RolePermissionData[](0)
+    );
+  }
+
+  function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
+    vm.assume(_expirationTimestamp < type(uint64).max);
+    RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
+    _roleHolders[0] = RoleHolderData(
+      Roles.Admin,
+      makeAddr("expiring admin"),
+      _expirationTimestamp
+    );
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    vm.prank(address(rootCore));
+    factory.deploy(
+      "NewProject",
+      address(strategyLogic),
+      address(accountLogic),
+      defaultStrategies(),
+      Solarray.strings("Account1", "Account2"),
+      _roleHolders,
+      new RolePermissionData[](0)
+    );
+  }
+
+  function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolderDeploy(uint256 _roleSalt) public {
+    bytes32[] memory _nonAdminRoles = Solarray.bytes32s(
+      Roles.ActionCreator,
+      Roles.AllHolders,
+      Roles.Approver,
+      Roles.Disapprover
+    );
+    _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
+    RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
+    _roleHolders[0] = RoleHolderData(
+      _nonAdminRoles[_roleSalt],
+      makeAddr("non-admin"),
+      type(uint64).max
+    );
+    vm.prank(address(rootCore));
+    vm.expectRevert(VertexFactory.MissingAdmin.selector);
+    factory.deploy(
+      "NewProject",
+      address(strategyLogic),
+      address(accountLogic),
+      defaultStrategies(),
+      Solarray.strings("Account1", "Account2"),
+      _roleHolders,
+      new RolePermissionData[](0)
+    );
+  }
 }
 
 contract AuthorizeStrategyLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex() public {
+  function testFuzz_RevertIf_CallerIsNotVertex(address _caller) public {
+    vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.prank(_caller);
     factory.authorizeStrategyLogic(randomLogicAddress);
   }
 
@@ -264,8 +379,10 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 }
 
 contract AuthorizeAccountLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex() public {
+  function test_RevertIf_CallerIsNotVertex(address _caller) public {
+    vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.prank(_caller);
     factory.authorizeAccountLogic(randomLogicAddress);
   }
 
@@ -281,5 +398,32 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
     vm.expectEmit(true, true, true, true);
     emit AccountLogicAuthorized(randomLogicAddress);
     factory.authorizeAccountLogic(randomLogicAddress);
+  }
+}
+
+contract SetPolicyMetadata is VertexFactoryTest {
+  function testFuzz_RevertsIf_NotCalledByVertex(address _caller, address _metadata) public {
+    vm.assume(_caller != address(rootCore));
+    vm.prank(address(_caller));
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.setPolicyMetadata(VertexPolicyMetadata(_metadata));
+  }
+
+  function testFuzz_WritesMetadataAddressToStorage(address _metadata) public {
+    vm.prank(address(rootCore));
+    factory.setPolicyMetadata(VertexPolicyMetadata(_metadata));
+    assertEq(
+      address(factory.vertexPolicyMetadata()),
+      _metadata
+    );
+  }
+}
+
+contract TokenURI is VertexFactoryTest {
+  function testFuzz_ProxiesToMetadataContract(string memory _name, string memory _symbol, uint256 _tokenId) public {
+    assertEq(
+      factory.tokenURI(_name, _symbol, _tokenId),
+      factory.vertexPolicyMetadata().tokenURI(_name, _symbol, _tokenId)
+    );
   }
 }
