@@ -14,8 +14,10 @@ contract VertexStrategyTest is VertexTestSetup {
   mapping(address => bool) public isRoleHolder;
   RolePermissionData[] rolePermissions;
   Strategy strategy;
-  Strategy[] strategies;
+  Strategy[] testStrategies;
   VertexStrategy newStrategy;
+  Strategy testStrategyData;
+  VertexStrategy testStrategy;
 
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
@@ -41,7 +43,7 @@ contract VertexStrategyTest is VertexTestSetup {
 
     mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
 
-    strategy = Strategy({
+    testStrategyData = Strategy({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -53,21 +55,13 @@ contract VertexStrategyTest is VertexTestSetup {
       forceApprovalRoles: _forceApprovalRoles,
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
-
-    strategies.push(strategy);
-
-    vm.prank(address(mpCore));
-
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
-
-    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
   }
 
   function _createAction() public returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
       "strategyTestRole",
-      mpStrategy1,
+      testStrategy,
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
@@ -90,6 +84,25 @@ contract VertexStrategyTest is VertexTestSetup {
 
   function _tokenId(address user) internal pure returns (uint256) {
     return uint256(uint160(user));
+  }
+
+  function _deployTestStrategy() internal {
+    testStrategyData = Strategy({
+      approvalPeriod: 1 days,
+      queuingPeriod: 2 days,
+      expirationPeriod: 8 days,
+      isFixedLengthApprovalPeriod: true,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: "strategyTestRole",
+      disapprovalRole: "strategyTestRole",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+    testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+    testStrategies.push(testStrategyData);
+    vm.prank(address(mpCore));
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
   }
   // function setUp() public virtual override {
   //   // TODO shared setup
@@ -342,6 +355,8 @@ contract IsActionPassed is VertexStrategyTest {
         _generateRoleHolder(_policyHolders[i]);
       }
     }
+    _deployTestStrategy();
+
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(roleHolders);
 
@@ -349,11 +364,12 @@ contract IsActionPassed is VertexStrategyTest {
     console.logUint(mpStrategy1.getMinimumAmountNeeded(roleHolders.length, 4000));
 
     uint256 minimumAmountNeeded = mpStrategy1.getMinimumAmountNeeded(roleHolders.length, 4000);
-    uint256 actionId = _createAction();
 
     vm.assume(_actionApprovals >= minimumAmountNeeded);
     vm.assume(_actionApprovals <= roleHolders.length);
     vm.assume(roleHolders.length < 100 && roleHolders.length > 2);
+
+    uint256 actionId = _createAction();
 
     assertEq(mpPolicy.getSupply("strategyTestRole"), roleHolders.length);
 
