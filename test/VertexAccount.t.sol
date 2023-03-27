@@ -92,12 +92,7 @@ contract VertexAccountTest is VertexTestSetup {
   }
 
   function transferUSDCToAccount(uint256 amount) internal {
-    assertEq(USDC.balanceOf(mpAccount1Addr), 0);
-
-    vm.startPrank(USDC_WHALE);
-    USDC.transfer(mpAccount1Addr, amount);
-    assertEq(USDC.balanceOf(mpAccount1Addr), amount);
-    vm.stopPrank();
+    deal(address(USDC), mpAccount1Addr, amount);
   }
 
   function approveUSDCToRecipient(uint256 amount) internal {
@@ -766,7 +761,11 @@ contract Integration is VertexAccountTest {
 
   // Test that VertexAccount can receive ERC20 tokens
   function test_ReceiveERC20() public {
-    transferUSDCToAccount(USDC_AMOUNT);
+    assertEq(USDC.balanceOf(mpAccount1Addr), 0);
+
+    vm.prank(USDC_WHALE);
+    USDC.transfer(mpAccount1Addr, USDC_AMOUNT);
+    assertEq(USDC.balanceOf(mpAccount1Addr), USDC_AMOUNT);
   }
 
   // Test that approved ERC20 tokens can be transferred from VertexAccount to a recipient
