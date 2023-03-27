@@ -17,6 +17,8 @@ import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} fr
 import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
+  uint128 constant DEFAULT_WEIGHT = 1;
+
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
@@ -124,29 +126,17 @@ contract Constructor is VertexFactoryTest {
   function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(
-      Roles.Admin,
-      makeAddr("expiring admin"),
-      _expirationTimestamp
-    );
+    _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     _deployNewFactoryWithRoleHolders(_roleHolders);
   }
 
   function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolder(uint256 _roleSalt) public {
-    bytes32[] memory _nonAdminRoles = Solarray.bytes32s(
-      Roles.ActionCreator,
-      Roles.AllHolders,
-      Roles.Approver,
-      Roles.Disapprover
-    );
+    bytes32[] memory _nonAdminRoles =
+      Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(
-      _nonAdminRoles[_roleSalt],
-      makeAddr("non-admin"),
-      type(uint64).max
-    );
+    _roleHolders[0] = RoleHolderData(_nonAdminRoles[_roleSalt], makeAddr("non-admin"), DEFAULT_WEIGHT, type(uint64).max);
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     _deployNewFactoryWithRoleHolders(_roleHolders);
   }
@@ -309,11 +299,7 @@ contract Deploy is VertexFactoryTest {
   function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(
-      Roles.Admin,
-      makeAddr("expiring admin"),
-      _expirationTimestamp
-    );
+    _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     vm.prank(address(rootCore));
     factory.deploy(
@@ -328,19 +314,11 @@ contract Deploy is VertexFactoryTest {
   }
 
   function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolderDeploy(uint256 _roleSalt) public {
-    bytes32[] memory _nonAdminRoles = Solarray.bytes32s(
-      Roles.ActionCreator,
-      Roles.AllHolders,
-      Roles.Approver,
-      Roles.Disapprover
-    );
+    bytes32[] memory _nonAdminRoles =
+      Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(
-      _nonAdminRoles[_roleSalt],
-      makeAddr("non-admin"),
-      type(uint64).max
-    );
+    _roleHolders[0] = RoleHolderData(_nonAdminRoles[_roleSalt], makeAddr("non-admin"), DEFAULT_WEIGHT, type(uint64).max);
     vm.prank(address(rootCore));
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     factory.deploy(
@@ -412,18 +390,14 @@ contract SetPolicyMetadata is VertexFactoryTest {
   function testFuzz_WritesMetadataAddressToStorage(address _metadata) public {
     vm.prank(address(rootCore));
     factory.setPolicyMetadata(VertexPolicyMetadata(_metadata));
-    assertEq(
-      address(factory.vertexPolicyMetadata()),
-      _metadata
-    );
+    assertEq(address(factory.vertexPolicyMetadata()), _metadata);
   }
 }
 
 contract TokenURI is VertexFactoryTest {
   function testFuzz_ProxiesToMetadataContract(string memory _name, string memory _symbol, uint256 _tokenId) public {
     assertEq(
-      factory.tokenURI(_name, _symbol, _tokenId),
-      factory.vertexPolicyMetadata().tokenURI(_name, _symbol, _tokenId)
+      factory.tokenURI(_name, _symbol, _tokenId), factory.vertexPolicyMetadata().tokenURI(_name, _symbol, _tokenId)
     );
   }
 }
