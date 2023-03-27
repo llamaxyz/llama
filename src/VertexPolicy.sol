@@ -266,7 +266,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     // Scope to avoid stack too deep.
     {
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when
-      // the quantity is zero.
+      // the quantity is zero. In other words, the relationships that are required between the role
+      // quantity and expiration fields are:
+      //   - quantity > 0 && expiration > block.timestamp: This means you are adding a role
+      //   - quantity == 0 && expiration == 0: This means you are removing a role
       bool case1 = quantity > 0 && expiration > block.timestamp;
       bool case2 = quantity == 0 && expiration == 0;
       if (!(case1 || case2)) revert InvalidInput();
