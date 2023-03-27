@@ -15,13 +15,16 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
-// Namespacing roles used for testing for readability, so they can be accessed with e.g. `Roles.Admin`.
-library Roles {
-  bytes32 public constant Admin = "admin";
-  bytes32 public constant ActionCreator = "action creator";
-  bytes32 public constant AllHolders = "all-policy-holders";
-  bytes32 public constant Approver = "approver";
-  bytes32 public constant Disapprover = "disapprover";
+// Used for readability of tests, so they can be accessed with e.g. `Roles.Admin`.
+enum Roles {
+  AllHolders,
+  Admin,
+  ActionCreator,
+  Approver,
+  Disapprover,
+  TestRole1,
+  TestRole2,
+  MadeUpRole
 }
 
 contract VertexTestSetup is Test {
@@ -138,13 +141,18 @@ contract VertexTestSetup is Test {
     // Add approvers and disapprovers to the mock protocol's vertex.
     RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](7);
     mpRoleHoldersNew[0] =
-      RoleHolderData(Roles.ActionCreator, actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[1] = RoleHolderData(Roles.Approver, approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[2] = RoleHolderData(Roles.Approver, approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[3] = RoleHolderData(Roles.Approver, approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[4] = RoleHolderData(Roles.Disapprover, disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[5] = RoleHolderData(Roles.Disapprover, disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[6] = RoleHolderData(Roles.Disapprover, disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+      RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[1] = RoleHolderData(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[2] =
+      RoleHolderData(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[3] = RoleHolderData(uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[4] =
+      RoleHolderData(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[5] =
+      RoleHolderData(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[6] =
+      RoleHolderData(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    // forgefmt: disable-end
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(mpRoleHoldersNew);
@@ -158,9 +166,9 @@ contract VertexTestSetup is Test {
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
 
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](3);
-    rolePermissions[0] = RolePermissionData(Roles.ActionCreator, pausePermissionId, true);
-    rolePermissions[1] = RolePermissionData(Roles.ActionCreator, failPermissionId, true);
-    rolePermissions[2] = RolePermissionData(Roles.ActionCreator, receiveEthPermissionId, true);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
+    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
+    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
 
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
@@ -209,7 +217,7 @@ contract VertexTestSetup is Test {
 
   function defaultAdminRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(Roles.Admin, who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(uint8(Roles.Admin), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function defaultStrategies() internal pure returns (Strategy[] memory strategies) {
@@ -220,10 +228,10 @@ contract VertexTestSetup is Test {
       isFixedLengthApprovalPeriod: true,
       minApprovalPct: 4000,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     Strategy memory strategy2Config = Strategy({
@@ -233,10 +241,10 @@ contract VertexTestSetup is Test {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 8000,
       minDisapprovalPct: 10_001,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: Solarray.bytes32s("admin"),
-      forceDisapprovalRoles: Solarray.bytes32s("admin")
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: Solarray.uint8s(uint8(Roles.Admin)),
+      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.Admin))
     });
 
     strategies = new Strategy[](2);
