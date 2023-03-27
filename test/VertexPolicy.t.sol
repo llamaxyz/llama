@@ -29,26 +29,28 @@ contract VertexPolicyTest is VertexTestSetup {
   }
 
   function generateRoleHolder(uint256 expiration) internal view returns (RoleHolderData[] memory roleHolder) {
+    // TODO Improve tests to test various quantities, we currently only test with a quantity of 1.
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData("testRole", arbitraryUser, toUint64(expiration));
+    uint128 quantity = expiration == 0 ? 0 : 1;
+    roleHolder[0] = RoleHolderData("testRole", arbitraryUser, quantity, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, uint256 expiration)
     internal
-    pure
+    view
     returns (RoleHolderData[] memory roleHolder)
   {
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData("testRole", user, toUint64(expiration));
+    roleHolder[0] = RoleHolderData("testRole", user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, bytes32 role, uint256 expiration)
     internal
-    pure
+    view
     returns (RoleHolderData[] memory roleHolder)
   {
     roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData(role, user, toUint64(expiration));
+    roleHolder[0] = RoleHolderData(role, user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateExpiredRole(address user, bytes32 role) internal pure returns (ExpiredRole[] memory expiredRole) {
@@ -197,15 +199,15 @@ contract GetWeight is VertexPolicyTest {
     assertEq(mpPolicy.getWeight(arbitraryAddress, "madeUpRole"), 0);
   }
 
-  function test_ReturnsZeroIfRoleHasExpired() public {
+  function test_ReturnsOneIfRoleHasExpiredButWasNotRevoked() public {
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(generateRoleHolder(100));
 
     vm.warp(100);
-    assertEq(mpPolicy.getWeight(arbitraryUser, "testRole"), 0);
+    assertEq(mpPolicy.getWeight(arbitraryUser, "testRole"), 1);
 
     vm.warp(101);
-    assertEq(mpPolicy.getWeight(arbitraryUser, "testRole"), 0);
+    assertEq(mpPolicy.getWeight(arbitraryUser, "testRole"), 1);
   }
 
   function test_ReturnsOneIfRoleHasNotExpired() public {
@@ -247,10 +249,10 @@ contract GetPastWeight is VertexPolicyTest {
     assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 101), 1, "101");
 
     assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 104), 1, "104");
-    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 105), 0, "105"); // Role expires
-    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 106), 0, "106");
+    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 105), 1, "105"); // Role expires, but not revoked.
+    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 106), 1, "106");
 
-    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 109), 0, "109");
+    assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 109), 1, "109");
     assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 110), 1, "110"); // Role set.
     assertEq(mpPolicy.getPastWeight(arbitraryUser, "testRole", 111), 1, "111");
 

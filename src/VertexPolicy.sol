@@ -73,7 +73,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].expiration);
+      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
@@ -92,7 +92,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Assigns roles to users.
   function setRoleHolders(RoleHolderData[] calldata roleHolders) external onlyVertex {
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].expiration);
+      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
   }
 
@@ -109,7 +109,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     RolePermissionData[] calldata rolePermissions
   ) external onlyVertex {
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].expiration);
+      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
@@ -137,7 +137,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // creating an action using the `ALL_HOLDERS_ROLE`.
   function revokePolicy(address user, bytes32[] calldata roles) external onlyVertex {
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roles[i], user, 0);
+      _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
   }
@@ -183,22 +183,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the quantity of the `role` for the given `user`. The returned value is the
   /// weight of the role when approving/disapproving (regardless of strategy).
-  /// @dev In the current implementation, this will always return 0 or 1 since quantities larger
-  /// than 1 are not supported. This is to keep the implementation simple
   function getWeight(address user, bytes32 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    return exists && quantity > 0 && expiration > block.timestamp ? quantity : 0;
+    return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `user` at `timestamp`. The returned
   /// value is the weight of the role when approving/disapproving (regardless of strategy).
-  /// @dev In the current implementation, this will always return 0 or 1 since quantities larger
-  /// than 1 are not supported. This is to keep the implementation simple
   function getPastWeight(address user, bytes32 role, uint256 timestamp) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    (uint256 quantity, uint256 expiration) = roleBalanceCkpts[tokenId][role].getCheckpointAtTimestamp(timestamp);
-    return quantity > 0 && expiration > timestamp ? quantity : 0;
+    return roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
   }
 
   /// @notice Returns the total supply of `role` holders at the given `timestamp`. The returned
@@ -237,16 +231,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
   function hasRole(address user, bytes32 role, uint256 timestamp) external view returns (bool) {
-    (uint256 quantity, uint256 expiration) = roleBalanceCkpts[_tokenId(user)][role].getCheckpointAtTimestamp(timestamp);
-    return quantity > 0 && expiration > block.timestamp;
+    uint256 quantity = roleBalanceCkpts[_tokenId(user)][role].getAtTimestamp(timestamp);
+    return quantity > 0;
   }
 
   /// @notice Returns true if the given `user` has a given `permissionId` under the `role`,
   /// false otherwise.
   function hasPermissionId(address user, bytes32 role, bytes32 permissionId) external view returns (bool) {
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    bool userHasRole = exists && quantity > 0 && expiration > block.timestamp;
-    return userHasRole && canCreateAction[role][permissionId];
+    uint128 quantity = roleBalanceCkpts[_tokenId(user)][role].latest();
+    return quantity > 0 && canCreateAction[role][permissionId];
   }
 
   /// @notice Returns the total number of policies in existence.
@@ -269,33 +262,42 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
-  function _setRoleHolder(bytes32 role, address user, uint256 expiration) internal {
-    if (expiration > 0 && expiration <= block.timestamp) revert InvalidInput();
+  function _setRoleHolder(bytes32 role, address user, uint128 quantity, uint64 expiration) internal {
+    // Scope to avoid stack too deep.
+    {
+      // An expiration of zero is only allowed if the role is being removed. Roles are removed when
+      // the quantity is zero. In other words, the relationships that are required between the role
+      // quantity and expiration fields are:
+      //   - quantity > 0 && expiration > block.timestamp: This means you are adding a role
+      //   - quantity == 0 && expiration == 0: This means you are removing a role
+      bool case1 = quantity > 0 && expiration > block.timestamp;
+      bool case2 = quantity == 0 && expiration == 0;
+      if (!(case1 || case2)) revert InvalidInput();
+    }
 
     // Save off whether or not the user has a nonzero quantity of this role. This is used below when
     // updating the total supply of the role.
     uint256 tokenId = _tokenId(user);
     uint128 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
     bool hadRoleQuantity = initialQuantity > 0;
-
-    // If the expiration is zero, the role is being removed. Otherwise, the role is being added.
-    bool willHaveRole = expiration != 0;
+    bool willHaveRole = quantity > 0 && expiration > block.timestamp;
 
     // Now we update the user's role balance checkpoint.
-    roleBalanceCkpts[tokenId][role].push(willHaveRole ? 1 : 0, expiration);
+    roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
     if (balanceOf(user) == 0) {
       _mint(user);
-      roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
+      roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(quantity, type(uint64).max);
     }
 
     // Lastly we update the total supply of the role. If the expiration is zero, it means the role
     // was removed. Determining how to update total supply requires knowing if the user currently
-    //has a nonzero quantity of this role. This is strictly a quantity check and ignores the expiration because this is
-    // used to determine whether or not to update the total supply.
+    // has a nonzero quantity of this role. This is strictly a quantity check and ignores the
+    // expiration because this is used to determine whether or not to update the total supply.
+    uint128 quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
     uint128 currentRoleSupply = roleSupplyCkpts[role].latest();
     uint128 newRoleSupply;
-    if (hadRoleQuantity && !willHaveRole) newRoleSupply = currentRoleSupply - 1;
-    else if (!hadRoleQuantity && willHaveRole) newRoleSupply = currentRoleSupply + 1;
+    if (hadRoleQuantity && !willHaveRole) newRoleSupply = currentRoleSupply - quantityDiff;
+    else if (!hadRoleQuantity && willHaveRole) newRoleSupply = currentRoleSupply + quantityDiff;
     else newRoleSupply = currentRoleSupply;
 
     roleSupplyCkpts[role].push(newRoleSupply);
@@ -312,7 +314,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(expiredRole.user);
     (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][expiredRole.role].latestCheckpoint();
     if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
-    _setRoleHolder(expiredRole.role, expiredRole.user, 0);
+    _setRoleHolder(expiredRole.role, expiredRole.user, 0, 0);
   }
 
   function _mint(address user) internal {
