@@ -648,7 +648,20 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
 
 contract GetMinimumAmountNeeded is VertexStrategyTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
-    vm.assume(minPct <= 10_000);
+    minPct = bound(minPct, 0, 10_000);
+    deployStrategyAndSetRole(
+      bytes32(0),
+      bytes32(0),
+      address(0xdeadbeef),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new bytes32[](0),
+      new bytes32[](0)
+    );
     vm.assume(minPct == 0 || supply <= type(uint256).max / minPct); // avoid solmate revert statement
     uint256 product = FixedPointMathLib.mulDivUp(supply, minPct, 10_000);
     assertEq(newStrategy.getMinimumAmountNeeded(supply, minPct), product);
