@@ -1,20 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
-struct PermissionData {
-  address target;
-  bytes4 selector;
-  VertexStrategy strategy;
+struct RoleHolderData {
+  bytes32 role; // Name of the role to set.
+  address user; // User to assign the role to.
+  uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  uint64 expiration; // When the role expires.
 }
 
-struct PermissionIdCheckpoint {
-  uint128 timestamp; // Timestamp of the checkpoint, i.e. `block.timestamp`.
-  uint128 quantity; // Quantity of the permission ID held at the timestamp.
+struct RolePermissionData {
+  bytes32 role; // Name of the role to set.
+  bytes32 permissionId; // Permission ID to assign to the role.
+  bool hasPermission; // Whether to assign the permission or remove the permission.
+}
+
+struct ExpiredRole {
+  bytes32 role; // Role that has expired.
+  address user; // User that held the role.
+}
+
+struct PermissionData {
+  address target; // Contract being called by an action.
+  bytes4 selector; // Selector of the function being called by an action.
+  VertexStrategy strategy; // Strategy used to govern the action.
 }
 
 struct Action {
@@ -46,27 +59,6 @@ struct Strategy {
   bytes32 disapprovalRole; // Anyone with this role can vote to disapprove an action.
   bytes32[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
   bytes32[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
-}
-
-struct PermissionMetadata {
-  bytes32 permissionId;
-  uint256 expirationTimestamp;
-}
-
-struct PolicyUpdateData {
-  uint256 policyId;
-  PermissionMetadata[] permissionsToAdd;
-  PermissionMetadata[] permissionsToRemove;
-}
-
-struct PolicyGrantData {
-  address user;
-  PermissionMetadata[] permissionsToAdd;
-}
-
-struct PolicyRevokeData {
-  uint256 policyId;
-  bytes32[] permissionIds;
 }
 
 struct ERC20Data {

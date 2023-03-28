@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, PolicyGrantData, PermissionData} from "src/lib/Structs.sol";
+import {Strategy, PermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Lens
 /// @author Llama (vertex@llama.xyz)
@@ -31,7 +31,7 @@ contract VertexLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexCoreLogic,
-      bytes32(keccak256(abi.encode(name))), // salt
+      keccak256(abi.encode(name)), // salt
       factory // deployer
     );
     return VertexCore(_computedAddress);
@@ -49,7 +49,7 @@ contract VertexLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexPolicyLogic,
-      bytes32(keccak256(abi.encode(name))), // salt
+      keccak256(abi.encode(name)), // salt
       factory // deployer
     );
     return VertexPolicy(_computedAddress);
@@ -68,7 +68,7 @@ contract VertexLens {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexStrategyLogic,
       keccak256(
-        abi.encodePacked(
+        abi.encode(
           _strategy.approvalPeriod,
           _strategy.queuingPeriod,
           _strategy.expirationPeriod,
@@ -97,7 +97,6 @@ contract VertexLens {
       keccak256(abi.encode(_account)), // salt
       _vertexCore // deployer
     );
-
     return VertexAccount(payable(_computedAddress));
   }
 

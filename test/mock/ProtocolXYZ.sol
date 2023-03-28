@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 contract ProtocolXYZ {
-  error OnlyVertex();
+  error OnlyOwner();
   error Failed();
 
-  address public immutable vertex;
+  address public immutable owner;
   bool public paused;
 
-  constructor(address _vertex) {
-    vertex = _vertex;
+  constructor(address _owner) {
+    owner = _owner;
   }
 
-  modifier onlyVertex() {
-    if (msg.sender != address(vertex)) revert OnlyVertex();
+  modifier onlyOwner() {
+    if (msg.sender != owner) revert OnlyOwner();
     _;
   }
 
-  function receiveEth() external payable onlyVertex returns (uint256) {
+  function receiveEth() external payable onlyOwner returns (uint256) {
     return msg.value;
   }
 
-  function pause(bool isPaused) external onlyVertex {
+  function pause(bool isPaused) external onlyOwner {
     paused = isPaused;
   }
 
-  function fail() external view onlyVertex {
+  function fail() external view onlyOwner {
     revert Failed();
   }
 }

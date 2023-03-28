@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {CommonBase} from "forge-std/Base.sol";
@@ -9,12 +9,15 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy, PolicyGrantData} from "src/lib/Structs.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
-import {VertexCoreTest} from "test/VertexCore.t.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 
 contract VertexFactoryHandler is BaseHandler {
+  uint128 DEFAULT_ROLE_QTY = 1;
+  uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
+
   // =========================
   // ======== Storage ========
   // =========================
@@ -58,13 +61,17 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(vertexFactory.rootVertex()));
-    PolicyGrantData[] memory _policyGrantData = new PolicyGrantData[](0);
-    vertexFactory.deploy(name(), address(0), address(0), new Strategy[](0), new string[](0), _policyGrantData);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("dummyAdmin"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    vertexFactory.deploy(
+      name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new RolePermissionData[](0)
+    );
     vertexCounts.push(vertexFactory.vertexCount());
   }
 }
 
-contract VertexFactoryInvariants is VertexCoreTest {
+contract VertexFactoryInvariants is VertexTestSetup {
   // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
@@ -72,8 +79,8 @@ contract VertexFactoryInvariants is VertexCoreTest {
   VertexFactoryHandler public handler;
 
   function setUp() public override {
-    VertexCoreTest.setUp();
-    handler = new VertexFactoryHandler(factory, core);
+    VertexTestSetup.setUp();
+    handler = new VertexFactoryHandler(factory, mpCore);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
