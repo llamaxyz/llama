@@ -484,10 +484,39 @@ contract IsActionCancelationValid is VertexStrategyTest {
     assertEq(isActionCancelled, true);
   }
 
-  function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionApprovals) public {
-    // TODO
-    // call isActionPassed on an action that has insufficient (random) num of
-    // disapprovals. assert response is false
+  function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionDisapprovals, uint256 _numberOfPolicies)
+    public
+  {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+
+    _deployTestStrategyWithForceApproval();
+
+    for (uint256 i = 1; i < _numberOfPolicies + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      if (mpPolicy.balanceOf(_policyHolder) == 0 && isRoleHolder[_policyHolder] == false) {
+        _generateRoleHolder(_policyHolder);
+      }
+    }
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(roleHolders);
+
+    uint256 actionId = _createAction();
+
+    vm.prank(address(adminAlice));
+    mpCore.castApproval(actionId, "admin");
+
+    mpCore.queueAction(actionId);
+
+    for (uint256 i = 1; i < _actionDisapprovals + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      _disapproveAction(_policyHolder, actionId);
+    }
+
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+
+    assertEq(isActionCancelled, false);
   }
 
   function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
