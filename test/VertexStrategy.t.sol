@@ -36,7 +36,7 @@ contract VertexStrategyTest is VertexTestSetup {
     uint256 _minDisapprovalPct,
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
-  ) public {
+  ) internal {
     roleHolders.push(RoleHolderData(_role, _policyHolder, 1, type(uint64).max));
     rolePermissions.push(RolePermissionData(_role, _permission, true));
 
@@ -106,7 +106,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
   }
 
-  function _createAction() public returns (uint256 actionId) {
+  function _createAction() internal returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
       uint8(Roles.TestRole1),
@@ -119,14 +119,14 @@ contract VertexStrategyTest is VertexTestSetup {
     vm.warp(block.timestamp + 1);
   }
 
-  function _approveAction(address _policyholder, uint256 _actionId) public {
+  function _approveAction(address _policyholder, uint256 _actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(_actionId, uint8(Roles.TestRole1));
   }
 
-  function _disapproveAction(address _policyholder, uint256 _actionId) public {
+  function _disapproveAction(address _policyholder, uint256 _actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
@@ -136,10 +136,6 @@ contract VertexStrategyTest is VertexTestSetup {
   function _generateRoleHolder(address user) internal {
     roleHolders.push(RoleHolderData(uint8(Roles.TestRole1), user, 1, type(uint64).max));
     isRoleHolder[user] = true;
-  }
-
-  function _tokenId(address user) internal pure returns (uint256) {
-    return uint256(uint160(user));
   }
 }
 
