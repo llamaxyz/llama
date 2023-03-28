@@ -520,15 +520,9 @@ contract IsActionCancelationValid is VertexStrategyTest {
   }
 
   function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
-    // TODO
-    // what if nonexistent actionId is passed in? I think this will return true
-    // currently but it should probably revert
-  }
-
-  function testFuzz_RoundsCorrectly(uint256 _actionAppovals) public {
-    // TODO
-    // what happens if the minDisapprovalPct rounds the
-    // action.disapprovalPolicySupply the wrong way?
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.prank(address(adminAlice));
+    mpCore.castDisapproval(_actionId, "admin");
   }
 }
 
