@@ -431,7 +431,7 @@ contract IsActionPassed is VertexStrategyTest {
     assertEq(isActionPassed, false);
   }
 
-  function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
+  function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
     vm.expectRevert(VertexCore.InvalidActionId.selector);
     vm.prank(address(adminAlice));
     mpCore.castApproval(_actionId, uint8(Roles.Admin));
@@ -508,7 +508,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
     assertEq(isActionCancelled, false);
   }
 
-  function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
+  function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
     vm.expectRevert(VertexCore.InvalidActionId.selector);
     vm.prank(address(adminAlice));
     mpCore.castDisapproval(_actionId, uint8(Roles.Admin));
