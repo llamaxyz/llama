@@ -65,11 +65,9 @@ contract VertexStrategyTest is VertexTestSetup {
     Strategy[] memory strategies = new Strategy[](1);
     strategies[0] = strategy;
 
-    {
-      vm.prank(address(mpCore));
+    vm.prank(address(mpCore));
 
-      mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
-    }
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
 
     newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
   }
@@ -129,23 +127,30 @@ contract VertexStrategyTest is VertexTestSetup {
     vm.warp(block.timestamp + 1);
   }
 
-  function _approveAction(address _policyholder, uint256 _actionId) internal {
+  function _approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderApproved(_actionId, _policyholder, 1, "");
-    vm.prank(_policyholder);
-    mpCore.castApproval(_actionId, uint8(Roles.TestRole1));
+    for (uint256 i; i < numberOfApprovals; i++) {
+      address _policyholder = address(uint160(i + 1));
+      vm.prank(_policyholder);
+      mpCore.castApproval(actionId, uint8(Roles.TestRole1));
+    }
   }
 
-  function _disapproveAction(address _policyholder, uint256 _actionId) internal {
+  function _disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
-    vm.prank(_policyholder);
-    mpCore.castDisapproval(_actionId, uint8(Roles.TestRole1));
+    for (uint256 i; i < numberOfDisapprovals; i++) {
+      address _policyholder = address(uint160(i + 1));
+      vm.prank(_policyholder);
+      mpCore.castDisapproval(actionId, uint8(Roles.TestRole1));
+    }
   }
 
   function _generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
-    for (uint256 i = 1; i < numberOfHolders + 1; i++) {
-      address _policyHolder = address(uint160(i));
+    roleHolders = new RoleHolderData[](numberOfHolders);
+    for (uint256 i = 0; i < numberOfHolders; i++) {
+      address _policyHolder = address(uint160(i + 1));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
         roleHolders[i] = RoleHolderData(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
       }
@@ -401,10 +406,7 @@ contract IsActionPassed is VertexStrategyTest {
 
     uint256 actionId = _createAction(testStrategy);
 
-    for (uint256 i = 1; i < _actionApprovals + 1; i++) {
-      address _policyHolder = address(uint160(i));
-      _approveAction(_policyHolder, actionId);
-    }
+    _approveAction(_actionApprovals, actionId);
 
     bool isActionPassed = testStrategy.isActionPassed(actionId);
 
@@ -421,10 +423,7 @@ contract IsActionPassed is VertexStrategyTest {
 
     uint256 actionId = _createAction(testStrategy);
 
-    for (uint256 i = 1; i < _actionApprovals + 1; i++) {
-      address _policyHolder = address(uint160(i));
-      _approveAction(_policyHolder, actionId);
-    }
+    _approveAction(_actionApprovals, actionId);
 
     bool isActionPassed = testStrategy.isActionPassed(actionId);
 
@@ -455,10 +454,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     mpCore.queueAction(actionId);
 
-    for (uint256 i = 1; i < _actionDisapprovals + 1; i++) {
-      address _policyHolder = address(uint160(i));
-      _disapproveAction(_policyHolder, actionId);
-    }
+    _disapproveAction(_actionDisapprovals, actionId);
 
     bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
 
@@ -482,10 +478,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     mpCore.queueAction(actionId);
 
-    for (uint256 i = 1; i < _actionDisapprovals + 1; i++) {
-      address _policyHolder = address(uint160(i));
-      _disapproveAction(_policyHolder, actionId);
-    }
+    _disapproveAction(_actionDisapprovals, actionId);
 
     bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
 
@@ -687,6 +680,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     _timestamp = bound(_timestamp, block.timestamp - 1, type(uint64).max);
     _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
       // roles
+    vm.assume(_policyHolder != address(0));
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
