@@ -571,7 +571,7 @@ contract GetApprovalWeightAt is VertexStrategyTest {
   function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint64 _timestamp, bytes32 _role, address _nonPolicyHolder)
     public
   {
-    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    _timestamp = uint64(bound(_timestamp, block.timestamp + 1, type(uint64).max));
     vm.assume(_nonPolicyHolder != address(0));
 
     // Mock protocol users.
