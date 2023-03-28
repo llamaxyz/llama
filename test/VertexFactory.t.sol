@@ -129,14 +129,16 @@ contract Constructor is VertexFactoryTest {
   function testFuzz_RevertIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
+    _roleHolders[0] =
+      RoleHolderData(uint8(Roles.Admin), makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     deployVertexFactory(_roleHolders);
   }
 
   function testFuzz_RevertIf_NonAdminIsOnlyRoleHolder(uint256 _roleSalt) public {
-    bytes32[] memory _nonAdminRoles =
-      Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
+    uint8[] memory _nonAdminRoles = Solarray.uint8s(
+      uint8(Roles.ActionCreator), uint8(Roles.AllHolders), uint8(Roles.Approver), uint8(Roles.Disapprover)
+    );
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
     _roleHolders[0] = RoleHolderData(_nonAdminRoles[_roleSalt], makeAddr("non-admin"), DEFAULT_WEIGHT, type(uint64).max);
@@ -302,7 +304,8 @@ contract Deploy is VertexFactoryTest {
   function testFuzz_RevertIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
-    _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
+    _roleHolders[0] =
+      RoleHolderData(uint8(Roles.Admin), makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     vm.prank(address(rootCore));
     factory.deploy(
@@ -317,8 +320,9 @@ contract Deploy is VertexFactoryTest {
   }
 
   function testFuzz_RevertIf_NonAdminIsOnlyRoleHolderDeploy(uint256 _roleSalt) public {
-    bytes32[] memory _nonAdminRoles =
-      Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
+    uint8[] memory _nonAdminRoles = Solarray.uint8s(
+      uint8(Roles.ActionCreator), uint8(Roles.AllHolders), uint8(Roles.Approver), uint8(Roles.Disapprover)
+    );
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
     _roleHolders[0] = RoleHolderData(_nonAdminRoles[_roleSalt], makeAddr("non-admin"), DEFAULT_WEIGHT, type(uint64).max);
