@@ -8,7 +8,6 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
