@@ -47,6 +47,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   error AlreadyInitialized();
   error InvalidInput();
+  error MissingAdmin();
   error NonTransferableToken();
   error OnlyVertex();
 
@@ -72,12 +73,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
+
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
+
+    _assertAdminsExist();
   }
 
   function setVertex(address _vertex) external {
@@ -94,6 +98,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Sets the permissions for a given role.
@@ -114,6 +119,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Revokes expired roles.
@@ -128,6 +134,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < expiredRoles.length; i = _uncheckedIncrement(i)) {
       _revokeExpiredRole(expiredRoles[i]);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Revokes all roles from the user and burns their policy.
@@ -140,6 +147,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
+    _assertAdminsExist();
   }
 
   // =================================
@@ -261,6 +269,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ================================
   // ======== Internal Logic ========
   // ================================
+
+  /// @dev Verifies that admin supply is non-zero to avoid the system being locked. Any changes to
+  /// roles that result in zero admin supply will revert.
+  function _assertAdminsExist() internal view {
+    if (getSupply(ADMIN_ROLE) == 0) revert MissingAdmin();
+  }
 
   function _setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) internal {
     // Scope to avoid stack too deep.
