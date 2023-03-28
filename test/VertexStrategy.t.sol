@@ -16,6 +16,9 @@ contract VertexStrategyTest is VertexTestSetup {
   Strategy strategy;
   Strategy[] strategies;
   VertexStrategy newStrategy;
+  Strategy testStrategyData;
+  VertexStrategy testStrategy;
+  Strategy[] testStrategies;
 
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
@@ -63,11 +66,30 @@ contract VertexStrategyTest is VertexTestSetup {
     newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
   }
 
+  function _deployTestStrategy() internal {
+    testStrategyData = Strategy({
+      approvalPeriod: 1 days,
+      queuingPeriod: 2 days,
+      expirationPeriod: 8 days,
+      isFixedLengthApprovalPeriod: true,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: "strategyTestRole",
+      disapprovalRole: "strategyTestRole",
+      forceApprovalRoles: new bytes32[](0),
+      forceDisapprovalRoles: new bytes32[](0)
+    });
+    testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+    testStrategies.push(testStrategyData);
+    vm.prank(address(mpCore));
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
+  }
+
   function _createAction() public returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
       "strategyTestRole",
-      mpStrategy1,
+      testStrategy,
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
@@ -335,38 +357,31 @@ contract Constructor is VertexStrategyTest {
 }
 
 contract IsActionPassed is VertexStrategyTest {
-  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, address[] memory _policyHolders) public {
-    vm.assume(_actionApprovals > 1);
-    vm.assume(_policyHolders.length < 100 && _policyHolders.length > 4); // limit to vm.assume with a
-      // safe margin
-    vm.assume(_policyHolders.length >= _actionApprovals);
+  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals =
+      bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
-    for (uint256 i = 0; i < _policyHolders.length; i++) {
-      vm.assume(_policyHolders[i] != address(0));
-      if (
-        _policyHolders[i] != address(0) && mpPolicy.balanceOf(_policyHolders[i]) == 0
-          && isRoleHolder[_policyHolders[i]] == false
-      ) _generateRoleHolder(_policyHolders[i]);
+    _deployTestStrategy();
+
+    for (uint256 i = 1; i < _numberOfPolicies + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      if (mpPolicy.balanceOf(_policyHolder) == 0 && isRoleHolder[_policyHolder] == false) {
+        _generateRoleHolder(_policyHolder);
+      }
     }
+
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(roleHolders);
 
-    vm.assume((roleHolders.length * 10_000) / _actionApprovals >= 4000);
-    vm.assume(roleHolders.length > 4);
-
-    assertEq(mpPolicy.getSupply("strategyTestRole"), roleHolders.length);
-
-    console.logUint(_actionApprovals);
-    console.logUint(roleHolders.length);
-    console.logUint((roleHolders.length * 10_000) / _actionApprovals);
-
     uint256 actionId = _createAction();
 
-    for (uint256 i = 0; i < _actionApprovals; i++) {
-      _approveAction(roleHolders[i].user, actionId);
+    for (uint256 i = 1; i < _actionApprovals + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      _approveAction(_policyHolder, actionId);
     }
 
-    bool isActionPassed = mpStrategy1.isActionPassed(actionId);
+    bool isActionPassed = testStrategy.isActionPassed(actionId);
 
     assertEq(isActionPassed, true);
   }
