@@ -298,10 +298,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
     // Now we update the user's role balance checkpoint.
     roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
-    if (balanceOf(user) == 0) {
-      _mint(user);
-      roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(quantity, type(uint64).max);
-    }
+    if (balanceOf(user) == 0) _mint(user);
 
     // Lastly we update the total supply of the role. If the expiration is zero, it means the role
     // was removed. Determining how to update total supply requires knowing if the user currently
@@ -332,14 +329,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   function _mint(address user) internal {
-    _mint(user, _tokenId(user));
+    uint256 tokenId = _tokenId(user);
+    _mint(user, tokenId);
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() + 1);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
 
   function _burn(uint256 tokenId) internal override {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() - 1);
-    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, type(uint64).max);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
 
   function _tokenId(address user) internal pure returns (uint256) {
