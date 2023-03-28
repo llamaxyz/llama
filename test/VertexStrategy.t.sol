@@ -85,6 +85,27 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
   }
 
+  function _deployTestStrategyWithForceApproval() internal {
+    bytes32[] memory forceRoles = new bytes32[](1);
+    forceRoles[0] = "admin";
+    testStrategyData = Strategy({
+      approvalPeriod: 1 days,
+      queuingPeriod: 2 days,
+      expirationPeriod: 8 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: "strategyTestRole",
+      disapprovalRole: "strategyTestRole",
+      forceApprovalRoles: forceRoles,
+      forceDisapprovalRoles: forceRoles
+    });
+    testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+    testStrategies.push(testStrategyData);
+    vm.prank(address(mpCore));
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
+  }
+
   function _createAction() public returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
@@ -103,6 +124,13 @@ contract VertexStrategyTest is VertexTestSetup {
     // emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(_actionId, "strategyTestRole");
+  }
+
+  function _disapproveAction(address _policyholder, uint256 _actionId) public {
+    // vm.expectEmit(true, true, true, true);
+    // emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
+    vm.prank(_policyholder);
+    mpCore.castDisapproval(_actionId, "strategyTestRole");
   }
 
   function _generateRoleHolder(address user) internal {
@@ -386,30 +414,74 @@ contract IsActionPassed is VertexStrategyTest {
     assertEq(isActionPassed, true);
   }
 
-  function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals) public {
-    // TODO
-    // call isActionPassed on an action that has insufficient (random) num of votes
-    // assert response is false
+  function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
+
+    _deployTestStrategy();
+
+    for (uint256 i = 1; i < _numberOfPolicies + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      if (mpPolicy.balanceOf(_policyHolder) == 0 && isRoleHolder[_policyHolder] == false) {
+        _generateRoleHolder(_policyHolder);
+      }
+    }
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(roleHolders);
+
+    uint256 actionId = _createAction();
+
+    for (uint256 i = 1; i < _actionApprovals + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      _approveAction(_policyHolder, actionId);
+    }
+
+    bool isActionPassed = testStrategy.isActionPassed(actionId);
+
+    assertEq(isActionPassed, false);
   }
 
   function testFuzz_RevertsForNonExistentActionId(uint256 _actionId) public {
-    // TODO
-    // what if nonexistent actionId is passed in? I think this will return true
-    // currently but it should probably revert
-  }
-
-  function testFuzz_RoundsCorrectly(uint256 _actionAppovals) public {
-    // TODO
-    // what happens if the minAppovalPct rounds the action.approvalPolicySupply
-    // the wrong way?
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.prank(address(adminAlice));
+    mpCore.castApproval(_actionId, "admin");
   }
 }
 
 contract IsActionCancelationValid is VertexStrategyTest {
-  function testFuzz_ReturnsTrueForDisapprovedActions(uint256 _actionDisapprovals) public {
-    // TODO
-    // call isActionCancelationValid on an action that has sufficient (random)
-    // num of disapprovals. assert response is true
+  function testFuzz_ReturnsTrueForDisapprovedActions(uint256 _actionDisapprovals, uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals =
+      bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
+
+    _deployTestStrategyWithForceApproval();
+
+    for (uint256 i = 1; i < _numberOfPolicies + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      if (mpPolicy.balanceOf(_policyHolder) == 0 && isRoleHolder[_policyHolder] == false) {
+        _generateRoleHolder(_policyHolder);
+      }
+    }
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(roleHolders);
+
+    uint256 actionId = _createAction();
+
+    vm.prank(address(adminAlice));
+    mpCore.castApproval(actionId, "admin");
+
+    mpCore.queueAction(actionId);
+
+    for (uint256 i = 1; i < _actionDisapprovals + 1; i++) {
+      address _policyHolder = address(uint160(i));
+      _disapproveAction(_policyHolder, actionId);
+    }
+
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+
+    assertEq(isActionCancelled, true);
   }
 
   function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionApprovals) public {
