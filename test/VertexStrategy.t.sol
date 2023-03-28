@@ -527,9 +527,8 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     // uint256 _weight,
     address _policyHolder
   ) public {
-    _timeUntilPermission = bound(_timeUntilPermission, block.timestamp - 1, type(uint64).max);
-    _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
-      // roles
+    vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
+    vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
@@ -552,9 +551,8 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     // uint256 _weight,
     address _policyHolder
   ) public {
-    _timeSincePermission = bound(_timeSincePermission, block.timestamp - 1, type(uint64).max);
-    _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
-      // roles
+    vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
+    vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
@@ -641,9 +639,8 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     // uint256 _weight,
     address _policyHolder
   ) public {
-    _timeUntilPermission = bound(_timeUntilPermission, block.timestamp - 1, type(uint64).max);
-    _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
-      // roles
+    vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
+    vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
@@ -666,9 +663,8 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     // uint256 _weight,
     address _policyHolder
   ) public {
-    _timeSincePermission = bound(_timeSincePermission, block.timestamp - 1, type(uint64).max);
-    _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
-      // roles
+    vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
+    vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
@@ -687,9 +683,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
   function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, uint8 _role, address _nonPolicyHolder)
     public
   {
-    _timestamp = bound(_timestamp, block.timestamp - 1, type(uint64).max);
-    _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
-      // roles
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
 
     deployStrategyAndSetRole(
@@ -713,7 +707,6 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     _timestamp = bound(_timestamp, block.timestamp - 1, type(uint64).max);
     _role = uint8(bound(_role, 8, 255)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
       // roles
-    vm.assume(_policyHolder != address(0));
 
     deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
