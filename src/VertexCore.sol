@@ -69,10 +69,10 @@ contract VertexCore is Initializable {
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
   /// @notice A special role to designate an Admin, who can always create actions.
-  bytes32 public constant ADMIN_ROLE = "admin";
+  uint8 public constant ADMIN_ROLE = 1;
 
   /// @notice A special role used to reference all policy holders.
-  bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
+  uint8 public constant ALL_HOLDERS_ROLE = 0; // TODO Confirm zero is safe here.
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -143,7 +143,7 @@ contract VertexCore is Initializable {
   /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
   /// @return actionId of the newly created action.
   function createAction(
-    bytes32 role,
+    uint8 role,
     VertexStrategy strategy,
     address target,
     uint256 value,
@@ -155,6 +155,14 @@ contract VertexCore is Initializable {
     PermissionData memory permission = PermissionData(target, selector, strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
 
+    // Typically (such as in Governor contracts) this should check that the caller has permission
+    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
+    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
+    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
+    // an action is created, as the order of transactions in the block then affects if action
+    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
+    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
+    // this race condition is unlikely to matter.
     if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
       revert PolicyholderDoesNotHavePermission();
     }
@@ -243,7 +251,7 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the approval of an action.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
-  function castApproval(uint256 actionId, bytes32 role) external {
+  function castApproval(uint256 actionId, uint8 role) external {
     return _castApproval(msg.sender, role, actionId, "");
   }
 
@@ -251,7 +259,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param reason The reason given for the approval by the policyholder.
-  function castApproval(uint256 actionId, bytes32 role, string calldata reason) external {
+  function castApproval(uint256 actionId, uint8 role, string calldata reason) external {
     return _castApproval(msg.sender, role, actionId, reason);
   }
 
@@ -261,7 +269,7 @@ contract VertexCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castApprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castApprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -277,7 +285,7 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the disapproval of an action.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
-  function castDisapproval(uint256 actionId, bytes32 role) external {
+  function castDisapproval(uint256 actionId, uint8 role) external {
     return _castDisapproval(msg.sender, role, actionId, "");
   }
 
@@ -285,7 +293,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param reason The reason given for the disapproval by the policyholder.
-  function castDisapproval(uint256 actionId, bytes32 role, string calldata reason) external {
+  function castDisapproval(uint256 actionId, uint8 role, string calldata reason) external {
     return _castDisapproval(msg.sender, role, actionId, reason);
   }
 
@@ -295,7 +303,7 @@ contract VertexCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castDisapprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castDisapprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -378,7 +386,7 @@ contract VertexCore is Initializable {
     return ActionState.Queued;
   }
 
-  function _castApproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
+  function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
@@ -397,7 +405,7 @@ contract VertexCore is Initializable {
     emit PolicyholderApproved(actionId, policyholder, weight, reason);
   }
 
-  function _castDisapproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
+  function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();

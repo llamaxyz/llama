@@ -13,3 +13,6 @@ out/
 # Build dependencies
 node_modules/
 bin/
+
+# macOS files
+.DS_Store
