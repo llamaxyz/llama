@@ -14,8 +14,8 @@ contract VertexStrategy is Initializable {
   error InvalidPermissionId();
   error NoPolicy();
 
-  event ForceApprovalRoleAdded(bytes32 role);
-  event ForceDisapprovalRoleAdded(bytes32 role);
+  event ForceApprovalRoleAdded(uint8 role);
+  event ForceDisapprovalRoleAdded(uint8 role);
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
 
   /// @notice Equivalent to 100%, but in basis points.
@@ -53,10 +53,10 @@ contract VertexStrategy is Initializable {
   /// == 100%.
   uint256 public minDisapprovalPct;
 
-  bytes32 public approvalRole;
-  bytes32 public disapprovalRole;
-  mapping(bytes32 => bool) public forceApprovalRole;
-  mapping(bytes32 => bool) public forceDisapprovalRole;
+  uint8 public approvalRole;
+  uint8 public disapprovalRole;
+  mapping(uint8 => bool) public forceApprovalRole;
+  mapping(uint8 => bool) public forceDisapprovalRole;
 
   constructor() initializer {}
 
@@ -78,13 +78,13 @@ contract VertexStrategy is Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
 
     for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i++) {
-      bytes32 role = strategyConfig.forceApprovalRoles[i];
+      uint8 role = strategyConfig.forceApprovalRoles[i];
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
     for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i++) {
-      bytes32 role = strategyConfig.forceDisapprovalRoles[i];
+      uint8 role = strategyConfig.forceDisapprovalRoles[i];
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
     }
@@ -113,7 +113,7 @@ contract VertexStrategy is Initializable {
   /// @param policyholder The role to check weight for.
   /// @param timestamp The block number at which to get the approval weight.
   /// @return The weight of the policyholder's approval.
-  function getApprovalWeightAt(address policyholder, bytes32 role, uint256 timestamp) external view returns (uint256) {
+  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     bool hasRole = policy.hasRole(policyholder, role, timestamp);
     if (!hasRole) return 0;
     return forceApprovalRole[role] ? type(uint256).max : 1;
@@ -124,11 +124,7 @@ contract VertexStrategy is Initializable {
   /// @param policyholder The role to check weight for.
   /// @param timestamp The block number at which to get the disapproval weight.
   /// @return The weight of the policyholder's disapproval.
-  function getDisapprovalWeightAt(address policyholder, bytes32 role, uint256 timestamp)
-    external
-    view
-    returns (uint256)
-  {
+  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     bool hasRole = policy.hasRole(policyholder, role, timestamp);
     if (!hasRole) return 0;
     return forceDisapprovalRole[role] ? type(uint256).max : 1;

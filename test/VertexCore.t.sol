@@ -47,7 +47,7 @@ contract VertexCoreTest is VertexTestSetup {
   function _createAction() public returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
-      Roles.Admin,
+      uint8(Roles.Admin),
       mpStrategy1,
       address(mockProtocol),
       0, // value
@@ -61,7 +61,7 @@ contract VertexCoreTest is VertexTestSetup {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    mpCore.castApproval(_actionId, "approver");
+    mpCore.castApproval(_actionId, uint8(Roles.Approver));
   }
 
   function _approveAction(address _policyholder) public {
@@ -73,7 +73,7 @@ contract VertexCoreTest is VertexTestSetup {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
-    mpCore.castDisapproval(_actionId, "disapprover");
+    mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
   }
 
   function _disapproveAction(address _policyholder) public {
@@ -209,7 +209,7 @@ contract CreateAction is VertexCoreTest {
     emit ActionCreated(0, adminAlice, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
     vm.prank(adminAlice);
     uint256 _actionId =
-      mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+      mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
 
     Action memory action = mpCore.getAction(_actionId);
     uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
@@ -230,7 +230,9 @@ contract CreateAction is VertexCoreTest {
     VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
     vm.prank(adminAlice);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
-    mpCore.createAction(Roles.Admin, unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(
+      uint8(Roles.Admin), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
   }
 
   function test_RevertIfStrategyIsFromAnotherVertex() public {
@@ -242,27 +244,27 @@ contract CreateAction is VertexCoreTest {
     vm.assume(mpPolicy.balanceOf(user) == 0);
     vm.prank(user);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function test_RevertIfNoPermissionForStrategy() public {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(Roles.Admin, mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(uint8(Roles.Admin), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfNoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(Roles.Admin, mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
     vm.assume(_badSelector != PAUSE_SELECTOR && _badSelector != FAIL_SELECTOR && _badSelector != RECEIVE_ETH_SELECTOR);
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
+    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
   }
 
   function testFuzz_RevertIfPermissionExpired(uint256 _expirationTimestamp) public {
@@ -458,8 +460,9 @@ contract ExecuteAction is VertexCoreTest {
 
   function test_RevertIfInsufficientMsgValue() public {
     vm.prank(adminAlice);
-    actionId =
-      mpCore.createAction(Roles.Admin, mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true));
+    actionId = mpCore.createAction(
+      uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true)
+    );
     vm.warp(block.timestamp + 1);
 
     _approveAction(approverAdam, actionId);
@@ -478,7 +481,7 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIfFailedActionExecution() public {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
-      Roles.Admin,
+      uint8(Roles.Admin),
       mpStrategy1,
       address(mockProtocol),
       0, // value
@@ -531,7 +534,7 @@ contract CastApproval is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderApproved(actionId, approverAdam, 1, reason);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, "approver", reason);
+    mpCore.castApproval(actionId, uint8(Roles.Approver), reason);
   }
 
   function test_RevertIfActionNotActive() public {
@@ -544,7 +547,7 @@ contract CastApproval is VertexCoreTest {
     mpCore.queueAction(actionId);
 
     vm.expectRevert(VertexCore.ActionNotActive.selector);
-    mpCore.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 
   function test_RevertIfDuplicateApproval() public {
@@ -553,7 +556,7 @@ contract CastApproval is VertexCoreTest {
 
     vm.expectRevert(VertexCore.DuplicateApproval.selector);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -562,10 +565,10 @@ contract CastApproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    mpCore.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
 
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, "approver");
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 }
 
@@ -611,14 +614,14 @@ contract CastDisapproval is VertexCoreTest {
     vm.expectEmit(true, true, true, true);
     emit PolicyholderDisapproved(actionId, disapproverDrake, 1, reason);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, "disapprover", reason);
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover), reason);
   }
 
   function test_RevertIfActionNotQueued() public {
     actionId = _createAction();
 
     vm.expectRevert(VertexCore.ActionNotQueued.selector);
-    mpCore.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 
   function test_RevertIfDuplicateDisapproval() public {
@@ -628,7 +631,7 @@ contract CastDisapproval is VertexCoreTest {
 
     vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 
   function test_RevertIfInvalidPolicyholder() public {
@@ -637,10 +640,10 @@ contract CastDisapproval is VertexCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
-    mpCore.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
 
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, "disapprover");
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 }
 
@@ -678,10 +681,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     newStrategies[1] = Strategy({
@@ -691,10 +694,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     newStrategies[2] = Strategy({
@@ -704,10 +707,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
@@ -744,10 +747,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     newStrategies[1] = Strategy({
@@ -757,10 +760,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     newStrategies[2] = Strategy({
@@ -770,10 +773,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
@@ -807,10 +810,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       isFixedLengthApprovalPeriod: false,
       minApprovalPct: 0,
       minDisapprovalPct: 2000,
-      approvalRole: "approver",
-      disapprovalRole: "disapprover",
-      forceApprovalRoles: new bytes32[](0),
-      forceDisapprovalRoles: new bytes32[](0)
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
     });
 
     vm.startPrank(address(mpCore));
