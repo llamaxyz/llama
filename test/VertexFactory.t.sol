@@ -121,12 +121,12 @@ contract Constructor is VertexFactoryTest {
     assertEq(factory.vertexCount(), 2);
   }
 
-  function test_RevertsIf_MissingAdmin() public {
+  function test_RevertIf_MissingAdmin() public {
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     deployVertexFactory(new RoleHolderData[](0)); // No role holders.
   }
 
-  function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
+  function testFuzz_RevertIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
     _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
@@ -134,7 +134,7 @@ contract Constructor is VertexFactoryTest {
     deployVertexFactory(_roleHolders);
   }
 
-  function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolder(uint256 _roleSalt) public {
+  function testFuzz_RevertIf_NonAdminIsOnlyRoleHolder(uint256 _roleSalt) public {
     bytes32[] memory _nonAdminRoles =
       Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
@@ -163,7 +163,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
+  function test_RevertIf_CalledByAccountThatIsNotRootVertex(address caller) public {
     vm.assume(caller != address(rootCore));
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -182,7 +182,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
+  function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
@@ -285,7 +285,7 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
   }
 
-  function test_RevertsIf_MissingAdmin() public {
+  function test_RevertIf_MissingAdmin() public {
     vm.expectRevert(VertexFactory.MissingAdmin.selector);
     vm.prank(address(rootCore));
     factory.deploy(
@@ -299,7 +299,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function testFuzz_RevertsIf_AdminExpiring(uint64 _expirationTimestamp) public {
+  function testFuzz_RevertIf_AdminExpiring(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp < type(uint64).max);
     RoleHolderData[] memory _roleHolders = new RoleHolderData[](1);
     _roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("expiring admin"), DEFAULT_WEIGHT, _expirationTimestamp);
@@ -316,7 +316,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function testFuzz_RevertsIf_NonAdminIsOnlyRoleHolderDeploy(uint256 _roleSalt) public {
+  function testFuzz_RevertIf_NonAdminIsOnlyRoleHolderDeploy(uint256 _roleSalt) public {
     bytes32[] memory _nonAdminRoles =
       Solarray.bytes32s(Roles.ActionCreator, Roles.AllHolders, Roles.Approver, Roles.Disapprover);
     _roleSalt = bound(_roleSalt, 0, _nonAdminRoles.length - 1);
@@ -383,7 +383,7 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
 }
 
 contract SetPolicyMetadata is VertexFactoryTest {
-  function testFuzz_RevertsIf_NotCalledByVertex(address _caller, address _metadata) public {
+  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _metadata) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
