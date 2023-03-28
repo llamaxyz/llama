@@ -141,11 +141,6 @@ contract VertexStrategyTest is VertexTestSetup {
   function _tokenId(address user) internal pure returns (uint256) {
     return uint256(uint160(user));
   }
-  // function setUp() public virtual override {
-  //   // TODO shared setup
-  // }
-
-  // TODO shared helpers
 }
 
 contract Constructor is VertexStrategyTest {
@@ -217,8 +212,7 @@ contract Constructor is VertexStrategyTest {
     assertEq(newStrategy.approvalPeriod(), _approvalPeriod);
   }
 
-  function testFuzz_SetsStrategyStoragePolicy() public {
-    //TODO actually use fuzzing in this test
+  function testFuzz_SetsStrategyStoragePolicy( /*TODO fuzz this test */ ) public {
     deployStrategyAndSetRole(
       bytes32(0),
       bytes32(0),
@@ -235,8 +229,7 @@ contract Constructor is VertexStrategyTest {
     assertEq(address(newStrategy.policy()), address(mpPolicy));
   }
 
-  function testFuzz_SetsStrategyStorageVertex(address _vertex) public {
-    //TODO actually use fuzzing in this test
+  function testFuzz_SetsStrategyStorageVertex( /*TODO fuzz this test */ ) public {
     deployStrategyAndSetRole(
       bytes32(0),
       bytes32(0),
@@ -534,7 +527,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     // uint256 _weight,
     address _policyHolder
   ) public {
-    // TODO
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > bytes32(0));
     vm.assume(_permission > bytes32(0));
