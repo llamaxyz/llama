@@ -11,16 +11,6 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
-  // RoleHolderData[] memory roleHolders;
-  // mapping(address => bool) public isRoleHolder;
-  // RolePermissionData[] memory rolePermissions;
-  // Strategy strategy;
-  // Strategy[] strategies;
-  // VertexStrategy newStrategy;
-  // Strategy memory testStrategyData;
-  // VertexStrategy testStrategy;
-  // Strategy[] memory testStrategies;
-
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
