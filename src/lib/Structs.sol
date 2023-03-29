@@ -7,20 +7,20 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 struct RoleHolderData {
-  bytes32 role; // Name of the role to set.
+  uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
   address user; // User to assign the role to.
   uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval weight.
   uint64 expiration; // When the role expires.
 }
 
 struct RolePermissionData {
-  bytes32 role; // Name of the role to set.
+  uint8 role; // Name of the role to set.
   bytes32 permissionId; // Permission ID to assign to the role.
   bool hasPermission; // Whether to assign the permission or remove the permission.
 }
 
 struct ExpiredRole {
-  bytes32 role; // Role that has expired.
+  uint8 role; // Role that has expired.
   address user; // User that held the role.
 }
 
@@ -55,10 +55,10 @@ struct Strategy {
   uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
   uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
-  bytes32 approvalRole; // Anyone with this role can vote to approve an action.
-  bytes32 disapprovalRole; // Anyone with this role can vote to disapprove an action.
-  bytes32[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
-  bytes32[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
+  uint8 approvalRole; // Anyone with this role can vote to approve an action.
+  uint8 disapprovalRole; // Anyone with this role can vote to disapprove an action.
+  uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
+  uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }
 
 struct ERC20Data {

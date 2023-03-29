@@ -32,8 +32,7 @@ contract VertexCore is Initializable {
   error DisapproveDisabled();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
-  error ApprovalRoleHasZeroSupply();
-  error DisapprovalRoleHasZeroSupply();
+  error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
 
@@ -69,10 +68,7 @@ contract VertexCore is Initializable {
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
   /// @notice A special role to designate an Admin, who can always create actions.
-  bytes32 public constant ADMIN_ROLE = "admin";
-
-  /// @notice A special role used to reference all policy holders.
-  bytes32 public constant ALL_HOLDERS_ROLE = "all-policy-holders";
+  uint8 public constant ADMIN_ROLE = 1;
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -141,15 +137,15 @@ contract VertexCore is Initializable {
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
   /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
-  /// @return actionId of the newly created action.
+  /// @return actionId actionId of the newly created action.
   function createAction(
-    bytes32 role,
+    uint8 role,
     VertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
     bytes calldata data
-  ) external returns (uint256) {
+  ) external returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, selector, strategy);
@@ -167,14 +163,11 @@ contract VertexCore is Initializable {
       revert PolicyholderDoesNotHavePermission();
     }
 
-    uint256 previousActionCount = actionsCount;
-    Action storage newAction = actions[previousActionCount];
+    actionId = actionsCount;
+    Action storage newAction = actions[actionId];
 
-    uint256 approvalPolicySupply = policy.getSupply(strategy.approvalRole());
-    if (approvalPolicySupply == 0) revert ApprovalRoleHasZeroSupply();
-
-    uint256 disapprovalPolicySupply = policy.getSupply(strategy.disapprovalRole());
-    if (disapprovalPolicySupply == 0) revert DisapprovalRoleHasZeroSupply();
+    // Revert if the policy has no supply for any provided roles.
+    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = assertNonZeroRoleSupplies(strategy);
 
     newAction.creator = msg.sender;
     newAction.strategy = strategy;
@@ -190,9 +183,7 @@ contract VertexCore is Initializable {
       ++actionsCount;
     }
 
-    emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, selector, data);
-
-    return previousActionCount;
+    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -251,7 +242,7 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the approval of an action.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
-  function castApproval(uint256 actionId, bytes32 role) external {
+  function castApproval(uint256 actionId, uint8 role) external {
     return _castApproval(msg.sender, role, actionId, "");
   }
 
@@ -259,7 +250,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param reason The reason given for the approval by the policyholder.
-  function castApproval(uint256 actionId, bytes32 role, string calldata reason) external {
+  function castApproval(uint256 actionId, uint8 role, string calldata reason) external {
     return _castApproval(msg.sender, role, actionId, reason);
   }
 
@@ -269,7 +260,7 @@ contract VertexCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castApprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castApprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -285,7 +276,7 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the disapproval of an action.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
-  function castDisapproval(uint256 actionId, bytes32 role) external {
+  function castDisapproval(uint256 actionId, uint8 role) external {
     return _castDisapproval(msg.sender, role, actionId, "");
   }
 
@@ -293,7 +284,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param reason The reason given for the disapproval by the policyholder.
-  function castDisapproval(uint256 actionId, bytes32 role, string calldata reason) external {
+  function castDisapproval(uint256 actionId, uint8 role, string calldata reason) external {
     return _castDisapproval(msg.sender, role, actionId, reason);
   }
 
@@ -303,7 +294,7 @@ contract VertexCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castDisapprovalBySig(uint256 actionId, bytes32 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castDisapprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -386,7 +377,7 @@ contract VertexCore is Initializable {
     return ActionState.Queued;
   }
 
-  function _castApproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
+  function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
@@ -405,7 +396,7 @@ contract VertexCore is Initializable {
     emit PolicyholderApproved(actionId, policyholder, weight, reason);
   }
 
-  function _castDisapproval(address policyholder, bytes32 role, uint256 actionId, string memory reason) internal {
+  function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
@@ -475,5 +466,21 @@ contract VertexCore is Initializable {
         emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
       }
     }
+  }
+
+  // TODO We don't loop through the force (dis)approval roles because currently the strategy does
+  // not store them all in an array to support this. Should we do this?
+  function assertNonZeroRoleSupplies(VertexStrategy strategy)
+    internal
+    view
+    returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
+  {
+    uint8 approvalRole = strategy.approvalRole();
+    approvalPolicySupply = policy.getSupply(approvalRole);
+    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
+
+    uint8 disapprovalRole = strategy.disapprovalRole();
+    disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 }

@@ -14,7 +14,6 @@ import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol"
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory {
-  error MissingAdmin();
   error OnlyVertex();
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
@@ -22,7 +21,7 @@ contract VertexFactory {
   event AccountLogicAuthorized(address indexed accountLogic);
 
   /// @notice A special role to designate an Admin, who can always create actions.
-  bytes32 public constant ADMIN_ROLE = "admin";
+  uint8 public constant ADMIN_ROLE = 1;
 
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable vertexCoreLogic;
@@ -123,16 +122,6 @@ contract VertexFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {
-    // Verify that at least one user is an admin to avoid the system being locked.
-    bool hasAdmin = false;
-    for (uint256 i = 0; i < initialRoleHolders.length; i = _uncheckedIncrement(i)) {
-      if (initialRoleHolders[i].role == ADMIN_ROLE && initialRoleHolders[i].expiration == type(uint64).max) {
-        hasAdmin = true;
-        break;
-      }
-    }
-    if (!hasAdmin) revert MissingAdmin();
-
     // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
