@@ -108,11 +108,11 @@ contract VertexStrategyTest is VertexTestSetup {
     vm.prank(address(mpCore));
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
 
-    RoleHolderData[] memory forceAproveRoleHolders = new RoleHolderData[](1);
-    forceAproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
+    RoleHolderData[] memory forceApproveRoleHolders = new RoleHolderData[](1);
+    forceApproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
 
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(forceAproveRoleHolders);
+    mpPolicy.setRoleHolders(forceApproveRoleHolders);
   }
 
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
@@ -313,7 +313,7 @@ contract Constructor is VertexStrategyTest {
     }
   }
 
-  function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDispprovalRoles) public {
+  function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDisapprovalRoles) public {
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -325,10 +325,10 @@ contract Constructor is VertexStrategyTest {
       4000,
       2000,
       new uint8[](0),
-      forceDispprovalRoles
+      forceDisapprovalRoles
     );
-    for (uint256 i = 0; i < forceDispprovalRoles.length; i++) {
-      assertEq(newStrategy.forceDisapprovalRole(forceDispprovalRoles[i]), true);
+    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
+      assertEq(newStrategy.forceDisapprovalRole(forceDisapprovalRoles[i]), true);
     }
   }
 
@@ -353,9 +353,9 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_HandlesDuplicateDisapprovalRoles(uint8 _role) public {
-    uint8[] memory forceDispprovalRoles = new uint8[](2);
-    forceDispprovalRoles[0] = _role;
-    forceDispprovalRoles[1] = _role;
+    uint8[] memory forceDisapprovalRoles = new uint8[](2);
+    forceDisapprovalRoles[0] = _role;
+    forceDisapprovalRoles[1] = _role;
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -367,7 +367,7 @@ contract Constructor is VertexStrategyTest {
       4000,
       2000,
       new uint8[](0),
-      forceDispprovalRoles
+      forceDisapprovalRoles
     );
     assertEq(newStrategy.forceDisapprovalRole(_role), true);
   }
@@ -494,7 +494,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     uint256 _timeUntilPermission,
     uint8 _role,
     bytes32 _permission,
-    // uint256 _weight,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
