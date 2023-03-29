@@ -155,11 +155,22 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _assertAdminsExist();
   }
 
-  /// @notice Revokes all roles from the user and burns their policy.
+  /// @notice Revokes all roles from the `user` and burns their policy.
+  function revokePolicy(address user) external onlyVertex {
+    for (uint256 i = 0; i <= numRoles; i = _uncheckedIncrement(i)) {
+      _setRoleHolder(uint8(i), user, 0, 0);
+    }
+    _burn(_tokenId(user));
+    _assertAdminsExist();
+  }
+
+  /// @notice Revokes all `roles` from the `user` and burns their policy.
   /// @dev WARNING: The contract cannot enumerate all roles for a user, so the caller MUST provide
   /// the full list of roles held by user. Not properly providing this data can result in an
   /// inconsistent internal state. It is expected that policies are revoked as needed before
-  // creating an action using the `ALL_HOLDERS_ROLE`.
+  /// creating an action using the `ALL_HOLDERS_ROLE`.
+  /// @dev This method only exists to ensure policies can still be revoked in the case where the
+  /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0, 0);

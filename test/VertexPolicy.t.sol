@@ -184,7 +184,9 @@ contract InitializeRole is VertexPolicyTest {
   }
 }
 
-contract SetRoleHolders is VertexPolicyTest {}
+contract SetRoleHolders is VertexPolicyTest {
+// TODO
+}
 
 contract SetRolePermissions is VertexPolicyTest {
 // TODO
@@ -199,6 +201,10 @@ contract RevokeExpiredRoles is VertexPolicyTest {
 }
 
 contract RevokePolicy is VertexPolicyTest {
+// TODO
+}
+
+contract RevokePolicyRolesOverload is VertexPolicyTest {
 // TODO
 }
 
