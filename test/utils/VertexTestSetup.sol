@@ -22,6 +22,8 @@ enum Roles {
   ActionCreator,
   Approver,
   Disapprover,
+  ForceApprover,
+  ForceDisapprover,
   TestRole1,
   TestRole2,
   MadeUpRole
