@@ -130,7 +130,7 @@ contract VertexStrategyTest is VertexTestSetup {
 
   function approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
     for (uint256 i; i < numberOfApprovals; i++) {
-      address _policyholder = address(uint160(i + 1));
+      address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
       mpCore.castApproval(actionId, uint8(Roles.TestRole1));
     }
@@ -138,7 +138,7 @@ contract VertexStrategyTest is VertexTestSetup {
 
   function disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
     for (uint256 i; i < numberOfDisapprovals; i++) {
-      address _policyholder = address(uint160(i + 1));
+      address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
       mpCore.castDisapproval(actionId, uint8(Roles.TestRole1));
     }
@@ -147,7 +147,7 @@ contract VertexStrategyTest is VertexTestSetup {
   function generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](numberOfHolders);
     for (uint256 i = 0; i < numberOfHolders; i++) {
-      address _policyHolder = address(uint160(i + 1));
+      address _policyHolder = address(uint160(i + 100));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
         roleHolders[i] = RoleHolderData(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
       }
