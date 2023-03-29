@@ -21,9 +21,6 @@ contract VertexStrategy is Initializable {
   /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice Permission signature value that determines weight of all unspecified policyholders.
-  bytes8 public constant DEFAULT_OPERATOR = 0xffffffffffffffff;
-
   /// @notice Can action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
