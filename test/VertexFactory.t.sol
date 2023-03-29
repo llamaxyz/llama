@@ -59,7 +59,7 @@ contract Constructor is VertexFactoryTest {
       "Root Vertex",
       strategies,
       accounts,
-      new string[](0),
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -118,7 +118,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      new string[](0),
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -156,7 +156,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      new string[](0),
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
