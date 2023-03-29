@@ -12,10 +12,13 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
+import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
+  uint128 constant DEFAULT_WEIGHT = 1;
+
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
@@ -46,7 +49,7 @@ contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory _roleHolders = defaultAdminRoleHolder(adminAlice);
     return new VertexFactory(
       coreLogic,
       address(strategyLogic),
@@ -56,7 +59,7 @@ contract Constructor is VertexFactoryTest {
       "Root Vertex",
       strategies,
       accounts,
-      roleHolders,
+      _roleHolders,
       new RolePermissionData[](0)
     );
   }
@@ -119,7 +122,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertsIf_CalledByAccountThatIsNotRootVertex(address caller) public {
+  function test_RevertIf_CalledByAccountThatIsNotRootVertex(address caller) public {
     vm.assume(caller != address(rootCore));
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -138,7 +141,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertsIf_InstanceDeployedWithSameName(string memory name) public {
+  function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
@@ -243,8 +246,10 @@ contract Deploy is VertexFactoryTest {
 }
 
 contract AuthorizeStrategyLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex() public {
+  function testFuzz_RevertIf_CallerIsNotVertex(address _caller) public {
+    vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.prank(_caller);
     factory.authorizeStrategyLogic(randomLogicAddress);
   }
 
@@ -264,8 +269,10 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 }
 
 contract AuthorizeAccountLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex() public {
+  function test_RevertIf_CallerIsNotVertex(address _caller) public {
+    vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.prank(_caller);
     factory.authorizeAccountLogic(randomLogicAddress);
   }
 
@@ -281,5 +288,28 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
     vm.expectEmit(true, true, true, true);
     emit AccountLogicAuthorized(randomLogicAddress);
     factory.authorizeAccountLogic(randomLogicAddress);
+  }
+}
+
+contract SetPolicyMetadata is VertexFactoryTest {
+  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _metadata) public {
+    vm.assume(_caller != address(rootCore));
+    vm.prank(address(_caller));
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    factory.setPolicyMetadata(VertexPolicyMetadata(_metadata));
+  }
+
+  function testFuzz_WritesMetadataAddressToStorage(address _metadata) public {
+    vm.prank(address(rootCore));
+    factory.setPolicyMetadata(VertexPolicyMetadata(_metadata));
+    assertEq(address(factory.vertexPolicyMetadata()), _metadata);
+  }
+}
+
+contract TokenURI is VertexFactoryTest {
+  function testFuzz_ProxiesToMetadataContract(string memory _name, string memory _symbol, uint256 _tokenId) public {
+    assertEq(
+      factory.tokenURI(_name, _symbol, _tokenId), factory.vertexPolicyMetadata().tokenURI(_name, _symbol, _tokenId)
+    );
   }
 }

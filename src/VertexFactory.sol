@@ -154,10 +154,4 @@ contract VertexFactory {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
   }
-
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
-  }
 }
