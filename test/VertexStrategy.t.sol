@@ -61,7 +61,7 @@ contract VertexStrategyTest is VertexTestSetup {
     newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
   }
 
-  function _deployTestStrategy() internal returns (VertexStrategy testStrategy) {
+  function deployTestStrategy() internal returns (VertexStrategy testStrategy) {
     Strategy memory testStrategyData = Strategy({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
@@ -81,7 +81,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
   }
 
-  function _deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
+  function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
     uint8[] memory forceRoles = new uint8[](1);
     forceRoles[0] = uint8(Roles.Admin);
     Strategy memory testStrategyData = Strategy({
@@ -103,7 +103,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
   }
 
-  function _createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
+  function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
       uint8(Roles.TestRole1),
@@ -116,7 +116,7 @@ contract VertexStrategyTest is VertexTestSetup {
     vm.warp(block.timestamp + 1);
   }
 
-  function _approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
+  function approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     for (uint256 i; i < numberOfApprovals; i++) {
@@ -126,7 +126,7 @@ contract VertexStrategyTest is VertexTestSetup {
     }
   }
 
-  function _disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
+  function disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
     // vm.expectEmit(true, true, true, true);
     // emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     for (uint256 i; i < numberOfDisapprovals; i++) {
@@ -136,7 +136,7 @@ contract VertexStrategyTest is VertexTestSetup {
     }
   }
 
-  function _generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
+  function generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](numberOfHolders);
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 1));
@@ -389,13 +389,13 @@ contract IsActionPassed is VertexStrategyTest {
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
-    VertexStrategy testStrategy = _deployTestStrategy();
+    VertexStrategy testStrategy = deployTestStrategy();
 
-    _generateAndSetRoleHolders(_numberOfPolicies);
+    generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = _createAction(testStrategy);
+    uint256 actionId = createAction(testStrategy);
 
-    _approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionId);
 
     bool isActionPassed = testStrategy.isActionPassed(actionId);
 
@@ -406,13 +406,13 @@ contract IsActionPassed is VertexStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
 
-    VertexStrategy testStrategy = _deployTestStrategy();
+    VertexStrategy testStrategy = deployTestStrategy();
 
-    _generateAndSetRoleHolders(_numberOfPolicies);
+    generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = _createAction(testStrategy);
+    uint256 actionId = createAction(testStrategy);
 
-    _approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionId);
 
     bool isActionPassed = testStrategy.isActionPassed(actionId);
 
@@ -432,18 +432,18 @@ contract IsActionCancelationValid is VertexStrategyTest {
     _actionDisapprovals =
       bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
 
-    VertexStrategy testStrategy = _deployTestStrategyWithForceApproval();
+    VertexStrategy testStrategy = deployTestStrategyWithForceApproval();
 
-    _generateAndSetRoleHolders(_numberOfPolicies);
+    generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = _createAction(testStrategy);
+    uint256 actionId = createAction(testStrategy);
 
     vm.prank(address(adminAlice));
     mpCore.castApproval(actionId, uint8(Roles.Admin));
 
     mpCore.queueAction(actionId);
 
-    _disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionId);
 
     bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
 
@@ -456,18 +456,18 @@ contract IsActionCancelationValid is VertexStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    VertexStrategy testStrategy = _deployTestStrategyWithForceApproval();
+    VertexStrategy testStrategy = deployTestStrategyWithForceApproval();
 
-    _generateAndSetRoleHolders(_numberOfPolicies);
+    generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = _createAction(testStrategy);
+    uint256 actionId = createAction(testStrategy);
 
     vm.prank(address(adminAlice));
     mpCore.castApproval(actionId, uint8(Roles.Admin));
 
     mpCore.queueAction(actionId);
 
-    _disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionId);
 
     bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
 
