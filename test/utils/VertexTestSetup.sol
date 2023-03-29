@@ -106,6 +106,8 @@ contract VertexTestSetup is Test {
 
     // Deploy the Root vertex instance. We only instantiate it with a single admin role.
     Strategy[] memory strategies = defaultStrategies();
+    string[] memory roleDescriptions =
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
     RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
 
@@ -118,6 +120,7 @@ contract VertexTestSetup is Test {
       "Root Vertex",
       strategies,
       rootAccounts,
+      roleDescriptions,
       rootRoleHolders,
       new RolePermissionData[](0)
     );
@@ -135,6 +138,7 @@ contract VertexTestSetup is Test {
       address(accountLogic),
       strategies,
       mpAccounts,
+      roleDescriptions,
       mpRoleHolders,
       new RolePermissionData[](0)
     );
