@@ -5,15 +5,15 @@ contract ProtocolXYZ {
   error OnlyOwner();
   error Failed();
 
-  address public immutable owner;
+  address public immutable OWNER;
   bool public paused;
 
   constructor(address _owner) {
-    owner = _owner;
+    OWNER = _owner;
   }
 
   modifier onlyOwner() {
-    if (msg.sender != owner) revert OnlyOwner();
+    if (msg.sender != OWNER) revert OnlyOwner();
     _;
   }
 

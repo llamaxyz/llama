@@ -34,7 +34,7 @@ contract VertexFactoryHandler is BaseHandler {
   // =============================
 
   constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
-    vertexCounts.push(vertexFactory.vertexCount());
+    vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
 
   // ==========================
@@ -60,15 +60,15 @@ contract VertexFactoryHandler is BaseHandler {
 
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
-    vm.prank(address(vertexFactory.rootVertex()));
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] =
       RoleHolderData(uint8(Roles.Admin), makeAddr("dummyAdmin"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    vertexFactory.deploy(
+    VERTEX_FACTORY.deploy(
       name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new RolePermissionData[](0)
     );
-    vertexCounts.push(vertexFactory.vertexCount());
+    vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
 }
 

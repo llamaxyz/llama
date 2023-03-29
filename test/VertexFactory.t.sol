@@ -65,11 +65,11 @@ contract Constructor is VertexFactoryTest {
   }
 
   function test_SetsVertexCoreLogicAddress() public {
-    assertEq(address(factory.vertexCoreLogic()), address(coreLogic));
+    assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
   }
 
   function test_SetsVertexPolicyLogicAddress() public {
-    assertEq(address(factory.vertexPolicyLogic()), address(policyLogic));
+    assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
   }
 
   function test_SetsVertexStrategyLogicAddress() public {
@@ -93,7 +93,7 @@ contract Constructor is VertexFactoryTest {
   }
 
   function test_SetsRootVertexAddress() public {
-    assertEq(address(factory.rootVertex()), address(rootCore));
+    assertEq(address(factory.ROOT_VERTEX()), address(rootCore));
   }
 
   function test_DeploysRootVertexViaInternalDeployMethod() public {
