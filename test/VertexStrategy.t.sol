@@ -117,8 +117,6 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
-    // vm.expectEmit(true, true, true, true);
-    // emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     for (uint256 i; i < numberOfApprovals; i++) {
       address _policyholder = address(uint160(i + 1));
       vm.prank(_policyholder);
@@ -127,8 +125,6 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
-    // vm.expectEmit(true, true, true, true);
-    // emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     for (uint256 i; i < numberOfDisapprovals; i++) {
       address _policyholder = address(uint160(i + 1));
       vm.prank(_policyholder);
