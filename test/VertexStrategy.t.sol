@@ -82,8 +82,11 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
-    uint8[] memory forceRoles = new uint8[](1);
-    forceRoles[0] = uint8(Roles.Admin);
+    uint8[] memory forceApproveRoles = new uint8[](1);
+    forceApproveRoles[0] = uint8(Roles.ForceApprover);
+    uint8[] memory forceDisapproveRoles = new uint8[](1);
+    forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
+
     Strategy memory testStrategyData = Strategy({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
@@ -93,14 +96,23 @@ contract VertexStrategyTest is VertexTestSetup {
       minDisapprovalPct: 2000,
       approvalRole: uint8(Roles.TestRole1),
       disapprovalRole: uint8(Roles.TestRole1),
-      forceApprovalRoles: forceRoles,
-      forceDisapprovalRoles: forceRoles
+      forceApprovalRoles: forceApproveRoles,
+      forceDisapprovalRoles: forceDisapproveRoles
     });
+
     testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
+
     vm.prank(address(mpCore));
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
+
+    RoleHolderData[] memory forceAproveRoleHolders = new RoleHolderData[](1);
+    forceAproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolders(forceAproveRoleHolders);
   }
 
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
@@ -417,8 +429,8 @@ contract IsActionPassed is VertexStrategyTest {
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
     vm.expectRevert(VertexCore.InvalidActionId.selector);
-    vm.prank(address(adminAlice));
-    mpCore.castApproval(_actionId, uint8(Roles.Admin));
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(_actionId, uint8(Roles.Approver));
   }
 }
 
@@ -434,8 +446,8 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     uint256 actionId = createAction(testStrategy);
 
-    vm.prank(address(adminAlice));
-    mpCore.castApproval(actionId, uint8(Roles.Admin));
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
 
     mpCore.queueAction(actionId);
 
@@ -458,8 +470,8 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     uint256 actionId = createAction(testStrategy);
 
-    vm.prank(address(adminAlice));
-    mpCore.castApproval(actionId, uint8(Roles.Admin));
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
 
     mpCore.queueAction(actionId);
 
@@ -472,8 +484,8 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
     vm.expectRevert(VertexCore.InvalidActionId.selector);
-    vm.prank(address(adminAlice));
-    mpCore.castDisapproval(_actionId, uint8(Roles.Admin));
+    vm.prank(address(disapproverDave));
+    mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
   }
 }
 
