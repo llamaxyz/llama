@@ -47,6 +47,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   error AlreadyInitialized();
   error InvalidInput();
+  error MissingAdmin();
   error NonTransferableToken();
   error OnlyVertex();
 
@@ -72,12 +73,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
+
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
+
+    _assertAdminsExist();
   }
 
   function setVertex(address _vertex) external {
@@ -94,6 +98,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Sets the permissions for a given role.
@@ -114,6 +119,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Revokes expired roles.
@@ -128,6 +134,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 0; i < expiredRoles.length; i = _uncheckedIncrement(i)) {
       _revokeExpiredRole(expiredRoles[i]);
     }
+    _assertAdminsExist();
   }
 
   /// @notice Revokes all roles from the user and burns their policy.
@@ -140,6 +147,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
+    _assertAdminsExist();
   }
 
   // =================================
@@ -262,6 +270,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Verifies that admin supply is non-zero to avoid the system being locked. Any changes to
+  /// roles that result in zero admin supply will revert.
+  function _assertAdminsExist() internal view {
+    if (getSupply(ADMIN_ROLE) == 0) revert MissingAdmin();
+  }
+
   function _setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) internal {
     // Scope to avoid stack too deep.
     {
@@ -284,10 +298,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
     // Now we update the user's role balance checkpoint.
     roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
-    if (balanceOf(user) == 0) {
-      _mint(user);
-      roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(quantity, type(uint64).max);
-    }
+    if (balanceOf(user) == 0) _mint(user);
 
     // Lastly we update the total supply of the role. If the expiration is zero, it means the role
     // was removed. Determining how to update total supply requires knowing if the user currently
@@ -318,14 +329,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   function _mint(address user) internal {
-    _mint(user, _tokenId(user));
+    uint256 tokenId = _tokenId(user);
+    _mint(user, tokenId);
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() + 1);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
 
   function _burn(uint256 tokenId) internal override {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
     roleSupplyCkpts[ALL_HOLDERS_ROLE].push(roleSupplyCkpts[ALL_HOLDERS_ROLE].latest() - 1);
-    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, type(uint64).max);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
 
   function _tokenId(address user) internal pure returns (uint256) {

@@ -32,8 +32,7 @@ contract VertexCore is Initializable {
   error DisapproveDisabled();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
-  error ApprovalRoleHasZeroSupply();
-  error DisapprovalRoleHasZeroSupply();
+  error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
 
@@ -70,9 +69,6 @@ contract VertexCore is Initializable {
 
   /// @notice A special role to designate an Admin, who can always create actions.
   uint8 public constant ADMIN_ROLE = 1;
-
-  /// @notice A special role used to reference all policy holders.
-  uint8 public constant ALL_HOLDERS_ROLE = 0; // TODO Confirm zero is safe here.
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -141,7 +137,7 @@ contract VertexCore is Initializable {
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
   /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
-  /// @return actionId of the newly created action.
+  /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
     VertexStrategy strategy,
@@ -149,7 +145,7 @@ contract VertexCore is Initializable {
     uint256 value,
     bytes4 selector,
     bytes calldata data
-  ) external returns (uint256) {
+  ) external returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, selector, strategy);
@@ -167,14 +163,11 @@ contract VertexCore is Initializable {
       revert PolicyholderDoesNotHavePermission();
     }
 
-    uint256 previousActionCount = actionsCount;
-    Action storage newAction = actions[previousActionCount];
+    actionId = actionsCount;
+    Action storage newAction = actions[actionId];
 
-    uint256 approvalPolicySupply = policy.getSupply(strategy.approvalRole());
-    if (approvalPolicySupply == 0) revert ApprovalRoleHasZeroSupply();
-
-    uint256 disapprovalPolicySupply = policy.getSupply(strategy.disapprovalRole());
-    if (disapprovalPolicySupply == 0) revert DisapprovalRoleHasZeroSupply();
+    // Revert if the policy has no supply for any provided roles.
+    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = assertNonZeroRoleSupplies(strategy);
 
     newAction.creator = msg.sender;
     newAction.strategy = strategy;
@@ -190,9 +183,7 @@ contract VertexCore is Initializable {
       ++actionsCount;
     }
 
-    emit ActionCreated(previousActionCount, msg.sender, strategy, target, value, selector, data);
-
-    return previousActionCount;
+    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -475,5 +466,21 @@ contract VertexCore is Initializable {
         emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
       }
     }
+  }
+
+  // TODO We don't loop through the force (dis)approval roles because currently the strategy does
+  // not store them all in an array to support this. Should we do this?
+  function assertNonZeroRoleSupplies(VertexStrategy strategy)
+    internal
+    view
+    returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
+  {
+    uint8 approvalRole = strategy.approvalRole();
+    approvalPolicySupply = policy.getSupply(approvalRole);
+    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
+
+    uint8 disapprovalRole = strategy.disapprovalRole();
+    disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 }
