@@ -49,6 +49,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   VertexFactory public factory;
 
   error AlreadyInitialized();
+  error CallReverted(uint256 index, bytes revertData);
   error InvalidInput();
   error MissingAdmin();
   error NonTransferableToken();
@@ -105,6 +106,22 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // =======================================
   // ======== Permission Management ========
   // =======================================
+
+  /// @notice Aggregate calls of multiple functions in the current contract into a single call.
+  /// @dev The `msg.value` should not be trusted for any method callable from this method. No
+  /// methods in this contract are `payable` so this should not be an issue, but it's mentioned
+  /// here in case this contract is modified in the future.
+  /// @param calls ABI-encoded array of calls to be executed in order.
+  /// @return returnData The return data of each call.
+  function aggregate(bytes[] calldata calls) external onlyVertex returns (bytes[] memory returnData) {
+    returnData = new bytes[](calls.length);
+
+    for (uint256 i = 0; i < calls.length; i = _uncheckedIncrement(i)) {
+      (bool success, bytes memory response) = address(this).delegatecall(calls[i]);
+      if (!success) revert CallReverted(i, response);
+      returnData[i] = response;
+    }
+  }
 
   /// @notice Initializes a new role with the given `role` ID and `description`
   function initializeRole(string calldata description) external onlyVertex {
