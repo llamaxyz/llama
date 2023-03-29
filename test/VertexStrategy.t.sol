@@ -517,7 +517,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
     bytes32 _permission,
     uint8 _role,
-    // uint256 _weight,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
@@ -604,7 +603,6 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     uint256 _timeUntilPermission,
     bytes32 _permission,
     uint8 _role,
-    // uint256 _weight,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
@@ -628,7 +626,6 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
     bytes32 _permission,
     uint8 _role,
-    // uint256 _weight,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
