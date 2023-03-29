@@ -375,7 +375,7 @@ contract Constructor is VertexStrategyTest {
   function testFuzz_EmitsNewStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
     vm.expectEmit(true, true, true, true);
     emit NewStrategyCreated(mpCore, mpPolicy);
-    VertexStrategy newStrategy = deployStrategyAndSetRole(
+    deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -524,7 +524,7 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
-    uint256 _referenceTime = block.timestamp;
+
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
@@ -568,7 +568,6 @@ contract GetApprovalWeightAt is VertexStrategyTest {
 
   function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
     uint256 _timestamp,
-    bytes32 _permission,
     uint8 _role,
     address _policyHolder
   ) public {
@@ -636,7 +635,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.assume(_role > 0);
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
-    uint256 _referenceTime = block.timestamp;
+
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
@@ -669,7 +668,6 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
 
   function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
     uint256 _timestamp,
-    bytes32 _permission,
     uint8 _role,
     address _policyHolder
   ) public {
