@@ -119,7 +119,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-        - name: Install Foundry
+      - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Run Slither
