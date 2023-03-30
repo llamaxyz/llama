@@ -35,6 +35,7 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
 
+  /// @notice The Vertex Policy Metadata contract.
   VertexPolicyMetadata public vertexPolicyMetadata;
 
   /// @notice The current number of vertex systems created.
@@ -121,6 +122,20 @@ contract VertexFactory {
     _authorizeAccountLogic(accountLogic);
   }
 
+  /// @notice Returns the token URI for a given Vertex Policy Holder.
+  /// @param name The name of the Vertex system.
+  /// @param symbol The symbol of the Vertex system.
+  /// @param tokenId The token ID of the Vertex Policy Holder.
+  function tokenURI(string memory name, string memory symbol, uint256 tokenId) external view returns (string memory) {
+    return vertexPolicyMetadata.tokenURI(name, symbol, tokenId);
+  }
+
+  /// @notice Sets the Vertex Policy Metadata contract.
+  /// @param _vertexPolicyMetadata The Vertex Policy Metadata contract.
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
+    vertexPolicyMetadata = _vertexPolicyMetadata;
+  }
+
   function _deploy(
     string memory name,
     address strategyLogic,
@@ -144,14 +159,6 @@ contract VertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
-  }
-
-  function tokenURI(string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
-    return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
-  }
-
-  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
-    vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 
   function _authorizeStrategyLogic(address strategyLogic) internal {
