@@ -153,7 +153,7 @@ contract VertexFactory {
 
   /// @notice Sets the Vertex Policy Metadata contract.
   /// @param _vertexPolicyMetadata The Vertex Policy Metadata contract.
-  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) external onlyRootVertex {
     vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 
