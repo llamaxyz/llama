@@ -8,12 +8,13 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
+import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, Strategy, PermissionData} from "src/lib/Structs.sol";
+import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexCoreTest is VertexTestSetup {
@@ -48,7 +49,7 @@ contract VertexCoreTest is VertexTestSetup {
   function _createAction() public returns (uint256 actionId) {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
-      uint8(Roles.Admin),
+      uint8(uint8(Roles.Admin)),
       mpStrategy1,
       address(mockProtocol),
       0, // value
@@ -134,6 +135,14 @@ contract VertexCoreTest is VertexTestSetup {
     factory.authorizeAccountLogic(address(additionalAccountLogic));
     return address(additionalAccountLogic);
   }
+
+  function getCodeSize(address account) internal view returns (uint256) {
+    uint256 size;
+    assembly {
+      size := extcodesize(account)
+    }
+    return size;
+  }
 }
 
 contract Setup is VertexCoreTest {
@@ -152,11 +161,61 @@ contract Setup is VertexCoreTest {
 }
 
 contract Initialize is VertexCoreTest {
-  // TODO might want a new setup function here which deploys a VertexCore
-  // without initializing it, then allows the test functions below to initialize
+  function deployWithoutInitialization()
+    internal
+    returns (VertexFactoryWithoutInitialization factory, VertexCore vertex, VertexPolicy policy)
+  {
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    factory = new VertexFactoryWithoutInitialization(
+      coreLogic,
+      address(strategyLogic),
+      address(accountLogic),
+      policyLogic,
+      policyMetadata,
+      "Root Vertex",
+      strategies,
+      accounts,
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+
+    (vertex, policy) = factory.deployWithoutInitialization(
+      "NewProject",
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+  }
 
   function test_StrategiesAreDeployedAtExpectedAddress() public {
-    // TODO confirm strategies have been deployed at expected addresses
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](2);
+    for (uint256 i; i < strategies.length; i++) {
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
+    }
+
+    assertEq(getCodeSize(address(strategyAddresses[0])), 0);
+    assertEq(getCodeSize(address(strategyAddresses[1])), 0);
+
+    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), false);
+    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
+
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+    );
+
+    assertGt(getCodeSize(address(strategyAddresses[0])), 0);
+    assertGt(getCodeSize(address(strategyAddresses[1])), 0);
+
+    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), true);
   }
 
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
@@ -209,8 +268,9 @@ contract CreateAction is VertexCoreTest {
     vm.expectEmit();
     emit ActionCreated(0, adminAlice, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
     vm.prank(adminAlice);
-    uint256 _actionId =
-      mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    uint256 _actionId = mpCore.createAction(
+      uint8(uint8(Roles.Admin)), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
 
     Action memory action = mpCore.getAction(_actionId);
     uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
@@ -228,7 +288,7 @@ contract CreateAction is VertexCoreTest {
 
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
-    mpCore.createAction(Roles.Admin, mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data));
+    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data));
   }
 
   function test_RevertIfStrategyUnauthorized() public {
@@ -236,7 +296,7 @@ contract CreateAction is VertexCoreTest {
     vm.prank(adminAlice);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
     mpCore.createAction(
-      uint8(Roles.Admin), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(uint8(Roles.Admin)), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
   }
 
@@ -244,7 +304,9 @@ contract CreateAction is VertexCoreTest {
     VertexStrategy unauthorizedStrategy = rootStrategy1;
     vm.prank(adminAlice);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
-    mpCore.createAction(Roles.Admin, unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(
+      uint8(Roles.Admin), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
   }
 
   function testFuzz_RevertIfPolicyholderNotMinted(address user) public {
@@ -252,27 +314,33 @@ contract CreateAction is VertexCoreTest {
     vm.assume(mpPolicy.balanceOf(user) == 0);
     vm.prank(user);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(
+      uint8(uint8(Roles.Admin)), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
   }
 
   function test_RevertIfNoPermissionForStrategy() public {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.Admin), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(
+      uint8(uint8(Roles.Admin)), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
   }
 
   function testFuzz_RevertIfNoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(uint8(uint8(Roles.Admin)), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIfBadPermissionForSelector(bytes4 _badSelector) public {
     vm.assume(_badSelector != PAUSE_SELECTOR && _badSelector != FAIL_SELECTOR && _badSelector != RECEIVE_ETH_SELECTOR);
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true));
+    mpCore.createAction(
+      uint8(uint8(Roles.Admin)), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true)
+    );
   }
 
   function testFuzz_RevertIfPermissionExpired(uint256 _expirationTimestamp) public {
@@ -471,7 +539,7 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIfInsufficientMsgValue() public {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
-      uint8(Roles.Admin), mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true)
+      uint8(uint8(Roles.Admin)), mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true)
     );
     vm.warp(block.timestamp + 1);
 
@@ -491,7 +559,7 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIfFailedActionExecution() public {
     vm.prank(adminAlice);
     actionId = mpCore.createAction(
-      uint8(Roles.Admin),
+      uint8(uint8(Roles.Admin)),
       mpStrategy1,
       address(mockProtocol),
       0, // value
