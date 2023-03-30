@@ -15,6 +15,9 @@ import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 
 contract VertexFactoryHandler is BaseHandler {
+  uint128 DEFAULT_ROLE_QTY = 1;
+  uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
+
   // =========================
   // ======== Storage ========
   // =========================
@@ -59,7 +62,8 @@ contract VertexFactoryHandler is BaseHandler {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(vertexFactory.rootVertex()));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(Roles.Admin, makeAddr("dummyAdmin"), type(uint64).max);
+    roleHolders[0] =
+      RoleHolderData(uint8(Roles.Admin), makeAddr("dummyAdmin"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     vertexFactory.deploy(
       name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new RolePermissionData[](0)
