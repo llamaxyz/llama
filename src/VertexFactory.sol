@@ -73,7 +73,7 @@ contract VertexFactory {
     );
   }
 
-  modifier onlyROOT_VERTEX() {
+  modifier onlyRootVertex() {
     if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
     _;
   }
@@ -95,7 +95,7 @@ contract VertexFactory {
     string[] memory initialAccounts,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) external onlyROOT_VERTEX returns (VertexCore) {
+  ) external onlyRootVertex returns (VertexCore) {
     return _deploy(
       name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialRoleHolders, initialRolePermissions
     );
@@ -103,13 +103,13 @@ contract VertexFactory {
 
   /// @notice Authorizes a strategy logic contract.
   /// @param strategyLogic The strategy logic contract to authorize.
-  function authorizeStrategyLogic(address strategyLogic) external onlyROOT_VERTEX {
+  function authorizeStrategyLogic(address strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
   }
 
   /// @notice Authorizes an account logic contract.
   /// @param accountLogic The account logic contract to authorize.
-  function authorizeAccountLogic(address accountLogic) external onlyROOT_VERTEX {
+  function authorizeAccountLogic(address accountLogic) external onlyRootVertex {
     _authorizeAccountLogic(accountLogic);
   }
 
@@ -141,7 +141,7 @@ contract VertexFactory {
     return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
   }
 
-  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyROOT_VERTEX {
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
     vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 
