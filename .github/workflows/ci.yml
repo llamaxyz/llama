@@ -116,11 +116,23 @@ jobs:
     # permissions:
     #   security-events: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Slither
+        uses: crytic/slither-action@v0.3.0
+        id: slither
         with:
-          fail-on: none # Required to avoid failing the CI run regardless of findings.
-          sarif: results.sarif
-          slither-args: --exclude naming-convention
-          target: src/
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v2
+          node-version: 16
+          fail-on: none
+          slither-args: --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+
+      - name: Create/update checklist as PR comment
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const script = require('.github/scripts/comment')
+            const header = '# Slither report'
+            const body = `${{ steps.slither.outputs.stdout }}`
+            await script({ github, context, header, body })
