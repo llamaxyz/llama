@@ -44,10 +44,10 @@ contract VertexFactory {
   uint256 public vertexCount;
 
   constructor(
-    VertexCore _VERTEX_CORE_LOGIC,
+    VertexCore vertexCoreLogic,
     address initialVertexStrategyLogic,
     address initialVertexAccountLogic,
-    VertexPolicy _VERTEX_POLICY_LOGIC,
+    VertexPolicy vertexPolicyLogic,
     VertexPolicyMetadata _vertexPolicyMetadata,
     string memory name,
     Strategy[] memory initialStrategies,
@@ -56,8 +56,8 @@ contract VertexFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) {
-    VERTEX_CORE_LOGIC = _VERTEX_CORE_LOGIC;
-    VERTEX_POLICY_LOGIC = _VERTEX_POLICY_LOGIC;
+    VERTEX_CORE_LOGIC = vertexCoreLogic;
+    VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyMetadata = _vertexPolicyMetadata;
 
     _authorizeStrategyLogic(initialVertexStrategyLogic);

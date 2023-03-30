@@ -8,8 +8,8 @@ contract ProtocolXYZ {
   address public immutable OWNER;
   bool public paused;
 
-  constructor(address _owner) {
-    OWNER = _owner;
+  constructor(address owner) {
+    OWNER = owner;
   }
 
   modifier onlyOwner() {
