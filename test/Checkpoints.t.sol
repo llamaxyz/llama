@@ -20,48 +20,49 @@ contract CheckpointsMock {
     }
   }
 
-  function latest() public view returns (uint256 quantity) {
-    return _totalCheckpoints.latest();
+  function latest() public view returns (uint256) {
+    uint256 quantity = _totalCheckpoints.latest();
+    return quantity;
   }
 
-  function latestCheckpoint()
-    public
-    view
-    returns (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration)
-  {
-    return _totalCheckpoints.latestCheckpoint();
+  function latestCheckpoint() public view returns (bool, uint256, uint256, uint256) {
+    (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration) = _totalCheckpoints.latestCheckpoint();
+    return (exists, quantity, timestamp, expiration);
   }
 
-  function length() public view returns (uint256 numCkpts) {
-    return _totalCheckpoints.length();
+  function length() public view returns (uint256) {
+    uint256 numCkpts = _totalCheckpoints.length();
+    return numCkpts;
   }
 
-  function push(uint256 quantity) public returns (uint256 prevQty, uint256 newQty) {
-    return _totalCheckpoints.push(quantity);
+  function push(uint256 quantity) public returns (uint256, uint256) {
+    (uint256 prevQty, uint256 newQty) = _totalCheckpoints.push(quantity);
+    return (prevQty, newQty);
   }
 
-  function push(uint256 quantity, uint256 expiration) public returns (uint256 prevQty, uint256 newQty) {
-    return _totalCheckpoints.push(quantity, expiration);
+  function push(uint256 quantity, uint256 expiration) public returns (uint256, uint256) {
+    (uint256 prevQty, uint256 newQty) = _totalCheckpoints.push(quantity, expiration);
+    return (prevQty, newQty);
   }
 
-  function getAtTimestamp(uint256 blockNumber) public view returns (uint256 quantity) {
-    return _totalCheckpoints.getAtTimestamp(blockNumber);
+  function getAtTimestamp(uint256 blockNumber) public view returns (uint256) {
+    uint256 quantity = _totalCheckpoints.getAtTimestamp(blockNumber);
+    return quantity;
   }
 
-  function getAtProbablyRecentTimestamp(uint256 blockNumber) public view returns (uint256 quantity) {
-    return _totalCheckpoints.getAtProbablyRecentTimestamp(blockNumber);
+  function getAtProbablyRecentTimestamp(uint256 blockNumber) public view returns (uint256) {
+    uint256 quantity = _totalCheckpoints.getAtProbablyRecentTimestamp(blockNumber);
+    return quantity;
   }
 
-  function getCheckpointAtTimestamp(uint256 blockNumber) public view returns (uint256 quantity, uint256 expiration) {
-    return _totalCheckpoints.getCheckpointAtTimestamp(blockNumber);
+  function getCheckpointAtTimestamp(uint256 blockNumber) public view returns (uint256, uint256) {
+    (uint256 quantity, uint256 expiration) = _totalCheckpoints.getCheckpointAtTimestamp(blockNumber);
+    return (quantity, expiration);
   }
 
-  function getCheckpointAtProbablyRecentTimestamp(uint256 blockNumber)
-    public
-    view
-    returns (uint256 quantity, uint256 expiration)
-  {
-    return _totalCheckpoints.getCheckpointAtProbablyRecentTimestamp(blockNumber);
+  function getCheckpointAtProbablyRecentTimestamp(uint256 blockNumber) public view returns (uint256, uint256) {
+    (uint256 quantity, uint256 expiration) = _totalCheckpoints.getCheckpointAtProbablyRecentTimestamp(blockNumber);
+    return (quantity, expiration);
   }
 }
 
