@@ -193,14 +193,16 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// weight of the role when approving/disapproving (regardless of strategy).
   function getWeight(address user, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    return roleBalanceCkpts[tokenId][role].latest();
+    uint256 quantity = roleBalanceCkpts[tokenId][role].latest();
+    return quantity;
   }
 
   /// @notice Returns the quantity of the `role` for the given `user` at `timestamp`. The returned
   /// value is the weight of the role when approving/disapproving (regardless of strategy).
   function getPastWeight(address user, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    return roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
+    uint256 quantity = roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
+    return quantity;
   }
 
   /// @notice Returns the total supply of `role` holders at the given `timestamp`. The returned
@@ -217,7 +219,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev The value returned by this method must equal the sum of the quantity of the role
   /// across all policyholders at that timestamp.
   function getPastSupply(uint8 role, uint256 timestamp) external view returns (uint256) {
-    return roleSupplyCkpts[role].getAtTimestamp(timestamp);
+    uint256 quantity = roleSupplyCkpts[role].getAtTimestamp(timestamp);
+    return quantity;
   }
 
   /// @notice Returns all checkpoints for the given `user` and `role`.
