@@ -106,6 +106,8 @@ contract VertexTestSetup is Test {
 
     // Deploy the Root vertex instance. We only instantiate it with a single admin role.
     Strategy[] memory strategies = defaultStrategies();
+    string[] memory roleDescriptions =
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
     RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
 
@@ -118,6 +120,7 @@ contract VertexTestSetup is Test {
       "Root Vertex",
       strategies,
       rootAccounts,
+      roleDescriptions,
       rootRoleHolders,
       new RolePermissionData[](0)
     );
@@ -135,25 +138,22 @@ contract VertexTestSetup is Test {
       address(accountLogic),
       strategies,
       mpAccounts,
+      roleDescriptions,
       mpRoleHolders,
       new RolePermissionData[](0)
     );
     mpPolicy = mpCore.policy();
 
     // Add approvers and disapprovers to the mock protocol's vertex.
+    // forgefmt: disable-start
     RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](7);
-    mpRoleHoldersNew[0] =
-      RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[0] = RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     mpRoleHoldersNew[1] = RoleHolderData(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[2] =
-      RoleHolderData(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[2] = RoleHolderData(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     mpRoleHoldersNew[3] = RoleHolderData(uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[4] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[5] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[6] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[4] = RoleHolderData(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[5] = RoleHolderData(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpRoleHoldersNew[6] = RoleHolderData(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     // forgefmt: disable-end
 
     vm.prank(address(mpCore));

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -13,6 +13,27 @@ contract VertexStrategyTest is VertexTestSetup {
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
   event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
+
+  function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
+    internal
+    pure
+    returns (uint8 largest)
+  {
+    largest = role;
+    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
+      if (forceApprovalRoles[i] > largest) largest = forceApprovalRoles[i];
+    }
+    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
+      if (forceDisapprovalRoles[i] > largest) largest = forceDisapprovalRoles[i];
+    }
+  }
+
+  function initializeRolesUpTo(uint8 role) internal {
+    while (mpPolicy.numRoles() < role) {
+      vm.prank(address(mpCore));
+      mpPolicy.initializeRole("Test Role");
+    }
+  }
 
   function deployStrategyAndSetRole(
     uint8 _role,
@@ -28,6 +49,9 @@ contract VertexStrategyTest is VertexTestSetup {
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (VertexStrategy newStrategy) {
     {
+      // Initialize roles if required.
+      initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
+
       RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
       roleHolders[0] = RoleHolderData(_role, _policyHolder, 1, type(uint64).max);
       RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);

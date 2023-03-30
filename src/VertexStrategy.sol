@@ -13,6 +13,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 contract VertexStrategy is Initializable {
   error InvalidPermissionId();
   error NoPolicy();
+  error RoleNotInitialized(uint8 role);
 
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
@@ -71,17 +72,24 @@ contract VertexStrategy is Initializable {
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
+    uint8 numRoles = policy.numRoles();
+
     approvalRole = strategyConfig.approvalRole;
+    _assertValidRole(approvalRole, numRoles);
+
     disapprovalRole = strategyConfig.disapprovalRole;
+    _assertValidRole(disapprovalRole, numRoles);
 
     for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i++) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
+      _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
     for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i++) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
+      _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
     }
@@ -134,5 +142,10 @@ contract VertexStrategy is Initializable {
   function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure returns (uint256) {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
+  }
+
+  /// @dev Reverts if the given `role` is greater than `numRoles`.
+  function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
+    if (role > numRoles) revert RoleNotInitialized(role);
   }
 }
