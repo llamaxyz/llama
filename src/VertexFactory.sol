@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -14,11 +15,28 @@ import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol"
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory {
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
   error OnlyVertex();
+
+  modifier onlyRootVertex() {
+    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
+    _;
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(address indexed strategyLogic);
   event AccountLogicAuthorized(address indexed accountLogic);
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable VERTEX_CORE_LOGIC;
@@ -40,6 +58,10 @@ contract VertexFactory {
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   constructor(
     VertexCore vertexCoreLogic,
@@ -73,10 +95,9 @@ contract VertexFactory {
     );
   }
 
-  modifier onlyRootVertex() {
-    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
-    _;
-  }
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
   /// @param name The name of this Vertex system.
@@ -135,6 +156,10 @@ contract VertexFactory {
   function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
     vertexPolicyMetadata = _vertexPolicyMetadata;
   }
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
 
   function _deploy(
     string memory name,
