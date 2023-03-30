@@ -9,8 +9,6 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 
 contract CheckpointsMock {
-  using Checkpoints for Checkpoints.History;
-
   Checkpoints.History private _totalCheckpoints;
 
   function print() public view {
@@ -21,47 +19,49 @@ contract CheckpointsMock {
   }
 
   function latest() external view returns (uint256) {
-    uint256 quantity = _totalCheckpoints.latest();
+    uint256 quantity = Checkpoints.latest(_totalCheckpoints);
     return quantity;
   }
 
   function latestCheckpoint() public view returns (bool, uint256, uint256, uint256) {
-    (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration) = _totalCheckpoints.latestCheckpoint();
+    (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration) =
+      Checkpoints.latestCheckpoint(_totalCheckpoints);
     return (exists, quantity, timestamp, expiration);
   }
 
   function length() public view returns (uint256) {
-    uint256 numCkpts = _totalCheckpoints.length();
+    uint256 numCkpts = Checkpoints.length(_totalCheckpoints);
     return numCkpts;
   }
 
   function push(uint256 quantity) public returns (uint256, uint256) {
-    (uint256 prevQty, uint256 newQty) = _totalCheckpoints.push(quantity);
+    (uint256 prevQty, uint256 newQty) = Checkpoints.push(_totalCheckpoints, quantity);
     return (prevQty, newQty);
   }
 
   function push(uint256 quantity, uint256 expiration) public returns (uint256, uint256) {
-    (uint256 prevQty, uint256 newQty) = _totalCheckpoints.push(quantity, expiration);
+    (uint256 prevQty, uint256 newQty) = Checkpoints.push(_totalCheckpoints, quantity, expiration);
     return (prevQty, newQty);
   }
 
   function getAtTimestamp(uint256 timestamp) public view returns (uint256) {
-    uint256 quantity = _totalCheckpoints.getAtTimestamp(timestamp);
+    uint256 quantity = Checkpoints.getAtTimestamp(_totalCheckpoints, timestamp);
     return quantity;
   }
 
   function getAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256) {
-    uint256 quantity = _totalCheckpoints.getAtProbablyRecentTimestamp(timestamp);
+    uint256 quantity = Checkpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
     return quantity;
   }
 
   function getCheckpointAtTimestamp(uint256 timestamp) public view returns (uint256, uint256) {
-    (uint256 quantity, uint256 expiration) = _totalCheckpoints.getCheckpointAtTimestamp(timestamp);
+    (uint256 quantity, uint256 expiration) = Checkpoints.getCheckpointAtTimestamp(_totalCheckpoints, timestamp);
     return (quantity, expiration);
   }
 
   function getCheckpointAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256, uint256) {
-    (uint256 quantity, uint256 expiration) = _totalCheckpoints.getCheckpointAtProbablyRecentTimestamp(timestamp);
+    (uint256 quantity, uint256 expiration) =
+      Checkpoints.getCheckpointAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
     return (quantity, expiration);
   }
 }
