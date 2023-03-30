@@ -49,7 +49,7 @@ contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
-    RoleHolderData[] memory _roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
     return new VertexFactory(
       coreLogic,
       address(strategyLogic),
@@ -59,7 +59,8 @@ contract Constructor is VertexFactoryTest {
       "Root Vertex",
       strategies,
       accounts,
-      _roleHolders,
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleHolders,
       new RolePermissionData[](0)
     );
   }
@@ -117,6 +118,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -136,6 +138,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
+      new string[](0),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -153,6 +156,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -164,6 +168,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
+      new string[](0),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -190,7 +195,7 @@ contract Deploy is VertexFactoryTest {
     assertGt(address(_policy).code.length, 0);
 
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", new RoleHolderData[](0), new RolePermissionData[](0));
+    _policy.initialize("Test", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
   function test_DeploysVertexCore() public {

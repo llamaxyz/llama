@@ -52,6 +52,7 @@ contract VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
+    string[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) {
@@ -68,6 +69,7 @@ contract VertexFactory {
       initialVertexAccountLogic,
       initialStrategies,
       initialAccounts,
+      initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
     );
@@ -84,6 +86,7 @@ contract VertexFactory {
   /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex system.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccounts The list of initial accounts.
+  /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders and their role expirations.
   /// @param initialRolePermissions The list initial permissions given to roles.
   /// @return the address of the VertexCore contract of the newly created system.
@@ -93,11 +96,19 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
+    string[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) external onlyRootVertex returns (VertexCore) {
     return _deploy(
-      name, strategyLogic, accountLogic, initialStrategies, initialAccounts, initialRoleHolders, initialRolePermissions
+      name,
+      strategyLogic,
+      accountLogic,
+      initialStrategies,
+      initialAccounts,
+      initialRoleDescriptions,
+      initialRoleHolders,
+      initialRolePermissions
     );
   }
 
@@ -119,13 +130,14 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
+    string[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {
     // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(VERTEX_POLICY_LOGIC), keccak256(abi.encode(name))));
-    policy.initialize(name, initialRoleHolders, initialRolePermissions);
+    policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);

@@ -39,6 +39,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// the role for each token ID that holds the role.
   mapping(uint8 role => Checkpoints.History) internal roleSupplyCkpts;
 
+  /// @notice The highest role ID that has been initialized.
+  uint8 public numRoles;
+
   /// @notice The address of the `VertexCore` instance that governs this contract.
   address public vertex;
 
@@ -46,12 +49,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   VertexFactory public factory;
 
   error AlreadyInitialized();
+  error CallReverted(uint256 index, bytes revertData);
   error InvalidInput();
   error MissingAdmin();
   error NonTransferableToken();
   error OnlyVertex();
+  error RoleNotInitialized(uint8 role);
 
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
+  event RoleInitialized(uint8 indexed role, string description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   modifier onlyVertex() {
@@ -68,15 +74,23 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   function initialize(
     string calldata _name,
+    string[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
 
+    numRoles = 1;
+    emit RoleInitialized(numRoles, "Admin");
+    for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
+      _initializeRole(roleDescriptions[i]);
+    }
+
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
+
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
@@ -92,6 +106,27 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // =======================================
   // ======== Permission Management ========
   // =======================================
+
+  /// @notice Aggregate calls of multiple functions in the current contract into a single call.
+  /// @dev The `msg.value` should not be trusted for any method callable from this method. No
+  /// methods in this contract are `payable` so this should not be an issue, but it's mentioned
+  /// here in case this contract is modified in the future.
+  /// @param calls ABI-encoded array of calls to be executed in order.
+  /// @return returnData The return data of each call.
+  function aggregate(bytes[] calldata calls) external onlyVertex returns (bytes[] memory returnData) {
+    returnData = new bytes[](calls.length);
+
+    for (uint256 i = 0; i < calls.length; i = _uncheckedIncrement(i)) {
+      (bool success, bytes memory response) = address(this).delegatecall(calls[i]);
+      if (!success) revert CallReverted(i, response);
+      returnData[i] = response;
+    }
+  }
+
+  /// @notice Initializes a new role with the given `role` ID and `description`
+  function initializeRole(string calldata description) external onlyVertex {
+    _initializeRole(description);
+  }
 
   /// @notice Assigns roles to users.
   function setRoleHolders(RoleHolderData[] calldata roleHolders) external onlyVertex {
@@ -137,11 +172,22 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _assertAdminsExist();
   }
 
-  /// @notice Revokes all roles from the user and burns their policy.
+  /// @notice Revokes all roles from the `user` and burns their policy.
+  function revokePolicy(address user) external onlyVertex {
+    for (uint256 i = 0; i <= numRoles; i = _uncheckedIncrement(i)) {
+      _setRoleHolder(uint8(i), user, 0, 0);
+    }
+    _burn(_tokenId(user));
+    _assertAdminsExist();
+  }
+
+  /// @notice Revokes all `roles` from the `user` and burns their policy.
   /// @dev WARNING: The contract cannot enumerate all roles for a user, so the caller MUST provide
   /// the full list of roles held by user. Not properly providing this data can result in an
   /// inconsistent internal state. It is expected that policies are revoked as needed before
-  // creating an action using the `ALL_HOLDERS_ROLE`.
+  /// creating an action using the `ALL_HOLDERS_ROLE`.
+  /// @dev This method only exists to ensure policies can still be revoked in the case where the
+  /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0, 0);
@@ -270,6 +316,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
+  function _initializeRole(string calldata description) internal {
+    numRoles += 1;
+    emit RoleInitialized(numRoles, description);
+  }
+
   /// @dev Verifies that admin supply is non-zero to avoid the system being locked. Any changes to
   /// roles that result in zero admin supply will revert.
   function _assertAdminsExist() internal view {
@@ -279,6 +330,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   function _setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) internal {
     // Scope to avoid stack too deep.
     {
+      // Ensure role is initialized.
+      if (role > numRoles) revert RoleNotInitialized(role);
+
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when
       // the quantity is zero. In other words, the relationships that are required between the role
       // quantity and expiration fields are:
