@@ -204,6 +204,82 @@ contract Initialize is VertexCoreTest {
     assertEq(getCodeSize(address(strategyAddresses[0])), 0);
     assertEq(getCodeSize(address(strategyAddresses[1])), 0);
 
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+    );
+
+    assertGt(getCodeSize(address(strategyAddresses[0])), 0);
+    assertGt(getCodeSize(address(strategyAddresses[1])), 0);
+  }
+
+  function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](2);
+    for (uint256 i; i < strategies.length; i++) {
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
+    }
+
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategies[0]);
+    emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategies[1]);
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+    );
+  }
+
+  function test_StrategiesHaveVertexCoreAddressInStorage() public {
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](2);
+    for (uint256 i; i < strategies.length; i++) {
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
+    }
+
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+    );
+
+    assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
+    assertEq(address(strategyAddresses[1].vertex()), address(uninitializedVertex));
+  }
+
+  function test_StrategiesHavePolicyAddressInStorage() public {
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](2);
+    for (uint256 i; i < strategies.length; i++) {
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
+    }
+
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+    );
+
+    assertEq(address(strategyAddresses[0].policy()), address(policy));
+    assertEq(address(strategyAddresses[1].policy()), address(policy));
+  }
+
+  function test_StrategiesAreAuthorizedByVertexCore() public {
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    VertexStrategy[] memory strategyAddresses = new VertexStrategy[](2);
+    for (uint256 i; i < strategies.length; i++) {
+      strategyAddresses[i] =
+        lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
+    }
+
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), false);
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
 
@@ -211,27 +287,8 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
     );
 
-    assertGt(getCodeSize(address(strategyAddresses[0])), 0);
-    assertGt(getCodeSize(address(strategyAddresses[1])), 0);
-
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), true);
-  }
-
-  function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
-    // TODO confirm strategy events have been emitted
-  }
-
-  function test_StrategiesHaveVertexCoreAddressInStorage() public {
-    // TODO confirm strategies have this vertex core address in storage
-  }
-
-  function test_StrategiesHavePolicyAddressInStorage() public {
-    // TODO confirm strategies have the correct policy address in storage
-  }
-
-  function test_StrategiesAreAuthorizedByVertexCore() public {
-    // TODO confirm strategies are authorized
   }
 
   function test_RevertIf_StrategyLogicIsNotAuthorized() public {
