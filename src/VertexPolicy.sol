@@ -226,12 +226,14 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns all checkpoints for the given `user` and `role`.
   function roleBalanceCheckpoints(address user, uint8 role) external view returns (Checkpoints.History memory) {
     uint256 tokenId = _tokenId(user);
-    return roleBalanceCkpts[tokenId][role];
+    Checkpoints.History memory _roleBalanceCkpts = roleBalanceCkpts[tokenId][role];
+    return _roleBalanceCkpts;
   }
 
   /// @notice Returns all supply checkpoints for the given `role`.
   function roleSupplyCheckpoints(uint8 role) external view returns (Checkpoints.History memory) {
-    return roleSupplyCkpts[role];
+    Checkpoints.History memory _roleSupplyCkpts = roleSupplyCkpts[role];
+    return _roleSupplyCkpts;
   }
 
   /// @notice Returns true if the `user` has the `role`, false otherwise.
