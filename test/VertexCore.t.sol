@@ -291,8 +291,17 @@ contract Initialize is VertexCoreTest {
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), true);
   }
 
-  function test_RevertIf_StrategyLogicIsNotAuthorized() public {
-    // TODO confirm revert if strategy logic is not authorized
+  function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
+    vm.assume(uint160(notStrategyLogic) != uint160(address(strategyLogic)));
+    (VertexFactoryWithoutInitialization factory, VertexCore uninitializedVertex, VertexPolicy policy) =
+      deployWithoutInitialization();
+    Strategy[] memory strategies = defaultStrategies();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+
+    vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
+    factory.initialize(
+      uninitializedVertex, policy, "NewProject", notStrategyLogic, address(accountLogic), strategies, accounts
+    );
   }
 
   function test_AccountsAreDeployedAtExpectedAddress() public {
