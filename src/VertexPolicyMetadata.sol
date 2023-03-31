@@ -4,7 +4,14 @@ pragma solidity 0.8.19;
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 
+/// @title Vertex Policy Metadata
+/// @author Llama (vertex@llama.xyz)
+/// @notice Utility contract to compute Vertex Policy metadata.
 contract VertexPolicyMetadata {
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
+
   /// @notice Returns the token URI for a given Vertex Policy Holder.
   /// @param name The name of the Vertex system.
   /// @param symbol The symbol of the Vertex system.
