@@ -57,7 +57,7 @@ abstract contract ERC721NonTransferableMinimalProxy is Initializable {
   /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-  
+
   function __initializeERC721MinimalProxy (string memory _name, string memory _symbol) internal {
     name = _name;
     symbol = _symbol;
