@@ -24,10 +24,10 @@ contract VertexFactory {
   uint8 public constant ADMIN_ROLE = 1;
 
   /// @notice The VertexCore implementation (logic) contract.
-  VertexCore public immutable vertexCoreLogic;
+  VertexCore public immutable VERTEX_CORE_LOGIC;
 
   /// @notice The Vertex Policy implementation (logic) contract.
-  VertexPolicy public immutable vertexPolicyLogic;
+  VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
   mapping(address => bool) public authorizedStrategyLogics;
@@ -36,7 +36,7 @@ contract VertexFactory {
   mapping(address => bool) public authorizedAccountLogics;
 
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
-  VertexCore public immutable rootVertex;
+  VertexCore public immutable ROOT_VERTEX;
 
   VertexPolicyMetadata public vertexPolicyMetadata;
 
@@ -44,10 +44,10 @@ contract VertexFactory {
   uint256 public vertexCount;
 
   constructor(
-    VertexCore _vertexCoreLogic,
+    VertexCore vertexCoreLogic,
     address initialVertexStrategyLogic,
     address initialVertexAccountLogic,
-    VertexPolicy _vertexPolicyLogic,
+    VertexPolicy vertexPolicyLogic,
     VertexPolicyMetadata _vertexPolicyMetadata,
     string memory name,
     Strategy[] memory initialStrategies,
@@ -56,14 +56,14 @@ contract VertexFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) {
-    vertexCoreLogic = _vertexCoreLogic;
-    vertexPolicyLogic = _vertexPolicyLogic;
+    VERTEX_CORE_LOGIC = vertexCoreLogic;
+    VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyMetadata = _vertexPolicyMetadata;
 
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);
 
-    rootVertex = _deploy(
+    ROOT_VERTEX = _deploy(
       name,
       initialVertexStrategyLogic,
       initialVertexAccountLogic,
@@ -76,7 +76,7 @@ contract VertexFactory {
   }
 
   modifier onlyRootVertex() {
-    if (msg.sender != address(rootVertex)) revert OnlyVertex();
+    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
     _;
   }
 
@@ -136,10 +136,10 @@ contract VertexFactory {
   ) internal returns (VertexCore vertex) {
     // Deploy the system.
     VertexPolicy policy =
-      VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
+      VertexPolicy(Clones.cloneDeterministic(address(VERTEX_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
+    vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));

@@ -124,7 +124,7 @@ contract VertexTestSetup is Test {
       rootRoleHolders,
       new RolePermissionData[](0)
     );
-    rootCore = factory.rootVertex();
+    rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's vertex, again with a single admin role.

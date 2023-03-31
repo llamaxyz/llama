@@ -6,7 +6,7 @@ import {Test, console2} from "forge-std/Test.sol";
 contract DeployTest is Test {
   function setUp() public {}
 
-  function testDeploy() public {
+  function test_Deploy() public {
     assertTrue(true);
   }
 }

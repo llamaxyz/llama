@@ -167,7 +167,7 @@ contract VertexCore is Initializable {
     Action storage newAction = actions[actionId];
 
     // Revert if the policy has no supply for any provided roles.
-    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = assertNonZeroRoleSupplies(strategy);
+    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
 
     newAction.creator = msg.sender;
     newAction.strategy = strategy;
@@ -470,7 +470,7 @@ contract VertexCore is Initializable {
 
   // TODO We don't loop through the force (dis)approval roles because currently the strategy does
   // not store them all in an array to support this. Should we do this?
-  function assertNonZeroRoleSupplies(VertexStrategy strategy)
+  function _assertNonZeroRoleSupplies(VertexStrategy strategy)
     internal
     view
     returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
