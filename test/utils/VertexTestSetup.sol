@@ -162,16 +162,6 @@ contract VertexTestSetup is Test {
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));
 
-    // With the protocol deployed, we can set special permissions.
-    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
-    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
-    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
-
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](3);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
-    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
-    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
-
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
     rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
@@ -183,6 +173,19 @@ contract VertexTestSetup is Test {
     rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
     mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
     mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+
+    // With the protocol deployed, we can set special permissions.
+    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
+    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
+    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
+
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](3);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
+    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
+    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermissions(rolePermissions);
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);
