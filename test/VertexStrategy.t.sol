@@ -566,17 +566,7 @@ contract GetApprovalWeightAt is VertexStrategyTest {
   {
     _timestamp = uint64(bound(_timestamp, block.timestamp + 1, type(uint64).max));
     vm.assume(_nonPolicyHolder != address(0));
-
-    // Mock protocol users.
-    vm.assume(_nonPolicyHolder != makeAddr("rootVertexAdmin"));
-    vm.assume(_nonPolicyHolder != makeAddr("adminAlice"));
-    vm.assume(_nonPolicyHolder != makeAddr("actionCreatorAaron"));
-    vm.assume(_nonPolicyHolder != makeAddr("approverAdam"));
-    vm.assume(_nonPolicyHolder != makeAddr("approverAlicia"));
-    vm.assume(_nonPolicyHolder != makeAddr("approverAndy"));
-    vm.assume(_nonPolicyHolder != makeAddr("disapproverDave"));
-    vm.assume(_nonPolicyHolder != makeAddr("disapproverDiane"));
-    vm.assume(_nonPolicyHolder != makeAddr("disapproverDrake"));
+    vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
@@ -675,6 +665,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
   {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
