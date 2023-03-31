@@ -18,9 +18,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // =========================
 
   // Protocol contracts.
-  VertexFactory public immutable vertexFactory;
-  VertexCore public immutable vertexCore;
-  VertexPolicy public immutable policy;
+  VertexFactory public immutable VERTEX_FACTORY;
+  VertexCore public immutable VERTEX_CORE;
+  VertexPolicy public immutable POLICY;
 
   // Handler state.
   address[] internal actors;
@@ -38,9 +38,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // =============================
 
   constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) {
-    vertexFactory = _vertexFactory;
-    vertexCore = _vertexCore;
-    policy = vertexCore.policy();
+    VERTEX_FACTORY = _vertexFactory;
+    VERTEX_CORE = _vertexCore;
+    POLICY = VERTEX_CORE.policy();
   }
 
   // =================================================

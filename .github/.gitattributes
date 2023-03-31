@@ -1,2 +1,1 @@
-
-test/lib/ethers.js detectable=false
+ethers.js linguist-vendored
