@@ -565,6 +565,7 @@ contract GetApprovalWeightAt is VertexStrategyTest {
   {
     _timestamp = uint64(bound(_timestamp, block.timestamp + 1, type(uint64).max));
     vm.assume(_nonPolicyHolder != address(0));
+    vm.assume(_nonPolicyHolder != address(0xdeadbeef)); // Given a policy below.
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
@@ -664,6 +665,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
   {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     vm.assume(_nonPolicyHolder != address(0));
+    vm.assume(_nonPolicyHolder != address(0xdeadbeef)); // Given a policy below.
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
