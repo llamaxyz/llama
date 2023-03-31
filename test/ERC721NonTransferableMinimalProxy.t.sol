@@ -317,17 +317,19 @@ contract ERC721Test is Test {
         token.transferFrom(address(0xFEED), address(0xBEEF), 1337);
     }
 
-    // function test_RevertsIf_SafeTransferFromToNonERC721Recipient() public {
-    //     token.mint(address(this), 1337);
-    //     vm.expectRevert();
-    //     token.safeTransferFrom(address(this), address(new NonERC721Recipient()), 1337);
-    // }
+    function test_RevertsIf_SafeTransferFromToNonERC721Recipient() public {
+        token.mint(address(this), 1337);
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, 1337);
+    }
 
-    // function test_RevertsIf_SafeTransferFromToNonERC721RecipientWithData() public {
-    //     token.mint(address(this), 1337);
-    //     vm.expectRevert();
-    //     token.safeTransferFrom(address(this), address(new NonERC721Recipient()), 1337, "testing 123");
-    // }
+    function test_RevertsIf_SafeTransferFromToNonERC721RecipientWithData() public {
+        token.mint(address(this), 1337);
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, 1337, "testing 123");
+    }
 
     // function test_RevertsIf_SafeTransferFromToRevertingERC721Recipient() public {
     //     token.mint(address(this), 1337);
