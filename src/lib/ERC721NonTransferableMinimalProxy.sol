@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
+/// @title ERC721 Non-Transferable Minimal Proxy
 /// @notice This contract is a modified version of Solmate's ERC721 contract
 /// @notice Modern, minimalist, and gas efficient ERC-721 implementation as a minimal proxy.
 /// @author Solmate / Llama (https://github.com/transmissions11/solmate/blob/34d20fc027fe8d50da71428687024a29dc01748b/src/tokens/ERC721.sol)
