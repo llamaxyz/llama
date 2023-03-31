@@ -15,10 +15,9 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
-// Used for readability of tests, so they can be accessed with e.g. `Roles.Admin`.
+// Used for readability of tests, so they can be accessed with e.g. `Roles.ActionCreator`.
 enum Roles {
   AllHolders,
-  Admin,
   ActionCreator,
   Approver,
   Disapprover,
@@ -60,11 +59,10 @@ contract VertexTestSetup is Test {
   // Mock protocol for action targets.
   ProtocolXYZ public mockProtocol;
 
-  // Root vertex admin.
-  address rootVertexAdmin = makeAddr("rootVertexAdmin");
+  // Root vertex action creator.
+  address rootVertexActionCreator = makeAddr("rootVertexActionCreator");
 
   // Mock protocol users.
-  address adminAlice = makeAddr("adminAlice");
   address actionCreatorAaron = makeAddr("actionCreatorAaron");
 
   address approverAdam = makeAddr("approverAdam");
@@ -104,12 +102,12 @@ contract VertexTestSetup is Test {
     // Deploy lens.
     lens = new VertexLens();
 
-    // Deploy the Root vertex instance. We only instantiate it with a single admin role.
+    // Deploy the Root vertex instance. We only instantiate it with a single action creator role.
     Strategy[] memory strategies = defaultStrategies();
     string[] memory roleDescriptions =
       Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
-    RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
+    RoleHolderData[] memory rootRoleHolders = defaultActionCreatorRoleHolder(rootVertexActionCreator);
 
     factory = new VertexFactory(
       coreLogic,
@@ -127,9 +125,9 @@ contract VertexTestSetup is Test {
     rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
 
-    // Now we deploy a mock protocol's vertex, again with a single admin role.
+    // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
-    RoleHolderData[] memory mpRoleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
@@ -143,6 +141,18 @@ contract VertexTestSetup is Test {
       new RolePermissionData[](0)
     );
     mpPolicy = mpCore.policy();
+
+    // Set strategy addresses.
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+
+    // Set vertex account addresses.
+    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // Add approvers and disapprovers to the mock protocol's vertex.
     // forgefmt: disable-start
@@ -172,17 +182,8 @@ contract VertexTestSetup is Test {
     rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
     rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
 
-    // Set strategy and account addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
-
-    // Set vertex account addresses.
-    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermissions(rolePermissions);
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);
@@ -217,9 +218,9 @@ contract VertexTestSetup is Test {
     require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
   }
 
-  function defaultAdminRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
+  function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(Roles.Admin), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function defaultStrategies() internal pure returns (Strategy[] memory strategies) {
@@ -245,8 +246,8 @@ contract VertexTestSetup is Test {
       minDisapprovalPct: 10_001,
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: Solarray.uint8s(uint8(Roles.Admin)),
-      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.Admin))
+      forceApprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator)),
+      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator))
     });
 
     strategies = new Strategy[](2);

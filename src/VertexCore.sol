@@ -67,9 +67,6 @@ contract VertexCore is Initializable {
   bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
     keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
 
-  /// @notice A special role to designate an Admin, who can always create actions.
-  uint8 public constant ADMIN_ROLE = 1;
-
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
@@ -159,9 +156,7 @@ contract VertexCore is Initializable {
     // creation would succeed. However, we are ok with this tradeoff because it means we don't need
     // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
     // this race condition is unlikely to matter.
-    if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
-      revert PolicyholderDoesNotHavePermission();
-    }
+    if (!policy.hasPermissionId(msg.sender, role, permissionId)) revert PolicyholderDoesNotHavePermission();
 
     actionId = actionsCount;
     Action storage newAction = actions[actionId];

@@ -49,7 +49,7 @@ contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new VertexFactory(
       coreLogic,
       address(strategyLogic),
@@ -109,7 +109,7 @@ contract Deploy is VertexFactoryTest {
   function deployVertex() internal returns (VertexCore) {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(rootCore));
     return factory.deploy(
@@ -128,7 +128,7 @@ contract Deploy is VertexFactoryTest {
     vm.assume(caller != address(rootCore));
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
@@ -147,7 +147,7 @@ contract Deploy is VertexFactoryTest {
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(rootCore));
     factory.deploy(
