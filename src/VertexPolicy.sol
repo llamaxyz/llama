@@ -7,6 +7,7 @@ import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 import {ExpiredRole, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title VertexPolicy
 /// @author Llama (vertex@llama.xyz)
@@ -57,7 +58,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error RoleNotInitialized(uint8 role);
 
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
-  event RoleInitialized(uint8 indexed role, string description);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   modifier onlyVertex() {
@@ -74,15 +75,14 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   function initialize(
     string calldata _name,
-    string[] calldata roleDescriptions,
+    RoleDescription[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
-
     numRoles = 1;
-    emit RoleInitialized(numRoles, "Admin");
+    emit RoleInitialized(numRoles, RoleDescription.wrap("Admin"));
     for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
       _initializeRole(roleDescriptions[i]);
     }
@@ -124,7 +124,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Initializes a new role with the given `role` ID and `description`
-  function initializeRole(string calldata description) external onlyVertex {
+  function initializeRole(RoleDescription description) external onlyVertex {
     _initializeRole(description);
   }
 
@@ -316,7 +316,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
-  function _initializeRole(string calldata description) internal {
+  function _initializeRole(RoleDescription description) internal {
     numRoles += 1;
     emit RoleInitialized(numRoles, description);
   }

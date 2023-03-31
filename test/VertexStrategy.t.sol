@@ -8,6 +8,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
@@ -31,7 +32,7 @@ contract VertexStrategyTest is VertexTestSetup {
   function initializeRolesUpTo(uint8 role) internal {
     while (mpPolicy.numRoles() < role) {
       vm.prank(address(mpCore));
-      mpPolicy.initializeRole("Test Role");
+      mpPolicy.initializeRole(getRoleDescription("Test Role"));
     }
   }
 

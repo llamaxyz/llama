@@ -13,6 +13,7 @@ import {console} from "lib/forge-std/src/console.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexPolicyTest is VertexTestSetup {
@@ -102,7 +103,7 @@ contract Initialize is VertexPolicyTest {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
     localPolicy.initialize(
-      "Test Policy", new string[](0), defaultAdminRoleHolder(adminAlice), new RolePermissionData[](0)
+      "Test Policy", new RoleDescription[](0), defaultAdminRoleHolder(adminAlice), new RolePermissionData[](0)
     );
     assertEq(localPolicy.numRoles(), 1);
   }
@@ -110,9 +111,9 @@ contract Initialize is VertexPolicyTest {
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {
     numRoles = bound(numRoles, 0, 254); // We always have the admin role as role 1, so can only fit 255 more.
 
-    string[] memory roleDescriptions = new string[](numRoles);
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
-      roleDescriptions[i] = string.concat("Role ", vm.toString(i));
+      roleDescriptions[i] = getRoleDescription(string.concat("Role ", vm.toString(i)));
     }
 
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
@@ -125,7 +126,7 @@ contract Initialize is VertexPolicyTest {
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize("Test", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+    mpPolicy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 }
 
@@ -147,40 +148,40 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, string description);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), 8); // VertexTestSetup initializes 8 roles.
     vm.startPrank(address(mpCore));
 
-    mpPolicy.initializeRole("TestRole1");
+    mpPolicy.initializeRole(getRoleDescription("TestRole1"));
     assertEq(mpPolicy.numRoles(), 9);
 
-    mpPolicy.initializeRole("TestRole2");
+    mpPolicy.initializeRole(getRoleDescription("TestRole2"));
     assertEq(mpPolicy.numRoles(), 10);
   }
 
   function test_RevertIf_OverflowOccurs() public {
     vm.startPrank(address(mpCore));
-    while (mpPolicy.numRoles() < type(uint8).max) mpPolicy.initializeRole("TestRole");
+    while (mpPolicy.numRoles() < type(uint8).max) mpPolicy.initializeRole(getRoleDescription("TestRole"));
 
     // Now the `numRoles` is at the max value, so the next call should revert.
     vm.expectRevert(stdError.arithmeticError);
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit(true, true, true, true);
-    emit RoleInitialized(9, "TestRole"); // VertexTestSetup initializes 8 roles, so next one is 9.
+    emit RoleInitialized(9, getRoleDescription("TestRole")); // VertexTestSetup initializes 8 roles, so next one is 9.
     vm.prank(address(mpCore));
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
   function test_DoesNotGuardAgainstSameDescriptionUsedForMultipleRoles() public {
     vm.startPrank(address(mpCore));
-    mpPolicy.initializeRole("TestRole");
-    mpPolicy.initializeRole("TestRole");
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 }
 

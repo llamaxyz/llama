@@ -15,6 +15,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
 import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_WEIGHT = 1;
@@ -50,6 +51,13 @@ contract Constructor is VertexFactoryTest {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    string[] memory roleDescriptionStrings =
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](roleDescriptionStrings.length);
+
+    for (uint256 i = 0; i < roleDescriptionStrings.length; i++) {
+      roleDescriptions[i] = getRoleDescription(roleDescriptionStrings[i]);
+    }
     return new VertexFactory(
       coreLogic,
       address(strategyLogic),
@@ -59,7 +67,7 @@ contract Constructor is VertexFactoryTest {
       "Root Vertex",
       strategies,
       accounts,
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleDescriptions,
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -110,6 +118,13 @@ contract Deploy is VertexFactoryTest {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    string[] memory roleDescriptionStrings =
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](roleDescriptionStrings.length);
+
+    for (uint256 i = 0; i < roleDescriptionStrings.length; i++) {
+      roleDescriptions[i] = getRoleDescription(roleDescriptionStrings[i]);
+    }
 
     vm.prank(address(rootCore));
     return factory.deploy(
@@ -118,7 +133,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleDescriptions,
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -138,7 +153,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      new string[](0),
+      new RoleDescription[](0),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -148,6 +163,13 @@ contract Deploy is VertexFactoryTest {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    string[] memory roleDescriptionStrings =
+      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](roleDescriptionStrings.length);
+
+    for (uint256 i = 0; i < roleDescriptionStrings.length; i++) {
+      roleDescriptions[i] = getRoleDescription(roleDescriptionStrings[i]);
+    }
 
     vm.prank(address(rootCore));
     factory.deploy(
@@ -156,7 +178,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      roleDescriptions,
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -168,7 +190,7 @@ contract Deploy is VertexFactoryTest {
       address(accountLogic),
       strategies,
       accounts,
-      new string[](0),
+      new RoleDescription[](0),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -195,7 +217,7 @@ contract Deploy is VertexFactoryTest {
     assertGt(address(_policy).code.length, 0);
 
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize("Test", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+    _policy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
   function test_DeploysVertexCore() public {
