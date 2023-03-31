@@ -749,10 +749,39 @@ contract ExecuteAction is VertexCoreTest {
   }
 
   function test_HandlesReentrancy() public {
-    // TODO
-    // What happens if someone queues an action to call mpCore.executeAction?
-    // Calling executeAction on that action should revert with OnlyQueuedActions.
-    // We should confirm that nothing weird happens if this is done
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+    // forgefmt: disable-start
+    RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](1);
+    mpRoleHoldersNew[0] = RoleHolderData(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    // forgefmt: disable-end
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolders(mpRoleHoldersNew);
+    vm.stopPrank();
+
+    vm.prank(actionCreatorAustin);
+    actionId = mpCore.createAction(
+      uint8(uint8(Roles.TestRole2)),
+      mpStrategy1,
+      address(mpCore),
+      0, // value
+      EXECUTE_ACTION_SELECTOR,
+      abi.encode(0)
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionId);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectRevert(VertexCore.FailedActionExecution.selector);
+    mpCore.executeAction(actionId);
   }
 
   function test_RevertsIfExternalCallIsUnsuccessful() public {
