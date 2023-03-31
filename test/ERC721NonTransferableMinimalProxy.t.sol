@@ -680,6 +680,9 @@ contract ERC721Test is Test {
     ) public {
         if (owner == address(0)) to = address(0xBEEF);
         if (from == owner) revert();
+        vm.assume(owner != address(0));
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
 
         token.mint(owner, id);
 
