@@ -42,9 +42,9 @@ contract VertexCoreTest is VertexTestSetup {
     VertexTestSetup.setUp();
   }
 
-  /*///////////////////////////////////////////////////////////////
-                        Helpers
-    //////////////////////////////////////////////////////////////*/
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function _createAction() public returns (uint256 actionId) {
     vm.prank(actionCreatorAaron);

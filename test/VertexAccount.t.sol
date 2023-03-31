@@ -83,9 +83,9 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1Addr = address(mpAccount1); // For convenience, to avoid tons of casting to address.
   }
 
-  /*///////////////////////////////////////////////////////////////
-                            Helpers
-    //////////////////////////////////////////////////////////////*/
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function transferETHToAccount(uint256 amount) internal {
     deal(mpAccount1Addr, amount);
