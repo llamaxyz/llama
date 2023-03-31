@@ -389,7 +389,7 @@ contract ERC721Test is Test {
         token.safeMint(_wrongReturnDataERC721Recipient, 1337);
     }
 
-    function testSafeMintToERC721RecipientWithWrongReturnDataWithData() public {
+    function test_RevertsIf_SafeMintToERC721RecipientWithWrongReturnDataWithData() public {
         address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
         vm.expectRevert();
         token.safeMint(_wrongReturnDataERC721Recipient, 1337, "testing 123");
@@ -630,7 +630,7 @@ contract ERC721Test is Test {
         token.mint(to, id);
     }
 
-    function testBurnUnMinted(uint256 id) public {
+    function test_RevertsIf_BurnUnMinted(uint256 id) public {
         vm.expectRevert();
         token.burn(id);
     }
