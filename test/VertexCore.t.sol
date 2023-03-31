@@ -532,8 +532,8 @@ contract CancelAction is VertexCoreTest {
     mpCore.cancelAction(0);
   }
 
-  // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
-  function test_RevertIfInvalidActionId() public {
+  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     vm.startPrank(adminAlice);
     vm.expectRevert(VertexCore.InvalidActionId.selector);
     mpCore.cancelAction(1);
@@ -630,8 +630,8 @@ contract QueueAction is VertexCoreTest {
     mpCore.queueAction(0);
   }
 
-  // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
-  function test_RevertIfInvalidActionId() public {
+  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     _createAction();
     _approveAction(approverAdam);
     _approveAction(approverAlicia);
@@ -677,8 +677,8 @@ contract ExecuteAction is VertexCoreTest {
     assertEq(uint256(mpCore.getActionState(0)), uint256(3));
   }
 
-  // TODO fuzz over action IDs, bound(actionsCount, type(uint).max)
-  function test_RevertIfInvalidActionId() public {
+  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     mpCore.queueAction(actionId);
 
     vm.warp(block.timestamp + 5 days);
@@ -687,14 +687,18 @@ contract ExecuteAction is VertexCoreTest {
     mpCore.executeAction(actionId + 1);
   }
 
-  // TODO fuzz over seconds jumped forward, only assert the revert if < executionTime
-  function test_RevertIfTimelockNotFinished() public {
+  function testFuzz_RevertIfTimelockNotFinished(uint256 timeElapsed) public {
+    // Using a reasonable upper limit for elapsedTime
+    vm.assume(timeElapsed < 10_000 days);
     mpCore.queueAction(actionId);
+    uint256 executionTime = mpCore.getAction(actionId).executionTime;
 
-    vm.warp(block.timestamp + 6 hours);
+    vm.warp(block.timestamp + timeElapsed);
 
-    vm.expectRevert(VertexCore.TimelockNotFinished.selector);
-    mpCore.executeAction(actionId);
+    if (executionTime > block.timestamp) {
+      vm.expectRevert(VertexCore.TimelockNotFinished.selector);
+      mpCore.executeAction(actionId);
+    }
   }
 
   function test_RevertIfInsufficientMsgValue() public {
@@ -1202,8 +1206,21 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 }
 
 contract GetActionState is VertexCoreTest {
-  function test_RevertsOnInvalidAction() public {} // TODO
-  function test_CanceledActionsHaveStateCanceled() public {} // TODO
+  function testFuzz_RevertsOnInvalidAction(uint256 invalidActionId) public {
+    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    mpCore.getActionState(invalidActionId);
+  }
+
+  function test_CanceledActionsHaveStateCanceled() public {
+    uint256 actionId = _createAction();
+    vm.prank(adminAlice);
+    mpCore.cancelAction(actionId);
+
+    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 canceledState = uint256(ActionState.Canceled);
+    assertEq(currentState, canceledState);
+  }
+
   function test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() public {
     // TODO
     // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
@@ -1229,9 +1246,53 @@ contract GetActionState is VertexCoreTest {
     // if _blocksSinceCreation => approvalPeriod --> expect Approved
     // if _blocksSinceCreation < approvalPeriod --> expect Active
   }
-  function test_QueuedActionsHaveStateQueued() public {} // TODO
-  function test_ExecutedActionsHaveStateExecuted() public {} // TODO
-  function test_RejectedActionsHaveStateFailed() public {} // TODO
+
+  function test_QueuedActionsHaveStateQueued() public {
+    _createAction();
+
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionPassed(0), true);
+    _queueAction();
+
+    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 queuedState = uint256(ActionState.Queued);
+    assertEq(currentState, queuedState);
+  }
+
+  function test_ExecutedActionsHaveStateExecuted() public {
+    _createAction();
+
+    _approveAction(approverAdam);
+    _approveAction(approverAlicia);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionPassed(0), true);
+    _queueAction();
+
+    _disapproveAction(disapproverDave);
+
+    vm.warp(block.timestamp + 5 days);
+
+    _executeAction();
+
+    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 executedState = uint256(ActionState.Executed);
+    assertEq(currentState, executedState);
+  }
+
+  function test_RejectedActionsHaveStateFailed() public {
+    _createAction();
+    vm.warp(block.timestamp + 12 days);
+
+    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 failedState = uint256(ActionState.Failed);
+    assertEq(currentState, failedState);
+  }
 }
 
 contract Integration is VertexCoreTest {
