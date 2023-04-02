@@ -702,7 +702,7 @@ contract ERC721Test is Test {
         address to,
         uint256 id
     ) public {
-        if (from == address(this)) from = address(0xBEEF);
+        if (from == address(this) || from == address(0)) from = address(0xBEEF);
 
         token.mint(from, id);
 
