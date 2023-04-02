@@ -463,7 +463,7 @@ contract CreateAction is VertexCoreTest {
   }
 
   function testFuzz_RevertIfPermissionExpired(uint64 _expirationTimestamp) public {
-    vm.assume(_expirationTimestamp > 2 && _expirationTimestamp < type(uint64).max - 2);
+    vm.assume(_expirationTimestamp > block.timestamp + 1 && _expirationTimestamp < type(uint64).max - 1);
 
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     // forgefmt: disable-start
