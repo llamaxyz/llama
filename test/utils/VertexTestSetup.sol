@@ -227,7 +227,7 @@ contract VertexTestSetup is Test {
 
   function defaultAdminRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(uint8(Roles.Admin)), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(uint8(Roles.Admin), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function defaultStrategies() internal pure returns (Strategy[] memory strategies) {
@@ -253,8 +253,8 @@ contract VertexTestSetup is Test {
       minDisapprovalPct: 10_001,
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: Solarray.uint8s(uint8(uint8(Roles.Admin))),
-      forceDisapprovalRoles: Solarray.uint8s(uint8(uint8(Roles.Admin)))
+      forceApprovalRoles: Solarray.uint8s(uint8(Roles.Admin)),
+      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.Admin))
     });
 
     strategies = new Strategy[](2);

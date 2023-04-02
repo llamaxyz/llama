@@ -56,10 +56,10 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     RolePermissionData[] memory initialRolePermissions
   ) external returns (VertexCore vertex, VertexPolicy policy) {
     // Deploy the system.
-    policy = VertexPolicy(Clones.cloneDeterministic(address(vertexPolicyLogic), keccak256(abi.encode(name))));
+    policy = VertexPolicy(Clones.cloneDeterministic(address(VERTEX_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    vertex = VertexCore(Clones.cloneDeterministic(address(vertexCoreLogic), keccak256(abi.encode(name))));
+    vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
     policy.setVertex(address(vertex));
 
     unchecked {
