@@ -135,14 +135,6 @@ contract VertexCoreTest is VertexTestSetup {
     factory.authorizeAccountLogic(address(additionalAccountLogic));
     return address(additionalAccountLogic);
   }
-
-  function getCodeSize(address account) internal view returns (uint256) {
-    uint256 size;
-    assembly {
-      size := extcodesize(account)
-    }
-    return size;
-  }
 }
 
 contract Setup is VertexCoreTest {
@@ -201,15 +193,15 @@ contract Initialize is VertexCoreTest {
         lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
     }
 
-    assertEq(getCodeSize(address(strategyAddresses[0])), 0);
-    assertEq(getCodeSize(address(strategyAddresses[1])), 0);
+    assertEq(address(strategyAddresses[0]).code.length, 0);
+    assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
       uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
     );
 
-    assertGt(getCodeSize(address(strategyAddresses[0])), 0);
-    assertGt(getCodeSize(address(strategyAddresses[1])), 0);
+    assertGt(address(strategyAddresses[0]).code.length, 0);
+    assertGt(address(strategyAddresses[1]).code.length, 0);
   }
 
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
@@ -292,7 +284,7 @@ contract Initialize is VertexCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
-    vm.assume(uint160(notStrategyLogic) != uint160(address(strategyLogic)));
+    vm.assume(notStrategyLogic != address(strategyLogic));
     (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
       deployWithoutInitialization();
     Strategy[] memory strategies = defaultStrategies();
@@ -315,15 +307,15 @@ contract Initialize is VertexCoreTest {
         lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
     }
 
-    assertEq(getCodeSize(address(accountAddresses[0])), 0);
-    assertEq(getCodeSize(address(accountAddresses[1])), 0);
+    assertEq(address(accountAddresses[0]).code.length, 0);
+    assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
       uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
     );
 
-    assertGt(getCodeSize(address(accountAddresses[0])), 0);
-    assertGt(getCodeSize(address(accountAddresses[1])), 0);
+    assertGt(address(accountAddresses[0]).code.length, 0);
+    assertGt(address(accountAddresses[1]).code.length, 0);
   }
 
   function test_EmitsAccountAuthorizedEventForEachAccount() public {
@@ -525,7 +517,7 @@ contract CancelAction is VertexCoreTest {
     mpCore.cancelAction(0);
   }
 
-  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
     bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     vm.startPrank(adminAlice);
     vm.expectRevert(VertexCore.InvalidActionId.selector);
@@ -623,7 +615,7 @@ contract QueueAction is VertexCoreTest {
     mpCore.queueAction(0);
   }
 
-  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
     bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     _createAction();
     _approveAction(approverAdam);
@@ -670,7 +662,7 @@ contract ExecuteAction is VertexCoreTest {
     assertEq(uint256(mpCore.getActionState(0)), uint256(3));
   }
 
-  function testFuzz_RevertIfInvalidActionId(uint256 invalidActionId) public {
+  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
     bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
     mpCore.queueAction(actionId);
 
@@ -759,7 +751,7 @@ contract ExecuteAction is VertexCoreTest {
       address(mpCore),
       0, // value
       EXECUTE_ACTION_SELECTOR,
-      abi.encode(0)
+      abi.encode(actionId)
     );
 
     vm.warp(block.timestamp + 1);
@@ -991,9 +983,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), newStrategies[0]);
-    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
-    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
@@ -1057,9 +1047,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, newStrategies[0]);
-    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
-    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
 
     mpCore.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
@@ -1118,7 +1106,6 @@ contract UnauthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy1);
-    vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy2);
 
     VertexStrategy[] memory strategies = new VertexStrategy[](2);
@@ -1149,9 +1136,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
     vm.expectEmit();
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
-    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
-    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
 
     vm.prank(address(mpCore));
@@ -1191,9 +1176,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
     vm.expectEmit();
     emit AccountAuthorized(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
-    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
-    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
 
     vm.prank(address(mpCore));
