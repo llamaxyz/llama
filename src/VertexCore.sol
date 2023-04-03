@@ -169,7 +169,48 @@ contract VertexCore is Initializable {
     bytes4 selector,
     bytes calldata data
   ) external returns (uint256 actionId) {
-    actionId = _createAction(role, strategy, target, value, selector, data);
+    actionId = _createAction(msg.sender, role, strategy, target, value, selector, data);
+  }
+
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
+  /// the provided {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param selector The function selector that will be called when the action is executed.
+  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @param user The user that signed the message.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  /// @return actionId actionId of the newly created action.
+  function createActionBySig(
+    uint8 role,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external returns (uint256 actionId) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_EMITTED_TYPEHASH, role, address(strategy), target, value, selector, keccak256(data), user
+          )
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -368,6 +409,7 @@ contract VertexCore is Initializable {
   // ================================
 
   function _createAction(
+    address policyholder,
     uint8 role,
     VertexStrategy strategy,
     address target,
@@ -388,7 +430,7 @@ contract VertexCore is Initializable {
     // creation would succeed. However, we are ok with this tradeoff because it means we don't need
     // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
     // this race condition is unlikely to matter.
-    if (!policy.hasPermissionId(msg.sender, role, permissionId)) revert PolicyholderDoesNotHavePermission();
+    if (!policy.hasPermissionId(policyholder, role, permissionId)) revert PolicyholderDoesNotHavePermission();
 
     actionId = actionsCount;
     Action storage newAction = actions[actionId];
@@ -396,7 +438,7 @@ contract VertexCore is Initializable {
     // Revert if the policy has no supply for any provided roles.
     (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
 
-    newAction.creator = msg.sender;
+    newAction.creator = policyholder;
     newAction.strategy = strategy;
     newAction.target = target;
     newAction.value = value;
@@ -410,7 +452,7 @@ contract VertexCore is Initializable {
       ++actionsCount;
     }
 
-    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
+    emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
