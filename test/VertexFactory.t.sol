@@ -84,7 +84,7 @@ contract Constructor is VertexFactoryTest {
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyLogicAuthorized(address(strategyLogic));
     deployVertexFactory();
   }
@@ -94,7 +94,7 @@ contract Constructor is VertexFactoryTest {
   }
 
   function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit AccountLogicAuthorized(address(accountLogic));
     deployVertexFactory();
   }
@@ -246,7 +246,7 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_EmitsVertexCreatedEvent() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
     emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy));
@@ -279,7 +279,7 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(rootCore));
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyLogicAuthorized(randomLogicAddress);
     factory.authorizeStrategyLogic(randomLogicAddress);
   }
@@ -302,7 +302,7 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
 
   function test_EmitsAccountLogicAuthorizedEvent() public {
     vm.prank(address(rootCore));
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit AccountLogicAuthorized(randomLogicAddress);
     factory.authorizeAccountLogic(randomLogicAddress);
   }
