@@ -52,13 +52,13 @@ contract VertexStrategyTest is VertexTestSetup {
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
-      bytes[] memory roleAndPermissionAsignments = new bytes[](2);
-      roleAndPermissionAsignments[0] =
+      bytes[] memory roleAndPermissionAssignments = new bytes[](2);
+      roleAndPermissionAssignments[0] =
         abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
-      roleAndPermissionAsignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
+      roleAndPermissionAssignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
 
       vm.prank(address(mpCore));
-      mpPolicy.aggregate(roleAndPermissionAsignments);
+      mpPolicy.aggregate(roleAndPermissionAssignments);
     }
 
     Strategy memory strategy = Strategy({
@@ -140,10 +140,8 @@ contract VertexStrategyTest is VertexTestSetup {
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), newPermissionId, true);
     vm.prank(address(mpCore));
-    mpPolicy.setRolePermissions(rolePermissions);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
 
     // Create the action.
     vm.prank(actionCreatorAaron);

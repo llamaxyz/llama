@@ -91,6 +91,7 @@ contract VertexTestSetup is Test {
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
   uint128 DEFAULT_ROLE_QTY = 1;
+  uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {

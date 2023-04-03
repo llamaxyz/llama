@@ -86,7 +86,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
+      setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
 
     // Must have assigned roles during initialization, otherwise the system cannot be used. However,
@@ -138,8 +138,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @param role Name of the role to set.
   /// @param permissionId Permission ID to assign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
-  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyVertex {
-    _setRolePermission(role, permissionId, hasPermission);
+  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) public onlyVertex {
+    canCreateAction[role][permissionId] = hasPermission;
+    emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
   /// @notice Revokes an expired role.
@@ -343,11 +344,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
     roleSupplyCkpts[role].push(newRoleSupply);
     emit RoleAssigned(user, role, expiration, newRoleSupply);
-  }
-
-  function _setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) internal {
-    canCreateAction[role][permissionId] = hasPermission;
-    emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
   function _revokeExpiredRole(uint8 role, address user) internal {
