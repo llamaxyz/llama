@@ -67,7 +67,9 @@ contract Initialize is VertexPolicyTest {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-    localPolicy.initialize("Test Policy", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+    localPolicy.initialize(
+      "Test Policy", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
+    );
   }
 
   function test_SetsNameAndSymbol() public {
@@ -106,8 +108,8 @@ contract Initialize is VertexPolicyTest {
     assertFalse(localPolicy.canCreateAction(role, pausePermissionId));
     localPolicy.setVertex(makeAddr("the factory"));
 
-    string[] memory roleDescriptions = new string[](1);
-    roleDescriptions[0] = "All Holders";
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("All Holders");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(role, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
@@ -144,7 +146,7 @@ contract InitializeRole is VertexPolicyTest {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
 
-    pPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 1);
 
     mpPolicy.initializeRole(RoleDescription.wrap("TestRole2"));
