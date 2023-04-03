@@ -485,9 +485,7 @@ contract CreateAction is VertexCoreTest {
     );
 
     vm.warp(_expirationTimestamp + 1);
-    ExpiredRole[] memory expiredRoles = new ExpiredRole[](1);
-    expiredRoles[0] = ExpiredRole(uint8(Roles.ActionCreator), actionCreatorAustin);
-    mpPolicy.revokeExpiredRoles(expiredRoles);
+    mpPolicy.revokeExpiredRole(uint8(Roles.ActionCreator), actionCreatorAustin);
 
     vm.startPrank(address(actionCreatorAustin));
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);

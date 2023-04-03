@@ -142,7 +142,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _setRolePermission(role, permissionId, hasPermission);
   }
 
-  /// @notice Revokes expired roles.
+  /// @notice Revokes an expired role.
+  /// @param role Role that has expired.
+  /// @param user User that held the role.
   /// @dev WARNING: The contract cannot enumerate all expired roles for a user, so the caller MUST
   /// provide the full list of expired roles to revoke. Not properly providing this data can result
   /// in an inconsistent internal state. It is expected that roles are revoked as needed before
@@ -150,10 +152,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// so would mean the total supply is higher than expected. Depending on the strategy
   /// configuration this may not be a big deal, or it may mean it's impossible to reach quorum. It's
   /// not a big issue if quorum cannot be reached, because a new action can be created.
-  function revokeExpiredRoles(ExpiredRole[] calldata expiredRoles) external {
-    for (uint256 i = 0; i < expiredRoles.length; i = _uncheckedIncrement(i)) {
-      _revokeExpiredRole(expiredRoles[i]);
-    }
+  function revokeExpiredRole(uint8 role, address user) external {
+    _revokeExpiredRole(role, user);
   }
 
   /// @notice Revokes all roles from the `user` and burns their policy.
@@ -350,12 +350,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
-  function _revokeExpiredRole(ExpiredRole calldata expiredRole) internal {
+  function _revokeExpiredRole(uint8 role, address user) internal {
     // Read the most recent checkpoint for the user's role balance.
-    uint256 tokenId = _tokenId(expiredRole.user);
-    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][expiredRole.role].latestCheckpoint();
+    uint256 tokenId = _tokenId(user);
+    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
     if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
-    _setRoleHolder(expiredRole.role, expiredRole.user, 0, 0);
+    _setRoleHolder(role, user, 0, 0);
   }
 
   function _mint(address user) internal {

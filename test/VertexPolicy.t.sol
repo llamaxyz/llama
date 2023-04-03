@@ -50,11 +50,6 @@ contract VertexPolicyTest is VertexTestSetup {
     roleHolder = RoleHolderData(role, user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
-  function generateExpiredRole(address user, uint8 role) internal pure returns (ExpiredRole[] memory expiredRole) {
-    expiredRole = new ExpiredRole[](1);
-    expiredRole[0] = ExpiredRole(role, user);
-  }
-
   function setUp() public virtual override {
     VertexTestSetup.setUp();
 
@@ -181,19 +176,15 @@ contract InitializeRole is VertexPolicyTest {
   }
 }
 
-contract SetRoleHolders is VertexPolicyTest {
+contract SetRoleHolder is VertexPolicyTest {
 // TODO
 }
 
-contract SetRolePermissions is VertexPolicyTest {
+contract SetRolePermission is VertexPolicyTest {
 // TODO
 }
 
-contract SetRoleHoldersAndPermissions is VertexPolicyTest {
-// TODO
-}
-
-contract RevokeExpiredRoles is VertexPolicyTest {
+contract RevokeExpiredRole is VertexPolicyTest {
 // TODO
 }
 
@@ -387,7 +378,7 @@ contract GetSupply is VertexPolicyTest {
     // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
     // it doesn't change the total supply.
     vm.warp(200);
-    mpPolicy.revokeExpiredRoles(generateExpiredRole(arbitraryUser, uint8(Roles.TestRole1)));
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
     assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 0);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
   }
@@ -433,7 +424,7 @@ contract GetPastSupply is VertexPolicyTest {
     // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
     // it doesn't change the total supply.
     vm.warp(200);
-    mpPolicy.revokeExpiredRoles(generateExpiredRole(arbitraryUser, uint8(Roles.TestRole1)));
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
 
     vm.warp(201);
 
