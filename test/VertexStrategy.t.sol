@@ -32,7 +32,7 @@ contract VertexStrategyTest is VertexTestSetup {
   function initializeRolesUpTo(uint8 role) internal {
     while (mpPolicy.numRoles() < role) {
       vm.prank(address(mpCore));
-      mpPolicy.initializeRole(getRoleDescription("Test Role"));
+      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
     }
   }
 

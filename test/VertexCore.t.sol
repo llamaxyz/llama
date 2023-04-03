@@ -170,7 +170,7 @@ contract Initialize is VertexCoreTest {
       "Root Vertex",
       strategies,
       accounts,
-      SolarrayVertex.roleDescription(getRoleDescription("AllHolders"), getRoleDescription("ActionCreator"), getRoleDescription("Approver"), getRoleDescription("Disapprover"), getRoleDescription("TestRole1"), getRoleDescription("TestRole2"), getRoleDescription("MadeUpRole")),
+      SolarrayVertex.roleDescription("AllHolders","ActionCreator","Approver","Disapprover","TestRole1","TestRole2","MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -178,13 +178,7 @@ contract Initialize is VertexCoreTest {
     (vertex, policy) = modifiedFactory.deployWithoutInitialization(
       "NewProject",
       SolarrayVertex.roleDescription(
-        getRoleDescription("AllHolders"),
-        getRoleDescription("ActionCreator"),
-        getRoleDescription("Approver"),
-        getRoleDescription("Disapprover"),
-        getRoleDescription("TestRole1"),
-        getRoleDescription("TestRole2"),
-        getRoleDescription("MadeUpRole")
+        "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
       ),
       roleHolders,
       new RolePermissionData[](0)

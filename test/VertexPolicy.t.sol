@@ -29,6 +29,10 @@ contract VertexPolicyTest is VertexTestSetup {
     return uint64(value);
   }
 
+  function getRoleDescription(string memory str) internal pure returns (RoleDescription) {
+    return RoleDescription.wrap(bytes32(bytes(str)));
+  }
+
   function generateRoleHolder(uint256 expiration) internal view returns (RoleHolderData[] memory roleHolder) {
     // TODO Improve tests to test various quantities, we currently only test with a quantity of 1.
     roleHolder = new RoleHolderData[](1);
@@ -113,7 +117,7 @@ contract Initialize is VertexPolicyTest {
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
-      roleDescriptions[i] = getRoleDescription(string.concat("Role ", vm.toString(i)));
+      roleDescriptions[i] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(i)))));
     }
 
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
@@ -154,10 +158,10 @@ contract InitializeRole is VertexPolicyTest {
     assertEq(mpPolicy.numRoles(), 8); // VertexTestSetup initializes 8 roles.
     vm.startPrank(address(mpCore));
 
-    mpPolicy.initializeRole(getRoleDescription("TestRole1"));
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
     assertEq(mpPolicy.numRoles(), 9);
 
-    mpPolicy.initializeRole(getRoleDescription("TestRole2"));
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole2"));
     assertEq(mpPolicy.numRoles(), 10);
   }
 

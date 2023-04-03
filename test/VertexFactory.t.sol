@@ -53,13 +53,7 @@ contract Constructor is VertexFactoryTest {
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      getRoleDescription("AllHolders"),
-      getRoleDescription("ActionCreator"),
-      getRoleDescription("Approver"),
-      getRoleDescription("Disapprover"),
-      getRoleDescription("TestRole1"),
-      getRoleDescription("TestRole2"),
-      getRoleDescription("MadeUpRole")
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     return new VertexFactory(
       coreLogic,
@@ -122,13 +116,7 @@ contract Deploy is VertexFactoryTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      getRoleDescription("AllHolders"),
-      getRoleDescription("ActionCreator"),
-      getRoleDescription("Approver"),
-      getRoleDescription("Disapprover"),
-      getRoleDescription("TestRole1"),
-      getRoleDescription("TestRole2"),
-      getRoleDescription("MadeUpRole")
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
 
     vm.prank(address(rootCore));
@@ -169,13 +157,7 @@ contract Deploy is VertexFactoryTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      getRoleDescription("AllHolders"),
-      getRoleDescription("ActionCreator"),
-      getRoleDescription("Approver"),
-      getRoleDescription("Disapprover"),
-      getRoleDescription("TestRole1"),
-      getRoleDescription("TestRole2"),
-      getRoleDescription("MadeUpRole")
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
 
     vm.prank(address(rootCore));

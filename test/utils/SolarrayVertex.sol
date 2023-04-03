@@ -4,95 +4,78 @@ pragma solidity ^0.8.13;
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 library SolarrayVertex {
-  function roleDescription(RoleDescription a) internal pure returns (RoleDescription[] memory) {
+  function roleDescription(bytes32 a) internal pure returns (RoleDescription[] memory) {
     RoleDescription[] memory arr = new RoleDescription[](1);
-    arr[0] = a;
+    arr[0] = RoleDescription.wrap(a);
     return arr;
   }
 
-  function roleDescription(RoleDescription a, RoleDescription b) internal pure returns (RoleDescription[] memory) {
+  function roleDescription(bytes32 a, bytes32 b) internal pure returns (RoleDescription[] memory) {
     RoleDescription[] memory arr = new RoleDescription[](2);
-    arr[0] = a;
-    arr[1] = b;
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
     return arr;
   }
 
-  function roleDescription(RoleDescription a, RoleDescription b, RoleDescription c)
-    internal
-    pure
-    returns (RoleDescription[] memory)
-  {
+  function roleDescription(bytes32 a, bytes32 b, bytes32 c) internal pure returns (RoleDescription[] memory) {
     RoleDescription[] memory arr = new RoleDescription[](3);
-    arr[0] = a;
-    arr[1] = b;
-    arr[2] = c;
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
+    arr[2] = RoleDescription.wrap(c);
     return arr;
   }
 
-  function roleDescription(RoleDescription a, RoleDescription b, RoleDescription c, RoleDescription d)
+  function roleDescription(bytes32 a, bytes32 b, bytes32 c, bytes32 d) internal pure returns (RoleDescription[] memory) {
+    RoleDescription[] memory arr = new RoleDescription[](4);
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
+    arr[2] = RoleDescription.wrap(c);
+    arr[3] = RoleDescription.wrap(d);
+    return arr;
+  }
+
+  function roleDescription(bytes32 a, bytes32 b, bytes32 c, bytes32 d, bytes32 e)
     internal
     pure
     returns (RoleDescription[] memory)
   {
-    RoleDescription[] memory arr = new RoleDescription[](4);
-    arr[0] = a;
-    arr[1] = b;
-    arr[2] = c;
-    arr[3] = d;
-    return arr;
-  }
-
-  function roleDescription(
-    RoleDescription a,
-    RoleDescription b,
-    RoleDescription c,
-    RoleDescription d,
-    RoleDescription e
-  ) internal pure returns (RoleDescription[] memory) {
     RoleDescription[] memory arr = new RoleDescription[](5);
-    arr[0] = a;
-    arr[1] = b;
-    arr[2] = c;
-    arr[3] = d;
-    arr[4] = e;
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
+    arr[2] = RoleDescription.wrap(c);
+    arr[3] = RoleDescription.wrap(d);
+    arr[4] = RoleDescription.wrap(e);
     return arr;
   }
 
-  function roleDescription(
-    RoleDescription a,
-    RoleDescription b,
-    RoleDescription c,
-    RoleDescription d,
-    RoleDescription e,
-    RoleDescription f
-  ) internal pure returns (RoleDescription[] memory) {
+  function roleDescription(bytes32 a, bytes32 b, bytes32 c, bytes32 d, bytes32 e, bytes32 f)
+    internal
+    pure
+    returns (RoleDescription[] memory)
+  {
     RoleDescription[] memory arr = new RoleDescription[](6);
-    arr[0] = a;
-    arr[1] = b;
-    arr[2] = c;
-    arr[3] = d;
-    arr[4] = e;
-    arr[5] = f;
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
+    arr[2] = RoleDescription.wrap(c);
+    arr[3] = RoleDescription.wrap(d);
+    arr[4] = RoleDescription.wrap(e);
+    arr[5] = RoleDescription.wrap(f);
     return arr;
   }
 
-  function roleDescription(
-    RoleDescription a,
-    RoleDescription b,
-    RoleDescription c,
-    RoleDescription d,
-    RoleDescription e,
-    RoleDescription f,
-    RoleDescription g
-  ) internal pure returns (RoleDescription[] memory) {
+  function roleDescription(bytes32 a, bytes32 b, bytes32 c, bytes32 d, bytes32 e, bytes32 f, bytes32 g)
+    internal
+    pure
+    returns (RoleDescription[] memory)
+  {
     RoleDescription[] memory arr = new RoleDescription[](7);
-    arr[0] = a;
-    arr[1] = b;
-    arr[2] = c;
-    arr[3] = d;
-    arr[4] = e;
-    arr[5] = f;
-    arr[6] = g;
+    arr[0] = RoleDescription.wrap(a);
+    arr[1] = RoleDescription.wrap(b);
+    arr[2] = RoleDescription.wrap(c);
+    arr[3] = RoleDescription.wrap(d);
+    arr[4] = RoleDescription.wrap(e);
+    arr[5] = RoleDescription.wrap(f);
+    arr[6] = RoleDescription.wrap(g);
     return arr;
   }
 

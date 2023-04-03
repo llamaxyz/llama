@@ -111,13 +111,7 @@ contract VertexTestSetup is Test {
     // Deploy the Root vertex instance. We only instantiate it with a single admin role.
     Strategy[] memory strategies = defaultStrategies();
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      getRoleDescription("AllHolders"),
-      getRoleDescription("ActionCreator"),
-      getRoleDescription("Approver"),
-      getRoleDescription("Disapprover"),
-      getRoleDescription("TestRole1"),
-      getRoleDescription("TestRole2"),
-      getRoleDescription("MadeUpRole")
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
     RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
@@ -269,21 +263,5 @@ contract VertexTestSetup is Test {
     strategies = new Strategy[](2);
     strategies[0] = strategy1Config;
     strategies[1] = strategy2Config;
-  }
-
-  function getRoleDescription(string memory description) public pure returns (RoleDescription) {
-    // Convert the string to bytes and make sure it's not too long
-    bytes memory descriptionBytes = bytes(description);
-    require(descriptionBytes.length <= 32, "Description must be 32 bytes or less");
-
-    // Pad the bytes with zeros if necessary to make them 32 bytes long
-    bytes32 description32;
-    assembly {
-      description32 := mload(0x0)
-      mstore(add(description32, 32), mul(0x100000000000000000000000000000000000000000000000000000000, descriptionBytes))
-    }
-
-    // Return the RoleDescription variable
-    return RoleDescription.wrap(description32);
   }
 }
