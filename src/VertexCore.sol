@@ -78,6 +78,11 @@ contract VertexCore is Initializable {
   bytes32 public constant DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
+  /// @notice EIP-712 createAction typehash.
+  bytes32 public constant CREATE_ACTION_EMITTED_TYPEHASH = keccak256(
+    "ActionCreated(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder)"
+  );
+
   /// @notice EIP-712 approval typehash.
   bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalCast(uint256 id,address policyholder)");
 
@@ -148,7 +153,8 @@ contract VertexCore is Initializable {
   // ===========================================
 
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
-  /// strategy, target, selector.
+  /// {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
   /// @param strategy The VertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
@@ -163,42 +169,7 @@ contract VertexCore is Initializable {
     bytes4 selector,
     bytes calldata data
   ) external returns (uint256 actionId) {
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
-
-    PermissionData memory permission = PermissionData(target, selector, strategy);
-    bytes32 permissionId = keccak256(abi.encode(permission));
-
-    // Typically (such as in Governor contracts) this should check that the caller has permission
-    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
-    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
-    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
-    // an action is created, as the order of transactions in the block then affects if action
-    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
-    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
-    // this race condition is unlikely to matter.
-    if (!policy.hasPermissionId(msg.sender, role, permissionId)) revert PolicyholderDoesNotHavePermission();
-
-    actionId = actionsCount;
-    Action storage newAction = actions[actionId];
-
-    // Revert if the policy has no supply for any provided roles.
-    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
-
-    newAction.creator = msg.sender;
-    newAction.strategy = strategy;
-    newAction.target = target;
-    newAction.value = value;
-    newAction.selector = selector;
-    newAction.data = data;
-    newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
-
-    unchecked {
-      ++actionsCount;
-    }
-
-    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
+    actionId = _createAction(role, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -395,6 +366,52 @@ contract VertexCore is Initializable {
   // ================================
   // ======== Internal Logic ========
   // ================================
+
+  function _createAction(
+    uint8 role,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data
+  ) internal returns (uint256 actionId) {
+    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+
+    PermissionData memory permission = PermissionData(target, selector, strategy);
+    bytes32 permissionId = keccak256(abi.encode(permission));
+
+    // Typically (such as in Governor contracts) this should check that the caller has permission
+    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
+    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
+    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
+    // an action is created, as the order of transactions in the block then affects if action
+    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
+    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
+    // this race condition is unlikely to matter.
+    if (!policy.hasPermissionId(msg.sender, role, permissionId)) revert PolicyholderDoesNotHavePermission();
+
+    actionId = actionsCount;
+    Action storage newAction = actions[actionId];
+
+    // Revert if the policy has no supply for any provided roles.
+    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
+
+    newAction.creator = msg.sender;
+    newAction.strategy = strategy;
+    newAction.target = target;
+    newAction.value = value;
+    newAction.selector = selector;
+    newAction.data = data;
+    newAction.creationTime = block.timestamp;
+    newAction.approvalPolicySupply = approvalPolicySupply;
+    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    unchecked {
+      ++actionsCount;
+    }
+
+    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
+  }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
