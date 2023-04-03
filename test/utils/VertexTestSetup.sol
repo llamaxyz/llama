@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Solarray} from "solarray/Solarray.sol";
+import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -15,7 +15,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 
-// Used for readability of tests, so they can be accessed with e.g. `Roles.ActionCreator`.
+// Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
 enum Roles {
   AllHolders,
   ActionCreator,
@@ -80,11 +80,13 @@ contract VertexTestSetup is Test {
   bytes4 public constant PAUSE_SELECTOR = 0x02329a29; // pause(bool)
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
+  bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
+  bytes32 executeActionId;
 
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
@@ -172,15 +174,29 @@ contract VertexTestSetup is Test {
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));
 
+    // Set strategy and account addresses.
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+
+    // Set vertex account addresses.
+    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+
     // With the protocol deployed, we can set special permissions.
     pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
     failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
+    executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
 
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](3);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](4);
     rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
     rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
     rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
+    rolePermissions[3] = RolePermissionData(uint8(Roles.TestRole2), executeActionId, true);
 
     vm.prank(address(mpCore));
     mpPolicy.setRolePermissions(rolePermissions);
@@ -216,6 +232,7 @@ contract VertexTestSetup is Test {
     require(bytes32(0) != pausePermissionId, "pausePermissionId not set");
     require(bytes32(0) != failPermissionId, "failPermissionId not set");
     require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
+    require(bytes32(0) != executeActionId, "executeActionId not set");
   }
 
   function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
