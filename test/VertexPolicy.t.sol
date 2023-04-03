@@ -5,7 +5,7 @@ import "lib/forge-std/src/console.sol";
 import {Test, stdError, console2} from "lib/forge-std/src/Test.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {RoleHolderData, RolePermissionData, ExpiredRole} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@solady/utils/Base64.sol";

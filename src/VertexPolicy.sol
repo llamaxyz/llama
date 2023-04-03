@@ -5,7 +5,7 @@ import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMi
 import {VertexFactory} from "src/VertexFactory.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
-import {ExpiredRole, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 
 /// @title VertexPolicy
