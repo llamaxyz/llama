@@ -90,6 +90,27 @@ contract Initialize is VertexPolicyTest {
     vm.expectRevert("Initializable: contract is already initialized");
     mpPolicy.initialize("Test", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
+
+  // TODO
+  // function test_SetsRoleDescriptions() public {
+  // function test_SetsRoleHolders() public {
+
+  function test_SetsRolePermissions() public {
+    uint8 role = uint8(Roles.AllHolders);
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    assertFalse(localPolicy.canCreateAction(role, pausePermissionId));
+    localPolicy.setVertex(makeAddr("the factory"));
+
+    string[] memory roleDescriptions = new string[](1);
+    roleDescriptions[0] = "All Holders";
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(role, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+
+    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
+    assertTrue(localPolicy.canCreateAction(uint8(Roles.TestRole1), pausePermissionId));
+  }
 }
 
 contract SetVertex is VertexPolicyTest {
