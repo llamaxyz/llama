@@ -84,10 +84,19 @@ contract VertexCore is Initializable {
   );
 
   /// @notice EIP-712 approval typehash.
+<<<<<<< HEAD
   bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalCast(uint256 id,address policyholder)");
 
   /// @notice EIP-712 disapproval typehash.
   bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalCast(uint256 id,address policyholder)");
+=======
+  bytes32 public constant APPROVAL_EMITTED_TYPEHASH =
+    keccak256("PolicyholderApproved(uint256 actionId,uint8 role,string reason,address policyholder)");
+
+  /// @notice EIP-712 disapproval typehash.
+  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
+    keccak256("PolicyholderDisapproved(uint256 actionId,uint8 role,string reason,address policyholder)");
+>>>>>>> e0dca13 (Fixing castApprovalBySig and castDisapprovalBySig)
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -284,20 +293,30 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
+  /// @param reason The reason given for the approval by the policyholder.
+  /// @param user The user that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castApprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castApprovalBySig(
+    uint256 actionId,
+    uint8 role,
+    string calldata reason,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
         keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, role, keccak256(bytes(reason)), user))
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
-    return _castApproval(signer, role, actionId, "");
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    return _castApproval(signer, role, actionId, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action.
@@ -318,20 +337,30 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
+  /// @param reason The reason given for the approval by the policyholder.
+  /// @param user The user that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castDisapprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castDisapprovalBySig(
+    uint256 actionId,
+    uint8 role,
+    string calldata reason,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
         keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, role, keccak256(bytes(reason)), user))
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
-    return _castDisapproval(signer, role, actionId, "");
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    return _castDisapproval(signer, role, actionId, reason);
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
