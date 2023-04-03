@@ -97,7 +97,7 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _executeAction() public {
     vm.expectEmit(true, true, true, true);
-    emit ActionExecuted(0, address(this), mpStrategy1, adminAlice);
+    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
     mpCore.executeAction(0);
 
     Action memory action = mpCore.getAction(0);
@@ -159,7 +159,7 @@ contract Initialize is VertexCoreTest {
   {
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
-    RoleHolderData[] memory roleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new VertexFactoryWithoutInitialization(
       coreLogic,
       address(strategyLogic),
@@ -414,7 +414,9 @@ contract CreateAction is VertexCoreTest {
 
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
-    mpCore.createAction(uint8(Roles.Admin), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data));
+    mpCore.createAction(
+      uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data)
+    );
   }
 
   function test_RevertIfStrategyUnauthorized() public {
@@ -428,10 +430,10 @@ contract CreateAction is VertexCoreTest {
 
   function test_RevertIfStrategyIsFromAnotherVertex() public {
     VertexStrategy unauthorizedStrategy = rootStrategy1;
-    vm.prank(adminAlice);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
     mpCore.createAction(
-      uint8(Roles.Admin), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
   }
 
@@ -507,7 +509,7 @@ contract CancelAction is VertexCoreTest {
   }
 
   function test_CreatorCancelFlow() public {
-    vm.startPrank(adminAlice);
+    vm.startPrank(actionCreatorAaron);
     vm.expectEmit(true, true, true, true);
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
@@ -656,7 +658,7 @@ contract ExecuteAction is VertexCoreTest {
     vm.warp(block.timestamp + 6 days);
 
     vm.expectEmit();
-    emit ActionExecuted(0, address(this), mpStrategy1, adminAlice);
+    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
     bytes memory result = mpCore.executeAction(0);
     assertEq(result, "");
   }
@@ -1225,7 +1227,7 @@ contract GetActionState is VertexCoreTest {
 
   function test_CanceledActionsHaveStateCanceled() public {
     uint256 actionId = _createAction();
-    vm.prank(adminAlice);
+    vm.prank(actionCreatorAaron);
     mpCore.cancelAction(actionId);
 
     uint256 currentState = uint256(mpCore.getActionState(0));
