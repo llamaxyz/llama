@@ -192,14 +192,18 @@ contract VertexTestSetup is Test {
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
     executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
 
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](4);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
-    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
-    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
-    rolePermissions[3] = RolePermissionData(uint8(Roles.TestRole2), executeActionId, true);
+    bytes[] memory permissionsToSet = new bytes[](4);
+    permissionsToSet[0] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
+    permissionsToSet[1] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), failPermissionId, true));
+    permissionsToSet[2] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), receiveEthPermissionId, true));
+    permissionsToSet[3] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeActionId, true));
 
     vm.prank(address(mpCore));
-    mpPolicy.setRolePermissions(rolePermissions);
+    mpPolicy.aggregate(permissionsToSet);
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);

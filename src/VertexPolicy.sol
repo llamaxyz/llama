@@ -132,11 +132,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     }
   }
 
-  /// @notice Sets the permissions for a given role.
-  function setRolePermissions(RolePermissionData[] calldata rolePermissions) external onlyVertex {
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
-    }
+  /// @notice Assigns a permission to a role.
+  /// @param role Name of the role to set.
+  /// @param permissionId Permission ID to assign to the role.
+  /// @param hasPermission Whether to assign the permission or remove the permission.
+  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyVertex {
+    _setRolePermission(role, permissionId, hasPermission);
   }
 
   /// @notice Assigns roles to users and sets permissions for roles.
