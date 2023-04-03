@@ -53,7 +53,8 @@ contract VertexStrategyTest is VertexTestSetup {
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
       bytes[] memory roleAndPermissionAsignments = new bytes[](2);
-      roleAndPermissionAsignments[0] = abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
+      roleAndPermissionAsignments[0] =
+        abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
       roleAndPermissionAsignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
 
       vm.prank(address(mpCore));
@@ -180,13 +181,8 @@ contract VertexStrategyTest is VertexTestSetup {
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 100));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        setRoleHolderCalls[i] = abi.encodeCall(
-          VertexPolicy.setRoleHolder,
-          (uint8(Roles.TestRole1),
-           _policyHolder,
-           1,
-           type(uint64).max)
-        );
+        setRoleHolderCalls[i] =
+          abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max));
       }
     }
     vm.prank(address(mpCore));
