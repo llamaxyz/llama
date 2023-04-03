@@ -52,14 +52,12 @@ contract VertexStrategyTest is VertexTestSetup {
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
-      RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-      roleHolders[0] = RoleHolderData(_role, _policyHolder, 1, type(uint64).max);
-      RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-      rolePermissions[0] = RolePermissionData(_role, _permission, true);
+      bytes[] memory roleAndPermissionAsignments = new bytes[](2);
+      roleAndPermissionAsignments[0] = abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
+      roleAndPermissionAsignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
 
       vm.prank(address(mpCore));
-
-      mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
+      mpPolicy.aggregate(roleAndPermissionAsignments);
     }
 
     Strategy memory strategy = Strategy({

@@ -142,19 +142,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _setRolePermission(role, permissionId, hasPermission);
   }
 
-  /// @notice Assigns roles to users and sets permissions for roles.
-  function setRoleHoldersAndPermissions(
-    RoleHolderData[] calldata roleHolders,
-    RolePermissionData[] calldata rolePermissions
-  ) external onlyVertex {
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
-    }
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
-    }
-  }
-
   /// @notice Revokes expired roles.
   /// @dev WARNING: The contract cannot enumerate all expired roles for a user, so the caller MUST
   /// provide the full list of expired roles to revoke. Not properly providing this data can result
