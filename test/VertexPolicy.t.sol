@@ -148,7 +148,7 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, RoleDescription description);
+  event RoleInitialized(uint8 indexed role, string description);
 
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), 8); // VertexTestSetup initializes 8 roles.
@@ -172,7 +172,7 @@ contract InitializeRole is VertexPolicyTest {
 
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit(true, true, true, true);
-    emit RoleInitialized(9, getRoleDescription("TestRole")); // VertexTestSetup initializes 8 roles, so next one is 9.
+    emit RoleInitialized(9, "TestRole"); // VertexTestSetup initializes 8 roles, so next one is 9.
     vm.prank(address(mpCore));
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
@@ -554,7 +554,7 @@ contract TokenURI is VertexPolicyTest {
 // // contract BatchGrantPolicies is VertexPolicyTest {
 // //   function test_CorrectlyGrantsPermission() public {
 // //     // PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(policyHolderPam);
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PolicyAdded(initialBatchGrantData[0]);
 // //     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
 // //     // assertEq(mpPolicy.balanceOf(arbitraryAddress), 1);
@@ -593,7 +593,7 @@ contract TokenURI is VertexPolicyTest {
 
 // //     // vm.warp(block.timestamp + 100);
 
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PermissionUpdated(updateData[0]);
 
 // //     // mpPolicy.batchUpdatePermissions(updateData);
@@ -631,7 +631,7 @@ contract TokenURI is VertexPolicyTest {
 
 // // contract BatchRevokePolicies is VertexPolicyTest {
 // //   function test_CorrectlyRevokesPolicy() public {
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PolicyRevoked(policyRevokeData[0]);
 // //     // mpPolicy.batchRevokePolicies(policyRevokeData);
 // //     // assertEq(mpPolicy.balanceOf(address(this)), 0);

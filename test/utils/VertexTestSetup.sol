@@ -15,6 +15,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.Admin)`.
 enum Roles {
@@ -109,15 +110,17 @@ contract VertexTestSetup is Test {
 
     // Deploy the Root vertex instance. We only instantiate it with a single admin role.
     Strategy[] memory strategies = defaultStrategies();
-    string[] memory roleDescriptionStrings =
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole");
-    RoleDescription[] memory roleDescriptions = new RoleDescription[](roleDescriptionStrings.length);
+    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
+      getRoleDescription("AllHolders"),
+      getRoleDescription("ActionCreator"),
+      getRoleDescription("Approver"),
+      getRoleDescription("Disapprover"),
+      getRoleDescription("TestRole1"),
+      getRoleDescription("TestRole2"),
+      getRoleDescription("MadeUpRole")
+    );
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
     RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
-
-    for (uint256 i = 0; i < roleDescriptionStrings.length; i++) {
-      roleDescriptions[i] = getRoleDescription(roleDescriptionStrings[i]);
-    }
 
     factory = new VertexFactory(
       coreLogic,
@@ -128,7 +131,7 @@ contract VertexTestSetup is Test {
       "Root Vertex",
       strategies,
       rootAccounts,
-      roleDescriptions,
+      roleDescriptionStrings,
       rootRoleHolders,
       new RolePermissionData[](0)
     );
@@ -146,7 +149,7 @@ contract VertexTestSetup is Test {
       address(accountLogic),
       strategies,
       mpAccounts,
-      roleDescriptions,
+      roleDescriptionStrings,
       mpRoleHolders,
       new RolePermissionData[](0)
     );
