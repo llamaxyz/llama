@@ -7,8 +7,8 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
 import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
+import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -42,9 +42,9 @@ contract VertexCoreTest is VertexTestSetup {
     VertexTestSetup.setUp();
   }
 
-  /*///////////////////////////////////////////////////////////////
-                        Helpers
-    //////////////////////////////////////////////////////////////*/
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function _createAction() public returns (uint256 actionId) {
     vm.prank(actionCreatorAaron);
@@ -96,7 +96,7 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _executeAction() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
     mpCore.executeAction(0);
 
@@ -503,7 +503,7 @@ contract CancelAction is VertexCoreTest {
 
   function test_CreatorCancelFlow() public {
     vm.startPrank(actionCreatorAaron);
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
     vm.stopPrank();

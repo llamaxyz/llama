@@ -8,6 +8,9 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 
+/// @dev The CheckpointsMock harness contract has its external functions written according to
+/// https://github.com/foundry-rs/foundry/pull/3128#issuecomment-1241245086
+/// so that test coverage is captured for the Checkpoints library.
 contract CheckpointsMock {
   Checkpoints.History private _totalCheckpoints;
 

@@ -7,7 +7,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
+import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -57,7 +57,7 @@ contract VertexTestSetup is Test {
   VertexAccount mpAccount2;
 
   // Mock protocol for action targets.
-  ProtocolXYZ public mockProtocol;
+  MockProtocol public mockProtocol;
 
   // Root vertex action creator.
   address rootVertexActionCreator = makeAddr("rootVertexActionCreator");
@@ -173,7 +173,7 @@ contract VertexTestSetup is Test {
     mpPolicy.aggregate(roleAssignmentCalls);
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
-    mockProtocol = new ProtocolXYZ(address(mpCore));
+    mockProtocol = new MockProtocol(address(mpCore));
 
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));

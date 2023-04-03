@@ -2,22 +2,35 @@
 pragma solidity 0.8.19;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 /// @title A strategy definition of a Vertex system.
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
 contract VertexStrategy is Initializable {
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
   error InvalidPermissionId();
   error NoPolicy();
   error RoleNotInitialized(uint8 role);
 
+  // ========================
+  // ======== Events ========
+  // ========================
+
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -41,20 +54,28 @@ contract VertexStrategy is Initializable {
   uint256 public approvalPeriod;
 
   /// @notice Minimum percentage of total approval weight / total approval supply at creationTime of the action for it
-  /// to be queued. In bps, where
-  /// 100_00 == 100%.
+  /// to be queued. In bps, where 100_00 == 100%.
   uint256 public minApprovalPct;
 
   /// @notice Minimum percentage of total disapproval weight / total disapproval supply at creationTime of the action
-  /// for it to be canceled. In bps,
-  /// where 100_00
-  /// == 100%.
+  /// for it to be canceled. In bps, 100_00 == 100%.
   uint256 public minDisapprovalPct;
 
+  /// @notice The role that can approve an action.
   uint8 public approvalRole;
+
+  /// @notice The role that can disapprove an action.
   uint8 public disapprovalRole;
+
+  /// @notice Mapping of roles that can force an action to be approved.
   mapping(uint8 => bool) public forceApprovalRole;
+
+  /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   constructor() initializer {}
 
@@ -96,6 +117,10 @@ contract VertexStrategy is Initializable {
 
     emit NewStrategyCreated(vertex, _policy);
   }
+
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Get whether an action has passed the approval process.
   /// @param actionId id of the action.
@@ -143,6 +168,10 @@ contract VertexStrategy is Initializable {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
   }
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
 
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {

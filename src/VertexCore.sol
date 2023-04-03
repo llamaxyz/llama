@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
+
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -14,6 +15,10 @@ import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is Initializable {
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
   error InvalidStrategy();
   error InvalidPolicyholder();
   error InvalidCancelation();
@@ -36,6 +41,15 @@ contract VertexCore is Initializable {
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
 
+  modifier onlyVertex() {
+    if (msg.sender != address(this)) revert OnlyVertex();
+    _;
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
+
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -55,6 +69,10 @@ contract VertexCore is Initializable {
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice EIP-712 base typehash.
   bytes32 public constant DOMAIN_TYPEHASH =
@@ -97,12 +115,11 @@ contract VertexCore is Initializable {
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
 
-  constructor() initializer {}
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
-  modifier onlyVertex() {
-    if (msg.sender != address(this)) revert OnlyVertex();
-    _;
-  }
+  constructor() initializer {}
 
   /// @notice Initializes a new VertexCore clone.
   /// @param _name The name of the VertexCore clone.
@@ -126,6 +143,10 @@ contract VertexCore is Initializable {
     _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
     _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
+
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
   /// strategy, target, selector.
@@ -371,6 +392,10 @@ contract VertexCore is Initializable {
 
     return ActionState.Queued;
   }
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();

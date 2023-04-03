@@ -1,21 +1,57 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
 
-/// @title VertexPolicy
+import {VertexFactory} from "src/VertexFactory.sol";
+import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
+import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+
+/// @title Vertex Policy
 /// @author Llama (vertex@llama.xyz)
-/// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
+/// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
+/// disapprove actions.
 /// @dev TODO Add comments here around limitations/expectations of this contract, namely the "total
 /// supply issue", the fact that quantities cannot be larger than 1, and burning a policy.
-/// @notice The permissions determine how the token can interact with the vertex administrator contract
+/// @dev The roles determine how the token can interact with the Vertex Core contract.
 contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
+
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
+  error AlreadyInitialized();
+  error CallReverted(uint256 index, bytes revertData);
+  error InvalidInput();
+  error MissingAdmin();
+  error NonTransferableToken();
+  error OnlyVertex();
+  error RoleNotInitialized(uint8 role);
+
+  modifier onlyVertex() {
+    if (msg.sender != vertex) revert OnlyVertex();
+    _;
+  }
+
+  modifier nonTransferableToken() {
+    _; // We put this ahead of the revert so we don't get an unreachable code warning. TODO Confirm this is safe.
+    revert NonTransferableToken();
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
+
+  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
+  event RoleInitialized(uint8 indexed role, string description);
+  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice A special role used to reference all policy holders.
   /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
@@ -45,26 +81,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The address of the `VertexFactory` contract.
   VertexFactory public factory;
 
-  error AlreadyInitialized();
-  error CallReverted(uint256 index, bytes revertData);
-  error InvalidInput();
-  error NonTransferableToken();
-  error OnlyVertex();
-  error RoleNotInitialized(uint8 role);
-
-  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
-  event RoleInitialized(uint8 indexed role, string description);
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
-
-  modifier onlyVertex() {
-    if (msg.sender != vertex) revert OnlyVertex();
-    _;
-  }
-
-  modifier nonTransferableToken() {
-    _; // We put this ahead of the revert so we don't get an unreachable code warning.
-    revert NonTransferableToken();
-  }
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   constructor() initializer {}
 
@@ -95,14 +114,19 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     if (numRoles == 0 || getSupply(ALL_HOLDERS_ROLE) == 0) revert InvalidInput();
   }
 
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
+
+  /// @notice Sets the address of the `VertexCore` contract.
+  /// @dev This method can only be called once.
+  /// @param _vertex The address of the `VertexCore` contract.
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;
   }
 
-  // =======================================
-  // ======== Permission Management ========
-  // =======================================
+  // -------- Role and Permission Management --------
 
   /// @notice Aggregate calls of multiple functions in the current contract into a single call.
   /// @dev The `msg.value` should not be trusted for any method callable from this method. No
@@ -179,44 +203,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _burn(_tokenId(user));
   }
 
-  // =================================
-  // ======== ERC-721 Methods ========
-  // =================================
-
-  /// @dev overriding transferFrom to disable transfers
-  /// @dev this is a temporary solution, we will need to conform to a Soulbound standard
-  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding safeTransferFrom to disable transfers
-  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding safeTransferFrom to disable transfers
-  function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding approve to disable approvals
-  function approve(address, /* spender */ uint256 /* id */ ) public pure override nonTransferableToken {}
-
-  /// @dev overriding approve to disable approvals
-  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
-
-  // ====================================
-  // ======== Permission Getters ========
-  // ====================================
+  // -------- Role and Permission Getters --------
 
   /// @notice Returns the quantity of the `role` for the given `user`. The returned value is the
   /// weight of the role when approving/disapproving (regardless of strategy).
@@ -285,15 +272,45 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return getSupply(ALL_HOLDERS_ROLE);
   }
 
-  // =================================
-  // ======== ERC-721 Getters ========
-  // =================================
+  // -------- ERC-721 Getters --------
 
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     return factory.tokenURI(name, symbol, tokenId);
   }
+
+  // -------- ERC-721 Methods --------
+
+  /// @dev overriding transferFrom to disable transfers
+  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding approve to disable approvals
+  function approve(address, /* spender */ uint256 /* id */ ) public pure override nonTransferableToken {}
+
+  /// @dev overriding approve to disable approvals
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
 
   // ================================
   // ======== Internal Logic ========
