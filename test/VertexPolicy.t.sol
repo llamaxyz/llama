@@ -148,7 +148,7 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, string description);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), 8); // VertexTestSetup initializes 8 roles.
@@ -172,7 +172,7 @@ contract InitializeRole is VertexPolicyTest {
 
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit(true, true, true, true);
-    emit RoleInitialized(9, "TestRole"); // VertexTestSetup initializes 8 roles, so next one is 9.
+    emit RoleInitialized(9, getRoleDescription("TestRole")); // VertexTestSetup initializes 8 roles, so next one is 9.
     vm.prank(address(mpCore));
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
