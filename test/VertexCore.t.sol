@@ -16,6 +16,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ExpiredRole, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 contract VertexCoreTest is VertexTestSetup {
   event ActionCreated(
@@ -169,14 +170,22 @@ contract Initialize is VertexCoreTest {
       "Root Vertex",
       strategies,
       accounts,
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      SolarrayVertex.roleDescription(getRoleDescription("AllHolders"), getRoleDescription("ActionCreator"), getRoleDescription("Approver"), getRoleDescription("Disapprover"), getRoleDescription("TestRole1"), getRoleDescription("TestRole2"), getRoleDescription("MadeUpRole")),
       roleHolders,
       new RolePermissionData[](0)
     );
 
     (vertex, policy) = modifiedFactory.deployWithoutInitialization(
       "NewProject",
-      Solarray.strings("AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"),
+      SolarrayVertex.roleDescription(
+        getRoleDescription("AllHolders"),
+        getRoleDescription("ActionCreator"),
+        getRoleDescription("Approver"),
+        getRoleDescription("Disapprover"),
+        getRoleDescription("TestRole1"),
+        getRoleDescription("TestRole2"),
+        getRoleDescription("MadeUpRole")
+      ),
       roleHolders,
       new RolePermissionData[](0)
     );
