@@ -125,11 +125,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _initializeRole(description);
   }
 
-  /// @notice Assigns roles to users.
-  function setRoleHolders(RoleHolderData[] calldata roleHolders) external onlyVertex {
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
-    }
+  /// @notice Assigns a role to a user.
+  /// @param role ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
+  /// @param user User to assign the role to.
+  /// @param quantity Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  /// @param expiration When the role expires.
+  function setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) external onlyVertex {
+    _setRoleHolder(role, user, quantity, expiration);
   }
 
   /// @notice Assigns a permission to a role.

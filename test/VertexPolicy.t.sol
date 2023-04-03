@@ -28,29 +28,26 @@ contract VertexPolicyTest is VertexTestSetup {
     return uint64(value);
   }
 
-  function generateRoleHolder(uint256 expiration) internal view returns (RoleHolderData[] memory roleHolder) {
+  function generateRoleHolder(uint256 expiration) internal view returns (RoleHolderData memory roleHolder) {
     // TODO Improve tests to test various quantities, we currently only test with a quantity of 1.
-    roleHolder = new RoleHolderData[](1);
     uint128 quantity = expiration == 0 ? 0 : 1;
-    roleHolder[0] = RoleHolderData(uint8(Roles.TestRole1), arbitraryUser, quantity, toUint64(expiration));
+    roleHolder = RoleHolderData(uint8(Roles.TestRole1), arbitraryUser, quantity, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, uint256 expiration)
     internal
     view
-    returns (RoleHolderData[] memory roleHolder)
+    returns (RoleHolderData memory roleHolder)
   {
-    roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, toUint64(expiration));
+    roleHolder = RoleHolderData(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateRoleHolder(address user, uint8 role, uint256 expiration)
     internal
     view
-    returns (RoleHolderData[] memory roleHolder)
+    returns (RoleHolderData memory roleHolder)
   {
-    roleHolder = new RoleHolderData[](1);
-    roleHolder[0] = RoleHolderData(role, user, DEFAULT_ROLE_QTY, toUint64(expiration));
+    roleHolder = RoleHolderData(role, user, DEFAULT_ROLE_QTY, toUint64(expiration));
   }
 
   function generateExpiredRole(address user, uint8 role) internal pure returns (ExpiredRole[] memory expiredRole) {
@@ -268,7 +265,8 @@ contract GetWeight is VertexPolicyTest {
 
   function test_ReturnsOneIfRoleHasExpiredButWasNotRevoked() public {
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(generateRoleHolder(100));
+    RoleHolderData memory roleData = generateRoleHolder(100);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(100);
     assertEq(mpPolicy.getWeight(arbitraryUser, uint8(Roles.TestRole1)), 1);
@@ -279,7 +277,8 @@ contract GetWeight is VertexPolicyTest {
 
   function test_ReturnsOneIfRoleHasNotExpired() public {
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(generateRoleHolder(100));
+    RoleHolderData memory roleData = generateRoleHolder(100);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(99);
     assertEq(mpPolicy.getWeight(arbitraryUser, uint8(Roles.TestRole1)), 1);
@@ -292,16 +291,20 @@ contract GetPastWeight is VertexPolicyTest {
     vm.startPrank(address(mpCore));
 
     vm.warp(100);
-    mpPolicy.setRoleHolders(generateRoleHolder(105));
+    RoleHolderData memory roleData = generateRoleHolder(105);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(110);
-    mpPolicy.setRoleHolders(generateRoleHolder(200));
+    roleData = generateRoleHolder(200);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(120);
-    mpPolicy.setRoleHolders(generateRoleHolder(0));
+    roleData = generateRoleHolder(0);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(130);
-    mpPolicy.setRoleHolders(generateRoleHolder(200));
+    roleData = generateRoleHolder(200);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     vm.warp(140);
     mpPolicy.revokePolicy(arbitraryUser, Solarray.uint8s(uint8(Roles.TestRole1)));
@@ -348,26 +351,30 @@ contract GetSupply is VertexPolicyTest {
 
     // Assigning a role increases supply.
     vm.warp(100);
-    mpPolicy.setRoleHolders(generateRoleHolder(150));
+    RoleHolderData memory roleData = generateRoleHolder(150);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
     assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 1);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Updating the role does not change supply.
     vm.warp(110);
-    mpPolicy.setRoleHolders(generateRoleHolder(160));
+    roleData = generateRoleHolder(160);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
     assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 1);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Assigning the role to a new person increases supply.
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
-    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, 200));
+    roleData = generateRoleHolder(newRoleHolder, 200);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
     assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 2);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
     // Assigning new role to the same person does not change supply.
     vm.warp(130);
-    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, uint8(Roles.TestRole2), 300));
+    roleData = generateRoleHolder(newRoleHolder, uint8(Roles.TestRole2), 300);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
     assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 2);
     assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
@@ -400,20 +407,24 @@ contract GetPastSupply is VertexPolicyTest {
 
     // Assigning a role increases supply.
     vm.warp(100);
-    mpPolicy.setRoleHolders(generateRoleHolder(150));
+    RoleHolderData memory roleData = generateRoleHolder(150);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     // Updating the role does not change supply.
     vm.warp(110);
-    mpPolicy.setRoleHolders(generateRoleHolder(160));
+    roleData = generateRoleHolder(160);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     // Assigning the role to a new person increases supply.
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
-    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, 200));
+    roleData = generateRoleHolder(newRoleHolder, 200);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     // Assigning new role to the same person does not change supply.
     vm.warp(130);
-    mpPolicy.setRoleHolders(generateRoleHolder(newRoleHolder, uint8(Roles.TestRole2), 300));
+    roleData = generateRoleHolder(newRoleHolder, uint8(Roles.TestRole2), 300);
+    mpPolicy.setRoleHolder(roleData.role, roleData.user, roleData.quantity, roleData.expiration);
 
     // Revoking all roles from the user should only decrease supply by 1.
     vm.warp(140);

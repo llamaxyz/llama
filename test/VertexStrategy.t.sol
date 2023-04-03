@@ -134,11 +134,8 @@ contract VertexStrategyTest is VertexTestSetup {
     vm.prank(address(mpCore));
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
 
-    // Assign users to have the above force approval role.
-    RoleHolderData[] memory forceApproveRoleHolders = new RoleHolderData[](1);
-    forceApproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(forceApproveRoleHolders);
+    mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
   }
 
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
@@ -179,16 +176,23 @@ contract VertexStrategyTest is VertexTestSetup {
     }
   }
 
-  function generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
-    roleHolders = new RoleHolderData[](numberOfHolders);
+  function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
+    bytes[] memory setRoleHolderCalls = new bytes[](numberOfHolders);
+
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 100));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        roleHolders[i] = RoleHolderData(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
+        setRoleHolderCalls[i] = abi.encodeCall(
+          VertexPolicy.setRoleHolder,
+          (uint8(Roles.TestRole1),
+           _policyHolder,
+           1,
+           type(uint64).max)
+        );
       }
     }
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(roleHolders);
+    mpPolicy.aggregate(setRoleHolderCalls);
   }
 }
 

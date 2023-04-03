@@ -473,15 +473,10 @@ contract CreateAction is VertexCoreTest {
 
   function testFuzz_RevertIfPermissionExpired(uint64 _expirationTimestamp) public {
     vm.assume(_expirationTimestamp > block.timestamp + 1 && _expirationTimestamp < type(uint64).max - 1);
-
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    // forgefmt: disable-start
-    RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](1);
-    mpRoleHoldersNew[0] = RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAustin, DEFAULT_ROLE_QTY, _expirationTimestamp);
-    // forgefmt: disable-end
 
     vm.startPrank(address(mpCore));
-    mpPolicy.setRoleHolders(mpRoleHoldersNew);
+    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), actionCreatorAustin, DEFAULT_ROLE_QTY, _expirationTimestamp);
     vm.stopPrank();
 
     vm.prank(address(actionCreatorAustin));
@@ -744,13 +739,9 @@ contract ExecuteAction is VertexCoreTest {
 
   function test_HandlesReentrancy() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    // forgefmt: disable-start
-    RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](1);
-    mpRoleHoldersNew[0] = RoleHolderData(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    // forgefmt: disable-end
 
     vm.startPrank(address(mpCore));
-    mpPolicy.setRoleHolders(mpRoleHoldersNew);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
     vm.prank(actionCreatorAustin);
