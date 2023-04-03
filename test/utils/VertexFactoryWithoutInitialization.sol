@@ -10,6 +10,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -24,7 +25,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    string[] memory initialRoleDescriptions,
+    RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   )
@@ -51,7 +52,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
   /// @return vertex the address of the VertexCore contract of the newly created system.
   function deployWithoutInitialization(
     string memory name,
-    string[] memory initialRoleDescriptions,
+    RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) external returns (VertexCore vertex, VertexPolicy policy) {
