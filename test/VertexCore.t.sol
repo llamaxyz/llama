@@ -61,7 +61,7 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _approveAction(address _policyholder, uint256 _actionId) public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit PolicyholderApproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(_actionId, uint8(Roles.Approver));
@@ -73,7 +73,7 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _disapproveAction(address _policyholder, uint256 _actionId) public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit PolicyholderDisapproved(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
@@ -86,7 +86,7 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _queueAction(uint256 _actionId) public {
     uint256 executionTime = block.timestamp + mpStrategy1.queuingPeriod();
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionQueued(_actionId, address(this), mpStrategy1, adminAlice, executionTime);
     mpCore.queueAction(_actionId);
   }
@@ -97,7 +97,7 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _executeAction() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionExecuted(0, address(this), mpStrategy1, adminAlice);
     mpCore.executeAction(0);
 
@@ -224,7 +224,7 @@ contract Initialize is VertexCoreTest {
         lens.computeVertexStrategyAddress(address(strategyLogic), strategies[i], address(uninitializedVertex));
     }
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategies[0]);
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategies[1]);
     modifiedFactory.initialize(
@@ -338,7 +338,7 @@ contract Initialize is VertexCoreTest {
         lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
     }
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), accounts[0]);
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), accounts[1]);
     modifiedFactory.initialize(
@@ -400,7 +400,7 @@ contract Initialize is VertexCoreTest {
 
 contract CreateAction is VertexCoreTest {
   function test_CreatesAnAction() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionCreated(0, adminAlice, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
     vm.prank(adminAlice);
     uint256 _actionId =
@@ -510,7 +510,7 @@ contract CancelAction is VertexCoreTest {
 
   function test_CreatorCancelFlow() public {
     vm.startPrank(adminAlice);
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
     vm.stopPrank();
@@ -594,7 +594,7 @@ contract CancelAction is VertexCoreTest {
     _disapproveAction(disapproverDiane);
     _disapproveAction(disapproverDrake);
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
   }
@@ -657,7 +657,7 @@ contract ExecuteAction is VertexCoreTest {
     mpCore.queueAction(0);
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionExecuted(0, address(this), mpStrategy1, adminAlice);
     bytes memory result = mpCore.executeAction(0);
     assertEq(result, "");
@@ -801,7 +801,7 @@ contract CastApproval is VertexCoreTest {
 
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
     actionId = _createAction();
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit PolicyholderApproved(actionId, approverAdam, 1, reason);
     vm.prank(approverAdam);
     mpCore.castApproval(actionId, uint8(Roles.Approver), reason);
@@ -881,7 +881,7 @@ contract CastDisapproval is VertexCoreTest {
 
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
     actionId = _createApproveAndQueueAction();
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit PolicyholderDisapproved(actionId, disapproverDrake, 1, reason);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover), reason);
@@ -990,7 +990,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.startPrank(address(mpCore));
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), newStrategies[0]);
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
@@ -1054,7 +1054,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.startPrank(address(mpCore));
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, newStrategies[0]);
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
@@ -1113,7 +1113,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
     assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
     assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy1);
     emit StrategyUnauthorized(mpStrategy2);
 
@@ -1143,7 +1143,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
       accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), newAccounts[0]);
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), newAccounts[1]);
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
@@ -1183,7 +1183,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
       accountAddresses[i] = lens.computeVertexAccountAddress(additionalAccountLogic, newAccounts[i], address(mpCore));
     }
 
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit AccountAuthorized(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
     emit AccountAuthorized(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
     emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
