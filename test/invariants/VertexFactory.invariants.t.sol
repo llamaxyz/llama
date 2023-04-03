@@ -63,8 +63,9 @@ contract VertexFactoryHandler is BaseHandler {
     // We don't care about the parameters, we just need it to execute successfully.
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] =
-      RoleHolderData(uint8(Roles.Admin), makeAddr("dummyAdmin"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(
+      uint8(Roles.ActionCreator), makeAddr("dummyActionCreator"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
+    );
 
     VERTEX_FACTORY.deploy(
       name(),

@@ -53,14 +53,13 @@ contract VertexStrategyTest is VertexTestSetup {
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
-      RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-      roleHolders[0] = RoleHolderData(_role, _policyHolder, 1, type(uint64).max);
-      RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-      rolePermissions[0] = RolePermissionData(_role, _permission, true);
+      bytes[] memory roleAndPermissionAssignments = new bytes[](2);
+      roleAndPermissionAssignments[0] =
+        abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
+      roleAndPermissionAssignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
 
       vm.prank(address(mpCore));
-
-      mpPolicy.setRoleHoldersAndPermissions(roleHolders, rolePermissions);
+      mpPolicy.aggregate(roleAndPermissionAssignments);
     }
 
     Strategy memory strategy = Strategy({
@@ -107,6 +106,7 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
+    // Define strategy parameters.
     uint8[] memory forceApproveRoles = new uint8[](1);
     forceApproveRoles[0] = uint8(Roles.ForceApprover);
     uint8[] memory forceDisapproveRoles = new uint8[](1);
@@ -125,31 +125,36 @@ contract VertexStrategyTest is VertexTestSetup {
       forceDisapprovalRoles: forceDisapproveRoles
     });
 
+    // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
 
+    // Create and authorize the strategy.
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
-
     vm.prank(address(mpCore));
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
 
-    RoleHolderData[] memory forceApproveRoleHolders = new RoleHolderData[](1);
-    forceApproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
-
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(forceApproveRoleHolders);
+    mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
   }
 
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
-    vm.prank(adminAlice);
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    vm.prank(actionCreatorAaron);
     actionId = mpCore.createAction(
-      uint8(Roles.TestRole1),
+      uint8(Roles.ActionCreator),
       testStrategy,
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
       abi.encode(true)
     );
+
     vm.warp(block.timestamp + 1);
   }
 
@@ -169,16 +174,18 @@ contract VertexStrategyTest is VertexTestSetup {
     }
   }
 
-  function generateAndSetRoleHolders(uint256 numberOfHolders) internal returns (RoleHolderData[] memory roleHolders) {
-    roleHolders = new RoleHolderData[](numberOfHolders);
+  function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
+    bytes[] memory setRoleHolderCalls = new bytes[](numberOfHolders);
+
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 100));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        roleHolders[i] = RoleHolderData(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
+        setRoleHolderCalls[i] =
+          abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max));
       }
     }
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(roleHolders);
+    mpPolicy.aggregate(setRoleHolderCalls);
   }
 }
 
@@ -398,7 +405,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_EmitsNewStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit NewStrategyCreated(mpCore, mpPolicy);
     deployStrategyAndSetRole(
       uint8(Roles.TestRole1),

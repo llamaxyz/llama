@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -15,14 +16,28 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactory {
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
   error OnlyVertex();
+
+  modifier onlyRootVertex() {
+    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
+    _;
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(address indexed strategyLogic);
   event AccountLogicAuthorized(address indexed accountLogic);
 
-  /// @notice A special role to designate an Admin, who can always create actions.
-  uint8 public constant ADMIN_ROLE = 1;
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable VERTEX_CORE_LOGIC;
@@ -39,10 +54,15 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
 
+  /// @notice The Vertex Policy Metadata contract.
   VertexPolicyMetadata public vertexPolicyMetadata;
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   constructor(
     VertexCore vertexCoreLogic,
@@ -76,10 +96,9 @@ contract VertexFactory {
     );
   }
 
-  modifier onlyRootVertex() {
-    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
-    _;
-  }
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
   /// @param name The name of this Vertex system.
@@ -125,6 +144,24 @@ contract VertexFactory {
     _authorizeAccountLogic(accountLogic);
   }
 
+  /// @notice Returns the token URI for a given Vertex Policy Holder.
+  /// @param name The name of the Vertex system.
+  /// @param symbol The symbol of the Vertex system.
+  /// @param tokenId The token ID of the Vertex Policy Holder.
+  function tokenURI(string memory name, string memory symbol, uint256 tokenId) external view returns (string memory) {
+    return vertexPolicyMetadata.tokenURI(name, symbol, tokenId);
+  }
+
+  /// @notice Sets the Vertex Policy Metadata contract.
+  /// @param _vertexPolicyMetadata The Vertex Policy Metadata contract.
+  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) external onlyRootVertex {
+    vertexPolicyMetadata = _vertexPolicyMetadata;
+  }
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
+
   function _deploy(
     string memory name,
     address strategyLogic,
@@ -148,14 +185,6 @@ contract VertexFactory {
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
     }
-  }
-
-  function tokenURI(string memory _name, string memory symbol, uint256 tokenId) external view returns (string memory) {
-    return vertexPolicyMetadata.tokenURI(_name, symbol, tokenId);
-  }
-
-  function setPolicyMetadata(VertexPolicyMetadata _vertexPolicyMetadata) public onlyRootVertex {
-    vertexPolicyMetadata = _vertexPolicyMetadata;
   }
 
   function _authorizeStrategyLogic(address strategyLogic) internal {

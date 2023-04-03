@@ -373,13 +373,13 @@ contract ERC721Test is Test {
 
     function test_RevertsIf_SafeMintToRevertingERC721Recipient() public {
         address _revertingERC721Recipient = address(new RevertingERC721Recipient());
-        vm.expectRevert(); 
+        vm.expectRevert();
         token.safeMint(_revertingERC721Recipient, 1337);
     }
 
     function test_RevertsIf_SafeMintToRevertingERC721RecipientWithData() public {
         address _revertingERC721Recipient = address(new RevertingERC721Recipient());
-        vm.expectRevert(); 
+        vm.expectRevert();
         token.safeMint(_revertingERC721Recipient, 1337, "testing 123");
     }
 
@@ -679,7 +679,7 @@ contract ERC721Test is Test {
         uint256 id
     ) public {
         if (owner == address(0)) to = address(0xBEEF);
-        if (from == owner) revert();
+        vm.assume(from != owner);
         vm.assume(owner != address(0));
         vm.assume(from != address(0));
         vm.assume(to != address(0));
@@ -767,14 +767,14 @@ contract ERC721Test is Test {
     }
 
     function test_RevertsIf_SafeMintToRevertingERC721Recipient(uint256 id) public {
-        address _revertingERC721Recipient = address(new RevertingERC721Recipient()); 
-        vm.expectRevert(); 
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
         token.safeMint(_revertingERC721Recipient, id);
     }
 
     function test_RevertsIf_SafeMintToRevertingERC721RecipientWithData(uint256 id, bytes calldata data) public {
         address _revertingERC721Recipient = address(new RevertingERC721Recipient());
-        vm.expectRevert(); 
+        vm.expectRevert();
         token.safeMint(_revertingERC721Recipient, id, data);
     }
 
