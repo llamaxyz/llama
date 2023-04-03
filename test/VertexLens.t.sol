@@ -69,10 +69,10 @@ contract ComputeVertexAccountAddress is VertexLensTestSetup {
 contract ComputePermissionId is VertexLensTestSetup {
   function test_ProperlyComputesId() public {
     PermissionData memory _pausePermission =
-      PermissionData(address(mpPolicy), mpPolicy.setRoleHoldersAndPermissions.selector, mpStrategy1);
+      PermissionData(address(mpPolicy), mpPolicy.setRolePermission.selector, mpStrategy1);
     bytes32 computedPausePermissionId = lens.computePermissionId(_pausePermission);
     assertEq(
-      keccak256(abi.encode(address(mpPolicy), mpPolicy.setRoleHoldersAndPermissions.selector, mpStrategy1)),
+      keccak256(abi.encode(address(mpPolicy), mpPolicy.setRolePermission.selector, mpStrategy1)),
       computedPausePermissionId
     );
   }

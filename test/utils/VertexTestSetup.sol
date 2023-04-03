@@ -91,6 +91,7 @@ contract VertexTestSetup is Test {
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
   uint128 DEFAULT_ROLE_QTY = 1;
+  uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
@@ -158,18 +159,18 @@ contract VertexTestSetup is Test {
 
     // Add approvers and disapprovers to the mock protocol's vertex.
     // forgefmt: disable-start
-    RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](7);
-    mpRoleHoldersNew[0] = RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[1] = RoleHolderData(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[2] = RoleHolderData(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[3] = RoleHolderData(uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[4] = RoleHolderData(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[5] = RoleHolderData(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[6] = RoleHolderData(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    bytes[] memory roleAssignmentCalls = new bytes[](7);
+    roleAssignmentCalls[0] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[1] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[2] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[3] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[4] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[5] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[6] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
     // forgefmt: disable-end
 
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(mpRoleHoldersNew);
+    mpPolicy.aggregate(roleAssignmentCalls);
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new ProtocolXYZ(address(mpCore));
@@ -192,14 +193,18 @@ contract VertexTestSetup is Test {
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
     executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
 
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](4);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
-    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
-    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
-    rolePermissions[3] = RolePermissionData(uint8(Roles.TestRole2), executeActionId, true);
+    bytes[] memory permissionsToSet = new bytes[](4);
+    permissionsToSet[0] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
+    permissionsToSet[1] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), failPermissionId, true));
+    permissionsToSet[2] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), receiveEthPermissionId, true));
+    permissionsToSet[3] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeActionId, true));
 
     vm.prank(address(mpCore));
-    mpPolicy.setRolePermissions(rolePermissions);
+    mpPolicy.aggregate(permissionsToSet);
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);

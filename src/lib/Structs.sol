@@ -19,11 +19,6 @@ struct RolePermissionData {
   bool hasPermission; // Whether to assign the permission or remove the permission.
 }
 
-struct ExpiredRole {
-  uint8 role; // Role that has expired.
-  address user; // User that held the role.
-}
-
 struct PermissionData {
   address target; // Contract being called by an action.
   bytes4 selector; // Selector of the function being called by an action.
