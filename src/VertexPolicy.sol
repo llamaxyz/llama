@@ -162,7 +162,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @param role Name of the role to set.
   /// @param permissionId Permission ID to assign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
-  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) public onlyVertex {
+  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyVertex {
     _setRolePermission(role, permissionId, hasPermission);
   }
 
