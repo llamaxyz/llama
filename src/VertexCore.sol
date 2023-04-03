@@ -75,28 +75,21 @@ contract VertexCore is Initializable {
   // =============================================================
 
   /// @notice EIP-712 base typehash.
-  bytes32 public constant DOMAIN_TYPEHASH =
-    keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+  bytes32 public constant EIP712_DOMAIN_TYPEHASH =
+    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
   /// @notice EIP-712 createAction typehash.
-  bytes32 public constant CREATE_ACTION_EMITTED_TYPEHASH = keccak256(
-    "ActionCreated(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder)"
+  bytes32 public constant CREATE_ACTION_TYPEHASH = keccak256(
+    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder,uint256 nonce)"
   );
 
-  /// @notice EIP-712 approval typehash.
-<<<<<<< HEAD
-  bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalCast(uint256 id,address policyholder)");
+  /// @notice EIP-712 castApproval typehash.
+  bytes32 public constant CAST_APPROVAL_TYPEHASH =
+    keccak256("CastApproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
-  /// @notice EIP-712 disapproval typehash.
-  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalCast(uint256 id,address policyholder)");
-=======
-  bytes32 public constant APPROVAL_EMITTED_TYPEHASH =
-    keccak256("PolicyholderApproved(uint256 actionId,uint8 role,string reason,address policyholder)");
-
-  /// @notice EIP-712 disapproval typehash.
-  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
-    keccak256("PolicyholderDisapproved(uint256 actionId,uint8 role,string reason,address policyholder)");
->>>>>>> e0dca13 (Fixing castApprovalBySig and castDisapprovalBySig)
+  /// @notice EIP-712 castDisapproval typehash.
+  bytes32 public constant CAST_DISAPPROVAL_TYPEHASH =
+    keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -127,6 +120,11 @@ contract VertexCore is Initializable {
 
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
+
+  /// @notice Mapping of all current nonces for each policyholder.
+  /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
+  /// castApproval and castDisapproval) signed by the policyholder.
+  mapping(address => uint256) public nonces;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -209,10 +207,22 @@ contract VertexCore is Initializable {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
-        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
         keccak256(
           abi.encode(
-            CREATE_ACTION_EMITTED_TYPEHASH, role, address(strategy), target, value, selector, keccak256(data), user
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_TYPEHASH,
+            role,
+            address(strategy),
+            target,
+            value,
+            selector,
+            keccak256(data),
+            user,
+            _useNonce(user)
           )
         )
       )
@@ -310,8 +320,12 @@ contract VertexCore is Initializable {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
-        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, role, keccak256(bytes(reason)), user))
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(abi.encode(CAST_APPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user)))
       )
     );
     address signer = ecrecover(digest, v, r, s);
@@ -354,8 +368,14 @@ contract VertexCore is Initializable {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
-        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, role, keccak256(bytes(reason)), user))
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(CAST_DISAPPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user))
+        )
       )
     );
     address signer = ecrecover(digest, v, r, s);
@@ -589,5 +609,12 @@ contract VertexCore is Initializable {
     uint8 disapprovalRole = strategy.disapprovalRole();
     disapprovalPolicySupply = policy.getSupply(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+  }
+
+  function _useNonce(address user) internal returns (uint256 nonce) {
+    nonce = nonces[user];
+    unchecked {
+      nonces[user] = nonce + 1;
+    }
   }
 }
