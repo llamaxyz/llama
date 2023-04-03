@@ -513,6 +513,25 @@ contract CreateAction is VertexCoreTest {
   }
 }
 
+contract CreateActionBySig is VertexCoreTest {
+  function test_SuccessfulCreateActionBySignature() public {
+    // TODO
+    // This is a happy path test.
+    // Assert changes to Action storage.
+    // Assert event emission.
+  }
+
+  function test_RevertIf_SignerIsNotPolicyHolder() public {
+    // TODO
+    // Reverts if user!=signer
+  }
+
+  function test_RevertIf_SignerIsZeroAddress() public {
+    // TODO
+    // Reverts if signer == address(0)
+  }
+}
+
 contract CancelAction is VertexCoreTest {
   function setUp() public override {
     VertexCoreTest.setUp();
@@ -848,9 +867,14 @@ contract CastApprovalBySig is VertexCoreTest {
     // Assert event emission.
   }
 
-  function test_RevertIf_InvalidPolicyholder() public {
+  function test_RevertIf_SignerIsNotPolicyHolder() public {
     // TODO
-    // https://github.com/llama-community/vertex-v1/issues/62
+    // Reverts if user!=signer
+  }
+
+  function test_RevertIf_SignerIsZeroAddress() public {
+    // TODO
+    // Reverts if signer == address(0)
   }
 }
 
@@ -929,9 +953,14 @@ contract CastDisapprovalBySig is VertexCoreTest {
     // Assert event emission.
   }
 
-  function test_RevertIf_CallerIsNotPolicyHolder() public {
+  function test_RevertIf_SignerIsNotPolicyHolder() public {
     // TODO
-    // https://github.com/llama-community/vertex-v1/issues/62
+    // Reverts if user!=signer
+  }
+
+  function test_RevertIf_SignerIsZeroAddress() public {
+    // TODO
+    // Reverts if signer == address(0)
   }
 }
 
