@@ -106,6 +106,7 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
+    // Define strategy parameters.
     uint8[] memory forceApproveRoles = new uint8[](1);
     forceApproveRoles[0] = uint8(Roles.ForceApprover);
     uint8[] memory forceDisapproveRoles = new uint8[](1);
@@ -124,31 +125,41 @@ contract VertexStrategyTest is VertexTestSetup {
       forceDisapprovalRoles: forceDisapproveRoles
     });
 
+    // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
 
+    // Create and authorize the strategy.
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
-
     vm.prank(address(mpCore));
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
 
+    // Assign users to have the above force approval role.
     RoleHolderData[] memory forceApproveRoleHolders = new RoleHolderData[](1);
     forceApproveRoleHolders[0] = RoleHolderData(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
-
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolders(forceApproveRoleHolders);
   }
 
   function createAction(VertexStrategy testStrategy) internal returns (uint256 actionId) {
-    vm.prank(adminAlice);
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), newPermissionId, true);
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermissions(rolePermissions);
+
+    // Create the action.
+    vm.prank(actionCreatorAaron);
     actionId = mpCore.createAction(
-      uint8(Roles.TestRole1),
+      uint8(Roles.ActionCreator),
       testStrategy,
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
       abi.encode(true)
     );
+
     vm.warp(block.timestamp + 1);
   }
 

@@ -20,9 +20,6 @@ contract VertexFactory {
   event StrategyLogicAuthorized(address indexed strategyLogic);
   event AccountLogicAuthorized(address indexed accountLogic);
 
-  /// @notice A special role to designate an Admin, who can always create actions.
-  uint8 public constant ADMIN_ROLE = 1;
-
   /// @notice The VertexCore implementation (logic) contract.
   VertexCore public immutable VERTEX_CORE_LOGIC;
 

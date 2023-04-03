@@ -93,22 +93,20 @@ contract NonTransferableToken is VertexPolicyTest {
 }
 
 contract Initialize is VertexPolicyTest {
+  function test_RevertIf_NoRolesAssignedAtInitialization() public {
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    localPolicy.setVertex(address(this));
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    localPolicy.initialize("Test Policy", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+  }
+
   function test_SetsNameAndSymbol() public {
     assertEq(mpPolicy.name(), "Mock Protocol Vertex");
     assertEq(mpPolicy.symbol(), "V_Moc");
   }
 
-  function test_SetsNumRolesToOneIfNoRoleDescriptionsGiven() public {
-    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.setVertex(address(this));
-    localPolicy.initialize(
-      "Test Policy", new string[](0), defaultAdminRoleHolder(adminAlice), new RolePermissionData[](0)
-    );
-    assertEq(localPolicy.numRoles(), 1);
-  }
-
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {
-    numRoles = bound(numRoles, 0, 254); // We always have the admin role as role 1, so can only fit 255 more.
+    numRoles = bound(numRoles, 1, 255); // Reverts if zero roles are given.
 
     string[] memory roleDescriptions = new string[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
@@ -118,9 +116,9 @@ contract Initialize is VertexPolicyTest {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
     localPolicy.initialize(
-      "Test Policy", roleDescriptions, defaultAdminRoleHolder(adminAlice), new RolePermissionData[](0)
+      "Test Policy", roleDescriptions, defaultActionCreatorRoleHolder(actionCreatorAaron), new RolePermissionData[](0)
     );
-    assertEq(localPolicy.numRoles(), numRoles + 1);
+    assertEq(localPolicy.numRoles(), numRoles);
   }
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
@@ -149,15 +147,17 @@ contract SetVertex is VertexPolicyTest {
 contract InitializeRole is VertexPolicyTest {
   event RoleInitialized(uint8 indexed role, string description);
 
+  uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
+
   function test_IncrementsNumRoles() public {
-    assertEq(mpPolicy.numRoles(), 8); // VertexTestSetup initializes 8 roles.
+    assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
 
     mpPolicy.initializeRole("TestRole1");
-    assertEq(mpPolicy.numRoles(), 9);
+    assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 1);
 
     mpPolicy.initializeRole("TestRole2");
-    assertEq(mpPolicy.numRoles(), 10);
+    assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 2);
   }
 
   function test_RevertIf_OverflowOccurs() public {
@@ -171,7 +171,7 @@ contract InitializeRole is VertexPolicyTest {
 
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit(true, true, true, true);
-    emit RoleInitialized(9, "TestRole"); // VertexTestSetup initializes 8 roles, so next one is 9.
+    emit RoleInitialized(NUM_INIT_ROLES + 1, "TestRole");
     vm.prank(address(mpCore));
     mpPolicy.initializeRole("TestRole");
   }
