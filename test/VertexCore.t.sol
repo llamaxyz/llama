@@ -96,7 +96,7 @@ contract VertexCoreTest is VertexTestSetup {
   }
 
   function _executeAction() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
     mpCore.executeAction(0);
 
@@ -503,7 +503,7 @@ contract CancelAction is VertexCoreTest {
 
   function test_CreatorCancelFlow() public {
     vm.startPrank(actionCreatorAaron);
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
     vm.stopPrank();

@@ -135,7 +135,7 @@ contract InitializeRole is VertexPolicyTest {
   }
 
   function test_EmitsRoleInitializedEvent() public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit RoleInitialized(NUM_INIT_ROLES + 1, "TestRole");
     vm.prank(address(mpCore));
     mpPolicy.initializeRole("TestRole");

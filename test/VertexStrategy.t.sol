@@ -404,7 +404,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_EmitsNewStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
-    vm.expectEmit(true, true, true, true);
+    vm.expectEmit();
     emit NewStrategyCreated(mpCore, mpPolicy);
     deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
