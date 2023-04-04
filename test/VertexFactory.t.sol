@@ -39,8 +39,8 @@ contract VertexFactoryTest is VertexTestSetup {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event DisapprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategiesAuthorized(Strategy[] strategies);
   event StrategiesUnauthorized(VertexStrategy[] strategies);
   event StrategyLogicAuthorized(address indexed strategyLogic);
