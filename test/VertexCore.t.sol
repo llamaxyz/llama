@@ -402,12 +402,12 @@ contract CreateAction is VertexCoreTest {
     );
 
     Action memory action = mpCore.getAction(_actionId);
-    uint256 approvalEndTime = block.timestamp + action.strategy.approvalPeriod();
+    uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
 
     assertEq(_actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
-    assertEq(approvalEndTime, block.timestamp + 2 days);
+    assertEq(ApprovalPeriodEnd, block.timestamp + 2 days);
     assertEq(action.approvalPolicySupply, 3);
     assertEq(action.disapprovalPolicySupply, 3);
   }
@@ -1277,21 +1277,56 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
   }
 
   function test_UniquenessOfInput() public {
-    // TODO
-    // What happens if duplicate account names are in the input array?
+    string[] memory newAccounts = Solarray.strings("VertexAccount1", "VertexAccount1");
+    vm.prank(address(mpCore));
+    vm.expectRevert("ERC1167: create2 failed");
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
   function test_Idempotency() public {
-    // TODO
-    // What happens if it is called twice with the same inputs?
+    string[] memory newAccounts1 = Solarray.strings("VertexAccount1");
+    string[] memory newAccounts2 = Solarray.strings("VertexAccount1");
+    vm.startPrank(address(mpCore));
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts1);
+
+    vm.expectRevert("ERC1167: create2 failed");
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
-    // TODO
-    // Submit an action to call this function and authorize a new Account.
-    // Approve and queue the action.
-    // Execute the action.
-    // Ensure that the account is now authorized.
+    string memory name = "VertexAccount1";
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+    string[] memory newAccounts = Solarray.strings(name);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    VertexAccount accountAddress = lens.computeVertexAccountAddress(address(accountLogic), name, address(mpCore));
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(
+      uint8(Roles.TestRole2),
+      mpStrategy1,
+      address(mpCore),
+      0, // value
+      CREATE_ACCOUNT_SELECTOR,
+      abi.encode(address(accountLogic), newAccounts)
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionId);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectEmit();
+    emit AccountAuthorized(accountAddress, address(accountLogic), name);
+    mpCore.executeAction(actionId);
   }
 }
 
@@ -1311,30 +1346,83 @@ contract GetActionState is VertexCoreTest {
     assertEq(currentState, canceledState);
   }
 
-  function test_UnpassedActionsPriorToApprovalEndBlockHaveStateActive() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // confirm its state begins at Active
+  function test_UnpassedActionsPriorToApprovalPeriodEndHaveStateActive() public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.stopPrank();
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(
+      uint8(Roles.TestRole2),
+      mpStrategy2,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
+
+    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 activeState = uint256(ActionState.Active);
+    assertEq(currentState, activeState);
   }
+
   function test_ApprovedActionsWithFixedLengthHaveStateActive() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == true
-    // have enough accounts approve it before the end of the approvalEndBlock so that it will succeed
-    // confirm its state is still Active, not Approved
+    uint256 actionId = _createAction();
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 1 days);
+
+    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 activeState = uint256(ActionState.Active);
+    assertEq(currentState, activeState);
   }
-  function test_PassedActionsPriorToApprovalEndBlockHaveStateApproved() public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // confirm its state begins at Active
+
+  function test_PassedActionsPriorToApprovalPeriodEndHaveStateApproved() public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.stopPrank();
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(
+      uint8(Roles.TestRole2),
+      mpStrategy2,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
+    vm.warp(block.timestamp + 1);
+
+    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 activeState = uint256(ActionState.Active);
+    assertEq(currentState, activeState);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAndy, actionId);
+
+    currentState = uint256(mpCore.getActionState(actionId));
+    uint256 approvedState = uint256(ActionState.Approved);
+    assertEq(currentState, approvedState);
   }
-  function testFuzz_ApprovedActionsHaveStateApproved(uint256 _blocksSinceCreation) public {
-    // TODO
-    // create an action such that action.strategy.isFixedLengthApprovalPeriod == false
-    // have enough accounts approve it so that it will pass
-    // bound(_blocksSinceCreation, 0, approvalPeriod * 2);
-    // vm.roll(_blocksSinceCreation)
-    // if _blocksSinceCreation => approvalPeriod --> expect Approved
-    // if _blocksSinceCreation < approvalPeriod --> expect Active
+
+  function testFuzz_ApprovedActionsHaveStateApproved(uint256 _timeSinceCreation) public {
+    uint256 actionId = _createAction();
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+    Action memory action = mpCore.getAction(actionId);
+    uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
+    vm.assume(_timeSinceCreation < mpStrategy1.approvalPeriod() * 2);
+    vm.warp(block.timestamp + _timeSinceCreation);
+
+    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 expectedState = uint256(block.timestamp < approvalEndTime ? ActionState.Active : ActionState.Approved);
+    assertEq(currentState, expectedState);
   }
 
   function test_QueuedActionsHaveStateQueued() public {
