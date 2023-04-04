@@ -206,7 +206,46 @@ contract InitializeRole is VertexPolicyTest {
 }
 
 contract SetRoleHolder is VertexPolicyTest {
-// TODO
+  function test_RevertIf_CalledByNonVertex() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_NonExistantRole(uint8 role) public {
+    vm.assume(role > mpPolicy.numRoles());
+    vm.startPrank(address(mpCore));
+    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, role));
+    mpPolicy.setRoleHolder(role, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_InvalidExpiration(uint64 expiration, uint256 timestamp) public {
+    vm.assume(expiration < timestamp);
+    vm.warp(timestamp);
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, expiration);
+  }
+
+  function test_RevertIf_InvalidQuantity() public {
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, 0, 1);
+
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, 0);
+  }
+
+  function test_SetsRoleHolder(address user) public {
+    vm.assume(user != address(0));
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+  }
 }
 
 contract SetRolePermission is VertexPolicyTest {
