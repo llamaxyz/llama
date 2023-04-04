@@ -19,6 +19,7 @@ import {Solarray} from "solarray/Solarray.sol";
 contract VertexPolicyTest is VertexTestSetup {
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -99,8 +100,37 @@ contract Initialize is VertexPolicyTest {
   }
 
   // TODO
-  // function test_SetsRoleDescriptions() public {
-  // function test_SetsRoleHolders() public {
+  function test_SetsRoleDescriptions() public {
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    localPolicy.setVertex(address(this));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Test Policy");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(uint8(Roles.AllHolders), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+
+    vm.expectEmit();
+    emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
+
+    localPolicy.initialize("local policy", roleDescriptions, roleHolders, rolePermissions);
+  }
+
+  function test_SetsRoleHolders() public {
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    localPolicy.setVertex(address(this));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("All Holders");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(uint8(Roles.AllHolders), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+
+    vm.expectEmit();
+    emit RoleAssigned(address(this), uint8(Roles.AllHolders), DEFAULT_ROLE_EXPIRATION, 2);
+
+    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
+  }
 
   function test_SetsRolePermissions() public {
     uint8 role = uint8(Roles.AllHolders);
@@ -138,8 +168,6 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, RoleDescription description);
-
   uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
 
   function test_IncrementsNumRoles() public {
