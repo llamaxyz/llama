@@ -249,7 +249,19 @@ contract SetRoleHolder is VertexPolicyTest {
 }
 
 contract SetRolePermission is VertexPolicyTest {
-// TODO
+  function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
+    vm.expectEmit();
+    emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
+
+    assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
+  }
+
+  function test_RevertIf_CalledByNonVertex() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
+  }
 }
 
 contract RevokeExpiredRole is VertexPolicyTest {
