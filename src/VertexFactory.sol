@@ -10,6 +10,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
@@ -72,7 +73,7 @@ contract VertexFactory {
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    string[] memory initialRoleDescriptions,
+    RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) {
@@ -115,7 +116,7 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    string[] memory initialRoleDescriptions,
+    RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) external onlyRootVertex returns (VertexCore) {
@@ -167,7 +168,7 @@ contract VertexFactory {
     address accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
-    string[] memory initialRoleDescriptions,
+    RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {

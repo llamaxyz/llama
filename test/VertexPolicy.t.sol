@@ -13,6 +13,7 @@ import {console} from "lib/forge-std/src/console.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexPolicyTest is VertexTestSetup {
@@ -22,6 +23,10 @@ contract VertexPolicyTest is VertexTestSetup {
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
   address arbitraryUser = makeAddr("arbitraryUser");
+
+  function getRoleDescription(string memory str) internal pure returns (RoleDescription) {
+    return RoleDescription.wrap(bytes32(bytes(str)));
+  }
 
   function setUp() public virtual override {
     VertexTestSetup.setUp();
@@ -62,7 +67,9 @@ contract Initialize is VertexPolicyTest {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-    localPolicy.initialize("Test Policy", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+    localPolicy.initialize(
+      "Test Policy", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
+    );
   }
 
   function test_SetsNameAndSymbol() public {
@@ -73,9 +80,9 @@ contract Initialize is VertexPolicyTest {
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {
     numRoles = bound(numRoles, 1, 255); // Reverts if zero roles are given.
 
-    string[] memory roleDescriptions = new string[](numRoles);
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
-      roleDescriptions[i] = string.concat("Role ", vm.toString(i));
+      roleDescriptions[i] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(i)))));
     }
 
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
@@ -88,7 +95,7 @@ contract Initialize is VertexPolicyTest {
 
   function test_RevertsIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize("Test", new string[](0), new RoleHolderData[](0), new RolePermissionData[](0));
+    mpPolicy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
   // TODO
@@ -101,8 +108,8 @@ contract Initialize is VertexPolicyTest {
     assertFalse(localPolicy.canCreateAction(role, pausePermissionId));
     localPolicy.setVertex(makeAddr("the factory"));
 
-    string[] memory roleDescriptions = new string[](1);
-    roleDescriptions[0] = "All Holders";
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("All Holders");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(role, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
@@ -131,7 +138,7 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, string description);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
 
@@ -139,34 +146,34 @@ contract InitializeRole is VertexPolicyTest {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
 
-    mpPolicy.initializeRole("TestRole1");
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 1);
 
-    mpPolicy.initializeRole("TestRole2");
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole2"));
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 2);
   }
 
   function test_RevertIf_OverflowOccurs() public {
     vm.startPrank(address(mpCore));
-    while (mpPolicy.numRoles() < type(uint8).max) mpPolicy.initializeRole("TestRole");
+    while (mpPolicy.numRoles() < type(uint8).max) mpPolicy.initializeRole(getRoleDescription("TestRole"));
 
     // Now the `numRoles` is at the max value, so the next call should revert.
     vm.expectRevert(stdError.arithmeticError);
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit();
-    emit RoleInitialized(NUM_INIT_ROLES + 1, "TestRole");
+    emit RoleInitialized(NUM_INIT_ROLES + 1, getRoleDescription("TestRole"));
     vm.prank(address(mpCore));
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
   function test_DoesNotGuardAgainstSameDescriptionUsedForMultipleRoles() public {
     vm.startPrank(address(mpCore));
-    mpPolicy.initializeRole("TestRole");
-    mpPolicy.initializeRole("TestRole");
-    mpPolicy.initializeRole("TestRole");
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
+    mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 }
 
@@ -535,7 +542,7 @@ contract TokenURI is VertexPolicyTest {
 // // contract BatchGrantPolicies is VertexPolicyTest {
 // //   function test_CorrectlyGrantsPermission() public {
 // //     // PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(policyHolderPam);
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PolicyAdded(initialBatchGrantData[0]);
 // //     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
 // //     // assertEq(mpPolicy.balanceOf(arbitraryAddress), 1);
@@ -574,7 +581,7 @@ contract TokenURI is VertexPolicyTest {
 
 // //     // vm.warp(block.timestamp + 100);
 
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PermissionUpdated(updateData[0]);
 
 // //     // mpPolicy.batchUpdatePermissions(updateData);
@@ -612,7 +619,7 @@ contract TokenURI is VertexPolicyTest {
 
 // // contract BatchRevokePolicies is VertexPolicyTest {
 // //   function test_CorrectlyRevokesPolicy() public {
-// //     // vm.expectEmit();
+// //     // vm.expectEmit(true, true, true, true);
 // //     // emit PolicyRevoked(policyRevokeData[0]);
 // //     // mpPolicy.batchRevokePolicies(policyRevokeData);
 // //     // assertEq(mpPolicy.balanceOf(address(this)), 0);

@@ -13,6 +13,7 @@ import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol"
 
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
@@ -72,7 +73,7 @@ contract VertexFactoryHandler is BaseHandler {
       address(0),
       new Strategy[](0),
       new string[](0),
-      new string[](0),
+      new RoleDescription[](0),
       roleHolders,
       new RolePermissionData[](0)
     );
