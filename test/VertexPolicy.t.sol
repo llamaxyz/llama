@@ -265,7 +265,33 @@ contract SetRolePermission is VertexPolicyTest {
 }
 
 contract RevokeExpiredRole is VertexPolicyTest {
-// TODO
+  function test_RevokesExpiredRole(address user, uint64 expiration) public {
+    vm.assume(user != address(0));
+    vm.assume(expiration > block.timestamp);
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+
+    vm.warp(expiration);
+
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, 0);
+
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false);
+  }
+
+  function test_RevertIf_NotExpiredYet(address user, uint64 expiration) public {
+    vm.assume(user != address(0));
+    vm.assume(expiration > block.timestamp);
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+  }
 }
 
 contract RevokePolicy is VertexPolicyTest {
