@@ -521,6 +521,17 @@ contract CreateActionBySig is VertexCoreTest {
     // Assert event emission.
   }
 
+  function test_CheckNonceIncrements() public {
+    // TODO
+    // This is a happy path test.
+    // Assert that nonce increments
+  }
+
+  function test_OperationCannotBeReplayed() public {
+    // TODO
+    // Check that operation with same parameters cannot be replayed.
+  }
+
   function test_RevertIf_SignerIsNotPolicyHolder() public {
     // TODO
     // Reverts if user!=signer
@@ -867,6 +878,17 @@ contract CastApprovalBySig is VertexCoreTest {
     // Assert event emission.
   }
 
+  function test_CheckNonceIncrements() public {
+    // TODO
+    // This is a happy path test.
+    // Assert that nonce increments
+  }
+
+  function test_OperationCannotBeReplayed() public {
+    // TODO
+    // Check that operation with same parameters cannot be replayed.
+  }
+
   function test_RevertIf_SignerIsNotPolicyHolder() public {
     // TODO
     // Reverts if user!=signer
@@ -951,6 +973,17 @@ contract CastDisapprovalBySig is VertexCoreTest {
     // Assert changes to Action storage.
     // Assert changes to Disapproval storage.
     // Assert event emission.
+  }
+
+  function test_CheckNonceIncrements() public {
+    // TODO
+    // This is a happy path test.
+    // Assert that nonce increments
+  }
+
+  function test_OperationCannotBeReplayed() public {
+    // TODO
+    // Check that operation with same parameters cannot be replayed.
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
