@@ -1127,11 +1127,53 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
-    // TODO
-    // Submit an action to call this function and authorize a new Strategy.
-    // Approve and queue the action.
-    // Execute the action.
-    // Ensure that the strategy is now authorized.
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    Strategy[] memory newStrategies = new Strategy[](1);
+
+    newStrategies[0] = Strategy({
+      approvalPeriod: 4 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    VertexStrategy strategyAddress =
+      lens.computeVertexStrategyAddress(address(strategyLogic), newStrategies[0], address(mpCore));
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(
+      uint8(Roles.TestRole2),
+      mpStrategy1,
+      address(mpCore),
+      0, // value
+      CREATE_STRATEGY_SELECTOR,
+      abi.encode(address(strategyLogic), newStrategies)
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionId);
+
+    vm.warp(block.timestamp + 5 days);
+
+    mpCore.executeAction(actionId);
+
+    assertEq(mpCore.authorizedStrategies(strategyAddress), true);
   }
 }
 
@@ -1153,13 +1195,19 @@ contract UnauthorizeStrategies is VertexCoreTest {
 
     assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
     assertEq(mpCore.authorizedStrategies(mpStrategy2), false);
+    vm.stopPrank();
 
-    // TODO assert that calling createAction on a freshly unauthorized
-    // strategy will revert with InvalidStrategy.
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(VertexCore.InvalidStrategy.selector);
+    mpCore.createAction(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
   }
-
-  // TODO decide what should happen to actions attached to strategies that
-  // have been unauthorized and test that behavior (if any).
 }
 
 contract CreateAndAuthorizeAccounts is VertexCoreTest {
