@@ -20,6 +20,7 @@ contract VertexPolicyTest is VertexTestSetup {
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
+  event Transfer(address indexed from, address indexed to, uint256 indexed id);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -295,7 +296,31 @@ contract RevokeExpiredRole is VertexPolicyTest {
 }
 
 contract RevokePolicy is VertexPolicyTest {
-// TODO
+  function test_RevokesPolicy(address user) public {
+    vm.assume(user != address(0));
+    assertEq(mpPolicy.balanceOf(user), 0);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.balanceOf(user), 1);
+
+    vm.expectEmit();
+    emit Transfer(user, address(0), uint256(uint160(user)));
+
+    vm.prank(address(mpCore));
+    mpPolicy.revokePolicy(user);
+
+    assertEq(mpPolicy.balanceOf(user), 0);
+  }
+
+  function test_RevertsIf_PolicyDoesNotExist(address user) public {
+    vm.assume(user != address(0));
+    vm.assume(mpPolicy.balanceOf(user) == 0);
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.prank(address(mpCore));
+    mpPolicy.revokePolicy(user);
+  }
 }
 
 contract RevokePolicyRolesOverload is VertexPolicyTest {
