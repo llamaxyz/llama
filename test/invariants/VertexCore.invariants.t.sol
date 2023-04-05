@@ -96,7 +96,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   function assertInvariant_CanceledActionsAreFinalized() internal {}
 
   // Once an action is expired, it's state is final and should never change, i.e. it cannot be
-  //later be queued and executed.
+  // later be queued and executed.
   function assertInvariant_ExpiredActionsAreFinalized() internal {}
 
   // =================================
