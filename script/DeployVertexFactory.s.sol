@@ -15,7 +15,6 @@ contract DeployVertexFactory is Script {
   using stdJson for string;
 
   function run() public {
-    // vm.broadcast();
     string memory _jsonInput = readInput();
 
     console2.log("Deploying VertexFactory via CREATE3 with following parameters to chain:", block.chainid);
@@ -57,6 +56,7 @@ contract DeployVertexFactory is Script {
     );
     uint256 _doNotSendETHDuringDeploy = 0;
 
+    // TODO vm.broadcast();
     address _factory = CREATE3.deploy(
       _salt,
       abi.encodePacked(type(VertexFactory).creationCode, _constructorArgs),
@@ -73,10 +73,32 @@ contract DeployVertexFactory is Script {
   }
 
   function readStrategies(string memory _jsonInput) internal returns (Strategy[] memory strategies) {
-    address[] memory _strategyAddresses = _jsonInput.readAddressArray(".initialStrategies");
-    strategies = new Strategy[](_strategyAddresses.length);
-    for (uint256 i = 0; i < _strategyAddresses.length; i++) {
-      strategies[i] = Strategy(_strategyAddresses[i]);
+    string[] memory _strategyObjects = _jsonInput.readStringArray(".initialStrategies");
+    strategies = new Strategy[](_strategyObjects.length);
+    for (uint256 i = 0; i < _strategyObjects.length; i++) {
+      string memory _strategyObject = _strategyObjects[i];
+      strategies[i].approvalPeriod = _strategyObject.readUint(".approvalPeriod");
+      strategies[i].queuingPeriod = _strategyObject.readUint(".queuingPeriod");
+      strategies[i].expirationPeriod = _strategyObject.readUint(".expirationPeriod");
+      strategies[i].minApprovalPct = _strategyObject.readUint(".minApprovalPct");
+      strategies[i].minDisapprovalPct = _strategyObject.readUint(".minDisapprovalPct");
+      strategies[i].isFixedLengthApprovalPeriod = _strategyObject.readBool(".isFixedLengthApprovalPeriod");
+      strategies[i].approvalRole = uint8(_strategyObject.readUint(".approvalRole"));
+      strategies[i].disapprovalRole = uint8(_strategyObject.readUint(".disapprovalRole"));
+
+      uint256[] memory _approvalRoles = _strategyObject.readUintArray(".forceApprovalRoles");
+      uint8[] memory _forceApprovalRoles = new uint8[](_approvalRoles.length);
+      for (uint256 i = 0; i < _approvalRoles.length; i++) {
+        _forceApprovalRoles[i] = uint8(_approvalRoles[i]);
+      }
+      strategies[i].forceApprovalRoles = _forceApprovalRoles;
+
+      uint256[] memory _disapprovalRoles = _strategyObject.readUintArray(".forcedisapprovalRoles");
+      uint8[] memory _forceDisapprovalRoles = new uint8[](_disapprovalRoles.length);
+      for (uint256 i = 0; i < _disapprovalRoles.length; i++) {
+        _forceDisapprovalRoles[i] = uint8(_disapprovalRoles[i]);
+      }
+      strategies[i].forceDisapprovalRoles = _forceDisapprovalRoles;
     }
   }
 
