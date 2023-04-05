@@ -7,66 +7,63 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {CREATE3} from "solmate/utils/CREATE3.sol";
 
 import "forge-std/Script.sol";
 
 contract DeployVertexFactory is Script {
   using stdJson for string;
 
-  function run() public {
-    string memory _jsonInput = readInput();
-
-    console2.log("Deploying VertexFactory via CREATE3 with following parameters to chain:", block.chainid);
-
-    address _vertexCoreLogic = _jsonInput.readAddress(".vertexCoreLogic");
-    console2.log("  VertexCoreLogic:", _vertexCoreLogic);
-
-    address _vertexStrategyLogic = _jsonInput.readAddress(".initialVertexStrategyLogic");
-    console2.log("  VertexStrategyLogic:", _vertexStrategyLogic);
-
-    address _vertexAccountLogic = _jsonInput.readAddress(".initialVertexAccountLogic");
-    console2.log("  VertexAccountLogic:", _vertexAccountLogic);
-
-    address _vertexPolicyLogic = _jsonInput.readAddress(".vertexPolicyLogic");
-    console2.log("  VertexPolicyLogic:", _vertexPolicyLogic);
-
-    address _vertexPolicyMetadata = _jsonInput.readAddress(".vertexPolicyMetadata");
-    console2.log("  VertexPolicyMetadata:", _vertexPolicyMetadata);
-
-    // This salt must be unique and never have been used with CREATE3 on any
-    // chain before. CREATE3 works by deploying a proxy with the salt via
-    // CREATE2. So anyone who had used CREATE3 with the same salt would have
-    // already deployed and initialized a proxy to the address. Hence, CREATE3
-    // will just revert.
-    bytes32 _salt = keccak256(bytes("Unique Llama Vertex Factory Salt On All Chains Dude"));
-
-    bytes memory _constructorArgs = abi.encode(
-      VertexCore(_vertexCoreLogic),
-      _vertexStrategyLogic,
-      _vertexAccountLogic,
-      VertexPolicy(_vertexPolicyLogic),
-      VertexPolicyMetadata(_vertexPolicyMetadata),
-      _jsonInput.readString(".rootVertexName"),
-      readStrategies(_jsonInput),
-      _jsonInput.readStringArray(".initialAddressNames"),
-      readRoleDescriptions(_jsonInput),
-      readRoleHolders(_jsonInput),
-      readRolePermissions(_jsonInput)
-    );
-    uint256 _doNotSendETHDuringDeploy = 0;
-
-    // TODO vm.broadcast();
-    address _factory = CREATE3.deploy(
-      _salt,
-      abi.encodePacked(type(VertexFactory).creationCode, _constructorArgs),
-      _doNotSendETHDuringDeploy
-    );
-
-    console2.log("VertexFactory deployed at address:", _factory);
+  struct Vars {
+    string jsonInput;
+    address vertexCoreLogic;
+    address vertexStrategyLogic;
+    address vertexAccountLogic;
+    address vertexPolicyLogic;
+    address vertexPolicyMetadata;
+    VertexFactory factory;
   }
 
-  function readInput() internal returns (string memory) {
+  function run() public {
+    Vars memory _vars;
+
+    _vars.jsonInput = readInput();
+
+    console2.log("Deploying VertexFactory with following parameters to chain:", block.chainid);
+
+    _vars.vertexCoreLogic = _vars.jsonInput.readAddress(".vertexCoreLogic");
+    console2.log("  VertexCoreLogic:", _vars.vertexCoreLogic);
+
+    _vars.vertexStrategyLogic = _vars.jsonInput.readAddress(".initialVertexStrategyLogic");
+    console2.log("  VertexStrategyLogic:", _vars.vertexStrategyLogic);
+
+    _vars.vertexAccountLogic = _vars.jsonInput.readAddress(".initialVertexAccountLogic");
+    console2.log("  VertexAccountLogic:", _vars.vertexAccountLogic);
+
+    _vars.vertexPolicyLogic = _vars.jsonInput.readAddress(".vertexPolicyLogic");
+    console2.log("  VertexPolicyLogic:", _vars.vertexPolicyLogic);
+
+    _vars.vertexPolicyMetadata = _vars.jsonInput.readAddress(".vertexPolicyMetadata");
+    console2.log("  VertexPolicyMetadata:", _vars.vertexPolicyMetadata);
+
+    // TODO vm.broadcast();
+    _vars.factory = new VertexFactory(
+      VertexCore(_vars.vertexCoreLogic),
+      _vars.vertexStrategyLogic,
+      _vars.vertexAccountLogic,
+      VertexPolicy(_vars.vertexPolicyLogic),
+      VertexPolicyMetadata(_vars.vertexPolicyMetadata),
+      _vars.jsonInput.readString(".rootVertexName"),
+      readStrategies(_vars.jsonInput),
+      _vars.jsonInput.readStringArray(".initialAddressNames"),
+      readRoleDescriptions(_vars.jsonInput),
+      readRoleHolders(_vars.jsonInput),
+      readRolePermissions(_vars.jsonInput)
+    );
+
+    console2.log("VertexFactory deployed at address:", address(_vars.factory));
+  }
+
+  function readInput() internal view returns (string memory) {
     string memory inputDir = string.concat(vm.projectRoot(), "/script/input/");
     string memory chainDir = string.concat(vm.toString(block.chainid), "/");
     return vm.readFile(string.concat(inputDir, chainDir, "deployVertexFactory.json"));
@@ -88,15 +85,15 @@ contract DeployVertexFactory is Script {
 
       uint256[] memory _approvalRoles = _strategyObject.readUintArray(".forceApprovalRoles");
       uint8[] memory _forceApprovalRoles = new uint8[](_approvalRoles.length);
-      for (uint256 i = 0; i < _approvalRoles.length; i++) {
-        _forceApprovalRoles[i] = uint8(_approvalRoles[i]);
+      for (uint256 j = 0; j < _approvalRoles.length; j++) {
+        _forceApprovalRoles[j] = uint8(_approvalRoles[j]);
       }
       strategies[i].forceApprovalRoles = _forceApprovalRoles;
 
       uint256[] memory _disapprovalRoles = _strategyObject.readUintArray(".forcedisapprovalRoles");
       uint8[] memory _forceDisapprovalRoles = new uint8[](_disapprovalRoles.length);
-      for (uint256 i = 0; i < _disapprovalRoles.length; i++) {
-        _forceDisapprovalRoles[i] = uint8(_disapprovalRoles[i]);
+      for (uint256 k = 0; k < _disapprovalRoles.length; k++) {
+        _forceDisapprovalRoles[k] = uint8(_disapprovalRoles[k]);
       }
       strategies[i].forceDisapprovalRoles = _forceDisapprovalRoles;
     }
