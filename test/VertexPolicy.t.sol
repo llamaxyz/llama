@@ -614,6 +614,23 @@ contract HasPermissionId is VertexPolicyTest {
 }
 
 contract TotalSupply is VertexPolicyTest {
+  function test_getsTotalSupply(uint256 numberOfPolicies) public {
+    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
+    vm.assume(numberOfPolicies < 10_000);
+    for (uint256 i = 0; i < numberOfPolicies; i++) {
+      vm.prank(address(mpCore));
+      mpPolicy.setRoleHolder(
+        uint8(Roles.TestRole1), address(uint160(i + 100)), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
+      );
+    }
+
+    // vm.warp(block.timestamp + 1);
+
+    assertEq(mpPolicy.totalSupply(), initPolicySupply + numberOfPolicies);
+  }
+}
+
+contract Aggregate is VertexPolicyTest {
 // TODO
 }
 
