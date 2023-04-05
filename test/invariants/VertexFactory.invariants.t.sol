@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {CommonBase} from "forge-std/Base.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
-import {StdUtils} from "forge-std/StdUtils.sol";
+import {console2} from "forge-std/Test.sol";
 
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
@@ -79,13 +76,33 @@ contract VertexFactoryHandler is BaseHandler {
     );
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
+
+  function vertexFactory_authorizeStrategyLogic(address newStrategyLogic)
+    public
+    recordCall("vertexFactory_authorizeStrategyLogic")
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
+  }
+
+  function vertexFactory_authorizeAccountLogic(address newAccountLogic)
+    public
+    recordCall("vertexFactory_authorizeAccountLogic")
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
+  }
+
+  function vertexFactory_setPolicyMetadata(VertexPolicyTokenURI newPolicyTokenURI)
+    public
+    recordCall("vertexFactory_setPolicyMetadata")
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.setPolicyMetadata(newPolicyTokenURI);
+  }
 }
 
 contract VertexFactoryInvariants is VertexTestSetup {
-  // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
-  // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
-  // tests would not be coupled to our unit tests in this way.
-
   VertexFactoryHandler public handler;
 
   function setUp() public override {
@@ -97,13 +114,10 @@ contract VertexFactoryInvariants is VertexTestSetup {
     // added to the target contracts list (by default, deployed contracts are automatically
     // added to the target contracts list). We then use `targetSelector` to filter out all
     // methods from the handler except for `vertexFactory_deploy`.
-    targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being
-      // deployed to a sender's address?
-
+    excludeArtifact("VertexAccount");
     excludeArtifact("VertexCore");
     excludeArtifact("VertexPolicy");
     excludeArtifact("VertexStrategy");
-    excludeArtifact("VertexAccount");
 
     bytes4[] memory selectors = new bytes4[](1);
     selectors[0] = handler.vertexFactory_deploy.selector;
