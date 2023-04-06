@@ -100,7 +100,6 @@ contract Initialize is VertexPolicyTest {
     mpPolicy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
-  // TODO
   function test_SetsRoleDescriptions() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
@@ -616,14 +615,14 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     vm.prank(address(mpCore));
     mpPolicy.revokePolicy(newRoleHolder);
 
-    vm.warp(150);
+    vm.warp(160);
     vm.prank(address(mpCore));
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
 
-    vm.warp(151);
+    vm.warp(161);
 
     Checkpoints.History memory rbCheckpoint1 = mpPolicy.roleBalanceCheckpoints(arbitraryUser, uint8(Roles.TestRole1));
-    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole1));
+    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
     assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
@@ -632,7 +631,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     assertEq(rbCheckpoint1._checkpoints[1].timestamp, 110);
     assertEq(rbCheckpoint1._checkpoints[1].expiration, 160);
     assertEq(rbCheckpoint1._checkpoints[1].quantity, 1);
-    assertEq(rbCheckpoint1._checkpoints[2].timestamp, 150);
+    assertEq(rbCheckpoint1._checkpoints[2].timestamp, 160);
     assertEq(rbCheckpoint1._checkpoints[2].expiration, 0);
     assertEq(rbCheckpoint1._checkpoints[2].quantity, 0);
 
