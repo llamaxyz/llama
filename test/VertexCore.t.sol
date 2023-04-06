@@ -33,8 +33,8 @@ contract VertexCoreTest is VertexTestSetup {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
@@ -62,7 +62,7 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _approveAction(address _policyholder, uint256 _actionId) public {
     vm.expectEmit();
-    emit ApprovalCasted(_actionId, _policyholder, 1, "");
+    emit ApprovalCast(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(_actionId, uint8(Roles.Approver));
   }
@@ -74,7 +74,7 @@ contract VertexCoreTest is VertexTestSetup {
 
   function _disapproveAction(address _policyholder, uint256 _actionId) public {
     vm.expectEmit();
-    emit DisapprovalCasted(_actionId, _policyholder, 1, "");
+    emit DisapprovalCast(_actionId, _policyholder, 1, "");
     vm.prank(_policyholder);
     mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
   }
@@ -799,7 +799,7 @@ contract CastApproval is VertexCoreTest {
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
     actionId = _createAction();
     vm.expectEmit();
-    emit ApprovalCasted(actionId, approverAdam, 1, reason);
+    emit ApprovalCast(actionId, approverAdam, 1, reason);
     vm.prank(approverAdam);
     mpCore.castApproval(actionId, uint8(Roles.Approver), reason);
   }
@@ -873,7 +873,7 @@ contract CastDisapproval is VertexCoreTest {
 
     vm.prank(disapproverDrake);
     vm.expectEmit();
-    emit DisapprovalCasted(actionId, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
 
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
 
@@ -884,7 +884,7 @@ contract CastDisapproval is VertexCoreTest {
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
     actionId = _createApproveAndQueueAction();
     vm.expectEmit();
-    emit DisapprovalCasted(actionId, disapproverDrake, 1, reason);
+    emit DisapprovalCast(actionId, disapproverDrake, 1, reason);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover), reason);
   }
@@ -1054,7 +1054,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     mpCore.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
   }
 
-  function test_UniquenessOfInput() public {
+  function test_RevertIf_StrategiesAreIdentical() public {
     Strategy[] memory newStrategies = new Strategy[](2);
 
     Strategy memory duplicateStrategy = Strategy({
@@ -1079,7 +1079,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
   }
 
-  function test_Idempotency() public {
+  function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
     Strategy[] memory newStrategies1 = new Strategy[](1);
     Strategy[] memory newStrategies2 = new Strategy[](1);
 
@@ -1256,14 +1256,14 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     mpCore.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
   }
 
-  function test_UniquenessOfInput() public {
+  function test_RevertIf_AccountsAreIdentical() public {
     string[] memory newAccounts = Solarray.strings("VertexAccount1", "VertexAccount1");
     vm.prank(address(mpCore));
     vm.expectRevert("ERC1167: create2 failed");
     mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
   }
 
-  function test_Idempotency() public {
+  function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     string[] memory newAccounts1 = Solarray.strings("VertexAccount1");
     string[] memory newAccounts2 = Solarray.strings("VertexAccount1");
     vm.startPrank(address(mpCore));

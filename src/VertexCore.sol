@@ -64,8 +64,8 @@ contract VertexCore is Initializable {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCasted(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
@@ -79,10 +79,10 @@ contract VertexCore is Initializable {
     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
   /// @notice EIP-712 approval typehash.
-  bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalCasted(uint256 id,address policyholder)");
+  bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("ApprovalCast(uint256 id,address policyholder)");
 
   /// @notice EIP-712 disapproval typehash.
-  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalCasted(uint256 id,address policyholder)");
+  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH = keccak256("DisapprovalCast(uint256 id,address policyholder)");
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -412,7 +412,7 @@ contract VertexCore is Initializable {
       : action.totalApprovals + weight;
     approvals[actionId][policyholder] = true;
 
-    emit ApprovalCasted(actionId, policyholder, weight, reason);
+    emit ApprovalCast(actionId, policyholder, weight, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
@@ -433,7 +433,7 @@ contract VertexCore is Initializable {
       : action.totalDisapprovals + weight;
     disapprovals[actionId][policyholder] = true;
 
-    emit DisapprovalCasted(actionId, policyholder, weight, reason);
+    emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
   function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
