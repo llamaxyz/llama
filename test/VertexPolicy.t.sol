@@ -653,15 +653,29 @@ contract RoleSupplyCheckpoints is VertexPolicyTest {
     vm.assume(quantity > 0);
     vm.assume(supply < type(uint8).max - 100);
 
+    uint256 initialTimestamp = block.timestamp;
+
     for (uint8 i = 100; i < supply + 100; i++) {
+      vm.warp(block.timestamp + 1);
       vm.prank(address(mpCore));
       mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(i)), quantity, DEFAULT_ROLE_EXPIRATION);
     }
 
-    vm.warp(100);
+    vm.warp(block.timestamp + 1);
 
     uint256 roleSupply = mpPolicy.getSupply(uint8(Roles.TestRole1));
     assertEq(roleSupply, uint256(supply) * uint256(quantity));
+
+    Checkpoints.History memory rsCheckpoint = mpPolicy.roleSupplyCheckpoints(uint8(Roles.TestRole1));
+    assertEq(rsCheckpoint._checkpoints.length, supply);
+    if (supply > 0) {
+      assertEq(rsCheckpoint._checkpoints[0].timestamp, initialTimestamp + 1);
+      assertEq(rsCheckpoint._checkpoints[0].quantity, quantity);
+      assertEq(rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].timestamp, block.timestamp - 1);
+      assertEq(
+        rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].quantity, uint256(supply) * uint256(quantity)
+      );
+    }
   }
 }
 
