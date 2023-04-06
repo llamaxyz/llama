@@ -1,0 +1,26 @@
+{
+    "vertexCoreLogic": "0xB0B",
+    "initialVertexStrategyLogic": "0xB0B",
+    "initialVertexAccountLogic": "0xB0B",
+    "vertexPolicyLogic": "0xB0B",
+    "vertexPolicyMetadata": "0xB0B",
+    "rootVertexName": "root vertex",
+    "initialStrategies": [
+      {
+        "approvalPeriod": 42,
+        "queuingPeriod": 42,
+        "expirationPeriod": 42,
+        "minApprovalPct": 42,
+        "minDisapprovalPct": 42,
+        "isFixedLengthApprovalPeriod": false,
+        "approvalRole": 1,
+        "disapprovalRole": 2,
+        "forceApprovalRoles": [1],
+        "forceDispprovalRoles": [2]
+      }
+    ],
+    "initialAccounts": [],
+    "initialRoleDescriptions": [],
+    "initialRoleHolders": [],
+    "initialRolePermissions": []
+}
