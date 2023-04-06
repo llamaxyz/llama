@@ -83,12 +83,17 @@ contract VertexTestSetup is Test {
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
   bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
+  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x38cb05ed; // createAndAuthorizeStrategies(address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[])[])
+  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x0db24798; // createAndAuthorizeAccounts(address,string[])
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
   bytes32 executeActionId;
+  bytes32 createStrategyId;
+  bytes32 createAccountId;
+  bytes32 pausePermissionId2;
 
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
@@ -195,8 +200,11 @@ contract VertexTestSetup is Test {
     failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
     executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
+    createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
+    createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
+    pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
 
-    bytes[] memory permissionsToSet = new bytes[](4);
+    bytes[] memory permissionsToSet = new bytes[](7);
     permissionsToSet[0] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
     permissionsToSet[1] =
@@ -205,6 +213,12 @@ contract VertexTestSetup is Test {
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), receiveEthPermissionId, true));
     permissionsToSet[3] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeActionId, true));
+    permissionsToSet[4] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createStrategyId, true));
+    permissionsToSet[5] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createAccountId, true));
+    permissionsToSet[6] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), pausePermissionId2, true));
 
     vm.prank(address(mpCore));
     mpPolicy.aggregate(permissionsToSet);
@@ -241,6 +255,8 @@ contract VertexTestSetup is Test {
     require(bytes32(0) != failPermissionId, "failPermissionId not set");
     require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
     require(bytes32(0) != executeActionId, "executeActionId not set");
+    require(bytes32(0) != createStrategyId, "createStrategyId not set");
+    require(bytes32(0) != createAccountId, "createAccountId not set");
   }
 
   function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
