@@ -594,7 +594,59 @@ contract GetPastSupply is VertexPolicyTest {
 }
 
 contract RoleBalanceCheckpoints is VertexPolicyTest {
-// TODO
+  function test_ReturnsAccurateCheckpoint() public {
+    vm.warp(100);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
+
+    vm.warp(110);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
+
+    vm.warp(120);
+    address newRoleHolder = makeAddr("newRoleHolder");
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 200);
+
+    vm.warp(130);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 300);
+
+    vm.warp(140);
+    vm.prank(address(mpCore));
+    mpPolicy.revokePolicy(newRoleHolder);
+
+    vm.warp(150);
+    vm.prank(address(mpCore));
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
+
+    vm.warp(151);
+
+    Checkpoints.History memory rbCheckpoint1 = mpPolicy.roleBalanceCheckpoints(arbitraryUser, uint8(Roles.TestRole1));
+    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole1));
+
+    assertEq(rbCheckpoint1._checkpoints.length, 3);
+    assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
+    assertEq(rbCheckpoint1._checkpoints[0].expiration, 150);
+    assertEq(rbCheckpoint1._checkpoints[0].quantity, 1);
+    assertEq(rbCheckpoint1._checkpoints[1].timestamp, 110);
+    assertEq(rbCheckpoint1._checkpoints[1].expiration, 160);
+    assertEq(rbCheckpoint1._checkpoints[1].quantity, 1);
+    assertEq(rbCheckpoint1._checkpoints[2].timestamp, 150);
+    assertEq(rbCheckpoint1._checkpoints[2].expiration, 0);
+    assertEq(rbCheckpoint1._checkpoints[2].quantity, 0);
+
+    assertEq(rbCheckpoint2._checkpoints.length, 3);
+    assertEq(rbCheckpoint2._checkpoints[0].timestamp, 120);
+    assertEq(rbCheckpoint2._checkpoints[0].expiration, 200);
+    assertEq(rbCheckpoint2._checkpoints[0].quantity, 1);
+    assertEq(rbCheckpoint2._checkpoints[1].timestamp, 130);
+    assertEq(rbCheckpoint2._checkpoints[1].expiration, 300);
+    assertEq(rbCheckpoint2._checkpoints[1].quantity, 1);
+    assertEq(rbCheckpoint2._checkpoints[2].timestamp, 140);
+    assertEq(rbCheckpoint2._checkpoints[2].expiration, 0);
+    assertEq(rbCheckpoint2._checkpoints[2].quantity, 0);
+  }
 }
 
 contract RoleSupplyCheckpoints is VertexPolicyTest {
