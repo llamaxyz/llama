@@ -667,7 +667,25 @@ contract RoleSupplyCheckpoints is VertexPolicyTest {
 }
 
 contract HasRole is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasRole() public {
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
+
+  function test_ReturnsFalseIfHolderHasExpiredRole() public {
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 100);
+
+    vm.warp(101);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
 }
 
 contract HasRoleUint256Overload is VertexPolicyTest {
