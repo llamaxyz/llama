@@ -297,7 +297,7 @@ contract RevokeExpiredRole is VertexPolicyTest {
 contract RevokePolicy is VertexPolicyTest {
   function test_RevokesPolicy(address user) public {
     vm.assume(user != address(0));
-    assertEq(mpPolicy.balanceOf(user), 0);
+    vm.assume(mpPolicy.balanceOf(user) == 0);
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
