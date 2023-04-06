@@ -121,10 +121,10 @@ contract VertexCore is Initializable {
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
 
-  /// @notice Mapping of all current nonces for each policyholder.
+  /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
   /// castApproval and castDisapproval) signed by the policyholder.
-  mapping(address => uint256) public nonces;
+  mapping(address => mapping(bytes4 => uint256)) public nonces;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -222,7 +222,7 @@ contract VertexCore is Initializable {
             selector,
             keccak256(data),
             user,
-            _useNonce(user)
+            _useNonce(user, msg.sig)
           )
         )
       )
@@ -325,7 +325,9 @@ contract VertexCore is Initializable {
             EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
           )
         ),
-        keccak256(abi.encode(CAST_APPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user)))
+        keccak256(
+          abi.encode(CAST_APPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig))
+        )
       )
     );
     address signer = ecrecover(digest, v, r, s);
@@ -374,7 +376,9 @@ contract VertexCore is Initializable {
           )
         ),
         keccak256(
-          abi.encode(CAST_DISAPPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user))
+          abi.encode(
+            CAST_DISAPPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig)
+          )
         )
       )
     );
@@ -611,10 +615,10 @@ contract VertexCore is Initializable {
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 
-  function _useNonce(address user) internal returns (uint256 nonce) {
-    nonce = nonces[user];
+  function _useNonce(address user, bytes4 selector) internal returns (uint256 nonce) {
+    nonce = nonces[user][selector];
     unchecked {
-      nonces[user] = nonce + 1;
+      nonces[user][selector] = nonce + 1;
     }
   }
 }
