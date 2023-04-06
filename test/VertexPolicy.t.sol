@@ -594,7 +594,7 @@ contract GetPastSupply is VertexPolicyTest {
 }
 
 contract RoleBalanceCheckpoints is VertexPolicyTest {
-  function test_ReturnsAccurateCheckpoint() public {
+  function test_ReturnsBalanceCheckpoint() public {
     vm.warp(100);
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
@@ -650,7 +650,20 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
 }
 
 contract RoleSupplyCheckpoints is VertexPolicyTest {
-// TODO
+  function test_ReturnsSupplyCheckpoint(uint8 supply, uint8 quantity) public {
+    vm.assume(quantity > 0);
+    vm.assume(supply < type(uint8).max - 100);
+
+    for (uint8 i = 100; i < supply + 100; i++) {
+      vm.prank(address(mpCore));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(i)), quantity, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    vm.warp(100);
+
+    uint256 roleSupply = mpPolicy.getSupply(uint8(Roles.TestRole1));
+    assertEq(roleSupply, uint256(supply) * uint256(quantity));
+  }
 }
 
 contract HasRole is VertexPolicyTest {
