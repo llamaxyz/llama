@@ -721,6 +721,7 @@ contract HasRoleUint256Overload is VertexPolicyTest {
     vm.warp(100);
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.warp(101);
 
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 99), false);
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 100), true);
