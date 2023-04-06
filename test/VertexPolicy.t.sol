@@ -686,7 +686,6 @@ contract HasRole is VertexPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 1), false);
   }
 
   function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
@@ -700,12 +699,32 @@ contract HasRole is VertexPolicyTest {
     vm.warp(101);
 
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 100), true);
   }
 }
 
 contract HasRoleUint256Overload is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasRole() public {
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.warp(100);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), block.timestamp - 1), true);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 0), false);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
+    vm.warp(100);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), block.timestamp - 1), false);
+  }
+
+  function test_ReturnsFalseIfHolderHasExpiredRole() public {
+    vm.warp(100);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 99), false);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 100), true);
+  }
 }
 
 contract HasPermissionId is VertexPolicyTest {
