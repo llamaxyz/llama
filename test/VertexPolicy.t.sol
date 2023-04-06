@@ -696,7 +696,19 @@ contract HasRoleUint256Overload is VertexPolicyTest {
 }
 
 contract HasPermissionId is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasPermission(bytes32 permisisonId) public {
+    vm.warp(100);
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permisisonId, true);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permisisonId), true);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), false);
+  }
 }
 
 contract TotalSupply is VertexPolicyTest {
