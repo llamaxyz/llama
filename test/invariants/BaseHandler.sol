@@ -55,7 +55,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   }
 
   // Used to record code paths hit within invariant tests, but for simplicity it uses the same mapping.
-  function recordMetric(string memory name) public {
+  function recordMetric(string memory name) internal {
     calls[name]++;
   }
 
@@ -109,7 +109,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   }
 
   // -------- Generic Helpers --------
-  function recordPermissionId(bytes8 permissionId) public {
+  function recordPermissionId(bytes8 permissionId) internal {
     if (!havePermissionId[permissionId]) {
       seenPermissionIds.push(permissionId);
       havePermissionId[permissionId] = true;

@@ -129,8 +129,9 @@ contract VertexFactoryInvariants is VertexTestSetup {
     excludeArtifact("VertexPolicy");
     excludeArtifact("VertexStrategy");
 
-    bytes4[] memory selectors = new bytes4[](1);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.vertexFactory_deploy.selector;
+    selectors[1] = handler.handler_increaseTimestampBy.selector;
     FuzzSelector memory selector = FuzzSelector({addr: address(handler), selectors: selectors});
     targetSelector(selector);
 
