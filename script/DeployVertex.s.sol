@@ -1,66 +1,77 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 import "forge-std/Script.sol";
 
-contract DeployVertexFactory is Script {
+contract DeployVertex is Script {
   using stdJson for string;
 
-  struct Vars {
-    string jsonInput;
-    address vertexCoreLogic;
-    address vertexStrategyLogic;
-    address vertexAccountLogic;
-    address vertexPolicyLogic;
-    address vertexPolicyMetadata;
-    VertexFactory factory;
-  }
+  // Logic contracts.
+  VertexCore coreLogic;
+  VertexStrategy strategyLogic;
+  VertexAccount accountLogic;
+  VertexPolicy policyLogic;
+
+  // Core Protocol.
+  VertexFactory factory;
+  VertexPolicyTokenURI policyMetadata;
+  VertexLens lens;
 
   function run() public {
-    Vars memory _vars;
-
-    _vars.jsonInput = readInput();
-
     console2.log("Deploying VertexFactory with following parameters to chain:", block.chainid);
 
-    _vars.vertexCoreLogic = _vars.jsonInput.readAddress(".vertexCoreLogic");
-    console2.log("  VertexCoreLogic:", _vars.vertexCoreLogic);
-
-    _vars.vertexStrategyLogic = _vars.jsonInput.readAddress(".initialVertexStrategyLogic");
-    console2.log("  VertexStrategyLogic:", _vars.vertexStrategyLogic);
-
-    _vars.vertexAccountLogic = _vars.jsonInput.readAddress(".initialVertexAccountLogic");
-    console2.log("  VertexAccountLogic:", _vars.vertexAccountLogic);
-
-    _vars.vertexPolicyLogic = _vars.jsonInput.readAddress(".vertexPolicyLogic");
-    console2.log("  VertexPolicyLogic:", _vars.vertexPolicyLogic);
-
-    _vars.vertexPolicyMetadata = _vars.jsonInput.readAddress(".vertexPolicyMetadata");
-    console2.log("  VertexPolicyMetadata:", _vars.vertexPolicyMetadata);
+    // TODO vm.broadcast();
+    coreLogic = new VertexCore();
+    console2.log("  VertexCoreLogic:", address(coreLogic));
 
     // TODO vm.broadcast();
-    _vars.factory = new VertexFactory(
-      VertexCore(_vars.vertexCoreLogic),
-      _vars.vertexStrategyLogic,
-      _vars.vertexAccountLogic,
-      VertexPolicy(_vars.vertexPolicyLogic),
-      VertexPolicyMetadata(_vars.vertexPolicyMetadata),
-      _vars.jsonInput.readString(".rootVertexName"),
-      readStrategies(_vars.jsonInput),
-      _vars.jsonInput.readStringArray(".initialAddressNames"),
-      readRoleDescriptions(_vars.jsonInput),
-      readRoleHolders(_vars.jsonInput),
-      readRolePermissions(_vars.jsonInput)
+    strategyLogic = new VertexStrategy();
+    console2.log("  VertexStrategyLogic:", address(strategyLogic));
+
+    // TODO vm.broadcast();
+    accountLogic = new VertexAccount();
+    console2.log("  VertexAccountLogic:", address(accountLogic));
+
+    // TODO vm.broadcast();
+    policyLogic = new VertexPolicy();
+    console2.log("  VertexPolicyLogic:", address(policyLogic));
+
+    // TODO vm.broadcast();
+    policyMetadata = new VertexPolicyTokenURI();
+    console2.log("  VertexPolicyMetadata:", address(policyMetadata));
+
+    // TODO vm.broadcast();
+    lens = new VertexLens();
+    console2.log("  VertexLens:", address(lens));
+
+    string memory jsonInput = readInput();
+
+    // TODO vm.broadcast();
+    factory = new VertexFactory(
+      coreLogic,
+      strategyLogic,
+      accountLogic,
+      policyLogic,
+      policyMetadata,
+      jsonInput.readString(".rootVertexName"),
+      readStrategies(jsonInput),
+      jsonInput.readStringArray(".initialAccountNames"),
+      readRoleDescriptions(jsonInput),
+      readRoleHolders(jsonInput),
+      readRolePermissions(jsonInput)
     );
 
-    console2.log("VertexFactory deployed at address:", address(_vars.factory));
+    console2.log("VertexFactory deployed at address:", address(factory));
   }
 
   function readInput() internal view returns (string memory) {

@@ -15,6 +15,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {DeployVertex} from "script/DeployVertex.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
@@ -30,18 +31,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is Test {
-  // Logic contracts.
-  VertexCore coreLogic;
-  VertexStrategy strategyLogic;
-  VertexAccount accountLogic;
-  VertexPolicy policyLogic;
-
-  // Core Protocol.
-  VertexFactory factory;
-  VertexPolicyTokenURI policyMetadata;
-  VertexLens lens;
-
+contract VertexTestSetup is DeployVertex, Test {
   // Root Vertex instance.
   VertexCore rootCore;
   VertexPolicy rootPolicy;
@@ -102,15 +92,10 @@ contract VertexTestSetup is Test {
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
-    // Deploy logic contracts.
-    coreLogic = new VertexCore();
-    strategyLogic = new VertexStrategy();
-    accountLogic = new VertexAccount();
-    policyLogic = new VertexPolicy();
-    policyMetadata = new VertexPolicyTokenURI();
+    DeployVertex.run();
 
-    // Deploy lens.
-    lens = new VertexLens();
+    rootCore = factory.ROOT_VERTEX();
+    rootPolicy = rootCore.policy();
 
     // Deploy the Root vertex instance. We only instantiate it with a single action creator role.
     Strategy[] memory strategies = defaultStrategies();
@@ -118,23 +103,6 @@ contract VertexTestSetup is Test {
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
-    RoleHolderData[] memory rootRoleHolders = defaultActionCreatorRoleHolder(rootVertexActionCreator);
-
-    factory = new VertexFactory(
-      coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
-      policyLogic,
-      policyMetadata,
-      "Root Vertex",
-      strategies,
-      rootAccounts,
-      roleDescriptionStrings,
-      rootRoleHolders,
-      new RolePermissionData[](0)
-    );
-    rootCore = factory.ROOT_VERTEX();
-    rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");

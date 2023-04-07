@@ -58,8 +58,8 @@ contract Constructor is VertexFactoryTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new VertexFactory(
       coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       policyLogic,
       policyMetadata,
       "Root Vertex",

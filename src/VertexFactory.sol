@@ -62,8 +62,8 @@ contract VertexFactory {
 
   constructor(
     VertexCore vertexCoreLogic,
-    address initialVertexStrategyLogic,
-    address initialVertexAccountLogic,
+    VertexStrategy initialVertexStrategyLogic,
+    VertexAccount initialVertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
@@ -77,13 +77,13 @@ contract VertexFactory {
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyTokenUri = _vertexPolicyTokenUri;
 
-    _authorizeStrategyLogic(initialVertexStrategyLogic);
-    _authorizeAccountLogic(initialVertexAccountLogic);
+    _authorizeStrategyLogic(address(initialVertexStrategyLogic));
+    _authorizeAccountLogic(address(initialVertexAccountLogic));
 
     ROOT_VERTEX = _deploy(
       name,
-      initialVertexStrategyLogic,
-      initialVertexAccountLogic,
+      address(initialVertexStrategyLogic),
+      address(initialVertexAccountLogic),
       initialStrategies,
       initialAccounts,
       initialRoleDescriptions,

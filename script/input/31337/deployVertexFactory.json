@@ -1,26 +1,56 @@
 {
-    "vertexCoreLogic": "0xB0B",
-    "initialVertexStrategyLogic": "0xB0B",
-    "initialVertexAccountLogic": "0xB0B",
-    "vertexPolicyLogic": "0xB0B",
-    "vertexPolicyMetadata": "0xB0B",
-    "rootVertexName": "root vertex",
+    "rootVertexName": "One Vertex to Rule Them All",
     "initialStrategies": [
       {
-        "approvalPeriod": 42,
-        "queuingPeriod": 42,
-        "expirationPeriod": 42,
-        "minApprovalPct": 42,
-        "minDisapprovalPct": 42,
+        "approvalPeriod": 172800,
+        "queuingPeriod": 345600,
+        "expirationPeriod": 691200,
+        "isFixedLengthApprovalPeriod": true,
+        "minApprovalPct": 4000,
+        "minDisapprovalPct": 2000,
+        "approvalRoleComment": "3 == the Approver role",
+        "approvalRole": 3,
+        "disapprovalRoleComment": "4 == the Disapprover role",
+        "disapprovalRole": 4,
+        "forceApprovalRoles": [],
+        "forceDisapprovalRoles": []
+      },
+      {
+        "approvalPeriod": 172800,
+        "queuingPeriod": 0,
+        "expirationPeriod": 86400,
         "isFixedLengthApprovalPeriod": false,
-        "approvalRole": 1,
-        "disapprovalRole": 2,
-        "forceApprovalRoles": [1],
-        "forceDispprovalRoles": [2]
+        "minApprovalPct": 8000,
+        "minDisapprovalPct": 10001,
+        "approvalRoleComment": "3 == the Approver role",
+        "approvalRole": 3,
+        "disapprovalRoleComment": "4 == the Disapprover role",
+        "disapprovalRole": 4,
+        "forceApprovalRolesComment": "2 == the ActionCreator role",
+        "forceApprovalRoles": [2],
+        "forceDisapprovalRoles": [2]
       }
     ],
-    "initialAccounts": [],
-    "initialRoleDescriptions": [],
-    "initialRoleHolders": [],
+    "initialAccountNames": ["Llama Treasury", "Llama Grants"],
+    "initialRoleDescriptions": [
+      "0x416c6c486f6c6465727300000000000000000000000000000000000000000000",
+      "0x416374696f6e43726561746f7200000000000000000000000000000000000000",
+      "0x417070726f766572000000000000000000000000000000000000000000000000",
+      "0x446973617070726f766572000000000000000000000000000000000000000000",
+      "0x54657374526f6c65310000000000000000000000000000000000000000000000",
+      "0x54657374526f6c65320000000000000000000000000000000000000000000000",
+      "0x4d6164655570526f6c6500000000000000000000000000000000000000000000"
+    ],
+    "initialRoleHolders": [
+      {
+        "roleComment": "This is the ActionCreator role.",
+        "role": 2,
+        "userComment": "makeAddr('randomLogicAddress')",
+        "user": "0x82e130E597e2b955c6Ad9DbC58185f881cD83CD7",
+        "quantity": 1,
+        "expirationComment": "This role assignment never expires",
+        "expiration": 18446744073709551615
+      }
+    ],
     "initialRolePermissions": []
 }
