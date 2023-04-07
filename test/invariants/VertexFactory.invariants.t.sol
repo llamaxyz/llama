@@ -20,27 +20,34 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Storage ========
   // =========================
 
+  // The default strategy and account logic contracts.
+  address public strategyLogic;
+  address public accountLogic;
+
   // Used to track the last seen `vertexCount` value.
   uint256[] public vertexCounts;
-
-  // The salt is a function of name and symbol. To ensure we get a different contract address each
-  // time we deterministically update this value to track what the next name and symbol will be.
-  uint256 nextNameCounter = 0;
 
   // =============================
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
+  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore, address _strategyLogic, address _accountLogic)
+    BaseHandler(_vertexFactory, _vertexCore)
+  {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
+    strategyLogic = _strategyLogic;
+    accountLogic = _accountLogic;
   }
 
   // ==========================
   // ======== Helpers =========
   // ==========================
 
-  function name() internal returns (string memory currentName) {
-    currentName = string.concat("NAME_", vm.toString(nextNameCounter++));
+  // The salt is a function of name and symbol. To ensure we get a different contract address each
+  // time we use this method.
+  function name() internal view returns (string memory currentName) {
+    uint256 lastCount = vertexCounts[vertexCounts.length - 1];
+    currentName = string.concat("NAME_", vm.toString(lastCount));
   }
 
   function getVertexCounts() public view returns (uint256[] memory) {
@@ -58,19 +65,22 @@ contract VertexFactoryHandler is BaseHandler {
 
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
     // We don't care about the parameters, we just need it to execute successfully.
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(
       uint8(Roles.ActionCreator), makeAddr("dummyActionCreator"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
     );
 
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Action Creator");
+
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.deploy(
       name(),
-      address(0),
-      address(0),
+      strategyLogic,
+      accountLogic,
       new Strategy[](0),
       new string[](0),
-      new RoleDescription[](0),
+      roleDescriptions,
       roleHolders,
       new RolePermissionData[](0)
     );
@@ -107,7 +117,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
 
   function setUp() public override {
     VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore);
+    handler = new VertexFactoryHandler(factory, mpCore, address(strategyLogic), address(accountLogic));
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
@@ -123,7 +133,9 @@ contract VertexFactoryInvariants is VertexTestSetup {
     selectors[0] = handler.vertexFactory_deploy.selector;
     FuzzSelector memory selector = FuzzSelector({addr: address(handler), selectors: selectors});
     targetSelector(selector);
+
     targetContract(address(handler));
+    targetSender(msg.sender);
   }
 
   // ======================================
