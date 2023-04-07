@@ -1,6 +1,6 @@
 {
     "comment": "This data is currently just used for fork tests, please update before running the script on mainnet!",
-    "rootVertexName": "One Vertex to Rule Them All",
+    "rootVertexName": "Root Vertex",
     "initialStrategies": [
       {
         "approvalPeriod": 172800,
