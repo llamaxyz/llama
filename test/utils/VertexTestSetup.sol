@@ -12,7 +12,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {VertexPolicyToken} from "src/VertexPolicyToken.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -39,7 +39,7 @@ contract VertexTestSetup is Test {
 
   // Core Protocol.
   VertexFactory factory;
-  VertexPolicyToken policyMetadata;
+  VertexPolicyTokenURI policyMetadata;
   VertexLens lens;
 
   // Root Vertex instance.
@@ -107,7 +107,7 @@ contract VertexTestSetup is Test {
     strategyLogic = new VertexStrategy();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
-    policyMetadata = new VertexPolicyToken();
+    policyMetadata = new VertexPolicyTokenURI();
 
     // Deploy lens.
     lens = new VertexLens();
