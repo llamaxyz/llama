@@ -20,9 +20,6 @@ contract VertexCoreHandler is BaseHandler {
   uint256 canceledActionId;
   uint256 expiredActionId;
 
-  uint256 minActionId;
-  uint256 maxActionId;
-
   // Parameters we'll need to create valid actions.
   address mockProtocol;
   VertexStrategy[2] strategies;
@@ -41,43 +38,26 @@ contract VertexCoreHandler is BaseHandler {
   constructor(
     VertexFactory _vertexFactory,
     VertexCore _vertexCore,
-    uint256 _executedActionId,
-    uint256 _canceledActionId,
-    uint256 _expiredActionId,
     VertexStrategy[2] memory _strategies,
     bytes32[3] memory _permissionIds,
     address _mockProtocol
   ) BaseHandler(_vertexFactory, _vertexCore) {
-    actionsCounts.push(VERTEX_CORE.actionsCount());
-
-    executedActionId = _executedActionId;
-    canceledActionId = _canceledActionId;
-    expiredActionId = _expiredActionId;
-
-    minActionId = min(executedActionId, canceledActionId, expiredActionId);
-    maxActionId = max(executedActionId, canceledActionId, expiredActionId);
-    require(minActionId == 0, "expected 0");
-    require(maxActionId == 2, "expected 2");
-
     strategies = _strategies;
     permissionIds = _permissionIds;
     mockProtocol = _mockProtocol;
+
+    // Save off each existing action
+    for (uint256 i = 0; i < VERTEX_CORE.actionsCount(); i++) {
+      actionsCounts.push(i);
+    }
   }
 
   // ==========================
   // ======== Helpers =========
   // ==========================
 
-  function min(uint256 a, uint256 b, uint256 c) internal pure returns (uint256) {
-    return a < b ? (a < c ? a : c) : (b < c ? b : c);
-  }
-
-  function max(uint256 a, uint256 b, uint256 c) internal pure returns (uint256) {
-    return a > b ? (a > c ? a : c) : (b > c ? b : c);
-  }
-
   function getAction(uint256 index) internal view returns (uint256) {
-    return bound(index, minActionId, maxActionId);
+    return _bound(index, actionsCounts[0], actionsCounts[actionsCounts.length - 1]);
   }
 
   // Note this function is sensitive to the order of the `permissionIds` array and the configuration
@@ -87,7 +67,7 @@ contract VertexCoreHandler is BaseHandler {
     view
     returns (address target, bytes4 selector, VertexStrategy strategy)
   {
-    index = bound(index, 0, permissionIds.length - 1);
+    index = _bound(index, 0, permissionIds.length - 1);
 
     // pausePermissionId
     if (index == 0) return (mockProtocol, bytes4(keccak256("pause(bool)")), strategies[0]);
@@ -119,8 +99,10 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("vertexCore_unauthorizeStrategies        ", calls["vertexCore_unauthorizeStrategies"]);
     console2.log("vertexCore_createAndAuthorizeAccounts   ", calls["vertexCore_createAndAuthorizeAccounts"]);
     console2.log("-----------------------------------------------");
-    console2.log("policyholdersHadBalanceOf_0      ", calls["policyholdersHadBalanceOf_0"]);
-    console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
+    console2.log("vertexCore_queueAction_queued           ", calls["vertexCore_queueAction_queued"]);
+    console2.log("vertexCore_queueAction_noop             ", calls["vertexCore_queueAction_noop"]);
+    console2.log("policyholdersHadBalanceOf_0             ", calls["policyholdersHadBalanceOf_0"]);
+    console2.log("policyholdersHadBalanceOf_1             ", calls["policyholdersHadBalanceOf_1"]);
   }
 
   // =====================================
@@ -137,19 +119,42 @@ contract VertexCoreHandler is BaseHandler {
 
     // We only have one function that can receive ETH, if we're calling that function, we randomize
     // how much ETH to send, otherwise we send 0.
-    value = selector == bytes4(keccak256("receiveEth()")) ? bound(value, 0, 1000 ether) : 0;
+    value = selector == bytes4(keccak256("receiveEth()")) ? _bound(value, 0, 1000 ether) : 0;
 
     // We only have one function that takes calldata, if we're calling that function, we randomize
     // the calldata;
-    bytes memory data = selector == bytes4(keccak256("pause(bool)")) ? abi.encode(bound(dataSeed, 0, 1)) : bytes("");
+    bytes memory data = selector == bytes4(keccak256("pause(bool)")) ? abi.encode(_bound(dataSeed, 0, 1)) : bytes("");
 
     // We can now execute the action.
     vm.prank(actionCreatorAaron);
-    VERTEX_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
+    uint256 actionId = VERTEX_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
+    actionsCounts.push(actionId);
+  }
+
+  function vertexCore_queueAction(uint256 index) public recordCall("vertexCore_queueAction") {
+    // We only want to queue actions that are in the `Approved` state. We start with the index given
+    // then incrementally increase until we traverse the entire array of action IDs. If none are
+    // ready to be queued, we exit and this is a no-op.
+    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
+    uint256 numIterations;
+    for (uint256 i = 0; i < actionsCounts.length; i++) {
+      if (VERTEX_CORE.getActionState(getAction(actionId)) == ActionState.Approved) {
+        VERTEX_CORE.queueAction(getAction(index));
+        recordMetric("vertexCore_queueAction_queued");
+        return;
+      }
+
+      if (numIterations == actionsCounts.length) {
+        recordMetric("vertexCore_queueAction_noop");
+        return;
+      }
+
+      numIterations++;
+      actionId = actionsCounts[(actionId + 1) % actionsCounts.length];
+    }
   }
 
   // TODO: Implement the rest of the methods.
-  // function vertexCore_queueAction() public recordCall("vertexCore_queueAction") {}
   // function vertexCore_executeAction() public recordCall("vertexCore_executeAction") {}
   // function vertexCore_cancelAction() public recordCall("vertexCore_cancelAction") {}
   // function vertexCore_castApproval() public recordCall("vertexCore_castApproval") {}
@@ -209,16 +214,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
     // Now we deploy our handler and inform it of these actions.
     VertexStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
     bytes32[3] memory permissionIds = [pausePermissionId, failPermissionId, receiveEthPermissionId];
-    handler = new VertexCoreHandler(
-      factory,
-      mpCore,
-      executedActionId,
-      canceledActionId,
-      expiredActionId,
-      strategies,
-      permissionIds,
-      address(mockProtocol)
-    );
+    handler = new VertexCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
 
     targetContract(address(handler));
     targetSender(msg.sender);
