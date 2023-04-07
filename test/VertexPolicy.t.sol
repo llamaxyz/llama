@@ -493,6 +493,7 @@ contract TokenURI is VertexPolicyTest {
   function test_ReturnsCorrectTokenURI() public {
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
+    string memory policyholder = LibString.toHexString(uint256(uint160(address(this))));
     string memory name1 = LibString.concat("Vertex Policy ID: ", LibString.toString(uint256(uint160(address(this)))));
     string memory name2 = LibString.concat(" - ", mpPolicy.symbol());
     string memory name = LibString.concat(name1, name2);
@@ -529,7 +530,8 @@ contract TokenURI is VertexPolicyTest {
     parts[10] =
       '" rx="17.536"/><text fill="#0B101A" font-family="\'Courier New\', monospace" font-size="16"><tspan x="45.393" y="399.851">';
 
-    parts[11] = LibString.toString(uint256(uint160(address(this))));
+    parts[11] =
+      string(abi.encodePacked(LibString.slice(policyholder, 0, 6), "...", LibString.slice(policyholder, 38, 42)));
 
     parts[12] = '</tspan></text><path fill="';
 
@@ -548,7 +550,9 @@ contract TokenURI is VertexPolicyTest {
     string memory svg2 =
       string(abi.encodePacked(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16]));
 
-    string memory output = LibString.concat(svg1, svg2);
+    string memory svg = LibString.concat(svg1, svg2);
+
+    assertEq(metadata.image, svg);
   }
 }
 

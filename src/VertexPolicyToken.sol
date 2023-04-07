@@ -24,6 +24,7 @@ contract VertexPolicyToken {
     returns (string memory)
   {
     string[17] memory parts;
+    string memory policyholder = LibString.toHexString(tokenId);
 
     parts[0] =
       '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><g clip-path="url(#a)"><rect width="390" height="500" fill="#0B101A" rx="13.393" /><mask id="b" width="364" height="305" x="4" y="30" maskUnits="userSpaceOnUse" style="mask-type:alpha"><ellipse cx="186.475" cy="182.744" fill="#8000FF" rx="196.994" ry="131.329" transform="rotate(-31.49 186.475 182.744)" /></mask><g mask="url(#b)"><g filter="url(#c)"><ellipse cx="237.625" cy="248.968" fill="#6A45EC" rx="140.048" ry="59.062" transform="rotate(-31.49 237.625 248.968)" /></g><g filter="url(#d)"><ellipse cx="286.654" cy="297.122" fill="';
@@ -51,7 +52,8 @@ contract VertexPolicyToken {
     parts[10] =
       '" rx="17.536"/><text fill="#0B101A" font-family="\'Courier New\', monospace" font-size="16"><tspan x="45.393" y="399.851">';
 
-    parts[11] = LibString.toString(tokenId);
+    parts[11] =
+      string(abi.encodePacked(LibString.slice(policyholder, 0, 6), "...", LibString.slice(policyholder, 38, 42)));
 
     parts[12] = '</tspan></text><path fill="';
 
