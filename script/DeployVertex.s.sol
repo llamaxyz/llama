@@ -154,7 +154,10 @@ contract DeployVertex is Script {
     }
   }
 
-  function readRolePermissions(string memory _jsonInput) internal returns (RolePermissionData[] memory _rolePermissions) {
+  function readRolePermissions(string memory _jsonInput)
+    internal
+    returns (RolePermissionData[] memory _rolePermissions)
+  {
     bytes memory _rolePermissionData = _jsonInput.parseRaw(".initialRolePermissions");
     RawRolePermissionData[] memory _rawRolePermissions = abi.decode(_rolePermissionData, (RawRolePermissionData[]));
 

@@ -1,6 +1,7 @@
 [profile.default]
   bytecode_hash = 'none'
   ffi = true
+  fs_permissions = [{ access = "read", path = "./script/input" }]
   gas_reports = [
     "VertexAccount",
     "VertexCore",
@@ -13,7 +14,6 @@
   optimizer = false
   solc = "0.8.19"
   via_ir = false
-  fs_permissions = [{ access = "read", path = "./script/input"}]
 
 [profile.default.optimizer_details]
   constantOptimizer = true
