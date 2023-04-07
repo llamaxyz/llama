@@ -8,7 +8,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
+import {VertexPolicyToken} from "src/VertexPolicyToken.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -21,7 +21,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     address initialVertexStrategyLogic,
     address initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
-    VertexPolicyMetadata _vertexPolicyMetadata,
+    VertexPolicyToken _vertexPolicyToken,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -34,7 +34,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
       initialVertexStrategyLogic,
       initialVertexAccountLogic,
       _vertexPolicyLogic,
-      _vertexPolicyMetadata,
+      _vertexPolicyToken,
       name,
       initialStrategies,
       initialAccounts,
