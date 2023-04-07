@@ -41,6 +41,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     VERTEX_FACTORY = _vertexFactory;
     VERTEX_CORE = _vertexCore;
     POLICY = VERTEX_CORE.policy();
+
+    // Set initial timestamp to current timestamp.
+    _handler_increaseTimestampBy(block.timestamp);
   }
 
   // =================================================
@@ -93,15 +96,14 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   modifier useCurrentTimestamp() {
     vm.warp(currentTimestamp);
     _;
-  }
-
-  modifier useCurrentTimestampThenIncreaseTimestampBy(uint256 timeToIncrease) {
-    vm.warp(currentTimestamp);
-    _;
-    handler_increaseTimestampBy(timeToIncrease);
+    _handler_increaseTimestampBy(1);
   }
 
   function handler_increaseTimestampBy(uint256 timeToIncrease) public recordCall("handler_increaseTimestampBy") {
+    _handler_increaseTimestampBy(timeToIncrease);
+  }
+
+  function _handler_increaseTimestampBy(uint256 timeToIncrease) internal {
     timeToIncrease = bound(timeToIncrease, 0, 8 weeks);
     uint256 newTimestamp = currentTimestamp + timeToIncrease;
     timestamps.push(newTimestamp);

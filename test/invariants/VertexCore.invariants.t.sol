@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {ActionState} from "src/lib/Enums.sol";
+import {Action} from "src/lib/Structs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -14,11 +15,6 @@ contract VertexCoreHandler is BaseHandler {
   // =========================
   // ======== Storage ========
   // =========================
-
-  // Actions that we'll reference in our invariant tests.
-  uint256 executedActionId;
-  uint256 canceledActionId;
-  uint256 expiredActionId;
 
   // Parameters we'll need to create valid actions.
   address mockProtocol;
@@ -112,8 +108,16 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("-----------------------------------------------");
     console2.log("vertexCore_queueAction_queued           ", calls["vertexCore_queueAction_queued"]);
     console2.log("vertexCore_queueAction_noop             ", calls["vertexCore_queueAction_noop"]);
-    console2.log("policyholdersHadBalanceOf_0             ", calls["policyholdersHadBalanceOf_0"]);
-    console2.log("policyholdersHadBalanceOf_1             ", calls["policyholdersHadBalanceOf_1"]);
+    console2.log("vertexCore_executeAction_executed       ", calls["vertexCore_executeAction_executed"]);
+    console2.log("vertexCore_executeAction_noop           ", calls["vertexCore_executeAction_noop"]);
+    console2.log("vertexCore_cancelAction_canceled        ", calls["vertexCore_cancelAction_canceled"]);
+    console2.log("vertexCore_cancelAction_noop            ", calls["vertexCore_cancelAction_noop"]);
+    console2.log("vertexCore_castApproval_approved        ", calls["vertexCore_castApproval_approved"]);
+    console2.log("vertexCore_castApproval_noop_1          ", calls["vertexCore_castApproval_noop_1"]);
+    console2.log("vertexCore_castApproval_noop_2          ", calls["vertexCore_castApproval_noop_2"]);
+    console2.log("vertexCore_castDisapproval_approved     ", calls["vertexCore_castDisapproval_approved"]);
+    console2.log("vertexCore_castDisapproval_noop_1       ", calls["vertexCore_castDisapproval_noop_1"]);
+    console2.log("vertexCore_castDisapproval_noop_2       ", calls["vertexCore_castDisapproval_noop_2"]);
   }
 
   // =====================================
@@ -123,6 +127,7 @@ contract VertexCoreHandler is BaseHandler {
   function vertexCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
     public
     recordCall("vertexCore_createAction")
+    useCurrentTimestamp
   {
     // We don't want action creation to revert, so we pull from arrays of known good values instead
     // of lettings the fuzzer have full control over input values.
@@ -142,10 +147,9 @@ contract VertexCoreHandler is BaseHandler {
     actionsCounts.push(actionId);
   }
 
-  function vertexCore_queueAction(uint256 index) public recordCall("vertexCore_queueAction") {
-    // We only want to queue actions that are in the `Approved` state. We start with the index given
-    // then incrementally increase until we traverse the entire array of action IDs. If none are
-    // ready to be queued, we exit and this is a no-op.
+  function vertexCore_queueAction(uint256 index) public recordCall("vertexCore_queueAction") useCurrentTimestamp {
+    // We only want to queue actions that are in the `Approved` state. If no actions are ready to be
+    // queued, we exit and this is a no-op.
     uint256 actionId = findActionByState(index, ActionState.Approved);
     if (actionId == type(uint256).max) {
       recordMetric("vertexCore_queueAction_noop");
@@ -156,18 +160,100 @@ contract VertexCoreHandler is BaseHandler {
     recordMetric("vertexCore_queueAction_queued");
   }
 
-  // TODO: Implement the rest of the methods.
-  // function vertexCore_executeAction() public recordCall("vertexCore_executeAction") {}
-  // function vertexCore_cancelAction() public recordCall("vertexCore_cancelAction") {}
-  // function vertexCore_castApproval() public recordCall("vertexCore_castApproval") {}
-  // function vertexCore_castApprovalWithReason() public recordCall("vertexCore_castApprovalWithReason") {}
-  // function vertexCore_castApprovalBySig() public recordCall("vertexCore_castApprovalBySig") {}
-  // function vertexCore_castDisapproval() public recordCall("vertexCore_castDisapproval") {}
-  // function vertexCore_castDisapprovalWithReason() public recordCall("vertexCore_castDisapprovalWithReason") {}
-  // function vertexCore_castDisapprovalBySig() public recordCall("vertexCore_castDisapprovalBySig") {}
-  // function vertexCore_createAndAuthorizeStrategies() public recordCall("vertexCore_createAndAuthorizeStrategies") {}
-  // function vertexCore_unauthorizeStrategies() public recordCall("vertexCore_unauthorizeStrategies") {}
-  // function vertexCore_createAndAuthorizeAccounts() public recordCall("vertexCore_createAndAuthorizeAccounts") {}
+  function vertexCore_executeAction(uint256 index) public recordCall("vertexCore_executeAction") useCurrentTimestamp {
+    // We only want to execute actions that are in the `Queued` state. If no actions are ready to be
+    // executed, we exit and this is a no-op.
+    uint256 actionId = findActionByState(index, ActionState.Queued);
+    if (actionId == type(uint256).max) {
+      recordMetric("vertexCore_executeAction_noop");
+      return;
+    }
+
+    VERTEX_CORE.executeAction(actionId);
+    recordMetric("vertexCore_executeAction_executed");
+  }
+
+  function vertexCore_cancelAction(uint256 index) public recordCall("vertexCore_cancelAction") useCurrentTimestamp {
+    // We can only cancel actions that are not in any of the following state: executed, canceled,
+    // expired, or failed. If all actions are in one of those states, we exit and this is a no-op.
+    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
+    for (uint256 i = 0; i < actionsCounts.length; i++) {
+      actionId = actionsCounts[(actionId + i) % actionsCounts.length];
+      ActionState state = VERTEX_CORE.getActionState(actionId);
+      if (
+        state != ActionState.Executed && state != ActionState.Canceled && state != ActionState.Expired
+          && state != ActionState.Failed
+      ) {
+        // Prank as the action creator so we don't need to worry about disapprovals to cancel the action.
+        Action memory action = VERTEX_CORE.getAction(actionId);
+        vm.prank(action.creator);
+        VERTEX_CORE.cancelAction(actionId);
+        recordMetric("vertexCore_cancelAction_canceled");
+        return;
+      }
+    }
+    recordMetric("vertexCore_cancelAction_noop");
+  }
+
+  function vertexCore_castApproval(uint256 index) public recordCall("vertexCore_castApproval") useCurrentTimestamp {
+    uint256 actionId = findActionByState(index, ActionState.Active);
+    if (actionId == type(uint256).max) {
+      recordMetric("vertexCore_castApproval_noop_1");
+      return;
+    }
+
+    address[3] memory approvers = [makeAddr("approverAdam"), makeAddr("approverAlicia"), makeAddr("approverAndy")];
+    uint256 newIndex = uint256(keccak256(abi.encode(index)));
+    address approver = approvers[_bound(newIndex, 0, approvers.length - 1)];
+
+    if (VERTEX_CORE.approvals(actionId, approver)) {
+      recordMetric("vertexCore_castApproval_noop_2");
+      return;
+    }
+
+    vm.prank(approver);
+    VERTEX_CORE.castApproval(actionId, uint8(Roles.Approver));
+    recordMetric("vertexCore_castApproval_approved");
+  }
+
+  function vertexCore_castDisapproval(uint256 index)
+    public
+    recordCall("vertexCore_castDisapproval")
+    useCurrentTimestamp
+  {
+    uint256 actionId = findActionByState(index, ActionState.Queued);
+    if (actionId == type(uint256).max) {
+      recordMetric("vertexCore_castDisapproval_noop_1");
+      return;
+    }
+
+    address[3] memory disapprovers =
+      [makeAddr("disapproverDave"), makeAddr("disapproverDiane"), makeAddr("disapproverDrake")];
+    uint256 newIndex = uint256(keccak256(abi.encode(index)));
+    address disapprover = disapprovers[_bound(newIndex, 0, disapprovers.length - 1)];
+
+    if (VERTEX_CORE.disapprovals(actionId, disapprover)) {
+      recordMetric("vertexCore_castDisapproval_noop_2");
+      return;
+    }
+
+    vm.prank(disapprover);
+    VERTEX_CORE.castDisapproval(actionId, uint8(Roles.Approver));
+    recordMetric("vertexCore_castDisapproval_disapproved");
+  }
+
+  // These methods are the same underlying functionality as the above methods, so they're omitted
+  // from the handler for simplicity/brevity.
+  //   vertexCore_castApprovalWithReason
+  //   vertexCore_castApprovalBySig
+  //   vertexCore_castDisapprovalWithReason
+  //   vertexCore_castDisapprovalBySig
+
+  // These methods do not affect any of the invariants we're testing, so they're omitted from the
+  // handler for simplicity/brevity.
+  //   vertexCore_createAndAuthorizeStrategies
+  //   vertexCore_unauthorizeStrategies
+  //   vertexCore_createAndAuthorizeAccounts
 }
 
 contract VertexFactoryInvariants is VertexTestSetup {

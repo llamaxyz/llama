@@ -63,7 +63,7 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Methods for Fuzzer =========
   // =====================================
 
-  function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
+  function vertexFactory_deploy() public recordCall("vertexFactory_deploy") useCurrentTimestamp {
     // We don't care about the parameters, we just need it to execute successfully.
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(
@@ -90,6 +90,7 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_authorizeStrategyLogic(address newStrategyLogic)
     public
     recordCall("vertexFactory_authorizeStrategyLogic")
+    useCurrentTimestamp
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
@@ -98,6 +99,7 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_authorizeAccountLogic(address newAccountLogic)
     public
     recordCall("vertexFactory_authorizeAccountLogic")
+    useCurrentTimestamp
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
@@ -106,6 +108,7 @@ contract VertexFactoryHandler is BaseHandler {
   function vertexFactory_setPolicyMetadata(VertexPolicyTokenURI newPolicyTokenURI)
     public
     recordCall("vertexFactory_setPolicyMetadata")
+    useCurrentTimestamp
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.setPolicyMetadata(newPolicyTokenURI);
