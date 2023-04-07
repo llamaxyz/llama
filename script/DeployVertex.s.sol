@@ -27,6 +27,41 @@ contract DeployVertex is Script {
   VertexPolicyTokenURI policyMetadata;
   VertexLens lens;
 
+  struct RawStrategyData {
+    // These attributes need to be in alphabetical order, otherwise the JSON
+    // will not decode properly.
+    uint256 approvalPeriod;
+    uint8 approvalRole;
+    string approvalRoleComment;
+    uint8 disapprovalRole;
+    string disapprovalRoleComment;
+    uint256 expirationPeriod;
+    uint8[] forceApprovalRoles;
+    string forceApprovalRolesComment;
+    uint8[] forceDisapprovalRoles;
+    bool isFixedLengthApprovalPeriod;
+    uint256 minApprovalPct;
+    uint256 minDisapprovalPct;
+    uint256 queuingPeriod;
+  }
+
+  struct RawRoleHolderData {
+    // These attributes need to be in alphabetical order, otherwise the JSON
+    // will not decode properly.
+    uint64 expiration;
+    string expirationComment;
+    uint128 quantity;
+    uint8 role;
+    string roleComment;
+    address user;
+    string userComment;
+  }
+
+  struct RawRolePermissionData {
+    bytes32 permissionId;
+    uint8 role;
+  }
+
   function run() public {
     console2.log("Deploying VertexFactory with following parameters to chain:", block.chainid);
 
@@ -77,69 +112,58 @@ contract DeployVertex is Script {
   function readInput() internal view returns (string memory) {
     string memory inputDir = string.concat(vm.projectRoot(), "/script/input/");
     string memory chainDir = string.concat(vm.toString(block.chainid), "/");
-    return vm.readFile(string.concat(inputDir, chainDir, "deployVertexFactory.json"));
+    return vm.readFile(string.concat(inputDir, chainDir, "deployVertex.json"));
   }
 
   function readStrategies(string memory _jsonInput) internal returns (Strategy[] memory strategies) {
-    string[] memory _strategyObjects = _jsonInput.readStringArray(".initialStrategies");
-    strategies = new Strategy[](_strategyObjects.length);
-    for (uint256 i = 0; i < _strategyObjects.length; i++) {
-      string memory _strategyObject = _strategyObjects[i];
-      strategies[i].approvalPeriod = _strategyObject.readUint(".approvalPeriod");
-      strategies[i].queuingPeriod = _strategyObject.readUint(".queuingPeriod");
-      strategies[i].expirationPeriod = _strategyObject.readUint(".expirationPeriod");
-      strategies[i].minApprovalPct = _strategyObject.readUint(".minApprovalPct");
-      strategies[i].minDisapprovalPct = _strategyObject.readUint(".minDisapprovalPct");
-      strategies[i].isFixedLengthApprovalPeriod = _strategyObject.readBool(".isFixedLengthApprovalPeriod");
-      strategies[i].approvalRole = uint8(_strategyObject.readUint(".approvalRole"));
-      strategies[i].disapprovalRole = uint8(_strategyObject.readUint(".disapprovalRole"));
+    bytes memory _strategyData = _jsonInput.parseRaw(".initialStrategies");
+    RawStrategyData[] memory _rawStrategies = abi.decode(_strategyData, (RawStrategyData[]));
 
-      uint256[] memory _approvalRoles = _strategyObject.readUintArray(".forceApprovalRoles");
-      uint8[] memory _forceApprovalRoles = new uint8[](_approvalRoles.length);
-      for (uint256 j = 0; j < _approvalRoles.length; j++) {
-        _forceApprovalRoles[j] = uint8(_approvalRoles[j]);
-      }
-      strategies[i].forceApprovalRoles = _forceApprovalRoles;
-
-      uint256[] memory _disapprovalRoles = _strategyObject.readUintArray(".forcedisapprovalRoles");
-      uint8[] memory _forceDisapprovalRoles = new uint8[](_disapprovalRoles.length);
-      for (uint256 k = 0; k < _disapprovalRoles.length; k++) {
-        _forceDisapprovalRoles[k] = uint8(_disapprovalRoles[k]);
-      }
-      strategies[i].forceDisapprovalRoles = _forceDisapprovalRoles;
+    strategies = new Strategy[](_rawStrategies.length);
+    for (uint256 i = 0; i < _rawStrategies.length; i++) {
+      RawStrategyData memory _rawStrategy = _rawStrategies[i];
+      strategies[i].approvalPeriod = _rawStrategy.approvalPeriod;
+      strategies[i].queuingPeriod = _rawStrategy.queuingPeriod;
+      strategies[i].expirationPeriod = _rawStrategy.expirationPeriod;
+      strategies[i].minApprovalPct = _rawStrategy.minApprovalPct;
+      strategies[i].minDisapprovalPct = _rawStrategy.minDisapprovalPct;
+      strategies[i].isFixedLengthApprovalPeriod = _rawStrategy.isFixedLengthApprovalPeriod;
+      strategies[i].approvalRole = _rawStrategy.approvalRole;
+      strategies[i].disapprovalRole = _rawStrategy.disapprovalRole;
+      strategies[i].forceApprovalRoles = _rawStrategy.forceApprovalRoles;
+      strategies[i].forceDisapprovalRoles = _rawStrategy.forceDisapprovalRoles;
     }
   }
 
   function readRoleDescriptions(string memory _jsonInput) internal returns (RoleDescription[] memory _descriptions) {
-    bytes32[] memory _descriptionBytes = _jsonInput.readBytes32Array(".initialRoleDescriptions");
-    _descriptions = new RoleDescription[](_descriptionBytes.length);
-    for (uint256 i = 0; i < _descriptionBytes.length; i++) {
-      _descriptions[i] = RoleDescription.wrap(_descriptionBytes[i]);
-    }
+    bytes memory _descriptionBytes = _jsonInput.parseRaw(".initialRoleDescriptions");
+    _descriptions = abi.decode(_descriptionBytes, (RoleDescription[]));
   }
 
   function readRoleHolders(string memory _jsonInput) internal returns (RoleHolderData[] memory _roleHolders) {
-    string[] memory _roleHolderObjects = _jsonInput.readStringArray(".initialRoleHolders");
-    _roleHolders = new RoleHolderData[](_roleHolderObjects.length);
-    for (uint256 i = 0; i < _roleHolderObjects.length; i++) {
-      string memory _roleHolderObject = _roleHolderObjects[i];
-      RoleHolderData memory _roleHolder;
-      _roleHolder.role = uint8(_roleHolderObject.readUint(".role"));
-      _roleHolder.user = _roleHolderObject.readAddress(".user");
-      _roleHolder.quantity = uint128(_roleHolderObject.readUint(".quantity"));
-      _roleHolder.expiration = uint64(_roleHolderObject.readUint(".expiration"));
-      _roleHolders[i] = _roleHolder;
+    bytes memory _roleHolderData = _jsonInput.parseRaw(".initialRoleHolders");
+    RawRoleHolderData[] memory _rawRoleHolders = abi.decode(_roleHolderData, (RawRoleHolderData[]));
+
+    _roleHolders = new RoleHolderData[](_rawRoleHolders.length);
+    for (uint256 i = 0; i < _rawRoleHolders.length; i++) {
+      RawRoleHolderData memory _rawRoleHolder = _rawRoleHolders[i];
+      _roleHolders[i].role = _rawRoleHolder.role;
+      _roleHolders[i].user = _rawRoleHolder.user;
+      _roleHolders[i].quantity = _rawRoleHolder.quantity;
+      _roleHolders[i].expiration = _rawRoleHolder.expiration;
     }
   }
 
   function readRolePermissions(string memory _jsonInput) internal returns (RolePermissionData[] memory _rolePermissions) {
-    string[] memory _rolePermissionObjects = _jsonInput.readStringArray("initialRolePermissions");
-    _rolePermissions = new RolePermissionData[](_rolePermissionObjects.length);
-    for (uint256 i = 0; i < _rolePermissionObjects.length; i++) {
-      string memory _rolePermissionObject = _rolePermissionObjects[i];
-      _rolePermissions[i].role = uint8(_rolePermissionObject.readUint(".role"));
-      _rolePermissions[i].permissionId = _rolePermissionObject.readBytes32(".permissionId");
-      _rolePermissions[i].hasPermission = _rolePermissionObject.readBool(".hasPermission");
+    bytes memory _rolePermissionData = _jsonInput.parseRaw(".initialRolePermissions");
+    RawRolePermissionData[] memory _rawRolePermissions = abi.decode(_rolePermissionData, (RawRolePermissionData[]));
+
+    _rolePermissions = new RolePermissionData[](_rawRolePermissions.length);
+    for (uint256 i = 0; i < _rawRolePermissions.length; i++) {
+      RawRolePermissionData memory _rawRolePermission = _rawRolePermissions[i];
+      _rolePermissions[i].role = _rawRolePermission.role;
+      _rolePermissions[i].permissionId = _rawRolePermission.permissionId;
+      _rolePermissions[i].hasPermission = true;
     }
   }
 }

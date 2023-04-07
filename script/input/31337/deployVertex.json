@@ -3,32 +3,33 @@
     "initialStrategies": [
       {
         "approvalPeriod": 172800,
-        "queuingPeriod": 345600,
+        "approvalRole": 3,
+        "approvalRoleComment": "3 == the Approver role",
+        "disapprovalRole": 4,
+        "disapprovalRoleComment": "4 == the Disapprover role",
         "expirationPeriod": 691200,
+        "forceApprovalRoles": [],
+        "forceApprovalRolesComment": "There aren't any for this strategy",
+        "forceDisapprovalRoles": [],
         "isFixedLengthApprovalPeriod": true,
         "minApprovalPct": 4000,
         "minDisapprovalPct": 2000,
-        "approvalRoleComment": "3 == the Approver role",
-        "approvalRole": 3,
-        "disapprovalRoleComment": "4 == the Disapprover role",
-        "disapprovalRole": 4,
-        "forceApprovalRoles": [],
-        "forceDisapprovalRoles": []
+        "queuingPeriod": 345600
       },
       {
         "approvalPeriod": 172800,
-        "queuingPeriod": 0,
+        "approvalRole": 3,
+        "approvalRoleComment": "3 == the Approver role",
+        "disapprovalRole": 4,
+        "disapprovalRoleComment": "4 == the Disapprover role",
         "expirationPeriod": 86400,
+        "forceApprovalRoles": [2],
+        "forceApprovalRolesComment": "2 == the ActionCreator role",
+        "forceDisapprovalRoles": [2],
         "isFixedLengthApprovalPeriod": false,
         "minApprovalPct": 8000,
         "minDisapprovalPct": 10001,
-        "approvalRoleComment": "3 == the Approver role",
-        "approvalRole": 3,
-        "disapprovalRoleComment": "4 == the Disapprover role",
-        "disapprovalRole": 4,
-        "forceApprovalRolesComment": "2 == the ActionCreator role",
-        "forceApprovalRoles": [2],
-        "forceDisapprovalRoles": [2]
+        "queuingPeriod": 0
       }
     ],
     "initialAccountNames": ["Llama Treasury", "Llama Grants"],
