@@ -28,8 +28,7 @@ contract DeployVertex is Script {
   VertexLens lens;
 
   struct RawStrategyData {
-    // These attributes need to be in alphabetical order, otherwise the JSON
-    // will not decode properly.
+    // Attributes need to be in alphabetical order so JSON decodes properly.
     uint256 approvalPeriod;
     uint8 approvalRole;
     string approvalRoleComment;
@@ -46,8 +45,7 @@ contract DeployVertex is Script {
   }
 
   struct RawRoleHolderData {
-    // These attributes need to be in alphabetical order, otherwise the JSON
-    // will not decode properly.
+    // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 expiration;
     string expirationComment;
     uint128 quantity;
@@ -58,6 +56,7 @@ contract DeployVertex is Script {
   }
 
   struct RawRolePermissionData {
+    // Attributes need to be in alphabetical order so JSON decodes properly.
     bytes32 permissionId;
     uint8 role;
   }
@@ -65,33 +64,33 @@ contract DeployVertex is Script {
   function run() public {
     console2.log("Deploying VertexFactory with following parameters to chain:", block.chainid);
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     coreLogic = new VertexCore();
     console2.log("  VertexCoreLogic:", address(coreLogic));
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     strategyLogic = new VertexStrategy();
     console2.log("  VertexStrategyLogic:", address(strategyLogic));
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     accountLogic = new VertexAccount();
     console2.log("  VertexAccountLogic:", address(accountLogic));
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     policyLogic = new VertexPolicy();
     console2.log("  VertexPolicyLogic:", address(policyLogic));
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     policyMetadata = new VertexPolicyTokenURI();
     console2.log("  VertexPolicyMetadata:", address(policyMetadata));
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     lens = new VertexLens();
     console2.log("  VertexLens:", address(lens));
 
     string memory jsonInput = readInput();
 
-    // TODO vm.broadcast();
+    vm.broadcast();
     factory = new VertexFactory(
       coreLogic,
       strategyLogic,
