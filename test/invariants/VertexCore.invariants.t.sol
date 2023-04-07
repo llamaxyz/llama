@@ -79,6 +79,17 @@ contract VertexCoreHandler is BaseHandler {
     revert("unhandled index");
   }
 
+  // Given an index and target action state, find the first action in that state. If one does not
+  // exist, a value of `type(uint256).max` is returned.
+  function findActionByState(uint256 index, ActionState targetState) internal view returns (uint256) {
+    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
+    for (uint256 i = 0; i < actionsCounts.length; i++) {
+      actionId = actionsCounts[(actionId + i) % actionsCounts.length];
+      if (VERTEX_CORE.getActionState(actionId) == targetState) return actionId;
+    }
+    return type(uint256).max;
+  }
+
   function getActionsCounts() public view returns (uint256[] memory) {
     return actionsCounts;
   }
@@ -135,23 +146,14 @@ contract VertexCoreHandler is BaseHandler {
     // We only want to queue actions that are in the `Approved` state. We start with the index given
     // then incrementally increase until we traverse the entire array of action IDs. If none are
     // ready to be queued, we exit and this is a no-op.
-    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
-    uint256 numIterations;
-    for (uint256 i = 0; i < actionsCounts.length; i++) {
-      if (VERTEX_CORE.getActionState(getAction(actionId)) == ActionState.Approved) {
-        VERTEX_CORE.queueAction(getAction(index));
-        recordMetric("vertexCore_queueAction_queued");
-        return;
-      }
-
-      if (numIterations == actionsCounts.length) {
-        recordMetric("vertexCore_queueAction_noop");
-        return;
-      }
-
-      numIterations++;
-      actionId = actionsCounts[(actionId + 1) % actionsCounts.length];
+    uint256 actionId = findActionByState(index, ActionState.Approved);
+    if (actionId == type(uint256).max) {
+      recordMetric("vertexCore_queueAction_noop");
+      return;
     }
+
+    VERTEX_CORE.queueAction(index);
+    recordMetric("vertexCore_queueAction_queued");
   }
 
   // TODO: Implement the rest of the methods.
