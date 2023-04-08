@@ -193,8 +193,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
+    if (balanceOf(user) == 0) revert InvalidInput();
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
-      if (balanceOf(user) == 0) revert InvalidInput();
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
