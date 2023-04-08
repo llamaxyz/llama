@@ -182,8 +182,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes all roles from the `user` and burns their policy.
   function revokePolicy(address user) external onlyVertex {
+    if (balanceOf(user) == 0) revert InvalidInput();
     for (uint256 i = 0; i <= numRoles; i = _uncheckedIncrement(i)) {
-      if (balanceOf(user) == 0) revert InvalidInput();
       _setRoleHolder(uint8(i), user, 0, 0);
     }
     _burn(_tokenId(user));
