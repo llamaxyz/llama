@@ -97,7 +97,7 @@ contract Initialize is VertexPolicyTest {
     assertEq(localPolicy.numRoles(), numRoles);
   }
 
-  function test_RevertsIf_InitializeIsCalledTwice() public {
+  function test_RevertIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
     mpPolicy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
@@ -326,7 +326,7 @@ contract RevokePolicy is VertexPolicyTest {
     assertEq(mpPolicy.balanceOf(user), 0);
   }
 
-  function test_RevertsIf_PolicyDoesNotExist(address user) public {
+  function test_RevertIf_PolicyDoesNotExist(address user) public {
     vm.assume(user != address(0));
     vm.assume(mpPolicy.balanceOf(user) == 0);
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
@@ -774,7 +774,7 @@ contract Aggregate is VertexPolicyTest {
     assertEq(mpPolicy.hasRole(newRoleHolder, uint8(Roles.TestRole1)), true);
   }
 
-  function test_RevertsIf_CalldataIsIncorrect() public {
+  function test_RevertIf_CalldataIsIncorrect() public {
     bytes memory call1 = abi.encodeCall(
       VertexPolicy.setRoleHolder,
       ( /* uninitialized role */ 8, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
