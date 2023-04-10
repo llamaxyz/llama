@@ -288,6 +288,8 @@ contract RevokeExpiredRole is VertexPolicyTest {
     vm.expectEmit();
     emit RoleAssigned(user, uint8(Roles.TestRole1), 0, 0);
 
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
 
     assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false);
