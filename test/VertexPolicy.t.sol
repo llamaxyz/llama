@@ -339,7 +339,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
   function test_Revokes255RolesWithEnumeration() public {
     vm.startPrank(address(mpCore));
 
-    for (uint8 i = 7; i < 255; i++) {
+    for (uint8 i = uint8(Roles.Last); i < 255; i++) {
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
@@ -350,7 +350,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
   function test_Revokes255RolesWithoutEnumeration() public {
     vm.startPrank(address(mpCore));
 
-    for (uint8 i = 7; i < 255; i++) {
+    for (uint8 i = uint8(Roles.Last); i < 255; i++) {
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }

@@ -27,7 +27,9 @@ enum Roles {
   ForceDisapprover,
   TestRole1,
   TestRole2,
-  MadeUpRole
+  MadeUpRole,
+  Last // added this so we can access the "length" of the enum; this is not a valid role.
+    // If you need to add a role, add it above "Last".
 }
 
 contract VertexTestSetup is Test {
