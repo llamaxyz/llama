@@ -203,6 +203,7 @@ contract InitializeRole is VertexPolicyTest {
     vm.expectEmit();
     emit RoleInitialized(NUM_INIT_ROLES + 1, getRoleDescription("TestRole"));
     vm.prank(address(mpCore));
+    
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
@@ -236,12 +237,12 @@ contract SetRoleHolder is VertexPolicyTest {
   }
 
   function test_RevertIf_InvalidQuantity() public {
+    vm.startPrank(address(mpCore));
+
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, 0, 1);
 
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, 0);
   }
 
@@ -308,7 +309,8 @@ contract RevokePolicy is VertexPolicyTest {
     vm.assume(user != address(0));
     vm.assume(mpPolicy.balanceOf(user) == 0);
 
-    vm.prank(address(mpCore));
+    vm.startPrank(address(mpCore));
+
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.balanceOf(user), 1);
@@ -316,7 +318,6 @@ contract RevokePolicy is VertexPolicyTest {
     vm.expectEmit();
     emit Transfer(user, address(0), uint256(uint160(user)));
 
-    vm.prank(address(mpCore));
     mpPolicy.revokePolicy(user);
 
     assertEq(mpPolicy.balanceOf(user), 0);
@@ -333,22 +334,21 @@ contract RevokePolicy is VertexPolicyTest {
 
 contract RevokePolicyRolesOverload is VertexPolicyTest {
   function test_Revokes255RolesWithEnumeration() public {
-    for (uint8 i = 7; i < 255; i++) {
-      vm.prank(address(mpCore));
+    vm.startPrank(address(mpCore));
+
+    for (uint8 i = 7; i < 255; i++) {v
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      vm.prank(address(mpCore));
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
-    vm.prank(address(mpCore));
     mpPolicy.revokePolicy(arbitraryAddress);
   }
 
   function test_Revokes255RolesWithoutEnumeration() public {
+    vm.startPrank(address(mpCore));
+
     for (uint8 i = 7; i < 255; i++) {
-      vm.prank(address(mpCore));
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      vm.prank(address(mpCore));
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
@@ -357,7 +357,6 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
     }
 
-    vm.prank(address(mpCore));
     mpPolicy.revokePolicy(arbitraryAddress, roles);
   }
 }
@@ -603,29 +602,25 @@ contract GetPastSupply is VertexPolicyTest {
 
 contract RoleBalanceCheckpoints is VertexPolicyTest {
   function test_ReturnsBalanceCheckpoint() public {
+    vm.startPrank(address(mpCore));
+
     vm.warp(100);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
 
     vm.warp(110);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
 
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 200);
 
     vm.warp(130);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 300);
 
     vm.warp(140);
-    vm.prank(address(mpCore));
     mpPolicy.revokePolicy(newRoleHolder);
 
     vm.warp(160);
-    vm.prank(address(mpCore));
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
 
     vm.warp(161);
@@ -720,10 +715,10 @@ contract HasRoleUint256Overload is VertexPolicyTest {
 
 contract HasPermissionId is VertexPolicyTest {
   function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
+    vm.startPrank(address(mpCore));
+
     vm.warp(100);
-    vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, true);
-    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), true);
