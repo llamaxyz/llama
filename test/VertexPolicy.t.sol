@@ -700,15 +700,6 @@ contract HasRole is VertexPolicyTest {
   function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
   }
-
-  function test_ReturnsFalseIfHolderHasExpiredRole() public {
-    vm.prank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 100);
-
-    vm.warp(101);
-
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
-  }
 }
 
 contract HasRoleUint256Overload is VertexPolicyTest {
@@ -724,16 +715,6 @@ contract HasRoleUint256Overload is VertexPolicyTest {
   function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
     vm.warp(100);
     assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), block.timestamp - 1), false);
-  }
-
-  function test_ReturnsFalseIfHolderHasExpiredRole() public {
-    vm.warp(100);
-    vm.prank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    vm.warp(101);
-
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 99), false);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 100), true);
   }
 }
 
@@ -897,5 +878,25 @@ contract TokenURI is VertexPolicyTest {
     string memory svg = LibString.concat(svg1, svg2);
 
     assertEq(metadata.image, svg);
+  }
+}
+
+contract IsRoleExpired is VertexPolicyTest {
+  function test_ReturnsTrueForExpiredRole(uint64 expiration) public returns (bool) {
+    expiration = uint64(bound(expiration, 1, type(uint64).max - 1));
+
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
+
+    vm.warp(expiration + 1);
+
+    assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
+  }
+
+  function test_ReturnsFalseForExpiredRole(uint64 expiration) public returns (bool) {
+    expiration = uint64(bound(expiration, block.timestamp, type(uint64).max));
+
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
+
+    assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
   }
 }

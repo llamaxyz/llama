@@ -247,7 +247,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns true if the `user` has the `role`, false otherwise.
   function hasRole(address user, uint8 role) external view returns (bool) {
     (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    return exists && quantity > 0 && expiration > block.timestamp;
+    return exists && quantity > 0;
   }
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
@@ -261,6 +261,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   function hasPermissionId(address user, uint8 role, bytes32 permissionId) external view returns (bool) {
     uint128 quantity = roleBalanceCkpts[_tokenId(user)][role].latest();
     return quantity > 0 && canCreateAction[role][permissionId];
+  }
+
+  function isRoleExpired(address user, uint8 role) external view returns (bool) {
+    (, uint64 expiration,,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return expiration < block.timestamp;
   }
 
   /// @notice Returns the total number of policies in existence.
