@@ -737,7 +737,7 @@ contract HasPermissionId is VertexPolicyTest {
 contract TotalSupply is VertexPolicyTest {
   function test_getsTotalSupply(uint256 numberOfPolicies) public {
     uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
-    vm.assume(numberOfPolicies < 10_000);
+    numberOfPolicies = bound(numberOfPolicies, 1, 10_000);
     for (uint256 i = 0; i < numberOfPolicies; i++) {
       vm.prank(address(mpCore));
       mpPolicy.setRoleHolder(
