@@ -336,24 +336,8 @@ contract RevokePolicy is VertexPolicyTest {
 }
 
 contract RevokePolicyRolesOverload is VertexPolicyTest {
-  function test_Revokes255RolesWithEnumeration() public {
-    vm.startPrank(address(mpCore));
-
-    for (uint8 i = uint8(Roles.Last) - 1; i < 255; i++) {
-      mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
-      mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    }
-
-    mpPolicy.revokePolicy(arbitraryAddress);
-
-    assertEq(mpPolicy.balanceOf(arbitraryAddress), 0);
-    assertEq(mpPolicy.hasRole(arbitraryAddress, uint8(Roles.Last)), false);
-  }
-
-  function test_Revokes255RolesWithoutEnumeration() public {
-    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+  function setUpLocalPolicy() internal returns (VertexPolicy localPolicy) {
+    localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(uint256(1))))));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
@@ -362,7 +346,32 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
 
     vm.startPrank(address(this));
+  }
 
+  function test_Revokes255RolesWithEnumeration() public {
+    VertexPolicy localPolicy = setUpLocalPolicy();
+
+    for (uint8 i = 2; i < 255; i++) {
+      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    for (uint8 i; i < 254; i++) {
+      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
+    }
+
+    localPolicy.revokePolicy(arbitraryAddress);
+
+    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
+    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(Roles.Last)), false);
+  }
+
+  function test_Revokes255RolesWithoutEnumeration() public {
+    VertexPolicy localPolicy = setUpLocalPolicy();
     for (uint8 i = 2; i < 255; i++) {
       localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       vm.expectEmit();
@@ -375,7 +384,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
       uint256 roleSupply = localPolicy.getSupply(i + 1);
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i + 1, DEFAULT_ROLE_EXPIRATION, roleSupply - 1);
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
     }
 
     vm.expectEmit();
