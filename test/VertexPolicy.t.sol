@@ -65,6 +65,8 @@ contract NonTransferableToken is VertexPolicyTest {
 }
 
 contract Initialize is VertexPolicyTest {
+  uint8 constant TEST_ROLE = 1;
+
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
@@ -106,9 +108,9 @@ contract Initialize is VertexPolicyTest {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(Roles.AllHolders), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
 
     vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
@@ -119,7 +121,6 @@ contract Initialize is VertexPolicyTest {
   function test_SetsRoleHolders() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
-    uint8 TEST_ROLE = 1;
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
@@ -135,23 +136,23 @@ contract Initialize is VertexPolicyTest {
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
 
     assertEq(localPolicy.getSupply(TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
+    assertEq(localPolicy.numRoles(), 1);
   }
 
   function test_SetsRolePermissions() public {
-    uint8 role = uint8(Roles.AllHolders);
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
-    assertFalse(localPolicy.canCreateAction(role, pausePermissionId));
+    assertFalse(localPolicy.canCreateAction(TEST_ROLE, pausePermissionId));
     localPolicy.setVertex(makeAddr("the factory"));
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
-    roleDescriptions[0] = RoleDescription.wrap("All Holders");
+    roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(role, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
-    assertTrue(localPolicy.canCreateAction(uint8(Roles.TestRole1), pausePermissionId));
+    assertTrue(localPolicy.canCreateAction(TEST_ROLE, pausePermissionId));
   }
 }
 
