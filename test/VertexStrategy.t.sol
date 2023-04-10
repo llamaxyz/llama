@@ -575,6 +575,7 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.assume(_nonPolicyHolder != address(0));
     vm.assume(_nonPolicyHolder != address(0xdeadbeef)); // Given a policy below.
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
+    vm.assume(_role != 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
@@ -675,6 +676,7 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.assume(_nonPolicyHolder != address(0));
     vm.assume(_nonPolicyHolder != address(0xdeadbeef)); // Given a policy below.
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
+    vm.assume(_role != 0);
 
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
