@@ -9,10 +9,10 @@
     "VertexPolicy",
     "VertexStrategy",
   ]
+  invariant = { fail_on_revert = true }
   optimizer = false
   solc = "0.8.19"
   via_ir = false
-  invariant = { fail_on_revert = true }
 
 [profile.default.optimizer_details]
   constantOptimizer = true
