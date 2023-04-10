@@ -65,7 +65,7 @@ contract NonTransferableToken is VertexPolicyTest {
 }
 
 contract Initialize is VertexPolicyTest {
-  uint8 constant TEST_ROLE = 1;
+  uint8 constant INIT_TEST_ROLE = 1;
 
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
@@ -108,9 +108,9 @@ contract Initialize is VertexPolicyTest {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
     vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
@@ -124,35 +124,35 @@ contract Initialize is VertexPolicyTest {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
-    uint256 prevSupply = localPolicy.getSupply(TEST_ROLE);
+    uint256 prevSupply = localPolicy.getSupply(INIT_TEST_ROLE);
 
     vm.expectEmit();
-    emit RoleAssigned(address(this), TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
 
-    assertEq(localPolicy.getSupply(TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
+    assertEq(localPolicy.getSupply(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
     assertEq(localPolicy.numRoles(), 1);
   }
 
   function test_SetsRolePermissions() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
-    assertFalse(localPolicy.canCreateAction(TEST_ROLE, pausePermissionId));
+    assertFalse(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
     localPolicy.setVertex(makeAddr("the factory"));
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
-    assertTrue(localPolicy.canCreateAction(TEST_ROLE, pausePermissionId));
+    assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
 }
 
@@ -306,7 +306,7 @@ contract RevokePolicy is VertexPolicyTest {
     vm.assume(mpPolicy.balanceOf(user) == 0);
 
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.balanceOf(user), 1);
 
