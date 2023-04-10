@@ -176,10 +176,10 @@ contract VertexFactoryInvariants is VertexCoreTest {
   function invariant_CallSummary() public view {
     // address[] memory policyholders = handler.getActors();
     // for (uint256 i = 0; i < policyholders.length; i++) {
-      // uint256 balance = mpPolicy.balanceOf(policyholders[i]);
-      // if (balance == 0) handler.recordMetric("policyholdersHadBalanceOf_0");
-      // else if (balance == 1) handler.recordMetric("policyholdersHadBalanceOf_1");
-      // else handler.recordMetric("policyholdersHadBalanceOf_2+");
+    // uint256 balance = mpPolicy.balanceOf(policyholders[i]);
+    // if (balance == 0) handler.recordMetric("policyholdersHadBalanceOf_0");
+    // else if (balance == 1) handler.recordMetric("policyholdersHadBalanceOf_1");
+    // else handler.recordMetric("policyholdersHadBalanceOf_2+");
     // }
 
     handler.callSummary();
