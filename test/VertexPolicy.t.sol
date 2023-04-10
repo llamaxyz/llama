@@ -341,26 +341,50 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
 
     for (uint8 i = uint8(Roles.Last) - 1; i < 255; i++) {
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
     mpPolicy.revokePolicy(arbitraryAddress);
+
+    assertEq(mpPolicy.balanceOf(arbitraryAddress), 0);
+    assertEq(mpPolicy.hasRole(arbitraryAddress, uint8(Roles.Last)), false);
   }
 
   function test_Revokes255RolesWithoutEnumeration() public {
-    vm.startPrank(address(mpCore));
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(uint256(1))))));
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(uint8(1), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    localPolicy.setVertex(address(this));
+    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
 
-    for (uint8 i = uint8(Roles.Last) - 1; i < 255; i++) {
-      mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.startPrank(address(this));
+
+    for (uint8 i = 2; i < 255; i++) {
+      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
     uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
-    for (uint8 i = 0; i < 254; i++) {
+    for (uint8 i; i < 254; i++) {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
+      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i + 1, DEFAULT_ROLE_EXPIRATION, roleSupply - 1);
     }
 
-    mpPolicy.revokePolicy(arbitraryAddress, roles);
+    vm.expectEmit();
+    emit Transfer(arbitraryAddress, address(0), uint256(uint160(arbitraryAddress)));
+
+    localPolicy.revokePolicy(arbitraryAddress, roles);
+
+    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
+    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(0)), false);
   }
 }
 
