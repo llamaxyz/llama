@@ -246,7 +246,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role`, false otherwise.
   function hasRole(address user, uint8 role) external view returns (bool) {
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    (bool exists,,, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
     return exists && quantity > 0;
   }
 
