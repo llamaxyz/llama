@@ -745,8 +745,6 @@ contract TotalSupply is VertexPolicyTest {
       );
     }
 
-    // vm.warp(block.timestamp + 1);
-
     assertEq(mpPolicy.totalSupply(), initPolicySupply + numberOfPolicies);
   }
 }
