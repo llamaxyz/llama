@@ -297,7 +297,7 @@ contract RevokeExpiredRole is VertexPolicyTest {
 
   function test_RevertIf_NotExpiredYet(address user, uint64 expiration) public {
     vm.assume(user != address(0));
-    vm.assume(expiration > block.timestamp);
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
