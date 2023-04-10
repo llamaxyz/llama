@@ -784,7 +784,7 @@ contract Aggregate is VertexPolicyTest {
     bytes[] memory calls = new bytes[](1);
     calls[0] = call1;
 
-    bytes memory failedResponse = hex"e5b1d7a00000000000000000000000000000000000000000000000000000000000000008";
+    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, 8)
 
     vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
     vm.prank(address(mpCore));
