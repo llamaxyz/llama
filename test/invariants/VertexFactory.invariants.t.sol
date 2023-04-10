@@ -159,7 +159,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_VertexCountMonotonicallyIncreases() public view {
+  function invariant_AllFactoryInvariants() public view {
     assertInvariant_VertexCountMonotonicallyIncreases();
   }
 

@@ -78,10 +78,14 @@ contract VertexCoreHandler is BaseHandler {
   // Given an index and target action state, find the first action in that state. If one does not
   // exist, a value of `type(uint256).max` is returned.
   function findActionByState(uint256 index, ActionState targetState) internal view returns (uint256) {
-    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
-    for (uint256 i = 0; i < actionsCounts.length; i++) {
-      actionId = actionsCounts[(actionId + i) % actionsCounts.length];
+    uint256 actionCount = VERTEX_CORE.actionsCount();
+    if (actionCount == 0) return type(uint256).max;
+
+    uint256 actionId = _bound(index, 0, actionCount - 1);
+    for (uint256 i = 0; i < actionCount; i++) {
+      actionId = actionId % actionCount;
       if (VERTEX_CORE.getActionState(actionId) == targetState) return actionId;
+      actionId++;
     }
     return type(uint256).max;
   }
@@ -156,7 +160,7 @@ contract VertexCoreHandler is BaseHandler {
       return;
     }
 
-    VERTEX_CORE.queueAction(index);
+    VERTEX_CORE.queueAction(actionId);
     recordMetric("vertexCore_queueAction_queued");
   }
 
@@ -365,7 +369,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_AllInvariants() public view {
+  function invariant_AllCoreInvariants() public view {
     assertInvariant_ActionsCountMonotonicallyIncreases();
     assertInvariant_ExecutedActionsAreFinalized();
     assertInvariant_CanceledActionsAreFinalized();
