@@ -738,7 +738,7 @@ contract HasRoleUint256Overload is VertexPolicyTest {
 }
 
 contract HasPermissionId is VertexPolicyTest {
-  function test_ReturnsTrueIfHolderHasPermission(bytes32 permisisonId) public {
+  function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
     vm.warp(100);
     vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permisisonId, true);
