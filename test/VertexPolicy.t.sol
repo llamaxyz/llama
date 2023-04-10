@@ -349,9 +349,9 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
-    uint8[] memory roles = new uint8[](255);
-    for (uint8 i; i < 255; i++) {
-      roles[i] = i;
+    uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
+    for (uint8 i = 0; i < 254; i++) {
+      roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
     }
 
     vm.prank(address(mpCore));
