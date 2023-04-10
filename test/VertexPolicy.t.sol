@@ -722,11 +722,11 @@ contract HasPermissionId is VertexPolicyTest {
   function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
     vm.warp(100);
     vm.prank(address(mpCore));
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permisisonId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, true);
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permisisonId), true);
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), true);
   }
 
   function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
