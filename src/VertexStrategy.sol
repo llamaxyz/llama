@@ -44,21 +44,21 @@ contract VertexStrategy is Initializable {
   /// @notice Policy NFT for this Vertex system.
   VertexPolicy public policy;
 
-  /// @notice Minimum time between queueing and execution of action.
+  /// @notice Minimum time, in seconds, between queueing and execution of action.
   uint256 public queuingPeriod;
 
-  /// @notice Time after executionTime that action can be executed before permanently expiring.
+  /// @notice Time, in seconds,  after executionTime that action can be executed before permanently expiring.
   uint256 public expirationPeriod;
 
-  /// @notice Length of approval period in blocks.
+  /// @notice Length of approval period in seconds.
   uint256 public approvalPeriod;
 
-  /// @notice Minimum percentage of total approval weight / total approval supply at creationTime of the action for it
-  /// to be queued. In bps, where 100_00 == 100%.
+  /// @notice Minimum percentage of `totalApprovalWeight / totalApprovalSupplyAtCreationTime` required for the
+  /// action to be queued. In bps, where 100_00 == 100%.
   uint256 public minApprovalPct;
 
-  /// @notice Minimum percentage of total disapproval weight / total disapproval supply at creationTime of the action
-  /// for it to be canceled. In bps, 100_00 == 100%.
+  /// @notice Minimum percentage of `totalDisapprovalWeight / totalDisapprovalSupplyAtCreationTime` required of the
+  /// action for it to be canceled. In bps, 100_00 == 100%.
   uint256 public minDisapprovalPct;
 
   /// @notice The role that can approve an action.

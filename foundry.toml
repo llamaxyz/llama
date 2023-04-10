@@ -9,6 +9,7 @@
     "VertexPolicy",
     "VertexStrategy",
   ]
+  invariant = { fail_on_revert = true }
   optimizer = false
   solc = "0.8.19"
   via_ir = false
@@ -19,7 +20,7 @@
 
 [profile.ci]
   fuzz = { runs = 5000 }
-  invariant = { runs = 1000, depth = 100, fail_on_revert = true }
+  invariant = { runs = 1000, depth = 100 }
   optimizer = true
   via_ir = true
 
