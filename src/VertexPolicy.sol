@@ -324,6 +324,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       // Ensure role is initialized.
       if (role > numRoles) revert RoleNotInitialized(role);
 
+      if (role == ALL_HOLDERS_ROLE) revert InvalidInput(); // Cannot set the ALL_HOLDERS_ROLE because this is handled in
+        // the _mint / _burn methods and can create duplicate entries if set here.
+
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when
       // the quantity is zero. In other words, the relationships that are required between the role
       // quantity and expiration fields are:

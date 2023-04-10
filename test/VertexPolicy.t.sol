@@ -119,17 +119,22 @@ contract Initialize is VertexPolicyTest {
   function test_SetsRoleHolders() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
+    uint8 TEST_ROLE = 1;
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
-    roleDescriptions[0] = RoleDescription.wrap("All Holders");
+    roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(Roles.AllHolders), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(TEST_ROLE, pausePermissionId, true);
+
+    uint256 prevSupply = localPolicy.getSupply(TEST_ROLE);
 
     vm.expectEmit();
-    emit RoleAssigned(address(this), uint8(Roles.AllHolders), DEFAULT_ROLE_EXPIRATION, 2);
+    emit RoleAssigned(address(this), TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
+
+    assertEq(localPolicy.getSupply(TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
   }
 
   function test_SetsRolePermissions() public {
