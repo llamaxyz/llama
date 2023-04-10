@@ -229,7 +229,8 @@ contract SetRoleHolder is VertexPolicyTest {
   }
 
   function test_RevertIf_InvalidExpiration(uint64 expiration, uint256 timestamp) public {
-    vm.assume(expiration < timestamp);
+    timestamp = bound(timestamp, block.timestamp, type(uint64).max);
+    expiration = bound(expiration, 0, timestamp - 1);
     vm.warp(timestamp);
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
     vm.prank(address(mpCore));
