@@ -222,7 +222,7 @@ contract SetRoleHolder is VertexPolicyTest {
   }
 
   function test_RevertIf_NonExistentRole(uint8 role) public {
-    role = bound(role, mpPolicy.numRoles() + 1, type(uint8).max);
+    role = uint8(bound(role, mpPolicy.numRoles() + 1, type(uint8).max));
     vm.startPrank(address(mpCore));
     vm.expectRevert(abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, role));
     mpPolicy.setRoleHolder(role, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -230,7 +230,7 @@ contract SetRoleHolder is VertexPolicyTest {
 
   function test_RevertIf_InvalidExpiration(uint64 expiration, uint256 timestamp) public {
     timestamp = bound(timestamp, block.timestamp, type(uint64).max);
-    expiration = bound(expiration, 0, timestamp - 1);
+    expiration = uint64(bound(expiration, 0, timestamp - 1));
     vm.warp(timestamp);
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
     vm.prank(address(mpCore));
