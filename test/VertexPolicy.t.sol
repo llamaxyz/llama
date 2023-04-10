@@ -784,7 +784,7 @@ contract Aggregate is VertexPolicyTest {
     bytes[] memory calls = new bytes[](1);
     calls[0] = call1;
 
-    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, 8)
+    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, 8);
 
     vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
     vm.prank(address(mpCore));
@@ -881,8 +881,9 @@ contract TokenURI is VertexPolicyTest {
 
 contract IsRoleExpired is VertexPolicyTest {
   function test_ReturnsTrueForExpiredRole(uint64 expiration) public returns (bool) {
-    expiration = uint64(bound(expiration, 1, type(uint64).max - 1));
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
+    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
     vm.warp(expiration + 1);
@@ -890,9 +891,10 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
   }
 
-  function test_ReturnsFalseForExpiredRole(uint64 expiration) public returns (bool) {
-    expiration = uint64(bound(expiration, block.timestamp, type(uint64).max));
+  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public returns (bool) {
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
+    vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
