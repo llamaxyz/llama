@@ -27,7 +27,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   uint256[] internal timestamps;
   uint256 currentTimestamp;
 
-  bytes32[] internal permissionIds; // All Permission IDs seen.
+  bytes32[] internal seenPermissionIds; // All Permission IDs seen.
   mapping(bytes8 => bool) internal havePermissionId; // Whether a Permission ID has been seen.
 
   // Metrics.
@@ -41,6 +41,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     VERTEX_FACTORY = _vertexFactory;
     VERTEX_CORE = _vertexCore;
     POLICY = VERTEX_CORE.policy();
+
+    // Set initial timestamp to current timestamp.
+    _handler_increaseTimestampBy(block.timestamp);
   }
 
   // =================================================
@@ -55,7 +58,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   }
 
   // Used to record code paths hit within invariant tests, but for simplicity it uses the same mapping.
-  function recordMetric(string memory name) public {
+  function recordMetric(string memory name) internal {
     calls[name]++;
   }
 
@@ -93,15 +96,14 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   modifier useCurrentTimestamp() {
     vm.warp(currentTimestamp);
     _;
-  }
-
-  modifier useCurrentTimestampThenIncreaseTimestampBy(uint256 timeToIncrease) {
-    vm.warp(currentTimestamp);
-    _;
-    handler_increaseTimestampBy(timeToIncrease);
+    _handler_increaseTimestampBy(1);
   }
 
   function handler_increaseTimestampBy(uint256 timeToIncrease) public recordCall("handler_increaseTimestampBy") {
+    _handler_increaseTimestampBy(timeToIncrease);
+  }
+
+  function _handler_increaseTimestampBy(uint256 timeToIncrease) internal {
     timeToIncrease = bound(timeToIncrease, 0, 8 weeks);
     uint256 newTimestamp = currentTimestamp + timeToIncrease;
     timestamps.push(newTimestamp);
@@ -109,15 +111,15 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   }
 
   // -------- Generic Helpers --------
-  function recordPermissionId(bytes8 permissionId) public {
+  function recordPermissionId(bytes8 permissionId) internal {
     if (!havePermissionId[permissionId]) {
-      permissionIds.push(permissionId);
+      seenPermissionIds.push(permissionId);
       havePermissionId[permissionId] = true;
     }
   }
 
-  function getPermissionIds() public view returns (bytes32[] memory) {
-    return permissionIds;
+  function getSeenPermissionIds() public view returns (bytes32[] memory) {
+    return seenPermissionIds;
   }
 
   function getPolicyIds() public view returns (uint256[] memory) {

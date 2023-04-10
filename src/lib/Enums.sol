@@ -8,5 +8,5 @@ enum ActionState {
   Approved, // Action approval succeeded and ready to be queued.
   Queued, // Action queued for queueing duration and disapproval period begins.
   Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
-  Executed // Action has executed succesfully.
+  Executed // Action has executed successfully.
 }
