@@ -203,7 +203,7 @@ contract InitializeRole is VertexPolicyTest {
     vm.expectEmit();
     emit RoleInitialized(NUM_INIT_ROLES + 1, getRoleDescription("TestRole"));
     vm.prank(address(mpCore));
-    
+
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
@@ -336,7 +336,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
   function test_Revokes255RolesWithEnumeration() public {
     vm.startPrank(address(mpCore));
 
-    for (uint8 i = 7; i < 255; i++) {v
+    for (uint8 i = 7; i < 255; i++) {
       mpPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       mpPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
