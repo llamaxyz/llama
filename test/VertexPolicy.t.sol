@@ -658,7 +658,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
 contract RoleSupplyCheckpoints is VertexPolicyTest {
   function test_ReturnsSupplyCheckpoint(uint8 supply, uint8 quantity) public {
     vm.assume(quantity > 0);
-    vm.assume(supply < type(uint8).max - 100);
+    supply = uint8(bound(supply, 0, type(uint8).max - 100));
 
     uint256 initialTimestamp = block.timestamp;
 
