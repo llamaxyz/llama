@@ -222,7 +222,7 @@ contract SetRoleHolder is VertexPolicyTest {
   }
 
   function test_RevertIf_NonExistentRole(uint8 role) public {
-    vm.assume(role > mpPolicy.numRoles());
+    role = bound(role, mpPolicy.numRoles() + 1, type(uint8).max);
     vm.startPrank(address(mpCore));
     vm.expectRevert(abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, role));
     mpPolicy.setRoleHolder(role, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
