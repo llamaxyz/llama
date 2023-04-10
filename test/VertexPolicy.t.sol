@@ -151,6 +151,9 @@ contract Initialize is VertexPolicyTest {
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
     rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
+    vm.expectEmit();
+    emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, true);
+
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
