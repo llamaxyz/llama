@@ -3,35 +3,31 @@ pragma solidity ^0.8.19;
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 
+/// @dev A mock action guard that can be configured for testing. We set the return value of each
+/// guard method in the constructor, and set the reason string to use for all cases. Tests will only
+/// test one case at a time, so this is sufficient.
 contract MockActionGuard is IActionGuard {
   bool creationAllowed;
-  bytes32 creationReason;
+  bool preExecutionAllowed;
+  bool postExecutionAllowed;
+  bytes32 reason;
 
-  bool executionAllowed;
-  bytes32 executionReason;
-
-  constructor(bool _creationAllowed, bytes32 _creationReason, bool _executionAllowed, bytes32 _executionReason) {
+  constructor(bool _creationAllowed, bool _preExecutionAllowed, bool _postExecutionAllowed, bytes32 _reason) {
     creationAllowed = _creationAllowed;
-    creationReason = _creationReason;
-    executionAllowed = _executionAllowed;
-    executionReason = _executionReason;
+    preExecutionAllowed = _preExecutionAllowed;
+    postExecutionAllowed = _postExecutionAllowed;
+    reason = _reason;
   }
 
-  function validateActionCreation(uint256 /* actionId */ )
-    external
-    view
-    override
-    returns (bool allowed, bytes32 reason)
-  {
-    return (creationAllowed, creationReason);
+  function validateActionCreation(uint256 /* actionId */ ) external view override returns (bool, bytes32) {
+    return (creationAllowed, reason);
   }
 
-  function validateActionExecution(uint256 /* actionId */ )
-    external
-    view
-    override
-    returns (bool allowed, bytes32 reason)
-  {
-    return (executionAllowed, executionReason);
+  function validatePreActionExecution(uint256 /* actionId */ ) external view override returns (bool, bytes32) {
+    return (preExecutionAllowed, reason);
+  }
+
+  function validatePostActionExecution(uint256 /* actionId */ ) external view override returns (bool, bytes32) {
+    return (postExecutionAllowed, reason);
   }
 }

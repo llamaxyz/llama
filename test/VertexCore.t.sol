@@ -440,7 +440,7 @@ contract CreateAction is VertexCoreTest {
   }
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
-    IActionGuard guard = IActionGuard(new MockActionGuard(false, "no action creation", true, ""));
+    IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
     bytes memory expectedErr = bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
 
     vm.prank(address(mpCore));
@@ -728,9 +728,25 @@ contract ExecuteAction is VertexCoreTest {
     assertEq(uint256(mpCore.getActionState(0)), uint256(3));
   }
 
-  function test_RevertIf_ActionGuardProhibitsAction() public {
-    IActionGuard guard = IActionGuard(new MockActionGuard(true, "", false, "no action execution"));
-    bytes memory expectedErr = bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action execution"));
+  function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
+    IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
+    bytes memory expectedErr =
+      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
+
+    vm.prank(address(mpCore));
+    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+
+    mpCore.queueAction(0);
+    vm.warp(block.timestamp + 6 days);
+
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(0);
+  }
+
+  function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
+    IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
+    bytes memory expectedErr =
+      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);

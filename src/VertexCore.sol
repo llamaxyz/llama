@@ -254,27 +254,34 @@ contract VertexCore is Initializable {
   /// @param actionId Id of the action to execute.
   /// @return The result returned from the call to the target contract.
   function executeAction(uint256 actionId) external payable returns (bytes memory) {
+    // Initial checks that action is ready to execute.
     if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
-    IActionGuard guard = actionGuard[action.target][action.selector];
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validateActionExecution(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
-
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
-    action.executed = true;
+    // Check pre-execution action guard.
+    IActionGuard guard = actionGuard[action.target][action.selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePreActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Execute action.
+    action.executed = true;
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-
     if (!success) revert FailedActionExecution();
 
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
+    // Check post-execution action guard.
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePostActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Action successfully executed.
+    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
     return result;
   }
 
