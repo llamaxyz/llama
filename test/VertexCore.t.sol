@@ -588,9 +588,9 @@ contract CreateActionBySig is VertexCoreTest {
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 0);
+    _createActionBySig(actionCreatorAaron, 0);
+    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
