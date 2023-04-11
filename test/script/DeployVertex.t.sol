@@ -13,36 +13,28 @@ import {PermissionData} from "src/lib/Structs.sol";
 import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-contract DeployVertexTest is Test {
-  DeployVertex script;
-
-  function setUp() public virtual {
-    script = new DeployVertex();
-  }
+contract DeployVertexTest is Test, DeployVertex {
+  function setUp() public virtual {}
 }
 
 contract Run is DeployVertexTest {
   function test_DeploysFactory() public {
-    VertexFactory factory = script.factory();
     assertEq(address(factory), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    factory = script.factory();
     assertNotEq(address(factory), address(0));
-    assertEq(address(factory.VERTEX_CORE_LOGIC()), address(script.coreLogic()));
-    assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(script.policyLogic()));
-    assertEq(factory.authorizedStrategyLogics(address(script.strategyLogic())), true);
-    assertEq(factory.authorizedAccountLogics(address(script.accountLogic())), true);
+    assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
+    assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
+    assertEq(factory.authorizedStrategyLogics(address(strategyLogic)), true);
+    assertEq(factory.authorizedAccountLogics(address(accountLogic)), true);
   }
 
   function test_DeploysRootVertex() public {
-    // ROOT_VERTEX
-    // vertexCount
     vm.recordLogs();
-    script.run();
+    DeployVertex.run();
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    VertexFactory factory = script.factory();
+
     assertEq(factory.vertexCount(), 1);
     VertexCore rootVertex = factory.ROOT_VERTEX();
     assertEq(rootVertex.name(), "Root Vertex");
@@ -136,12 +128,10 @@ contract Run is DeployVertexTest {
   }
 
   function test_DeploysCoreLogic() public {
-    VertexCore coreLogic = script.coreLogic();
     assertEq(address(coreLogic), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    coreLogic = script.coreLogic();
     assertNotEq(address(coreLogic), address(0));
     assertEq(
       coreLogic.EIP712_DOMAIN_TYPEHASH(), // Just confirming the deployment.
@@ -150,43 +140,35 @@ contract Run is DeployVertexTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    VertexStrategy strategyLogic = script.strategyLogic();
     assertEq(address(strategyLogic), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    strategyLogic = script.strategyLogic();
     assertNotEq(address(strategyLogic), address(0));
   }
 
   function test_DeploysAccountLogic() public {
-    VertexAccount accountLogic = script.accountLogic();
     assertEq(address(accountLogic), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    accountLogic = script.accountLogic();
     assertNotEq(address(accountLogic), address(0));
   }
 
   function test_DeploysPolicyLogic() public {
-    VertexPolicy policyLogic = script.policyLogic();
     assertEq(address(policyLogic), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    policyLogic = script.policyLogic();
     assertNotEq(address(policyLogic), address(0));
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
   function test_DeploysLens() public {
-    VertexLens lens = script.lens();
     assertEq(address(lens), address(0));
 
-    script.run();
+    DeployVertex.run();
 
-    lens = script.lens();
     assertNotEq(address(lens), address(0));
     PermissionData memory permissionData = PermissionData(
       makeAddr("target"), // Could be any address, choosing a random one.
