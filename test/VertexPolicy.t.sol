@@ -241,10 +241,14 @@ contract SetRoleHolder is VertexPolicyTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
-    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, 0, 1);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, 0, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_AllHoldersRole() public {
+    vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexPolicy.AllHoldersRole.selector);
-    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, 0);
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function test_SetsRoleHolder(address user) public {
