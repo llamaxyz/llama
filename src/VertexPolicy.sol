@@ -31,6 +31,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error NonTransferableToken();
   error OnlyVertex();
   error RoleNotInitialized(uint8 role);
+  error UserDoesNotHoldPolicy(address user);
 
   modifier onlyVertex() {
     if (msg.sender != vertex) revert OnlyVertex();
@@ -182,7 +183,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes all roles from the `user` and burns their policy.
   function revokePolicy(address user) external onlyVertex {
-    if (balanceOf(user) == 0) revert InvalidInput();
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
     for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), user, 0, 0);
     }
@@ -193,7 +194,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
-    if (balanceOf(user) == 0) revert InvalidInput();
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0, 0);
     }
