@@ -19,6 +19,8 @@ import {Solarray} from "solarray/Solarray.sol";
 contract VertexPolicyTest is VertexTestSetup {
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
+  event Transfer(address indexed from, address indexed to, uint256 indexed id);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -63,6 +65,8 @@ contract NonTransferableToken is VertexPolicyTest {
 }
 
 contract Initialize is VertexPolicyTest {
+  uint8 constant INIT_TEST_ROLE = 1;
+
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
@@ -93,30 +97,65 @@ contract Initialize is VertexPolicyTest {
     assertEq(localPolicy.numRoles(), numRoles);
   }
 
-  function test_RevertsIf_InitializeIsCalledTwice() public {
+  function test_RevertIf_InitializeIsCalledTwice() public {
     vm.expectRevert("Initializable: contract is already initialized");
     mpPolicy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
-  // TODO
-  // function test_SetsRoleDescriptions() public {
-  // function test_SetsRoleHolders() public {
+  function test_SetsRoleDescriptions() public {
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    localPolicy.setVertex(address(this));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Test Policy");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+
+    vm.expectEmit();
+    emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
+
+    localPolicy.initialize("local policy", roleDescriptions, roleHolders, rolePermissions);
+  }
+
+  function test_SetsRoleHolders() public {
+    VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    localPolicy.setVertex(address(this));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+
+    uint256 prevSupply = localPolicy.getSupply(INIT_TEST_ROLE);
+
+    vm.expectEmit();
+    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+
+    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
+
+    assertEq(localPolicy.getSupply(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
+    assertEq(localPolicy.numRoles(), 1);
+  }
 
   function test_SetsRolePermissions() public {
-    uint8 role = uint8(Roles.AllHolders);
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
-    assertFalse(localPolicy.canCreateAction(role, pausePermissionId));
+    assertFalse(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
     localPolicy.setVertex(makeAddr("the factory"));
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
-    roleDescriptions[0] = RoleDescription.wrap("All Holders");
+    roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(role, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.TestRole1), pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+
+    vm.expectEmit();
+    emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, true);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
-    assertTrue(localPolicy.canCreateAction(uint8(Roles.TestRole1), pausePermissionId));
+    assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
 }
 
@@ -138,8 +177,6 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  event RoleInitialized(uint8 indexed role, RoleDescription description);
-
   uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
 
   function test_IncrementsNumRoles() public {
@@ -166,6 +203,7 @@ contract InitializeRole is VertexPolicyTest {
     vm.expectEmit();
     emit RoleInitialized(NUM_INIT_ROLES + 1, getRoleDescription("TestRole"));
     vm.prank(address(mpCore));
+
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
@@ -178,23 +216,189 @@ contract InitializeRole is VertexPolicyTest {
 }
 
 contract SetRoleHolder is VertexPolicyTest {
-// TODO
+  function test_RevertIf_CalledByNonVertex() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_NonExistentRole(uint8 role) public {
+    role = uint8(bound(role, mpPolicy.numRoles() + 1, type(uint8).max));
+    vm.startPrank(address(mpCore));
+    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, role));
+    mpPolicy.setRoleHolder(role, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_InvalidExpiration(uint64 expiration, uint256 timestamp) public {
+    timestamp = bound(timestamp, block.timestamp, type(uint64).max);
+    expiration = uint64(bound(expiration, 0, timestamp - 1));
+    vm.warp(timestamp);
+    vm.expectRevert(VertexPolicy.AllHoldersRole.selector);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, expiration);
+  }
+
+  function test_RevertIf_InvalidQuantity() public {
+    vm.startPrank(address(mpCore));
+
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, 0, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_AllHoldersRole() public {
+    vm.startPrank(address(mpCore));
+
+    vm.expectRevert(VertexPolicy.AllHoldersRole.selector);
+    mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_SetsRoleHolder(address user) public {
+    vm.assume(user != address(0));
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+  }
 }
 
 contract SetRolePermission is VertexPolicyTest {
-// TODO
+  function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
+    vm.expectEmit();
+    emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
+
+    assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
+  }
+
+  function test_RevertIf_CalledByNonVertex() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
+  }
 }
 
 contract RevokeExpiredRole is VertexPolicyTest {
-// TODO
+  function test_RevokesExpiredRole(address user, uint64 expiration) public {
+    vm.assume(user != address(0));
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+
+    vm.warp(expiration);
+
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, 0);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false);
+  }
+
+  function test_RevertIf_NotExpiredYet(address user, uint64 expiration) public {
+    vm.assume(user != address(0));
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+
+    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+  }
 }
 
 contract RevokePolicy is VertexPolicyTest {
-// TODO
+  function test_RevokesPolicy(address user) public {
+    vm.assume(user != address(0));
+    vm.assume(mpPolicy.balanceOf(user) == 0);
+
+    vm.startPrank(address(mpCore));
+
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.balanceOf(user), 1);
+
+    vm.expectEmit();
+    emit Transfer(user, address(0), uint256(uint160(user)));
+
+    mpPolicy.revokePolicy(user);
+
+    assertEq(mpPolicy.balanceOf(user), 0);
+  }
+
+  function test_RevertIf_PolicyDoesNotExist(address user) public {
+    vm.assume(user != address(0));
+    vm.assume(mpPolicy.balanceOf(user) == 0);
+    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.UserDoesNotHoldPolicy.selector, user));
+    vm.prank(address(mpCore));
+    mpPolicy.revokePolicy(user);
+  }
 }
 
 contract RevokePolicyRolesOverload is VertexPolicyTest {
-// TODO
+  function setUpLocalPolicy() internal returns (VertexPolicy localPolicy) {
+    localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(uint256(1))))));
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(uint8(1), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    localPolicy.setVertex(address(this));
+    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
+
+    vm.startPrank(address(this));
+  }
+
+  function test_Revokes255RolesWithEnumeration() public {
+    VertexPolicy localPolicy = setUpLocalPolicy();
+
+    for (uint8 i = 2; i < 255; i++) {
+      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    for (uint8 i; i < 254; i++) {
+      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
+    }
+
+    localPolicy.revokePolicy(arbitraryAddress);
+
+    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
+    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(type(Roles).max) + 1), false);
+  }
+
+  function test_Revokes255RolesWithoutEnumeration() public {
+    VertexPolicy localPolicy = setUpLocalPolicy();
+    for (uint8 i = 2; i < 255; i++) {
+      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
+    for (uint8 i; i < 254; i++) {
+      roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
+      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      vm.expectEmit();
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
+    }
+
+    vm.expectEmit();
+    emit Transfer(arbitraryAddress, address(0), uint256(uint160(arbitraryAddress)));
+
+    localPolicy.revokePolicy(arbitraryAddress, roles);
+
+    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
+    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(0)), false);
+  }
 }
 
 // =================================
@@ -437,27 +641,196 @@ contract GetPastSupply is VertexPolicyTest {
 }
 
 contract RoleBalanceCheckpoints is VertexPolicyTest {
-// TODO
+  function test_ReturnsBalanceCheckpoint() public {
+    vm.startPrank(address(mpCore));
+
+    vm.warp(100);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
+
+    vm.warp(110);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
+
+    vm.warp(120);
+    address newRoleHolder = makeAddr("newRoleHolder");
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 200);
+
+    vm.warp(130);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 300);
+
+    vm.warp(140);
+    mpPolicy.revokePolicy(newRoleHolder);
+
+    vm.warp(160);
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
+
+    vm.warp(161);
+
+    Checkpoints.History memory rbCheckpoint1 = mpPolicy.roleBalanceCheckpoints(arbitraryUser, uint8(Roles.TestRole1));
+    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
+
+    assertEq(rbCheckpoint1._checkpoints.length, 3);
+    assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
+    assertEq(rbCheckpoint1._checkpoints[0].expiration, 150);
+    assertEq(rbCheckpoint1._checkpoints[0].quantity, 1);
+    assertEq(rbCheckpoint1._checkpoints[1].timestamp, 110);
+    assertEq(rbCheckpoint1._checkpoints[1].expiration, 160);
+    assertEq(rbCheckpoint1._checkpoints[1].quantity, 1);
+    assertEq(rbCheckpoint1._checkpoints[2].timestamp, 160);
+    assertEq(rbCheckpoint1._checkpoints[2].expiration, 0);
+    assertEq(rbCheckpoint1._checkpoints[2].quantity, 0);
+
+    assertEq(rbCheckpoint2._checkpoints.length, 3);
+    assertEq(rbCheckpoint2._checkpoints[0].timestamp, 120);
+    assertEq(rbCheckpoint2._checkpoints[0].expiration, 200);
+    assertEq(rbCheckpoint2._checkpoints[0].quantity, 1);
+    assertEq(rbCheckpoint2._checkpoints[1].timestamp, 130);
+    assertEq(rbCheckpoint2._checkpoints[1].expiration, 300);
+    assertEq(rbCheckpoint2._checkpoints[1].quantity, 1);
+    assertEq(rbCheckpoint2._checkpoints[2].timestamp, 140);
+    assertEq(rbCheckpoint2._checkpoints[2].expiration, 0);
+    assertEq(rbCheckpoint2._checkpoints[2].quantity, 0);
+  }
 }
 
 contract RoleSupplyCheckpoints is VertexPolicyTest {
-// TODO
+  function test_ReturnsSupplyCheckpoint(uint8 supply, uint8 quantity) public {
+    vm.assume(quantity > 0);
+    supply = uint8(bound(supply, 0, type(uint8).max - 100));
+
+    uint256 initialTimestamp = block.timestamp;
+
+    for (uint8 i = 100; i < supply + 100; i++) {
+      vm.warp(block.timestamp + 1);
+      vm.prank(address(mpCore));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(i)), quantity, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    vm.warp(block.timestamp + 1);
+
+    uint256 roleSupply = mpPolicy.getSupply(uint8(Roles.TestRole1));
+    assertEq(roleSupply, uint256(supply) * uint256(quantity));
+
+    Checkpoints.History memory rsCheckpoint = mpPolicy.roleSupplyCheckpoints(uint8(Roles.TestRole1));
+    assertEq(rsCheckpoint._checkpoints.length, supply);
+    if (supply > 0) {
+      assertEq(rsCheckpoint._checkpoints[0].timestamp, initialTimestamp + 1);
+      assertEq(rsCheckpoint._checkpoints[0].quantity, quantity);
+      assertEq(rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].timestamp, block.timestamp - 1);
+      assertEq(
+        rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].quantity, uint256(supply) * uint256(quantity)
+      );
+    }
+  }
 }
 
 contract HasRole is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasRole() public {
+    vm.warp(100);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
 }
 
 contract HasRoleUint256Overload is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasRole() public {
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.warp(100);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), block.timestamp - 1), true);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), 0), false);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
+    vm.warp(100);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1), block.timestamp - 1), false);
+  }
 }
 
 contract HasPermissionId is VertexPolicyTest {
-// TODO
+  function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
+    vm.startPrank(address(mpCore));
+
+    vm.warp(100);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, true);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), true);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHaveQuanitity() public {
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), pausePermissionId), false);
+  }
+
+  function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), false);
+  }
 }
 
 contract TotalSupply is VertexPolicyTest {
-// TODO
+  function test_getsTotalSupply(uint256 numberOfPolicies) public {
+    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
+    numberOfPolicies = bound(numberOfPolicies, 1, 10_000);
+    for (uint256 i = 0; i < numberOfPolicies; i++) {
+      vm.prank(address(mpCore));
+      mpPolicy.setRoleHolder(
+        uint8(Roles.TestRole1), address(uint160(i + 100)), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
+      );
+    }
+
+    assertEq(mpPolicy.totalSupply(), initPolicySupply + numberOfPolicies);
+  }
+}
+
+contract Aggregate is VertexPolicyTest {
+  function test_AggregatesSetRoleHolderCalls() public {
+    address newRoleHolder = makeAddr("newRoleHolder");
+
+    bytes memory call1 = abi.encodeCall(
+      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
+    );
+    bytes memory call2 = abi.encodeCall(
+      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole2), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
+    );
+    bytes memory call3 = abi.encodeCall(
+      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
+    );
+
+    bytes[] memory calls = new bytes[](3);
+    calls[0] = call1;
+    calls[1] = call2;
+    calls[2] = call3;
+
+    vm.prank(address(mpCore));
+    mpPolicy.aggregate(calls);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole2)), true);
+    assertEq(mpPolicy.hasRole(newRoleHolder, uint8(Roles.TestRole1)), true);
+  }
+
+  function test_RevertIf_CalldataIsIncorrect() public {
+    bytes memory call1 = abi.encodeCall(
+      VertexPolicy.setRoleHolder,
+      ( /* uninitialized role */ 8, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
+    );
+    bytes[] memory calls = new bytes[](1);
+    calls[0] = call1;
+
+    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, 8);
+
+    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
+    vm.prank(address(mpCore));
+    mpPolicy.aggregate(calls);
+  }
 }
 
 // =================================
@@ -480,15 +853,6 @@ contract TokenURI is VertexPolicyTest {
     inputs[2] = uri;
     return abi.decode(vm.ffi(inputs), (Metadata));
   }
-
-  // function assertEq(Metadata memory a, Metadata memory b) internal {
-  //   assertEq(a.name, b.name, "name");
-  //   assertEq(a.description, b.description, "description");
-  //   assertEq(a.basefee, b.basefee, "basefee");
-  //   assertEq(a.frequency, b.frequency, "frequency");
-  //   assertEq(a.external_url, b.external_url, "external_url");
-  //   assertEq(a.image, b.image, "image");
-  // }
 
   function test_ReturnsCorrectTokenURI() public {
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
@@ -556,209 +920,24 @@ contract TokenURI is VertexPolicyTest {
   }
 }
 
-// contract HolderWeightAt is VertexPolicyTest {
-//   function test_ReturnsCorrectValue() public {
-//     // TODO
-//     // assertEq(mpPolicy.holderWeightAt(address(this), permissionId1, block.number), 1);
-//     // assertEq(mpPolicy.holderWeightAt(policyHolderPam, permissionId1, block.number), 0);
+contract IsRoleExpired is VertexPolicyTest {
+  function test_ReturnsTrueForExpiredRole(uint64 expiration) public returns (bool) {
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
-//     // vm.warp(block.timestamp + 100);
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
-//     // PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(arbitraryAddress);
-//     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
-//     // mpPolicy.batchRevokePolicies(policyRevokeData);
+    vm.warp(expiration + 1);
 
-//     // assertEq(mpPolicy.holderWeightAt(address(this), permissionId1, block.timestamp), 0);
-//     // assertEq(mpPolicy.holderWeightAt(arbitraryAddress, permissionId1, block.timestamp), 1);
-//     // assertEq(mpPolicy.holderWeightAt(address(this), permissionId1, block.timestamp - 99), 1);
-//     // assertEq(mpPolicy.holderWeightAt(arbitraryAddress, permissionId1, block.timestamp - 99), 0);
-//   }
-// }
+    assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
+  }
 
-// // contract TotalSupplyAt is VertexPolicyTest {
-// // // TODO Add tests.
-// // }
+  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public returns (bool) {
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
-// // contract BatchGrantPolicies is VertexPolicyTest {
-// //   function test_CorrectlyGrantsPermission() public {
-// //     // PolicyGrantData[] memory initialBatchGrantData = _buildBatchGrantData(policyHolderPam);
-// //     // vm.expectEmit(true, true, true, true);
-// //     // emit PolicyAdded(initialBatchGrantData[0]);
-// //     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
-// //     // assertEq(mpPolicy.balanceOf(arbitraryAddress), 1);
-// //     // assertEq(mpPolicy.ownerOf(DEADBEEF_TOKEN_ID), arbitraryAddress);
-// //   }
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
-// //   function test_RevertIfPolicyAlreadyGranted() public {
-// //     // PolicyGrantData[] memory policies;
-// //     // vm.expectRevert(VertexPolicy.OnlyOnePolicyPerHolder.selector);
-// //     // mpPolicy.batchGrantPolicies(policies);
-// //   }
-// // }
-
-// // contract BatchUpdatePermissions is VertexPolicyTest {
-// //   function test_UpdatesPermissionsCorrectly() public {
-// //     // bytes32 oldPermissionSignature = permissionId1;
-// //     // assertEq(mpPolicy.hasPermission(policyIds[0], oldPermissionSignature), true);
-// //     // permissionsToRevoke = permissionIds;
-
-// //     // permission = PermissionData(
-// //     //   address(0xdeadbeefdeadbeef), bytes4(0x09090909), VertexStrategy(address(0xdeadbeefdeadbeefdeafbeef))
-// //     // );
-// //     // permissions[0] = permission;
-// //     // permissionsArray[0] = permissions;
-// //     // permissionId1 = lens.computePermissionId(permission);
-// //     // permissionIds[0] = permissionId;
-
-// //     // PermissionMetadata[] memory toAdd = new PermissionMetadata[](1);
-// //     // PermissionMetadata[] memory toRemove = new PermissionMetadata[](1);
-
-// //     // toAdd[0] = PermissionMetadata(permissionId1, 0);
-// //     // toRemove[0] = PermissionMetadata(permissionId2, 0);
-
-// //     // PolicyUpdateData[] memory updateData = new PolicyUpdateData[](1);
-// //     // updateData[0] = PolicyUpdateData(policyIds[0], toAdd, toRemove);
-
-// //     // vm.warp(block.timestamp + 100);
-
-// //     // vm.expectEmit(true, true, true, true);
-// //     // emit PermissionUpdated(updateData[0]);
-
-// //     // mpPolicy.batchUpdatePermissions(updateData);
-
-// //     // assertEq(mpPolicy.hasPermission(policyIds[0], oldPermissionSignature), false);
-// //     // assertEq(mpPolicy.hasPermission(policyIds[0], permissionId1), true);
-// //     // assertEq(mpPolicy.holderWeightAt(address(this), oldPermissionSignature, block.timestamp - 100), 1);
-// //     // assertEq(mpPolicy.holderWeightAt(address(this), oldPermissionSignature, block.timestamp), 0);
-// //     // assertEq(mpPolicy.holderWeightAt(address(this), permissionId1, block.timestamp - 100), 0);
-// //     // assertEq(mpPolicy.holderWeightAt(address(this), permissionId1, block.timestamp), 1);
-// //   }
-
-// //   function test_updatesTimeStamp() public {
-// //     // bytes32 _permissionId = lens.computePermissionId(
-// //     //   PermissionData(arbitraryAddress, bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
-// //     // ); // same permission as in setup
-
-// //     // PermissionMetadata[] memory permissionsToAdd = new PermissionMetadata[](1);
-// //     // permissionsToAdd[0] = PermissionMetadata(_permissionId, block.timestamp + 1 days);
-
-// //     // PolicyUpdateData memory updateData = PolicyUpdateData(SELF_TOKEN_ID, permissionsToAdd, new
-// //     // PermissionMetadata[](0));
-// //     // PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
-// //     // updateDataArray[0] = updateData;
-// //     // assertEq(mpPolicy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, permissionId1), 0);
-// //     // mpPolicy.batchUpdatePermissions(updateDataArray);
-// //     // assertEq(mpPolicy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, permissionId1), block.timestamp + 1
-// days);
-// //   }
-
-// //   function test_CanSetPermissionWithExpirationDateToInfiniteExpiration() public {
-// //     // TODO after matt's PR merges
-// //   }
-// // }
-
-// // contract BatchRevokePolicies is VertexPolicyTest {
-// //   function test_CorrectlyRevokesPolicy() public {
-// //     // vm.expectEmit(true, true, true, true);
-// //     // emit PolicyRevoked(policyRevokeData[0]);
-// //     // mpPolicy.batchRevokePolicies(policyRevokeData);
-// //     // assertEq(mpPolicy.balanceOf(address(this)), 0);
-// //   }
-
-// //   function test_RevertIf_PolicyNotGranted() public {
-// //     // uint256 mockPolicyId = uint256(uint160(arbitraryAddress));
-// //     // policyIds[0] = mockPolicyId;
-// //     // policyRevokeData[0] = PolicyRevokeData(mockPolicyId, permissionId);
-// //     // vm.expectRevert("NOT_MINTED");
-// //     // mpPolicy.batchRevokePolicies(policyRevokeData);
-// //   }
-// // }
-
-// // contract TotalSupply is VertexPolicyTest {
-// //   function test_ReturnsCorrectTotalSupply() public {
-// //     // assertEq(mpPolicy.totalSupply(), 1);
-// //     // addresses[0] = arbitraryAddress;
-// //     // mpPolicy.batchGrantPolicies(_buildBatchGrantData(addresses[0]));
-// //     // assertEq(mpPolicy.totalSupply(), 2);
-// //     // mpPolicy.batchRevokePolicies(policyRevokeData);
-// //     // assertEq(mpPolicy.totalSupply(), 1);
-// //   }
-// // }
-
-// // contract ExpirationTests is VertexPolicyTest {
-// //   // TODO Refactor these so they are in the correct method contracts
-// //   function test_expirationTimestamp_DoesNotHavePermissionIfExpired() public {
-// //     // bytes32 _permissionId = lens.computePermissionId(
-// //     //   PermissionData(arbitraryAddress, bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
-// //     // ); // same permission as in setup
-
-// //     // assertEq(mpPolicy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, _permissionId), 0);
-// //     // assertEq(mpPolicy.hasPermission(SELF_TOKEN_ID, _permissionId), true);
-
-// //     // uint256 newExpirationTimestamp = block.timestamp + 1 days;
-
-// //     // PermissionMetadata[] memory permissionsToAdd = new PermissionMetadata[](1);
-// //     // permissionsToAdd[0] = PermissionMetadata(_permissionId, newExpirationTimestamp);
-
-// //     // PolicyUpdateData memory updateData = PolicyUpdateData(SELF_TOKEN_ID, permissionsToAdd, new
-// //     // PermissionMetadata[](0));
-// //     // PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
-// //     // updateDataArray[0] = updateData;
-
-// //     // mpPolicy.batchUpdatePermissions(updateDataArray);
-
-// //     // vm.warp(block.timestamp + 2 days);
-
-// //     // assertEq(newExpirationTimestamp < block.timestamp, true);
-// //     // assertEq(mpPolicy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, _permissionId),
-// newExpirationTimestamp);
-// //     // assertEq(mpPolicy.hasPermission(SELF_TOKEN_ID, _permissionId), false);
-// //   }
-
-// //   function test_grantPermissions_GrantsTokenWithExpiration() public {
-// //     // uint256 _newExpirationTimestamp = block.timestamp + 1 days;
-// //     // address _newAddress = arbitraryAddress;
-
-// //     // PermissionMetadata[] memory _changes = new PermissionMetadata[](1);
-// //     // _changes[0] = PermissionMetadata(permissionId1, _newExpirationTimestamp);
-
-// //     // PolicyGrantData[] memory initialBatchGrantData = new PolicyGrantData[](1);
-// //     // initialBatchGrantData[0] = PolicyGrantData(_newAddress, _changes);
-// //     // mpPolicy.batchGrantPolicies(initialBatchGrantData);
-
-// //     // assertEq(
-// //     //   mpPolicy.tokenToPermissionExpirationTimestamp(uint256(uint160(_newAddress)), permissionId1),
-// //     // _newExpirationTimestamp
-// //     // );
-// //   }
-
-// //   function test_expirationTimestamp_RevertIfTimestampIsExpired() public {
-// //     // vm.warp(block.timestamp + 1 days);
-
-// //     // bytes32 _permissionId = lens.computePermissionId(
-// //     //   PermissionData(arbitraryAddress, bytes4(0x08080808), VertexStrategy(address(0xdeadbeefdeadbeef)))
-// //     // ); // same permission as in setup
-
-// //     // assertEq(mpPolicy.tokenToPermissionExpirationTimestamp(SELF_TOKEN_ID, _permissionId), 0);
-// //     // assertEq(mpPolicy.hasPermission(SELF_TOKEN_ID, _permissionId), true);
-
-// //     // uint256 newExpirationTimestamp = block.timestamp - 1 days;
-
-// //     // PermissionMetadata[] memory permissionsToAdd = new PermissionMetadata[](1);
-// //     // permissionsToAdd[0] = PermissionMetadata(_permissionId, newExpirationTimestamp);
-
-// //     // PolicyUpdateData memory updateData = PolicyUpdateData(SELF_TOKEN_ID, permissionsToAdd, new
-// //     // PermissionMetadata[](0));
-// //     // PolicyUpdateData[] memory updateDataArray = new PolicyUpdateData[](1);
-// //     // updateDataArray[0] = updateData;
-
-// //     // PolicyGrantData[] memory grantData = new PolicyGrantData[](1);
-// //     // grantData[0] = PolicyGrantData(address(0x1), permissionsToAdd);
-
-// //     // vm.expectRevert(VertexPolicy.Expired.selector);
-// //     // mpPolicy.batchGrantPolicies(grantData);
-// //     // assertEq(block.timestamp > newExpirationTimestamp, true);
-// //     // vm.expectRevert(VertexPolicy.Expired.selector);
-// //     // mpPolicy.batchUpdatePermissions(updateDataArray);
-// //   }
-// // }
+    assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
+}

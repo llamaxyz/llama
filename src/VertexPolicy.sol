@@ -24,6 +24,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error AllHoldersRole();
   error AlreadyInitialized();
   error CallReverted(uint256 index, bytes revertData);
   error InvalidInput();
@@ -31,6 +32,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error NonTransferableToken();
   error OnlyVertex();
   error RoleNotInitialized(uint8 role);
+  error UserDoesNotHoldPolicy(address user);
 
   modifier onlyVertex() {
     if (msg.sender != vertex) revert OnlyVertex();
@@ -182,20 +184,18 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes all roles from the `user` and burns their policy.
   function revokePolicy(address user) external onlyVertex {
-    for (uint256 i = 0; i <= numRoles; i = _uncheckedIncrement(i)) {
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
+    for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), user, 0, 0);
     }
     _burn(_tokenId(user));
   }
 
   /// @notice Revokes all `roles` from the `user` and burns their policy.
-  /// @dev WARNING: The contract cannot enumerate all roles for a user, so the caller MUST provide
-  /// the full list of roles held by user. Not properly providing this data can result in an
-  /// inconsistent internal state. It is expected that policies are revoked as needed before
-  /// creating an action using the `ALL_HOLDERS_ROLE`.
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0, 0);
     }
@@ -248,8 +248,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role`, false otherwise.
   function hasRole(address user, uint8 role) external view returns (bool) {
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    return exists && quantity > 0 && expiration > block.timestamp;
+    (bool exists,,, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return exists && quantity > 0;
   }
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
@@ -263,6 +263,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   function hasPermissionId(address user, uint8 role, bytes32 permissionId) external view returns (bool) {
     uint128 quantity = roleBalanceCkpts[_tokenId(user)][role].latest();
     return quantity > 0 && canCreateAction[role][permissionId];
+  }
+
+  function isRoleExpired(address user, uint8 role) external view returns (bool) {
+    (, uint64 expiration,,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return expiration < block.timestamp;
   }
 
   /// @notice Returns the total number of policies in existence.
@@ -325,6 +330,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     {
       // Ensure role is initialized.
       if (role > numRoles) revert RoleNotInitialized(role);
+
+      if (role == ALL_HOLDERS_ROLE) revert AllHoldersRole(); // Cannot set the ALL_HOLDERS_ROLE because this is handled
+        // in
+        // the _mint / _burn methods and can create duplicate entries if set here.
 
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when
       // the quantity is zero. In other words, the relationships that are required between the role

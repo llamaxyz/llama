@@ -242,7 +242,7 @@ contract VertexCoreHandler is BaseHandler {
     }
 
     vm.prank(disapprover);
-    VERTEX_CORE.castDisapproval(actionId, uint8(Roles.Approver));
+    VERTEX_CORE.castDisapproval(actionId, uint8(Roles.Disapprover));
     recordMetric("vertexCore_castDisapproval_disapproved");
   }
 
