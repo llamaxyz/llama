@@ -14,10 +14,9 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract DeployVertexTest is Test {
-
   DeployVertex script;
 
-  function setUp() virtual public {
+  function setUp() public virtual {
     script = new DeployVertex();
   }
 }
@@ -51,7 +50,9 @@ contract Run is DeployVertexTest {
     // There are two strategies we expect to have been deployed.
     VertexStrategy[] memory strategiesAuthorized = new VertexStrategy[](2);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[]))");
+    bytes32 strategiesAuthorizedSig = keccak256(
+      "StrategyAuthorized(address,address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[]))"
+    );
 
     // There are two accounts we expect to have been deployed.
     VertexAccount[] memory accountsAuthorized = new VertexAccount[](2);
@@ -88,8 +89,8 @@ contract Run is DeployVertexTest {
     assertEq(firstStrategy.disapprovalRole(), 4);
     assertEq(firstStrategy.expirationPeriod(), 691_200);
     assertEq(firstStrategy.isFixedLengthApprovalPeriod(), true);
-    assertEq(firstStrategy.minApprovalPct(), 4_000);
-    assertEq(firstStrategy.minDisapprovalPct(), 2_000);
+    assertEq(firstStrategy.minApprovalPct(), 4000);
+    assertEq(firstStrategy.minDisapprovalPct(), 2000);
     assertEq(firstStrategy.queuingPeriod(), 345_600);
     assertEq(firstStrategy.forceApprovalRole(2), false);
     assertEq(firstStrategy.forceDisapprovalRole(2), false);
@@ -101,7 +102,7 @@ contract Run is DeployVertexTest {
     assertEq(secondStrategy.disapprovalRole(), 4);
     assertEq(secondStrategy.expirationPeriod(), 86_400);
     assertEq(secondStrategy.isFixedLengthApprovalPeriod(), false);
-    assertEq(secondStrategy.minApprovalPct(), 8_000);
+    assertEq(secondStrategy.minApprovalPct(), 8000);
     assertEq(secondStrategy.minDisapprovalPct(), 10_001);
     assertEq(secondStrategy.queuingPeriod(), 0);
     assertEq(secondStrategy.forceApprovalRole(2), true);
@@ -110,14 +111,14 @@ contract Run is DeployVertexTest {
     VertexAccount firstAccount = accountsAuthorized[0];
     assertEq(firstAccount.vertex(), address(rootVertex));
     assertEq(
-      keccak256(abi.encodePacked(firstAccount.name())),
+      keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("Llama Treasury")
     );
 
     VertexAccount secondAccount = accountsAuthorized[1];
     assertEq(secondAccount.vertex(), address(rootVertex));
     assertEq(
-      keccak256(abi.encodePacked(secondAccount.name())),
+      keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("Llama Grants")
     );
 
@@ -142,8 +143,10 @@ contract Run is DeployVertexTest {
 
     coreLogic = script.coreLogic();
     assertNotEq(address(coreLogic), address(0));
-    assertEq(coreLogic.DOMAIN_TYPEHASH(), bytes32(0x8cad95687ba82c2ce50e74f7b754645e5117c3a5bec8151c0726d5857980a866));
-    // TODO assert it's initialized!
+    assertEq(
+      coreLogic.EIP712_DOMAIN_TYPEHASH(), // Just confirming the deployment.
+      bytes32(0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f)
+    );
   }
 
   function test_DeploysStrategyLogic() public {
@@ -186,7 +189,7 @@ contract Run is DeployVertexTest {
     lens = script.lens();
     assertNotEq(address(lens), address(0));
     PermissionData memory permissionData = PermissionData(
-      makeAddr('target'),
+      makeAddr("target"), // Could be any address, choosing a random one.
       bytes4(bytes32("transfer(address,uint256)")),
       VertexStrategy(makeAddr("strategy"))
     );
