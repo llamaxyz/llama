@@ -109,7 +109,7 @@ contract DeployVertex is Script {
     return vm.readFile(string.concat(inputDir, chainDir, "deployVertex.json"));
   }
 
-  function readStrategies(string memory _jsonInput) internal returns (Strategy[] memory strategies) {
+  function readStrategies(string memory _jsonInput) internal pure returns (Strategy[] memory strategies) {
     bytes memory _strategyData = _jsonInput.parseRaw(".initialStrategies");
     RawStrategyData[] memory _rawStrategies = abi.decode(_strategyData, (RawStrategyData[]));
 
@@ -129,7 +129,11 @@ contract DeployVertex is Script {
     }
   }
 
-  function readRoleDescriptions(string memory _jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
+  function readRoleDescriptions(string memory _jsonInput)
+    internal
+    pure
+    returns (RoleDescription[] memory roleDescriptions)
+  {
     bytes memory descriptionBytes = _jsonInput.parseRaw(".initialRoleDescriptions");
     string[] memory descriptions = abi.decode(descriptionBytes, (string[]));
     for (uint256 i; i < descriptions.length; i++) {
@@ -138,7 +142,7 @@ contract DeployVertex is Script {
     roleDescriptions = abi.decode(descriptionBytes, (RoleDescription[]));
   }
 
-  function readRoleHolders(string memory _jsonInput) internal returns (RoleHolderData[] memory _roleHolders) {
+  function readRoleHolders(string memory _jsonInput) internal pure returns (RoleHolderData[] memory _roleHolders) {
     bytes memory _roleHolderData = _jsonInput.parseRaw(".initialRoleHolders");
     RawRoleHolderData[] memory _rawRoleHolders = abi.decode(_roleHolderData, (RawRoleHolderData[]));
 
@@ -154,6 +158,7 @@ contract DeployVertex is Script {
 
   function readRolePermissions(string memory _jsonInput)
     internal
+    pure
     returns (RolePermissionData[] memory _rolePermissions)
   {
     bytes memory _rolePermissionData = _jsonInput.parseRaw(".initialRolePermissions");
