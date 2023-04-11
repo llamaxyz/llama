@@ -31,12 +31,9 @@ contract DeployVertex is Script {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint256 approvalPeriod;
     uint8 approvalRole;
-    string approvalRoleComment;
     uint8 disapprovalRole;
-    string disapprovalRoleComment;
     uint256 expirationPeriod;
     uint8[] forceApprovalRoles;
-    string forceApprovalRolesComment;
     uint8[] forceDisapprovalRoles;
     bool isFixedLengthApprovalPeriod;
     uint256 minApprovalPct;
@@ -46,13 +43,11 @@ contract DeployVertex is Script {
 
   struct RawRoleHolderData {
     // Attributes need to be in alphabetical order so JSON decodes properly.
+    string comment;
     uint64 expiration;
-    string expirationComment;
     uint128 quantity;
     uint8 role;
-    string roleComment;
     address user;
-    string userComment;
   }
 
   struct RawRolePermissionData {
@@ -134,9 +129,13 @@ contract DeployVertex is Script {
     }
   }
 
-  function readRoleDescriptions(string memory _jsonInput) internal returns (RoleDescription[] memory _descriptions) {
-    bytes memory _descriptionBytes = _jsonInput.parseRaw(".initialRoleDescriptions");
-    _descriptions = abi.decode(_descriptionBytes, (RoleDescription[]));
+  function readRoleDescriptions(string memory _jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
+    bytes memory descriptionBytes = _jsonInput.parseRaw(".initialRoleDescriptions");
+    string[] memory descriptions = abi.decode(descriptionBytes, (string[]));
+    for (uint256 i; i < descriptions.length; i++) {
+      require(bytes(descriptions[i]).length <= 32, "Role description is too long");
+    }
+    roleDescriptions = abi.decode(descriptionBytes, (RoleDescription[]));
   }
 
   function readRoleHolders(string memory _jsonInput) internal returns (RoleHolderData[] memory _roleHolders) {

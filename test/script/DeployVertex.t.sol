@@ -14,6 +14,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 contract DeployVertexTest is Test {
+
   DeployVertex script;
 
   function setUp() virtual public {
