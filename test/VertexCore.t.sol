@@ -5,6 +5,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
@@ -15,6 +16,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
@@ -437,6 +439,20 @@ contract CreateAction is VertexCoreTest {
     );
   }
 
+  function test_RevertIf_ActionGuardProhibitsAction() public {
+    IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
+    bytes memory expectedErr = bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
+
+    vm.prank(address(mpCore));
+    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(expectedErr);
+    mpCore.createAction(
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+    );
+  }
+
   function test_RevertIf_StrategyUnauthorized() public {
     VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
@@ -710,6 +726,36 @@ contract ExecuteAction is VertexCoreTest {
 
     // Check that it's in the Approved state
     assertEq(uint256(mpCore.getActionState(0)), uint256(3));
+  }
+
+  function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
+    IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
+    bytes memory expectedErr =
+      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
+
+    vm.prank(address(mpCore));
+    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+
+    mpCore.queueAction(0);
+    vm.warp(block.timestamp + 6 days);
+
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(0);
+  }
+
+  function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
+    IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
+    bytes memory expectedErr =
+      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
+
+    vm.prank(address(mpCore));
+    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+
+    mpCore.queueAction(0);
+    vm.warp(block.timestamp + 6 days);
+
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(0);
   }
 
   function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
@@ -1369,6 +1415,27 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     vm.expectEmit();
     emit AccountAuthorized(accountAddress, address(accountLogic), name);
     mpCore.executeAction(actionId);
+  }
+}
+
+contract SetGuard is VertexCoreTest {
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
+
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller, address target, bytes4 selector, IActionGuard guard)
+    public
+  {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.prank(caller);
+    mpCore.setGuard(target, selector, guard);
+  }
+
+  function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpCore));
+    vm.expectEmit();
+    emit ActionGuardSet(target, selector, guard);
+    mpCore.setGuard(target, selector, guard);
+    assertEq(address(mpCore.actionGuard(target, selector)), address(guard));
   }
 }
 

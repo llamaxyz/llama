@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
+import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -40,6 +41,7 @@ contract VertexCore is Initializable {
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
+  error ProhibitedByActionGuard(bytes32 reason);
 
   modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
@@ -60,6 +62,7 @@ contract VertexCore is Initializable {
     bytes data
   );
   event ActionCanceled(uint256 id);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
@@ -75,20 +78,20 @@ contract VertexCore is Initializable {
   // =============================================================
 
   /// @notice EIP-712 base typehash.
-  bytes32 public constant EIP712_DOMAIN_TYPEHASH =
+  bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
   /// @notice EIP-712 createAction typehash.
-  bytes32 public constant CREATE_ACTION_TYPEHASH = keccak256(
+  bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
     "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder,uint256 nonce)"
   );
 
   /// @notice EIP-712 castApproval typehash.
-  bytes32 public constant CAST_APPROVAL_TYPEHASH =
+  bytes32 internal constant CAST_APPROVAL_TYPEHASH =
     keccak256("CastApproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
   /// @notice EIP-712 castDisapproval typehash.
-  bytes32 public constant CAST_DISAPPROVAL_TYPEHASH =
+  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
     keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
   /// @notice Equivalent to 100%, but scaled for precision
@@ -125,6 +128,9 @@ contract VertexCore is Initializable {
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
   /// castApproval and castDisapproval) signed by the policyholder.
   mapping(address => mapping(bytes4 => uint256)) public nonces;
+
+  /// @notice Mapping of target to selector to actionGuard address.
+  mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -248,21 +254,34 @@ contract VertexCore is Initializable {
   /// @param actionId Id of the action to execute.
   /// @return The result returned from the call to the target contract.
   function executeAction(uint256 actionId) external payable returns (bytes memory) {
+    // Initial checks that action is ready to execute.
     if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
-    action.executed = true;
+    // Check pre-execution action guard.
+    IActionGuard guard = actionGuard[action.target][action.selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePreActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Execute action.
+    action.executed = true;
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-
     if (!success) revert FailedActionExecution();
 
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
+    // Check post-execution action guard.
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePostActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Action successfully executed.
+    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
     return result;
   }
 
@@ -416,6 +435,13 @@ contract VertexCore is Initializable {
     _deployAccounts(vertexAccountLogic, accounts);
   }
 
+  /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a guard, set `guard` to the zero address.
+  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+    actionGuard[target][selector] = guard;
+    emit ActionGuardSet(target, selector, guard);
+  }
+
   /// @notice Get whether an action has expired and can no longer be executed.
   /// @param actionId id of the action.
   /// @return Boolean value that is true if the action has expired.
@@ -500,6 +526,14 @@ contract VertexCore is Initializable {
     newAction.creationTime = block.timestamp;
     newAction.approvalPolicySupply = approvalPolicySupply;
     newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    // If an action guard is present, call it to determine if the action can be created. We must do
+    // this after the action is written to storage so that the action guard can any state it needs.
+    IActionGuard guard = actionGuard[target][selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
     unchecked {
       ++actionsCount;
