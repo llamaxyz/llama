@@ -540,7 +540,7 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CreateActionBySig is VertexCoreTest {
-  function test_CreateActionBySig() public {
+  function _createActionBySig(address _policyholder, uint256 _nonce) internal returns (uint256 actionId) {
     // Creating off-chain signature
     VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
@@ -549,28 +549,32 @@ contract CreateActionBySig is VertexCoreTest {
       value: 0,
       selector: PAUSE_SELECTOR,
       data: abi.encode(true),
-      policyholder: actionCreatorAaron,
-      nonce: 0
+      policyholder: _policyholder,
+      nonce: _nonce
     });
     bytes32 digest = sigUtils.getCreateActionTypedDataHash(createAction);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(actionCreatorAaronPrivateKey, digest);
 
     // Submitting on behalf of user
-    vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
-
-    uint256 _actionId = mpCore.createActionBySig(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0,
-      PAUSE_SELECTOR,
-      abi.encode(true),
-      actionCreatorAaron,
+    actionId = mpCore.createActionBySig(
+      createAction.role,
+      VertexStrategy(createAction.strategy),
+      createAction.target,
+      createAction.value,
+      createAction.selector,
+      createAction.data,
+      createAction.policyholder,
       v,
       r,
       s
     );
+  }
+
+  function test_CreateActionBySig() public {
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+
+    uint256 _actionId = _createActionBySig(actionCreatorAaron, 0);
 
     Action memory action = mpCore.getAction(_actionId);
     uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
