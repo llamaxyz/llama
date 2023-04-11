@@ -17,15 +17,15 @@ contract DeployVertex is Script {
   using stdJson for string;
 
   // Logic contracts.
-  VertexCore coreLogic;
-  VertexStrategy strategyLogic;
-  VertexAccount accountLogic;
-  VertexPolicy policyLogic;
+  VertexCore public coreLogic;
+  VertexStrategy public strategyLogic;
+  VertexAccount public accountLogic;
+  VertexPolicy public policyLogic;
 
   // Core Protocol.
-  VertexFactory factory;
-  VertexPolicyTokenURI policyMetadata;
-  VertexLens lens;
+  VertexFactory public factory;
+  VertexPolicyTokenURI public policyMetadata;
+  VertexLens public lens;
 
   struct RawStrategyData {
     // Attributes need to be in alphabetical order so JSON decodes properly.
