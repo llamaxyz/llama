@@ -764,7 +764,13 @@ contract HasPermissionId is VertexPolicyTest {
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), true);
   }
 
+  function test_ReturnsFalseIfHolderDoesNotHaveQuanitity() public {
+    assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), pausePermissionId), false);
+  }
+
   function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), false);
   }
 }
