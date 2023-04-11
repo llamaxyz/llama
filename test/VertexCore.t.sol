@@ -19,6 +19,7 @@ import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} fr
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 
 contract VertexCoreTest is VertexTestSetup {
   event ActionCreated(
@@ -41,8 +42,17 @@ contract VertexCoreTest is VertexTestSetup {
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
+  VertexCoreSigUtils sigUtils;
+
   function setUp() public virtual override {
     VertexTestSetup.setUp();
+
+    sigUtils = new VertexCoreSigUtils(VertexCoreSigUtils.EIP712Domain({
+      name: mpCore.name(),
+      version: "1",
+      chainId: block.chainid,
+      verifyingContract: address(mpCore)
+    }));
   }
 
   // =========================
