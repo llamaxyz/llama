@@ -22,6 +22,7 @@
   fuzz = { runs = 5000 }
   invariant = { runs = 1000, depth = 100 }
   optimizer = true
+  optimizer_runs = 10_000_000
   via_ir = true
 
 [rpc_endpoints]

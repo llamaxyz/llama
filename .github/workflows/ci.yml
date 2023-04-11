@@ -22,7 +22,7 @@ jobs:
       - name: Build contracts
         run: |
           forge --version
-          forge build --sizes --skip test
+          FOUNDRY_PROFILE=ci forge build --sizes --skip test
 
   test:
     runs-on: ubuntu-latest
