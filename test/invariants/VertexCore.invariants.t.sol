@@ -22,7 +22,8 @@ contract VertexCoreHandler is BaseHandler {
   bytes32[3] permissionIds;
 
   // Duplicated parameters from `VertexTestSetup` that we use here.
-  address actionCreatorAaron = makeAddr("actionCreatorAaron");
+  address actionCreatorAaron;
+  uint256 actionCreatorAaronPrivateKey;
 
   // Used to track the last seen `actionsCount` value.
   uint256[] public actionsCounts;
@@ -46,6 +47,8 @@ contract VertexCoreHandler is BaseHandler {
     for (uint256 i = 0; i < VERTEX_CORE.actionsCount(); i++) {
       actionsCounts.push(i);
     }
+
+    (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
   }
 
   // ==========================
