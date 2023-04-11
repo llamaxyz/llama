@@ -329,7 +329,7 @@ contract RevokePolicy is VertexPolicyTest {
   function test_RevertIf_PolicyDoesNotExist(address user) public {
     vm.assume(user != address(0));
     vm.assume(mpPolicy.balanceOf(user) == 0);
-    vm.expectRevert(VertexPolicy.UserDoesNotHoldPolicy.selector);
+    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.UserDoesNotHoldPolicy.selector, user));
     vm.prank(address(mpCore));
     mpPolicy.revokePolicy(user);
   }
