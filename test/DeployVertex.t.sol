@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
@@ -21,10 +22,6 @@ contract DeployVertexTest is Test {
 }
 
 contract Run is DeployVertexTest {
-  // function setUp() override public {
-  //   super.setUp();
-  //   script.run();
-  // }
   function test_DeploysFactory() public {
     VertexFactory factory = script.factory();
     assertEq(address(factory), address(0));
@@ -46,6 +43,7 @@ contract Run is DeployVertexTest {
     script.run();
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     VertexFactory factory = script.factory();
+    assertEq(factory.vertexCount(), 1);
     VertexCore rootVertex = factory.ROOT_VERTEX();
     assertEq(rootVertex.name(), "Root Vertex");
 
@@ -77,7 +75,7 @@ contract Run is DeployVertexTest {
         //   address indexed accountLogic,
         //   string name
         // );
-        address account = address(uint160(uint256(_event.topics[1])));
+        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
         accountsAuthorized[accountsCount++] = VertexAccount(account);
       }
     }
@@ -108,9 +106,31 @@ contract Run is DeployVertexTest {
     assertEq(secondStrategy.forceApprovalRole(2), true);
     assertEq(secondStrategy.forceDisapprovalRole(2), true);
 
-    // TODO authorizedAccounts
+    VertexAccount firstAccount = accountsAuthorized[0];
+    assertEq(firstAccount.vertex(), address(rootVertex));
+    assertEq(
+      keccak256(abi.encodePacked(firstAccount.name())),
+      keccak256("Llama Treasury")
+    );
+
+    VertexAccount secondAccount = accountsAuthorized[1];
+    assertEq(secondAccount.vertex(), address(rootVertex));
+    assertEq(
+      keccak256(abi.encodePacked(secondAccount.name())),
+      keccak256("Llama Grants")
+    );
 
     VertexPolicy rootPolicy = rootVertex.policy();
+    assertEq(address(rootPolicy.factory()), address(factory));
+    assertEq(rootPolicy.numRoles(), 7);
+
+    address initRoleHolder = 0x82e130E597e2b955c6Ad9DbC58185f881cD83CD7; // makeAddr('randomLogicAddress')
+    uint8 approverRoleId = 2;
+    assertEq(rootPolicy.hasRole(initRoleHolder, approverRoleId), true);
+    Checkpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    assertEq(checkpoint.expiration, type(uint64).max);
+    assertEq(checkpoint.quantity, 1);
   }
 
   function test_DeploysCoreLogic() public {
@@ -174,9 +194,4 @@ contract Run is DeployVertexTest {
       bytes32(0xb015298f3f29356efa6d653f1f06c375fa6ad631144702003798f9939f8ce444)
     );
   }
-
-  // function test_DeploysAccountsToSameAddressAccrossDifferentChains() public {
-  // }
-
-  // Once root vertex is deployed, deploy a new vertex with the factory
 }
