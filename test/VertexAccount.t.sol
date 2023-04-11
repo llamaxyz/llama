@@ -200,7 +200,7 @@ contract Transfer is VertexAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
-    mpAccount1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -209,13 +209,13 @@ contract Transfer is VertexAccountTest {
 
   function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    mpAccount1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
   }
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    mpAccount1.transfer(payable(address(0)), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(address(0)), ETH_AMOUNT);
     vm.stopPrank();
   }
 }

@@ -74,7 +74,7 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Function for Vertex to transfer native tokens to other parties.
   /// @param recipient Transfer's recipient.
   /// @param amount Amount to transfer.
-  function transfer(address payable recipient, uint256 amount) external onlyVertex {
+  function transferNativeToken(address payable recipient, uint256 amount) external onlyVertex {
     if (recipient == address(0)) revert Invalid0xRecipient();
     recipient.sendValue(amount);
   }
