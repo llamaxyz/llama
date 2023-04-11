@@ -24,6 +24,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error AllHoldersRole();
   error AlreadyInitialized();
   error CallReverted(uint256 index, bytes revertData);
   error InvalidInput();
@@ -330,7 +331,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       // Ensure role is initialized.
       if (role > numRoles) revert RoleNotInitialized(role);
 
-      if (role == ALL_HOLDERS_ROLE) revert InvalidInput(); // Cannot set the ALL_HOLDERS_ROLE because this is handled in
+      if (role == ALL_HOLDERS_ROLE) revert AllHoldersRole(); // Cannot set the ALL_HOLDERS_ROLE because this is handled
+        // in
         // the _mint / _burn methods and can create duplicate entries if set here.
 
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when

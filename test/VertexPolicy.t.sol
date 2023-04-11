@@ -232,7 +232,7 @@ contract SetRoleHolder is VertexPolicyTest {
     timestamp = bound(timestamp, block.timestamp, type(uint64).max);
     expiration = uint64(bound(expiration, 0, timestamp - 1));
     vm.warp(timestamp);
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.AllHoldersRole.selector);
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, expiration);
   }
@@ -243,7 +243,7 @@ contract SetRoleHolder is VertexPolicyTest {
     vm.expectRevert(VertexPolicy.InvalidInput.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, 0, 1);
 
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.AllHoldersRole.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, 0);
   }
 
