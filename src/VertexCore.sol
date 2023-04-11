@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
+import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -40,6 +41,7 @@ contract VertexCore is Initializable {
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
+  error ProhibitedByActionGuard(bytes32 reason);
 
   modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
@@ -60,6 +62,7 @@ contract VertexCore is Initializable {
     bytes data
   );
   event ActionCanceled(uint256 id);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
@@ -125,6 +128,9 @@ contract VertexCore is Initializable {
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
   /// castApproval and castDisapproval) signed by the policyholder.
   mapping(address => mapping(bytes4 => uint256)) public nonces;
+
+  /// @notice Mapping of target to selector to actionGuard address.
+  mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -251,6 +257,12 @@ contract VertexCore is Initializable {
     if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
+    IActionGuard guard = actionGuard[action.target][action.selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validateActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
+
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
@@ -416,6 +428,13 @@ contract VertexCore is Initializable {
     _deployAccounts(vertexAccountLogic, accounts);
   }
 
+  /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a guard, set `guard` to the zero address.
+  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+    actionGuard[target][selector] = guard;
+    emit ActionGuardSet(target, selector, guard);
+  }
+
   /// @notice Get whether an action has expired and can no longer be executed.
   /// @param actionId id of the action.
   /// @return Boolean value that is true if the action has expired.
@@ -500,6 +519,14 @@ contract VertexCore is Initializable {
     newAction.creationTime = block.timestamp;
     newAction.approvalPolicySupply = approvalPolicySupply;
     newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    // If an action guard is present, call it to determine if the action can be created. We must do
+    // this after the action is written to storage so that the action guard can any state it needs.
+    IActionGuard guard = actionGuard[target][selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
     unchecked {
       ++actionsCount;
