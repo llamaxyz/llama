@@ -371,7 +371,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     localPolicy.revokePolicy(arbitraryAddress);
 
     assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
-    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(Roles.Last)), false);
+    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(type(Roles).max) + 1), false);
   }
 
   function test_Revokes255RolesWithoutEnumeration() public {
