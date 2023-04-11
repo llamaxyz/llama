@@ -540,11 +540,47 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CreateActionBySig is VertexCoreTest {
-  function test_SuccessfulCreateActionBySignature() public {
-    // TODO
-    // This is a happy path test.
-    // Assert changes to Action storage.
-    // Assert event emission.
+  function test_CreateActionBySig() public {
+    // Creating off-chain signature
+    VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
+      role: uint8(Roles.ActionCreator),
+      strategy: address(mpStrategy1),
+      target: address(mockProtocol),
+      value: 0,
+      selector: PAUSE_SELECTOR,
+      data: abi.encode(true),
+      policyholder: actionCreatorAaron,
+      nonce: 0
+    });
+    bytes32 digest = sigUtils.getCreateActionTypedDataHash(createAction);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(actionCreatorAaronPrivateKey, digest);
+
+    // Submitting on behalf of user
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+
+    uint256 _actionId = mpCore.createActionBySig(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      actionCreatorAaron,
+      v,
+      r,
+      s
+    );
+
+    Action memory action = mpCore.getAction(_actionId);
+    uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
+
+    assertEq(_actionId, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(ApprovalPeriodEnd, block.timestamp + 2 days);
+    assertEq(action.approvalPolicySupply, 3);
+    assertEq(action.disapprovalPolicySupply, 3);
   }
 
   function test_CheckNonceIncrements() public {
@@ -924,7 +960,7 @@ contract CastApproval is VertexCoreTest {
 }
 
 contract CastApprovalBySig is VertexCoreTest {
-  function test_SuccessfulApprovalBySignature() public {
+  function test_CastApprovalBySig() public {
     // TODO
     // This is a happy path test.
     // Assert changes to Action storage.
@@ -1020,7 +1056,7 @@ contract CastDisapproval is VertexCoreTest {
 }
 
 contract CastDisapprovalBySig is VertexCoreTest {
-  function test_SuccessfulDisapprovalBySignature() public {
+  function test_CastDisapprovalBySig() public {
     // TODO
     // This is a happy path test.
     // Sign a message and have one account cast a disapproval on behalf of another.
