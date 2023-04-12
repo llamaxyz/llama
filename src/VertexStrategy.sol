@@ -138,7 +138,7 @@ contract VertexStrategy is Initializable {
   /// @return Boolean value that is true if the action is expired.
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.executionTime + expirationPeriod < block.timestamp;
+    return action.minExecutionTime + expirationPeriod < block.timestamp;
   }
 
   /// @notice Get whether an action has eligible to be canceled.

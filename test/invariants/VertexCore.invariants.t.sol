@@ -174,7 +174,7 @@ contract VertexCoreHandler is BaseHandler {
       return;
     }
 
-    vm.warp(VERTEX_CORE.getAction(actionId).executionTime); // Ensure the action is ready to be executed.
+    vm.warp(VERTEX_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
     try VERTEX_CORE.executeAction(actionId) {
       recordMetric("vertexCore_executeAction_executed");
     } catch {

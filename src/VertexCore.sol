@@ -241,7 +241,7 @@ contract VertexCore is Initializable {
     Action storage action = actions[actionId];
     uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
-    action.executionTime = executionTime;
+    action.minExecutionTime = executionTime;
 
     emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
   }
@@ -254,7 +254,7 @@ contract VertexCore is Initializable {
     if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
 
     Action storage action = actions[actionId];
-    if (block.timestamp < action.executionTime) revert TimelockNotFinished();
+    if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
     // Check pre-execution action guard.
@@ -455,7 +455,7 @@ contract VertexCore is Initializable {
 
     if (!action.strategy.isActionPassed(actionId)) return ActionState.Failed;
 
-    if (action.executionTime == 0) return ActionState.Approved;
+    if (action.minExecutionTime == 0) return ActionState.Approved;
 
     if (action.executed) return ActionState.Executed;
 

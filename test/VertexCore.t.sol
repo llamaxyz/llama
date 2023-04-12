@@ -770,7 +770,7 @@ contract ExecuteAction is VertexCoreTest {
     // Using a reasonable upper limit for elapsedTime
     vm.assume(timeElapsed < 10_000 days);
     mpCore.queueAction(actionId);
-    uint256 executionTime = mpCore.getAction(actionId).executionTime;
+    uint256 executionTime = mpCore.getAction(actionId).minExecutionTime;
 
     vm.warp(block.timestamp + timeElapsed);
 
