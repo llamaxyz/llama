@@ -975,28 +975,70 @@ contract CastApproval is VertexCoreTest {
 }
 
 contract CastApprovalBySig is VertexCoreTest {
+  function _createOffchainSignature(uint256 _actionId, uint256 privateKey)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    VertexCoreSigUtils.CastApproval memory castApproval = VertexCoreSigUtils.CastApproval({
+      actionId: _actionId,
+      role: uint8(Roles.Approver),
+      reason: "",
+      policyholder: approverAdam,
+      nonce: 0
+    });
+    bytes32 digest = sigUtils.getCastApprovalTypedDataHash(castApproval);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function _castApprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castApprovalBySig(actionId, uint8(Roles.Approver), "", approverAdam, v, r, s);
+  }
+
   function test_CastApprovalBySig() public {
-    // TODO
-    // This is a happy path test.
-    // Assert changes to Action storage.
-    // Assert changes to Approval storage.
-    // Assert event emission.
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+
+    vm.expectEmit();
+    emit ApprovalCast(actionId, approverAdam, 1, "");
+
+    _castApprovalBySig(actionId, v, r, s);
+
+    assertEq(mpCore.getAction(0).totalApprovals, 1);
+    assertEq(mpCore.approvals(0, approverAdam), true);
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+
+    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 0);
+    _castApprovalBySig(actionId, v, r, s);
+    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+    _castApprovalBySig(actionId, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    uint256 actionId = _createAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
