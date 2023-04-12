@@ -540,8 +540,7 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CreateActionBySig is VertexCoreTest {
-  function _createActionBySig(address _policyholder, uint256 _nonce) internal returns (uint256 actionId) {
-    // Creating off-chain signature
+  function _createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
       strategy: address(mpStrategy1),
@@ -549,21 +548,22 @@ contract CreateActionBySig is VertexCoreTest {
       value: 0,
       selector: PAUSE_SELECTOR,
       data: abi.encode(true),
-      policyholder: _policyholder,
-      nonce: _nonce
+      policyholder: actionCreatorAaron,
+      nonce: 0
     });
     bytes32 digest = sigUtils.getCreateActionTypedDataHash(createAction);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(actionCreatorAaronPrivateKey, digest);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
 
-    // Submitting on behalf of user
+  function _createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
     actionId = mpCore.createActionBySig(
-      createAction.role,
-      VertexStrategy(createAction.strategy),
-      createAction.target,
-      createAction.value,
-      createAction.selector,
-      createAction.data,
-      createAction.policyholder,
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      actionCreatorAaron,
       v,
       r,
       s
@@ -571,10 +571,12 @@ contract CreateActionBySig is VertexCoreTest {
   }
 
   function test_CreateActionBySig() public {
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+
     vm.expectEmit();
     emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
 
-    uint256 _actionId = _createActionBySig(actionCreatorAaron, 0);
+    uint256 _actionId = _createActionBySig(v, r, s);
 
     Action memory action = mpCore.getAction(_actionId);
     uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
@@ -588,19 +590,28 @@ contract CreateActionBySig is VertexCoreTest {
   }
 
   function test_CheckNonceIncrements() public {
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
     assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 0);
-    _createActionBySig(actionCreatorAaron, 0);
+    _createActionBySig(v, r, s);
     assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+    _createActionBySig(v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
