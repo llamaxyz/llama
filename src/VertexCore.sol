@@ -563,9 +563,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies)
-    internal
-  {
+  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies) internal {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
