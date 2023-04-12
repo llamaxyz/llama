@@ -118,7 +118,7 @@ contract Run is DeployVertexTest {
     assertEq(address(rootPolicy.factory()), address(factory));
     assertEq(rootPolicy.numRoles(), 7);
 
-    address initRoleHolder = 0x82e130E597e2b955c6Ad9DbC58185f881cD83CD7; // makeAddr('randomLogicAddress')
+    address initRoleHolder = makeAddr("randomLogicAddress");
     uint8 approverRoleId = 2;
     assertEq(rootPolicy.hasRole(initRoleHolder, approverRoleId), true);
     Checkpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);

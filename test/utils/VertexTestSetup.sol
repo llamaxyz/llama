@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {stdJson} from "forge-std/Script.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -32,6 +33,8 @@ enum Roles {
 }
 
 contract VertexTestSetup is DeployVertexProtocol, Test {
+  using stdJson for string;
+
   // Root Vertex instance.
   VertexCore rootCore;
   VertexPolicy rootPolicy;
@@ -99,10 +102,9 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
     // Deploy the Root vertex instance. We only instantiate it with a single action creator role.
     Strategy[] memory strategies = defaultStrategies();
-    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-    );
-    string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
+    string memory scriptInput = readScriptInput();
+    RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
+    string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
