@@ -26,7 +26,6 @@ contract VertexCore is Initializable {
   error InvalidActionId();
   error OnlyQueuedActions();
   error InvalidStateForQueue();
-  error ActionCannotBeCanceled();
   error OnlyVertex();
   error ActionNotActive();
   error ActionNotQueued();
@@ -285,22 +284,15 @@ contract VertexCore is Initializable {
     return result;
   }
 
-  /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
+  /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
   /// @param actionId Id of the action to cancel.
   function cancelAction(uint256 actionId) external {
-    ActionState state = getActionState(actionId);
-    if (
-      state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
-        || state == ActionState.Failed
-    ) revert InvalidCancelation();
-
+    // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
+    // address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
     Action storage action = actions[actionId];
-    if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) {
-      revert ActionCannotBeCanceled();
-    }
+    if (!action.strategy.isActionCancelationValid(actionId, msg.sender)) revert InvalidCancelation();
 
     action.canceled = true;
-
     emit ActionCanceled(actionId);
   }
 

@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
+import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
@@ -132,9 +133,27 @@ contract VertexStrategy is Initializable {
 
   /// @notice Get whether an action has eligible to be canceled.
   /// @param actionId id of the action.
+  /// @param caller User initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
-  function isActionCancelationValid(uint256 actionId) external view returns (bool) {
+  function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool) {
+    // The rules for cancelation are:
+    //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
+    //   2. For all other states (Active, Approved, Queued) the action can be canceled if:
+    //        a. The caller is the action creator.
+    //        b. The action is Queued, but the number of disapprovals is >= the disapproval threshold.
+
+    // Check 1.
+    ActionState state = vertex.getActionState(actionId);
+    if (
+      state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
+        || state == ActionState.Failed
+    ) return false;
+
+    // Check 2a.
     Action memory action = vertex.getAction(actionId);
+    if (caller == action.creator) return true;
+
+    // Check 2b.
     return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
   }
 

@@ -485,7 +485,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionId);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
 
     assertEq(isActionCancelled, true);
   }
@@ -509,7 +509,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionId);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
 
     assertEq(isActionCancelled, false);
   }
