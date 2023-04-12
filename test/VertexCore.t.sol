@@ -675,7 +675,7 @@ contract QueueAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Approved)));
     mpCore.queueAction(0);
   }
 
@@ -719,7 +719,7 @@ contract ExecuteAction is VertexCoreTest {
   }
 
   function test_RevertIf_NotQueued() public {
-    vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.executeAction(actionId);
 
     // Check that it's in the Approved state
@@ -887,7 +887,7 @@ contract CastApproval is VertexCoreTest {
 
     mpCore.queueAction(actionId);
 
-    vm.expectRevert(VertexCore.ActionNotActive.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Active)));
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 
@@ -982,7 +982,7 @@ contract CastDisapproval is VertexCoreTest {
   function test_RevertIf_ActionNotQueued() public {
     actionId = _createAction();
 
-    vm.expectRevert(VertexCore.ActionNotQueued.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 
