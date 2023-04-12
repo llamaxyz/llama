@@ -129,17 +129,12 @@ contract DeployVertexProtocol is Script {
     }
   }
 
-  function readRoleDescriptions(string memory jsonInput)
-    internal
-    pure
-    returns (RoleDescription[] memory roleDescriptions)
-  {
-    bytes memory descriptionBytes = jsonInput.parseRaw(".initialRoleDescriptions");
-    string[] memory descriptions = abi.decode(descriptionBytes, (string[]));
+  function readRoleDescriptions(string memory jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
+    string[] memory descriptions = jsonInput.readStringArray(".initialRoleDescriptions");
     for (uint256 i; i < descriptions.length; i++) {
       require(bytes(descriptions[i]).length <= 32, "Role description is too long");
     }
-    roleDescriptions = abi.decode(descriptionBytes, (RoleDescription[]));
+    roleDescriptions = abi.decode(abi.encode(descriptions), (RoleDescription[]));
   }
 
   function readRoleHolders(string memory jsonInput) internal pure returns (RoleHolderData[] memory roleHolders) {
