@@ -5,9 +5,11 @@ import {console2} from "forge-std/Test.sol";
 
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
@@ -21,8 +23,8 @@ contract VertexFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  address public strategyLogic;
-  address public accountLogic;
+  VertexStrategy public strategyLogic;
+  VertexAccount public accountLogic;
 
   // Used to track the last seen `vertexCount` value.
   uint256[] public vertexCounts;
@@ -31,9 +33,12 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore, address _strategyLogic, address _accountLogic)
-    BaseHandler(_vertexFactory, _vertexCore)
-  {
+  constructor(
+    VertexFactory _vertexFactory,
+    VertexCore _vertexCore,
+    VertexStrategy _strategyLogic,
+    VertexAccount _accountLogic
+  ) BaseHandler(_vertexFactory, _vertexCore) {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
     strategyLogic = _strategyLogic;
     accountLogic = _accountLogic;
@@ -87,7 +92,7 @@ contract VertexFactoryHandler is BaseHandler {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
 
-  function vertexFactory_authorizeStrategyLogic(address newStrategyLogic)
+  function vertexFactory_authorizeStrategyLogic(VertexStrategy newStrategyLogic)
     public
     recordCall("vertexFactory_authorizeStrategyLogic")
     useCurrentTimestamp
@@ -96,7 +101,7 @@ contract VertexFactoryHandler is BaseHandler {
     VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
   }
 
-  function vertexFactory_authorizeAccountLogic(address newAccountLogic)
+  function vertexFactory_authorizeAccountLogic(VertexAccount newAccountLogic)
     public
     recordCall("vertexFactory_authorizeAccountLogic")
     useCurrentTimestamp
@@ -120,7 +125,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
 
   function setUp() public override {
     VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore, address(strategyLogic), address(accountLogic));
+    handler = new VertexFactoryHandler(factory, mpCore, strategyLogic, accountLogic);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

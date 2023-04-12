@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -28,8 +30,8 @@ contract VertexFactory {
   // ========================
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
-  event StrategyLogicAuthorized(address indexed strategyLogic);
-  event AccountLogicAuthorized(address indexed accountLogic);
+  event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);
+  event AccountLogicAuthorized(VertexAccount indexed accountLogic);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -42,10 +44,10 @@ contract VertexFactory {
   VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
-  mapping(address => bool) public authorizedStrategyLogics;
+  mapping(VertexStrategy => bool) public authorizedStrategyLogics;
 
   /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
-  mapping(address => bool) public authorizedAccountLogics;
+  mapping(VertexAccount => bool) public authorizedAccountLogics;
 
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
@@ -62,8 +64,8 @@ contract VertexFactory {
 
   constructor(
     VertexCore vertexCoreLogic,
-    address initialVertexStrategyLogic,
-    address initialVertexAccountLogic,
+    VertexStrategy initialVertexStrategyLogic,
+    VertexAccount initialVertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
@@ -108,8 +110,8 @@ contract VertexFactory {
   /// @return the address of the VertexCore contract of the newly created system.
   function deploy(
     string memory name,
-    address strategyLogic,
-    address accountLogic,
+    VertexStrategy strategyLogic,
+    VertexAccount accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
@@ -130,13 +132,13 @@ contract VertexFactory {
 
   /// @notice Authorizes a strategy logic contract.
   /// @param strategyLogic The strategy logic contract to authorize.
-  function authorizeStrategyLogic(address strategyLogic) external onlyRootVertex {
+  function authorizeStrategyLogic(VertexStrategy strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
   }
 
   /// @notice Authorizes an account logic contract.
   /// @param accountLogic The account logic contract to authorize.
-  function authorizeAccountLogic(address accountLogic) external onlyRootVertex {
+  function authorizeAccountLogic(VertexAccount accountLogic) external onlyRootVertex {
     _authorizeAccountLogic(accountLogic);
   }
 
@@ -163,8 +165,8 @@ contract VertexFactory {
 
   function _deploy(
     string memory name,
-    address strategyLogic,
-    address accountLogic,
+    VertexStrategy strategyLogic,
+    VertexAccount accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
@@ -186,12 +188,12 @@ contract VertexFactory {
     }
   }
 
-  function _authorizeStrategyLogic(address strategyLogic) internal {
+  function _authorizeStrategyLogic(VertexStrategy strategyLogic) internal {
     authorizedStrategyLogics[strategyLogic] = true;
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
-  function _authorizeAccountLogic(address accountLogic) internal {
+  function _authorizeAccountLogic(VertexAccount accountLogic) internal {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
   }

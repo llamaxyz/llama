@@ -69,9 +69,11 @@ contract VertexCore is Initializable {
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+  event StrategyAuthorized(
+    VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, Strategy strategyData
+  );
   event StrategyUnauthorized(VertexStrategy indexed strategy);
-  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
+  event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -148,8 +150,8 @@ contract VertexCore is Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
-    address _vertexStrategyLogic,
-    address _vertexAccountLogic,
+    VertexStrategy _vertexStrategyLogic,
+    VertexAccount _vertexAccountLogic,
     Strategy[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
@@ -409,7 +411,7 @@ contract VertexCore is Initializable {
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(address vertexStrategyLogic, Strategy[] calldata strategies)
+  function createAndAuthorizeStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies)
     external
     onlyVertex
   {
@@ -431,7 +433,7 @@ contract VertexCore is Initializable {
   /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
   /// @param vertexAccountLogic address of the Vertex Account logic contract.
   /// @param accounts list of new accounts to be authorized.
-  function createAndAuthorizeAccounts(address vertexAccountLogic, string[] calldata accounts) external onlyVertex {
+  function createAndAuthorizeAccounts(VertexAccount vertexAccountLogic, string[] calldata accounts) external onlyVertex {
     _deployAccounts(vertexAccountLogic, accounts);
   }
 
@@ -582,7 +584,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
+  function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
     internal
   {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
@@ -607,7 +609,7 @@ contract VertexCore is Initializable {
           )
         );
 
-        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
+        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
         strategy.initialize(strategies[i], _policy);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
@@ -615,7 +617,7 @@ contract VertexCore is Initializable {
     }
   }
 
-  function _deployAccounts(address vertexAccountLogic, string[] calldata accounts) internal {
+  function _deployAccounts(VertexAccount vertexAccountLogic, string[] calldata accounts) internal {
     if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
       // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
@@ -626,7 +628,7 @@ contract VertexCore is Initializable {
     unchecked {
       for (uint256 i; i < accountLength; ++i) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
+        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
         account.initialize(accounts[i]);
         emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
       }

@@ -128,15 +128,15 @@ contract VertexCoreTest is VertexTestSetup {
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     VertexStrategy additionalStrategyLogic = new VertexStrategy();
     vm.prank(address(rootCore));
-    factory.authorizeStrategyLogic(address(additionalStrategyLogic));
+    factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
   }
 
-  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address) {
+  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address payable) {
     VertexAccount additionalAccountLogic = new VertexAccount();
     vm.prank(address(rootCore));
-    factory.authorizeAccountLogic(address(additionalAccountLogic));
-    return address(additionalAccountLogic);
+    factory.authorizeAccountLogic(additionalAccountLogic);
+    return payable(additionalAccountLogic);
   }
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod) internal pure returns (Strategy memory) {
@@ -180,8 +180,8 @@ contract Initialize is VertexCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new VertexFactoryWithoutInitialization(
       coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       policyLogic,
       policyMetadata,
       "Root Vertex",
@@ -217,7 +217,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -239,7 +239,7 @@ contract Initialize is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategies[0]);
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategies[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
   }
 
@@ -255,7 +255,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
@@ -274,7 +274,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
@@ -296,7 +296,7 @@ contract Initialize is VertexCoreTest {
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
@@ -312,7 +312,13 @@ contract Initialize is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", notStrategyLogic, address(accountLogic), strategies, accounts
+      uninitializedVertex,
+      policy,
+      "NewProject",
+      VertexStrategy(notStrategyLogic),
+      VertexAccount(accountLogic),
+      strategies,
+      accounts
     );
   }
 
@@ -331,7 +337,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -353,7 +359,7 @@ contract Initialize is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), accounts[0]);
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), accounts[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
   }
 
@@ -369,7 +375,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(accountAddresses[0].vertex()), address(uninitializedVertex));
@@ -388,7 +394,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(accountAddresses[0].name(), "Account1");
@@ -397,6 +403,7 @@ contract Initialize is VertexCoreTest {
 
   function test_RevertIf_AccountLogicIsNotAuthorized(address notAccountLogic) public {
     vm.assume(uint160(notAccountLogic) != uint160(address(accountLogic)));
+    address payable payableNotAccountLogic = payable(notAccountLogic);
     (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
       deployWithoutInitialization();
     Strategy[] memory strategies = defaultStrategies();
@@ -404,7 +411,13 @@ contract Initialize is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(notAccountLogic), strategies, accounts
+      uninitializedVertex,
+      policy,
+      "NewProject",
+      strategyLogic,
+      VertexAccount(payableNotAccountLogic),
+      strategies,
+      accounts
     );
   }
 }
@@ -1069,7 +1082,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1133,7 +1146,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
 
-    mpCore.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
+    mpCore.createAndAuthorizeStrategies(VertexStrategy(additionalStrategyLogic), newStrategies);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1159,7 +1172,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
+    mpCore.createAndAuthorizeStrategies(VertexStrategy(randomLogicAddress), newStrategies);
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1184,7 +1197,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1208,10 +1221,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies1);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies1);
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies2);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1313,7 +1326,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
 
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_Reinitialized() public {
@@ -1325,7 +1338,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     }
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[0].initialize(newAccounts[0]);
@@ -1338,7 +1351,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
   }
 
   function test_CreateNewAccountsWithAdditionalAccountLogic() public {
-    address additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
+    address payable additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
 
     string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);
@@ -1353,7 +1366,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
 
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
+    mpCore.createAndAuthorizeAccounts(VertexAccount(additionalAccountLogic), newAccounts);
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
@@ -1361,24 +1374,24 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
+    mpCore.createAndAuthorizeAccounts(VertexAccount(randomLogicAddress), newAccounts);
   }
 
   function test_RevertIf_AccountsAreIdentical() public {
     string[] memory newAccounts = Solarray.strings("VertexAccount1", "VertexAccount1");
     vm.prank(address(mpCore));
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     string[] memory newAccounts1 = Solarray.strings("VertexAccount1");
     string[] memory newAccounts2 = Solarray.strings("VertexAccount1");
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts1);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts1);
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts2);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {

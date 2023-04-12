@@ -96,7 +96,7 @@ contract VertexTestSetup is Test {
   bytes32 pausePermissionId2;
 
   // Other addresses and constants.
-  address randomLogicAddress = makeAddr("randomLogicAddress");
+  address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
   uint128 DEFAULT_ROLE_QTY = 1;
   uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
@@ -122,8 +122,8 @@ contract VertexTestSetup is Test {
 
     factory = new VertexFactory(
       coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       policyLogic,
       policyMetadata,
       "Root Vertex",
@@ -143,8 +143,8 @@ contract VertexTestSetup is Test {
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       strategies,
       mpAccounts,
       roleDescriptionStrings,
