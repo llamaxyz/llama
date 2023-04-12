@@ -434,14 +434,6 @@ contract VertexCore is Initializable {
     emit ActionGuardSet(target, selector, guard);
   }
 
-  /// @notice Get whether an action has expired and can no longer be executed.
-  /// @param actionId id of the action.
-  /// @return Boolean value that is true if the action has expired.
-  function isActionExpired(uint256 actionId) public view returns (bool) {
-    Action storage action = actions[actionId];
-    return block.timestamp >= action.executionTime + action.strategy.expirationPeriod();
-  }
-
   /// @notice Get an Action struct by actionId.
   /// @param actionId id of the action.
   /// @return The Action struct.
@@ -470,7 +462,7 @@ contract VertexCore is Initializable {
 
     if (action.executed) return ActionState.Executed;
 
-    if (isActionExpired(actionId)) return ActionState.Expired;
+    if (action.strategy.isActionExpired(actionId)) return ActionState.Expired;
 
     return ActionState.Queued;
   }

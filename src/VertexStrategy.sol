@@ -131,6 +131,14 @@ contract VertexStrategy is Initializable {
     return action.totalApprovals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
   }
 
+  /// @notice Returns `true` if the action is expired, false otherwise.
+  /// @param actionId id of the action.
+  /// @return Boolean value that is true if the action is expired.
+  function isActionExpired(uint256 actionId) external view returns (bool) {
+    Action memory action = vertex.getAction(actionId);
+    return action.executionTime + expirationPeriod < block.timestamp;
+  }
+
   /// @notice Get whether an action has eligible to be canceled.
   /// @param actionId id of the action.
   /// @param caller User initiating the cancelation.
