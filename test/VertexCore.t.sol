@@ -1113,29 +1113,81 @@ contract CastDisapproval is VertexCoreTest {
 }
 
 contract CastDisapprovalBySig is VertexCoreTest {
+  function _createOffchainSignature(uint256 _actionId, uint256 privateKey)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    VertexCoreSigUtils.CastDisapproval memory castDisapproval = VertexCoreSigUtils.CastDisapproval({
+      actionId: _actionId,
+      role: uint8(Roles.Disapprover),
+      reason: "",
+      policyholder: disapproverDrake,
+      nonce: 0
+    });
+    bytes32 digest = sigUtils.getCastDisapprovalTypedDataHash(castDisapproval);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function _castDisapprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castDisapprovalBySig(actionId, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
+  }
+
+  function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
+    _actionId = _createAction();
+    _approveAction(approverAdam, _actionId);
+    _approveAction(approverAlicia, _actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionPassed(_actionId), true);
+    _queueAction(_actionId);
+  }
+
   function test_CastDisapprovalBySig() public {
-    // TODO
-    // This is a happy path test.
-    // Sign a message and have one account cast a disapproval on behalf of another.
-    // Assert changes to Action storage.
-    // Assert changes to Disapproval storage.
-    // Assert event emission.
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+
+    vm.expectEmit();
+    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+
+    _castDisapprovalBySig(actionId, v, r, s);
+
+    assertEq(mpCore.getAction(0).totalDisapprovals, 1);
+    assertEq(mpCore.disapprovals(0, disapproverDrake), true);
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+
+    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 0);
+    _castDisapprovalBySig(actionId, v, r, s);
+    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    _castDisapprovalBySig(actionId, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
