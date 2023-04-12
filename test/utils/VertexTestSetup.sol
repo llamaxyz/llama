@@ -2,26 +2,29 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Solarray} from "solarray/Solarray.sol";
+import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {ProtocolXYZ} from "test/mock/ProtocolXYZ.sol";
+import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
-import {VertexPolicyMetadata} from "src/VertexPolicyMetadata.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
-// Used for readability of tests, so they can be accessed with e.g. `Roles.Admin`.
+// Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
 enum Roles {
   AllHolders,
-  Admin,
   ActionCreator,
   Approver,
   Disapprover,
+  ForceApprover,
+  ForceDisapprover,
   TestRole1,
   TestRole2,
   MadeUpRole
@@ -36,7 +39,7 @@ contract VertexTestSetup is Test {
 
   // Core Protocol.
   VertexFactory factory;
-  VertexPolicyMetadata policyMetadata;
+  VertexPolicyTokenURI policyMetadata;
   VertexLens lens;
 
   // Root Vertex instance.
@@ -56,13 +59,12 @@ contract VertexTestSetup is Test {
   VertexAccount mpAccount2;
 
   // Mock protocol for action targets.
-  ProtocolXYZ public mockProtocol;
+  MockProtocol public mockProtocol;
 
-  // Root vertex admin.
-  address rootVertexAdmin = makeAddr("rootVertexAdmin");
+  // Root vertex action creator.
+  address rootVertexActionCreator = makeAddr("rootVertexActionCreator");
 
   // Mock protocol users.
-  address adminAlice = makeAddr("adminAlice");
   address actionCreatorAaron = makeAddr("actionCreatorAaron");
 
   address approverAdam = makeAddr("approverAdam");
@@ -80,15 +82,23 @@ contract VertexTestSetup is Test {
   bytes4 public constant PAUSE_SELECTOR = 0x02329a29; // pause(bool)
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
+  bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
+  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x38cb05ed; // createAndAuthorizeStrategies(address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[])[])
+  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x0db24798; // createAndAuthorizeAccounts(address,string[])
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
+  bytes32 executeActionId;
+  bytes32 createStrategyId;
+  bytes32 createAccountId;
+  bytes32 pausePermissionId2;
 
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
   uint128 DEFAULT_ROLE_QTY = 1;
+  uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
@@ -97,15 +107,18 @@ contract VertexTestSetup is Test {
     strategyLogic = new VertexStrategy();
     accountLogic = new VertexAccount();
     policyLogic = new VertexPolicy();
-    policyMetadata = new VertexPolicyMetadata();
+    policyMetadata = new VertexPolicyTokenURI();
 
     // Deploy lens.
     lens = new VertexLens();
 
-    // Deploy the Root vertex instance. We only instantiate it with a single admin role.
+    // Deploy the Root vertex instance. We only instantiate it with a single action creator role.
     Strategy[] memory strategies = defaultStrategies();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
     string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
-    RoleHolderData[] memory rootRoleHolders = defaultAdminRoleHolder(rootVertexAdmin);
+    RoleHolderData[] memory rootRoleHolders = defaultActionCreatorRoleHolder(rootVertexActionCreator);
 
     factory = new VertexFactory(
       coreLogic,
@@ -116,15 +129,16 @@ contract VertexTestSetup is Test {
       "Root Vertex",
       strategies,
       rootAccounts,
+      roleDescriptionStrings,
       rootRoleHolders,
       new RolePermissionData[](0)
     );
-    rootCore = factory.rootVertex();
+    rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
 
-    // Now we deploy a mock protocol's vertex, again with a single admin role.
+    // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
-    RoleHolderData[] memory mpRoleHolders = defaultAdminRoleHolder(adminAlice);
+    RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
@@ -133,42 +147,41 @@ contract VertexTestSetup is Test {
       address(accountLogic),
       strategies,
       mpAccounts,
+      roleDescriptionStrings,
       mpRoleHolders,
       new RolePermissionData[](0)
     );
     mpPolicy = mpCore.policy();
 
+    // Set strategy addresses.
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+
+    // Set vertex account addresses.
+    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+
     // Add approvers and disapprovers to the mock protocol's vertex.
-    RoleHolderData[] memory mpRoleHoldersNew = new RoleHolderData[](7);
-    mpRoleHoldersNew[0] =
-      RoleHolderData(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[1] = RoleHolderData(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[2] =
-      RoleHolderData(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[3] = RoleHolderData(uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[4] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[5] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpRoleHoldersNew[6] =
-      RoleHolderData(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    // forgefmt: disable-start
+    bytes[] memory roleAssignmentCalls = new bytes[](7);
+    roleAssignmentCalls[0] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[1] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[2] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[3] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[4] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[5] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
+    roleAssignmentCalls[6] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
     // forgefmt: disable-end
 
     vm.prank(address(mpCore));
-    mpPolicy.setRoleHolders(mpRoleHoldersNew);
+    mpPolicy.aggregate(roleAssignmentCalls);
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
-    mockProtocol = new ProtocolXYZ(address(mpCore));
-
-    // With the protocol deployed, we can set special permissions.
-    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
-    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
-    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
-
-    RolePermissionData[] memory rolePermissions = new RolePermissionData[](3);
-    rolePermissions[0] = RolePermissionData(uint8(Roles.ActionCreator), pausePermissionId, true);
-    rolePermissions[1] = RolePermissionData(uint8(Roles.ActionCreator), failPermissionId, true);
-    rolePermissions[2] = RolePermissionData(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
+    mockProtocol = new MockProtocol(address(mpCore));
 
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
@@ -181,6 +194,34 @@ contract VertexTestSetup is Test {
     rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
     mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
     mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+
+    // With the protocol deployed, we can set special permissions.
+    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
+    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
+    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
+    executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
+    createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
+    createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
+    pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
+
+    bytes[] memory permissionsToSet = new bytes[](7);
+    permissionsToSet[0] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
+    permissionsToSet[1] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), failPermissionId, true));
+    permissionsToSet[2] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), receiveEthPermissionId, true));
+    permissionsToSet[3] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeActionId, true));
+    permissionsToSet[4] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createStrategyId, true));
+    permissionsToSet[5] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createAccountId, true));
+    permissionsToSet[6] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), pausePermissionId2, true));
+
+    vm.prank(address(mpCore));
+    mpPolicy.aggregate(permissionsToSet);
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);
@@ -213,11 +254,14 @@ contract VertexTestSetup is Test {
     require(bytes32(0) != pausePermissionId, "pausePermissionId not set");
     require(bytes32(0) != failPermissionId, "failPermissionId not set");
     require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
+    require(bytes32(0) != executeActionId, "executeActionId not set");
+    require(bytes32(0) != createStrategyId, "createStrategyId not set");
+    require(bytes32(0) != createAccountId, "createAccountId not set");
   }
 
-  function defaultAdminRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
+  function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {
     roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(Roles.Admin), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function defaultStrategies() internal pure returns (Strategy[] memory strategies) {
@@ -243,8 +287,8 @@ contract VertexTestSetup is Test {
       minDisapprovalPct: 10_001,
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: Solarray.uint8s(uint8(Roles.Admin)),
-      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.Admin))
+      forceApprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator)),
+      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator))
     });
 
     strategies = new Strategy[](2);

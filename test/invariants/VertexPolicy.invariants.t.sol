@@ -42,17 +42,17 @@ contract VertexPolicyHandler is BaseHandler {
   // =====================================
 
   function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(POLICY.vertex()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(POLICY.vertex()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(policy.vertex()));
+    vm.prank(address(POLICY.vertex()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }
@@ -166,21 +166,21 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_AllInvariants() public view {
+  function invariant_AllPolicyInvariants() public view {
     assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
     assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
     assertInvariant_DeterministicPolicyIds();
     assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT();
   }
 
-  function invariant_CallSummary() public {
-    address[] memory policyholders = handler.getActors();
-    for (uint256 i = 0; i < policyholders.length; i++) {
-      uint256 balance = mpPolicy.balanceOf(policyholders[i]);
-      if (balance == 0) handler.recordMetric("policyholdersHadBalanceOf_0");
-      else if (balance == 1) handler.recordMetric("policyholdersHadBalanceOf_1");
-      else handler.recordMetric("policyholdersHadBalanceOf_2+");
-    }
+  function invariant_CallSummary() public view {
+    // address[] memory policyholders = handler.getActors();
+    // for (uint256 i = 0; i < policyholders.length; i++) {
+    // uint256 balance = mpPolicy.balanceOf(policyholders[i]);
+    // if (balance == 0) handler.recordMetric("policyholdersHadBalanceOf_0");
+    // else if (balance == 1) handler.recordMetric("policyholdersHadBalanceOf_1");
+    // else handler.recordMetric("policyholdersHadBalanceOf_2+");
+    // }
 
     handler.callSummary();
   }

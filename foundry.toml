@@ -1,10 +1,18 @@
 [profile.default]
   bytecode_hash = 'none'
-  solc = "0.8.19"
-  optimizer = false
-  via_ir = false
   ffi = true
-  gas_reports = ["VertexAccount", "VertexCore", "VertexFactory", "VertexLens", "VertexPolicy", "VertexStrategy"]
+  gas_reports = [
+    "VertexAccount",
+    "VertexCore",
+    "VertexFactory",
+    "VertexLens",
+    "VertexPolicy",
+    "VertexStrategy",
+  ]
+  invariant = { fail_on_revert = true }
+  optimizer = false
+  solc = "0.8.19"
+  via_ir = false
 
 [profile.default.optimizer_details]
   constantOptimizer = true
@@ -12,8 +20,9 @@
 
 [profile.ci]
   fuzz = { runs = 5000 }
-  invariant = { runs = 1000, depth = 100, fail_on_revert = true }
+  invariant = { runs = 1000, depth = 100 }
   optimizer = true
+  optimizer_runs = 10_000_000
   via_ir = true
 
 [rpc_endpoints]

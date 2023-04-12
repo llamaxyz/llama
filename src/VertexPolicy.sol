@@ -1,29 +1,65 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
-import {ExpiredRole, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
 
-/// @title VertexPolicy
+import {VertexFactory} from "src/VertexFactory.sol";
+import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
+import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+
+/// @title Vertex Policy
 /// @author Llama (vertex@llama.xyz)
-/// @dev VertexPolicy is a (TODO: pick a soulbound standard) ERC721 contract where each token has permissions
+/// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
+/// disapprove actions.
 /// @dev TODO Add comments here around limitations/expectations of this contract, namely the "total
 /// supply issue", the fact that quantities cannot be larger than 1, and burning a policy.
-/// @notice The permissions determine how the token can interact with the vertex administrator contract
+/// @dev The roles determine how the token can interact with the Vertex Core contract.
 contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
+
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
+  error AllHoldersRole();
+  error AlreadyInitialized();
+  error CallReverted(uint256 index, bytes revertData);
+  error InvalidInput();
+  error MissingAdmin();
+  error NonTransferableToken();
+  error OnlyVertex();
+  error RoleNotInitialized(uint8 role);
+  error UserDoesNotHoldPolicy(address user);
+
+  modifier onlyVertex() {
+    if (msg.sender != vertex) revert OnlyVertex();
+    _;
+  }
+
+  modifier nonTransferableToken() {
+    _; // We put this ahead of the revert so we don't get an unreachable code warning. TODO Confirm this is safe.
+    revert NonTransferableToken();
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
+
+  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
+  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
 
   /// @notice A special role used to reference all policy holders.
   /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
   /// values for this role.
   uint8 public constant ALL_HOLDERS_ROLE = 0; // TODO Confirm zero is safe here.
-
-  /// @notice A special role to designate an Admin, who can always create actions.
-  uint8 public constant ADMIN_ROLE = 1;
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
@@ -39,90 +75,102 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// the role for each token ID that holds the role.
   mapping(uint8 role => Checkpoints.History) internal roleSupplyCkpts;
 
+  /// @notice The highest role ID that has been initialized.
+  uint8 public numRoles;
+
   /// @notice The address of the `VertexCore` instance that governs this contract.
   address public vertex;
 
   /// @notice The address of the `VertexFactory` contract.
   VertexFactory public factory;
 
-  error AlreadyInitialized();
-  error InvalidInput();
-  error MissingAdmin();
-  error NonTransferableToken();
-  error OnlyVertex();
-
-  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
-
-  modifier onlyVertex() {
-    if (msg.sender != vertex) revert OnlyVertex();
-    _;
-  }
-
-  modifier nonTransferableToken() {
-    _; // We put this ahead of the revert so we don't get an unreachable code warning.
-    revert NonTransferableToken();
-  }
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   constructor() initializer {}
 
   function initialize(
     string calldata _name,
+    RoleDescription[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
     factory = VertexFactory(msg.sender);
+    for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
+      _initializeRole(roleDescriptions[i]);
+    }
 
     for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
     }
+
     for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
 
-    _assertAdminsExist();
+    // Must have assigned roles during initialization, otherwise the system cannot be used. However,
+    // we do not check that roles were assigned "properly" as there is no single correct way, so
+    // this is more of a sanity check, not a guarantee that the system will work after initialization.
+    if (numRoles == 0 || getSupply(ALL_HOLDERS_ROLE) == 0) revert InvalidInput();
   }
 
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
+
+  /// @notice Sets the address of the `VertexCore` contract.
+  /// @dev This method can only be called once.
+  /// @param _vertex The address of the `VertexCore` contract.
   function setVertex(address _vertex) external {
     if (vertex != address(0)) revert AlreadyInitialized();
     vertex = _vertex;
   }
 
-  // =======================================
-  // ======== Permission Management ========
-  // =======================================
+  // -------- Role and Permission Management --------
 
-  /// @notice Assigns roles to users.
-  function setRoleHolders(RoleHolderData[] calldata roleHolders) external onlyVertex {
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
+  /// @notice Aggregate calls of multiple functions in the current contract into a single call.
+  /// @dev The `msg.value` should not be trusted for any method callable from this method. No
+  /// methods in this contract are `payable` so this should not be an issue, but it's mentioned
+  /// here in case this contract is modified in the future.
+  /// @param calls ABI-encoded array of calls to be executed in order.
+  /// @return returnData The return data of each call.
+  function aggregate(bytes[] calldata calls) external onlyVertex returns (bytes[] memory returnData) {
+    returnData = new bytes[](calls.length);
+
+    for (uint256 i = 0; i < calls.length; i = _uncheckedIncrement(i)) {
+      (bool success, bytes memory response) = address(this).delegatecall(calls[i]);
+      if (!success) revert CallReverted(i, response);
+      returnData[i] = response;
     }
-    _assertAdminsExist();
   }
 
-  /// @notice Sets the permissions for a given role.
-  function setRolePermissions(RolePermissionData[] calldata rolePermissions) external onlyVertex {
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
-    }
+  /// @notice Initializes a new role with the given `role` ID and `description`
+  function initializeRole(RoleDescription description) external onlyVertex {
+    _initializeRole(description);
   }
 
-  /// @notice Assigns roles to users and sets permissions for roles.
-  function setRoleHoldersAndPermissions(
-    RoleHolderData[] calldata roleHolders,
-    RolePermissionData[] calldata rolePermissions
-  ) external onlyVertex {
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
-      _setRoleHolder(roleHolders[i].role, roleHolders[i].user, roleHolders[i].quantity, roleHolders[i].expiration);
-    }
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
-    }
-    _assertAdminsExist();
+  /// @notice Assigns a role to a user.
+  /// @param role ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
+  /// @param user User to assign the role to.
+  /// @param quantity Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  /// @param expiration When the role expires.
+  function setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) external onlyVertex {
+    _setRoleHolder(role, user, quantity, expiration);
   }
 
-  /// @notice Revokes expired roles.
+  /// @notice Assigns a permission to a role.
+  /// @param role Name of the role to set.
+  /// @param permissionId Permission ID to assign to the role.
+  /// @param hasPermission Whether to assign the permission or remove the permission.
+  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyVertex {
+    _setRolePermission(role, permissionId, hasPermission);
+  }
+
+  /// @notice Revokes an expired role.
+  /// @param role Role that has expired.
+  /// @param user User that held the role.
   /// @dev WARNING: The contract cannot enumerate all expired roles for a user, so the caller MUST
   /// provide the full list of expired roles to revoke. Not properly providing this data can result
   /// in an inconsistent internal state. It is expected that roles are revoked as needed before
@@ -130,64 +178,31 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// so would mean the total supply is higher than expected. Depending on the strategy
   /// configuration this may not be a big deal, or it may mean it's impossible to reach quorum. It's
   /// not a big issue if quorum cannot be reached, because a new action can be created.
-  function revokeExpiredRoles(ExpiredRole[] calldata expiredRoles) external {
-    for (uint256 i = 0; i < expiredRoles.length; i = _uncheckedIncrement(i)) {
-      _revokeExpiredRole(expiredRoles[i]);
-    }
-    _assertAdminsExist();
+  function revokeExpiredRole(uint8 role, address user) external {
+    _revokeExpiredRole(role, user);
   }
 
-  /// @notice Revokes all roles from the user and burns their policy.
-  /// @dev WARNING: The contract cannot enumerate all roles for a user, so the caller MUST provide
-  /// the full list of roles held by user. Not properly providing this data can result in an
-  /// inconsistent internal state. It is expected that policies are revoked as needed before
-  // creating an action using the `ALL_HOLDERS_ROLE`.
+  /// @notice Revokes all roles from the `user` and burns their policy.
+  function revokePolicy(address user) external onlyVertex {
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
+    for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
+      _setRoleHolder(uint8(i), user, 0, 0);
+    }
+    _burn(_tokenId(user));
+  }
+
+  /// @notice Revokes all `roles` from the `user` and burns their policy.
+  /// @dev This method only exists to ensure policies can still be revoked in the case where the
+  /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
+    if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
-    _assertAdminsExist();
   }
 
-  // =================================
-  // ======== ERC-721 Methods ========
-  // =================================
-
-  /// @dev overriding transferFrom to disable transfers
-  /// @dev this is a temporary solution, we will need to conform to a Soulbound standard
-  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding safeTransferFrom to disable transfers
-  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding safeTransferFrom to disable transfers
-  function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
-    public
-    pure
-    override
-    nonTransferableToken
-  {}
-
-  /// @dev overriding approve to disable approvals
-  function approve(address, /* spender */ uint256 /* id */ ) public pure override nonTransferableToken {}
-
-  /// @dev overriding approve to disable approvals
-  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
-
-  // ====================================
-  // ======== Permission Getters ========
-  // ====================================
+  // -------- Role and Permission Getters --------
 
   /// @notice Returns the quantity of the `role` for the given `user`. The returned value is the
   /// weight of the role when approving/disapproving (regardless of strategy).
@@ -233,8 +248,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role`, false otherwise.
   function hasRole(address user, uint8 role) external view returns (bool) {
-    (bool exists,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    return exists && quantity > 0 && expiration > block.timestamp;
+    (bool exists,,, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return exists && quantity > 0;
   }
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
@@ -250,15 +265,18 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
+  function isRoleExpired(address user, uint8 role) external view returns (bool) {
+    (, uint64 expiration,,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return expiration < block.timestamp;
+  }
+
   /// @notice Returns the total number of policies in existence.
   /// @dev This is just an alias for convenience/familiarity.
   function totalSupply() public view returns (uint256) {
     return getSupply(ALL_HOLDERS_ROLE);
   }
 
-  // =================================
-  // ======== ERC-721 Getters ========
-  // =================================
+  // -------- ERC-721 Getters --------
 
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
@@ -266,19 +284,57 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return factory.tokenURI(name, symbol, tokenId);
   }
 
+  // -------- ERC-721 Methods --------
+
+  /// @dev overriding transferFrom to disable transfers
+  function transferFrom(address, /* from */ address, /* to */ uint256 /* policyId */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256 /* id */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding safeTransferFrom to disable transfers
+  function safeTransferFrom(address, /* from */ address, /* to */ uint256, /* policyId */ bytes calldata /* data */ )
+    public
+    pure
+    override
+    nonTransferableToken
+  {}
+
+  /// @dev overriding approve to disable approvals
+  function approve(address, /* spender */ uint256 /* id */ ) public pure override nonTransferableToken {}
+
+  /// @dev overriding approve to disable approvals
+  function setApprovalForAll(address, /* operator */ bool /* approved */ ) public pure override nonTransferableToken {}
+
   // ================================
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Verifies that admin supply is non-zero to avoid the system being locked. Any changes to
-  /// roles that result in zero admin supply will revert.
-  function _assertAdminsExist() internal view {
-    if (getSupply(ADMIN_ROLE) == 0) revert MissingAdmin();
+  function _initializeRole(RoleDescription description) internal {
+    numRoles += 1;
+    emit RoleInitialized(numRoles, description);
   }
 
   function _setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) internal {
     // Scope to avoid stack too deep.
     {
+      // Ensure role is initialized.
+      if (role > numRoles) revert RoleNotInitialized(role);
+
+      if (role == ALL_HOLDERS_ROLE) revert AllHoldersRole(); // Cannot set the ALL_HOLDERS_ROLE because this is handled
+        // in
+        // the _mint / _burn methods and can create duplicate entries if set here.
+
       // An expiration of zero is only allowed if the role is being removed. Roles are removed when
       // the quantity is zero. In other words, the relationships that are required between the role
       // quantity and expiration fields are:
@@ -320,12 +376,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
-  function _revokeExpiredRole(ExpiredRole calldata expiredRole) internal {
+  function _revokeExpiredRole(uint8 role, address user) internal {
     // Read the most recent checkpoint for the user's role balance.
-    uint256 tokenId = _tokenId(expiredRole.user);
-    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][expiredRole.role].latestCheckpoint();
+    uint256 tokenId = _tokenId(user);
+    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
     if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
-    _setRoleHolder(expiredRole.role, expiredRole.user, 0, 0);
+    _setRoleHolder(role, user, 0, 0);
   }
 
   function _mint(address user) internal {

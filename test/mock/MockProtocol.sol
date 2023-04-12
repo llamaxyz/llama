@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract ProtocolXYZ {
+contract MockProtocol {
   error OnlyOwner();
   error Failed();
 
-  address public immutable owner;
+  address public immutable OWNER;
   bool public paused;
 
-  constructor(address _owner) {
-    owner = _owner;
+  constructor(address owner) {
+    OWNER = owner;
   }
 
   modifier onlyOwner() {
-    if (msg.sender != owner) revert OnlyOwner();
+    if (msg.sender != OWNER) revert OnlyOwner();
     _;
   }
 

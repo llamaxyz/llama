@@ -10,8 +10,8 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
-import {TestScript} from "test/mock/scripts/TestScript.sol";
-import {ICryptoPunk} from "test/mock/external/ICryptoPunk.sol";
+import {MockExtension} from "test/mock/MockExtension.sol";
+import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
 import {
   ERC20Data,
   ERC721Data,
@@ -83,9 +83,9 @@ contract VertexAccountTest is VertexTestSetup {
     mpAccount1Addr = address(mpAccount1); // For convenience, to avoid tons of casting to address.
   }
 
-  /*///////////////////////////////////////////////////////////////
-                            Helpers
-    //////////////////////////////////////////////////////////////*/
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function transferETHToAccount(uint256 amount) internal {
     deal(mpAccount1Addr, amount);
@@ -200,7 +200,7 @@ contract Transfer is VertexAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
-    mpAccount1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -209,13 +209,13 @@ contract Transfer is VertexAccountTest {
 
   function test_RevertIf_NotVertexMsgSender() public {
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    mpAccount1.transfer(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
   }
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    mpAccount1.transfer(payable(address(0)), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(payable(address(0)), ETH_AMOUNT);
     vm.stopPrank();
   }
 }
@@ -706,29 +706,29 @@ contract Execute is VertexAccountTest {
     vm.stopPrank();
   }
 
-  function test_DelegateCallTestScript() public {
-    TestScript testScript = new TestScript();
+  function test_DelegateCallMockExtension() public {
+    MockExtension mockExtension = new MockExtension();
 
     vm.startPrank(address(mpCore));
     bytes memory result =
-      mpAccount1.execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
+      mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
     assertEq(10, uint256(bytes32(result)));
     vm.stopPrank();
   }
 
   function test_RevertIf_NotVertexMsgSender() public {
-    TestScript testScript = new TestScript();
+    MockExtension mockExtension = new MockExtension();
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
-    mpAccount1.execute(address(testScript), abi.encodePacked(TestScript.testFunction.selector, ""), true);
+    mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
   }
 
   function test_RevertIf_NotSuccess() public {
-    TestScript testScript = new TestScript();
+    MockExtension mockExtension = new MockExtension();
 
     vm.startPrank(address(mpCore));
     vm.expectRevert(abi.encodeWithSelector(VertexAccount.FailedExecution.selector, ""));
-    mpAccount1.execute(address(testScript), abi.encodePacked("", ""), true);
+    mpAccount1.execute(address(mockExtension), abi.encodePacked("", ""), true);
     vm.stopPrank();
   }
 }

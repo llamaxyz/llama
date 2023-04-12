@@ -5,7 +5,7 @@
 // refactored one invariant test to a fuzz to test the name and symbol are initialized correctly
 pragma solidity ^0.8.19;
 
-import {DSTestPlus} from "lib/solmate/src/test/utils/DSTestPlus.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {DSInvariantTest} from "lib/solmate/src/test/utils/DSInvariantTest.sol";
 
 import {MockERC721} from "./mock/MockERC721MinimalProxy.sol";
@@ -58,7 +58,7 @@ contract WrongReturnDataERC721Recipient is ERC721TokenReceiver {
 
 contract NonERC721Recipient {}
 
-contract ERC721Test is DSTestPlus {
+contract ERC721Test is Test {
     MockERC721 token;
     MockERC721 tokenLogic;
 
@@ -76,24 +76,24 @@ contract ERC721Test is DSTestPlus {
     assertEq(token.symbol(), symbol);
   }
 
-    function testMint() public {
+    function test_Mint() public {
         token.mint(address(0xBEEF), 1337);
 
         assertEq(token.balanceOf(address(0xBEEF)), 1);
         assertEq(token.ownerOf(1337), address(0xBEEF));
     }
 
-    function testBurn() public {
+    function test_Burn() public {
         token.mint(address(0xBEEF), 1337);
         token.burn(1337);
 
         assertEq(token.balanceOf(address(0xBEEF)), 0);
 
-        hevm.expectRevert("NOT_MINTED");
+        vm.expectRevert("NOT_MINTED");
         token.ownerOf(1337);
     }
 
-    function testApprove() public {
+    function test_Approve() public {
         token.mint(address(this), 1337);
 
         token.approve(address(0xBEEF), 1337);
@@ -101,7 +101,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.getApproved(1337), address(0xBEEF));
     }
 
-    function testApproveBurn() public {
+    function test_ApproveBurn() public {
         token.mint(address(this), 1337);
 
         token.approve(address(0xBEEF), 1337);
@@ -111,22 +111,22 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
         assertEq(token.getApproved(1337), address(0));
 
-        hevm.expectRevert("NOT_MINTED");
+        vm.expectRevert("NOT_MINTED");
         token.ownerOf(1337);
     }
 
-    function testApproveAll() public {
+    function test_ApproveAll() public {
         token.setApprovalForAll(address(0xBEEF), true);
 
         assertTrue(token.isApprovedForAll(address(this), address(0xBEEF)));
     }
 
-    function testTransferFrom() public {
+    function test_TransferFrom() public {
         address from = address(0xABCD);
 
         token.mint(from, 1337);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.approve(address(this), 1337);
 
         token.transferFrom(from, address(0xBEEF), 1337);
@@ -137,7 +137,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testTransferFromSelf() public {
+    function test_TransferFromSelf() public {
         token.mint(address(this), 1337);
 
         token.transferFrom(address(this), address(0xBEEF), 1337);
@@ -148,12 +148,12 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
     }
 
-    function testTransferFromApproveAll() public {
+    function test_TransferFromApproveAll() public {
         address from = address(0xABCD);
 
         token.mint(from, 1337);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.transferFrom(from, address(0xBEEF), 1337);
@@ -164,12 +164,12 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testSafeTransferFromToEOA() public {
+    function test_SafeTransferFromToEOA() public {
         address from = address(0xABCD);
 
         token.mint(from, 1337);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, address(0xBEEF), 1337);
@@ -180,13 +180,13 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testSafeTransferFromToERC721Recipient() public {
+    function test_SafeTransferFromToERC721Recipient() public {
         address from = address(0xABCD);
         ERC721Recipient recipient = new ERC721Recipient();
 
         token.mint(from, 1337);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, address(recipient), 1337);
@@ -199,16 +199,16 @@ contract ERC721Test is DSTestPlus {
         assertEq(recipient.operator(), address(this));
         assertEq(recipient.from(), from);
         assertEq(recipient.id(), 1337);
-        assertBytesEq(recipient.data(), "");
+        assertEq(recipient.data(), "");
     }
 
-    function testSafeTransferFromToERC721RecipientWithData() public {
+    function test_SafeTransferFromToERC721RecipientWithData() public {
         address from = address(0xABCD);
         ERC721Recipient recipient = new ERC721Recipient();
 
         token.mint(from, 1337);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, address(recipient), 1337, "testing 123");
@@ -221,17 +221,17 @@ contract ERC721Test is DSTestPlus {
         assertEq(recipient.operator(), address(this));
         assertEq(recipient.from(), from);
         assertEq(recipient.id(), 1337);
-        assertBytesEq(recipient.data(), "testing 123");
+        assertEq(recipient.data(), "testing 123");
     }
 
-    function testSafeMintToEOA() public {
+    function test_SafeMintToEOA() public {
         token.safeMint(address(0xBEEF), 1337);
 
         assertEq(token.ownerOf(1337), address(address(0xBEEF)));
         assertEq(token.balanceOf(address(address(0xBEEF))), 1);
     }
 
-    function testSafeMintToERC721Recipient() public {
+    function test_SafeMintToERC721Recipient() public {
         ERC721Recipient to = new ERC721Recipient();
 
         token.safeMint(address(to), 1337);
@@ -242,10 +242,10 @@ contract ERC721Test is DSTestPlus {
         assertEq(to.operator(), address(this));
         assertEq(to.from(), address(0));
         assertEq(to.id(), 1337);
-        assertBytesEq(to.data(), "");
+        assertEq(to.data(), "");
     }
 
-    function testSafeMintToERC721RecipientWithData() public {
+    function test_SafeMintToERC721RecipientWithData() public {
         ERC721Recipient to = new ERC721Recipient();
 
         token.safeMint(address(to), 1337, "testing 123");
@@ -256,130 +256,156 @@ contract ERC721Test is DSTestPlus {
         assertEq(to.operator(), address(this));
         assertEq(to.from(), address(0));
         assertEq(to.id(), 1337);
-        assertBytesEq(to.data(), "testing 123");
+        assertEq(to.data(), "testing 123");
     }
 
-    function testFailMintToZero() public {
+    function test_RevertsIf_MintToZero() public {
+        vm.expectRevert();
         token.mint(address(0), 1337);
     }
 
-    function testFailDoubleMint() public {
+    function test_RevertsIf_DoubleMint() public {
         token.mint(address(0xBEEF), 1337);
+        vm.expectRevert();
         token.mint(address(0xBEEF), 1337);
     }
 
-    function testFailBurnUnMinted() public {
+    function test_RevertsIf_BurnUnMinted() public {
+        vm.expectRevert();
         token.burn(1337);
     }
 
-    function testFailDoubleBurn() public {
+    function test_RevertsIf_DoubleBurn() public {
         token.mint(address(0xBEEF), 1337);
 
         token.burn(1337);
+        vm.expectRevert();
         token.burn(1337);
     }
 
-    function testFailApproveUnMinted() public {
+    function test_RevertsIf_ApproveUnMinted() public {
+        vm.expectRevert();
         token.approve(address(0xBEEF), 1337);
     }
 
-    function testFailApproveUnAuthorized() public {
+    function test_RevertsIf_ApproveUnAuthorized() public {
         token.mint(address(0xCAFE), 1337);
-
+        vm.expectRevert();
         token.approve(address(0xBEEF), 1337);
     }
 
-    function testFailTransferFromUnOwned() public {
+    function test_RevertsIf_TransferFromUnOwned() public {
+        vm.expectRevert();
         token.transferFrom(address(0xFEED), address(0xBEEF), 1337);
     }
 
-    function testFailTransferFromWrongFrom() public {
+    function test_RevertsIf_TransferFromWrongFrom() public {
         token.mint(address(0xCAFE), 1337);
-
+        vm.expectRevert();
         token.transferFrom(address(0xFEED), address(0xBEEF), 1337);
     }
 
-    function testFailTransferFromToZero() public {
+    function test_RevertsIf_TransferFromToZero() public {
         token.mint(address(this), 1337);
-
+        vm.expectRevert();
         token.transferFrom(address(this), address(0), 1337);
     }
 
-    function testFailTransferFromNotOwner() public {
+    function test_RevertsIf_TransferFromNotOwner() public {
         token.mint(address(0xFEED), 1337);
-
+        vm.expectRevert();
         token.transferFrom(address(0xFEED), address(0xBEEF), 1337);
     }
 
-    function testFailSafeTransferFromToNonERC721Recipient() public {
+    function test_RevertsIf_SafeTransferFromToNonERC721Recipient() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new NonERC721Recipient()), 1337);
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, 1337);
     }
 
-    function testFailSafeTransferFromToNonERC721RecipientWithData() public {
+    function test_RevertsIf_SafeTransferFromToNonERC721RecipientWithData() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new NonERC721Recipient()), 1337, "testing 123");
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailSafeTransferFromToRevertingERC721Recipient() public {
+    function test_RevertsIf_SafeTransferFromToRevertingERC721Recipient() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new RevertingERC721Recipient()), 1337);
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _revertingERC721Recipient, 1337);
     }
 
-    function testFailSafeTransferFromToRevertingERC721RecipientWithData() public {
+    function test_RevertsIf_SafeTransferFromToRevertingERC721RecipientWithData() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new RevertingERC721Recipient()), 1337, "testing 123");
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _revertingERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailSafeTransferFromToERC721RecipientWithWrongReturnData() public {
+    function test_RevertsIf_SafeTransferFromToERC721RecipientWithWrongReturnData() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new WrongReturnDataERC721Recipient()), 1337);
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _wrongReturnDataERC721Recipient, 1337);
     }
 
-    function testFailSafeTransferFromToERC721RecipientWithWrongReturnDataWithData() public {
+    function test_RevertsIf_SafeTransferFromToERC721RecipientWithWrongReturnDataWithData() public {
         token.mint(address(this), 1337);
-
-        token.safeTransferFrom(address(this), address(new WrongReturnDataERC721Recipient()), 1337, "testing 123");
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _wrongReturnDataERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailSafeMintToNonERC721Recipient() public {
-        token.safeMint(address(new NonERC721Recipient()), 1337);
+    function test_RevertsIf_SafeMintToNonERC721Recipient() public {
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_nonERC721Recipient, 1337);
     }
 
-    function testFailSafeMintToNonERC721RecipientWithData() public {
-        token.safeMint(address(new NonERC721Recipient()), 1337, "testing 123");
+    function test_RevertsIf_SafeMintToNonERC721RecipientWithData() public {
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_nonERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailSafeMintToRevertingERC721Recipient() public {
-        token.safeMint(address(new RevertingERC721Recipient()), 1337);
+    function test_RevertsIf_SafeMintToRevertingERC721Recipient() public {
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_revertingERC721Recipient, 1337);
     }
 
-    function testFailSafeMintToRevertingERC721RecipientWithData() public {
-        token.safeMint(address(new RevertingERC721Recipient()), 1337, "testing 123");
+    function test_RevertsIf_SafeMintToRevertingERC721RecipientWithData() public {
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_revertingERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailSafeMintToERC721RecipientWithWrongReturnData() public {
-        token.safeMint(address(new WrongReturnDataERC721Recipient()), 1337);
+    function test_RevertsIf_SafeMintToERC721RecipientWithWrongReturnData() public {
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_wrongReturnDataERC721Recipient, 1337);
     }
 
-    function testFailSafeMintToERC721RecipientWithWrongReturnDataWithData() public {
-        token.safeMint(address(new WrongReturnDataERC721Recipient()), 1337, "testing 123");
+    function test_RevertsIf_SafeMintToERC721RecipientWithWrongReturnDataWithData() public {
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_wrongReturnDataERC721Recipient, 1337, "testing 123");
     }
 
-    function testFailBalanceOfZeroAddress() public view {
+    function test_RevertsIf_BalanceOfZeroAddress() public {
+        vm.expectRevert();
         token.balanceOf(address(0));
     }
 
-    function testFailOwnerOfUnminted() public view {
+    function test_RevertsIf_OwnerOfUnminted() public {
+        vm.expectRevert();
         token.ownerOf(1337);
     }
 
-    function testMetadata(string memory name, string memory symbol) public {
+    function test_Metadata(string memory name, string memory symbol) public {
         MockERC721 tkn = new MockERC721();
         tkn.initialize(name, symbol);
 
@@ -387,7 +413,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(tkn.symbol(), symbol);
     }
 
-    function testMint(address to, uint256 id) public {
+    function test_Mint(address to, uint256 id) public {
         if (to == address(0)) to = address(0xBEEF);
 
         token.mint(to, id);
@@ -396,7 +422,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.ownerOf(id), to);
     }
 
-    function testBurn(address to, uint256 id) public {
+    function test_Burn(address to, uint256 id) public {
         if (to == address(0)) to = address(0xBEEF);
 
         token.mint(to, id);
@@ -404,11 +430,11 @@ contract ERC721Test is DSTestPlus {
 
         assertEq(token.balanceOf(to), 0);
 
-        hevm.expectRevert("NOT_MINTED");
+        vm.expectRevert("NOT_MINTED");
         token.ownerOf(id);
     }
 
-    function testApprove(address to, uint256 id) public {
+    function test_Approve(address to, uint256 id) public {
         if (to == address(0)) to = address(0xBEEF);
 
         token.mint(address(this), id);
@@ -418,7 +444,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.getApproved(id), to);
     }
 
-    function testApproveBurn(address to, uint256 id) public {
+    function test_ApproveBurn(address to, uint256 id) public {
         token.mint(address(this), id);
 
         token.approve(address(to), id);
@@ -428,24 +454,24 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
         assertEq(token.getApproved(id), address(0));
 
-        hevm.expectRevert("NOT_MINTED");
+        vm.expectRevert("NOT_MINTED");
         token.ownerOf(id);
     }
 
-    function testApproveAll(address to, bool approved) public {
+    function test_ApproveAll(address to, bool approved) public {
         token.setApprovalForAll(to, approved);
 
-        assertBoolEq(token.isApprovedForAll(address(this), to), approved);
+        assertEq(token.isApprovedForAll(address(this), to), approved);
     }
 
-    function testTransferFrom(uint256 id, address to) public {
+    function test_TransferFrom(uint256 id, address to) public {
         address from = address(0xABCD);
 
         if (to == address(0) || to == from) to = address(0xBEEF);
 
         token.mint(from, id);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.approve(address(this), id);
 
         token.transferFrom(from, to, id);
@@ -456,7 +482,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testTransferFromSelf(uint256 id, address to) public {
+    function test_TransferFromSelf(uint256 id, address to) public {
         if (to == address(0) || to == address(this)) to = address(0xBEEF);
 
         token.mint(address(this), id);
@@ -469,14 +495,14 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
     }
 
-    function testTransferFromApproveAll(uint256 id, address to) public {
+    function test_TransferFromApproveAll(uint256 id, address to) public {
         address from = address(0xABCD);
 
         if (to == address(0) || to == from) to = address(0xBEEF);
 
         token.mint(from, id);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.transferFrom(from, to, id);
@@ -487,7 +513,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testSafeTransferFromToEOA(uint256 id, address to) public {
+    function test_SafeTransferFromToEOA(uint256 id, address to) public {
         address from = address(0xABCD);
 
         if (to == address(0) || to == from) to = address(0xBEEF);
@@ -496,7 +522,7 @@ contract ERC721Test is DSTestPlus {
 
         token.mint(from, id);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, to, id);
@@ -507,14 +533,14 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(from), 0);
     }
 
-    function testSafeTransferFromToERC721Recipient(uint256 id) public {
+    function test_SafeTransferFromToERC721Recipient(uint256 id) public {
         address from = address(0xABCD);
 
         ERC721Recipient recipient = new ERC721Recipient();
 
         token.mint(from, id);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, address(recipient), id);
@@ -527,16 +553,16 @@ contract ERC721Test is DSTestPlus {
         assertEq(recipient.operator(), address(this));
         assertEq(recipient.from(), from);
         assertEq(recipient.id(), id);
-        assertBytesEq(recipient.data(), "");
+        assertEq(recipient.data(), "");
     }
 
-    function testSafeTransferFromToERC721RecipientWithData(uint256 id, bytes calldata data) public {
+    function test_SafeTransferFromToERC721RecipientWithData(uint256 id, bytes calldata data) public {
         address from = address(0xABCD);
         ERC721Recipient recipient = new ERC721Recipient();
 
         token.mint(from, id);
 
-        hevm.prank(from);
+        vm.prank(from);
         token.setApprovalForAll(address(this), true);
 
         token.safeTransferFrom(from, address(recipient), id, data);
@@ -549,10 +575,10 @@ contract ERC721Test is DSTestPlus {
         assertEq(recipient.operator(), address(this));
         assertEq(recipient.from(), from);
         assertEq(recipient.id(), id);
-        assertBytesEq(recipient.data(), data);
+        assertEq(recipient.data(), data);
     }
 
-    function testSafeMintToEOA(uint256 id, address to) public {
+    function test_SafeMintToEOA(uint256 id, address to) public {
         if (to == address(0)) to = address(0xBEEF);
 
         if (uint256(uint160(to)) <= 18 || to.code.length > 0) return;
@@ -563,7 +589,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(to)), 1);
     }
 
-    function testSafeMintToERC721Recipient(uint256 id) public {
+    function test_SafeMintToERC721Recipient(uint256 id) public {
         ERC721Recipient to = new ERC721Recipient();
 
         token.safeMint(address(to), id);
@@ -574,10 +600,10 @@ contract ERC721Test is DSTestPlus {
         assertEq(to.operator(), address(this));
         assertEq(to.from(), address(0));
         assertEq(to.id(), id);
-        assertBytesEq(to.data(), "");
+        assertEq(to.data(), "");
     }
 
-    function testSafeMintToERC721RecipientWithData(uint256 id, bytes calldata data) public {
+    function test_SafeMintToERC721RecipientWithData(uint256 id, bytes calldata data) public {
         ERC721Recipient to = new ERC721Recipient();
 
         token.safeMint(address(to), id, data);
@@ -588,38 +614,43 @@ contract ERC721Test is DSTestPlus {
         assertEq(to.operator(), address(this));
         assertEq(to.from(), address(0));
         assertEq(to.id(), id);
-        assertBytesEq(to.data(), data);
+        assertEq(to.data(), data);
     }
 
-    function testFailMintToZero(uint256 id) public {
+    function test_RevertsIf_MintToZero(uint256 id) public {
+        vm.expectRevert();
         token.mint(address(0), id);
     }
 
-    function testFailDoubleMint(uint256 id, address to) public {
+    function test_RevertsIf_DoubleMint(uint256 id, address to) public {
         if (to == address(0)) to = address(0xBEEF);
 
         token.mint(to, id);
+        vm.expectRevert();
         token.mint(to, id);
     }
 
-    function testFailBurnUnMinted(uint256 id) public {
+    function test_RevertsIf_BurnUnMinted(uint256 id) public {
+        vm.expectRevert();
         token.burn(id);
     }
 
-    function testFailDoubleBurn(uint256 id, address to) public {
+    function test_RevertsIf_DoubleBurn(uint256 id, address to) public {
         if (to == address(0)) to = address(0xBEEF);
 
         token.mint(to, id);
 
         token.burn(id);
+        vm.expectRevert();
         token.burn(id);
     }
 
-    function testFailApproveUnMinted(uint256 id, address to) public {
+    function test_RevertsIf_ApproveUnMinted(uint256 id, address to) public {
+        vm.expectRevert();
         token.approve(to, id);
     }
 
-    function testFailApproveUnAuthorized(
+    function test_RevertsIf_ApproveUnAuthorized(
         address owner,
         uint256 id,
         address to
@@ -628,112 +659,139 @@ contract ERC721Test is DSTestPlus {
 
         token.mint(owner, id);
 
+        vm.expectRevert();
         token.approve(to, id);
     }
 
-    function testFailTransferFromUnOwned(
+    function test_RevertsIf_TransferFromUnOwned(
         address from,
         address to,
         uint256 id
     ) public {
+        vm.expectRevert();
         token.transferFrom(from, to, id);
     }
 
-    function testFailTransferFromWrongFrom(
+    function test_RevertsIf_TransferFromWrongFrom(
         address owner,
         address from,
         address to,
         uint256 id
     ) public {
         if (owner == address(0)) to = address(0xBEEF);
-        if (from == owner) revert();
+        vm.assume(from != owner);
+        vm.assume(owner != address(0));
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
 
         token.mint(owner, id);
 
+        vm.expectRevert();
         token.transferFrom(from, to, id);
     }
 
-    function testFailTransferFromToZero(uint256 id) public {
+    function test_RevertsIf_TransferFromToZero(uint256 id) public {
         token.mint(address(this), id);
 
+        vm.expectRevert();
         token.transferFrom(address(this), address(0), id);
     }
 
-    function testFailTransferFromNotOwner(
+    function test_RevertsIf_TransferFromNotOwner(
         address from,
         address to,
         uint256 id
     ) public {
-        if (from == address(this)) from = address(0xBEEF);
+        if (from == address(this) || from == address(0)) from = address(0xBEEF);
 
         token.mint(from, id);
 
+        vm.expectRevert();
         token.transferFrom(from, to, id);
     }
 
-    function testFailSafeTransferFromToNonERC721Recipient(uint256 id) public {
+    function test_RevertsIf_SafeTransferFromToNonERC721Recipient(uint256 id) public {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new NonERC721Recipient()), id);
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, id);
     }
 
-    function testFailSafeTransferFromToNonERC721RecipientWithData(uint256 id, bytes calldata data) public {
+    function test_RevertsIf_SafeTransferFromToNonERC721RecipientWithData(uint256 id, bytes calldata data) public {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new NonERC721Recipient()), id, data);
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _nonERC721Recipient, id, data);
     }
 
-    function testFailSafeTransferFromToRevertingERC721Recipient(uint256 id) public {
+    function test_RevertsIf_SafeTransferFromToRevertingERC721Recipient(uint256 id) public {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new RevertingERC721Recipient()), id);
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _revertingERC721Recipient, id);
     }
 
-    function testFailSafeTransferFromToRevertingERC721RecipientWithData(uint256 id, bytes calldata data) public {
+    function test_RevertsIf_SafeTransferFromToRevertingERC721RecipientWithData(uint256 id, bytes calldata data) public {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new RevertingERC721Recipient()), id, data);
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _revertingERC721Recipient, id, data);
     }
 
-    function testFailSafeTransferFromToERC721RecipientWithWrongReturnData(uint256 id) public {
+    function test_RevertsIf_SafeTransferFromToERC721RecipientWithWrongReturnData(uint256 id) public {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new WrongReturnDataERC721Recipient()), id);
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _wrongReturnDataERC721Recipient, id);
     }
 
-    function testFailSafeTransferFromToERC721RecipientWithWrongReturnDataWithData(uint256 id, bytes calldata data)
+    function test_RevertsIf_SafeTransferFromToERC721RecipientWithWrongReturnDataWithData(uint256 id, bytes calldata data)
         public
     {
         token.mint(address(this), id);
-
-        token.safeTransferFrom(address(this), address(new WrongReturnDataERC721Recipient()), id, data);
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeTransferFrom(address(this), _wrongReturnDataERC721Recipient, id, data);
     }
 
-    function testFailSafeMintToNonERC721Recipient(uint256 id) public {
-        token.safeMint(address(new NonERC721Recipient()), id);
+    function test_RevertsIf_SafeMintToNonERC721Recipient(uint256 id) public {
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_nonERC721Recipient, id);
     }
 
-    function testFailSafeMintToNonERC721RecipientWithData(uint256 id, bytes calldata data) public {
-        token.safeMint(address(new NonERC721Recipient()), id, data);
+    function test_RevertsIf_SafeMintToNonERC721RecipientWithData(uint256 id, bytes calldata data) public {
+        address _nonERC721Recipient = address(new NonERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_nonERC721Recipient, id, data);
     }
 
-    function testFailSafeMintToRevertingERC721Recipient(uint256 id) public {
-        token.safeMint(address(new RevertingERC721Recipient()), id);
+    function test_RevertsIf_SafeMintToRevertingERC721Recipient(uint256 id) public {
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_revertingERC721Recipient, id);
     }
 
-    function testFailSafeMintToRevertingERC721RecipientWithData(uint256 id, bytes calldata data) public {
-        token.safeMint(address(new RevertingERC721Recipient()), id, data);
+    function test_RevertsIf_SafeMintToRevertingERC721RecipientWithData(uint256 id, bytes calldata data) public {
+        address _revertingERC721Recipient = address(new RevertingERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_revertingERC721Recipient, id, data);
     }
 
-    function testFailSafeMintToERC721RecipientWithWrongReturnData(uint256 id) public {
-        token.safeMint(address(new WrongReturnDataERC721Recipient()), id);
+    function test_RevertsIf_SafeMintToERC721RecipientWithWrongReturnData(uint256 id) public {
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_wrongReturnDataERC721Recipient, id);
     }
 
-    function testFailSafeMintToERC721RecipientWithWrongReturnDataWithData(uint256 id, bytes calldata data) public {
-        token.safeMint(address(new WrongReturnDataERC721Recipient()), id, data);
+    function test_RevertsIf_SafeMintToERC721RecipientWithWrongReturnDataWithData(uint256 id, bytes calldata data) public {
+        address _wrongReturnDataERC721Recipient = address(new WrongReturnDataERC721Recipient());
+        vm.expectRevert();
+        token.safeMint(_wrongReturnDataERC721Recipient, id, data);
     }
 
-    function testFailOwnerOfUnminted(uint256 id) public view {
+    function test_RevertsIf_OwnerOfUnminted(uint256 id) public {
+        vm.expectRevert();
         token.ownerOf(id);
     }
 }

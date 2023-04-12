@@ -3,6 +3,8 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
+
+import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -14,6 +16,10 @@ import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is Initializable {
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
   error InvalidStrategy();
   error InvalidPolicyholder();
   error InvalidCancelation();
@@ -35,6 +41,16 @@ contract VertexCore is Initializable {
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
+  error ProhibitedByActionGuard(bytes32 reason);
+
+  modifier onlyVertex() {
+    if (msg.sender != address(this)) revert OnlyVertex();
+    _;
+  }
+
+  // ========================
+  // ======== Events ========
+  // ========================
 
   event ActionCreated(
     uint256 id,
@@ -46,29 +62,37 @@ contract VertexCore is Initializable {
     bytes data
   );
   event ActionCanceled(uint256 id);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event PolicyholderApproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event PolicyholderDisapproved(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
+
   /// @notice EIP-712 base typehash.
-  bytes32 public constant DOMAIN_TYPEHASH =
-    keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
+  bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
+    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-  /// @notice EIP-712 approval typehash.
-  bytes32 public constant APPROVAL_EMITTED_TYPEHASH = keccak256("PolicyholderApproved(uint256 id,address policyholder)");
+  /// @notice EIP-712 createAction typehash.
+  bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
+    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder,uint256 nonce)"
+  );
 
-  /// @notice EIP-712 disapproval typehash.
-  bytes32 public constant DISAPPROVAL_EMITTED_TYPEHASH =
-    keccak256("PolicyholderDisapproved(uint256 id,address policyholder)");
+  /// @notice EIP-712 castApproval typehash.
+  bytes32 internal constant CAST_APPROVAL_TYPEHASH =
+    keccak256("CastApproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
-  /// @notice A special role to designate an Admin, who can always create actions.
-  uint8 public constant ADMIN_ROLE = 1;
+  /// @notice EIP-712 castDisapproval typehash.
+  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
+    keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
   /// @notice Equivalent to 100%, but scaled for precision
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
@@ -100,12 +124,19 @@ contract VertexCore is Initializable {
   /// @notice Mapping of all authorized strategies.
   mapping(VertexStrategy => bool) public authorizedStrategies;
 
-  constructor() initializer {}
+  /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
+  /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
+  /// castApproval and castDisapproval) signed by the policyholder.
+  mapping(address => mapping(bytes4 => uint256)) public nonces;
 
-  modifier onlyVertex() {
-    if (msg.sender != address(this)) revert OnlyVertex();
-    _;
-  }
+  /// @notice Mapping of target to selector to actionGuard address.
+  mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
+
+  constructor() initializer {}
 
   /// @notice Initializes a new VertexCore clone.
   /// @param _name The name of the VertexCore clone.
@@ -130,8 +161,13 @@ contract VertexCore is Initializable {
     _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
 
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
+
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
-  /// strategy, target, selector.
+  /// {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
   /// @param strategy The VertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
@@ -146,44 +182,60 @@ contract VertexCore is Initializable {
     bytes4 selector,
     bytes calldata data
   ) external returns (uint256 actionId) {
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+    actionId = _createAction(msg.sender, role, strategy, target, value, selector, data);
+  }
 
-    PermissionData memory permission = PermissionData(target, selector, strategy);
-    bytes32 permissionId = keccak256(abi.encode(permission));
-
-    // Typically (such as in Governor contracts) this should check that the caller has permission
-    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
-    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
-    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
-    // an action is created, as the order of transactions in the block then affects if action
-    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
-    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
-    // this race condition is unlikely to matter.
-    if (!policy.hasPermissionId(msg.sender, role, permissionId) && !policy.hasRole(msg.sender, ADMIN_ROLE)) {
-      revert PolicyholderDoesNotHavePermission();
-    }
-
-    actionId = actionsCount;
-    Action storage newAction = actions[actionId];
-
-    // Revert if the policy has no supply for any provided roles.
-    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = assertNonZeroRoleSupplies(strategy);
-
-    newAction.creator = msg.sender;
-    newAction.strategy = strategy;
-    newAction.target = target;
-    newAction.value = value;
-    newAction.selector = selector;
-    newAction.data = data;
-    newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
-
-    unchecked {
-      ++actionsCount;
-    }
-
-    emit ActionCreated(actionId, msg.sender, strategy, target, value, selector, data);
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
+  /// the provided {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param selector The function selector that will be called when the action is executed.
+  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @param user The user that signed the message.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  /// @return actionId actionId of the newly created action.
+  function createActionBySig(
+    uint8 role,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external returns (uint256 actionId) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_TYPEHASH,
+            role,
+            address(strategy),
+            target,
+            value,
+            selector,
+            keccak256(data),
+            user,
+            _useNonce(user, msg.sig)
+          )
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -202,21 +254,34 @@ contract VertexCore is Initializable {
   /// @param actionId Id of the action to execute.
   /// @return The result returned from the call to the target contract.
   function executeAction(uint256 actionId) external payable returns (bytes memory) {
+    // Initial checks that action is ready to execute.
     if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
 
     Action storage action = actions[actionId];
     if (block.timestamp < action.executionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
-    action.executed = true;
+    // Check pre-execution action guard.
+    IActionGuard guard = actionGuard[action.target][action.selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePreActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Execute action.
+    action.executed = true;
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-
     if (!success) revert FailedActionExecution();
 
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
+    // Check post-execution action guard.
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validatePostActionExecution(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
+    // Action successfully executed.
+    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
     return result;
   }
 
@@ -257,20 +322,36 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
+  /// @param reason The reason given for the approval by the policyholder.
+  /// @param user The user that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castApprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castApprovalBySig(
+    uint256 actionId,
+    uint8 role,
+    string calldata reason,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
-        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(APPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(CAST_APPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig))
+        )
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
-    return _castApproval(signer, role, actionId, "");
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    return _castApproval(signer, role, actionId, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action.
@@ -291,20 +372,38 @@ contract VertexCore is Initializable {
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
+  /// @param reason The reason given for the approval by the policyholder.
+  /// @param user The user that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  function castDisapprovalBySig(uint256 actionId, uint8 role, uint8 v, bytes32 r, bytes32 s) external {
+  function castDisapprovalBySig(
+    uint256 actionId,
+    uint8 role,
+    string calldata reason,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external {
     bytes32 digest = keccak256(
       abi.encodePacked(
         "\x19\x01",
-        keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), block.chainid, address(this))),
-        keccak256(abi.encode(DISAPPROVAL_EMITTED_TYPEHASH, actionId, msg.sender))
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CAST_DISAPPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig)
+          )
+        )
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0)) revert InvalidSignature();
-    return _castDisapproval(signer, role, actionId, "");
+    if (signer == address(0) || signer != user) revert InvalidSignature();
+    return _castDisapproval(signer, role, actionId, reason);
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
@@ -334,6 +433,13 @@ contract VertexCore is Initializable {
   /// @param accounts list of new accounts to be authorized.
   function createAndAuthorizeAccounts(address vertexAccountLogic, string[] calldata accounts) external onlyVertex {
     _deployAccounts(vertexAccountLogic, accounts);
+  }
+
+  /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a guard, set `guard` to the zero address.
+  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+    actionGuard[target][selector] = guard;
+    emit ActionGuardSet(target, selector, guard);
   }
 
   /// @notice Get whether an action has expired and can no longer be executed.
@@ -377,6 +483,65 @@ contract VertexCore is Initializable {
     return ActionState.Queued;
   }
 
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
+
+  function _createAction(
+    address policyholder,
+    uint8 role,
+    VertexStrategy strategy,
+    address target,
+    uint256 value,
+    bytes4 selector,
+    bytes calldata data
+  ) internal returns (uint256 actionId) {
+    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+
+    PermissionData memory permission = PermissionData(target, selector, strategy);
+    bytes32 permissionId = keccak256(abi.encode(permission));
+
+    // Typically (such as in Governor contracts) this should check that the caller has permission
+    // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has
+    // permission. Technically this introduces a race condition if e.g. an action to revoke a role
+    // from someone (or revoke a permission from a role) is ready to be executed at the same time as
+    // an action is created, as the order of transactions in the block then affects if action
+    // creation would succeed. However, we are ok with this tradeoff because it means we don't need
+    // to checkpoint the `canCreateAction` mapping which is simpler and cheaper, and in practice
+    // this race condition is unlikely to matter.
+    if (!policy.hasPermissionId(policyholder, role, permissionId)) revert PolicyholderDoesNotHavePermission();
+
+    actionId = actionsCount;
+    Action storage newAction = actions[actionId];
+
+    // Revert if the policy has no supply for any provided roles.
+    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
+
+    newAction.creator = policyholder;
+    newAction.strategy = strategy;
+    newAction.target = target;
+    newAction.value = value;
+    newAction.selector = selector;
+    newAction.data = data;
+    newAction.creationTime = block.timestamp;
+    newAction.approvalPolicySupply = approvalPolicySupply;
+    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    // If an action guard is present, call it to determine if the action can be created. We must do
+    // this after the action is written to storage so that the action guard can any state it needs.
+    IActionGuard guard = actionGuard[target][selector];
+    if (guard != IActionGuard(address(0))) {
+      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
+
+    unchecked {
+      ++actionsCount;
+    }
+
+    emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
+  }
+
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
     bool hasApproved = approvals[actionId][policyholder];
@@ -393,7 +558,7 @@ contract VertexCore is Initializable {
       : action.totalApprovals + weight;
     approvals[actionId][policyholder] = true;
 
-    emit PolicyholderApproved(actionId, policyholder, weight, reason);
+    emit ApprovalCast(actionId, policyholder, weight, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
@@ -414,7 +579,7 @@ contract VertexCore is Initializable {
       : action.totalDisapprovals + weight;
     disapprovals[actionId][policyholder] = true;
 
-    emit PolicyholderDisapproved(actionId, policyholder, weight, reason);
+    emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
   function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
@@ -470,7 +635,7 @@ contract VertexCore is Initializable {
 
   // TODO We don't loop through the force (dis)approval roles because currently the strategy does
   // not store them all in an array to support this. Should we do this?
-  function assertNonZeroRoleSupplies(VertexStrategy strategy)
+  function _assertNonZeroRoleSupplies(VertexStrategy strategy)
     internal
     view
     returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
@@ -482,5 +647,12 @@ contract VertexCore is Initializable {
     uint8 disapprovalRole = strategy.disapprovalRole();
     disapprovalPolicySupply = policy.getSupply(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+  }
+
+  function _useNonce(address user, bytes4 selector) internal returns (uint256 nonce) {
+    nonce = nonces[user][selector];
+    unchecked {
+      nonces[user][selector] = nonce + 1;
+    }
   }
 }

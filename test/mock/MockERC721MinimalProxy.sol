@@ -57,4 +57,26 @@ contract MockERC721 is ERC721NonTransferableMinimalProxy {
       "UNSAFE_RECIPIENT"
     );
   }
+
+  function transferFrom(address from, address to, uint256 id) public override {
+    require(from == _ownerOf[id], "WRONG_FROM");
+
+    require(to != address(0), "INVALID_RECIPIENT");
+
+    require(msg.sender == from || isApprovedForAll[from][msg.sender] || msg.sender == getApproved[id], "NOT_AUTHORIZED");
+
+    // Underflow of the sender's balance is impossible because we check for
+    // ownership above and the recipient's balance can't realistically overflow.
+    unchecked {
+      _balanceOf[from]--;
+
+      _balanceOf[to]++;
+    }
+
+    _ownerOf[id] = to;
+
+    delete getApproved[id];
+
+    emit Transfer(from, to, id);
+  }
 }

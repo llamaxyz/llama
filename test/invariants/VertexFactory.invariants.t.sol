@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-import {CommonBase} from "forge-std/Base.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
-import {StdUtils} from "forge-std/StdUtils.sol";
+import {console2} from "forge-std/Test.sol";
 
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
@@ -22,27 +20,34 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Storage ========
   // =========================
 
+  // The default strategy and account logic contracts.
+  address public strategyLogic;
+  address public accountLogic;
+
   // Used to track the last seen `vertexCount` value.
   uint256[] public vertexCounts;
-
-  // The salt is a function of name and symbol. To ensure we get a different contract address each
-  // time we deterministically update this value to track what the next name and symbol will be.
-  uint256 nextNameCounter = 0;
 
   // =============================
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
-    vertexCounts.push(vertexFactory.vertexCount());
+  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore, address _strategyLogic, address _accountLogic)
+    BaseHandler(_vertexFactory, _vertexCore)
+  {
+    vertexCounts.push(VERTEX_FACTORY.vertexCount());
+    strategyLogic = _strategyLogic;
+    accountLogic = _accountLogic;
   }
 
   // ==========================
   // ======== Helpers =========
   // ==========================
 
-  function name() internal returns (string memory currentName) {
-    currentName = string.concat("NAME_", vm.toString(nextNameCounter++));
+  // The salt is a function of name and symbol. To ensure we get a different contract address each
+  // time we use this method.
+  function name() internal view returns (string memory currentName) {
+    uint256 lastCount = vertexCounts[vertexCounts.length - 1];
+    currentName = string.concat("NAME_", vm.toString(lastCount));
   }
 
   function getVertexCounts() public view returns (uint256[] memory) {
@@ -58,49 +63,83 @@ contract VertexFactoryHandler is BaseHandler {
   // ======== Methods for Fuzzer =========
   // =====================================
 
-  function vertexFactory_deploy() public recordCall("vertexFactory_deploy") {
+  function vertexFactory_deploy() public recordCall("vertexFactory_deploy") useCurrentTimestamp {
     // We don't care about the parameters, we just need it to execute successfully.
-    vm.prank(address(vertexFactory.rootVertex()));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] =
-      RoleHolderData(uint8(Roles.Admin), makeAddr("dummyAdmin"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-
-    vertexFactory.deploy(
-      name(), address(0), address(0), new Strategy[](0), new string[](0), roleHolders, new RolePermissionData[](0)
+    roleHolders[0] = RoleHolderData(
+      uint8(Roles.ActionCreator), makeAddr("dummyActionCreator"), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
     );
-    vertexCounts.push(vertexFactory.vertexCount());
+
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Action Creator");
+
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.deploy(
+      name(),
+      strategyLogic,
+      accountLogic,
+      new Strategy[](0),
+      new string[](0),
+      roleDescriptions,
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+    vertexCounts.push(VERTEX_FACTORY.vertexCount());
+  }
+
+  function vertexFactory_authorizeStrategyLogic(address newStrategyLogic)
+    public
+    recordCall("vertexFactory_authorizeStrategyLogic")
+    useCurrentTimestamp
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
+  }
+
+  function vertexFactory_authorizeAccountLogic(address newAccountLogic)
+    public
+    recordCall("vertexFactory_authorizeAccountLogic")
+    useCurrentTimestamp
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
+  }
+
+  function vertexFactory_setPolicyMetadata(VertexPolicyTokenURI newPolicyTokenURI)
+    public
+    recordCall("vertexFactory_setPolicyMetadata")
+    useCurrentTimestamp
+  {
+    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
+    VERTEX_FACTORY.setPolicyMetadata(newPolicyTokenURI);
   }
 }
 
 contract VertexFactoryInvariants is VertexTestSetup {
-  // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
-  // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
-  // tests would not be coupled to our unit tests in this way.
-
   VertexFactoryHandler public handler;
 
   function setUp() public override {
     VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore);
+    handler = new VertexFactoryHandler(factory, mpCore, address(strategyLogic), address(accountLogic));
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
     // added to the target contracts list (by default, deployed contracts are automatically
     // added to the target contracts list). We then use `targetSelector` to filter out all
     // methods from the handler except for `vertexFactory_deploy`.
-    targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being
-      // deployed to a sender's address?
-
+    excludeArtifact("VertexAccount");
     excludeArtifact("VertexCore");
     excludeArtifact("VertexPolicy");
     excludeArtifact("VertexStrategy");
-    excludeArtifact("VertexAccount");
 
-    bytes4[] memory selectors = new bytes4[](1);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.vertexFactory_deploy.selector;
+    selectors[1] = handler.handler_increaseTimestampBy.selector;
     FuzzSelector memory selector = FuzzSelector({addr: address(handler), selectors: selectors});
     targetSelector(selector);
+
     targetContract(address(handler));
+    targetSender(msg.sender);
   }
 
   // ======================================
@@ -120,7 +159,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // ======== Invariant Tests ========
   // =================================
 
-  function invariant_VertexCountMonotonicallyIncreases() public view {
+  function invariant_AllFactoryInvariants() public view {
     assertInvariant_VertexCountMonotonicallyIncreases();
   }
 
