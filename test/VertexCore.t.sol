@@ -1044,6 +1044,15 @@ contract CastDisapprovalBySig is VertexCoreTest {
 }
 
 contract CreateAndAuthorizeStrategies is VertexCoreTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    Strategy[] memory newStrategies = new Strategy[](0);
+
+    vm.prank(caller);
+    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+  }
+
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
     public
   {
@@ -1266,6 +1275,15 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 }
 
 contract UnauthorizeStrategies is VertexCoreTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    VertexStrategy[] memory strategies = new VertexStrategy[](0);
+
+    vm.prank(caller);
+    mpCore.unauthorizeStrategies(strategies);
+  }
+
   function test_UnauthorizeStrategies() public {
     vm.startPrank(address(mpCore));
     assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
@@ -1299,6 +1317,15 @@ contract UnauthorizeStrategies is VertexCoreTest {
 }
 
 contract CreateAndAuthorizeAccounts is VertexCoreTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
+
+    vm.prank(caller);
+    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+  }
+
   function test_CreateNewAccounts() public {
     string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);

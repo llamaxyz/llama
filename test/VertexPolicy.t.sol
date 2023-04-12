@@ -179,6 +179,14 @@ contract SetVertex is VertexPolicyTest {
 contract InitializeRole is VertexPolicyTest {
   uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
 
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
+  }
+
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
@@ -216,8 +224,11 @@ contract InitializeRole is VertexPolicyTest {
 }
 
 contract SetRoleHolder is VertexPolicyTest {
-  function test_RevertIf_CalledByNonVertex() public {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
@@ -264,6 +275,14 @@ contract SetRoleHolder is VertexPolicyTest {
 }
 
 contract SetRolePermission is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
+  }
+
   function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
     vm.expectEmit();
     emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
@@ -271,11 +290,6 @@ contract SetRolePermission is VertexPolicyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
 
     assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
-  }
-
-  function test_RevertIf_CalledByNonVertex() public {
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
   }
 }
 
@@ -312,6 +326,14 @@ contract RevokeExpiredRole is VertexPolicyTest {
 }
 
 contract RevokePolicy is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.revokePolicy(makeAddr("user"));
+  }
+
   function test_RevokesPolicy(address user) public {
     vm.assume(user != address(0));
     vm.assume(mpPolicy.balanceOf(user) == 0);
@@ -350,6 +372,16 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
 
     vm.startPrank(address(this));
+  }
+
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    VertexPolicy localPolicy = setUpLocalPolicy();
+    uint8[] memory roles = new uint8[](254);
+
+    vm.prank(caller);
+    localPolicy.revokePolicy(arbitraryAddress, roles);
   }
 
   function test_Revokes255RolesWithEnumeration() public {
@@ -791,6 +823,15 @@ contract TotalSupply is VertexPolicyTest {
 }
 
 contract Aggregate is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(rootCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    bytes[] memory calls = new bytes[](3);
+
+    vm.prank(caller);
+    mpPolicy.aggregate(calls);
+  }
+
   function test_AggregatesSetRoleHolderCalls() public {
     address newRoleHolder = makeAddr("newRoleHolder");
 

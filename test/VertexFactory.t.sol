@@ -133,7 +133,7 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertIf_CalledByAccountThatIsNotRootVertex(address caller) public {
+  function test_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(rootCore));
     Strategy[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -309,7 +309,7 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
 }
 
 contract SetPolicyMetadata is VertexFactoryTest {
-  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _metadata) public {
+  function testFuzz_RevertIf_CallerIsNotVertex(address _caller, address _metadata) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
