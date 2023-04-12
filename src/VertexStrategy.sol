@@ -19,6 +19,7 @@ contract VertexStrategy is Initializable {
   error InvalidPermissionId();
   error NoPolicy();
   error RoleNotInitialized(uint8 role);
+  error WrongVertexInstance(address vertex);
 
   // ========================
   // ======== Events ========
@@ -90,6 +91,7 @@ contract VertexStrategy is Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
     policy = _policy;
+    if (policy.vertex() != address(vertex)) revert WrongVertexInstance(policy.vertex());
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 

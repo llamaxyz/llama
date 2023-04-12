@@ -177,9 +177,10 @@ contract VertexFactory {
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
-    vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
+
+    vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
     unchecked {
       emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
