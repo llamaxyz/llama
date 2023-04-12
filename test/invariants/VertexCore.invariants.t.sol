@@ -113,6 +113,7 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("vertexCore_queueAction_queued           ", calls["vertexCore_queueAction_queued"]);
     console2.log("vertexCore_queueAction_noop             ", calls["vertexCore_queueAction_noop"]);
     console2.log("vertexCore_executeAction_executed       ", calls["vertexCore_executeAction_executed"]);
+    console2.log("vertexCore_executeAction_executionRevert", calls["vertexCore_executeAction_executionRevert"]);
     console2.log("vertexCore_executeAction_noop           ", calls["vertexCore_executeAction_noop"]);
     console2.log("vertexCore_cancelAction_canceled        ", calls["vertexCore_cancelAction_canceled"]);
     console2.log("vertexCore_cancelAction_noop            ", calls["vertexCore_cancelAction_noop"]);
@@ -173,8 +174,13 @@ contract VertexCoreHandler is BaseHandler {
       return;
     }
 
-    VERTEX_CORE.executeAction(actionId);
-    recordMetric("vertexCore_executeAction_executed");
+    vm.warp(VERTEX_CORE.getAction(actionId).executionTime); // Ensure the action is ready to be executed.
+    try VERTEX_CORE.executeAction(actionId) {
+      recordMetric("vertexCore_executeAction_executed");
+    } catch {
+      // We don't care about reverts, we just want to know if the action was executed or not.
+      recordMetric("vertexCore_executeAction_executionRevert");
+    }
   }
 
   function vertexCore_cancelAction(uint256 index) public recordCall("vertexCore_cancelAction") useCurrentTimestamp {
