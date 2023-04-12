@@ -153,7 +153,7 @@ contract VertexCore is Initializable {
     name = _name;
     policy = _policy;
 
-    _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
+    _deployStrategies(_vertexStrategyLogic, initialStrategies);
     _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
 
@@ -402,7 +402,7 @@ contract VertexCore is Initializable {
     external
     onlyVertex
   {
-    _deployStrategies(vertexStrategyLogic, strategies, policy);
+    _deployStrategies(vertexStrategyLogic, strategies);
   }
 
   /// @notice Remove strategies from the mapping of authorized strategies.
@@ -563,7 +563,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
+  function _deployStrategies(address vertexStrategyLogic, Strategy[] calldata strategies)
     internal
   {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
@@ -589,7 +589,7 @@ contract VertexCore is Initializable {
         );
 
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
-        strategy.initialize(strategies[i], _policy);
+        strategy.initialize(strategies[i]);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
       }

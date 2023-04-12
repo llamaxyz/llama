@@ -17,6 +17,7 @@ contract VertexStrategy is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error InvalidMinApprovalPct(uint256 minApprovalPct);
   error InvalidPermissionId();
   error NoPolicy();
   error RoleNotInitialized(uint8 role);
@@ -83,14 +84,15 @@ contract VertexStrategy is Initializable {
   /// @notice Initializes a new VertexStrategy clone.
   /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
   /// @param strategyConfig The strategy configuration.
-  /// @param _policy The policy contract.
-  function initialize(Strategy memory strategyConfig, VertexPolicy _policy) external initializer {
+  function initialize(Strategy memory strategyConfig) external initializer {
     vertex = VertexCore(msg.sender);
+    policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
-    policy = _policy;
+
+    if (strategyConfig.minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(minApprovalPct);
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
@@ -116,7 +118,7 @@ contract VertexStrategy is Initializable {
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit NewStrategyCreated(vertex, _policy);
+    emit NewStrategyCreated(vertex, policy);
   }
 
   // ===========================================
