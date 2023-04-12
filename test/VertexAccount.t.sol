@@ -731,9 +731,9 @@ contract BatchApproveOperatorERC1155 is VertexAccountTest {
 contract Execute is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(rootCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     MockExtension mockExtension = new MockExtension();
 
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
     vm.prank(caller);
     mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
   }

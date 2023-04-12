@@ -376,10 +376,11 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
 
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(rootCore));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
     VertexPolicy localPolicy = setUpLocalPolicy();
     uint8[] memory roles = new uint8[](254);
+    vm.stopPrank();
 
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
     vm.prank(caller);
     localPolicy.revokePolicy(arbitraryAddress, roles);
   }
