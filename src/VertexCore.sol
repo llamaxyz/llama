@@ -554,7 +554,7 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
+    if (!action.strategy.isDisapprovalEnabled()) revert DisapproveDisabled();
 
     uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
 

@@ -165,6 +165,11 @@ contract VertexStrategy is Initializable {
     return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
   }
 
+  /// @notice Returns `true` if the disapprovals are allowed with this strategy, `false` otherwise.
+  function isDisapprovalEnabled() external view returns (bool) {
+    return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
+  }
+
   /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
   /// @param policyholder The role to check weight for.
