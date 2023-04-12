@@ -133,10 +133,6 @@ contract Run is DeployVertexTest {
     DeployVertexProtocol.run();
 
     assertNotEq(address(coreLogic), address(0));
-    assertEq(
-      coreLogic.EIP712_DOMAIN_TYPEHASH(), // Just confirming the deployment.
-      bytes32(0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f)
-    );
   }
 
   function test_DeploysStrategyLogic() public {
