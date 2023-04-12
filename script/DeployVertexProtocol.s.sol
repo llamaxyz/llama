@@ -13,7 +13,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 
 import "forge-std/Script.sol";
 
-contract DeployVertex is Script {
+contract DeployVertexProtocol is Script {
   using stdJson for string;
 
   // Logic contracts.

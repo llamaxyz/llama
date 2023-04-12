@@ -15,7 +15,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {DeployVertex} from "script/DeployVertex.s.sol";
+import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
@@ -31,7 +31,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is DeployVertex, Test {
+contract VertexTestSetup is DeployVertexProtocol, Test {
   // Root Vertex instance.
   VertexCore rootCore;
   VertexPolicy rootPolicy;
@@ -92,7 +92,7 @@ contract VertexTestSetup is DeployVertex, Test {
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
-    DeployVertex.run();
+    DeployVertexProtocol.run();
 
     rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
