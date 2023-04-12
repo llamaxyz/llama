@@ -16,6 +16,7 @@ contract VertexStrategy is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error InvalidMinApprovalPct(uint256 minApprovalPct);
   error InvalidPermissionId();
   error NoPolicy();
   error RoleNotInitialized(uint8 role);
@@ -93,6 +94,7 @@ contract VertexStrategy is Initializable {
     policy = _policy;
     if (policy.vertex() != address(vertex)) revert WrongVertexInstance(policy.vertex());
     minApprovalPct = strategyConfig.minApprovalPct;
+    if (minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(minApprovalPct);
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
     uint8 numRoles = policy.numRoles();
