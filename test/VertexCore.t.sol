@@ -911,6 +911,15 @@ contract CastApproval is VertexCoreTest {
     vm.prank(approverAdam);
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
+
+  function test_RevertIf_ActionCreator() public {
+    actionId = _createAction();
+
+    vm.expectRevert(VertexCore.CreatorCannotCast.selector);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
+  }
 }
 
 contract CastApprovalBySig is VertexCoreTest {
@@ -942,6 +951,8 @@ contract CastApprovalBySig is VertexCoreTest {
     // TODO
     // Reverts if signer == address(0)
   }
+
+  function test_RevertIf_ActionCreator() public {}
 }
 
 contract CastDisapproval is VertexCoreTest {
@@ -1007,6 +1018,15 @@ contract CastDisapproval is VertexCoreTest {
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
+
+  function test_RevertIf_ActionCreator() public {
+    actionId = _createApproveAndQueueAction();
+
+    vm.expectRevert(VertexCore.CreatorCannotCast.selector);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+  }
 }
 
 contract CastDisapprovalBySig is VertexCoreTest {
@@ -1039,6 +1059,8 @@ contract CastDisapprovalBySig is VertexCoreTest {
     // TODO
     // Reverts if signer == address(0)
   }
+
+  function test_RevertIf_ActionCreator() public {}
 }
 
 contract CreateAndAuthorizeStrategies is VertexCoreTest {
