@@ -47,6 +47,7 @@ contract VertexTestSetup is Test {
   VertexPolicy rootPolicy;
   VertexStrategy rootStrategy1;
   VertexStrategy rootStrategy2;
+  VertexStrategy rootStrategy3;
   VertexAccount rootAccount1;
   VertexAccount rootAccount2;
 
@@ -55,6 +56,7 @@ contract VertexTestSetup is Test {
   VertexPolicy mpPolicy;
   VertexStrategy mpStrategy1;
   VertexStrategy mpStrategy2;
+  VertexStrategy mpStrategy3;
   VertexAccount mpAccount1;
   VertexAccount mpAccount2;
 
@@ -156,8 +158,10 @@ contract VertexTestSetup is Test {
     // Set strategy addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
     rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
+    rootStrategy3 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[2], address(rootCore));
     mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
     mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+    mpStrategy3 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[2], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -186,8 +190,10 @@ contract VertexTestSetup is Test {
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
     rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[2], address(rootCore));
     mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
     mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[2], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -291,8 +297,22 @@ contract VertexTestSetup is Test {
       forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator))
     });
 
-    strategies = new Strategy[](2);
+    Strategy memory strategy3Config = Strategy({
+      approvalPeriod: 2 days,
+      queuingPeriod: 0,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 5000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator)),
+      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator))
+    });
+
+    strategies = new Strategy[](3);
     strategies[0] = strategy1Config;
     strategies[1] = strategy2Config;
+    strategies[2] = strategy3Config;
   }
 }

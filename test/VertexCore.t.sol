@@ -920,6 +920,23 @@ contract CastApproval is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
+
+  function test_RevertIf_ApprovalsDisabled() public {
+    vm.startPrank(actionCreatorAaron);
+    actionId = mpCore.createAction(
+      uint8(Roles.ActionCreator),
+      mpStrategy3,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
+    vm.warp(block.timestamp + 1);
+
+    vm.expectRevert(VertexCore.ApproveDisabled.selector);
+
+    mpCore.castApproval(actionId, uint8(Roles.Approver));
+  }
 }
 
 contract CastApprovalBySig is VertexCoreTest {
@@ -953,6 +970,8 @@ contract CastApprovalBySig is VertexCoreTest {
   }
 
   function test_RevertIf_ActionCreator() public {}
+
+  function test_RevertIf_ApprovalsDisabled() public {}
 }
 
 contract CastDisapproval is VertexCoreTest {
@@ -1026,6 +1045,23 @@ contract CastDisapproval is VertexCoreTest {
 
     vm.prank(actionCreatorAaron);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+  }
+
+  function test_RevertIf_DisapprovalsDisabled() public {
+    vm.startPrank(actionCreatorAaron);
+    actionId = mpCore.createAction(
+      uint8(Roles.ActionCreator),
+      mpStrategy2,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true)
+    );
+    vm.warp(block.timestamp + 1);
+
+    vm.expectRevert(VertexCore.DisapproveDisabled.selector);
+
+    mpCore.castDisapproval(actionId, uint8(Roles.Approver));
   }
 }
 
