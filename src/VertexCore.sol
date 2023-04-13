@@ -20,6 +20,7 @@ contract VertexCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error CreatorCannotCast();
   error InvalidStrategy();
   error InvalidPolicyholder();
   error InvalidCancelation();
@@ -527,6 +528,7 @@ contract VertexCore is Initializable {
     if (hasApproved) revert DuplicateApproval();
 
     Action storage action = actions[actionId];
+    if (action.creator == policyholder) revert CreatorCannotCast();
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
@@ -546,6 +548,7 @@ contract VertexCore is Initializable {
     if (hasDisapproved) revert DuplicateDisapproval();
 
     Action storage action = actions[actionId];
+    if (action.creator == policyholder) revert CreatorCannotCast();
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
