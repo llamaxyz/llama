@@ -24,12 +24,8 @@ contract VertexCore is Initializable {
   error InvalidPolicyholder();
   error InvalidCancelation();
   error InvalidActionId();
-  error OnlyQueuedActions();
-  error InvalidStateForQueue();
-  error ActionCannotBeCanceled();
+  error InvalidActionState(ActionState expected);
   error OnlyVertex();
-  error ActionNotActive();
-  error ActionNotQueued();
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution();
@@ -159,7 +155,7 @@ contract VertexCore is Initializable {
     name = _name;
     policy = _policy;
 
-    _deployStrategies(_vertexStrategyLogic, initialStrategies, _policy);
+    _deployStrategies(_vertexStrategyLogic, initialStrategies);
     _deployAccounts(_vertexAccountLogic, initialAccounts);
   }
 
@@ -243,11 +239,11 @@ contract VertexCore is Initializable {
   /// @notice Queue an action by actionId if it's in Approved state.
   /// @param actionId Id of the action to queue.
   function queueAction(uint256 actionId) external {
-    if (getActionState(actionId) != ActionState.Approved) revert InvalidStateForQueue();
+    if (getActionState(actionId) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
     Action storage action = actions[actionId];
     uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
 
-    action.executionTime = executionTime;
+    action.minExecutionTime = executionTime;
 
     emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
   }
@@ -257,10 +253,10 @@ contract VertexCore is Initializable {
   /// @return The result returned from the call to the target contract.
   function executeAction(uint256 actionId) external payable returns (bytes memory) {
     // Initial checks that action is ready to execute.
-    if (getActionState(actionId) != ActionState.Queued) revert OnlyQueuedActions();
+    if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
 
     Action storage action = actions[actionId];
-    if (block.timestamp < action.executionTime) revert TimelockNotFinished();
+    if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
     // Check pre-execution action guard.
@@ -287,22 +283,15 @@ contract VertexCore is Initializable {
     return result;
   }
 
-  /// @notice Cancels an action. Can be called anytime by the creator or if action is disapproved.
+  /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
   /// @param actionId Id of the action to cancel.
   function cancelAction(uint256 actionId) external {
-    ActionState state = getActionState(actionId);
-    if (
-      state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
-        || state == ActionState.Failed
-    ) revert InvalidCancelation();
-
+    // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
+    // address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
     Action storage action = actions[actionId];
-    if (!(msg.sender == action.creator || action.strategy.isActionCancelationValid(actionId))) {
-      revert ActionCannotBeCanceled();
-    }
+    if (!action.strategy.isActionCancelationValid(actionId, msg.sender)) revert InvalidCancelation();
 
     action.canceled = true;
-
     emit ActionCanceled(actionId);
   }
 
@@ -415,7 +404,7 @@ contract VertexCore is Initializable {
     external
     onlyVertex
   {
-    _deployStrategies(vertexStrategyLogic, strategies, policy);
+    _deployStrategies(vertexStrategyLogic, strategies);
   }
 
   /// @notice Remove strategies from the mapping of authorized strategies.
@@ -444,14 +433,6 @@ contract VertexCore is Initializable {
     emit ActionGuardSet(target, selector, guard);
   }
 
-  /// @notice Get whether an action has expired and can no longer be executed.
-  /// @param actionId id of the action.
-  /// @return Boolean value that is true if the action has expired.
-  function isActionExpired(uint256 actionId) public view returns (bool) {
-    Action storage action = actions[actionId];
-    return block.timestamp >= action.executionTime + action.strategy.expirationPeriod();
-  }
-
   /// @notice Get an Action struct by actionId.
   /// @param actionId id of the action.
   /// @return The Action struct.
@@ -476,11 +457,11 @@ contract VertexCore is Initializable {
 
     if (!action.strategy.isActionPassed(actionId)) return ActionState.Failed;
 
-    if (action.executionTime == 0) return ActionState.Approved;
+    if (action.minExecutionTime == 0) return ActionState.Approved;
 
     if (action.executed) return ActionState.Executed;
 
-    if (isActionExpired(actionId)) return ActionState.Expired;
+    if (action.strategy.isActionExpired(actionId)) return ActionState.Expired;
 
     return ActionState.Queued;
   }
@@ -545,7 +526,7 @@ contract VertexCore is Initializable {
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Active) revert ActionNotActive();
+    if (getActionState(actionId) != ActionState.Active) revert InvalidActionState(ActionState.Active);
     bool hasApproved = approvals[actionId][policyholder];
     if (hasApproved) revert DuplicateApproval();
 
@@ -564,7 +545,7 @@ contract VertexCore is Initializable {
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Queued) revert ActionNotQueued();
+    if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
     bool hasDisapproved = disapprovals[actionId][policyholder];
     if (hasDisapproved) revert DuplicateDisapproval();
 
@@ -572,7 +553,7 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    if (action.strategy.minDisapprovalPct() > ONE_HUNDRED_IN_BPS) revert DisapproveDisabled();
+    if (!action.strategy.isDisapprovalEnabled()) revert DisapproveDisabled();
 
     uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
 
@@ -584,9 +565,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies, VertexPolicy _policy)
-    internal
-  {
+  function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies) internal {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
@@ -610,7 +589,7 @@ contract VertexCore is Initializable {
         );
 
         VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
-        strategy.initialize(strategies[i], _policy);
+        strategy.initialize(strategies[i]);
         authorizedStrategies[strategy] = true;
         emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
       }

@@ -293,6 +293,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {
+    _percent = bound(_percent, 0, 10_000);
     VertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -485,7 +486,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionId);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
 
     assertEq(isActionCancelled, true);
   }
@@ -509,7 +510,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionId);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId);
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
 
     assertEq(isActionCancelled, false);
   }
