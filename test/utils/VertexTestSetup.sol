@@ -109,7 +109,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   string scriptInput;
-  
+
   function setUp() public virtual {
     // Setting up user addresses and private keys.
     (rootVertexActionCreator, rootVertexActionCreatorPrivateKey) = makeAddrAndKey("rootVertexActionCreator");
@@ -121,17 +121,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
-    // Deploy logic contracts.
-    coreLogic = new VertexCore();
-    strategyLogic = new VertexStrategy();
-    accountLogic = new VertexAccount();
-    policyLogic = new VertexPolicy();
-    policyMetadata = new VertexPolicyTokenURI();
-
-    // Deploy lens.
-    lens = new VertexLens();
-
-  function setUp() public virtual {
     DeployVertexProtocol.run();
 
     rootCore = factory.ROOT_VERTEX();
