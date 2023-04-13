@@ -566,11 +566,11 @@ contract CancelAction is VertexCoreTest {
   }
 
   function test_CreatorCancelFlow() public {
-    vm.startPrank(actionCreatorAaron);
+    vm.prank(actionCreatorAaron);
     vm.expectEmit();
     emit ActionCanceled(0);
     mpCore.cancelAction(0);
-    vm.stopPrank();
+
     uint256 state = uint256(mpCore.getActionState(0));
     uint256 canceled = uint256(ActionState.Canceled);
     assertEq(state, canceled);
@@ -579,16 +579,17 @@ contract CancelAction is VertexCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
   function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
-    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
-    vm.startPrank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
-    mpCore.cancelAction(1);
-    vm.stopPrank();
+    invalidActionId = bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
+    vm.prank(actionCreatorAaron);
+    // We expect a low-level revert with no error message because if the action doesn't exist the strategy will be the
+    // zero address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
+    vm.expectRevert();
+    mpCore.cancelAction(invalidActionId);
   }
 
   function test_RevertIf_AlreadyCanceled() public {
@@ -596,16 +597,14 @@ contract CancelAction is VertexCoreTest {
     mpCore.cancelAction(0);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
-    vm.stopPrank();
   }
 
   function test_RevertIf_ActionExecuted() public {
     _executeCompleteActionFlow();
 
-    vm.startPrank(actionCreatorAaron);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
-    vm.stopPrank();
   }
 
   function test_RevertIf_ActionExpired() public {
@@ -621,10 +620,9 @@ contract CancelAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 15 days);
 
-    vm.startPrank(actionCreatorAaron);
+    vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
-    vm.stopPrank();
   }
 
   function test_RevertIf_ActionFailed() public {
@@ -665,7 +663,7 @@ contract CancelAction is VertexCoreTest {
     assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    vm.expectRevert(VertexCore.ActionCannotBeCanceled.selector);
+    vm.expectRevert(VertexCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 }
@@ -677,7 +675,7 @@ contract QueueAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(VertexCore.InvalidStateForQueue.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Approved)));
     mpCore.queueAction(0);
   }
 
@@ -721,7 +719,7 @@ contract ExecuteAction is VertexCoreTest {
   }
 
   function test_RevertIf_NotQueued() public {
-    vm.expectRevert(VertexCore.OnlyQueuedActions.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.executeAction(actionId);
 
     // Check that it's in the Approved state
@@ -772,7 +770,7 @@ contract ExecuteAction is VertexCoreTest {
     // Using a reasonable upper limit for elapsedTime
     vm.assume(timeElapsed < 10_000 days);
     mpCore.queueAction(actionId);
-    uint256 executionTime = mpCore.getAction(actionId).executionTime;
+    uint256 executionTime = mpCore.getAction(actionId).minExecutionTime;
 
     vm.warp(block.timestamp + timeElapsed);
 
@@ -889,7 +887,7 @@ contract CastApproval is VertexCoreTest {
 
     mpCore.queueAction(actionId);
 
-    vm.expectRevert(VertexCore.ActionNotActive.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Active)));
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 
@@ -984,7 +982,7 @@ contract CastDisapproval is VertexCoreTest {
   function test_RevertIf_ActionNotQueued() public {
     actionId = _createAction();
 
-    vm.expectRevert(VertexCore.ActionNotQueued.selector);
+    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 

@@ -67,7 +67,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much weight the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  /// @dev The current implementation does not allow a user's quantity to be anything other than 1.
   mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Checkpoints the total supply of a given role.

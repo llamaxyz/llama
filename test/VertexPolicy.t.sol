@@ -963,7 +963,7 @@ contract TokenURI is VertexPolicyTest {
 }
 
 contract IsRoleExpired is VertexPolicyTest {
-  function test_ReturnsTrueForExpiredRole(uint64 expiration) public returns (bool) {
+  function test_ReturnsTrueForExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.prank(address(mpCore));
@@ -974,7 +974,7 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
   }
 
-  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public returns (bool) {
+  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.prank(address(mpCore));
