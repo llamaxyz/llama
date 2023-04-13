@@ -77,7 +77,7 @@ contract DeployVertexProtocol is Script {
 
     vm.broadcast();
     policyMetadata = new VertexPolicyTokenURI();
-    console2.log("  VertexPolicyMetadata:", address(policyMetadata));
+    console2.log("  VertexPolicyTokenURI:", address(policyMetadata));
 
     vm.broadcast();
     lens = new VertexLens();
