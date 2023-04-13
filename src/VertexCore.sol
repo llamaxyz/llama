@@ -409,11 +409,9 @@ contract VertexCore is Initializable {
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
   function unauthorizeStrategies(VertexStrategy[] calldata strategies) external onlyVertex {
     uint256 strategiesLength = strategies.length;
-    unchecked {
-      for (uint256 i = 0; i < strategiesLength; ++i) {
-        delete authorizedStrategies[strategies[i]];
-        emit StrategyUnauthorized(strategies[i]);
-      }
+    for (uint256 i = 0; i < strategiesLength; i = _uncheckedIncrement(i)) {
+      delete authorizedStrategies[strategies[i]];
+      emit StrategyUnauthorized(strategies[i]);
     }
   }
 
@@ -571,26 +569,24 @@ contract VertexCore is Initializable {
     }
 
     uint256 strategyLength = strategies.length;
-    unchecked {
-      for (uint256 i; i < strategyLength; ++i) {
-        bytes32 salt = bytes32(
-          keccak256(
-            abi.encode(
-              strategies[i].approvalPeriod,
-              strategies[i].queuingPeriod,
-              strategies[i].expirationPeriod,
-              strategies[i].minApprovalPct,
-              strategies[i].minDisapprovalPct,
-              strategies[i].isFixedLengthApprovalPeriod
-            )
+    for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
+      bytes32 salt = bytes32(
+        keccak256(
+          abi.encode(
+            strategies[i].approvalPeriod,
+            strategies[i].queuingPeriod,
+            strategies[i].expirationPeriod,
+            strategies[i].minApprovalPct,
+            strategies[i].minDisapprovalPct,
+            strategies[i].isFixedLengthApprovalPeriod
           )
-        );
+        )
+      );
 
-        VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
-        strategy.initialize(strategies[i]);
-        authorizedStrategies[strategy] = true;
-        emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
-      }
+      VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(vertexStrategyLogic, salt));
+      strategy.initialize(strategies[i]);
+      authorizedStrategies[strategy] = true;
+      emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
     }
   }
 
@@ -602,13 +598,11 @@ contract VertexCore is Initializable {
     }
 
     uint256 accountLength = accounts.length;
-    unchecked {
-      for (uint256 i; i < accountLength; ++i) {
-        bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-        VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
-        account.initialize(accounts[i]);
-        emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
-      }
+    for (uint256 i; i < accountLength; i = _uncheckedIncrement(i)) {
+      bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+      VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
+      account.initialize(accounts[i]);
+      emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
     }
   }
 
@@ -632,6 +626,12 @@ contract VertexCore is Initializable {
     nonce = nonces[user][selector];
     unchecked {
       nonces[user][selector] = nonce + 1;
+    }
+  }
+
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
     }
   }
 }
