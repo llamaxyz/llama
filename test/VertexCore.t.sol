@@ -45,6 +45,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   function setUp() public virtual override {
     VertexTestSetup.setUp();
 
+    // Setting Mock Protocol Core's EIP-712 Domain Hash
     setDomainHash(
       VertexCoreSigUtils.EIP712Domain({
         name: mpCore.name(),
