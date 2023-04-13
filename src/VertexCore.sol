@@ -410,7 +410,7 @@ contract VertexCore is Initializable {
   function unauthorizeStrategies(VertexStrategy[] calldata strategies) external onlyVertex {
     uint256 strategiesLength = strategies.length;
     unchecked {
-      for (uint256 i = 0; i < strategiesLength; ++i) {
+      for (uint256 i = 0; i < strategiesLength; _uncheckedIncrement(i)) {
         delete authorizedStrategies[strategies[i]];
         emit StrategyUnauthorized(strategies[i]);
       }
@@ -572,7 +572,7 @@ contract VertexCore is Initializable {
 
     uint256 strategyLength = strategies.length;
     unchecked {
-      for (uint256 i; i < strategyLength; ++i) {
+      for (uint256 i; i < strategyLength; _uncheckedIncrement(i)) {
         bytes32 salt = bytes32(
           keccak256(
             abi.encode(
@@ -603,7 +603,7 @@ contract VertexCore is Initializable {
 
     uint256 accountLength = accounts.length;
     unchecked {
-      for (uint256 i; i < accountLength; ++i) {
+      for (uint256 i; i < accountLength; _uncheckedIncrement(i)) {
         bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
         VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(vertexAccountLogic, salt)));
         account.initialize(accounts[i]);
@@ -632,6 +632,12 @@ contract VertexCore is Initializable {
     nonce = nonces[user][selector];
     unchecked {
       nonces[user][selector] = nonce + 1;
+    }
+  }
+
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
     }
   }
 }
