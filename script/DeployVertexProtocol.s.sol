@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
+
+import {Script, stdJson, console2} from "forge-std/Script.sol";
 
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -10,8 +12,6 @@ import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-
-import {Script, stdJson, console2} from "forge-std/Script.sol";
 
 contract DeployVertexProtocol is Script {
   using stdJson for string;
