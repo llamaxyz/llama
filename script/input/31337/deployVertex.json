@@ -3,8 +3,8 @@
     "initialStrategies": [
       {
         "approvalPeriod": 172800,
-        "approvalRole": 3,
-        "disapprovalRole": 4,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
         "expirationPeriod": 691200,
         "forceApprovalRoles": [],
         "forceDisapprovalRoles": [],
@@ -15,11 +15,11 @@
       },
       {
         "approvalPeriod": 172800,
-        "approvalRole": 3,
-        "disapprovalRole": 4,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
         "expirationPeriod": 86400,
-        "forceApprovalRoles": [2],
-        "forceDisapprovalRoles": [2],
+        "forceApprovalRoles": [1],
+        "forceDisapprovalRoles": [1],
         "isFixedLengthApprovalPeriod": false,
         "minApprovalPct": 8000,
         "minDisapprovalPct": 10001,
@@ -28,10 +28,11 @@
     ],
     "initialAccountNames": ["Llama Treasury", "Llama Grants"],
     "initialRoleDescriptions": [
-      "AllHolders",
       "ActionCreator",
       "Approver",
       "Disapprover",
+      "ForceApprover",
+      "ForceDisapprover",
       "TestRole1",
       "TestRole2",
       "MadeUpRole"

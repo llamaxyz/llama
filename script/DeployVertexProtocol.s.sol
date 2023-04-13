@@ -95,7 +95,7 @@ contract DeployVertexProtocol is Script {
       readRoleHolders(jsonInput),
       readRolePermissions(jsonInput)
     );
-    console2.log(" VertexFactory:", address(factory));
+    console2.log("  VertexFactory:", address(factory));
 
     vm.broadcast();
     lens = new VertexLens();
