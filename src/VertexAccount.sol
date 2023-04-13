@@ -92,10 +92,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc20Data The data of the ERC20 transfers.
   function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
     uint256 length = erc20Data.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        transferERC20(erc20Data[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      transferERC20(erc20Data[i]);
     }
   }
 
@@ -109,10 +107,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc20Data The data of the ERC20 allowances.
   function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyVertex {
     uint256 length = erc20Data.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        approveERC20(erc20Data[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      approveERC20(erc20Data[i]);
     }
   }
 
@@ -129,10 +125,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721Data The data of the ERC721 transfers.
   function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
     uint256 length = erc721Data.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        transferERC721(erc721Data[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      transferERC721(erc721Data[i]);
     }
   }
 
@@ -146,10 +140,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721Data The data of the ERC721 allowances.
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyVertex {
     uint256 length = erc721Data.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        approveERC721(erc721Data[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      approveERC721(erc721Data[i]);
     }
   }
 
@@ -163,10 +155,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721OperatorData The data of the ERC721 operator allowances.
   function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyVertex {
     uint256 length = erc721OperatorData.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        approveOperatorERC721(erc721OperatorData[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      approveOperatorERC721(erc721OperatorData[i]);
     }
   }
 
@@ -198,10 +188,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc1155BatchData The data of the ERC1155 batch transfers.
   function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyVertex {
     uint256 length = erc1155BatchData.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        batchTransferSingleERC1155(erc1155BatchData[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      batchTransferSingleERC1155(erc1155BatchData[i]);
     }
   }
 
@@ -215,10 +203,8 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc1155OperatorData The data of the ERC1155 operator allowances.
   function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyVertex {
     uint256 length = erc1155OperatorData.length;
-    unchecked {
-      for (uint256 i = 0; i < length; _uncheckedIncrement(i)) {
-        approveOperatorERC1155(erc1155OperatorData[i]);
-      }
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      approveOperatorERC1155(erc1155OperatorData[i]);
     }
   }
 

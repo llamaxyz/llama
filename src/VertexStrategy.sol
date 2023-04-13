@@ -104,14 +104,14 @@ contract VertexStrategy is Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; _uncheckedIncrement(i)) {
+    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; _uncheckedIncrement(i)) {
+    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
