@@ -609,14 +609,17 @@ contract CreateActionBySig is VertexCoreTest {
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
     (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
-    // parameter
+    // parameter.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
     _createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _createActionBySig((v + 1), r, s);
   }
 }
 
@@ -1036,14 +1039,19 @@ contract CastApprovalBySig is VertexCoreTest {
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
     (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
-    // parameter
+    // parameter.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
     _castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castApprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
@@ -1191,8 +1199,13 @@ contract CastDisapprovalBySig is VertexCoreTest {
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    _castDisapprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
