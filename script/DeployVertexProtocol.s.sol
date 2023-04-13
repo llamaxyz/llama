@@ -24,7 +24,7 @@ contract DeployVertexProtocol is Script {
 
   // Core Protocol.
   VertexFactory factory;
-  VertexPolicyTokenURI policyMetadata;
+  VertexPolicyTokenURI policyTokenUri;
   VertexLens lens;
 
   struct RawStrategyData {
@@ -57,7 +57,7 @@ contract DeployVertexProtocol is Script {
   }
 
   function run() public {
-    console2.log("Deploying VertexFactory with following parameters to chain:", block.chainid);
+    console2.log("Deploying Vertex infrastructure to chain:", block.chainid);
 
     vm.broadcast();
     coreLogic = new VertexCore();
@@ -76,12 +76,8 @@ contract DeployVertexProtocol is Script {
     console2.log("  VertexPolicyLogic:", address(policyLogic));
 
     vm.broadcast();
-    policyMetadata = new VertexPolicyTokenURI();
-    console2.log("  VertexPolicyTokenURI:", address(policyMetadata));
-
-    vm.broadcast();
-    lens = new VertexLens();
-    console2.log("  VertexLens:", address(lens));
+    policyTokenUri = new VertexPolicyTokenURI();
+    console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
 
     string memory jsonInput = readScriptInput();
 
@@ -91,7 +87,7 @@ contract DeployVertexProtocol is Script {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyMetadata,
+      policyTokenUri,
       jsonInput.readString(".rootVertexName"),
       readStrategies(jsonInput),
       jsonInput.readStringArray(".initialAccountNames"),
@@ -99,8 +95,11 @@ contract DeployVertexProtocol is Script {
       readRoleHolders(jsonInput),
       readRolePermissions(jsonInput)
     );
+    console2.log(" VertexFactory:", address(factory));
 
-    console2.log("VertexFactory deployed at address:", address(factory));
+    vm.broadcast();
+    lens = new VertexLens();
+    console2.log("  VertexLens:", address(lens));
   }
 
   function readScriptInput() internal view returns (string memory) {

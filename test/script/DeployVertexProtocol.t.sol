@@ -161,6 +161,15 @@ contract Run is DeployVertexTest {
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
+  function test_DeploysPolicyTokenURI() public {
+    assertEq(address(policyTokenUri), address(0));
+
+    DeployVertexProtocol.run();
+
+    assertNotEq(address(policyTokenUri), address(0));
+    assertNotEq(policyTokenUri.tokenURI("MyVertex", "MTX", 42, "teal", "https://logo.com"), "");
+  }
+
   function test_DeploysLens() public {
     assertEq(address(lens), address(0));
 
