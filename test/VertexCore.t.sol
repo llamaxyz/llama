@@ -1045,7 +1045,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
 
 contract CreateAndAuthorizeStrategies is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexCore.OnlyVertex.selector);
     Strategy[] memory newStrategies = new Strategy[](0);
 
@@ -1276,7 +1276,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
 contract UnauthorizeStrategies is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexCore.OnlyVertex.selector);
     VertexStrategy[] memory strategies = new VertexStrategy[](0);
 
@@ -1318,7 +1318,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
 
 contract CreateAndAuthorizeAccounts is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexCore.OnlyVertex.selector);
     string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
 
@@ -1451,8 +1451,8 @@ contract SetGuard is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller, address target, bytes4 selector, IActionGuard guard)
     public
   {
-    vm.assume(caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
     vm.prank(caller);
     mpCore.setGuard(target, selector, guard);
   }

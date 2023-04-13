@@ -193,7 +193,7 @@ contract Initialize is VertexAccountTest {
 
 contract Transfer is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -225,7 +225,7 @@ contract Transfer is VertexAccountTest {
 
 contract TransferERC20 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -257,7 +257,7 @@ contract TransferERC20 is VertexAccountTest {
 
 contract BatchTransferERC20 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
@@ -303,7 +303,7 @@ contract BatchTransferERC20 is VertexAccountTest {
 
 contract ApproveERC20 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -341,7 +341,7 @@ contract ApproveERC20 is VertexAccountTest {
 
 contract BatchApproveERC20 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
@@ -365,7 +365,7 @@ contract BatchApproveERC20 is VertexAccountTest {
 
 contract TransferERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -398,7 +398,7 @@ contract TransferERC721 is VertexAccountTest {
 
 contract BatchTransferERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
@@ -444,7 +444,7 @@ contract BatchTransferERC721 is VertexAccountTest {
 
 contract ApproveERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -459,7 +459,7 @@ contract ApproveERC721 is VertexAccountTest {
 
 contract BatchApproveERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
@@ -486,7 +486,7 @@ contract BatchApproveERC721 is VertexAccountTest {
 
 contract ApproveOperatorERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -504,7 +504,7 @@ contract ApproveOperatorERC721 is VertexAccountTest {
 
 contract BatchApproveOperatorERC721 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
@@ -528,7 +528,7 @@ contract BatchApproveOperatorERC721 is VertexAccountTest {
 
 contract TransferERC1155 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -560,7 +560,7 @@ contract TransferERC1155 is VertexAccountTest {
 
 contract BatchTransferSingleERC1155 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     uint256[] memory tokenIDs = new uint256[](2);
     tokenIDs[0] = RARI_ID_1;
@@ -621,7 +621,7 @@ contract BatchTransferSingleERC1155 is VertexAccountTest {
 
 contract BatchTransferMultipleERC1155 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
 
@@ -689,7 +689,7 @@ contract BatchTransferMultipleERC1155 is VertexAccountTest {
 
 contract ApproveOperatorERC1155 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -707,7 +707,7 @@ contract ApproveOperatorERC1155 is VertexAccountTest {
 
 contract BatchApproveOperatorERC1155 is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
 
@@ -730,7 +730,7 @@ contract BatchApproveOperatorERC1155 is VertexAccountTest {
 
 contract Execute is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     MockExtension mockExtension = new MockExtension();
 
     vm.expectRevert(VertexAccount.OnlyVertex.selector);

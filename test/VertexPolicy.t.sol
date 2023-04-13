@@ -180,7 +180,7 @@ contract InitializeRole is VertexPolicyTest {
   uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
 
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -225,7 +225,7 @@ contract InitializeRole is VertexPolicyTest {
 
 contract SetRoleHolder is VertexPolicyTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -276,7 +276,7 @@ contract SetRoleHolder is VertexPolicyTest {
 
 contract SetRolePermission is VertexPolicyTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -327,7 +327,7 @@ contract RevokeExpiredRole is VertexPolicyTest {
 
 contract RevokePolicy is VertexPolicyTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
 
     vm.prank(caller);
@@ -375,7 +375,7 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
   }
 
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     VertexPolicy localPolicy = setUpLocalPolicy();
     uint8[] memory roles = new uint8[](254);
     vm.stopPrank();
@@ -825,7 +825,7 @@ contract TotalSupply is VertexPolicyTest {
 
 contract Aggregate is VertexPolicyTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
     bytes[] memory calls = new bytes[](3);
 
