@@ -540,7 +540,7 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CreateActionBySig is VertexCoreTest {
-  function _createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+  function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
       strategy: address(mpStrategy1),
@@ -555,7 +555,7 @@ contract CreateActionBySig is VertexCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
-  function _createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
+  function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
     actionId = mpCore.createActionBySig(
       uint8(Roles.ActionCreator),
       mpStrategy1,
@@ -570,13 +570,13 @@ contract CreateActionBySig is VertexCoreTest {
     );
   }
 
-  function test_CreateActionBySig() public {
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+  function test_CreatesActionBySig() public {
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
 
     vm.expectEmit();
     emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
 
-    uint256 _actionId = _createActionBySig(v, r, s);
+    uint256 _actionId = createActionBySig(v, r, s);
 
     Action memory action = mpCore.getAction(_actionId);
     uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
@@ -590,36 +590,36 @@ contract CreateActionBySig is VertexCoreTest {
   }
 
   function test_CheckNonceIncrements() public {
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 0);
-    _createActionBySig(v, r, s);
+    createActionBySig(v, r, s);
     assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
-    _createActionBySig(v, r, s);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    createActionBySig(v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _createActionBySig(v, r, s);
+    createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(randomSignerPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
     // parameter.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _createActionBySig(v, r, s);
+    createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionCreatorAaronPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _createActionBySig((v + 1), r, s);
+    createActionBySig((v + 1), r, s);
   }
 }
 
@@ -978,7 +978,7 @@ contract CastApproval is VertexCoreTest {
 }
 
 contract CastApprovalBySig is VertexCoreTest {
-  function _createOffchainSignature(uint256 _actionId, uint256 privateKey)
+  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
@@ -994,19 +994,19 @@ contract CastApprovalBySig is VertexCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
-  function _castApprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+  function castApprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
     mpCore.castApprovalBySig(actionId, uint8(Roles.Approver), "", approverAdam, v, r, s);
   }
 
-  function test_CastApprovalBySig() public {
+  function test_CastsApprovalBySig() public {
     uint256 actionId = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
 
     vm.expectEmit();
     emit ApprovalCast(actionId, approverAdam, 1, "");
 
-    _castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionId, v, r, s);
 
     assertEq(mpCore.getAction(0).totalApprovals, 1);
     assertEq(mpCore.approvals(0, approverAdam), true);
@@ -1015,43 +1015,43 @@ contract CastApprovalBySig is VertexCoreTest {
   function test_CheckNonceIncrements() public {
     uint256 actionId = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
 
     assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 0);
-    _castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionId, v, r, s);
     assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
     uint256 actionId = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
-    _castApprovalBySig(actionId, v, r, s);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    castApprovalBySig(actionId, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
     uint256 actionId = _createAction();
 
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, randomSignerPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
     // parameter.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
     uint256 actionId = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castApprovalBySig(actionId, (v + 1), r, s);
+    castApprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
@@ -1121,7 +1121,7 @@ contract CastDisapproval is VertexCoreTest {
 }
 
 contract CastDisapprovalBySig is VertexCoreTest {
-  function _createOffchainSignature(uint256 _actionId, uint256 privateKey)
+  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
@@ -1137,7 +1137,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
-  function _castDisapprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+  function castDisapprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
     mpCore.castDisapprovalBySig(actionId, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
   }
 
@@ -1152,15 +1152,15 @@ contract CastDisapprovalBySig is VertexCoreTest {
     _queueAction(_actionId);
   }
 
-  function test_CastDisapprovalBySig() public {
+  function test_CastsDisapprovalBySig() public {
     uint256 actionId = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
 
     vm.expectEmit();
     emit DisapprovalCast(actionId, disapproverDrake, 1, "");
 
-    _castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionId, v, r, s);
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
@@ -1169,43 +1169,43 @@ contract CastDisapprovalBySig is VertexCoreTest {
   function test_CheckNonceIncrements() public {
     uint256 actionId = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
 
     assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 0);
-    _castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionId, v, r, s);
     assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
     uint256 actionId = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
-    _castDisapprovalBySig(actionId, v, r, s);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    castDisapprovalBySig(actionId, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
     uint256 actionId = _createApproveAndQueueAction();
 
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, randomSignerPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
     uint256 actionId = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = _createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
     vm.expectRevert(VertexCore.InvalidSignature.selector);
-    _castDisapprovalBySig(actionId, (v + 1), r, s);
+    castDisapprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
