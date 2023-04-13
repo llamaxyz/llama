@@ -59,7 +59,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice A special role used to reference all policy holders.
   /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
   /// values for this role.
-  uint8 public constant ALL_HOLDERS_ROLE = 0; // TODO Confirm zero is safe here.
+  // TODO Confirm zero is safe here.
+  // TODO If zero is NOT safe, update the deploy script to add an 'AllHolders' role description.
+  uint8 public constant ALL_HOLDERS_ROLE = 0;
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;

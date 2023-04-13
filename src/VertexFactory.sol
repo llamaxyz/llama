@@ -2,9 +2,11 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -62,8 +64,8 @@ contract VertexFactory {
 
   constructor(
     VertexCore vertexCoreLogic,
-    address initialVertexStrategyLogic,
-    address initialVertexAccountLogic,
+    VertexStrategy initialVertexStrategyLogic,
+    VertexAccount initialVertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
@@ -77,13 +79,13 @@ contract VertexFactory {
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyTokenUri = _vertexPolicyTokenUri;
 
-    _authorizeStrategyLogic(initialVertexStrategyLogic);
-    _authorizeAccountLogic(initialVertexAccountLogic);
+    _authorizeStrategyLogic(address(initialVertexStrategyLogic));
+    _authorizeAccountLogic(address(initialVertexAccountLogic));
 
     ROOT_VERTEX = _deploy(
       name,
-      initialVertexStrategyLogic,
-      initialVertexAccountLogic,
+      address(initialVertexStrategyLogic),
+      address(initialVertexAccountLogic),
       initialStrategies,
       initialAccounts,
       initialRoleDescriptions,
