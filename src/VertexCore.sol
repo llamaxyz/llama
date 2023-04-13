@@ -32,6 +32,7 @@ contract VertexCore is Initializable {
   error FailedActionExecution();
   error DuplicateApproval();
   error DuplicateDisapproval();
+  error ApproveDisabled();
   error DisapproveDisabled();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
@@ -531,6 +532,8 @@ contract VertexCore is Initializable {
     if (action.creator == policyholder) revert CreatorCannotCast();
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
+
+    if (!action.strategy.isApprovalEnabled()) revert ApproveDisabled();
 
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 

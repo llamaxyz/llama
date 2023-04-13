@@ -167,6 +167,11 @@ contract VertexStrategy is Initializable {
     return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
   }
 
+  /// @notice Returns `true` if the approvals are allowed with this strategy, `false` otherwise.
+  function isApprovalEnabled() external view returns (bool) {
+    return minApprovalPct != 0;
+  }
+
   /// @notice Returns `true` if the disapprovals are allowed with this strategy, `false` otherwise.
   function isDisapprovalEnabled() external view returns (bool) {
     return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
