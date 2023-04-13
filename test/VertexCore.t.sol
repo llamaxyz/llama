@@ -21,7 +21,7 @@ import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 
-contract VertexCoreTest is VertexTestSetup {
+contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -42,17 +42,17 @@ contract VertexCoreTest is VertexTestSetup {
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
-  VertexCoreSigUtils sigUtils;
-
   function setUp() public virtual override {
     VertexTestSetup.setUp();
 
-    sigUtils = new VertexCoreSigUtils(VertexCoreSigUtils.EIP712Domain({
-      name: mpCore.name(),
-      version: "1",
-      chainId: block.chainid,
-      verifyingContract: address(mpCore)
-    }));
+    setDomainHash(
+      VertexCoreSigUtils.EIP712Domain({
+        name: mpCore.name(),
+        version: "1",
+        chainId: block.chainid,
+        verifyingContract: address(mpCore)
+      })
+    );
   }
 
   // =========================
@@ -551,7 +551,7 @@ contract CreateActionBySig is VertexCoreTest {
       policyholder: actionCreatorAaron,
       nonce: 0
     });
-    bytes32 digest = sigUtils.getCreateActionTypedDataHash(createAction);
+    bytes32 digest = getCreateActionTypedDataHash(createAction);
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
@@ -990,7 +990,7 @@ contract CastApprovalBySig is VertexCoreTest {
       policyholder: approverAdam,
       nonce: 0
     });
-    bytes32 digest = sigUtils.getCastApprovalTypedDataHash(castApproval);
+    bytes32 digest = getCastApprovalTypedDataHash(castApproval);
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
@@ -1133,7 +1133,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
       policyholder: disapproverDrake,
       nonce: 0
     });
-    bytes32 digest = sigUtils.getCastDisapprovalTypedDataHash(castDisapproval);
+    bytes32 digest = getCastDisapprovalTypedDataHash(castDisapproval);
     (v, r, s) = vm.sign(privateKey, digest);
   }
 

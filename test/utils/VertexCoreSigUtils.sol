@@ -55,13 +55,9 @@ contract VertexCoreSigUtils {
 
   bytes32 internal DOMAIN_SEPARATOR;
 
-  constructor(EIP712Domain memory eip712Domain) {
-    DOMAIN_SEPARATOR = getDomainHash(eip712Domain);
-  }
-
-  /// @notice Returns the EIP-712 domain separator.
-  function getDomainHash(EIP712Domain memory eip712Domain) internal pure returns (bytes32) {
-    return keccak256(
+  /// @notice Sets the EIP-712 domain separator.
+  function setDomainHash(EIP712Domain memory eip712Domain) internal {
+    DOMAIN_SEPARATOR = keccak256(
       abi.encode(
         EIP712_DOMAIN_TYPEHASH,
         keccak256(bytes(eip712Domain.name)),
@@ -91,7 +87,7 @@ contract VertexCoreSigUtils {
 
   /// @notice Returns the hash of the fully encoded EIP-712 message for the CreateAction domain, which can be used to
   /// recover the signer.
-  function getCreateActionTypedDataHash(CreateAction memory createAction) public view returns (bytes32) {
+  function getCreateActionTypedDataHash(CreateAction memory createAction) internal view returns (bytes32) {
     return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getCreateActionHash(createAction)));
   }
 
@@ -111,7 +107,7 @@ contract VertexCoreSigUtils {
 
   /// @notice Returns the hash of the fully encoded EIP-712 message for the CastApproval domain, which can be used to
   /// recover the signer.
-  function getCastApprovalTypedDataHash(CastApproval memory castApproval) public view returns (bytes32) {
+  function getCastApprovalTypedDataHash(CastApproval memory castApproval) internal view returns (bytes32) {
     return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getCastApprovalHash(castApproval)));
   }
 
@@ -131,7 +127,7 @@ contract VertexCoreSigUtils {
 
   /// @notice Returns the hash of the fully encoded EIP-712 message for the CastDisapproval domain, which can be used to
   /// recover the signer.
-  function getCastDisapprovalTypedDataHash(CastDisapproval memory castDisapproval) public view returns (bytes32) {
+  function getCastDisapprovalTypedDataHash(CastDisapproval memory castDisapproval) internal view returns (bytes32) {
     return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getCastDisapprovalHash(castDisapproval)));
   }
 }
