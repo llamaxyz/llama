@@ -96,6 +96,7 @@ contract VertexTestSetup is Test {
   bytes32 createStrategyId;
   bytes32 createAccountId;
   bytes32 pausePermissionId2;
+  bytes32 pausePermissionId3;
 
   // Other addresses and constants.
   address randomLogicAddress = makeAddr("randomLogicAddress");
@@ -209,8 +210,9 @@ contract VertexTestSetup is Test {
     createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
     createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
+    pausePermissionId3 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy3));
 
-    bytes[] memory permissionsToSet = new bytes[](7);
+    bytes[] memory permissionsToSet = new bytes[](8);
     permissionsToSet[0] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
     permissionsToSet[1] =
@@ -225,6 +227,8 @@ contract VertexTestSetup is Test {
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createAccountId, true));
     permissionsToSet[6] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), pausePermissionId2, true));
+    permissionsToSet[7] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId3, true));
 
     vm.prank(address(mpCore));
     mpPolicy.aggregate(permissionsToSet);
