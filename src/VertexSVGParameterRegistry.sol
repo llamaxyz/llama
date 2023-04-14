@@ -18,6 +18,13 @@ contract VertexSVGParameterRegistry {
     _;
   }
 
+  // ========================
+  // ======== Events ========
+  // ========================
+
+  event ColorSet(VertexCore indexed vertexCore, string color);
+  event LogoSet(VertexCore indexed vertexCore, string logo);
+
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
@@ -48,6 +55,7 @@ contract VertexSVGParameterRegistry {
   /// @param _color The color code.
   function setColor(VertexCore vertexCore, string memory _color) external onlyRootVertex {
     color[vertexCore] = _color;
+    emit ColorSet(vertexCore, _color);
   }
 
   /// @notice Sets the logo for SVG of a Vertex Instance.
@@ -55,5 +63,6 @@ contract VertexSVGParameterRegistry {
   /// @param _logo The logo.
   function setLogo(VertexCore vertexCore, string memory _logo) external onlyRootVertex {
     logo[vertexCore] = _logo;
+    emit LogoSet(vertexCore, _logo);
   }
 }
