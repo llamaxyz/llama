@@ -9,7 +9,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
-import {RoleHolderData, RolePermissionData, Strategy} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -65,7 +65,7 @@ contract VertexStrategyTest is VertexTestSetup {
       mpPolicy.aggregate(roleAndPermissionAssignments);
     }
 
-    Strategy memory strategy = Strategy({
+    DefaultStrategyConfig memory strategyConfig = DefaultStrategyConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -78,18 +78,19 @@ contract VertexStrategyTest is VertexTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    Strategy[] memory strategies = new Strategy[](1);
-    strategies[0] = strategy;
+    DefaultStrategyConfig[] memory strategyConfigs = new DefaultStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(strategies));
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(strategyConfigs));
 
-    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(strategy), address(mpCore));
+    newStrategy =
+      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(strategyConfig), address(mpCore));
   }
 
   function deployTestStrategy() internal returns (IVertexStrategy testStrategy) {
-    Strategy memory testStrategyData = Strategy({
+    DefaultStrategyConfig memory testStrategyData = DefaultStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -103,10 +104,10 @@ contract VertexStrategyTest is VertexTestSetup {
     });
     testStrategy =
       lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
-    Strategy[] memory testStrategies = new Strategy[](1);
+    DefaultStrategyConfig[] memory testStrategies = new DefaultStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(testStrategies));
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(testStrategies));
   }
 
   function deployTestStrategyWithForceApproval() internal returns (IVertexStrategy testStrategy) {
@@ -116,7 +117,7 @@ contract VertexStrategyTest is VertexTestSetup {
     uint8[] memory forceDisapproveRoles = new uint8[](1);
     forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
 
-    Strategy memory testStrategyData = Strategy({
+    DefaultStrategyConfig memory testStrategyData = DefaultStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -134,10 +135,10 @@ contract VertexStrategyTest is VertexTestSetup {
       lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
 
     // Create and authorize the strategy.
-    Strategy[] memory testStrategies = new Strategy[](1);
+    DefaultStrategyConfig[] memory testStrategies = new DefaultStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(testStrategies));
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);

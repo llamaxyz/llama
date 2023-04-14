@@ -11,7 +11,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract DeployVertexProtocol is Script {
@@ -90,7 +90,7 @@ contract DeployVertexProtocol is Script {
       policyLogic,
       policyTokenUri,
       jsonInput.readString(".rootVertexName"),
-      encodeStrategies(readStrategies(jsonInput)),
+      encodeStrategyConfigs(readStrategies(jsonInput)),
       jsonInput.readStringArray(".initialAccountNames"),
       readRoleDescriptions(jsonInput),
       readRoleHolders(jsonInput),
@@ -109,23 +109,27 @@ contract DeployVertexProtocol is Script {
     return vm.readFile(string.concat(inputDir, chainDir, "deployVertex.json"));
   }
 
-  function readStrategies(string memory jsonInput) internal pure returns (Strategy[] memory strategies) {
+  function readStrategies(string memory jsonInput)
+    internal
+    pure
+    returns (DefaultStrategyConfig[] memory strategyConfigs)
+  {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RawStrategyData[] memory rawStrategies = abi.decode(strategyData, (RawStrategyData[]));
+    RawStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawStrategyData[]));
 
-    strategies = new Strategy[](rawStrategies.length);
-    for (uint256 i = 0; i < rawStrategies.length; i++) {
-      RawStrategyData memory rawStrategy = rawStrategies[i];
-      strategies[i].approvalPeriod = rawStrategy.approvalPeriod;
-      strategies[i].queuingPeriod = rawStrategy.queuingPeriod;
-      strategies[i].expirationPeriod = rawStrategy.expirationPeriod;
-      strategies[i].minApprovalPct = rawStrategy.minApprovalPct;
-      strategies[i].minDisapprovalPct = rawStrategy.minDisapprovalPct;
-      strategies[i].isFixedLengthApprovalPeriod = rawStrategy.isFixedLengthApprovalPeriod;
-      strategies[i].approvalRole = rawStrategy.approvalRole;
-      strategies[i].disapprovalRole = rawStrategy.disapprovalRole;
-      strategies[i].forceApprovalRoles = rawStrategy.forceApprovalRoles;
-      strategies[i].forceDisapprovalRoles = rawStrategy.forceDisapprovalRoles;
+    strategyConfigs = new DefaultStrategyConfig[](rawStrategyConfigs.length);
+    for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
+      RawStrategyData memory rawStrategy = rawStrategyConfigs[i];
+      strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
+      strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
+      strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
+      strategyConfigs[i].minApprovalPct = rawStrategy.minApprovalPct;
+      strategyConfigs[i].minDisapprovalPct = rawStrategy.minDisapprovalPct;
+      strategyConfigs[i].isFixedLengthApprovalPeriod = rawStrategy.isFixedLengthApprovalPeriod;
+      strategyConfigs[i].approvalRole = rawStrategy.approvalRole;
+      strategyConfigs[i].disapprovalRole = rawStrategy.disapprovalRole;
+      strategyConfigs[i].forceApprovalRoles = rawStrategy.forceApprovalRoles;
+      strategyConfigs[i].forceDisapprovalRoles = rawStrategy.forceDisapprovalRoles;
     }
   }
 
@@ -168,11 +172,15 @@ contract DeployVertexProtocol is Script {
     }
   }
 
-  function encodeStrategy(Strategy memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(DefaultStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategies(Strategy[] memory strategies) internal pure returns (bytes[] memory encoded) {
+  function encodeStrategyConfigs(DefaultStrategyConfig[] memory strategies)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
     encoded = new bytes[](strategies.length);
     for (uint256 i; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);

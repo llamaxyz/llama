@@ -8,7 +8,7 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Action, Strategy} from "src/lib/Structs.sol";
+import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Vertex Strategy
 /// @author Llama (vertex@llama.xyz)
@@ -100,7 +100,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function initialize(bytes memory config) external initializer {
-    Strategy memory strategyConfig = abi.decode(config, (Strategy));
+    DefaultStrategyConfig memory strategyConfig = abi.decode(config, (DefaultStrategyConfig));
     vertex = VertexCore(msg.sender);
     policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

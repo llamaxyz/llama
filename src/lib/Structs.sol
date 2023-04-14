@@ -41,7 +41,7 @@ struct Action {
   uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
-struct Strategy {
+struct DefaultStrategyConfig {
   uint256 approvalPeriod; // The length of time of the approval period.
   uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.

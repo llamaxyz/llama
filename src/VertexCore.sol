@@ -10,7 +10,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
+import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)

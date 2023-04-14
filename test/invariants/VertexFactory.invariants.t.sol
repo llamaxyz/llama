@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
