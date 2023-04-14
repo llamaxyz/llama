@@ -6,6 +6,7 @@ import {stdJson} from "forge-std/Script.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
@@ -18,6 +19,9 @@ import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} fr
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+
+// TODO probably remove?
+import {DeployUtils} from "script/DeployUtils.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
 enum Roles {
@@ -127,13 +131,13 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     rootPolicy = rootCore.policy();
 
     // We use input from the deploy script to bootstrap our test suite.
-    scriptInput = readScriptInput();
+    scriptInput = DeployUtils.readScriptInput('deployVertexProtocol.json');
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     Strategy[] memory strategies = defaultStrategies();
-    RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
+    RoleDescription[] memory roleDescriptionStrings = DeployUtils.readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
     vm.prank(address(rootCore));
@@ -261,6 +265,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   }
 
   function defaultStrategies() internal view returns (Strategy[] memory strategies) {
-    strategies = readStrategies(scriptInput);
+    strategies = DeployUtils.readStrategies(scriptInput);
   }
 }
