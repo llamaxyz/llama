@@ -5,7 +5,7 @@ import {VertexCore} from "src/VertexCore.sol";
 
 /// @title Vertex SVG Parameter Registry
 /// @author Llama (vertex@llama.xyz)
-/// @notice Paramter Registry contract for Onchain SVGs.
+/// @notice Parameter Registry contract for Onchain SVGs.
 contract VertexSVGParameterRegistry {
   // ======================================
   // ======== Errors and Modifiers ========
