@@ -60,11 +60,11 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint256 public expirationPeriod;
 
-  /// @notice Minimum percentage of `totalApprovalWeight / totalApprovalSupplyAtCreationTime` required for the
+  /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 100_00 == 100%.
   uint256 public minApprovalPct;
 
-  /// @notice Minimum percentage of `totalDisapprovalWeight / totalDisapprovalSupplyAtCreationTime` required of the
+  /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
   /// action for it to be canceled. In bps, 100_00 == 100%.
   uint256 public minDisapprovalPct;
 
@@ -172,9 +172,9 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   }
 
   /// @inheritdoc IVertexStrategy
-  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceApprovalRole[role] ? type(uint256).max : weight;
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
+    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint256).max : quantity;
   }
 
   // -------- When Casting Disapproval --------
@@ -188,9 +188,13 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   }
 
   /// @inheritdoc IVertexStrategy
-  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
+  function getDisapprovalquantityAt(address policyholder, uint8 role, uint256 timestamp)
+    external
+    view
+    returns (uint256)
+  {
+    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint256).max : quantity;
   }
 
   // -------- When Queueing --------
@@ -258,10 +262,10 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Determine the minimum weight needed for an action to reach quorum.
+  /// @dev Determine the minimum quantity needed for an action to reach quorum.
   /// @param supply Total number of policyholders eligible for participation.
   /// @param minPct Minimum percentage needed to reach quorum.
-  /// @return The total weight needed to reach quorum.
+  /// @return The total quantity needed to reach quorum.
   function _getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);

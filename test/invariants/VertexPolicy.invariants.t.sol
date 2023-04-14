@@ -94,7 +94,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     //     for (uint256 k = 0; k < policyholders.length; k++) {
     //       bool hasPermission =
-    //         mpPolicy.holderWeightAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
+    //         mpPolicy.holderQuantityAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
     //       sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
     //     }
     //     require(

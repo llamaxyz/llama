@@ -19,7 +19,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
-  uint128 constant DEFAULT_WEIGHT = 1;
+  uint128 constant DEFAULT_QUANTITY = 1;
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
@@ -39,8 +39,8 @@ contract VertexFactoryTest is VertexTestSetup {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategiesAuthorized(Strategy[] strategies);
   event StrategiesUnauthorized(VertexStrategy[] strategies);
   event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);

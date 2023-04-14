@@ -15,8 +15,8 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
   function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
     internal
@@ -527,8 +527,8 @@ contract IsActionCancelationValid is VertexStrategyTest {
   }
 }
 
-contract GetApprovalWeightAt is VertexStrategyTest {
-  function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
+contract GetApprovalQuantityAt is VertexStrategyTest {
+  function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
     bytes32 _permission,
@@ -546,12 +546,12 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     );
 
     assertEq(
-      newStrategy.getApprovalWeightAt(_policyHolder, _role, _referenceTime),
-      0 // there should be zero weight before permission was granted
+      newStrategy.getApprovalQuantityAt(_policyHolder, _role, _referenceTime),
+      0 // there should be zero quantity before permission was granted
     );
   }
 
-  function testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(
+  function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
     bytes32 _permission,
     uint8 _role,
@@ -567,14 +567,14 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     );
     vm.warp(_timeSincePermission);
     assertEq(
-      newStrategy.getApprovalWeightAt(
+      newStrategy.getApprovalQuantityAt(
         _policyHolder, _role, _timeSincePermission > 0 ? _timeSincePermission - 1 : _timeSincePermission
       ),
-      1 // the account should still have the weight
+      1 // the account should still have the quantity
     );
   }
 
-  function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint64 _timestamp, uint8 _role, address _nonPolicyHolder)
+  function testFuzz_ReturnsZeroQuantityForNonPolicyHolders(uint64 _timestamp, uint8 _role, address _nonPolicyHolder)
     public
   {
     _timestamp = uint64(bound(_timestamp, block.timestamp + 1, type(uint64).max));
@@ -590,12 +590,12 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.warp(_timestamp);
 
     assertEq(
-      newStrategy.getApprovalWeightAt(_nonPolicyHolder, _role, _timestamp - 1),
-      0 // the account should not have a weight
+      newStrategy.getApprovalQuantityAt(_nonPolicyHolder, _role, _timestamp - 1),
+      0 // the account should not have a quantity
     );
   }
 
-  function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
+  function testFuzz_ReturnsDefaultQuantityForPolicyHolderWithoutExplicitQuantity(
     uint256 _timestamp,
     uint8 _role,
     address _policyHolder
@@ -622,14 +622,14 @@ contract GetApprovalWeightAt is VertexStrategyTest {
     vm.warp(_timestamp);
 
     assertEq(
-      newStrategy.getApprovalWeightAt(_policyHolder, _role, _timestamp - 1),
-      0 // the account should not have a weight
+      newStrategy.getApprovalQuantityAt(_policyHolder, _role, _timestamp - 1),
+      0 // the account should not have a quantity
     );
   }
 }
 
-contract GetDisapprovalWeightAt is VertexStrategyTest {
-  function testFuzz_ReturnsZeroWeightPriorToAccountGainingPermission(
+contract GetDisapprovalQuantityAt is VertexStrategyTest {
+  function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     bytes32 _permission,
     uint8 _role,
@@ -647,12 +647,12 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     );
 
     assertEq(
-      newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _referenceTime),
-      0 // there should be zero weight before permission was granted
+      newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _referenceTime),
+      0 // there should be zero quantity before permission was granted
     );
   }
 
-  function testFuzz_ReturnsWeightAfterBlockThatAccountGainedPermission(
+  function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
     bytes32 _permission,
     uint8 _role,
@@ -668,14 +668,14 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     );
     vm.warp(_timeSincePermission);
     assertEq(
-      newStrategy.getDisapprovalWeightAt(
+      newStrategy.getDisapprovalQuantityAt(
         _policyHolder, _role, _timeSincePermission > 0 ? _timeSincePermission - 1 : _timeSincePermission
       ),
-      1 // the account should still have the weight
+      1 // the account should still have the quantity
     );
   }
 
-  function testFuzz_ReturnsZeroWeightForNonPolicyHolders(uint256 _timestamp, uint8 _role, address _nonPolicyHolder)
+  function testFuzz_ReturnsZeroQuantityForNonPolicyHolders(uint256 _timestamp, uint8 _role, address _nonPolicyHolder)
     public
   {
     vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
@@ -691,12 +691,12 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.warp(_timestamp);
 
     assertEq(
-      newStrategy.getDisapprovalWeightAt(_nonPolicyHolder, _role, _timestamp - 1),
-      0 // the account should not have a weight
+      newStrategy.getDisapprovalQuantityAt(_nonPolicyHolder, _role, _timestamp - 1),
+      0 // the account should not have a quantity
     );
   }
 
-  function testFuzz_ReturnsDefaultWeightForPolicyHolderWithoutExplicitWeight(
+  function testFuzz_ReturnsDefaultQuantityForPolicyHolderWithoutExplicitQuantity(
     uint256 _timestamp,
     uint8 _role,
     address _policyHolder
@@ -723,8 +723,8 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
     vm.warp(_timestamp);
 
     assertEq(
-      newStrategy.getDisapprovalWeightAt(_policyHolder, _role, _timestamp - 1),
-      0 // the account should not have a weight
+      newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _timestamp - 1),
+      0 // the account should not have a quantity
     );
   }
 }

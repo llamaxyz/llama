@@ -62,8 +62,8 @@ contract VertexCore is Initializable {
     uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
     IVertexStrategy indexed strategy, IVertexStrategy indexed strategyLogic, bytes initializationData
   );
@@ -518,19 +518,19 @@ contract VertexCore is Initializable {
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Active);
 
-    uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
-    action.totalApprovals = _newCastCount(action.totalApprovals, weight);
+    uint256 quantity = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+    action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionId][policyholder] = true;
-    emit ApprovalCast(actionId, policyholder, weight, reason);
+    emit ApprovalCast(actionId, policyholder, quantity, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
     Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Queued);
 
-    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
-    action.totalDisapprovals = _newCastCount(action.totalDisapprovals, weight);
+    uint256 quantity = action.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+    action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionId][policyholder] = true;
-    emit DisapprovalCast(actionId, policyholder, weight, reason);
+    emit DisapprovalCast(actionId, policyholder, quantity, reason);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
@@ -556,9 +556,9 @@ contract VertexCore is Initializable {
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
-  function _newCastCount(uint256 currentCount, uint256 weight) internal pure returns (uint256) {
-    if (currentCount == type(uint256).max || weight == type(uint256).max) return type(uint256).max;
-    return currentCount + weight;
+  function _newCastCount(uint256 currentCount, uint256 quantity) internal pure returns (uint256) {
+    if (currentCount == type(uint256).max || quantity == type(uint256).max) return type(uint256).max;
+    return currentCount + quantity;
   }
 
   function _deployStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {

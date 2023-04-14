@@ -37,8 +37,8 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
     uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
