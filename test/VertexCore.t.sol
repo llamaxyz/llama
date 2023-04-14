@@ -99,7 +99,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   }
 
   function _queueAction(uint256 _actionId) public {
-    uint256 executionTime = block.timestamp + mpStrategy1.queuingPeriod();
+    uint256 executionTime = block.timestamp + toVertexStrategy(mpStrategy1).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(_actionId, address(this), mpStrategy1, actionCreatorAaron, executionTime);
     mpCore.queueAction(_actionId);
