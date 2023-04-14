@@ -325,8 +325,7 @@ contract SetPolicyTokenURI is VertexFactoryTest {
 
 contract TokenURI is VertexFactoryTest {
   function testFuzz_ProxiesToMetadataContract(uint256 _tokenId) public {
-    string memory _color = svgParameterRegistry.color(mpCore);
-    string memory _logo = svgParameterRegistry.logo(mpCore);
+    (string memory _color, string memory _logo) = svgParameterRegistry.getMetadata(mpCore);
     assertEq(
       factory.tokenURI(mpCore, mpPolicy.name(), mpPolicy.symbol(), _tokenId),
       policyTokenURI.tokenURI(mpPolicy.name(), mpPolicy.symbol(), _tokenId, _color, _logo)

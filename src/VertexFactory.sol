@@ -166,8 +166,7 @@ contract VertexFactory {
     view
     returns (string memory)
   {
-    string memory color = VERTEX_SVG_PARAMETER_REGISTRY.color(vertexCore);
-    string memory logo = VERTEX_SVG_PARAMETER_REGISTRY.logo(vertexCore);
+    (string memory color, string memory logo) = VERTEX_SVG_PARAMETER_REGISTRY.getMetadata(vertexCore);
     return vertexPolicyTokenURI.tokenURI(name, symbol, tokenId, color, logo);
   }
 

@@ -50,6 +50,11 @@ contract VertexSVGParameterRegistry {
   // ======== External and Public Logic ========
   // ===========================================
 
+  function getMetadata(VertexCore vertexCore) external view returns (string memory _color, string memory _logo) {
+    _color = color[vertexCore];
+    _logo = logo[vertexCore];
+  }
+
   /// @notice Sets the color code for SVG of a Vertex Instance.
   /// @param vertexCore The Vertex Instance.
   /// @param _color The color code.
