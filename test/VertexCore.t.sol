@@ -194,7 +194,7 @@ contract Initialize is VertexCoreTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      SVG(policyTokenUri, colorRegistry),
+      SVG(policyTokenUri, svgParameterRegistry),
       "Root Vertex",
       strategies,
       accounts,

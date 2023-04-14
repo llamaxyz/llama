@@ -8,7 +8,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexColorRegistry} from "src/VertexColorRegistry.sol";
+import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {SVG, Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -59,7 +59,7 @@ contract VertexFactory {
   VertexPolicyTokenURI public vertexPolicyTokenUri;
 
   /// @notice The Vertex Color Registry contract for Onchain SVGs.
-  VertexColorRegistry public vertexColorRegistry;
+  VertexSVGParameterRegistry public vertexSVGParameterRegistry;
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
@@ -84,7 +84,7 @@ contract VertexFactory {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyTokenUri = initialSVG.policyTokenURI;
-    vertexColorRegistry = initialSVG.colorRegistry;
+    vertexSVGParameterRegistry = initialSVG.svgParameterRegistry;
 
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);
@@ -149,8 +149,8 @@ contract VertexFactory {
     _authorizeAccountLogic(accountLogic);
   }
 
-  /// @notice Sets the Vertex Policy Metadata contract.
-  /// @param _vertexPolicyTokenUri The Vertex Policy Metadata contract.
+  /// @notice Sets the Vertex Policy Token URI contract.
+  /// @param _vertexPolicyTokenUri The Vertex Policy Token URI contract.
   function setPolicyMetadata(VertexPolicyTokenURI _vertexPolicyTokenUri) external onlyRootVertex {
     vertexPolicyTokenUri = _vertexPolicyTokenUri;
   }

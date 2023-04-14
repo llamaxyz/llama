@@ -7,11 +7,11 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexColorRegistry} from "src/VertexColorRegistry.sol";
+import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
 
 struct SVG {
   VertexPolicyTokenURI policyTokenURI;
-  VertexColorRegistry colorRegistry;
+  VertexSVGParameterRegistry svgParameterRegistry;
 }
 
 struct RoleHolderData {

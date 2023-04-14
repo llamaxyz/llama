@@ -61,7 +61,7 @@ contract Constructor is VertexFactoryTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      SVG(policyTokenUri, colorRegistry),
+      SVG(policyTokenUri, svgParameterRegistry),
       "Root Vertex",
       strategies,
       accounts,

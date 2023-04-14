@@ -9,7 +9,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexColorRegistry} from "src/VertexColorRegistry.sol";
+import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {SVG, Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -26,7 +26,7 @@ contract DeployVertexProtocol is Script {
   // Core Protocol.
   VertexFactory factory;
   VertexPolicyTokenURI policyTokenUri;
-  VertexColorRegistry colorRegistry;
+  VertexSVGParameterRegistry svgParameterRegistry;
   VertexLens lens;
 
   struct RawStrategyData {
@@ -82,8 +82,8 @@ contract DeployVertexProtocol is Script {
     console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
 
     vm.broadcast();
-    colorRegistry = new VertexColorRegistry();
-    console2.log("  VertexColorRegistry:", address(colorRegistry));
+    svgParameterRegistry = new VertexSVGParameterRegistry();
+    console2.log("  VertexSVGParameterRegistry:", address(svgParameterRegistry));
 
     string memory jsonInput = readScriptInput();
 
@@ -93,7 +93,7 @@ contract DeployVertexProtocol is Script {
       strategyLogic,
       accountLogic,
       policyLogic,
-      SVG(policyTokenUri, colorRegistry),
+      SVG(policyTokenUri, svgParameterRegistry),
       jsonInput.readString(".rootVertexName"),
       readStrategies(jsonInput),
       jsonInput.readStringArray(".initialAccountNames"),
