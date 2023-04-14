@@ -861,7 +861,7 @@ contract TokenURI is VertexPolicyTest {
     string memory name = LibString.concat(name1, name2);
     assertEq(metadata.name, name);
     assertEq(metadata.description, "Vertex is a framework for onchain organizations.");
-    (string memory color, string memory logo)  = svgParameterRegistry.getMetadata(mpCore);
+    (string memory color, string memory logo) = svgParameterRegistry.getMetadata(mpCore);
     string[17] memory parts;
 
     parts[0] =
