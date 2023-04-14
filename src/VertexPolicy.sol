@@ -60,7 +60,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
   /// values for this role.
   // TODO Confirm zero is safe here.
-  // TODO If zero is NOT safe, update the deploy script to add an 'AllHolders' role description.
+  // TODO If the ALL_HOLDERS_ROLE changes, we need to confirm that the deploy script input
+  // doesn't have to change as well. E.g. the script input references roles by their IDs.
+  // If this role is no longer zero, we may have to increment the role numbers in the input.
+  // We'll also probably need to update the Roles enum in the test suite. Proceed with caution!
   uint8 public constant ALL_HOLDERS_ROLE = 0;
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
