@@ -61,18 +61,26 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   MockProtocol public mockProtocol;
 
   // Root vertex action creator.
-  address rootVertexActionCreator = makeAddr("rootVertexActionCreator");
+  address rootVertexActionCreator;
+  uint256 rootVertexActionCreatorPrivateKey;
 
   // Mock protocol users.
-  address actionCreatorAaron = makeAddr("actionCreatorAaron");
+  address actionCreatorAaron;
+  uint256 actionCreatorAaronPrivateKey;
 
-  address approverAdam = makeAddr("approverAdam");
-  address approverAlicia = makeAddr("approverAlicia");
-  address approverAndy = makeAddr("approverAndy");
+  address approverAdam;
+  uint256 approverAdamPrivateKey;
+  address approverAlicia;
+  uint256 approverAliciaPrivateKey;
+  address approverAndy;
+  uint256 approverAndyPrivateKey;
 
-  address disapproverDave = makeAddr("disapproverDave");
-  address disapproverDiane = makeAddr("disapproverDiane");
-  address disapproverDrake = makeAddr("disapproverDrake");
+  address disapproverDave;
+  uint256 disapproverDavePrivateKey;
+  address disapproverDiane;
+  uint256 disapproverDianePrivateKey;
+  address disapproverDrake;
+  uint256 disapproverDrakePrivateKey;
 
   // Constants.
   uint256 SELF_TOKEN_ID = uint256(uint160(address(this)));
@@ -103,6 +111,16 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   string scriptInput;
 
   function setUp() public virtual {
+    // Setting up user addresses and private keys.
+    (rootVertexActionCreator, rootVertexActionCreatorPrivateKey) = makeAddrAndKey("rootVertexActionCreator");
+    (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
+    (approverAdam, approverAdamPrivateKey) = makeAddrAndKey("approverAdam");
+    (approverAlicia, approverAliciaPrivateKey) = makeAddrAndKey("approverAlicia");
+    (approverAndy, approverAndyPrivateKey) = makeAddrAndKey("approverAndy");
+    (disapproverDave, disapproverDavePrivateKey) = makeAddrAndKey("disapproverDave");
+    (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
+    (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
+
     DeployVertexProtocol.run();
 
     rootCore = factory.ROOT_VERTEX();
