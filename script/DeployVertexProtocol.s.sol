@@ -57,27 +57,27 @@ contract DeployVertexProtocol is Script {
   }
 
   function run() public {
-    console2.log("Deploying Vertex infrastructure to chain:", block.chainid);
+    print(string.concat("Deploying Vertex infrastructure to chain:", vm.toString(block.chainid)));
 
     vm.broadcast();
     coreLogic = new VertexCore();
-    console2.log("  VertexCoreLogic:", address(coreLogic));
+    print(string.concat("  VertexCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
     strategyLogic = new VertexStrategy();
-    console2.log("  VertexStrategyLogic:", address(strategyLogic));
+    print(string.concat("  VertexStrategyLogic:", vm.toString(address(strategyLogic))));
 
     vm.broadcast();
     accountLogic = new VertexAccount();
-    console2.log("  VertexAccountLogic:", address(accountLogic));
+    print(string.concat("  VertexAccountLogic:", vm.toString(address(accountLogic))));
 
     vm.broadcast();
     policyLogic = new VertexPolicy();
-    console2.log("  VertexPolicyLogic:", address(policyLogic));
+    print(string.concat("  VertexPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
     policyTokenUri = new VertexPolicyTokenURI();
-    console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
+    print(string.concat("  VertexPolicyTokenURI:", vm.toString(address(policyTokenUri))));
 
     string memory jsonInput = readScriptInput();
 
@@ -95,11 +95,11 @@ contract DeployVertexProtocol is Script {
       readRoleHolders(jsonInput),
       readRolePermissions(jsonInput)
     );
-    console2.log("  VertexFactory:", address(factory));
+    print(string.concat("  VertexFactory:", vm.toString(address(factory))));
 
     vm.broadcast();
     lens = new VertexLens();
-    console2.log("  VertexLens:", address(lens));
+    print(string.concat("  VertexLens:", vm.toString(address(lens))));
   }
 
   function readScriptInput() internal view returns (string memory) {
@@ -176,5 +176,12 @@ contract DeployVertexProtocol is Script {
     for (uint256 i; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
     }
+  }
+
+  function print(string memory message) internal view {
+    // Avoid getting flooded with logs during tests. Note that fork tests will show logs with this
+    // approach, because there's currently no way to tell which environment we're in, e.g. script
+    // or test. This is being tracked in https://github.com/foundry-rs/foundry/issues/2900.
+    if (block.chainid != 31_337) console2.log(message);
   }
 }
