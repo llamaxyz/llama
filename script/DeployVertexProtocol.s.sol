@@ -25,7 +25,7 @@ contract DeployVertexProtocol is Script {
 
   // Core Protocol.
   VertexFactory factory;
-  VertexPolicyTokenURI policyTokenUri;
+  VertexPolicyTokenURI policyTokenURI;
   VertexSVGParameterRegistry svgParameterRegistry;
   VertexLens lens;
 
@@ -78,8 +78,8 @@ contract DeployVertexProtocol is Script {
     console2.log("  VertexPolicyLogic:", address(policyLogic));
 
     vm.broadcast();
-    policyTokenUri = new VertexPolicyTokenURI();
-    console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
+    policyTokenURI = new VertexPolicyTokenURI();
+    console2.log("  VertexPolicyTokenURI:", address(policyTokenURI));
 
     string memory jsonInput = readScriptInput();
 
@@ -89,7 +89,7 @@ contract DeployVertexProtocol is Script {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenUri,
+      policyTokenURI,
       jsonInput.readString(".rootVertexName"),
       readStrategies(jsonInput),
       jsonInput.readStringArray(".initialAccountNames"),

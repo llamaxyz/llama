@@ -194,7 +194,7 @@ contract Initialize is VertexCoreTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenUri,
+      policyTokenURI,
       "Root Vertex",
       strategies,
       accounts,

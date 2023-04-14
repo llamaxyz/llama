@@ -162,12 +162,12 @@ contract Run is DeployVertexTest {
   }
 
   function test_DeploysPolicyTokenURI() public {
-    assertEq(address(policyTokenUri), address(0));
+    assertEq(address(policyTokenURI), address(0));
 
     DeployVertexProtocol.run();
 
-    assertNotEq(address(policyTokenUri), address(0));
-    assertNotEq(policyTokenUri.tokenURI("MyVertex", "MTX", 42, "teal", "https://logo.com"), "");
+    assertNotEq(address(policyTokenURI), address(0));
+    assertNotEq(policyTokenURI.tokenURI("MyVertex", "MTX", 42, "teal", "https://logo.com"), "");
   }
 
   function test_DeploysLens() public {
