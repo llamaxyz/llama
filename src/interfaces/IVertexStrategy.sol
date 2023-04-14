@@ -52,10 +52,4 @@ interface IVertexStrategy {
   /// @param timestamp The block number at which to get the disapproval weight.
   /// @return The weight of the policyholder's disapproval.
   function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256);
-
-  /// @notice Determine the minimum weight needed for an action to reach quorum.
-  /// @param supply Total number of policyholders eligible for participation.
-  /// @param minPct Minimum percentage needed to reach quorum.
-  /// @return The total weight needed to reach quorum.
-  function getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256);
 }

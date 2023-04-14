@@ -10,9 +10,11 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, Strategy} from "src/lib/Structs.sol";
 
-/// @title A strategy definition of a Vertex system.
+/// @title Vertex Strategy
 /// @author Llama (vertex@llama.xyz)
-/// @notice This is the template for Vertex strategies which determine the rules of an action's process.
+/// @notice This is the default vertex strategy which has the following properties:
+///   - Approval/disapproval thresholds are specified as percentages of total supply.
+///   - Action creators are allowed to vote on their own actions, assuming they hold the appropriate role.
 contract VertexStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
@@ -32,12 +34,21 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
-
   /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice Can action be queued before approvalEndTime.
+  // -------- Interface Requirements --------
+
+  /// @inheritdoc IVertexStrategy
+  uint256 public queuingPeriod;
+
+  /// @inheritdoc IVertexStrategy
+  uint256 public approvalPeriod;
+
+  /// @inheritdoc IVertexStrategy
   bool public isFixedLengthApprovalPeriod;
+
+  // -------- Specific to this Strategy --------
 
   /// @notice The strategy's Vertex system.
   VertexCore public vertex;
@@ -45,14 +56,8 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice Policy NFT for this Vertex system.
   VertexPolicy public policy;
 
-  /// @notice Minimum time, in seconds, between queueing and execution of action.
-  uint256 public queuingPeriod;
-
-  /// @notice Time, in seconds,  after executionTime that action can be executed before permanently expiring.
+  /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint256 public expirationPeriod;
-
-  /// @notice Length of approval period in seconds.
-  uint256 public approvalPeriod;
 
   /// @notice Minimum percentage of `totalApprovalWeight / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 100_00 == 100%.
@@ -119,30 +124,23 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     emit NewStrategyCreated(vertex, policy);
   }
 
-  // ===========================================
-  // ======== External and Public Logic ========
-  // ===========================================
+  // ==========================================
+  // ======== Interface Implementation ========
+  // ==========================================
 
-  /// @notice Get whether an action has passed the approval process.
-  /// @param actionId id of the action.
-  /// @return Boolean value that is true if the action has passed the approval process.
+  /// @inheritdoc IVertexStrategy
   function isActionPassed(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
     return action.totalApprovals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
   }
 
-  /// @notice Returns `true` if the action is expired, false otherwise.
-  /// @param actionId id of the action.
-  /// @return Boolean value that is true if the action is expired.
+  /// @inheritdoc IVertexStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
     return action.minExecutionTime + expirationPeriod < block.timestamp;
   }
 
-  /// @notice Get whether an action has eligible to be canceled.
-  /// @param actionId id of the action.
-  /// @param caller User initiating the cancelation.
-  /// @return Boolean value that is true if the action can be canceled.
+  /// @inheritdoc IVertexStrategy
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool) {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
@@ -165,49 +163,42 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
   }
 
-  /// @notice Returns `true` if the disapprovals are allowed with this strategy, `false` otherwise.
+  /// @inheritdoc IVertexStrategy
   function isDisapprovalEnabled() external view returns (bool) {
     return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
   }
 
-  /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
-  /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the approval weight.
-  /// @return The weight of the policyholder's approval.
+  /// @inheritdoc IVertexStrategy
   function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
     return weight > 0 && forceApprovalRole[role] ? type(uint256).max : weight;
   }
 
-  /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
-  /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the disapproval weight.
-  /// @return The weight of the policyholder's disapproval.
+  /// @inheritdoc IVertexStrategy
   function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
     return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
-  }
-
-  /// @notice Determine the minimum weight needed for an action to reach quorum.
-  /// @param supply Total number of policyholders eligible for participation.
-  /// @param minPct Minimum percentage needed to reach quorum.
-  /// @return The total weight needed to reach quorum.
-  function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure returns (uint256) {
-    // Rounding Up
-    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
   }
 
   // ================================
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Determine the minimum weight needed for an action to reach quorum.
+  /// @param supply Total number of policyholders eligible for participation.
+  /// @param minPct Minimum percentage needed to reach quorum.
+  /// @return The total weight needed to reach quorum.
+  function getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
+    // Rounding Up
+    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
+  }
+
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
   }
 
+  /// @dev Increments `i` by 1, but does not check for overflow.
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;

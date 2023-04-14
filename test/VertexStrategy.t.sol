@@ -2,6 +2,8 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
@@ -726,24 +728,19 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
   }
 }
 
+contract VertexStrategyHarness is VertexStrategy {
+  function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure returns (uint256) {
+    return getMinimumAmountNeeded(supply, minPct);
+  }
+}
+
 contract GetMinimumAmountNeeded is VertexStrategyTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
+    VertexStrategyHarness newStrategy = new VertexStrategyHarness();
     minPct = bound(minPct, 0, 10_000);
-    VertexStrategy newStrategy = deployStrategyAndSetRole(
-      uint8(Roles.TestRole1),
-      bytes32(0),
-      address(0xdeadbeef),
-      1 days,
-      4 days,
-      1 days,
-      true,
-      4000,
-      2000,
-      new uint8[](0),
-      new uint8[](0)
-    );
     vm.assume(minPct == 0 || supply <= type(uint256).max / minPct); // avoid solmate revert statement
+
     uint256 product = FixedPointMathLib.mulDivUp(supply, minPct, 10_000);
-    assertEq(newStrategy.getMinimumAmountNeeded(supply, minPct), product);
+    assertEq(newStrategy.exposed_getMinimumAmountNeeded(supply, minPct), product);
   }
 }
