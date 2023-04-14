@@ -18,8 +18,8 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 contract VertexFactoryWithoutInitialization is VertexFactory {
   constructor(
     VertexCore _vertexCoreLogic,
-    address initialVertexStrategyLogic,
-    address initialVertexAccountLogic,
+    VertexStrategy initialVertexStrategyLogic,
+    VertexAccount initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
@@ -72,8 +72,8 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexCore vertex,
     VertexPolicy policy,
     string memory name,
-    address strategyLogic,
-    address accountLogic,
+    VertexStrategy strategyLogic,
+    VertexAccount accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts
   ) external {

@@ -19,8 +19,9 @@ import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} fr
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 
-contract VertexCoreTest is VertexTestSetup {
+contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -43,6 +44,16 @@ contract VertexCoreTest is VertexTestSetup {
 
   function setUp() public virtual override {
     VertexTestSetup.setUp();
+
+    // Setting Mock Protocol Core's EIP-712 Domain Hash
+    setDomainHash(
+      VertexCoreSigUtils.EIP712Domain({
+        name: mpCore.name(),
+        version: "1",
+        chainId: block.chainid,
+        verifyingContract: address(mpCore)
+      })
+    );
   }
 
   // =========================
@@ -128,15 +139,15 @@ contract VertexCoreTest is VertexTestSetup {
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     VertexStrategy additionalStrategyLogic = new VertexStrategy();
     vm.prank(address(rootCore));
-    factory.authorizeStrategyLogic(address(additionalStrategyLogic));
+    factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
   }
 
-  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address) {
+  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (address payable) {
     VertexAccount additionalAccountLogic = new VertexAccount();
     vm.prank(address(rootCore));
-    factory.authorizeAccountLogic(address(additionalAccountLogic));
-    return address(additionalAccountLogic);
+    factory.authorizeAccountLogic(additionalAccountLogic);
+    return payable(additionalAccountLogic);
   }
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod) internal pure returns (Strategy memory) {
@@ -180,10 +191,10 @@ contract Initialize is VertexCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new VertexFactoryWithoutInitialization(
       coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       policyLogic,
-      policyMetadata,
+      policyTokenUri,
       "Root Vertex",
       strategies,
       accounts,
@@ -217,7 +228,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -239,7 +250,7 @@ contract Initialize is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategies[0]);
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategies[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
   }
 
@@ -255,7 +266,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
@@ -274,7 +285,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
@@ -296,7 +307,7 @@ contract Initialize is VertexCoreTest {
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
@@ -312,7 +323,13 @@ contract Initialize is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", notStrategyLogic, address(accountLogic), strategies, accounts
+      uninitializedVertex,
+      policy,
+      "NewProject",
+      VertexStrategy(notStrategyLogic),
+      VertexAccount(accountLogic),
+      strategies,
+      accounts
     );
   }
 
@@ -331,7 +348,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -353,7 +370,7 @@ contract Initialize is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[0], address(accountLogic), accounts[0]);
     emit AccountAuthorized(accountAddresses[1], address(accountLogic), accounts[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
   }
 
@@ -369,7 +386,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(address(accountAddresses[0].vertex()), address(uninitializedVertex));
@@ -388,7 +405,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(accountLogic), strategies, accounts
+      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
     assertEq(accountAddresses[0].name(), "Account1");
@@ -397,6 +414,7 @@ contract Initialize is VertexCoreTest {
 
   function test_RevertIf_AccountLogicIsNotAuthorized(address notAccountLogic) public {
     vm.assume(uint160(notAccountLogic) != uint160(address(accountLogic)));
+    address payable payableNotAccountLogic = payable(notAccountLogic);
     (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
       deployWithoutInitialization();
     Strategy[] memory strategies = defaultStrategies();
@@ -404,7 +422,13 @@ contract Initialize is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", address(strategyLogic), address(notAccountLogic), strategies, accounts
+      uninitializedVertex,
+      policy,
+      "NewProject",
+      strategyLogic,
+      VertexAccount(payableNotAccountLogic),
+      strategies,
+      accounts
     );
   }
 }
@@ -530,32 +554,86 @@ contract CreateAction is VertexCoreTest {
 }
 
 contract CreateActionBySig is VertexCoreTest {
-  function test_SuccessfulCreateActionBySignature() public {
-    // TODO
-    // This is a happy path test.
-    // Assert changes to Action storage.
-    // Assert event emission.
+  function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+    VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
+      role: uint8(Roles.ActionCreator),
+      strategy: address(mpStrategy1),
+      target: address(mockProtocol),
+      value: 0,
+      selector: PAUSE_SELECTOR,
+      data: abi.encode(true),
+      policyholder: actionCreatorAaron,
+      nonce: 0
+    });
+    bytes32 digest = getCreateActionTypedDataHash(createAction);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
+    actionId = mpCore.createActionBySig(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      actionCreatorAaron,
+      v,
+      r,
+      s
+    );
+  }
+
+  function test_CreatesActionBySig() public {
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+
+    uint256 _actionId = createActionBySig(v, r, s);
+
+    Action memory action = mpCore.getAction(_actionId);
+    uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
+
+    assertEq(_actionId, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(ApprovalPeriodEnd, block.timestamp + 2 days);
+    assertEq(action.approvalPolicySupply, 3);
+    assertEq(action.disapprovalPolicySupply, 3);
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 0);
+    createActionBySig(v, r, s);
+    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    createActionBySig(v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    createActionBySig(v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    createActionBySig((v + 1), r, s);
   }
 }
 
@@ -914,33 +992,80 @@ contract CastApproval is VertexCoreTest {
 }
 
 contract CastApprovalBySig is VertexCoreTest {
-  function test_SuccessfulApprovalBySignature() public {
-    // TODO
-    // This is a happy path test.
-    // Assert changes to Action storage.
-    // Assert changes to Approval storage.
-    // Assert event emission.
+  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    VertexCoreSigUtils.CastApproval memory castApproval = VertexCoreSigUtils.CastApproval({
+      actionId: _actionId,
+      role: uint8(Roles.Approver),
+      reason: "",
+      policyholder: approverAdam,
+      nonce: 0
+    });
+    bytes32 digest = getCastApprovalTypedDataHash(castApproval);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function castApprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castApprovalBySig(actionId, uint8(Roles.Approver), "", approverAdam, v, r, s);
+  }
+
+  function test_CastsApprovalBySig() public {
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+
+    vm.expectEmit();
+    emit ApprovalCast(actionId, approverAdam, 1, "");
+
+    castApprovalBySig(actionId, v, r, s);
+
+    assertEq(mpCore.getAction(0).totalApprovals, 1);
+    assertEq(mpCore.approvals(0, approverAdam), true);
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+
+    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 0);
+    castApprovalBySig(actionId, v, r, s);
+    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    castApprovalBySig(actionId, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    uint256 actionId = _createAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castApprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    uint256 actionId = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castApprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
@@ -1010,34 +1135,91 @@ contract CastDisapproval is VertexCoreTest {
 }
 
 contract CastDisapprovalBySig is VertexCoreTest {
-  function test_SuccessfulDisapprovalBySignature() public {
-    // TODO
-    // This is a happy path test.
-    // Sign a message and have one account cast a disapproval on behalf of another.
-    // Assert changes to Action storage.
-    // Assert changes to Disapproval storage.
-    // Assert event emission.
+  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    VertexCoreSigUtils.CastDisapproval memory castDisapproval = VertexCoreSigUtils.CastDisapproval({
+      actionId: _actionId,
+      role: uint8(Roles.Disapprover),
+      reason: "",
+      policyholder: disapproverDrake,
+      nonce: 0
+    });
+    bytes32 digest = getCastDisapprovalTypedDataHash(castDisapproval);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function castDisapprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castDisapprovalBySig(actionId, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
+  }
+
+  function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
+    _actionId = _createAction();
+    _approveAction(approverAdam, _actionId);
+    _approveAction(approverAlicia, _actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionPassed(_actionId), true);
+    _queueAction(_actionId);
+  }
+
+  function test_CastsDisapprovalBySig() public {
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+
+    vm.expectEmit();
+    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+
+    castDisapprovalBySig(actionId, v, r, s);
+
+    assertEq(mpCore.getAction(0).totalDisapprovals, 1);
+    assertEq(mpCore.disapprovals(0, disapproverDrake), true);
   }
 
   function test_CheckNonceIncrements() public {
-    // TODO
-    // This is a happy path test.
-    // Assert that nonce increments
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+
+    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 0);
+    castDisapprovalBySig(actionId, v, r, s);
+    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    // TODO
-    // Check that operation with same parameters cannot be replayed.
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    castDisapprovalBySig(actionId, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    // TODO
-    // Reverts if user!=signer
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castDisapprovalBySig(actionId, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    // TODO
-    // Reverts if signer == address(0)
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    castDisapprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
@@ -1076,7 +1258,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), newStrategies[2]);
 
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1140,7 +1322,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, newStrategies[1]);
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, newStrategies[2]);
 
-    mpCore.createAndAuthorizeStrategies(additionalStrategyLogic, newStrategies);
+    mpCore.createAndAuthorizeStrategies(VertexStrategy(additionalStrategyLogic), newStrategies);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1166,7 +1348,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(randomLogicAddress, newStrategies);
+    mpCore.createAndAuthorizeStrategies(VertexStrategy(randomLogicAddress), newStrategies);
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1191,7 +1373,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1215,10 +1397,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies1);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies1);
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies2);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1338,7 +1520,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[2], address(accountLogic), newAccounts[2]);
 
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_Reinitialized() public {
@@ -1350,7 +1532,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     }
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[0].initialize(newAccounts[0]);
@@ -1363,7 +1545,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
   }
 
   function test_CreateNewAccountsWithAdditionalAccountLogic() public {
-    address additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
+    address payable additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
 
     string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
     VertexAccount[] memory accountAddresses = new VertexAccount[](3);
@@ -1378,7 +1560,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     emit AccountAuthorized(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
 
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(additionalAccountLogic, newAccounts);
+    mpCore.createAndAuthorizeAccounts(VertexAccount(additionalAccountLogic), newAccounts);
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
@@ -1386,24 +1568,24 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
 
     vm.expectRevert(VertexCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(randomLogicAddress, newAccounts);
+    mpCore.createAndAuthorizeAccounts(VertexAccount(randomLogicAddress), newAccounts);
   }
 
   function test_RevertIf_AccountsAreIdentical() public {
     string[] memory newAccounts = Solarray.strings("VertexAccount1", "VertexAccount1");
     vm.prank(address(mpCore));
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     string[] memory newAccounts1 = Solarray.strings("VertexAccount1");
     string[] memory newAccounts2 = Solarray.strings("VertexAccount1");
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts1);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts1);
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts2);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {

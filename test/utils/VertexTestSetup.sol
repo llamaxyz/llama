@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {stdJson} from "forge-std/Script.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -15,6 +16,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
@@ -30,17 +32,14 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is Test {
-  // Logic contracts.
-  VertexCore coreLogic;
-  VertexStrategy strategyLogic;
-  VertexAccount accountLogic;
-  VertexPolicy policyLogic;
+contract VertexTestSetup is DeployVertexProtocol, Test {
+  using stdJson for string;
 
-  // Core Protocol.
-  VertexFactory factory;
-  VertexPolicyTokenURI policyMetadata;
-  VertexLens lens;
+  // The actual length of the Roles enum is type(Roles).max *plus* 1 because
+  // enums are zero-indexed. However, because we don't actually initialize the
+  // "AllHolders" role listed in the enum, this ends up being the correct number
+  // of roles.
+  uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
 
   // Root Vertex instance.
   VertexCore rootCore;
@@ -62,18 +61,26 @@ contract VertexTestSetup is Test {
   MockProtocol public mockProtocol;
 
   // Root vertex action creator.
-  address rootVertexActionCreator = makeAddr("rootVertexActionCreator");
+  address rootVertexActionCreator;
+  uint256 rootVertexActionCreatorPrivateKey;
 
   // Mock protocol users.
-  address actionCreatorAaron = makeAddr("actionCreatorAaron");
+  address actionCreatorAaron;
+  uint256 actionCreatorAaronPrivateKey;
 
-  address approverAdam = makeAddr("approverAdam");
-  address approverAlicia = makeAddr("approverAlicia");
-  address approverAndy = makeAddr("approverAndy");
+  address approverAdam;
+  uint256 approverAdamPrivateKey;
+  address approverAlicia;
+  uint256 approverAliciaPrivateKey;
+  address approverAndy;
+  uint256 approverAndyPrivateKey;
 
-  address disapproverDave = makeAddr("disapproverDave");
-  address disapproverDiane = makeAddr("disapproverDiane");
-  address disapproverDrake = makeAddr("disapproverDrake");
+  address disapproverDave;
+  uint256 disapproverDavePrivateKey;
+  address disapproverDiane;
+  uint256 disapproverDianePrivateKey;
+  address disapproverDrake;
+  uint256 disapproverDrakePrivateKey;
 
   // Constants.
   uint256 SELF_TOKEN_ID = uint256(uint160(address(this)));
@@ -96,55 +103,44 @@ contract VertexTestSetup is Test {
   bytes32 pausePermissionId2;
 
   // Other addresses and constants.
-  address randomLogicAddress = makeAddr("randomLogicAddress");
+  address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
   uint128 DEFAULT_ROLE_QTY = 1;
   uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
+  string scriptInput;
+
   function setUp() public virtual {
-    // Deploy logic contracts.
-    coreLogic = new VertexCore();
-    strategyLogic = new VertexStrategy();
-    accountLogic = new VertexAccount();
-    policyLogic = new VertexPolicy();
-    policyMetadata = new VertexPolicyTokenURI();
+    // Setting up user addresses and private keys.
+    (rootVertexActionCreator, rootVertexActionCreatorPrivateKey) = makeAddrAndKey("rootVertexActionCreator");
+    (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
+    (approverAdam, approverAdamPrivateKey) = makeAddrAndKey("approverAdam");
+    (approverAlicia, approverAliciaPrivateKey) = makeAddrAndKey("approverAlicia");
+    (approverAndy, approverAndyPrivateKey) = makeAddrAndKey("approverAndy");
+    (disapproverDave, disapproverDavePrivateKey) = makeAddrAndKey("disapproverDave");
+    (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
+    (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
-    // Deploy lens.
-    lens = new VertexLens();
+    DeployVertexProtocol.run();
 
-    // Deploy the Root vertex instance. We only instantiate it with a single action creator role.
-    Strategy[] memory strategies = defaultStrategies();
-    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
-      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-    );
-    string[] memory rootAccounts = Solarray.strings("Llama Treasury", "Llama Grants");
-    RoleHolderData[] memory rootRoleHolders = defaultActionCreatorRoleHolder(rootVertexActionCreator);
-
-    factory = new VertexFactory(
-      coreLogic,
-      address(strategyLogic),
-      address(accountLogic),
-      policyLogic,
-      policyMetadata,
-      "Root Vertex",
-      strategies,
-      rootAccounts,
-      roleDescriptionStrings,
-      rootRoleHolders,
-      new RolePermissionData[](0)
-    );
     rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
+
+    // We use input from the deploy script to bootstrap our test suite.
+    scriptInput = readScriptInput();
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+    Strategy[] memory strategies = defaultStrategies();
+    RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
+    string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
-      address(strategyLogic),
-      address(accountLogic),
+      strategyLogic,
+      accountLogic,
       strategies,
       mpAccounts,
       roleDescriptionStrings,
@@ -264,35 +260,7 @@ contract VertexTestSetup is Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategies() internal pure returns (Strategy[] memory strategies) {
-    Strategy memory strategy1Config = Strategy({
-      approvalPeriod: 2 days,
-      queuingPeriod: 4 days,
-      expirationPeriod: 8 days,
-      isFixedLengthApprovalPeriod: true,
-      minApprovalPct: 4000,
-      minDisapprovalPct: 2000,
-      approvalRole: uint8(Roles.Approver),
-      disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: new uint8[](0),
-      forceDisapprovalRoles: new uint8[](0)
-    });
-
-    Strategy memory strategy2Config = Strategy({
-      approvalPeriod: 2 days,
-      queuingPeriod: 0,
-      expirationPeriod: 1 days,
-      isFixedLengthApprovalPeriod: false,
-      minApprovalPct: 8000,
-      minDisapprovalPct: 10_001,
-      approvalRole: uint8(Roles.Approver),
-      disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator)),
-      forceDisapprovalRoles: Solarray.uint8s(uint8(Roles.ActionCreator))
-    });
-
-    strategies = new Strategy[](2);
-    strategies[0] = strategy1Config;
-    strategies[1] = strategy2Config;
+  function defaultStrategies() internal view returns (Strategy[] memory strategies) {
+    strategies = readStrategies(scriptInput);
   }
 }
