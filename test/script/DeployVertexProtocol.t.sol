@@ -43,9 +43,7 @@ contract Run is DeployVertexTest {
     // There are two strategies we expect to have been deployed.
     VertexStrategy[] memory strategiesAuthorized = new VertexStrategy[](2);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256(
-      "StrategyAuthorized(address,address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[]))"
-    );
+    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
     VertexAccount[] memory accountsAuthorized = new VertexAccount[](2);

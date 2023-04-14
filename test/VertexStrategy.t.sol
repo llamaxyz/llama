@@ -80,9 +80,9 @@ contract VertexStrategyTest is VertexTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(strategyLogic, strategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(strategies));
 
-    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
+    newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(strategy), address(mpCore));
   }
 
   function deployTestStrategy() internal returns (VertexStrategy testStrategy) {
@@ -98,11 +98,12 @@ contract VertexStrategyTest is VertexTestSetup {
       forceApprovalRoles: new uint8[](0),
       forceDisapprovalRoles: new uint8[](0)
     });
-    testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+    testStrategy =
+      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, testStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(testStrategies));
   }
 
   function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
@@ -126,13 +127,14 @@ contract VertexStrategyTest is VertexTestSetup {
     });
 
     // Get the address of the strategy we'll deploy.
-    testStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), testStrategyData, address(mpCore));
+    testStrategy =
+      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
 
     // Create and authorize the strategy.
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, testStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategies(testStrategies));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);

@@ -89,7 +89,7 @@ contract DeployVertexProtocol is Script {
       policyLogic,
       policyTokenUri,
       jsonInput.readString(".rootVertexName"),
-      readStrategies(jsonInput),
+      encodeStrategies(readStrategies(jsonInput)),
       jsonInput.readStringArray(".initialAccountNames"),
       readRoleDescriptions(jsonInput),
       readRoleHolders(jsonInput),
@@ -164,6 +164,17 @@ contract DeployVertexProtocol is Script {
       rolePermissions[i].role = rawRolePermission.role;
       rolePermissions[i].permissionId = rawRolePermission.permissionId;
       rolePermissions[i].hasPermission = true;
+    }
+  }
+
+  function encodeStrategy(Strategy memory strategy) internal pure returns (bytes memory encoded) {
+    encoded = abi.encode(strategy);
+  }
+
+  function encodeStrategies(Strategy[] memory strategies) internal pure returns (bytes[] memory encoded) {
+    encoded = new bytes[](strategies.length);
+    for (uint256 i; i < strategies.length; i++) {
+      encoded[i] = encodeStrategy(strategies[i]);
     }
   }
 }

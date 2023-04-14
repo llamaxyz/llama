@@ -49,7 +49,7 @@ contract VertexFactoryTest is VertexTestSetup {
 
 contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
 
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
@@ -113,7 +113,7 @@ contract Constructor is VertexFactoryTest {
 
 contract Deploy is VertexFactoryTest {
   function deployVertex() internal returns (VertexCore) {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
@@ -135,7 +135,7 @@ contract Deploy is VertexFactoryTest {
 
   function test_RevertIf_CalledByAccountThatIsNotRootVertex(address caller) public {
     vm.assume(caller != address(rootCore));
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
@@ -154,7 +154,7 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
@@ -224,7 +224,7 @@ contract Deploy is VertexFactoryTest {
     VertexCore _vertex = deployVertex();
     assertEq(_vertex.name(), "NewProject");
 
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
 
     VertexPolicy _policy = _vertex.policy();

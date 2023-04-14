@@ -33,7 +33,7 @@ contract ComputeVertexPolicyAddress is VertexLensTestSetup {
 
 contract ComputeVertexStrategyAddress is VertexLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     address expected =
       address(lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore)));
     assertEq(expected, address(rootStrategy1));

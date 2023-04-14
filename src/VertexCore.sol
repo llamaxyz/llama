@@ -66,7 +66,7 @@ contract VertexCore is Initializable {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(
-    VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, Strategy strategyData
+    VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, bytes initializationData
   );
   event StrategyUnauthorized(VertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
@@ -148,7 +148,7 @@ contract VertexCore is Initializable {
     VertexPolicy _policy,
     VertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
-    Strategy[] calldata initialStrategies,
+    bytes[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
     factory = VertexFactory(msg.sender);
@@ -400,7 +400,7 @@ contract VertexCore is Initializable {
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies)
+  function createAndAuthorizeStrategies(VertexStrategy vertexStrategyLogic, bytes[] calldata strategies)
     external
     onlyVertex
   {
@@ -563,7 +563,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies) internal {
+  function _deployStrategies(VertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
@@ -572,18 +572,7 @@ contract VertexCore is Initializable {
 
     uint256 strategyLength = strategies.length;
     for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(
-        keccak256(
-          abi.encode(
-            strategies[i].approvalPeriod,
-            strategies[i].queuingPeriod,
-            strategies[i].expirationPeriod,
-            strategies[i].minApprovalPct,
-            strategies[i].minDisapprovalPct,
-            strategies[i].isFixedLengthApprovalPeriod
-          )
-        )
-      );
+      bytes32 salt = bytes32(keccak256(strategies[i]));
 
       VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
       strategy.initialize(strategies[i]);

@@ -65,23 +65,14 @@ contract VertexLens {
   /// @param strategy The strategy to be set.
   /// @param vertexCore The vertex core to be set.
   /// @return the computed address of the VertexStrategy contract.
-  function computeVertexStrategyAddress(address vertexStrategyLogic, Strategy memory strategy, address vertexCore)
+  function computeVertexStrategyAddress(address vertexStrategyLogic, bytes memory strategy, address vertexCore)
     external
     pure
     returns (VertexStrategy)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexStrategyLogic,
-      keccak256(
-        abi.encode(
-          strategy.approvalPeriod,
-          strategy.queuingPeriod,
-          strategy.expirationPeriod,
-          strategy.minApprovalPct,
-          strategy.minDisapprovalPct,
-          strategy.isFixedLengthApprovalPeriod
-        )
-      ), // salt
+      keccak256(strategy), // salt
       vertexCore // deployer
     );
     return VertexStrategy(_computedAddress);

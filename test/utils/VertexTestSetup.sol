@@ -90,7 +90,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
   bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
-  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x38cb05ed; // createAndAuthorizeStrategies(address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[])[])
+  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x0db24798; // createAndAuthorizeAccounts(address,string[])
 
   // Permission IDs for those selectors.
@@ -132,7 +132,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategies = defaultStrategies();
     RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
@@ -260,7 +260,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategies() internal view returns (Strategy[] memory strategies) {
-    strategies = readStrategies(scriptInput);
+  function defaultStrategies() internal view returns (bytes[] memory strategies) {
+    strategies = encodeStrategies(readStrategies(scriptInput));
   }
 }

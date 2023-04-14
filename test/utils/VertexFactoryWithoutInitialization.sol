@@ -23,7 +23,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexPolicy _vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
-    Strategy[] memory initialStrategies,
+    bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
@@ -74,7 +74,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     string memory name,
     VertexStrategy strategyLogic,
     VertexAccount accountLogic,
-    Strategy[] memory initialStrategies,
+    bytes[] memory initialStrategies,
     string[] memory initialAccounts
   ) external {
     vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);

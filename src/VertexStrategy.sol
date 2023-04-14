@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -12,7 +13,7 @@ import {Action, Strategy} from "src/lib/Structs.sol";
 /// @title A strategy definition of a Vertex system.
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the template for Vertex strategies which determine the rules of an action's process.
-contract VertexStrategy is Initializable {
+contract VertexStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -79,10 +80,9 @@ contract VertexStrategy is Initializable {
 
   constructor() initializer {}
 
-  /// @notice Initializes a new VertexStrategy clone.
-  /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
-  /// @param strategyConfig The strategy configuration.
-  function initialize(Strategy memory strategyConfig) external initializer {
+  /// @inheritdoc IVertexStrategy
+  function initialize(bytes memory config) external initializer {
+    Strategy memory strategyConfig = abi.decode(config, (Strategy));
     vertex = VertexCore(msg.sender);
     policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

@@ -83,7 +83,7 @@ contract VertexFactoryHandler is BaseHandler {
       name(),
       strategyLogic,
       accountLogic,
-      new Strategy[](0),
+      new bytes[](0),
       new string[](0),
       roleDescriptions,
       roleHolders,
