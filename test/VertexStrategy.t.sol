@@ -14,7 +14,7 @@ contract VertexStrategyTest is VertexTestSetup {
   event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-quantity
+
   function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
     internal
     pure
