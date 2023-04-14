@@ -131,7 +131,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionPassed(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.totalApprovals >= getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
+    return action.totalApprovals >= _getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
   }
 
   /// @inheritdoc IVertexStrategy
@@ -160,7 +160,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     if (caller == action.creator) return true;
 
     // Check 2b.
-    return action.totalDisapprovals >= getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
+    return action.totalDisapprovals >= _getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
   }
 
   /// @inheritdoc IVertexStrategy
@@ -188,7 +188,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @param supply Total number of policyholders eligible for participation.
   /// @param minPct Minimum percentage needed to reach quorum.
   /// @return The total weight needed to reach quorum.
-  function getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
+  function _getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
   }

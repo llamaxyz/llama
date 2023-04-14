@@ -729,8 +729,8 @@ contract GetDisapprovalWeightAt is VertexStrategyTest {
 }
 
 contract VertexStrategyHarness is VertexStrategy {
-  function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure returns (uint256) {
-    return getMinimumAmountNeeded(supply, minPct);
+  function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256) {
+    return _getMinimumAmountNeeded(supply, minPct);
   }
 }
 
