@@ -151,7 +151,7 @@ contract VertexFactory {
 
   /// @notice Sets the Vertex Policy Token URI contract.
   /// @param _vertexPolicyTokenUri The Vertex Policy Token URI contract.
-  function setPolicyMetadata(VertexPolicyTokenURI _vertexPolicyTokenUri) external onlyRootVertex {
+  function setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenUri) external onlyRootVertex {
     vertexPolicyTokenUri = _vertexPolicyTokenUri;
   }
 

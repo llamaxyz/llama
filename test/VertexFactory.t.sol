@@ -308,18 +308,18 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
   }
 }
 
-contract SetPolicyMetadata is VertexFactoryTest {
-  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _metadata) public {
+contract SetPolicyTokenURI is VertexFactoryTest {
+  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _policyTokenURI) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    factory.setPolicyMetadata(VertexPolicyTokenURI(_metadata));
+    factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
   }
 
-  function testFuzz_WritesMetadataAddressToStorage(address _metadata) public {
+  function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
-    factory.setPolicyMetadata(VertexPolicyTokenURI(_metadata));
-    assertEq(address(factory.vertexPolicyTokenUri()), _metadata);
+    factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
+    assertEq(address(factory.vertexPolicyTokenUri()), _policyTokenURI);
   }
 }
 
