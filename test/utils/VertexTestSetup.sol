@@ -281,7 +281,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     }
   }
 
-  // TODO Take a look at all usages of this and see what other methods we should add to the IVertexStrategy interface.
   function toVertexStrategy(IVertexStrategy strategy) internal pure returns (VertexStrategy converted) {
     assembly {
       converted := strategy

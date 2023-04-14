@@ -40,10 +40,10 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice If false, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
-  /// @notice The strategy's Vertex system.
+  /// @inheritdoc IVertexStrategy
   VertexCore public vertex;
 
-  /// @notice Policy NFT for this Vertex system.
+  /// @inheritdoc IVertexStrategy
   VertexPolicy public policy;
 
   /// @notice Length of approval period in seconds.

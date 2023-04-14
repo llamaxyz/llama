@@ -277,7 +277,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(address(toVertexStrategy(newStrategy).policy()), address(mpPolicy));
+    assertEq(address(newStrategy.policy()), address(mpPolicy));
   }
 
   function testFuzz_SetsStrategyStorageVertex( /*TODO fuzz this test */ ) public {
@@ -294,7 +294,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(address(toVertexStrategy(newStrategy).vertex()), address(mpCore));
+    assertEq(address(newStrategy.vertex()), address(mpCore));
   }
 
   function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {

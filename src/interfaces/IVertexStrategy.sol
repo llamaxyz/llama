@@ -1,11 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
+
 /// @title Vertex Strategy Interface
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the interface for Vertex strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
 interface IVertexStrategy {
+  // -------- For Inspection --------
+  // These are not strictly required by the core, but are useful for inspecting a strategy contract.
+
+  /// @notice Returns the address of the Vertex contract that this strategy is registered to.
+  function vertex() external view returns (VertexCore);
+
+  /// @notice Returns the name of the policy contract that this strategy is registered to.
+  function policy() external view returns (VertexPolicy);
+
   // -------- At Strategy Creation --------
 
   /// @notice Initializes a new clone of the strategy.

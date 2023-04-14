@@ -270,8 +270,8 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
-    assertEq(address(toVertexStrategy(strategyAddresses[0]).vertex()), address(uninitializedVertex));
-    assertEq(address(toVertexStrategy(strategyAddresses[1]).vertex()), address(uninitializedVertex));
+    assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
+    assertEq(address(strategyAddresses[1].vertex()), address(uninitializedVertex));
   }
 
   function test_StrategiesHavePolicyAddressInStorage() public {
@@ -289,8 +289,8 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategies, accounts
     );
 
-    assertEq(address(toVertexStrategy(strategyAddresses[0]).policy()), address(policy));
-    assertEq(address(toVertexStrategy(strategyAddresses[1]).policy()), address(policy));
+    assertEq(address(strategyAddresses[0].policy()), address(policy));
+    assertEq(address(strategyAddresses[1].policy()), address(policy));
   }
 
   function test_StrategiesAreAuthorizedByVertexCore() public {
