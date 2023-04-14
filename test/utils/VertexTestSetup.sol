@@ -10,7 +10,7 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
@@ -265,7 +265,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     strategies = encodeStrategies(readStrategies(scriptInput));
   }
 
-  function toIVertexStrategy(VertexStrategy[] memory strategies)
+  function toIVertexStrategy(DefaultStrategy[] memory strategies)
     internal
     pure
     returns (IVertexStrategy[] memory converted)
@@ -276,12 +276,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   }
 
   function toIVertexStrategy(Strategy memory strategy) internal pure returns (IVertexStrategy[] memory converted) {
-    assembly {
-      converted := strategy
-    }
-  }
-
-  function toVertexStrategy(IVertexStrategy strategy) internal pure returns (VertexStrategy converted) {
     assembly {
       converted := strategy
     }

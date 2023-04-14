@@ -4,13 +4,14 @@ pragma solidity 0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
@@ -41,7 +42,7 @@ contract Run is DeployVertexTest {
     assertEq(rootVertex.name(), "Root Vertex");
 
     // There are two strategies we expect to have been deployed.
-    VertexStrategy[] memory strategiesAuthorized = new VertexStrategy[](2);
+    IVertexStrategy[] memory strategiesAuthorized = new IVertexStrategy[](2);
     uint8 strategiesCount;
     bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
 
@@ -55,12 +56,12 @@ contract Run is DeployVertexTest {
       _event = emittedEvents[i];
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   VertexStrategy indexed strategy,  <-- The topic we want.
+        //   IVertexStrategy indexed strategy,  <-- The topic we want.
         //   address indexed strategyLogic,
         //   Strategy strategyData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
-        strategiesAuthorized[strategiesCount++] = VertexStrategy(strategy);
+        strategiesAuthorized[strategiesCount++] = IVertexStrategy(strategy);
       }
       if (_event.topics[0] == accountAuthorizedSig) {
         // event AccountAuthorized(
@@ -73,31 +74,31 @@ contract Run is DeployVertexTest {
       }
     }
 
-    VertexStrategy firstStrategy = strategiesAuthorized[0];
+    IVertexStrategy firstStrategy = strategiesAuthorized[0];
     assertEq(rootVertex.authorizedStrategies(firstStrategy), true);
-    assertEq(firstStrategy.approvalPeriod(), 172_800);
-    assertEq(firstStrategy.approvalRole(), 2);
-    assertEq(firstStrategy.disapprovalRole(), 3);
-    assertEq(firstStrategy.expirationPeriod(), 691_200);
-    assertEq(firstStrategy.isFixedLengthApprovalPeriod(), true);
-    assertEq(firstStrategy.minApprovalPct(), 4000);
-    assertEq(firstStrategy.minDisapprovalPct(), 2000);
-    assertEq(firstStrategy.queuingPeriod(), 345_600);
-    assertEq(firstStrategy.forceApprovalRole(1), false);
-    assertEq(firstStrategy.forceDisapprovalRole(1), false);
+    assertEq(toDefaultStrategy(firstStrategy).approvalPeriod(), 172_800);
+    assertEq(toDefaultStrategy(firstStrategy).approvalRole(), 2);
+    assertEq(toDefaultStrategy(firstStrategy).disapprovalRole(), 3);
+    assertEq(toDefaultStrategy(firstStrategy).expirationPeriod(), 691_200);
+    assertEq(toDefaultStrategy(firstStrategy).isFixedLengthApprovalPeriod(), true);
+    assertEq(toDefaultStrategy(firstStrategy).minApprovalPct(), 4000);
+    assertEq(toDefaultStrategy(firstStrategy).minDisapprovalPct(), 2000);
+    assertEq(toDefaultStrategy(firstStrategy).queuingPeriod(), 345_600);
+    assertEq(toDefaultStrategy(firstStrategy).forceApprovalRole(1), false);
+    assertEq(toDefaultStrategy(firstStrategy).forceDisapprovalRole(1), false);
 
-    VertexStrategy secondStrategy = strategiesAuthorized[1];
+    IVertexStrategy secondStrategy = strategiesAuthorized[1];
     assertEq(rootVertex.authorizedStrategies(secondStrategy), true);
-    assertEq(secondStrategy.approvalPeriod(), 172_800);
-    assertEq(secondStrategy.approvalRole(), 2);
-    assertEq(secondStrategy.disapprovalRole(), 3);
-    assertEq(secondStrategy.expirationPeriod(), 86_400);
-    assertEq(secondStrategy.isFixedLengthApprovalPeriod(), false);
-    assertEq(secondStrategy.minApprovalPct(), 8000);
-    assertEq(secondStrategy.minDisapprovalPct(), 10_001);
-    assertEq(secondStrategy.queuingPeriod(), 0);
-    assertEq(secondStrategy.forceApprovalRole(1), true);
-    assertEq(secondStrategy.forceDisapprovalRole(1), true);
+    assertEq(toDefaultStrategy(secondStrategy).approvalPeriod(), 172_800);
+    assertEq(toDefaultStrategy(secondStrategy).approvalRole(), 2);
+    assertEq(toDefaultStrategy(secondStrategy).disapprovalRole(), 3);
+    assertEq(toDefaultStrategy(secondStrategy).expirationPeriod(), 86_400);
+    assertEq(toDefaultStrategy(secondStrategy).isFixedLengthApprovalPeriod(), false);
+    assertEq(toDefaultStrategy(secondStrategy).minApprovalPct(), 8000);
+    assertEq(toDefaultStrategy(secondStrategy).minDisapprovalPct(), 10_001);
+    assertEq(toDefaultStrategy(secondStrategy).queuingPeriod(), 0);
+    assertEq(toDefaultStrategy(secondStrategy).forceApprovalRole(1), true);
+    assertEq(toDefaultStrategy(secondStrategy).forceDisapprovalRole(1), true);
 
     VertexAccount firstAccount = accountsAuthorized[0];
     assertEq(firstAccount.vertex(), address(rootVertex));
@@ -177,7 +178,7 @@ contract Run is DeployVertexTest {
     PermissionData memory permissionData = PermissionData(
       makeAddr("target"), // Could be any address, choosing a random one.
       bytes4(bytes32("transfer(address,uint256)")),
-      VertexStrategy(makeAddr("strategy"))
+      IVertexStrategy(makeAddr("strategy"))
     );
     assertEq(
       lens.computePermissionId(permissionData),

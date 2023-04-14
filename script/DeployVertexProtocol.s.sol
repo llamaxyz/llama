@@ -3,13 +3,14 @@ pragma solidity 0.8.19;
 
 import {Script, stdJson, console2} from "forge-std/Script.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -18,7 +19,7 @@ contract DeployVertexProtocol is Script {
 
   // Logic contracts.
   VertexCore coreLogic;
-  VertexStrategy strategyLogic;
+  DefaultStrategy strategyLogic;
   VertexAccount accountLogic;
   VertexPolicy policyLogic;
 
@@ -64,7 +65,7 @@ contract DeployVertexProtocol is Script {
     print(string.concat("  VertexCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    strategyLogic = new VertexStrategy();
+    strategyLogic = new DefaultStrategy();
     print(string.concat("  VertexStrategyLogic:", vm.toString(address(strategyLogic))));
 
     vm.broadcast();
@@ -175,6 +176,12 @@ contract DeployVertexProtocol is Script {
     encoded = new bytes[](strategies.length);
     for (uint256 i; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
+    }
+  }
+
+  function toDefaultStrategy(IVertexStrategy strategy) internal pure returns (DefaultStrategy converted) {
+    assembly {
+      converted := strategy
     }
   }
 

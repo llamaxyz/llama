@@ -5,10 +5,11 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Solarray} from "solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
@@ -22,13 +23,13 @@ contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
-  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    VertexStrategy indexed strategy,
+    IVertexStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -36,14 +37,14 @@ contract VertexFactoryTest is VertexTestSetup {
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
-    uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategiesAuthorized(Strategy[] strategies);
-  event StrategiesUnauthorized(VertexStrategy[] strategies);
-  event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);
+  event StrategiesUnauthorized(IVertexStrategy[] strategies);
+  event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
 }
 
@@ -267,21 +268,21 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
     vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
     vm.prank(_caller);
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(VertexStrategy(randomLogicAddress)), false);
+    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), false);
     vm.prank(address(rootCore));
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
-    assertEq(factory.authorizedStrategyLogics(VertexStrategy(randomLogicAddress)), true);
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
+    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), true);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit StrategyLogicAuthorized(VertexStrategy(randomLogicAddress));
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
+    emit StrategyLogicAuthorized(IVertexStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
 }
 

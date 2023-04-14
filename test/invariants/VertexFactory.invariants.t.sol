@@ -3,13 +3,14 @@ pragma solidity ^0.8.19;
 
 import {console2} from "forge-std/Test.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
@@ -23,7 +24,7 @@ contract VertexFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  VertexStrategy public strategyLogic;
+  IVertexStrategy public strategyLogic;
   VertexAccount public accountLogic;
 
   // Used to track the last seen `vertexCount` value.
@@ -36,7 +37,7 @@ contract VertexFactoryHandler is BaseHandler {
   constructor(
     VertexFactory _vertexFactory,
     VertexCore _vertexCore,
-    VertexStrategy _strategyLogic,
+    IVertexStrategy _strategyLogic,
     VertexAccount _accountLogic
   ) BaseHandler(_vertexFactory, _vertexCore) {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
@@ -92,7 +93,7 @@ contract VertexFactoryHandler is BaseHandler {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
 
-  function vertexFactory_authorizeStrategyLogic(VertexStrategy newStrategyLogic)
+  function vertexFactory_authorizeStrategyLogic(IVertexStrategy newStrategyLogic)
     public
     recordCall("vertexFactory_authorizeStrategyLogic")
     useCurrentTimestamp
@@ -135,7 +136,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
     excludeArtifact("VertexAccount");
     excludeArtifact("VertexCore");
     excludeArtifact("VertexPolicy");
-    excludeArtifact("VertexStrategy");
+    excludeArtifact("DefaultStrategy");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.vertexFactory_deploy.selector;

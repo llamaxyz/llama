@@ -2,12 +2,12 @@
 pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -18,7 +18,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 contract VertexFactoryWithoutInitialization is VertexFactory {
   constructor(
     VertexCore _vertexCoreLogic,
-    VertexStrategy initialVertexStrategyLogic,
+    IVertexStrategy initialVertexStrategyLogic,
     VertexAccount initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenUri,
@@ -72,7 +72,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexCore vertex,
     VertexPolicy policy,
     string memory name,
-    VertexStrategy strategyLogic,
+    IVertexStrategy strategyLogic,
     VertexAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts

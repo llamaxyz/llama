@@ -11,7 +11,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
@@ -99,7 +99,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   }
 
   function _queueAction(uint256 _actionId) public {
-    uint256 executionTime = block.timestamp + toVertexStrategy(mpStrategy1).queuingPeriod();
+    uint256 executionTime = block.timestamp + toDefaultStrategy(mpStrategy1).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(_actionId, address(this), mpStrategy1, actionCreatorAaron, executionTime);
     mpCore.queueAction(_actionId);
@@ -138,7 +138,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   }
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
-    VertexStrategy additionalStrategyLogic = new VertexStrategy();
+    DefaultStrategy additionalStrategyLogic = new DefaultStrategy();
     vm.prank(address(rootCore));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
@@ -327,7 +327,7 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex,
       policy,
       "NewProject",
-      VertexStrategy(notStrategyLogic),
+      IVertexStrategy(notStrategyLogic),
       VertexAccount(accountLogic),
       strategies,
       accounts
@@ -444,14 +444,14 @@ contract CreateAction is VertexCoreTest {
     );
 
     Action memory action = mpCore.getAction(_actionId);
-    uint256 approvalPeriodEnd = toVertexStrategy(action.strategy).approvalEndTime(_actionId);
+    uint256 approvalPeriodEnd = toDefaultStrategy(action.strategy).approvalEndTime(_actionId);
 
     assertEq(_actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toVertexStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
-    assertEq(toVertexStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
+    assertEq(toDefaultStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
+    assertEq(toDefaultStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
   }
 
   function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
@@ -479,7 +479,7 @@ contract CreateAction is VertexCoreTest {
   }
 
   function test_RevertIf_StrategyUnauthorized() public {
-    VertexStrategy unauthorizedStrategy = VertexStrategy(makeAddr("unauthorized strategy"));
+    IVertexStrategy unauthorizedStrategy = IVertexStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
     mpCore.createAction(
@@ -594,14 +594,14 @@ contract CreateActionBySig is VertexCoreTest {
     uint256 _actionId = createActionBySig(v, r, s);
 
     Action memory action = mpCore.getAction(_actionId);
-    uint256 approvalPeriodEnd = toVertexStrategy(action.strategy).approvalEndTime(_actionId);
+    uint256 approvalPeriodEnd = toDefaultStrategy(action.strategy).approvalEndTime(_actionId);
 
     assertEq(_actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toVertexStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
-    assertEq(toVertexStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
+    assertEq(toDefaultStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
+    assertEq(toDefaultStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
   }
 
   function test_CheckNonceIncrements() public {
@@ -1314,7 +1314,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, encodeStrategy(newStrategies[1]));
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(VertexStrategy(additionalStrategyLogic), encodeStrategies(newStrategies));
+    mpCore.createAndAuthorizeStrategies(IVertexStrategy(additionalStrategyLogic), encodeStrategies(newStrategies));
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1340,7 +1340,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(VertexStrategy(randomLogicAddress), encodeStrategies(newStrategies));
+    mpCore.createAndAuthorizeStrategies(IVertexStrategy(randomLogicAddress), encodeStrategies(newStrategies));
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1706,8 +1706,8 @@ contract GetActionState is VertexCoreTest {
     _approveAction(approverAdam, actionId);
     _approveAction(approverAlicia, actionId);
     Action memory action = mpCore.getAction(actionId);
-    uint256 approvalEndTime = toVertexStrategy(action.strategy).approvalEndTime(actionId);
-    vm.assume(_timeSinceCreation < toVertexStrategy(mpStrategy1).approvalPeriod() * 2);
+    uint256 approvalEndTime = toDefaultStrategy(action.strategy).approvalEndTime(actionId);
+    vm.assume(_timeSinceCreation < toDefaultStrategy(mpStrategy1).approvalPeriod() * 2);
     vm.warp(block.timestamp + _timeSinceCreation);
 
     uint256 currentState = uint256(mpCore.getActionState(actionId));
