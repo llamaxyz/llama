@@ -489,9 +489,6 @@ contract VertexCore is Initializable {
     actionId = actionsCount;
     Action storage newAction = actions[actionId];
 
-    // Revert if the policy has no supply for any provided roles.
-    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
-
     newAction.creator = policyholder;
     newAction.strategy = strategy;
     newAction.target = target;
@@ -499,15 +496,16 @@ contract VertexCore is Initializable {
     newAction.selector = selector;
     newAction.data = data;
     newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    bool allowedByStrategy = strategy.validateActionCreation(actionId);
+    if (!allowedByStrategy) revert ProhibitedByStrategy();
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
     IActionGuard guard = actionGuard[target][selector];
     if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
+      (bool allowedByGuard, bytes32 reason) = guard.validateActionCreation(actionId);
+      if (!allowedByGuard) revert ProhibitedByActionGuard(reason);
     }
 
     unchecked {
@@ -594,22 +592,6 @@ contract VertexCore is Initializable {
       account.initialize(accounts[i]);
       emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
     }
-  }
-
-  // TODO We don't loop through the force (dis)approval roles because currently the strategy does
-  // not store them all in an array to support this. Should we do this?
-  function _assertNonZeroRoleSupplies(IVertexStrategy strategy)
-    internal
-    view
-    returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
-  {
-    uint8 approvalRole = strategy.approvalRole();
-    approvalPolicySupply = policy.getSupply(approvalRole);
-    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
-
-    uint8 disapprovalRole = strategy.disapprovalRole();
-    disapprovalPolicySupply = policy.getSupply(disapprovalRole);
-    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 
   function _useNonce(address user, bytes4 selector) internal returns (uint256 nonce) {

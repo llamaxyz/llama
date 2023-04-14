@@ -450,8 +450,8 @@ contract CreateAction is VertexCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(action.approvalPolicySupply, 3);
-    assertEq(action.disapprovalPolicySupply, 3);
+    assertEq(toVertexStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
+    assertEq(toVertexStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
   }
 
   function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
@@ -600,8 +600,8 @@ contract CreateActionBySig is VertexCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(action.approvalPolicySupply, 3);
-    assertEq(action.disapprovalPolicySupply, 3);
+    assertEq(toVertexStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
+    assertEq(toVertexStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
   }
 
   function test_CheckNonceIncrements() public {

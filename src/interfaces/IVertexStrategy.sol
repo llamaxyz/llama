@@ -16,11 +16,9 @@ interface IVertexStrategy {
 
   // -------- At Action Creation --------
 
-  /// @notice Returns the approver role.
-  function approvalRole() external view returns (uint8);
-
-  /// @notice Returns the disapprover role.
-  function disapprovalRole() external view returns (uint8);
+  /// @notice Returns `true` if the action is allowed to be created, false otherwise.
+  /// @dev This method is not view because the strategy may want to save off some data at the time of creation.
+  function validateActionCreation(uint256 actionId) external returns (bool);
 
   // -------- When Casting Approval --------
 

@@ -75,6 +75,12 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
+  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
+  mapping(uint256 => uint256) public actionApprovalSupply;
+
+  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
+  mapping(uint256 => uint256) public actionDisapprovalSupply;
+
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
@@ -125,7 +131,19 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // ==========================================
 
   /// @inheritdoc IVertexStrategy
-  function minExecutionTime(uint256 /* actionId */ ) external view returns (uint256) {
+  function validateActionCreation(uint256 actionId) external returns (bool) {
+    uint256 approvalPolicySupply = policy.getSupply(approvalRole);
+    if (approvalPolicySupply == 0) return false;
+    uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    if (disapprovalPolicySupply == 0) return false;
+
+    actionApprovalSupply[actionId] = approvalPolicySupply;
+    actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
+    return true;
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function minExecutionTime(uint256) external view returns (uint256) {
     return block.timestamp + queuingPeriod;
   }
 
@@ -137,7 +155,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionPassed(uint256 actionId) public view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.totalApprovals >= _getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
+    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
   }
 
   /// @inheritdoc IVertexStrategy
@@ -166,7 +184,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     if (caller == action.creator) return true;
 
     // Check 2b.
-    return action.totalDisapprovals >= _getMinimumAmountNeeded(action.disapprovalPolicySupply, minDisapprovalPct);
+    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
   }
 
   /// @inheritdoc IVertexStrategy
