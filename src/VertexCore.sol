@@ -532,7 +532,7 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    uint256 wequantityight = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+    uint256 quantity = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || quantity == type(uint256).max
       ? type(uint256).max
