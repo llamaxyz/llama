@@ -36,7 +36,7 @@ contract VertexCore is Initializable {
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
   error ProhibitedByActionGuard(bytes32 reason);
-  error ProhibitedByStrategy();
+  error ProhibitedByStrategy(bytes32 reason);
 
   modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
@@ -497,15 +497,15 @@ contract VertexCore is Initializable {
     newAction.data = data;
     newAction.creationTime = block.timestamp;
 
-    bool allowedByStrategy = strategy.validateActionCreation(actionId);
-    if (!allowedByStrategy) revert ProhibitedByStrategy();
+    (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
+    if (!allowed) revert ProhibitedByStrategy(reason);
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
     IActionGuard guard = actionGuard[target][selector];
     if (guard != IActionGuard(address(0))) {
-      (bool allowedByGuard, bytes32 reason) = guard.validateActionCreation(actionId);
-      if (!allowedByGuard) revert ProhibitedByActionGuard(reason);
+      (allowed, reason) = guard.validateActionCreation(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
     }
 
     unchecked {
@@ -549,9 +549,10 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    bool isEnabled =
-      isApproval ? action.strategy.isApprovalEnabled(actionId) : action.strategy.isDisapprovalEnabled(actionId);
-    if (!isEnabled) revert ProhibitedByStrategy();
+    (bool isEnabled, bytes32 reason) = isApproval
+      ? action.strategy.isApprovalEnabled(actionId, msg.sender)
+      : action.strategy.isDisapprovalEnabled(actionId, msg.sender);
+    if (!isEnabled) revert ProhibitedByStrategy(reason);
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.

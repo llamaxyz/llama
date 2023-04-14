@@ -16,14 +16,20 @@ interface IVertexStrategy {
 
   // -------- At Action Creation --------
 
-  /// @notice Returns `true` if the action is allowed to be created, false otherwise.
+  /// @notice Returns `true` if the action is allowed to be created, false otherwise.  May also
+  /// return a reason string for why the action is not allowed.
+  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
+  /// string that consumes too much gas when copied to memory.
   /// @dev This method is not view because the strategy may want to save off some data at the time of creation.
-  function validateActionCreation(uint256 actionId) external returns (bool);
+  function validateActionCreation(uint256 actionId) external returns (bool, bytes32);
 
   // -------- When Casting Approval --------
 
-  /// @notice Returns true if approvals are allowed with this strategy, false otherwise.
-  function isApprovalEnabled(uint256 actionId) external view returns (bool);
+  /// @notice Returns true if approvals are allowed with this strategy for the given user, false
+  /// otherwise.  May also return a reason string for why the action is not allowed.
+  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
+  /// string that consumes too much gas when copied to memory.
+  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
 
   /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -34,8 +40,11 @@ interface IVertexStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Returns true if disapprovals are allowed with this strategy, false otherwise.
-  function isDisapprovalEnabled(uint256 actionId) external view returns (bool);
+  /// @notice Returns true if disapprovals are allowed with this strategy for the given user, false
+  /// otherwise. May also return a reason string for why the action is not allowed.
+  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
+  /// string that consumes too much gas when copied to memory.
+  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
 
   /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.

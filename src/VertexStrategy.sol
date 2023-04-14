@@ -14,7 +14,7 @@ import {Action, Strategy} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the default vertex strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
-///   - Action creators are allowed to vote on their own actions, assuming they hold the appropriate role.
+///   - Action creators are not allowed to vote on their own actions, regardless of the roles they hold.
 contract VertexStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
@@ -131,15 +131,26 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // ==========================================
 
   /// @inheritdoc IVertexStrategy
-  function validateActionCreation(uint256 actionId) external returns (bool) {
+  function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
     uint256 approvalPolicySupply = policy.getSupply(approvalRole);
-    if (approvalPolicySupply == 0) return false;
+    if (approvalPolicySupply == 0) return (false, "No approval supply");
     uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
-    if (disapprovalPolicySupply == 0) return false;
+    if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
+    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
+    Action memory action = vertex.getAction(actionId);
+    unchecked {
+      // Safety: If either supply was zero, we would have returned early above. Therefore we know
+      // both of the supply values are at least 1, and therefore we can safely subtract 1 without
+      // worrying about overflow.
+      if (policy.hasRole(action.creator, approvalRole)) approvalPolicySupply -= 1;
+      if (policy.hasRole(action.creator, disapprovalRole)) disapprovalPolicySupply -= 1;
+    }
+
+    // Save off the supplies to use for checking quorum.
     actionApprovalSupply[actionId] = approvalPolicySupply;
     actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
-    return true;
+    return (true, "");
   }
 
   /// @inheritdoc IVertexStrategy
@@ -188,13 +199,18 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   }
 
   /// @inheritdoc IVertexStrategy
-  function isApprovalEnabled(uint256 /* actionId */ ) external pure returns (bool) {
-    return true;
+  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+    Action memory action = vertex.getAction(actionId);
+    if (action.creator == policyholder) return (false, "Action creator cannot approve");
+    return (true, "");
   }
 
   /// @inheritdoc IVertexStrategy
-  function isDisapprovalEnabled(uint256 /* actionId */ ) external view returns (bool) {
-    return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
+  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+    Action memory action = vertex.getAction(actionId);
+    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
+    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
+    return (true, "");
   }
 
   /// @inheritdoc IVertexStrategy
