@@ -67,7 +67,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
 
   /// @notice Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
-  /// role is how much weight the role-holder gets when approving/disapproving (regardless of
+  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
   mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
 
@@ -155,7 +155,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Assigns a role to a user.
   /// @param role ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
   /// @param user User to assign the role to.
-  /// @param quantity Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  /// @param quantity Quantity of the role to assign to the user, i.e. their (dis)approval quantity.
   /// @param expiration When the role expires.
   function setRoleHolder(uint8 role, address user, uint128 quantity, uint64 expiration) external onlyVertex {
     _setRoleHolder(role, user, quantity, expiration);
@@ -206,15 +206,15 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // -------- Role and Permission Getters --------
 
   /// @notice Returns the quantity of the `role` for the given `user`. The returned value is the
-  /// weight of the role when approving/disapproving (regardless of strategy).
-  function getWeight(address user, uint8 role) external view returns (uint256) {
+  /// quantity of the role when approving/disapproving (regardless of strategy).
+  function getQuantity(address user, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
     return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `user` at `timestamp`. The returned
-  /// value is the weight of the role when approving/disapproving (regardless of strategy).
-  function getPastWeight(address user, uint8 role, uint256 timestamp) external view returns (uint256) {
+  /// value is the quantity of the role when approving/disapproving (regardless of strategy).
+  function getPastQuantity(address user, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
     return roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
   }

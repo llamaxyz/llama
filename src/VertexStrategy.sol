@@ -55,11 +55,11 @@ contract VertexStrategy is Initializable {
   /// @notice Length of approval period in seconds.
   uint256 public approvalPeriod;
 
-  /// @notice Minimum percentage of `totalApprovalWeight / totalApprovalSupplyAtCreationTime` required for the
+  /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 100_00 == 100%.
   uint256 public minApprovalPct;
 
-  /// @notice Minimum percentage of `totalDisapprovalWeight / totalDisapprovalSupplyAtCreationTime` required of the
+  /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
   /// action for it to be canceled. In bps, 100_00 == 100%.
   uint256 public minDisapprovalPct;
 
@@ -82,7 +82,7 @@ contract VertexStrategy is Initializable {
   constructor() initializer {}
 
   /// @notice Initializes a new VertexStrategy clone.
-  /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
+  /// @dev Order is of QuantityByPermissions is critical. Quantity is determined by the first specific permission match.
   /// @param strategyConfig The strategy configuration.
   function initialize(Strategy memory strategyConfig) external initializer {
     vertex = VertexCore(msg.sender);
@@ -172,30 +172,34 @@ contract VertexStrategy is Initializable {
     return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
   }
 
-  /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
+  /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the approval weight.
-  /// @return The weight of the policyholder's approval.
-  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceApprovalRole[role] ? type(uint256).max : weight;
+  /// @param policyholder The role to check quantity for.
+  /// @param timestamp The block number at which to get the approval quantity.
+  /// @return The quantity of the policyholder's approval.
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
+    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint256).max : quantity;
   }
 
-  /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
+  /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the disapproval weight.
-  /// @return The weight of the policyholder's disapproval.
-  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
+  /// @param policyholder The role to check quantity for.
+  /// @param timestamp The block number at which to get the disapproval quantity.
+  /// @return The quantity of the policyholder's disapproval.
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
+    external
+    view
+    returns (uint256)
+  {
+    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint256).max : quantity;
   }
 
-  /// @notice Determine the minimum weight needed for an action to reach quorum.
+  /// @notice Determine the minimum quantity needed for an action to reach quorum.
   /// @param supply Total number of policyholders eligible for participation.
   /// @param minPct Minimum percentage needed to reach quorum.
-  /// @return The total weight needed to reach quorum.
+  /// @return The total quantity needed to reach quorum.
   function getMinimumAmountNeeded(uint256 supply, uint256 minPct) public pure returns (uint256) {
     // Rounding Up
     return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);

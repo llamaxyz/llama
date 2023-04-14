@@ -10,7 +10,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 struct RoleHolderData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
   address user; // User to assign the role to.
-  uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval weight.
+  uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval quantity.
   uint64 expiration; // When the role expires.
 }
 
@@ -37,8 +37,8 @@ struct Action {
   uint256 value; // The value in wei to be sent when the action is executed.
   uint256 creationTime; // The timestamp when action was created (used for policy snapshots).
   uint256 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
-  uint256 totalApprovals; // The total weight of policyholder approvals.
-  uint256 totalDisapprovals; // The total weight of policyholder disapprovals.
+  uint256 totalApprovals; // The total quantity of policyholder approvals.
+  uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
   uint256 approvalPolicySupply; // The total amount of policyholders eligible to approve.
   uint256 disapprovalPolicySupply; // The total amount of policyholders eligible to disapprove.
 }
@@ -48,8 +48,8 @@ struct Strategy {
   uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.
   uint256 expirationPeriod; // The length of time an action can be executed before it expires.
-  uint256 minApprovalPct; // Minimum percentage of total approval weight / total approval supply.
-  uint256 minDisapprovalPct; // Minimum percentage of total disapproval weight / total disapproval supply.
+  uint256 minApprovalPct; // Minimum percentage of total approval quantity / total approval supply.
+  uint256 minDisapprovalPct; // Minimum percentage of total disapproval quantity / total disapproval supply.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
   uint8 approvalRole; // Anyone with this role can vote to approve an action.
   uint8 disapprovalRole; // Anyone with this role can vote to disapprove an action.

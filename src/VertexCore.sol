@@ -63,8 +63,8 @@ contract VertexCore is Initializable {
     uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
     VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, Strategy strategyData
   );
@@ -532,14 +532,14 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
+    uint256 wequantityight = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
 
-    action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
+    action.totalApprovals = action.totalApprovals == type(uint256).max || quantity == type(uint256).max
       ? type(uint256).max
-      : action.totalApprovals + weight;
+      : action.totalApprovals + quantity;
     approvals[actionId][policyholder] = true;
 
-    emit ApprovalCast(actionId, policyholder, weight, reason);
+    emit ApprovalCast(actionId, policyholder, quantity, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
@@ -553,14 +553,14 @@ contract VertexCore is Initializable {
 
     if (!action.strategy.isDisapprovalEnabled()) revert DisapproveDisabled();
 
-    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
+    uint256 quantity = action.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
 
-    action.totalDisapprovals = action.totalDisapprovals == type(uint256).max || weight == type(uint256).max
+    action.totalDisapprovals = action.totalDisapprovals == type(uint256).max || quantity == type(uint256).max
       ? type(uint256).max
-      : action.totalDisapprovals + weight;
+      : action.totalDisapprovals + quantity;
     disapprovals[actionId][policyholder] = true;
 
-    emit DisapprovalCast(actionId, policyholder, weight, reason);
+    emit DisapprovalCast(actionId, policyholder, quantity, reason);
   }
 
   function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies) internal {
