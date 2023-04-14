@@ -81,13 +81,13 @@ contract VertexFactory {
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
     vertexPolicyTokenUri = _vertexPolicyTokenUri;
 
-    _authorizeStrategyLogic(address(initialVertexStrategyLogic));
-    _authorizeAccountLogic(address(initialVertexAccountLogic));
+    _authorizeStrategyLogic(initialVertexStrategyLogic);
+    _authorizeAccountLogic(initialVertexAccountLogic);
 
     ROOT_VERTEX = _deploy(
       name,
-      address(initialVertexStrategyLogic),
-      address(initialVertexAccountLogic),
+      initialVertexStrategyLogic,
+      initialVertexAccountLogic,
       initialStrategies,
       initialAccounts,
       initialRoleDescriptions,
