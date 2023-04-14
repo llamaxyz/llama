@@ -18,8 +18,6 @@ contract VertexStrategy is Initializable {
   // ======================================
 
   error InvalidMinApprovalPct(uint256 minApprovalPct);
-  error InvalidPermissionId();
-  error NoPolicy();
   error RoleNotInitialized(uint8 role);
 
   // ========================
