@@ -13,8 +13,8 @@ contract VertexSVGParameterRegistry {
 
   error OnlyVertex();
 
-  modifier onlyRootVertex() {
-    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
+  modifier onlyVertex(VertexCore vertexCore) {
+    if ((msg.sender != address(ROOT_VERTEX)) && (msg.sender != address(vertexCore))) revert OnlyVertex();
     _;
   }
 
@@ -53,7 +53,7 @@ contract VertexSVGParameterRegistry {
   /// @notice Sets the color code for SVG of a Vertex Instance.
   /// @param vertexCore The Vertex Instance.
   /// @param _color The color code.
-  function setColor(VertexCore vertexCore, string memory _color) external onlyRootVertex {
+  function setColor(VertexCore vertexCore, string memory _color) external onlyVertex(vertexCore) {
     color[vertexCore] = _color;
     emit ColorSet(vertexCore, _color);
   }
@@ -61,7 +61,7 @@ contract VertexSVGParameterRegistry {
   /// @notice Sets the logo for SVG of a Vertex Instance.
   /// @param vertexCore The Vertex Instance.
   /// @param _logo The logo.
-  function setLogo(VertexCore vertexCore, string memory _logo) external onlyRootVertex {
+  function setLogo(VertexCore vertexCore, string memory _logo) external onlyVertex(vertexCore) {
     logo[vertexCore] = _logo;
     emit LogoSet(vertexCore, _logo);
   }
