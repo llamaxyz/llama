@@ -31,13 +31,13 @@ contract VertexCore is Initializable {
   error FailedActionExecution();
   error DuplicateApproval();
   error DuplicateDisapproval();
-  error DisapproveDisabled();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
   error ProhibitedByActionGuard(bytes32 reason);
+  error ProhibitedByStrategy();
 
   modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
@@ -240,12 +240,11 @@ contract VertexCore is Initializable {
   /// @param actionId Id of the action to queue.
   function queueAction(uint256 actionId) external {
     if (getActionState(actionId) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
+
     Action storage action = actions[actionId];
-    uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
-
-    action.minExecutionTime = executionTime;
-
-    emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
+    uint256 minExecutionTime = action.strategy.minExecutionTime(actionId);
+    action.minExecutionTime = minExecutionTime;
+    emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, minExecutionTime);
   }
 
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
@@ -444,14 +443,10 @@ contract VertexCore is Initializable {
   function getActionState(uint256 actionId) public view returns (ActionState) {
     if (actionId >= actionsCount) revert InvalidActionId();
     Action storage action = actions[actionId];
-    uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
 
     if (action.canceled) return ActionState.Canceled;
 
-    if (
-      block.timestamp < approvalEndTime
-        && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))
-    ) return ActionState.Active;
+    if (action.strategy.isActive(actionId)) return ActionState.Active;
 
     if (!action.strategy.isActionPassed(actionId)) return ActionState.Failed;
 
@@ -532,6 +527,8 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
+    if (!action.strategy.isApprovalEnabled(actionId)) revert ProhibitedByStrategy();
+
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
 
     action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
@@ -551,7 +548,7 @@ contract VertexCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    if (!action.strategy.isDisapprovalEnabled()) revert DisapproveDisabled();
+    if (!action.strategy.isDisapprovalEnabled(actionId)) revert ProhibitedByStrategy();
 
     uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
 

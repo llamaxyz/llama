@@ -17,14 +17,20 @@ interface IVertexStrategy {
   /// @notice Returns the disapprover role.
   function disapprovalRole() external view returns (uint8);
 
+  /// @notice Returns true if approvals are allowed with this strategy, false otherwise.
+  function isApprovalEnabled(uint256 actionId) external view returns (bool);
+
+  /// @notice Returns true if disapprovals are allowed with this strategy, false otherwise.
+  function isDisapprovalEnabled(uint256 actionId) external view returns (bool);
+
+  /// @notice Returns the earliest timestamp, in seconds, at which an action can be executed.
+  function minExecutionTime(uint256 actionId) external view returns (uint256);
+
+  /// @notice Returns true if an action is currently active, false otherwise.
+  function isActive(uint256 actionId) external view returns (bool);
+
   /// @notice Minimum time, in seconds, between queueing and execution of action.
   function queuingPeriod() external view returns (uint256);
-
-  /// @notice Length of approval period in seconds.
-  function approvalPeriod() external view returns (uint256);
-
-  /// @notice If false, action be queued before approvalEndTime.
-  function isFixedLengthApprovalPeriod() external view returns (bool);
 
   /// @notice Get whether an action has passed the approval process.
   /// @param actionId id of the action.
@@ -41,9 +47,6 @@ interface IVertexStrategy {
   /// @param caller User initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool);
-
-  /// @notice Returns `true` if the disapprovals are allowed with this strategy, `false` otherwise.
-  function isDisapprovalEnabled() external view returns (bool);
 
   /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.

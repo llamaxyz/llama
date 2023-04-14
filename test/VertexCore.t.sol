@@ -444,12 +444,12 @@ contract CreateAction is VertexCoreTest {
     );
 
     Action memory action = mpCore.getAction(_actionId);
-    uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
+    uint256 approvalPeriodEnd = toVertexStrategy(action.strategy).approvalEndTime(_actionId);
 
     assertEq(_actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
-    assertEq(ApprovalPeriodEnd, block.timestamp + 2 days);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
     assertEq(action.approvalPolicySupply, 3);
     assertEq(action.disapprovalPolicySupply, 3);
   }
@@ -594,12 +594,12 @@ contract CreateActionBySig is VertexCoreTest {
     uint256 _actionId = createActionBySig(v, r, s);
 
     Action memory action = mpCore.getAction(_actionId);
-    uint256 ApprovalPeriodEnd = block.timestamp + action.strategy.approvalPeriod();
+    uint256 approvalPeriodEnd = toVertexStrategy(action.strategy).approvalEndTime(_actionId);
 
     assertEq(_actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
-    assertEq(ApprovalPeriodEnd, block.timestamp + 2 days);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
     assertEq(action.approvalPolicySupply, 3);
     assertEq(action.disapprovalPolicySupply, 3);
   }
@@ -1706,8 +1706,8 @@ contract GetActionState is VertexCoreTest {
     _approveAction(approverAdam, actionId);
     _approveAction(approverAlicia, actionId);
     Action memory action = mpCore.getAction(actionId);
-    uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
-    vm.assume(_timeSinceCreation < mpStrategy1.approvalPeriod() * 2);
+    uint256 approvalEndTime = toVertexStrategy(action.strategy).approvalEndTime(actionId);
+    vm.assume(_timeSinceCreation < toVertexStrategy(mpStrategy1).approvalPeriod() * 2);
     vm.warp(block.timestamp + _timeSinceCreation);
 
     uint256 currentState = uint256(mpCore.getActionState(actionId));

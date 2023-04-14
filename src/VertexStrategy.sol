@@ -37,24 +37,20 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  // -------- Interface Requirements --------
-
-  /// @inheritdoc IVertexStrategy
-  uint256 public queuingPeriod;
-
-  /// @inheritdoc IVertexStrategy
-  uint256 public approvalPeriod;
-
-  /// @inheritdoc IVertexStrategy
+  /// @notice If false, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
-
-  // -------- Specific to this Strategy --------
 
   /// @notice The strategy's Vertex system.
   VertexCore public vertex;
 
   /// @notice Policy NFT for this Vertex system.
   VertexPolicy public policy;
+
+  /// @notice Length of approval period in seconds.
+  uint256 public approvalPeriod;
+
+  /// @notice Minimum time, in seconds, between queueing and execution of action.
+  uint256 public queuingPeriod;
 
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint256 public expirationPeriod;
@@ -129,7 +125,17 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // ==========================================
 
   /// @inheritdoc IVertexStrategy
-  function isActionPassed(uint256 actionId) external view returns (bool) {
+  function minExecutionTime(uint256 /* actionId */ ) external view returns (uint256) {
+    return block.timestamp + queuingPeriod;
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function isActive(uint256 actionId) external view returns (bool) {
+    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function isActionPassed(uint256 actionId) public view returns (bool) {
     Action memory action = vertex.getAction(actionId);
     return action.totalApprovals >= _getMinimumAmountNeeded(action.approvalPolicySupply, minApprovalPct);
   }
@@ -164,7 +170,12 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   }
 
   /// @inheritdoc IVertexStrategy
-  function isDisapprovalEnabled() external view returns (bool) {
+  function isApprovalEnabled(uint256 /* actionId */ ) external pure returns (bool) {
+    return true;
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function isDisapprovalEnabled(uint256 /* actionId */ ) external view returns (bool) {
     return minDisapprovalPct <= ONE_HUNDRED_IN_BPS;
   }
 
@@ -178,6 +189,16 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
     return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
+  }
+
+  // ========================================
+  // ======== Other Public Functions ========
+  // ========================================
+
+  /// @notice Returns the timestamp at which the approval period ends.
+  function approvalEndTime(uint256 actionId) public view returns (uint256) {
+    Action memory action = vertex.getAction(actionId);
+    return action.creationTime + approvalPeriod;
   }
 
   // ================================
