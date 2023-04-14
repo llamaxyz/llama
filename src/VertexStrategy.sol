@@ -34,17 +34,22 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
-  /// @notice Equivalent to 100%, but in basis points.
-  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice If false, action be queued before approvalEndTime.
-  bool public isFixedLengthApprovalPeriod;
+  // -------- Interface Requirements --------
 
   /// @inheritdoc IVertexStrategy
   VertexCore public vertex;
 
   /// @inheritdoc IVertexStrategy
   VertexPolicy public policy;
+
+  // -------- Strategy Configuration --------
+
+  /// @notice Equivalent to 100%, but in basis points.
+  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
+
+  /// @notice If false, action be queued before approvalEndTime.
+  bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
   uint256 public approvalPeriod;
@@ -81,11 +86,17 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
   mapping(uint256 => uint256) public actionDisapprovalSupply;
 
-  // ======================================================
-  // ======== Contract Creation and Initialization ========
-  // ======================================================
+  // =============================
+  // ======== Constructor ========
+  // =============================
 
   constructor() initializer {}
+
+  // ==========================================
+  // ======== Interface Implementation ========
+  // ==========================================
+
+  // -------- At Strategy Creation --------
 
   /// @inheritdoc IVertexStrategy
   function initialize(bytes memory config) external initializer {
@@ -126,9 +137,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     emit NewStrategyCreated(vertex, policy);
   }
 
-  // ==========================================
-  // ======== Interface Implementation ========
-  // ==========================================
+  // -------- At Action Creation --------
 
   /// @inheritdoc IVertexStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
@@ -153,27 +162,45 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     return (true, "");
   }
 
+  // -------- When Casting Approval --------
+
+  /// @inheritdoc IVertexStrategy
+  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+    Action memory action = vertex.getAction(actionId);
+    if (action.creator == policyholder) return (false, "Action creator cannot approve");
+    return (true, "");
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
+    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
+    return weight > 0 && forceApprovalRole[role] ? type(uint256).max : weight;
+  }
+
+  // -------- When Casting Disapproval --------
+
+  /// @inheritdoc IVertexStrategy
+  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+    Action memory action = vertex.getAction(actionId);
+    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
+    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
+    return (true, "");
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
+    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
+    return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
+  }
+
+  // -------- When Queueing --------
+
   /// @inheritdoc IVertexStrategy
   function minExecutionTime(uint256) external view returns (uint256) {
     return block.timestamp + queuingPeriod;
   }
 
-  /// @inheritdoc IVertexStrategy
-  function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function isActionPassed(uint256 actionId) public view returns (bool) {
-    Action memory action = vertex.getAction(actionId);
-    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function isActionExpired(uint256 actionId) external view returns (bool) {
-    Action memory action = vertex.getAction(actionId);
-    return action.minExecutionTime + expirationPeriod < block.timestamp;
-  }
+  // -------- When Canceling --------
 
   /// @inheritdoc IVertexStrategy
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool) {
@@ -198,31 +225,23 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
   }
 
+  // -------- When Determining Action State --------
+
   /// @inheritdoc IVertexStrategy
-  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+  function isActive(uint256 actionId) external view returns (bool) {
+    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+  }
+
+  /// @inheritdoc IVertexStrategy
+  function isActionPassed(uint256 actionId) public view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    if (action.creator == policyholder) return (false, "Action creator cannot approve");
-    return (true, "");
+    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
   }
 
   /// @inheritdoc IVertexStrategy
-  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
+  function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
-    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
-    return (true, "");
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceApprovalRole[role] ? type(uint256).max : weight;
-  }
-
-  /// @inheritdoc IVertexStrategy
-  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 weight = policy.getPastWeight(policyholder, role, timestamp);
-    return weight > 0 && forceDisapprovalRole[role] ? type(uint256).max : weight;
+    return action.minExecutionTime + expirationPeriod < block.timestamp;
   }
 
   // ========================================
