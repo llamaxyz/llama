@@ -29,8 +29,7 @@ contract VertexCore is Initializable {
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution();
-  error DuplicateApproval();
-  error DuplicateDisapproval();
+  error DuplicateVote();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
@@ -519,45 +518,48 @@ contract VertexCore is Initializable {
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Active) revert InvalidActionState(ActionState.Active);
-    bool hasApproved = approvals[actionId][policyholder];
-    if (hasApproved) revert DuplicateApproval();
-
-    Action storage action = actions[actionId];
-    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
-    if (!hasRole) revert InvalidPolicyholder();
-
-    if (!action.strategy.isApprovalEnabled(actionId)) revert ProhibitedByStrategy();
+    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Active);
 
     uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
-
-    action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
-      ? type(uint256).max
-      : action.totalApprovals + weight;
+    action.totalApprovals = _newCastCount(action.totalApprovals, weight);
     approvals[actionId][policyholder] = true;
-
     emit ApprovalCast(actionId, policyholder, weight, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
-    bool hasDisapproved = disapprovals[actionId][policyholder];
-    if (hasDisapproved) revert DuplicateDisapproval();
+    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Queued);
 
-    Action storage action = actions[actionId];
+    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
+    action.totalDisapprovals = _newCastCount(action.totalDisapprovals, weight);
+    disapprovals[actionId][policyholder] = true;
+    emit DisapprovalCast(actionId, policyholder, weight, reason);
+  }
+
+  /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
+  function _preCastAssertions(uint256 actionId, address policyholder, uint8 role, ActionState expectedState)
+    internal
+    view
+    returns (Action storage action)
+  {
+    if (getActionState(actionId) != expectedState) revert InvalidActionState(expectedState);
+
+    bool isApproval = expectedState == ActionState.Active;
+    bool alreadyVoted = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
+    if (alreadyVoted) revert DuplicateVote();
+
+    action = actions[actionId];
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    if (!action.strategy.isDisapprovalEnabled(actionId)) revert ProhibitedByStrategy();
+    bool isEnabled =
+      isApproval ? action.strategy.isApprovalEnabled(actionId) : action.strategy.isDisapprovalEnabled(actionId);
+    if (!isEnabled) revert ProhibitedByStrategy();
+  }
 
-    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
-
-    action.totalDisapprovals = action.totalDisapprovals == type(uint256).max || weight == type(uint256).max
-      ? type(uint256).max
-      : action.totalDisapprovals + weight;
-    disapprovals[actionId][policyholder] = true;
-
-    emit DisapprovalCast(actionId, policyholder, weight, reason);
+  /// @dev Returns the new total count of approvals or disapprovals.
+  function _newCastCount(uint256 currentCount, uint256 weight) internal pure returns (uint256) {
+    if (currentCount == type(uint256).max || weight == type(uint256).max) return type(uint256).max;
+    return currentCount + weight;
   }
 
   function _deployStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {

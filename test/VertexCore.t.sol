@@ -974,7 +974,7 @@ contract CastApproval is VertexCoreTest {
     actionId = _createAction();
     _approveAction(approverAdam, actionId);
 
-    vm.expectRevert(VertexCore.DuplicateApproval.selector);
+    vm.expectRevert(VertexCore.DuplicateVote.selector);
     vm.prank(approverAdam);
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
@@ -1117,7 +1117,7 @@ contract CastDisapproval is VertexCoreTest {
 
     _disapproveAction(disapproverDrake, actionId);
 
-    vm.expectRevert(VertexCore.DuplicateDisapproval.selector);
+    vm.expectRevert(VertexCore.DuplicateVote.selector);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
