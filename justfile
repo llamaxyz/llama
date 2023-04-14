@@ -8,11 +8,15 @@ report:
 yul contractName:
   forge inspect {{contractName}} ir-optimized > yul.sol
 
-dry-run:
-  forge script script/Deploy.s.sol:Deploy --rpc-url $MAINNET_RPC_URL --private-key $PRIVATE_KEY --verify -vvvv
+run-script script flags='':
+  # To speed up compilation we temporarily rename the test directory.
+  mv test _test
+  # We hyphenate so that we still cleanup the directory names even if the deploy fails.
+  - FOUNDRY_PROFILE=ci forge script script/{{script}}.s.sol --rpc-url $SCRIPT_RPC_URL --private-key $SCRIPT_PRIVATE_KEY -vvvv {{flags}}
+  mv _test test
 
-deploy:
-  forge script script/Deploy.s.sol:Deploy --rpc-url $MAINNET_RPC_URL --broadcast --private-key $PRIVATE_KEY --verify -vvvv
+dry-run: (run-script 'DeployVertexProtocol')
 
-verify:
-  forge script script/Deploy.s.sol:Deploy --rpc-url $MAINNET_RPC_URL --verify -vvvv
+deploy: (run-script 'DeployVertexProtocol' '--broadcast --verify')
+
+verify: (run-script 'DeployVertexProtocol' '--verify')
