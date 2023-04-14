@@ -35,6 +35,7 @@ contract VertexFactory {
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
   event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
+  event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -83,8 +84,8 @@ contract VertexFactory {
   ) {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
-    vertexPolicyTokenURI = _vertexPolicyTokenURI;
 
+    _setPolicyTokenURI(_vertexPolicyTokenURI);
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);
 
@@ -153,7 +154,7 @@ contract VertexFactory {
   /// @notice Sets the Vertex Policy Token URI contract.
   /// @param _vertexPolicyTokenURI The Vertex Policy Token URI contract.
   function setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) external onlyRootVertex {
-    vertexPolicyTokenURI = _vertexPolicyTokenURI;
+    _setPolicyTokenURI(_vertexPolicyTokenURI);
   }
 
   /// @notice Returns the token URI for a given Vertex Policy Holder.
@@ -204,5 +205,10 @@ contract VertexFactory {
   function _authorizeAccountLogic(VertexAccount accountLogic) internal {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
+  }
+
+  function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
+    vertexPolicyTokenURI = _vertexPolicyTokenURI;
+    emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);
   }
 }
