@@ -3,10 +3,10 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, PermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Lens
@@ -64,18 +64,18 @@ contract VertexLens {
   /// @param vertexStrategyLogic The Vertex Strategy logic contract.
   /// @param strategy The strategy to be set.
   /// @param vertexCore The vertex core to be set.
-  /// @return the computed address of the VertexStrategy contract.
+  /// @return the computed address of the strategy contract.
   function computeVertexStrategyAddress(address vertexStrategyLogic, bytes memory strategy, address vertexCore)
     external
     pure
-    returns (VertexStrategy)
+    returns (IVertexStrategy)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       vertexStrategyLogic,
       keccak256(strategy), // salt
       vertexCore // deployer
     );
-    return VertexStrategy(_computedAddress);
+    return IVertexStrategy(_computedAddress);
   }
 
   /// @notice Computes the address of a vertex account with a name (account) value.

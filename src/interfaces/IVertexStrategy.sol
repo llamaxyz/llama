@@ -5,11 +5,17 @@ pragma solidity 0.8.19;
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the interface for Vertex strategies which determine the rules of an action's process.
 interface IVertexStrategy {
-  /// @notice Initializes a new VertexStrategy clone.
+  /// @notice Initializes a new clone of the strategy.
   /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
   /// @param config The strategy configuration, encoded as bytes to support differing constructor arguments in
   /// different strategies.
   function initialize(bytes memory config) external;
+
+  /// @notice Returns the approver role.
+  function approvalRole() external view returns (uint8);
+
+  /// @notice Returns the disapprover role.
+  function disapprovalRole() external view returns (uint8);
 
   /// @notice Minimum time, in seconds, between queueing and execution of action.
   function queuingPeriod() external view returns (uint256);

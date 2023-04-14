@@ -6,6 +6,7 @@ import {stdJson} from "forge-std/Script.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
@@ -44,16 +45,16 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   // Root Vertex instance.
   VertexCore rootCore;
   VertexPolicy rootPolicy;
-  VertexStrategy rootStrategy1;
-  VertexStrategy rootStrategy2;
+  IVertexStrategy rootStrategy1;
+  IVertexStrategy rootStrategy2;
   VertexAccount rootAccount1;
   VertexAccount rootAccount2;
 
   // Mock protocol's (mp) vertex instance.
   VertexCore mpCore;
   VertexPolicy mpPolicy;
-  VertexStrategy mpStrategy1;
-  VertexStrategy mpStrategy2;
+  IVertexStrategy mpStrategy1;
+  IVertexStrategy mpStrategy2;
   VertexAccount mpAccount1;
   VertexAccount mpAccount2;
 
@@ -262,5 +263,28 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
   function defaultStrategies() internal view returns (bytes[] memory strategies) {
     strategies = encodeStrategies(readStrategies(scriptInput));
+  }
+
+  function toIVertexStrategy(VertexStrategy[] memory strategies)
+    internal
+    pure
+    returns (IVertexStrategy[] memory converted)
+  {
+    assembly {
+      converted := strategies
+    }
+  }
+
+  function toIVertexStrategy(Strategy memory strategy) internal pure returns (IVertexStrategy[] memory converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  // TODO Take a look at all usages of this and see what other methods we should add to the IVertexStrategy interface.
+  function toVertexStrategy(IVertexStrategy strategy) internal pure returns (VertexStrategy converted) {
+    assembly {
+      converted := strategy
+    }
   }
 }

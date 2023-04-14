@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {console2} from "forge-std/Test.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action} from "src/lib/Structs.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -18,7 +19,7 @@ contract VertexCoreHandler is BaseHandler {
 
   // Parameters we'll need to create valid actions.
   address mockProtocol;
-  VertexStrategy[2] strategies;
+  IVertexStrategy[2] strategies;
   bytes32[3] permissionIds;
 
   // Duplicated parameters from `VertexTestSetup` that we use here.
@@ -35,7 +36,7 @@ contract VertexCoreHandler is BaseHandler {
   constructor(
     VertexFactory _vertexFactory,
     VertexCore _vertexCore,
-    VertexStrategy[2] memory _strategies,
+    IVertexStrategy[2] memory _strategies,
     bytes32[3] memory _permissionIds,
     address _mockProtocol
   ) BaseHandler(_vertexFactory, _vertexCore) {
@@ -64,7 +65,7 @@ contract VertexCoreHandler is BaseHandler {
   function permissionIdIndexToData(uint256 index)
     internal
     view
-    returns (address target, bytes4 selector, VertexStrategy strategy)
+    returns (address target, bytes4 selector, IVertexStrategy strategy)
   {
     index = _bound(index, 0, permissionIds.length - 1);
 
@@ -139,7 +140,7 @@ contract VertexCoreHandler is BaseHandler {
   {
     // We don't want action creation to revert, so we pull from arrays of known good values instead
     // of lettings the fuzzer have full control over input values.
-    (address target, bytes4 selector, VertexStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
+    (address target, bytes4 selector, IVertexStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
 
     // We only have one function that can receive ETH, if we're calling that function, we randomize
     // how much ETH to send, otherwise we send 0.
@@ -313,7 +314,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
     require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId");
 
     // Now we deploy our handler and inform it of these actions.
-    VertexStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
+    IVertexStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
     bytes32[3] memory permissionIds = [pausePermissionId, failPermissionId, receiveEthPermissionId];
     handler = new VertexCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
 

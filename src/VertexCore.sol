@@ -5,8 +5,8 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
@@ -51,7 +51,7 @@ contract VertexCore is Initializable {
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    VertexStrategy indexed strategy,
+    IVertexStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -60,15 +60,15 @@ contract VertexCore is Initializable {
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
-    uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
+  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
   event StrategyAuthorized(
-    VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, bytes initializationData
+    IVertexStrategy indexed strategy, IVertexStrategy indexed strategyLogic, bytes initializationData
   );
-  event StrategyUnauthorized(VertexStrategy indexed strategy);
+  event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
 
   // =============================================================
@@ -120,7 +120,7 @@ contract VertexCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(VertexStrategy => bool) public authorizedStrategies;
+  mapping(IVertexStrategy => bool) public authorizedStrategies;
 
   /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
@@ -146,7 +146,7 @@ contract VertexCore is Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
-    VertexStrategy _vertexStrategyLogic,
+    IVertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
     bytes[] calldata initialStrategies,
     string[] calldata initialAccounts
@@ -166,7 +166,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
   /// {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -174,7 +174,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -186,7 +186,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
   /// the provided {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -198,7 +198,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createActionBySig(
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -400,7 +400,7 @@ contract VertexCore is Initializable {
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(VertexStrategy vertexStrategyLogic, bytes[] calldata strategies)
+  function createAndAuthorizeStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies)
     external
     onlyVertex
   {
@@ -409,7 +409,7 @@ contract VertexCore is Initializable {
 
   /// @notice Remove strategies from the mapping of authorized strategies.
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external onlyVertex {
+  function unauthorizeStrategies(IVertexStrategy[] calldata strategies) external onlyVertex {
     uint256 strategiesLength = strategies.length;
     for (uint256 i = 0; i < strategiesLength; i = _uncheckedIncrement(i)) {
       delete authorizedStrategies[strategies[i]];
@@ -471,7 +471,7 @@ contract VertexCore is Initializable {
   function _createAction(
     address policyholder,
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -563,7 +563,7 @@ contract VertexCore is Initializable {
     emit DisapprovalCast(actionId, policyholder, weight, reason);
   }
 
-  function _deployStrategies(VertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {
+  function _deployStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
@@ -574,7 +574,7 @@ contract VertexCore is Initializable {
     for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
 
-      VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
+      IVertexStrategy strategy = IVertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;
       emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
@@ -599,7 +599,7 @@ contract VertexCore is Initializable {
 
   // TODO We don't loop through the force (dis)approval roles because currently the strategy does
   // not store them all in an array to support this. Should we do this?
-  function _assertNonZeroRoleSupplies(VertexStrategy strategy)
+  function _assertNonZeroRoleSupplies(IVertexStrategy strategy)
     internal
     view
     returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
