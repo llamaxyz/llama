@@ -39,7 +39,7 @@ struct Action {
   uint256 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
   uint256 totalApprovals; // The total quantity of policyholder approvals.
   uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
-}quantity
+}
 
 struct Strategy {
   uint256 approvalPeriod; // The length of time of the approval period.

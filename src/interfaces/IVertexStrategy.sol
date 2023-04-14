@@ -21,7 +21,7 @@ interface IVertexStrategy {
   // -------- At Strategy Creation --------
 
   /// @notice Initializes a new clone of the strategy.
-  /// @dev Order is of WeightByPermissions is critical. Weight is determined by the first specific permission match.
+  /// @dev Order is of QuantityByPermissions is critical. Quantity is determined by the first specific permission match.
   /// @param config The strategy configuration, encoded as bytes to support differing constructor arguments in
   /// different strategies.
   function initialize(bytes memory config) external;
@@ -43,12 +43,12 @@ interface IVertexStrategy {
   /// string that consumes too much gas when copied to memory.
   function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
 
-  /// @notice Get the weight of an approval of a policyholder at a specific timestamp.
+  /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the approval weight.
-  /// @return The weight of the policyholder's approval.
-  function getApprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256);
+  /// @param policyholder The role to check quantity for.
+  /// @param timestamp The block number at which to get the approval quantity.
+  /// @return The quantity of the policyholder's approval.
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256);
 
   // -------- When Casting Disapproval --------
 
@@ -58,12 +58,15 @@ interface IVertexStrategy {
   /// string that consumes too much gas when copied to memory.
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
 
-  /// @notice Get the weight of a disapproval of a policyholder at a specific timestamp.
+  /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
-  /// @param policyholder The role to check weight for.
-  /// @param timestamp The block number at which to get the disapproval weight.
-  /// @return The weight of the policyholder's disapproval.
-  function getDisapprovalWeightAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256);
+  /// @param policyholder The role to check quantity for.
+  /// @param timestamp The block number at which to get the disapproval quantity.
+  /// @return The quantity of the policyholder's disapproval.
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
+    external
+    view
+    returns (uint256);
 
   // -------- When Queueing --------
 

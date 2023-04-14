@@ -188,7 +188,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
   }
 
   /// @inheritdoc IVertexStrategy
-  function getDisapprovalquantityAt(address policyholder, uint8 role, uint256 timestamp)
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
     returns (uint256)
