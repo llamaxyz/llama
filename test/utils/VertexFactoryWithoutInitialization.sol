@@ -9,7 +9,7 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {SVG, Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
@@ -21,7 +21,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexStrategy initialVertexStrategyLogic,
     VertexAccount initialVertexAccountLogic,
     VertexPolicy _vertexPolicyLogic,
-    SVG memory initialSVG,
+    VertexPolicyTokenURI _vertexPolicyTokenUri,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -34,7 +34,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
       initialVertexStrategyLogic,
       initialVertexAccountLogic,
       _vertexPolicyLogic,
-      initialSVG,
+      _vertexPolicyTokenUri,
       name,
       initialStrategies,
       initialAccounts,

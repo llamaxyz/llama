@@ -11,7 +11,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {SVG, Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract DeployVertexProtocol is Script {
@@ -81,10 +81,6 @@ contract DeployVertexProtocol is Script {
     policyTokenUri = new VertexPolicyTokenURI();
     console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
 
-    vm.broadcast();
-    svgParameterRegistry = new VertexSVGParameterRegistry();
-    console2.log("  VertexSVGParameterRegistry:", address(svgParameterRegistry));
-
     string memory jsonInput = readScriptInput();
 
     vm.broadcast();
@@ -93,7 +89,7 @@ contract DeployVertexProtocol is Script {
       strategyLogic,
       accountLogic,
       policyLogic,
-      SVG(policyTokenUri, svgParameterRegistry),
+      policyTokenUri,
       jsonInput.readString(".rootVertexName"),
       readStrategies(jsonInput),
       jsonInput.readStringArray(".initialAccountNames"),
@@ -102,6 +98,9 @@ contract DeployVertexProtocol is Script {
       readRolePermissions(jsonInput)
     );
     console2.log("  VertexFactory:", address(factory));
+
+    svgParameterRegistry = factory.VERTEX_SVG_PARAMETER_REGISTRY();
+    console2.log("  VertexSVGParameterRegistry:", address(svgParameterRegistry));
 
     vm.broadcast();
     lens = new VertexLens();
