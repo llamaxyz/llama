@@ -1230,7 +1230,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     Strategy[] memory newStrategies = new Strategy[](0);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1503,7 +1503,7 @@ contract CreateAndAuthorizeAccounts is VertexCoreTest {
     string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeAccounts(address(accountLogic), newAccounts);
+    mpCore.createAndAuthorizeAccounts(accountLogic, newAccounts);
   }
 
   function test_CreateNewAccounts() public {
