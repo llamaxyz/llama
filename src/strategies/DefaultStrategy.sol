@@ -149,11 +149,14 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
     Action memory action = vertex.getAction(actionId);
     unchecked {
-      // Safety: If either supply was zero, we would have returned early above. Therefore we know
-      // both of the supply values are at least 1, and therefore we can safely subtract 1 without
-      // worrying about overflow.
-      if (policy.hasRole(action.creator, approvalRole)) approvalPolicySupply -= 1;
-      if (policy.hasRole(action.creator, disapprovalRole)) disapprovalPolicySupply -= 1;
+      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
+      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
+      // the action creator without overflow, since a user can never have a quantity greater than
+      // the total supply.
+      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(action.creator, approvalRole);
+      approvalPolicySupply -= actionCreatorApprovalRoleQty;
+      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(action.creator, disapprovalRole);
+      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
     }
 
     // Save off the supplies to use for checking quorum.
