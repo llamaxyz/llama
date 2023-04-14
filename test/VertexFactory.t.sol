@@ -61,7 +61,7 @@ contract Constructor is VertexFactoryTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyMetadata,
+      policyTokenUri,
       "Root Vertex",
       strategies,
       accounts,

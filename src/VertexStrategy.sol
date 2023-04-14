@@ -104,14 +104,14 @@ contract VertexStrategy is Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i++) {
+    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i++) {
+    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
@@ -208,5 +208,11 @@ contract VertexStrategy is Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
+  }
+
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
+    }
   }
 }

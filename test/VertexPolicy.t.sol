@@ -177,8 +177,6 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
-  uint8 constant NUM_INIT_ROLES = 7; // VertexTestSetup initializes 7 roles.
-
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
@@ -818,14 +816,14 @@ contract Aggregate is VertexPolicyTest {
   }
 
   function test_RevertIf_CalldataIsIncorrect() public {
+    uint8 uninitializedRole = NUM_INIT_ROLES + 1;
     bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder,
-      ( /* uninitialized role */ 8, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
+      VertexPolicy.setRoleHolder, (uninitializedRole, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
     );
     bytes[] memory calls = new bytes[](1);
     calls[0] = call1;
 
-    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, 8);
+    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, uninitializedRole);
 
     vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
     vm.prank(address(mpCore));
@@ -921,7 +919,7 @@ contract TokenURI is VertexPolicyTest {
 }
 
 contract IsRoleExpired is VertexPolicyTest {
-  function test_ReturnsTrueForExpiredRole(uint64 expiration) public returns (bool) {
+  function test_ReturnsTrueForExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.prank(address(mpCore));
@@ -932,7 +930,7 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
   }
 
-  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public returns (bool) {
+  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.prank(address(mpCore));
