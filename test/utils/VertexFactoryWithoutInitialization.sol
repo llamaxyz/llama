@@ -72,8 +72,8 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexCore vertex,
     VertexPolicy policy,
     string memory name,
-    address strategyLogic,
-    address accountLogic,
+    VertexStrategy strategyLogic,
+    VertexAccount accountLogic,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts
   ) external {

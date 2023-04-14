@@ -80,7 +80,7 @@ contract VertexStrategyTest is VertexTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), strategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, strategies);
 
     newStrategy = lens.computeVertexStrategyAddress(address(strategyLogic), strategy, address(mpCore));
   }
@@ -102,7 +102,7 @@ contract VertexStrategyTest is VertexTestSetup {
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, testStrategies);
   }
 
   function deployTestStrategyWithForceApproval() internal returns (VertexStrategy testStrategy) {
@@ -132,7 +132,7 @@ contract VertexStrategyTest is VertexTestSetup {
     Strategy[] memory testStrategies = new Strategy[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(address(strategyLogic), testStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, testStrategies);
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);

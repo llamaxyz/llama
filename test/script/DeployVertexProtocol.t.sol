@@ -27,8 +27,8 @@ contract Run is DeployVertexTest {
     assertNotEq(address(factory), address(0));
     assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
-    assertEq(factory.authorizedStrategyLogics(address(strategyLogic)), true);
-    assertEq(factory.authorizedAccountLogics(address(accountLogic)), true);
+    assertEq(factory.authorizedStrategyLogics(strategyLogic), true);
+    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootVertex() public {
