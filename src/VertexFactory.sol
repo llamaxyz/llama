@@ -54,7 +54,7 @@ contract VertexFactory {
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
 
-  /// @notice The Vertex Policy Metadata contract.
+  /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenUri;
 
   /// @notice The current number of vertex systems created.
