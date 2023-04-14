@@ -15,7 +15,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {SVG, Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -194,7 +194,7 @@ contract Initialize is VertexCoreTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenUri,
+      SVG(policyTokenUri, colorRegistry),
       "Root Vertex",
       strategies,
       accounts,

@@ -8,8 +8,9 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexColorRegistry} from "src/VertexColorRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {SVG, Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
@@ -57,6 +58,9 @@ contract VertexFactory {
   /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenUri;
 
+  /// @notice The Vertex Color Registry contract for Onchain SVGs.
+  VertexColorRegistry public vertexColorRegistry;
+
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
 
@@ -69,7 +73,7 @@ contract VertexFactory {
     VertexStrategy initialVertexStrategyLogic,
     VertexAccount initialVertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
-    VertexPolicyTokenURI _vertexPolicyTokenUri,
+    SVG memory initialSVG,
     string memory name,
     Strategy[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -79,7 +83,8 @@ contract VertexFactory {
   ) {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
-    vertexPolicyTokenUri = _vertexPolicyTokenUri;
+    vertexPolicyTokenUri = initialSVG.policyTokenURI;
+    vertexColorRegistry = initialSVG.colorRegistry;
 
     _authorizeStrategyLogic(initialVertexStrategyLogic);
     _authorizeAccountLogic(initialVertexAccountLogic);

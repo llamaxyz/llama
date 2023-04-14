@@ -6,6 +6,13 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexColorRegistry} from "src/VertexColorRegistry.sol";
+
+struct SVG {
+  VertexPolicyTokenURI policyTokenURI;
+  VertexColorRegistry colorRegistry;
+}
 
 struct RoleHolderData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).

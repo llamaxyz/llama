@@ -13,7 +13,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
+import {SVG, Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
 import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -61,7 +61,7 @@ contract Constructor is VertexFactoryTest {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenUri,
+      SVG(policyTokenUri, colorRegistry),
       "Root Vertex",
       strategies,
       accounts,
