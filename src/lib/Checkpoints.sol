@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 
 /**
  * @dev This library defines the `History` struct, for checkpointing values as they change at different points in
- * time, and later looking up past values by block timestamp. See {Votes} as an example.
+ * time, and later looking up past values by block timestamp.
  *
  * To create a history of checkpoints define a variable type `Checkpoints.History` in your contract, and store a new
  * checkpoint for the current transaction timestamp using the {push} function.

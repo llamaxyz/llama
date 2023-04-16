@@ -14,7 +14,8 @@ import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the default vertex strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
-///   - Action creators are not allowed to vote on their own actions, regardless of the roles they hold.
+///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
+///     regardless of the roles they hold.
 contract DefaultStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========

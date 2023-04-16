@@ -29,7 +29,7 @@ contract VertexCore is Initializable {
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution();
-  error DuplicateVote();
+  error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
@@ -542,8 +542,8 @@ contract VertexCore is Initializable {
     if (getActionState(actionId) != expectedState) revert InvalidActionState(expectedState);
 
     bool isApproval = expectedState == ActionState.Active;
-    bool alreadyVoted = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
-    if (alreadyVoted) revert DuplicateVote();
+    bool alreadyCast = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
+    if (alreadyCast) revert DuplicateCast();
 
     action = actions[actionId];
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
