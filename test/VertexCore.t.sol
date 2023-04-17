@@ -1232,10 +1232,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexCore.OnlyVertex.selector);
-    Strategy[] memory newStrategies = new Strategy[](0);
+    DefaultStrategyConfig[] memory newStrategies = new DefaultStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(strategyLogic, newStrategies);
+    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1463,7 +1463,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexCore.OnlyVertex.selector);
-    VertexStrategy[] memory strategies = new VertexStrategy[](0);
+    IVertexStrategy[] memory strategies = new IVertexStrategy[](0);
 
     vm.prank(caller);
     mpCore.unauthorizeStrategies(strategies);
