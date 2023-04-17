@@ -3,14 +3,15 @@ pragma solidity 0.8.19;
 
 import {Script, stdJson, console2} from "forge-std/Script.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract DeployVertexProtocol is Script {
@@ -18,7 +19,7 @@ contract DeployVertexProtocol is Script {
 
   // Logic contracts.
   VertexCore coreLogic;
-  VertexStrategy strategyLogic;
+  DefaultStrategy strategyLogic;
   VertexAccount accountLogic;
   VertexPolicy policyLogic;
 
@@ -57,27 +58,27 @@ contract DeployVertexProtocol is Script {
   }
 
   function run() public {
-    console2.log("Deploying Vertex infrastructure to chain:", block.chainid);
+    print(string.concat("Deploying Vertex infrastructure to chain:", vm.toString(block.chainid)));
 
     vm.broadcast();
     coreLogic = new VertexCore();
-    console2.log("  VertexCoreLogic:", address(coreLogic));
+    print(string.concat("  VertexCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    strategyLogic = new VertexStrategy();
-    console2.log("  VertexStrategyLogic:", address(strategyLogic));
+    strategyLogic = new DefaultStrategy();
+    print(string.concat("  VertexStrategyLogic:", vm.toString(address(strategyLogic))));
 
     vm.broadcast();
     accountLogic = new VertexAccount();
-    console2.log("  VertexAccountLogic:", address(accountLogic));
+    print(string.concat("  VertexAccountLogic:", vm.toString(address(accountLogic))));
 
     vm.broadcast();
     policyLogic = new VertexPolicy();
-    console2.log("  VertexPolicyLogic:", address(policyLogic));
+    print(string.concat("  VertexPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
     policyTokenUri = new VertexPolicyTokenURI();
-    console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
+    print(string.concat("  VertexPolicyTokenURI:", vm.toString(address(policyTokenUri))));
 
     string memory jsonInput = readScriptInput();
 
@@ -89,17 +90,17 @@ contract DeployVertexProtocol is Script {
       policyLogic,
       policyTokenUri,
       jsonInput.readString(".rootVertexName"),
-      readStrategies(jsonInput),
+      encodeStrategyConfigs(readStrategies(jsonInput)),
       jsonInput.readStringArray(".initialAccountNames"),
       readRoleDescriptions(jsonInput),
       readRoleHolders(jsonInput),
       readRolePermissions(jsonInput)
     );
-    console2.log("  VertexFactory:", address(factory));
+    print(string.concat("  VertexFactory:", vm.toString(address(factory))));
 
     vm.broadcast();
     lens = new VertexLens();
-    console2.log("  VertexLens:", address(lens));
+    print(string.concat("  VertexLens:", vm.toString(address(lens))));
   }
 
   function readScriptInput() internal view returns (string memory) {
@@ -108,23 +109,27 @@ contract DeployVertexProtocol is Script {
     return vm.readFile(string.concat(inputDir, chainDir, "deployVertex.json"));
   }
 
-  function readStrategies(string memory jsonInput) internal pure returns (Strategy[] memory strategies) {
+  function readStrategies(string memory jsonInput)
+    internal
+    pure
+    returns (DefaultStrategyConfig[] memory strategyConfigs)
+  {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RawStrategyData[] memory rawStrategies = abi.decode(strategyData, (RawStrategyData[]));
+    RawStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawStrategyData[]));
 
-    strategies = new Strategy[](rawStrategies.length);
-    for (uint256 i = 0; i < rawStrategies.length; i++) {
-      RawStrategyData memory rawStrategy = rawStrategies[i];
-      strategies[i].approvalPeriod = rawStrategy.approvalPeriod;
-      strategies[i].queuingPeriod = rawStrategy.queuingPeriod;
-      strategies[i].expirationPeriod = rawStrategy.expirationPeriod;
-      strategies[i].minApprovalPct = rawStrategy.minApprovalPct;
-      strategies[i].minDisapprovalPct = rawStrategy.minDisapprovalPct;
-      strategies[i].isFixedLengthApprovalPeriod = rawStrategy.isFixedLengthApprovalPeriod;
-      strategies[i].approvalRole = rawStrategy.approvalRole;
-      strategies[i].disapprovalRole = rawStrategy.disapprovalRole;
-      strategies[i].forceApprovalRoles = rawStrategy.forceApprovalRoles;
-      strategies[i].forceDisapprovalRoles = rawStrategy.forceDisapprovalRoles;
+    strategyConfigs = new DefaultStrategyConfig[](rawStrategyConfigs.length);
+    for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
+      RawStrategyData memory rawStrategy = rawStrategyConfigs[i];
+      strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
+      strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
+      strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
+      strategyConfigs[i].minApprovalPct = rawStrategy.minApprovalPct;
+      strategyConfigs[i].minDisapprovalPct = rawStrategy.minDisapprovalPct;
+      strategyConfigs[i].isFixedLengthApprovalPeriod = rawStrategy.isFixedLengthApprovalPeriod;
+      strategyConfigs[i].approvalRole = rawStrategy.approvalRole;
+      strategyConfigs[i].disapprovalRole = rawStrategy.disapprovalRole;
+      strategyConfigs[i].forceApprovalRoles = rawStrategy.forceApprovalRoles;
+      strategyConfigs[i].forceDisapprovalRoles = rawStrategy.forceDisapprovalRoles;
     }
   }
 
@@ -165,5 +170,33 @@ contract DeployVertexProtocol is Script {
       rolePermissions[i].permissionId = rawRolePermission.permissionId;
       rolePermissions[i].hasPermission = true;
     }
+  }
+
+  function encodeStrategy(DefaultStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+    encoded = abi.encode(strategy);
+  }
+
+  function encodeStrategyConfigs(DefaultStrategyConfig[] memory strategies)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
+    encoded = new bytes[](strategies.length);
+    for (uint256 i; i < strategies.length; i++) {
+      encoded[i] = encodeStrategy(strategies[i]);
+    }
+  }
+
+  function toDefaultStrategy(IVertexStrategy strategy) internal pure returns (DefaultStrategy converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function print(string memory message) internal view {
+    // Avoid getting flooded with logs during tests. Note that fork tests will show logs with this
+    // approach, because there's currently no way to tell which environment we're in, e.g. script
+    // or test. This is being tracked in https://github.com/foundry-rs/foundry/issues/2900.
+    if (block.chainid != 31_337) console2.log(message);
   }
 }
