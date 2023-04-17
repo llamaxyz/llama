@@ -257,6 +257,8 @@ contract VertexCore is Initializable {
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
     if (msg.value < action.value) revert InsufficientMsgValue();
 
+    action.executed = true;
+
     // Check pre-execution action guard.
     IActionGuard guard = actionGuard[action.target][action.selector];
     if (guard != IActionGuard(address(0))) {
@@ -265,7 +267,6 @@ contract VertexCore is Initializable {
     }
 
     // Execute action.
-    action.executed = true;
     (bool success, bytes memory result) =
       action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
     if (!success) revert FailedActionExecution();
