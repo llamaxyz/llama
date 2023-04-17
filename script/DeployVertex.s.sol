@@ -14,7 +14,7 @@ import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol"
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-contract DeployVertexProtocol is Script {
+contract DeployVertex is Script {
   using stdJson for string;
 
   // Logic contracts.

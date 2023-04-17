@@ -11,10 +11,10 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
+import {DeployVertex} from "script/DeployVertex.s.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
-contract DeployVertexTest is Test, DeployVertexProtocol {
+contract DeployVertexTest is Test, DeployVertex {
   function setUp() public virtual {}
 }
 
@@ -22,7 +22,7 @@ contract Run is DeployVertexTest {
   function test_DeploysFactory() public {
     assertEq(address(factory), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(factory), address(0));
     assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
@@ -33,7 +33,7 @@ contract Run is DeployVertexTest {
 
   function test_DeploysRootVertex() public {
     vm.recordLogs();
-    DeployVertexProtocol.run();
+    DeployVertex.run();
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     assertEq(factory.vertexCount(), 1);
@@ -131,7 +131,7 @@ contract Run is DeployVertexTest {
   function test_DeploysCoreLogic() public {
     assertEq(address(coreLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(coreLogic), address(0));
   }
@@ -139,7 +139,7 @@ contract Run is DeployVertexTest {
   function test_DeploysStrategyLogic() public {
     assertEq(address(strategyLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(strategyLogic), address(0));
   }
@@ -147,7 +147,7 @@ contract Run is DeployVertexTest {
   function test_DeploysAccountLogic() public {
     assertEq(address(accountLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(accountLogic), address(0));
   }
@@ -155,7 +155,7 @@ contract Run is DeployVertexTest {
   function test_DeploysPolicyLogic() public {
     assertEq(address(policyLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(policyLogic), address(0));
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
@@ -164,7 +164,7 @@ contract Run is DeployVertexTest {
   function test_DeploysPolicyTokenURI() public {
     assertEq(address(policyTokenUri), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(policyTokenUri), address(0));
     assertNotEq(policyTokenUri.tokenURI("MyVertex", "MTX", 42, "teal", "https://logo.com"), "");
@@ -173,7 +173,7 @@ contract Run is DeployVertexTest {
   function test_DeploysLens() public {
     assertEq(address(lens), address(0));
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     assertNotEq(address(lens), address(0));
     PermissionData memory permissionData = PermissionData(

@@ -17,7 +17,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
+import {DeployVertex} from "script/DeployVertex.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // TODO probably remove?
@@ -36,7 +36,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is DeployVertexProtocol, Test {
+contract VertexTestSetup is DeployVertex, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -125,7 +125,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
-    DeployVertexProtocol.run();
+    DeployVertex.run();
 
     rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
