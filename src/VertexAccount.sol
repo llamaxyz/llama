@@ -230,6 +230,10 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
     return result;
   }
 
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
+
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;

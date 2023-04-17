@@ -10,6 +10,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -25,7 +26,8 @@ contract DeployVertexProtocol is Script {
 
   // Core Protocol.
   VertexFactory factory;
-  VertexPolicyTokenURI policyTokenUri;
+  VertexPolicyTokenURI policyTokenURI;
+  VertexPolicyTokenURIParamRegistry policyTokenURIParamRegistry;
   VertexLens lens;
 
   struct RawStrategyData {
@@ -77,8 +79,8 @@ contract DeployVertexProtocol is Script {
     print(string.concat("  VertexPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
-    policyTokenUri = new VertexPolicyTokenURI();
-    print(string.concat("  VertexPolicyTokenURI:", vm.toString(address(policyTokenUri))));
+    policyTokenURI = new VertexPolicyTokenURI();
+    print(string.concat("  VertexPolicyTokenURI:", vm.toString(address(policyTokenURI))));
 
     string memory jsonInput = readScriptInput();
 
@@ -88,7 +90,7 @@ contract DeployVertexProtocol is Script {
       strategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenUri,
+      policyTokenURI,
       jsonInput.readString(".rootVertexName"),
       encodeStrategyConfigs(readStrategies(jsonInput)),
       jsonInput.readStringArray(".initialAccountNames"),
@@ -97,6 +99,9 @@ contract DeployVertexProtocol is Script {
       readRolePermissions(jsonInput)
     );
     print(string.concat("  VertexFactory:", vm.toString(address(factory))));
+
+    policyTokenURIParamRegistry = factory.VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY();
+    print(string.concat("  VertexPolicyTokenURIParamRegistry:", vm.toString(address(policyTokenURIParamRegistry))));
 
     vm.broadcast();
     lens = new VertexLens();

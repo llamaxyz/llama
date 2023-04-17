@@ -111,13 +111,13 @@ contract VertexFactoryHandler is BaseHandler {
     VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
   }
 
-  function vertexFactory_setPolicyMetadata(VertexPolicyTokenURI newPolicyTokenURI)
+  function vertexFactory_setPolicyTokenURI(VertexPolicyTokenURI newPolicyTokenURI)
     public
-    recordCall("vertexFactory_setPolicyMetadata")
+    recordCall("vertexFactory_setPolicyTokenURI")
     useCurrentTimestamp
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.setPolicyMetadata(newPolicyTokenURI);
+    VERTEX_FACTORY.setPolicyTokenURI(newPolicyTokenURI);
   }
 }
 
