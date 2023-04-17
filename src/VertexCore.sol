@@ -5,12 +5,12 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
+import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -29,15 +29,14 @@ contract VertexCore is Initializable {
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution();
-  error DuplicateApproval();
-  error DuplicateDisapproval();
-  error DisapproveDisabled();
+  error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
   error ProhibitedByActionGuard(bytes32 reason);
+  error ProhibitedByStrategy(bytes32 reason);
 
   modifier onlyVertex() {
     if (msg.sender != address(this)) revert OnlyVertex();
@@ -51,7 +50,7 @@ contract VertexCore is Initializable {
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    VertexStrategy indexed strategy,
+    IVertexStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -60,15 +59,15 @@ contract VertexCore is Initializable {
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
-    uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
+  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
-    VertexStrategy indexed strategy, VertexStrategy indexed strategyLogic, Strategy strategyData
+    IVertexStrategy indexed strategy, IVertexStrategy indexed strategyLogic, bytes initializationData
   );
-  event StrategyUnauthorized(VertexStrategy indexed strategy);
+  event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
 
   // =============================================================
@@ -120,7 +119,7 @@ contract VertexCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(VertexStrategy => bool) public authorizedStrategies;
+  mapping(IVertexStrategy => bool) public authorizedStrategies;
 
   /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
@@ -146,9 +145,9 @@ contract VertexCore is Initializable {
   function initialize(
     string memory _name,
     VertexPolicy _policy,
-    VertexStrategy _vertexStrategyLogic,
+    IVertexStrategy _vertexStrategyLogic,
     VertexAccount _vertexAccountLogic,
-    Strategy[] calldata initialStrategies,
+    bytes[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
     factory = VertexFactory(msg.sender);
@@ -166,7 +165,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
   /// {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -174,7 +173,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -186,7 +185,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
   /// the provided {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The VertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -198,7 +197,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createActionBySig(
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -240,12 +239,11 @@ contract VertexCore is Initializable {
   /// @param actionId Id of the action to queue.
   function queueAction(uint256 actionId) external {
     if (getActionState(actionId) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
+
     Action storage action = actions[actionId];
-    uint256 executionTime = block.timestamp + action.strategy.queuingPeriod();
-
-    action.minExecutionTime = executionTime;
-
-    emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, executionTime);
+    uint256 minExecutionTime = action.strategy.minExecutionTime(actionId);
+    action.minExecutionTime = minExecutionTime;
+    emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, minExecutionTime);
   }
 
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
@@ -400,7 +398,7 @@ contract VertexCore is Initializable {
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies)
+  function createAndAuthorizeStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies)
     external
     onlyVertex
   {
@@ -409,7 +407,7 @@ contract VertexCore is Initializable {
 
   /// @notice Remove strategies from the mapping of authorized strategies.
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(VertexStrategy[] calldata strategies) external onlyVertex {
+  function unauthorizeStrategies(IVertexStrategy[] calldata strategies) external onlyVertex {
     uint256 strategiesLength = strategies.length;
     for (uint256 i = 0; i < strategiesLength; i = _uncheckedIncrement(i)) {
       delete authorizedStrategies[strategies[i]];
@@ -444,14 +442,10 @@ contract VertexCore is Initializable {
   function getActionState(uint256 actionId) public view returns (ActionState) {
     if (actionId >= actionsCount) revert InvalidActionId();
     Action storage action = actions[actionId];
-    uint256 approvalEndTime = action.creationTime + action.strategy.approvalPeriod();
 
     if (action.canceled) return ActionState.Canceled;
 
-    if (
-      block.timestamp < approvalEndTime
-        && (action.strategy.isFixedLengthApprovalPeriod() || !action.strategy.isActionPassed(actionId))
-    ) return ActionState.Active;
+    if (action.strategy.isActive(actionId)) return ActionState.Active;
 
     if (!action.strategy.isActionPassed(actionId)) return ActionState.Failed;
 
@@ -471,7 +465,7 @@ contract VertexCore is Initializable {
   function _createAction(
     address policyholder,
     uint8 role,
-    VertexStrategy strategy,
+    IVertexStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -495,9 +489,6 @@ contract VertexCore is Initializable {
     actionId = actionsCount;
     Action storage newAction = actions[actionId];
 
-    // Revert if the policy has no supply for any provided roles.
-    (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply) = _assertNonZeroRoleSupplies(strategy);
-
     newAction.creator = policyholder;
     newAction.strategy = strategy;
     newAction.target = target;
@@ -505,14 +496,15 @@ contract VertexCore is Initializable {
     newAction.selector = selector;
     newAction.data = data;
     newAction.creationTime = block.timestamp;
-    newAction.approvalPolicySupply = approvalPolicySupply;
-    newAction.disapprovalPolicySupply = disapprovalPolicySupply;
+
+    (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
+    if (!allowed) revert ProhibitedByStrategy(reason);
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
     IActionGuard guard = actionGuard[target][selector];
     if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
+      (allowed, reason) = guard.validateActionCreation(actionId);
       if (!allowed) revert ProhibitedByActionGuard(reason);
     }
 
@@ -524,46 +516,52 @@ contract VertexCore is Initializable {
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Active) revert InvalidActionState(ActionState.Active);
-    bool hasApproved = approvals[actionId][policyholder];
-    if (hasApproved) revert DuplicateApproval();
+    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Active);
 
-    Action storage action = actions[actionId];
-    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
-    if (!hasRole) revert InvalidPolicyholder();
-
-    uint256 weight = action.strategy.getApprovalWeightAt(policyholder, role, action.creationTime);
-
-    action.totalApprovals = action.totalApprovals == type(uint256).max || weight == type(uint256).max
-      ? type(uint256).max
-      : action.totalApprovals + weight;
+    uint256 quantity = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+    action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionId][policyholder] = true;
-
-    emit ApprovalCast(actionId, policyholder, weight, reason);
+    emit ApprovalCast(actionId, policyholder, quantity, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
-    bool hasDisapproved = disapprovals[actionId][policyholder];
-    if (hasDisapproved) revert DuplicateDisapproval();
+    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Queued);
 
-    Action storage action = actions[actionId];
+    uint256 quantity = action.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+    action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
+    disapprovals[actionId][policyholder] = true;
+    emit DisapprovalCast(actionId, policyholder, quantity, reason);
+  }
+
+  /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
+  function _preCastAssertions(uint256 actionId, address policyholder, uint8 role, ActionState expectedState)
+    internal
+    view
+    returns (Action storage action)
+  {
+    if (getActionState(actionId) != expectedState) revert InvalidActionState(expectedState);
+
+    bool isApproval = expectedState == ActionState.Active;
+    bool alreadyCast = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
+    if (alreadyCast) revert DuplicateCast();
+
+    action = actions[actionId];
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    if (!action.strategy.isDisapprovalEnabled()) revert DisapproveDisabled();
-
-    uint256 weight = action.strategy.getDisapprovalWeightAt(policyholder, role, action.creationTime);
-
-    action.totalDisapprovals = action.totalDisapprovals == type(uint256).max || weight == type(uint256).max
-      ? type(uint256).max
-      : action.totalDisapprovals + weight;
-    disapprovals[actionId][policyholder] = true;
-
-    emit DisapprovalCast(actionId, policyholder, weight, reason);
+    (bool isEnabled, bytes32 reason) = isApproval
+      ? action.strategy.isApprovalEnabled(actionId, msg.sender)
+      : action.strategy.isDisapprovalEnabled(actionId, msg.sender);
+    if (!isEnabled) revert ProhibitedByStrategy(reason);
   }
 
-  function _deployStrategies(VertexStrategy vertexStrategyLogic, Strategy[] calldata strategies) internal {
+  /// @dev Returns the new total count of approvals or disapprovals.
+  function _newCastCount(uint256 currentCount, uint256 quantity) internal pure returns (uint256) {
+    if (currentCount == type(uint256).max || quantity == type(uint256).max) return type(uint256).max;
+    return currentCount + quantity;
+  }
+
+  function _deployStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
       // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
@@ -572,20 +570,9 @@ contract VertexCore is Initializable {
 
     uint256 strategyLength = strategies.length;
     for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(
-        keccak256(
-          abi.encode(
-            strategies[i].approvalPeriod,
-            strategies[i].queuingPeriod,
-            strategies[i].expirationPeriod,
-            strategies[i].minApprovalPct,
-            strategies[i].minDisapprovalPct,
-            strategies[i].isFixedLengthApprovalPeriod
-          )
-        )
-      );
+      bytes32 salt = bytes32(keccak256(strategies[i]));
 
-      VertexStrategy strategy = VertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
+      IVertexStrategy strategy = IVertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;
       emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
@@ -606,22 +593,6 @@ contract VertexCore is Initializable {
       account.initialize(accounts[i]);
       emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
     }
-  }
-
-  // TODO We don't loop through the force (dis)approval roles because currently the strategy does
-  // not store them all in an array to support this. Should we do this?
-  function _assertNonZeroRoleSupplies(VertexStrategy strategy)
-    internal
-    view
-    returns (uint256 approvalPolicySupply, uint256 disapprovalPolicySupply)
-  {
-    uint8 approvalRole = strategy.approvalRole();
-    approvalPolicySupply = policy.getSupply(approvalRole);
-    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
-
-    uint8 disapprovalRole = strategy.disapprovalRole();
-    disapprovalPolicySupply = policy.getSupply(disapprovalRole);
-    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 
   function _useNonce(address user, bytes4 selector) internal returns (uint256 nonce) {

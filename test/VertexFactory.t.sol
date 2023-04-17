@@ -5,31 +5,32 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Solarray} from "solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, RoleHolderData, RolePermissionData, Strategy, PermissionData} from "src/lib/Structs.sol";
+import {Action, RoleHolderData, RolePermissionData, DefaultStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
-  uint128 constant DEFAULT_WEIGHT = 1;
+  uint128 constant DEFAULT_QUANTITY = 1;
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
-  event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
+  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    VertexStrategy indexed strategy,
+    IVertexStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -37,20 +38,20 @@ contract VertexFactoryTest is VertexTestSetup {
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
-    uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, VertexStrategy indexed strategy, address indexed creator);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 weight, string reason);
-  event StrategiesAuthorized(Strategy[] strategies);
-  event StrategiesUnauthorized(VertexStrategy[] strategies);
-  event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);
+  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event StrategiesAuthorized(DefaultStrategyConfig[] strategies);
+  event StrategiesUnauthorized(IVertexStrategy[] strategies);
+  event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
 }
 
 contract Constructor is VertexFactoryTest {
   function deployVertexFactory() internal returns (VertexFactory) {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
 
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
@@ -64,7 +65,7 @@ contract Constructor is VertexFactoryTest {
       policyLogic,
       policyTokenURI,
       "Root Vertex",
-      strategies,
+      strategyConfigs,
       accounts,
       roleDescriptionStrings,
       roleHolders,
@@ -124,7 +125,7 @@ contract Constructor is VertexFactoryTest {
 
 contract Deploy is VertexFactoryTest {
   function deployVertex() internal returns (VertexCore) {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
@@ -136,7 +137,7 @@ contract Deploy is VertexFactoryTest {
       "NewProject",
       strategyLogic,
       accountLogic,
-      strategies,
+      strategyConfigs,
       accounts,
       roleDescriptionStrings,
       roleHolders,
@@ -144,9 +145,9 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertIf_CalledByAccountThatIsNotRootVertex(address caller) public {
+  function test_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(rootCore));
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
@@ -156,7 +157,7 @@ contract Deploy is VertexFactoryTest {
       "NewProject",
       strategyLogic,
       accountLogic,
-      strategies,
+      strategyConfigs,
       accounts,
       new RoleDescription[](0),
       roleHolders,
@@ -165,7 +166,7 @@ contract Deploy is VertexFactoryTest {
   }
 
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
@@ -177,7 +178,7 @@ contract Deploy is VertexFactoryTest {
       name,
       strategyLogic,
       accountLogic,
-      strategies,
+      strategyConfigs,
       accounts,
       roleDescriptionStrings,
       roleHolders,
@@ -189,7 +190,7 @@ contract Deploy is VertexFactoryTest {
       name,
       strategyLogic,
       accountLogic,
-      strategies,
+      strategyConfigs,
       accounts,
       new RoleDescription[](0),
       roleHolders,
@@ -235,12 +236,12 @@ contract Deploy is VertexFactoryTest {
     VertexCore _vertex = deployVertex();
     assertEq(_vertex.name(), "NewProject");
 
-    Strategy[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
 
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategies, accounts);
+    _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategyConfigs, accounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
@@ -278,21 +279,21 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
     vm.assume(_caller != address(rootCore));
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
     vm.prank(_caller);
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(VertexStrategy(randomLogicAddress)), false);
+    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), false);
     vm.prank(address(rootCore));
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
-    assertEq(factory.authorizedStrategyLogics(VertexStrategy(randomLogicAddress)), true);
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
+    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), true);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit StrategyLogicAuthorized(VertexStrategy(randomLogicAddress));
-    factory.authorizeStrategyLogic(VertexStrategy(randomLogicAddress));
+    emit StrategyLogicAuthorized(IVertexStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
 }
 

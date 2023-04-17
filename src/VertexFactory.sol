@@ -3,15 +3,14 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
@@ -34,7 +33,7 @@ contract VertexFactory {
   // ========================
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
-  event StrategyLogicAuthorized(VertexStrategy indexed strategyLogic);
+  event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
@@ -49,7 +48,7 @@ contract VertexFactory {
   VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
-  mapping(VertexStrategy => bool) public authorizedStrategyLogics;
+  mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
 
   /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
   mapping(VertexAccount => bool) public authorizedAccountLogics;
@@ -72,12 +71,12 @@ contract VertexFactory {
 
   constructor(
     VertexCore vertexCoreLogic,
-    VertexStrategy initialVertexStrategyLogic,
+    IVertexStrategy initialVertexStrategyLogic,
     VertexAccount initialVertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenURI,
     string memory name,
-    Strategy[] memory initialStrategies,
+    bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
@@ -110,7 +109,7 @@ contract VertexFactory {
 
   /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
   /// @param name The name of this Vertex system.
-  /// @param strategyLogic The VertexStrategy implementation (logic) contract to use for this Vertex system.
+  /// @param strategyLogic The IVertexStrategy implementation (logic) contract to use for this Vertex system.
   /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex system.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccounts The list of initial accounts.
@@ -120,9 +119,9 @@ contract VertexFactory {
   /// @return the address of the VertexCore contract of the newly created system.
   function deploy(
     string memory name,
-    VertexStrategy strategyLogic,
+    IVertexStrategy strategyLogic,
     VertexAccount accountLogic,
-    Strategy[] memory initialStrategies,
+    bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
@@ -142,7 +141,7 @@ contract VertexFactory {
 
   /// @notice Authorizes a strategy logic contract.
   /// @param strategyLogic The strategy logic contract to authorize.
-  function authorizeStrategyLogic(VertexStrategy strategyLogic) external onlyRootVertex {
+  function authorizeStrategyLogic(IVertexStrategy strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
   }
 
@@ -177,9 +176,9 @@ contract VertexFactory {
 
   function _deploy(
     string memory name,
-    VertexStrategy strategyLogic,
+    IVertexStrategy strategyLogic,
     VertexAccount accountLogic,
-    Strategy[] memory initialStrategies,
+    bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
@@ -200,7 +199,7 @@ contract VertexFactory {
     }
   }
 
-  function _authorizeStrategyLogic(VertexStrategy strategyLogic) internal {
+  function _authorizeStrategyLogic(IVertexStrategy strategyLogic) internal {
     authorizedStrategyLogics[strategyLogic] = true;
     emit StrategyLogicAuthorized(strategyLogic);
   }
