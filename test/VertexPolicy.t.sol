@@ -909,7 +909,6 @@ contract TokenURI is VertexPolicyTest {
 
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
-    console.log(metadata.image);
     string memory policyholder = LibString.toHexString(uint256(uint160(address(this))));
     string memory name1 = LibString.concat("Vertex Policy ID: ", LibString.toString(uint256(uint160(address(this)))));
     string memory name2 = LibString.concat(" - ", mpPolicy.symbol());
