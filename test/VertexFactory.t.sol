@@ -21,7 +21,9 @@ import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
-  event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
+  event VertexCreated(
+    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy, uint256 chainId
+  );
   event StrategyAuthorized(VertexStrategy indexed strategy, address indexed strategyLogic, Strategy strategyData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
 
@@ -249,7 +251,7 @@ contract Deploy is VertexFactoryTest {
     vm.expectEmit();
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy));
+    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy), block.chainid);
     deployVertex();
   }
 

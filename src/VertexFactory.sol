@@ -30,7 +30,9 @@ contract VertexFactory {
   // ======== Events ========
   // ========================
 
-  event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT);
+  event VertexCreated(
+    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT, uint256 chainId
+  );
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
 
@@ -185,7 +187,7 @@ contract VertexFactory {
     policy.setVertex(address(vertex));
 
     unchecked {
-      emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
+      emit VertexCreated(vertexCount++, name, address(vertex), address(policy), block.chainid);
     }
   }
 
