@@ -3,10 +3,10 @@ pragma solidity 0.8.19;
 
 import {VertexCore} from "src/VertexCore.sol";
 
-/// @title Vertex SVG Parameter Registry
+/// @title Vertex Policy Token URI Parameter Registry
 /// @author Llama (vertex@llama.xyz)
-/// @notice Parameter Registry contract for Onchain SVGs.
-contract VertexSVGParameterRegistry {
+/// @notice Parameter Registry contract for Onchain image formats.
+contract VertexPolicyTokenURIParamRegistry {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================

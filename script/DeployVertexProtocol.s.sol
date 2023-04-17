@@ -9,7 +9,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
+import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -26,7 +26,7 @@ contract DeployVertexProtocol is Script {
   // Core Protocol.
   VertexFactory factory;
   VertexPolicyTokenURI policyTokenURI;
-  VertexSVGParameterRegistry svgParameterRegistry;
+  VertexPolicyTokenURIParamRegistry policyTokenURIParamRegistry;
   VertexLens lens;
 
   struct RawStrategyData {
@@ -99,8 +99,8 @@ contract DeployVertexProtocol is Script {
     );
     console2.log("  VertexFactory:", address(factory));
 
-    svgParameterRegistry = factory.VERTEX_SVG_PARAMETER_REGISTRY();
-    console2.log("  VertexSVGParameterRegistry:", address(svgParameterRegistry));
+    policyTokenURIParamRegistry = factory.VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY();
+    console2.log("  VertexPolicyTokenURIParamRegistry:", address(policyTokenURIParamRegistry));
 
     vm.broadcast();
     lens = new VertexLens();

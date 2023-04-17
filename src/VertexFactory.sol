@@ -9,7 +9,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexSVGParameterRegistry} from "src/VertexSVGParameterRegistry.sol";
+import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -60,8 +60,8 @@ contract VertexFactory {
   /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenURI;
 
-  /// @notice The Vertex Color Registry contract for Onchain SVGs.
-  VertexSVGParameterRegistry public immutable VERTEX_SVG_PARAMETER_REGISTRY;
+  /// @notice The Vertex Policy Token URI Parameter Registry contract for Onchain image formats.
+  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The current number of vertex systems created.
   uint256 public vertexCount;
@@ -101,7 +101,7 @@ contract VertexFactory {
       initialRolePermissions
     );
 
-    VERTEX_SVG_PARAMETER_REGISTRY = new VertexSVGParameterRegistry(ROOT_VERTEX);
+    VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY = new VertexPolicyTokenURIParamRegistry(ROOT_VERTEX);
   }
 
   // ===========================================
@@ -167,7 +167,7 @@ contract VertexFactory {
     view
     returns (string memory)
   {
-    (string memory color, string memory logo) = VERTEX_SVG_PARAMETER_REGISTRY.getMetadata(vertexCore);
+    (string memory color, string memory logo) = VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(vertexCore);
     return vertexPolicyTokenURI.tokenURI(name, symbol, tokenId, color, logo);
   }
 
