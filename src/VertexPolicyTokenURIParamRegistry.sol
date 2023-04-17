@@ -5,7 +5,7 @@ import {VertexCore} from "src/VertexCore.sol";
 
 /// @title Vertex Policy Token URI Parameter Registry
 /// @author Llama (vertex@llama.xyz)
-/// @notice Parameter Registry contract for Onchain image formats.
+/// @notice Parameter Registry contract for onchain image formats.
 contract VertexPolicyTokenURIParamRegistry {
   // ======================================
   // ======== Errors and Modifiers ========
