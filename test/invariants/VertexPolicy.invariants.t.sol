@@ -9,7 +9,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Strategy} from "src/lib/Structs.sol";
+import {DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 import {VertexCoreTest} from "test/VertexCore.t.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
@@ -94,7 +94,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
     //     for (uint256 k = 0; k < policyholders.length; k++) {
     //       bool hasPermission =
-    //         mpPolicy.holderWeightAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
+    //         mpPolicy.holderQuantityAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
     //       sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
     //     }
     //     require(
