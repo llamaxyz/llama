@@ -81,6 +81,10 @@ contract Constructor is VertexFactoryTest {
     assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
   }
 
+  function test_SetsVertexAccountLogicAddress() public {
+    assertEq(address(factory.VERTEX_ACCOUNT_LOGIC()), address(accountLogic));
+  }
+
   function test_SetsVertexPolicyTokenURIAddress() public {
     assertEq(address(factory.vertexPolicyTokenURI()), address(policyTokenURI));
   }
@@ -98,16 +102,6 @@ contract Constructor is VertexFactoryTest {
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
     emit StrategyLogicAuthorized(strategyLogic);
-    deployVertexFactory();
-  }
-
-  function test_SetsVertexAccountLogicAddress() public {
-    assertTrue(factory.authorizedAccountLogics(accountLogic));
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.expectEmit();
-    emit AccountLogicAuthorized(accountLogic);
     deployVertexFactory();
   }
 
@@ -136,7 +130,6 @@ contract Deploy is VertexFactoryTest {
     return factory.deploy(
       "NewProject",
       strategyLogic,
-      accountLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -156,7 +149,6 @@ contract Deploy is VertexFactoryTest {
     factory.deploy(
       "NewProject",
       strategyLogic,
-      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -175,26 +167,12 @@ contract Deploy is VertexFactoryTest {
 
     vm.prank(address(rootCore));
     factory.deploy(
-      name,
-      strategyLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0)
+      name, strategyLogic, strategyConfigs, accounts, roleDescriptionStrings, roleHolders, new RolePermissionData[](0)
     );
 
     vm.expectRevert();
     factory.deploy(
-      name,
-      strategyLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0)
+      name, strategyLogic, strategyConfigs, accounts, new RoleDescription[](0), roleHolders, new RolePermissionData[](0)
     );
   }
 
@@ -257,6 +235,11 @@ contract Deploy is VertexFactoryTest {
     assertEq(address(_vertex.policy()), address(computedPolicy));
   }
 
+  function test_SetsAccountLogicAddressOnVertexCore() public {
+    VertexCore _vertex = deployVertex();
+    assertEq(address(_vertex.vertexAccountLogic()), address(accountLogic));
+  }
+
   function test_EmitsVertexCreatedEvent() public {
     vm.expectEmit();
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
@@ -294,29 +277,6 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
     vm.expectEmit();
     emit StrategyLogicAuthorized(IVertexStrategy(randomLogicAddress));
     factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
-  }
-}
-
-contract AuthorizeAccountLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex(address _caller) public {
-    vm.assume(_caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
-    vm.prank(_caller);
-    factory.authorizeAccountLogic(VertexAccount(randomLogicAddress));
-  }
-
-  function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedAccountLogics(VertexAccount(randomLogicAddress)), false);
-    vm.prank(address(rootCore));
-    factory.authorizeAccountLogic(VertexAccount(randomLogicAddress));
-    assertEq(factory.authorizedAccountLogics(VertexAccount(randomLogicAddress)), true);
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.prank(address(rootCore));
-    vm.expectEmit();
-    emit AccountLogicAuthorized(VertexAccount(randomLogicAddress));
-    factory.authorizeAccountLogic(VertexAccount(randomLogicAddress));
   }
 }
 
