@@ -21,10 +21,10 @@ contract VertexFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error OnlyVertex();
+  error OnlyRootVertex();
 
   modifier onlyRootVertex() {
-    if (msg.sender != address(ROOT_VERTEX)) revert OnlyVertex();
+    if (msg.sender != address(ROOT_VERTEX)) revert OnlyRootVertex();
     _;
   }
 
@@ -147,18 +147,21 @@ contract VertexFactory {
   }
 
   /// @notice Authorizes a strategy implementation (logic) contract.
+  /// @dev This function can only be called by the root Vertex instance.
   /// @param strategyLogic The strategy logic contract to authorize.
   function authorizeStrategyLogic(IVertexStrategy strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
   }
 
   /// @notice Authorizes an account implementation (logic) contract.
+  /// @dev This function can only be called by the root Vertex instance.
   /// @param accountLogic The account logic contract to authorize.
   function authorizeAccountLogic(VertexAccount accountLogic) external onlyRootVertex {
     _authorizeAccountLogic(accountLogic);
   }
 
   /// @notice Sets the Vertex Policy Token URI contract.
+  /// @dev This function can only be called by the root Vertex instance.
   /// @param _vertexPolicyTokenURI The Vertex Policy Token URI contract.
   function setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) external onlyRootVertex {
     _setPolicyTokenURI(_vertexPolicyTokenURI);

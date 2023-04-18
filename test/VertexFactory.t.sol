@@ -147,14 +147,14 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertIf_CallerIsNotVertex(address caller) public {
+  function test_RevertIf_CallerIsNotRootVertex(address caller) public {
     vm.assume(caller != address(rootCore));
     bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(caller));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     factory.deploy(
       "NewProject",
       strategyLogic,
@@ -277,9 +277,9 @@ contract Deploy is VertexFactoryTest {
 }
 
 contract AuthorizeStrategyLogic is VertexFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address _caller) public {
+  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller) public {
     vm.assume(_caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     vm.prank(_caller);
     factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
@@ -300,9 +300,9 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 }
 
 contract AuthorizeAccountLogic is VertexFactoryTest {
-  function test_RevertIf_CallerIsNotVertex(address _caller) public {
+  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller) public {
     vm.assume(_caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     vm.prank(_caller);
     factory.authorizeAccountLogic(VertexAccount(randomLogicAddress));
   }
@@ -323,10 +323,10 @@ contract AuthorizeAccountLogic is VertexFactoryTest {
 }
 
 contract SetPolicyTokenURI is VertexFactoryTest {
-  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _policyTokenURI) public {
+  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller, address _policyTokenURI) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
   }
 
