@@ -991,3 +991,18 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
   }
 }
+
+contract UpdateRoleDescription is VertexPolicyTest {
+  function test_UpdatesRoleDescription() public {
+    vm.prank(address(mpCore));
+    vm.expectEmit();
+    emit RoleInitialized(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+
+    mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+  }
+
+  function test_FailsForNonOwner() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+  }
+}
