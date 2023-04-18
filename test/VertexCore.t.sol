@@ -930,8 +930,7 @@ contract ExecuteAction is VertexCoreTest {
       abi.encode("")
     );
     bytes memory expectedErr = abi.encodeWithSelector(
-      VertexCore.FailedActionExecution.selector,
-      abi.encodeWithSelector(MockProtocol.Failed.selector)
+      VertexCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
     );
 
     vm.warp(block.timestamp + 1);
