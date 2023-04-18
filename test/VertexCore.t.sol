@@ -1649,6 +1649,49 @@ contract SetGuard is VertexCoreTest {
     mpCore.setGuard(target, selector, guard);
     assertEq(address(mpCore.actionGuard(target, selector)), address(guard));
   }
+
+  function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.TargetCannotBeCoreOrPolicy.selector);
+    mpCore.setGuard(address(mpCore), selector, guard);
+  }
+
+  function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.TargetCannotBeCoreOrPolicy.selector);
+    mpCore.setGuard(address(mpPolicy), selector, guard);
+  }
+}
+
+contract AuthorizeScript is VertexCoreTest {
+  event ScriptAuthorized(address indexed script, bool authorized);
+
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller, address script, bool authorized) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    vm.prank(caller);
+    mpCore.authorizeScript(script, authorized);
+  }
+
+  function testFuzz_UpdatesScriptAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectEmit();
+    emit ScriptAuthorized(script, authorized);
+    mpCore.authorizeScript(script, authorized);
+    assertEq(mpCore.authorizedScripts(script), authorized);
+  }
+
+  function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.ScriptCannotBeCoreOrPolicy.selector);
+    mpCore.authorizeScript(address(mpCore), authorized);
+  }
+
+  function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.ScriptCannotBeCoreOrPolicy.selector);
+    mpCore.authorizeScript(address(mpPolicy), authorized);
+  }
 }
 
 contract GetActionState is VertexCoreTest {

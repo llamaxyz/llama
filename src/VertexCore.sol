@@ -35,6 +35,8 @@ contract VertexCore is Initializable {
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
+  error TargetCannotBeCoreOrPolicy();
+  error ScriptCannotBeCoreOrPolicy();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
 
@@ -69,6 +71,7 @@ contract VertexCore is Initializable {
   );
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
+  event ScriptAuthorized(address indexed script, bool authorized);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -120,6 +123,9 @@ contract VertexCore is Initializable {
 
   /// @notice Mapping of all authorized strategies.
   mapping(IVertexStrategy => bool) public authorizedStrategies;
+
+  /// @notice Mapping of all authorized scripts.
+  mapping(address => bool) public authorizedScripts;
 
   /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
@@ -266,9 +272,15 @@ contract VertexCore is Initializable {
 
     // Execute action.
     action.executed = true;
-    (bool success, bytes memory result) =
-      action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-    if (!success) revert FailedActionExecution();
+    bool success;
+    bytes memory result;
+    if (authorizedScripts[action.target]) {
+      (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+      if (!success) revert FailedActionExecution();
+    } else {
+      (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+      if (!success) revert FailedActionExecution();
+    }
 
     // Check post-execution action guard.
     if (guard != IActionGuard(address(0))) {
@@ -425,8 +437,17 @@ contract VertexCore is Initializable {
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+    if (target == address(this) || target == address(policy)) revert TargetCannotBeCoreOrPolicy();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
+  }
+
+  /// @notice Authorizes `script` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a script, set `authorized` to false.
+  function authorizeScript(address script, bool authorized) external onlyVertex {
+    if (script == address(this) || script == address(policy)) revert ScriptCannotBeCoreOrPolicy();
+    authorizedScripts[script] = authorized;
+    emit ScriptAuthorized(script, authorized);
   }
 
   /// @notice Get an Action struct by actionId.
