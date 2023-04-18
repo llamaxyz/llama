@@ -21,8 +21,10 @@ contract VertexFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Thrown when a protected external function in the factory is not called by the Root Vertex Core.
   error OnlyRootVertex();
 
+  /// @dev Checks that the caller is the Root Vertex Core and reverts if not.
   modifier onlyRootVertex() {
     if (msg.sender != address(ROOT_VERTEX)) revert OnlyRootVertex();
     _;
@@ -75,6 +77,7 @@ contract VertexFactory {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev Constructs the Vertex Factory and deploys the root Vertex instance.
   constructor(
     VertexCore vertexCoreLogic,
     IVertexStrategy initialVertexStrategyLogic,
