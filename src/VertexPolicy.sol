@@ -389,7 +389,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     // Read the most recent checkpoint for the user's role balance.
     uint256 tokenId = _tokenId(user);
     (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
+    if (quantity == 0 || expiration > block.timestamp) revert InvalidInput();
     _setRoleHolder(role, user, 0, 0);
   }
 
