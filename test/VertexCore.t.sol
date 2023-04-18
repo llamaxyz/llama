@@ -929,7 +929,10 @@ contract ExecuteAction is VertexCoreTest {
       FAIL_SELECTOR,
       abi.encode("")
     );
-    bytes memory expectedErr = bytes.concat(VertexCore.FailedActionExecution.selector, bytes32(""));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      VertexCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(MockProtocol.Failed.selector)
+    );
 
     vm.warp(block.timestamp + 1);
 
@@ -950,7 +953,10 @@ contract ExecuteAction is VertexCoreTest {
 
   function test_HandlesReentrancy() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    bytes memory expectedErr = bytes.concat(VertexCore.FailedActionExecution.selector, bytes32(""));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      VertexCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(VertexCore.InvalidActionState.selector, (ActionState.Queued))
+    );
 
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
