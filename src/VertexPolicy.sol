@@ -204,6 +204,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _burn(_tokenId(user));
   }
 
+  /// @notice Updates the description of a role.
+  /// @param role ID of the role to update.
+  /// @param description New description of the role.
   function updateRoleDescription(uint8 role, RoleDescription description) external onlyVertex {
     emit RoleInitialized(role, description);
   }
