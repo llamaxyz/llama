@@ -12,9 +12,9 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
-/// @title Core of a Vertex system
+/// @title Core of a Vertex instance
 /// @author Llama (vertex@llama.xyz)
-/// @notice Main point of interaction with a Vertex system.
+/// @notice Main point of interaction of a Vertex instance (i.e entry into and exit from).
 contract VertexCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
