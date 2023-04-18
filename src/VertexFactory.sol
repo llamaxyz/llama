@@ -201,7 +201,7 @@ contract VertexFactory {
     emit VertexCreated(vertexCount, name, address(vertex), address(policy), block.chainid);
 
     unchecked {
-      vertexCount++;
+      ++vertexCount;
     }
   }
 
