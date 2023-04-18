@@ -13,10 +13,6 @@ import {DefaultStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 /// @author Llama (vertex@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens {
-  // ===========================================
-  // ======== External and Public Logic ========
-  // ===========================================
-
   /// @notice Hashes a permission.
   /// @param permission the permission to hash.
   /// @return the hash of the permission.
