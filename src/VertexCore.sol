@@ -10,7 +10,7 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, Strategy} from "src/lib/Structs.sol";
+import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
 /// @author Llama (vertex@llama.xyz)
@@ -29,7 +29,7 @@ contract VertexCore is Initializable {
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution();
-  error DuplicateVote();
+  error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
@@ -543,8 +543,8 @@ contract VertexCore is Initializable {
     if (getActionState(actionId) != expectedState) revert InvalidActionState(expectedState);
 
     bool isApproval = expectedState == ActionState.Active;
-    bool alreadyVoted = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
-    if (alreadyVoted) revert DuplicateVote();
+    bool alreadyCast = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
+    if (alreadyCast) revert DuplicateCast();
 
     action = actions[actionId];
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);

@@ -8,14 +8,15 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Action, Strategy} from "src/lib/Structs.sol";
+import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Vertex Strategy
 /// @author Llama (vertex@llama.xyz)
 /// @notice This is the default vertex strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
-///   - Action creators are not allowed to vote on their own actions, regardless of the roles they hold.
-contract VertexStrategy is IVertexStrategy, Initializable {
+///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
+///     regardless of the roles they hold.
+contract DefaultStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -100,7 +101,7 @@ contract VertexStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function initialize(bytes memory config) external initializer {
-    Strategy memory strategyConfig = abi.decode(config, (Strategy));
+    DefaultStrategyConfig memory strategyConfig = abi.decode(config, (DefaultStrategyConfig));
     vertex = VertexCore(msg.sender);
     policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
@@ -149,11 +150,14 @@ contract VertexStrategy is IVertexStrategy, Initializable {
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
     Action memory action = vertex.getAction(actionId);
     unchecked {
-      // Safety: If either supply was zero, we would have returned early above. Therefore we know
-      // both of the supply values are at least 1, and therefore we can safely subtract 1 without
-      // worrying about overflow.
-      if (policy.hasRole(action.creator, approvalRole)) approvalPolicySupply -= 1;
-      if (policy.hasRole(action.creator, disapprovalRole)) disapprovalPolicySupply -= 1;
+      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
+      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
+      // the action creator without overflow, since a user can never have a quantity greater than
+      // the total supply.
+      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(action.creator, approvalRole);
+      approvalPolicySupply -= actionCreatorApprovalRoleQty;
+      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(action.creator, disapprovalRole);
+      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
     }
 
     // Save off the supplies to use for checking quorum.

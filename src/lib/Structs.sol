@@ -41,7 +41,7 @@ struct Action {
   uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
-struct Strategy {
+struct DefaultStrategyConfig {
   uint256 approvalPeriod; // The length of time of the approval period.
   uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.
@@ -49,8 +49,8 @@ struct Strategy {
   uint256 minApprovalPct; // Minimum percentage of total approval quantity / total approval supply.
   uint256 minDisapprovalPct; // Minimum percentage of total disapproval quantity / total disapproval supply.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
-  uint8 approvalRole; // Anyone with this role can vote to approve an action.
-  uint8 disapprovalRole; // Anyone with this role can vote to disapprove an action.
+  uint8 approvalRole; // Anyone with this role can cast approval of an action.
+  uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
   uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
   uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }

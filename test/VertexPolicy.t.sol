@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "lib/forge-std/src/console.sol";
 import {Test, stdError, console2} from "lib/forge-std/src/Test.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
@@ -177,6 +177,14 @@ contract SetVertex is VertexPolicyTest {
 // =======================================
 
 contract InitializeRole is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
+  }
+
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
     vm.startPrank(address(mpCore));
@@ -214,8 +222,11 @@ contract InitializeRole is VertexPolicyTest {
 }
 
 contract SetRoleHolder is VertexPolicyTest {
-  function test_RevertIf_CalledByNonVertex() public {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
@@ -262,6 +273,14 @@ contract SetRoleHolder is VertexPolicyTest {
 }
 
 contract SetRolePermission is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
+  }
+
   function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
     vm.expectEmit();
     emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
@@ -269,11 +288,6 @@ contract SetRolePermission is VertexPolicyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
 
     assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
-  }
-
-  function test_RevertIf_CalledByNonVertex() public {
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
   }
 }
 
@@ -310,6 +324,14 @@ contract RevokeExpiredRole is VertexPolicyTest {
 }
 
 contract RevokePolicy is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+
+    vm.prank(caller);
+    mpPolicy.revokePolicy(makeAddr("user"));
+  }
+
   function test_RevokesPolicy(address user) public {
     vm.assume(user != address(0));
     vm.assume(mpPolicy.balanceOf(user) == 0);
@@ -348,6 +370,17 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
 
     vm.startPrank(address(this));
+  }
+
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    VertexPolicy localPolicy = setUpLocalPolicy();
+    uint8[] memory roles = new uint8[](254);
+    vm.stopPrank();
+
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    vm.prank(caller);
+    localPolicy.revokePolicy(arbitraryAddress, roles);
   }
 
   function test_Revokes255RolesWithEnumeration() public {
@@ -789,6 +822,15 @@ contract TotalSupply is VertexPolicyTest {
 }
 
 contract Aggregate is VertexPolicyTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    bytes[] memory calls = new bytes[](3);
+
+    vm.prank(caller);
+    mpPolicy.aggregate(calls);
+  }
+
   function test_AggregatesSetRoleHolderCalls() public {
     address newRoleHolder = makeAddr("newRoleHolder");
 
@@ -844,6 +886,16 @@ contract TokenURI is VertexPolicyTest {
     string image; // Decoded SVG.
   }
 
+  function setTokenURIMetadata() internal {
+    string memory color = "#FF0000";
+    string memory logo =
+      '<path fill="#fff" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
+    vm.startPrank(address(rootCore));
+    policyTokenURIParamRegistry.setColor(mpCore, color);
+    policyTokenURIParamRegistry.setLogo(mpCore, logo);
+    vm.stopPrank();
+  }
+
   function parseMetadata(string memory uri) internal returns (Metadata memory) {
     string[] memory inputs = new string[](3);
     inputs[0] = "node";
@@ -853,6 +905,8 @@ contract TokenURI is VertexPolicyTest {
   }
 
   function test_ReturnsCorrectTokenURI() public {
+    setTokenURIMetadata();
+
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
     string memory policyholder = LibString.toHexString(uint256(uint160(address(this))));
@@ -861,13 +915,11 @@ contract TokenURI is VertexPolicyTest {
     string memory name = LibString.concat(name1, name2);
     assertEq(metadata.name, name);
     assertEq(metadata.description, "Vertex is a framework for onchain organizations.");
-    string memory color = "#FF0000";
-    string memory logo =
-      '<path fill="#fff" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
+    (string memory color, string memory logo) = policyTokenURIParamRegistry.getMetadata(mpCore);
     string[17] memory parts;
 
     parts[0] =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><g clip-path="url(#a)"><rect width="390" height="500" fill="#0B101A" rx="13.393" /><mask id="b" width="364" height="305" x="4" y="30" maskUnits="userSpaceOnUse" style="mask-type:alpha"><ellipse cx="186.475" cy="182.744" fill="#8000FF" rx="196.994" ry="131.329" transform="rotate(-31.49 186.475 182.744)" /></mask><g mask="url(#b)"><g filter="url(#c)"><ellipse cx="237.625" cy="248.968" fill="#6A45EC" rx="140.048" ry="59.062" transform="rotate(-31.49 237.625 248.968)" /></g><g filter="url(#d)"><ellipse cx="286.654" cy="297.122" fill="';
+      '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><g clip-path="url(#a)"><rect width="390" height="500" fill="#0B101A" rx="13.393" /><mask id="b" width="364" height="305" x="4" y="30" maskUnits="userSpaceOnUse" style="mask-type:alpha"><ellipse cx="186.475" cy="182.744" fill="#8000FF" rx="196.994" ry="131.329" transform="rotate(-31.49 186.475 182.744)" /></mask><g mask="url(#b)"><g filter="url(#c)"><ellipse cx="237.625" cy="248.968" fill="#6A45EC" rx="140.048" ry="59.062" transform="rotate(-31.49 237.625 248.968)" /></g><g filter="url(#d)"><ellipse cx="286.654" cy="297.122" fill="';
 
     parts[1] = color;
 
@@ -905,7 +957,7 @@ contract TokenURI is VertexPolicyTest {
     parts[15] = color;
 
     parts[16] =
-      '" /><stop offset="1" stop-color="#fff" /></radialGradient><clipPath id="a"><rect width="390" height="500" fill="#fff" rx="13.393" /></clipPath></defs></svg>';
+      '" /><stop offset="1" stop-color="#fff" /></radialGradient><clipPath id="a"><rect width="390" height="500" fill="#fff" rx="13.393" /></clipPath></svg>';
 
     string memory svg1 =
       string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));

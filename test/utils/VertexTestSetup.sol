@@ -10,12 +10,12 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -133,7 +133,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    bytes[] memory strategies = defaultStrategies();
+    bytes[] memory strategyConfigs = defaultStrategyConfigs();
     RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
@@ -142,7 +142,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
       "Mock Protocol Vertex",
       strategyLogic,
       accountLogic,
-      strategies,
+      strategyConfigs,
       mpAccounts,
       roleDescriptionStrings,
       mpRoleHolders,
@@ -151,10 +151,10 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpPolicy = mpCore.policy();
 
     // Set strategy addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -181,10 +181,10 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mockProtocol = new MockProtocol(address(mpCore));
 
     // Set strategy and account addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -261,11 +261,11 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategies() internal view returns (bytes[] memory strategies) {
-    strategies = encodeStrategies(readStrategies(scriptInput));
+  function defaultStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
+    strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
   }
 
-  function toIVertexStrategy(VertexStrategy[] memory strategies)
+  function toIVertexStrategy(DefaultStrategyConfig[] memory strategies)
     internal
     pure
     returns (IVertexStrategy[] memory converted)
@@ -275,13 +275,11 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     }
   }
 
-  function toIVertexStrategy(Strategy memory strategy) internal pure returns (IVertexStrategy[] memory converted) {
-    assembly {
-      converted := strategy
-    }
-  }
-
-  function toVertexStrategy(IVertexStrategy strategy) internal pure returns (VertexStrategy converted) {
+  function toIVertexStrategy(DefaultStrategyConfig memory strategy)
+    internal
+    pure
+    returns (IVertexStrategy[] memory converted)
+  {
     assembly {
       converted := strategy
     }
