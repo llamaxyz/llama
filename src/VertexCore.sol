@@ -28,7 +28,7 @@ contract VertexCore is Initializable {
   error OnlyVertex();
   error InvalidSignature();
   error TimelockNotFinished();
-  error FailedActionExecution();
+  error FailedActionExecution(bytes);
   error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
@@ -63,7 +63,9 @@ contract VertexCore is Initializable {
   event ActionQueued(
     uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
+  event ActionExecuted(
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, bytes result
+  );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
@@ -254,8 +256,7 @@ contract VertexCore is Initializable {
 
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
   /// @param actionId Id of the action to execute.
-  /// @return The result returned from the call to the target contract.
-  function executeAction(uint256 actionId) external payable returns (bytes memory) {
+  function executeAction(uint256 actionId) external payable {
     // Initial checks that action is ready to execute.
     if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
 
@@ -276,12 +277,12 @@ contract VertexCore is Initializable {
     bytes memory result;
 
     if (authorizedScripts[action.target]) {
-      (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+      (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
     } else {
       (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
     }
 
-    if (!success) revert FailedActionExecution();
+    if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
     if (guard != IActionGuard(address(0))) {
@@ -290,8 +291,7 @@ contract VertexCore is Initializable {
     }
 
     // Action successfully executed.
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
-    return result;
+    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator, result);
   }
 
   /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
