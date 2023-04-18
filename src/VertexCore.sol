@@ -34,7 +34,6 @@ contract VertexCore is Initializable {
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
-  error UnauthorizedAccountLogic();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
 
@@ -68,7 +67,7 @@ contract VertexCore is Initializable {
     IVertexStrategy indexed strategy, IVertexStrategy indexed strategyLogic, bytes initializationData
   );
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
-  event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
+  event AccountCreated(VertexAccount indexed account, string name);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -99,6 +98,9 @@ contract VertexCore is Initializable {
 
   /// @notice The NFT contract that defines the policies for this Vertex system.
   VertexPolicy public policy;
+
+  /// @notice The Vertex Account implementation (logic) contract.
+  VertexAccount public vertexAccountLogic;
 
   /// @notice Name of this Vertex system.
   string public name;
@@ -153,9 +155,10 @@ contract VertexCore is Initializable {
     factory = VertexFactory(msg.sender);
     name = _name;
     policy = _policy;
+    vertexAccountLogic = _vertexAccountLogic;
 
     _deployStrategies(_vertexStrategyLogic, initialStrategies);
-    _deployAccounts(_vertexAccountLogic, initialAccounts);
+    _deployAccounts(initialAccounts);
   }
 
   // ===========================================
@@ -416,10 +419,9 @@ contract VertexCore is Initializable {
   }
 
   /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
-  /// @param vertexAccountLogic address of the Vertex Account logic contract.
   /// @param accounts list of new accounts to be authorized.
-  function createAndAuthorizeAccounts(VertexAccount vertexAccountLogic, string[] calldata accounts) external onlyVertex {
-    _deployAccounts(vertexAccountLogic, accounts);
+  function createAndAuthorizeAccounts(string[] calldata accounts) external onlyVertex {
+    _deployAccounts(accounts);
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
@@ -579,19 +581,13 @@ contract VertexCore is Initializable {
     }
   }
 
-  function _deployAccounts(VertexAccount vertexAccountLogic, string[] calldata accounts) internal {
-    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(vertexAccountLogic)) {
-      // The only edge case where this check is skipped is if `_deployAccounts()` is called by Root Vertex Instance
-      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
-      revert UnauthorizedAccountLogic();
-    }
-
+  function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
     for (uint256 i; i < accountLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
       VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
       account.initialize(accounts[i]);
-      emit AccountAuthorized(account, vertexAccountLogic, accounts[i]);
+      emit AccountCreated(account, accounts[i]);
     }
   }
 
