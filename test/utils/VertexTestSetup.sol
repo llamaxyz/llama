@@ -141,7 +141,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
       strategyLogic,
-      accountLogic,
       strategyConfigs,
       mpAccounts,
       roleDescriptionStrings,
