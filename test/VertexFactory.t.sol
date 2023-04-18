@@ -249,7 +249,7 @@ contract Deploy is VertexFactoryTest {
   function test_SetsVertexCoreAddressOnThePolicy() public {
     VertexCore _vertex = deployVertex();
     VertexPolicy _policy = _vertex.policy();
-    VertexCore _vertexFromPolicy = VertexCore(_policy.vertex());
+    VertexCore _vertexFromPolicy = VertexCore(_policy.vertexCoreAddress());
     assertEq(address(_vertexFromPolicy), address(_vertex));
   }
 
@@ -271,8 +271,8 @@ contract Deploy is VertexFactoryTest {
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexCore newVertex = deployVertex();
     assertEq(address(newVertex), address(computedVertex));
-    assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
-    assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
+    assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertexCoreAddress());
+    assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertexCoreAddress());
   }
 }
 

@@ -42,17 +42,17 @@ contract VertexPolicyHandler is BaseHandler {
   // =====================================
 
   function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCoreAddress()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCoreAddress()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCoreAddress()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }
