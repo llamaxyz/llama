@@ -15,7 +15,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (vertex@llama.xyz)
-/// @notice Factory for deploying new Vertex systems.
+/// @notice Factory for deploying new Vertex instances.
 contract VertexFactory {
   // ======================================
   // ======== Errors and Modifiers ========
@@ -32,18 +32,22 @@ contract VertexFactory {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when a new Vertex instance is created.
   event VertexCreated(
     uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT, uint256 chainId
   );
+  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
+  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Vertex Instances.
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
+  /// @dev Emitted when the Vertex Policy Token URI contract is updated.
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice The VertexCore implementation (logic) contract.
+  /// @notice The Vertex Core implementation (logic) contract.
   VertexCore public immutable VERTEX_CORE_LOGIC;
 
   /// @notice The Vertex Policy implementation (logic) contract.
@@ -55,7 +59,7 @@ contract VertexFactory {
   /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
   mapping(VertexAccount => bool) public authorizedAccountLogics;
 
-  /// @notice The Vertex instance responsible for deploying new Vertex instances.
+  /// @notice The Vertex instance responsible for governing the Vertex Factory.
   VertexCore public immutable ROOT_VERTEX;
 
   /// @notice The Vertex Policy Token URI contract.
@@ -64,7 +68,7 @@ contract VertexFactory {
   /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
   VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
-  /// @notice The current number of vertex systems created.
+  /// @notice The current number of Vertex instances created.
   uint256 public vertexCount;
 
   // ======================================================
@@ -109,17 +113,17 @@ contract VertexFactory {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Deploys a new Vertex system.
-  /// @dev This function can only be called by the initial Vertex system.
-  /// @param name The name of this Vertex system.
-  /// @param strategyLogic The IVertexStrategy implementation (logic) contract to use for this Vertex system.
-  /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex system.
+  /// @notice Deploys a new Vertex instance.
+  /// @dev This function can only be called by the root Vertex instance.
+  /// @param name The name of this Vertex instance.
+  /// @param strategyLogic The IVertexStrategy implementation (logic) contract to use for this Vertex instance.
+  /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex instance.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccounts The list of initial accounts.
   /// @param initialRoleDescriptions The list of initial role descriptions.
-  /// @param initialRoleHolders The list of initial role holders and their role expirations.
-  /// @param initialRolePermissions The list initial permissions given to roles.
-  /// @return The address of the VertexCore contract of the newly created system.
+  /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
+  /// @param initialRolePermissions The list of initial permissions given to roles.
+  /// @return The address of the Vertex Core of the newly created instances.
   function deploy(
     string memory name,
     IVertexStrategy strategyLogic,
@@ -142,13 +146,13 @@ contract VertexFactory {
     );
   }
 
-  /// @notice Authorizes a strategy logic contract.
+  /// @notice Authorizes a strategy implementation (logic) contract.
   /// @param strategyLogic The strategy logic contract to authorize.
   function authorizeStrategyLogic(IVertexStrategy strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
   }
 
-  /// @notice Authorizes an account logic contract.
+  /// @notice Authorizes an account implementation (logic) contract.
   /// @param accountLogic The account logic contract to authorize.
   function authorizeAccountLogic(VertexAccount accountLogic) external onlyRootVertex {
     _authorizeAccountLogic(accountLogic);
@@ -178,6 +182,7 @@ contract VertexFactory {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Deploys a new Vertex instance.
   function _deploy(
     string memory name,
     IVertexStrategy strategyLogic,
@@ -205,16 +210,19 @@ contract VertexFactory {
     }
   }
 
+  /// @dev Authorizes a strategy implementation (logic) contract.
   function _authorizeStrategyLogic(IVertexStrategy strategyLogic) internal {
     authorizedStrategyLogics[strategyLogic] = true;
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
+  /// @dev Authorizes an account implementation (logic) contract.
   function _authorizeAccountLogic(VertexAccount accountLogic) internal {
     authorizedAccountLogics[accountLogic] = true;
     emit AccountLogicAuthorized(accountLogic);
   }
 
+  /// @dev Sets the Vertex Policy Token URI contract.
   function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
     vertexPolicyTokenURI = _vertexPolicyTokenURI;
     emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);
