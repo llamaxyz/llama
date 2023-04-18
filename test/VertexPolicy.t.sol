@@ -70,7 +70,7 @@ contract Initialize is VertexPolicyTest {
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     localPolicy.initialize(
       "Test Policy", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
     );
@@ -249,7 +249,7 @@ contract SetRoleHolder is VertexPolicyTest {
   function test_RevertIf_InvalidQuantity() public {
     vm.startPrank(address(mpCore));
 
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, 0, DEFAULT_ROLE_EXPIRATION);
   }
 
@@ -318,7 +318,7 @@ contract RevokeExpiredRole is VertexPolicyTest {
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
 
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
   }
 }
