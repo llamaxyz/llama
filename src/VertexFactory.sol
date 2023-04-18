@@ -109,7 +109,8 @@ contract VertexFactory {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Deploys a new Vertex system. This function can only be called by the initial Vertex system.
+  /// @notice Deploys a new Vertex system.
+  /// @dev This function can only be called by the initial Vertex system.
   /// @param name The name of this Vertex system.
   /// @param strategyLogic The IVertexStrategy implementation (logic) contract to use for this Vertex system.
   /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex system.
@@ -118,7 +119,7 @@ contract VertexFactory {
   /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders and their role expirations.
   /// @param initialRolePermissions The list initial permissions given to roles.
-  /// @return the address of the VertexCore contract of the newly created system.
+  /// @return The address of the VertexCore contract of the newly created system.
   function deploy(
     string memory name,
     IVertexStrategy strategyLogic,
@@ -163,6 +164,7 @@ contract VertexFactory {
   /// @param name The name of the Vertex system.
   /// @param symbol The symbol of the Vertex system.
   /// @param tokenId The token ID of the Vertex Policy Holder.
+  /// @return The token URI for the given Vertex Policy Holder.
   function tokenURI(VertexCore vertexCore, string memory name, string memory symbol, uint256 tokenId)
     external
     view
