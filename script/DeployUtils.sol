@@ -38,6 +38,7 @@ library DeployUtils {
 
   struct RawRolePermissionData {
     // Attributes need to be in alphabetical order so JSON decodes properly.
+    string comment;
     bytes32 permissionId;
     uint8 role;
   }

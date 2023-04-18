@@ -19,6 +19,11 @@ contract DeployVertexTest is Test, DeployVertex {
 }
 
 contract Run is DeployVertexTest {
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new Vertex instances. It could be
+  // replaced with any address that we hold the private key for.
+  address VERTEX_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
+
   function test_DeploysFactory() public {
     assertEq(address(factory), address(0));
 
@@ -126,6 +131,20 @@ contract Run is DeployVertexTest {
     Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
+
+    uint8 actionCreatorRole = 1;
+    assertEq(rootPolicy.hasRole(VERTEX_INSTANCE_DEPLOYER, actionCreatorRole), true);
+    balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    checkpoint = balances._checkpoints[0];
+    assertEq(checkpoint.expiration, type(uint64).max);
+    assertEq(checkpoint.quantity, 1);
+
+    bytes32 permissionId = lens.computePermissionId(PermissionData(
+      address(factory), // target
+      VertexFactory.deploy.selector, // selector
+      secondStrategy // strategy
+    ));
+    assertTrue(rootPolicy.canCreateAction(actionCreatorRole, permissionId));
   }
 
   function test_DeploysCoreLogic() public {

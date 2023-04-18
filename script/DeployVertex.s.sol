@@ -10,7 +10,7 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
-import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Strategy, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -51,7 +51,7 @@ contract DeployVertex is Script {
     policyTokenUri = new VertexPolicyTokenURI();
     console2.log("  VertexPolicyTokenURI:", address(policyTokenUri));
 
-    string memory jsonInput = DeployUtils.readScriptInput("deployVertexProtocol.json");
+    string memory jsonInput = DeployUtils.readScriptInput("deployVertex.json");
 
     vm.broadcast();
     factory = new VertexFactory(

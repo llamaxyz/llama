@@ -39,12 +39,25 @@
     ],
     "initialRoleHolders": [
       {
-        "comment": "This will assign the ActionCreator role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",
+        "comment": "This will assign the Approver role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: xpiration == type(uint64).max.",
         "expiration": 18446744073709551615,
         "quantity": 1,
         "role": 2,
         "user": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e"
+      },
+      {
+        "comment": "This will assign the ActionCreator role (role 1) to the address we will use with the CreateAction script to automate deployment of new Vertex instance. The role assignment is set to never expire (type(uint64).max) because this is the default. The quantity is likewise the default.",
+        "expiration": 18446744073709551615,
+        "quantity": 1,
+        "role": 1,
+        "user": "0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a"
       }
     ],
-    "initialRolePermissions": []
+    "initialRolePermissions": [
+      {
+        "comment": "This gives the ActionCreator permission to call VertexFactory.deploy which creates new Vertex instances. The permissionId was derived by encoding and hashing (a) the VertexFactory address that this script deploys, (b) VertexFactory.deploy.selector, and (c) the address of the second Strategy specified above -- the one without a fixed voting period.",
+        "permissionId": "0x10aa48bea40c71fce5d9713b8ce994d76c6445b870b3fc429c39ac7524ae9536",
+        "role": 1
+      }
+    ]
 }

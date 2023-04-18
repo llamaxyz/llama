@@ -131,7 +131,7 @@ contract VertexTestSetup is DeployVertex, Test {
     rootPolicy = rootCore.policy();
 
     // We use input from the deploy script to bootstrap our test suite.
-    scriptInput = DeployUtils.readScriptInput('deployVertexProtocol.json');
+    scriptInput = DeployUtils.readScriptInput('deployVertex.json');
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
