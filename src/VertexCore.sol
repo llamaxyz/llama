@@ -274,13 +274,14 @@ contract VertexCore is Initializable {
     action.executed = true;
     bool success;
     bytes memory result;
+
     if (authorizedScripts[action.target]) {
       (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-      if (!success) revert FailedActionExecution();
     } else {
       (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-      if (!success) revert FailedActionExecution();
     }
+
+    if (!success) revert FailedActionExecution();
 
     // Check post-execution action guard.
     if (guard != IActionGuard(address(0))) {
