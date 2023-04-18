@@ -45,9 +45,9 @@ contract VertexFactoryHandler is BaseHandler {
     accountLogic = _accountLogic;
   }
 
-  // ==========================
-  // ======== Helpers =========
-  // ==========================
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   // The salt is a function of name and symbol. To ensure we get a different contract address each
   // time we use this method.
@@ -65,9 +65,9 @@ contract VertexFactoryHandler is BaseHandler {
     console2.log("vertexFactory_deploy             ", calls["vertexFactory_deploy"]);
   }
 
-  // =====================================
-  // ======== Methods for Fuzzer =========
-  // =====================================
+  // ====================================
+  // ======== Methods for Fuzzer ========
+  // ====================================
 
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") useCurrentTimestamp {
     // We don't care about the parameters, we just need it to execute successfully.
