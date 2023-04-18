@@ -198,8 +198,10 @@ contract VertexFactory {
 
     policy.setVertex(address(vertex));
 
+    emit VertexCreated(vertexCount, name, address(vertex), address(policy), block.chainid);
+
     unchecked {
-      emit VertexCreated(vertexCount++, name, address(vertex), address(policy), block.chainid);
+      vertexCount++;
     }
   }
 
