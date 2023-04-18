@@ -15,8 +15,8 @@ run-script script flags='':
   - FOUNDRY_PROFILE=ci forge script script/{{script}}.s.sol --rpc-url $SCRIPT_RPC_URL --private-key $SCRIPT_PRIVATE_KEY -vvvv {{flags}}
   mv _test test
 
-dry-run: (run-script 'DeployVertexProtocol')
+dry-run: (run-script 'DeployVertex')
 
-deploy: (run-script 'DeployVertexProtocol' '--broadcast --verify')
+deploy: (run-script 'DeployVertex' '--broadcast --verify')
 
-verify: (run-script 'DeployVertexProtocol' '--verify')
+verify: (run-script 'DeployVertex' '--verify')
