@@ -18,8 +18,7 @@ import {
   ERC721OperatorData,
   ERC1155Data,
   ERC1155BatchData,
-  ERC1155OperatorData,
-  RelativeStrategyConfig
+  ERC1155OperatorData
 } from "src/lib/Structs.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
