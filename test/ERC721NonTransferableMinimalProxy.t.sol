@@ -6,8 +6,11 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {ERC721TokenReceiver} from "@solmate/tokens/ERC721.sol";
+
 import {DSInvariantTest} from "@solmate/test/utils/DSInvariantTest.sol";
 
 import {MockERC721} from "test/mock/MockERC721MinimalProxy.sol";

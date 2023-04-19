@@ -2,27 +2,29 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Solarray} from "@solarray/Solarray.sol";
-import {Clones} from "@openzeppelin/proxy/Clones.sol";
-import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
+import {Solarray} from "@solarray/Solarray.sol";
+
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
+import {MockProtocol} from "test/mock/MockProtocol.sol";
+
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexLens} from "src/VertexLens.sol";
+
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 
 contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   event ActionCreated(
