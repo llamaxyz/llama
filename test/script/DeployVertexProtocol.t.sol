@@ -7,10 +7,8 @@ import {Vm} from "forge-std/Vm.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
-
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";

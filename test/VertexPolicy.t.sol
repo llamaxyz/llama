@@ -14,7 +14,6 @@ import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-
 import {VertexPolicy} from "src/VertexPolicy.sol";
 
 contract VertexPolicyTest is VertexTestSetup {

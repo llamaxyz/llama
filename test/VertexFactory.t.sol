@@ -9,10 +9,8 @@ import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {Action, RoleHolderData, RolePermissionData, DefaultStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";

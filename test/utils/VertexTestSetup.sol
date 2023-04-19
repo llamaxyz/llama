@@ -14,10 +14,8 @@ import {MockScript} from "test/mock/MockScript.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";

@@ -5,9 +5,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";

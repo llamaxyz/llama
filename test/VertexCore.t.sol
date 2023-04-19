@@ -7,7 +7,6 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
@@ -15,12 +14,9 @@ import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";

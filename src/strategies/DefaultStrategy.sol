@@ -6,10 +6,8 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
-
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 
