@@ -6,12 +6,9 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
-import {VertexCoreTest} from "test/VertexCore.t.sol";
-
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {DefaultStrategyConfig} from "src/lib/Structs.sol";
 
 contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // =========================

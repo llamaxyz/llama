@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
+import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
+
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+
 import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {PermissionData} from "src/lib/Structs.sol";
+
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
-import {PermissionData} from "src/lib/Structs.sol";
 
 contract DeployVertexTest is Test, DeployVertexProtocol {
   function setUp() public virtual {}

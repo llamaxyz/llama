@@ -7,13 +7,14 @@ import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 
 contract VertexFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
