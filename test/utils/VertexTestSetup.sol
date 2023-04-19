@@ -3,26 +3,24 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {stdJson} from "forge-std/Script.sol";
-import {Solarray} from "@solarray/Solarray.sol";
-import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+import {Solarray} from "@solarray/Solarray.sol";
+
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexLens} from "src/VertexLens.sol";
-import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+
 import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
 enum Roles {
