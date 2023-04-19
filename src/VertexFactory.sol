@@ -55,17 +55,17 @@ contract VertexFactory {
   /// @notice The Vertex Policy implementation (logic) contract.
   VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
-  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
-  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
-
   /// @notice The Vertex Account implementation (logic) contract.
   VertexAccount public immutable VERTEX_ACCOUNT_LOGIC;
 
-  /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
-  mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
+  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
+  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
+
+  /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
+  mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
 
   /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenURI;
@@ -92,8 +92,8 @@ contract VertexFactory {
     RolePermissionData[] memory initialRolePermissions
   ) {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
-    VERTEX_ACCOUNT_LOGIC = vertexAccountLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
+    VERTEX_ACCOUNT_LOGIC = vertexAccountLogic;
 
     _setPolicyTokenURI(_vertexPolicyTokenURI);
     _authorizeStrategyLogic(initialVertexStrategyLogic);
