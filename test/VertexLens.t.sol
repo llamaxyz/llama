@@ -35,16 +35,19 @@ contract ComputeVertexStrategyAddress is VertexLensTestSetup {
   function test_ProperlyComputesAddress() public {
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     address expected =
-      address(lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore)));
+      address(lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore)));
     assertEq(expected, address(rootStrategy1));
 
-    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore)));
+    expected =
+      address(lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore)));
     assertEq(expected, address(rootStrategy2));
 
-    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore)));
+    expected =
+      address(lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore)));
     assertEq(expected, address(mpStrategy1));
 
-    expected = address(lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore)));
+    expected =
+      address(lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore)));
     assertEq(expected, address(mpStrategy2));
   }
 }

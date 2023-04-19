@@ -145,7 +145,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
-      strategyLogic,
+      relativeStrategyLogic,
       strategyConfigs,
       mpAccounts,
       roleDescriptionStrings,
@@ -155,10 +155,12 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpPolicy = mpCore.policy();
 
     // Set strategy addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
+    rootStrategy1 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -188,10 +190,12 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
+    rootStrategy1 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -236,7 +240,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(strategyLogic), "strategyLogic not set");
+    require(address(0) != address(relativeStrategyLogic), "relativeStrategyLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 

@@ -29,7 +29,7 @@ contract Run is DeployVertexTest {
     assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
     assertEq(address(factory.VERTEX_ACCOUNT_LOGIC()), address(accountLogic));
-    assertEq(factory.authorizedStrategyLogics(strategyLogic), true);
+    assertEq(factory.authorizedStrategyLogics(relativeStrategyLogic), true);
   }
 
   function test_DeploysRootVertex() public {
@@ -57,7 +57,7 @@ contract Run is DeployVertexTest {
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
         //   IVertexStrategy indexed strategy,  <-- The topic we want.
-        //   address indexed strategyLogic,
+        //   address indexed relativeStrategyLogic,
         //   Strategy strategyData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
@@ -135,11 +135,11 @@ contract Run is DeployVertexTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    assertEq(address(strategyLogic), address(0));
+    assertEq(address(relativeStrategyLogic), address(0));
 
     DeployVertexProtocol.run();
 
-    assertNotEq(address(strategyLogic), address(0));
+    assertNotEq(address(relativeStrategyLogic), address(0));
   }
 
   function test_DeploysAccountLogic() public {

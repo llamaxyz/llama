@@ -83,10 +83,10 @@ contract VertexStrategyTest is VertexTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(strategyConfigs));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(strategyConfigs));
 
     newStrategy =
-      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
   }
 
   function deployTestStrategy() internal returns (IVertexStrategy testStrategy) {
@@ -102,12 +102,13 @@ contract VertexStrategyTest is VertexTestSetup {
       forceApprovalRoles: new uint8[](0),
       forceDisapprovalRoles: new uint8[](0)
     });
-    testStrategy =
-      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
+    testStrategy = lens.computeVertexStrategyAddress(
+      address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
+    );
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(testStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(testStrategies));
   }
 
   function deployTestStrategyWithForceApproval() internal returns (IVertexStrategy testStrategy) {
@@ -131,14 +132,15 @@ contract VertexStrategyTest is VertexTestSetup {
     });
 
     // Get the address of the strategy we'll deploy.
-    testStrategy =
-      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(testStrategyData), address(mpCore));
+    testStrategy = lens.computeVertexStrategyAddress(
+      address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
+    );
 
     // Create and authorize the strategy.
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(testStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);

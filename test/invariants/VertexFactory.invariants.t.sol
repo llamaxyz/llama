@@ -24,7 +24,7 @@ contract VertexFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  IVertexStrategy public strategyLogic;
+  IVertexStrategy public relativeStrategyLogic;
   VertexAccount public accountLogic;
 
   // Used to track the last seen `vertexCount` value.
@@ -37,11 +37,11 @@ contract VertexFactoryHandler is BaseHandler {
   constructor(
     VertexFactory _vertexFactory,
     VertexCore _vertexCore,
-    IVertexStrategy _strategyLogic,
+    IVertexStrategy _relativeStrategyLogic,
     VertexAccount _accountLogic
   ) BaseHandler(_vertexFactory, _vertexCore) {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
-    strategyLogic = _strategyLogic;
+    relativeStrategyLogic = _relativeStrategyLogic;
     accountLogic = _accountLogic;
   }
 
@@ -81,7 +81,13 @@ contract VertexFactoryHandler is BaseHandler {
 
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.deploy(
-      name(), strategyLogic, new bytes[](0), new string[](0), roleDescriptions, roleHolders, new RolePermissionData[](0)
+      name(),
+      relativeStrategyLogic,
+      new bytes[](0),
+      new string[](0),
+      roleDescriptions,
+      roleHolders,
+      new RolePermissionData[](0)
     );
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
@@ -110,7 +116,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
 
   function setUp() public override {
     VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore, strategyLogic, accountLogic);
+    handler = new VertexFactoryHandler(factory, mpCore, relativeStrategyLogic, accountLogic);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

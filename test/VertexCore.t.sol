@@ -41,7 +41,9 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
+  event StrategyAuthorized(
+    IVertexStrategy indexed strategy, address indexed relativeStrategyLogic, bytes initializationData
+  );
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountCreated(VertexAccount indexed account, string name);
 
@@ -194,7 +196,7 @@ contract Initialize is VertexCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new VertexFactoryWithoutInitialization(
       coreLogic,
-      strategyLogic,
+      relativeStrategyLogic,
       accountLogic,
       policyLogic,
       policyTokenURI,
@@ -223,15 +225,16 @@ contract Initialize is VertexCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[i], address(uninitializedVertex));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      );
     }
 
     assertEq(address(strategyAddresses[0]).code.length, 0);
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -245,15 +248,16 @@ contract Initialize is VertexCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[i], address(uninitializedVertex));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      );
     }
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategyConfigs[0]);
-    emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategyConfigs[1]);
+    emit StrategyAuthorized(strategyAddresses[0], address(relativeStrategyLogic), strategyConfigs[0]);
+    emit StrategyAuthorized(strategyAddresses[1], address(relativeStrategyLogic), strategyConfigs[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -264,12 +268,13 @@ contract Initialize is VertexCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[i], address(uninitializedVertex));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      );
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
@@ -283,12 +288,13 @@ contract Initialize is VertexCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[i], address(uninitializedVertex));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      );
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
@@ -302,15 +308,16 @@ contract Initialize is VertexCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[i], address(uninitializedVertex));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      );
     }
 
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), false);
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
@@ -318,7 +325,7 @@ contract Initialize is VertexCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
-    vm.assume(notStrategyLogic != address(strategyLogic));
+    vm.assume(notStrategyLogic != address(relativeStrategyLogic));
     (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
@@ -351,7 +358,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -374,7 +381,7 @@ contract Initialize is VertexCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accounts[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -390,7 +397,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(accountAddresses[0].vertex()), address(uninitializedVertex));
@@ -409,7 +416,7 @@ contract Initialize is VertexCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(accountAddresses[0].name(), "Account1");
@@ -1257,7 +1264,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1274,18 +1281,19 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     newStrategies[2] = _createStrategy(salt3, isFixedLengthApprovalPeriod);
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(newStrategies[i]), address(mpCore));
+      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+        address(relativeStrategyLogic), encodeStrategy(newStrategies[i]), address(mpCore)
+      );
     }
 
     vm.startPrank(address(mpCore));
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), encodeStrategy(newStrategies[0]));
-    emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), encodeStrategy(newStrategies[1]));
-    emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), encodeStrategy(newStrategies[2]));
+    emit StrategyAuthorized(strategyAddresses[0], address(relativeStrategyLogic), encodeStrategy(newStrategies[0]));
+    emit StrategyAuthorized(strategyAddresses[1], address(relativeStrategyLogic), encodeStrategy(newStrategies[1]));
+    emit StrategyAuthorized(strategyAddresses[2], address(relativeStrategyLogic), encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1400,7 +1408,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1424,10 +1432,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies1));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies2));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1448,8 +1456,9 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    IVertexStrategy strategyAddress =
-      lens.computeVertexStrategyAddress(address(strategyLogic), encodeStrategy(newStrategies[0]), address(mpCore));
+    IVertexStrategy strategyAddress = lens.computeVertexStrategyAddress(
+      address(relativeStrategyLogic), encodeStrategy(newStrategies[0]), address(mpCore)
+    );
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -1461,7 +1470,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       address(mpCore),
       0, // value
       CREATE_STRATEGY_SELECTOR,
-      abi.encode(address(strategyLogic), encodeStrategyConfigs(newStrategies))
+      abi.encode(address(relativeStrategyLogic), encodeStrategyConfigs(newStrategies))
     );
 
     vm.warp(block.timestamp + 1);

@@ -23,7 +23,9 @@ contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
   event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
-  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
+  event StrategyAuthorized(
+    IVertexStrategy indexed strategy, address indexed relativeStrategyLogic, bytes initializationData
+  );
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
@@ -44,7 +46,7 @@ contract VertexFactoryTest is VertexTestSetup {
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategiesAuthorized(RelativeStrategyConfig[] strategies);
   event StrategiesUnauthorized(IVertexStrategy[] strategies);
-  event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
+  event StrategyLogicAuthorized(IVertexStrategy indexed relativeStrategyLogic);
   event AccountLogicAuthorized(VertexAccount indexed accountLogic);
 }
 
@@ -59,7 +61,7 @@ contract Constructor is VertexFactoryTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new VertexFactory(
       coreLogic,
-      strategyLogic,
+      relativeStrategyLogic,
       accountLogic,
       policyLogic,
       policyTokenURI,
@@ -95,12 +97,12 @@ contract Constructor is VertexFactoryTest {
   }
 
   function test_SetsVertexStrategyLogicAddress() public {
-    assertTrue(factory.authorizedStrategyLogics(strategyLogic));
+    assertTrue(factory.authorizedStrategyLogics(relativeStrategyLogic));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
-    emit StrategyLogicAuthorized(strategyLogic);
+    emit StrategyLogicAuthorized(relativeStrategyLogic);
     deployVertexFactory();
   }
 
@@ -128,7 +130,7 @@ contract Deploy is VertexFactoryTest {
     vm.prank(address(rootCore));
     return factory.deploy(
       "NewProject",
-      strategyLogic,
+      relativeStrategyLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -147,7 +149,7 @@ contract Deploy is VertexFactoryTest {
     vm.expectRevert(VertexFactory.OnlyVertex.selector);
     factory.deploy(
       "NewProject",
-      strategyLogic,
+      relativeStrategyLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -166,12 +168,24 @@ contract Deploy is VertexFactoryTest {
 
     vm.prank(address(rootCore));
     factory.deploy(
-      name, strategyLogic, strategyConfigs, accounts, roleDescriptionStrings, roleHolders, new RolePermissionData[](0)
+      name,
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      roleDescriptionStrings,
+      roleHolders,
+      new RolePermissionData[](0)
     );
 
     vm.expectRevert();
     factory.deploy(
-      name, strategyLogic, strategyConfigs, accounts, new RoleDescription[](0), roleHolders, new RolePermissionData[](0)
+      name,
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      roleHolders,
+      new RolePermissionData[](0)
     );
   }
 
@@ -218,7 +232,7 @@ contract Deploy is VertexFactoryTest {
 
     VertexPolicy _policy = _vertex.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategyConfigs, accounts);
+    _vertex.initialize("NewProject", _policy, relativeStrategyLogic, accountLogic, strategyConfigs, accounts);
   }
 
   function test_SetsVertexCoreAddressOnThePolicy() public {
