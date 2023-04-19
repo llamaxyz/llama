@@ -359,12 +359,12 @@ contract SetRolePermission is VertexPolicyTest {
 contract RevokeExpiredRole is VertexPolicyTest {
   function test_RevokesExpiredRole(address user, uint64 expiration) public {
     vm.assume(user != address(0));
-    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
 
-    vm.warp(expiration);
+    vm.warp(expiration + 1);
 
     vm.expectEmit();
     emit RoleAssigned(user, uint8(Roles.TestRole1), 0, VertexPolicy.RoleSupply(0, 0));
@@ -683,7 +683,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
 
     vm.warp(110);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 159);
 
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
@@ -708,7 +708,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     assertEq(rbCheckpoint1._checkpoints[0].expiration, 150);
     assertEq(rbCheckpoint1._checkpoints[0].quantity, 1);
     assertEq(rbCheckpoint1._checkpoints[1].timestamp, 110);
-    assertEq(rbCheckpoint1._checkpoints[1].expiration, 160);
+    assertEq(rbCheckpoint1._checkpoints[1].expiration, 159);
     assertEq(rbCheckpoint1._checkpoints[1].quantity, 1);
     assertEq(rbCheckpoint1._checkpoints[2].timestamp, 160);
     assertEq(rbCheckpoint1._checkpoints[2].expiration, 0);
