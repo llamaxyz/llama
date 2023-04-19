@@ -41,9 +41,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategyAuthorized(
-    IVertexStrategy indexed strategy, address indexed relativeStrategyLogic, bytes initializationData
-  );
+  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountCreated(VertexAccount indexed account, string name);
 
@@ -400,8 +398,8 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(accountAddresses[0].vertex()), address(uninitializedVertex));
-    assertEq(address(accountAddresses[1].vertex()), address(uninitializedVertex));
+    assertEq(address(accountAddresses[0].vertexCore()), address(uninitializedVertex));
+    assertEq(address(accountAddresses[1].vertexCore()), address(uninitializedVertex));
   }
 
   function test_AccountsHaveNameInStorage() public {
@@ -1649,6 +1647,7 @@ contract SetGuard is VertexCoreTest {
   }
 
   function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
+    vm.assume(target != address(mpCore) && target != address(mpPolicy));
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ActionGuardSet(target, selector, guard);
@@ -1680,6 +1679,7 @@ contract AuthorizeScript is VertexCoreTest {
   }
 
   function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+    vm.assume(script != address(mpCore) && script != address(mpPolicy));
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ScriptAuthorized(script, authorized);

@@ -177,7 +177,7 @@ contract VertexAccountTest is VertexTestSetup {
 
 contract Initialize is VertexAccountTest {
   function test_SetsVertexCore() public {
-    assertEq(mpAccount1.vertex(), address(mpCore));
+    assertEq(mpAccount1.vertexCore(), address(mpCore));
   }
 
   function test_SetsAccountName() public {

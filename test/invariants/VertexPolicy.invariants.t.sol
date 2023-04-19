@@ -22,9 +22,9 @@ contract VertexPolicyHandler is BaseHandler {
     // TODO Set some initial permissions, each actor is a policyholder.
   }
 
-  // ==========================
-  // ======== Helpers =========
-  // ==========================
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function callSummary() public view override {
     BaseHandler.callSummary();
@@ -36,22 +36,22 @@ contract VertexPolicyHandler is BaseHandler {
     console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
   }
 
-  // =====================================
-  // ======== Methods for Fuzzer =========
-  // =====================================
+  // ====================================
+  // ======== Methods for Fuzzer ========
+  // ====================================
 
   function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(POLICY.vertex()));
+    vm.prank(address(POLICY.vertexCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }

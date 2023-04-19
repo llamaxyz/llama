@@ -5,7 +5,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 
 /// @title Vertex Strategy Interface
-/// @author Llama (devs@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Vertex strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
 interface IVertexStrategy {

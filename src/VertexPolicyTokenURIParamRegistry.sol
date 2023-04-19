@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {VertexCore} from "src/VertexCore.sol";
 
 /// @title Vertex Policy Token URI Parameter Registry
-/// @author Llama (devs@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Parameter Registry contract for onchain image formats.
 contract VertexPolicyTokenURIParamRegistry {
   // ======================================

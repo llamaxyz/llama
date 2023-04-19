@@ -12,7 +12,7 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
-/// @author Llama (devs@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactoryWithoutInitialization is VertexFactory {
   constructor(
@@ -63,7 +63,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     policy.setVertex(address(vertex));
 
     unchecked {
-      emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
+      emit VertexCreated(vertexCount++, name, address(vertex), address(policy), block.chainid);
     }
   }
 

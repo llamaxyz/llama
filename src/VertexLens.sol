@@ -10,13 +10,9 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Lens
-/// @author Llama (devs@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens {
-  // ===========================================
-  // ======== External and Public Logic ========
-  // ===========================================
-
   /// @notice Hashes a permission.
   /// @param permission the permission to hash.
   /// @return the hash of the permission.

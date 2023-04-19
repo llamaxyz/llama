@@ -100,14 +100,14 @@ contract Run is DeployVertexTest {
     assertEq(toRelativeStrategy(secondStrategy).forceDisapprovalRole(1), true);
 
     VertexAccount firstAccount = accountsAuthorized[0];
-    assertEq(firstAccount.vertex(), address(rootVertex));
+    assertEq(firstAccount.vertexCore(), address(rootVertex));
     assertEq(
       keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("Llama Treasury")
     );
 
     VertexAccount secondAccount = accountsAuthorized[1];
-    assertEq(secondAccount.vertex(), address(rootVertex));
+    assertEq(secondAccount.vertexCore(), address(rootVertex));
     assertEq(
       keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("Llama Grants")

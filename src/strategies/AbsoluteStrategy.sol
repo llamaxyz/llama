@@ -11,7 +11,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Action, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 
 /// @title Absolute Vertex Strategy
-/// @author Llama (devs@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a vertex strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
@@ -107,9 +107,9 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    // TODO: when matt merges his PR we can uncomment this line
-    // if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) revert
-    // InvalidMinApprovals(minApprovals);
+    if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) {
+      revert InvalidMinApprovals(minApprovals);
+    }
     minApprovals = strategyConfig.minApprovals;
     minDisapprovals = strategyConfig.minDisapprovals;
 
@@ -142,9 +142,9 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
-    uint256 approvalPolicySupply = policy.getSupply(approvalRole);
+    uint256 approvalPolicySupply = policy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
-    uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsQuantitySum(disapprovalRole);
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
