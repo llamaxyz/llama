@@ -794,58 +794,6 @@ contract TotalSupply is VertexPolicyTest {
   }
 }
 
-contract Aggregate is VertexPolicyTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    bytes[] memory calls = new bytes[](3);
-
-    vm.prank(caller);
-    mpPolicy.aggregate(calls);
-  }
-
-  function test_AggregatesSetRoleHolderCalls() public {
-    address newRoleHolder = makeAddr("newRoleHolder");
-
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call2 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole2), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call3 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-
-    bytes[] memory calls = new bytes[](3);
-    calls[0] = call1;
-    calls[1] = call2;
-    calls[2] = call3;
-
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
-
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole2)), true);
-    assertEq(mpPolicy.hasRole(newRoleHolder, uint8(Roles.TestRole1)), true);
-  }
-
-  function test_RevertIf_CalldataIsIncorrect() public {
-    uint8 uninitializedRole = NUM_INIT_ROLES + 1;
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uninitializedRole, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes[] memory calls = new bytes[](1);
-    calls[0] = call1;
-
-    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, uninitializedRole);
-
-    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
-  }
-}
-
 // =================================
 // ======== ERC-721 Getters ========
 // =================================

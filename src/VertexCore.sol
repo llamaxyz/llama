@@ -94,9 +94,6 @@ contract VertexCore is Initializable {
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
     keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
-  /// @notice Equivalent to 100%, but scaled for precision
-  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
-
   /// @notice The VertexFactory contract that deployed this Vertex system.
   VertexFactory public factory;
 
