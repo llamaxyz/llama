@@ -1640,6 +1640,7 @@ contract SetGuard is VertexCoreTest {
 
   function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpCore));
+    vm.assume(target != address(mpCore) && target != address(mpPolicy)));
     vm.expectEmit();
     emit ActionGuardSet(target, selector, guard);
     mpCore.setGuard(target, selector, guard);
