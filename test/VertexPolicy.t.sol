@@ -758,7 +758,7 @@ contract HasRoleUint256Overload is VertexPolicyTest {
 }
 
 contract HasPermissionId is VertexPolicyTest {
-  function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
+  function testFuzz_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
     vm.startPrank(address(mpCore));
 
     vm.warp(100);
@@ -772,7 +772,7 @@ contract HasPermissionId is VertexPolicyTest {
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), pausePermissionId), false);
   }
 
-  function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
+  function testFuzz_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), false);
@@ -780,7 +780,7 @@ contract HasPermissionId is VertexPolicyTest {
 }
 
 contract TotalSupply is VertexPolicyTest {
-  function test_getsTotalSupply(uint256 numberOfPolicies) public {
+  function testFuzz_getsTotalSupply(uint256 numberOfPolicies) public {
     uint256 initPolicySupply = mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE);
     numberOfPolicies = bound(numberOfPolicies, 1, 10_000);
     for (uint256 i = 0; i < numberOfPolicies; i++) {
@@ -944,7 +944,7 @@ contract TokenURI is VertexPolicyTest {
 }
 
 contract IsRoleExpired is VertexPolicyTest {
-  function test_ReturnsTrueForExpiredRole(uint64 expiration) public {
+  function testFuzz_ReturnsTrueForExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.prank(address(mpCore));
@@ -955,13 +955,20 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
   }
 
-  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
+  function testFuzz_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
+
+  function test_ReturnsFalseIfNoRole() public {
+    address randomUser = makeAddr("randomUser");
+    // Make sure user has no role, in and in that case expired should be false.
+    assertEq(mpPolicy.getQuantity(randomUser, uint8(Roles.TestRole1)), 0);
+    assertFalse(mpPolicy.isRoleExpired(randomUser, uint8(Roles.TestRole1)));
   }
 }
 

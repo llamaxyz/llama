@@ -408,8 +408,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     _mint(user, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders = allHoldersRoleSupply.numberOfHolders + 1;
-    allHoldersRoleSupply.totalQuantity = allHoldersRoleSupply.totalQuantity + 1;
+    allHoldersRoleSupply.numberOfHolders += 1;
+    allHoldersRoleSupply.totalQuantity += 1;
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
@@ -418,8 +418,8 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders = allHoldersRoleSupply.numberOfHolders - 1;
-    allHoldersRoleSupply.totalQuantity = allHoldersRoleSupply.totalQuantity - 1;
+    allHoldersRoleSupply.numberOfHolders -= 1;
+    allHoldersRoleSupply.totalQuantity -= 1;
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
