@@ -142,9 +142,9 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
-    uint256 approvalPolicySupply = policy.getSupply(approvalRole);
+    uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
-    uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
@@ -237,7 +237,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
   }
 
   /// @inheritdoc IVertexStrategy
@@ -249,7 +249,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.minExecutionTime + expirationPeriod < block.timestamp;
+    return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
   // ========================================
