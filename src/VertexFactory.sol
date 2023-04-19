@@ -41,9 +41,6 @@ contract VertexFactory {
 
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
-  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Vertex Instances.
-  event AccountLogicAuthorized(VertexAccount indexed accountLogic);
-  /// @dev Emitted when the Vertex Policy Token URI contract is updated.
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
@@ -59,13 +56,13 @@ contract VertexFactory {
   /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
   VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
+  /// @notice The Vertex Account implementation (logic) contract.
+  VertexAccount public immutable VERTEX_ACCOUNT_LOGIC;
+
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
   mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
 
-  /// @notice Mapping of all authorized Vertex Account implementation (logic) contracts.
-  mapping(VertexAccount => bool) public authorizedAccountLogics;
-
-  /// @notice The Vertex instance responsible for governing the Vertex Factory.
+  /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
 
   /// @notice The Vertex Policy Token URI contract.
@@ -82,7 +79,7 @@ contract VertexFactory {
   constructor(
     VertexCore vertexCoreLogic,
     IVertexStrategy initialVertexStrategyLogic,
-    VertexAccount initialVertexAccountLogic,
+    VertexAccount vertexAccountLogic,
     VertexPolicy vertexPolicyLogic,
     VertexPolicyTokenURI _vertexPolicyTokenURI,
     string memory name,
@@ -93,16 +90,15 @@ contract VertexFactory {
     RolePermissionData[] memory initialRolePermissions
   ) {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
+    VERTEX_ACCOUNT_LOGIC = vertexAccountLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
 
     _setPolicyTokenURI(_vertexPolicyTokenURI);
     _authorizeStrategyLogic(initialVertexStrategyLogic);
-    _authorizeAccountLogic(initialVertexAccountLogic);
 
     ROOT_VERTEX = _deploy(
       name,
       initialVertexStrategyLogic,
-      initialVertexAccountLogic,
       initialStrategies,
       initialAccounts,
       initialRoleDescriptions,
@@ -121,7 +117,6 @@ contract VertexFactory {
   /// @dev This function can only be called by the root Vertex instance.
   /// @param name The name of this Vertex instance.
   /// @param strategyLogic The IVertexStrategy implementation (logic) contract to use for this Vertex instance.
-  /// @param accountLogic The VertexAccount implementation (logic) contract to use for this Vertex instance.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccounts The list of initial accounts.
   /// @param initialRoleDescriptions The list of initial role descriptions.
@@ -131,7 +126,6 @@ contract VertexFactory {
   function deploy(
     string memory name,
     IVertexStrategy strategyLogic,
-    VertexAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
@@ -141,7 +135,6 @@ contract VertexFactory {
     return _deploy(
       name,
       strategyLogic,
-      accountLogic,
       initialStrategies,
       initialAccounts,
       initialRoleDescriptions,
@@ -155,13 +148,6 @@ contract VertexFactory {
   /// @param strategyLogic The strategy logic contract to authorize.
   function authorizeStrategyLogic(IVertexStrategy strategyLogic) external onlyRootVertex {
     _authorizeStrategyLogic(strategyLogic);
-  }
-
-  /// @notice Authorizes an account implementation (logic) contract.
-  /// @dev This function can only be called by the root Vertex instance.
-  /// @param accountLogic The account logic contract to authorize.
-  function authorizeAccountLogic(VertexAccount accountLogic) external onlyRootVertex {
-    _authorizeAccountLogic(accountLogic);
   }
 
   /// @notice Sets the Vertex Policy Token URI contract.
@@ -193,7 +179,6 @@ contract VertexFactory {
   function _deploy(
     string memory name,
     IVertexStrategy strategyLogic,
-    VertexAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
@@ -206,7 +191,7 @@ contract VertexFactory {
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     vertex = VertexCore(Clones.cloneDeterministic(address(VERTEX_CORE_LOGIC), keccak256(abi.encode(name))));
-    vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+    vertex.initialize(name, policy, strategyLogic, VERTEX_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
     policy.setVertex(address(vertex));
 
@@ -223,13 +208,6 @@ contract VertexFactory {
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
-  /// @dev Authorizes an account implementation (logic) contract.
-  function _authorizeAccountLogic(VertexAccount accountLogic) internal {
-    authorizedAccountLogics[accountLogic] = true;
-    emit AccountLogicAuthorized(accountLogic);
-  }
-
-  /// @dev Sets the Vertex Policy Token URI contract.
   function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
     vertexPolicyTokenURI = _vertexPolicyTokenURI;
     emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);
