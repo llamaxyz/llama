@@ -21,7 +21,7 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error InvalidMinApprovalPct(uint256 minApprovals);
+  error InvalidMinApprovals(uint256 minApprovals);
   error RoleNotInitialized(uint8 role);
 
   // ========================
@@ -109,7 +109,9 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    // TODO: Add check that minApprovals is less than total quantity
+    // TODO: when matt merges his PR we can uncomment this line
+    // if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) revert
+    // InvalidMinApprovals(minApprovals);
     minApprovals = strategyConfig.minApprovals;
     minDisapprovals = strategyConfig.minDisapprovals;
 
