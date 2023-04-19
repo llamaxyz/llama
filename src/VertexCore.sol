@@ -10,10 +10,10 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {Action, PermissionData} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex system
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devs@llama.xyz)
 /// @notice Main point of interaction with a Vertex system.
 contract VertexCore is Initializable {
   // ======================================

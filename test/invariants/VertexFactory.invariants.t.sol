@@ -4,13 +4,13 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
@@ -120,7 +120,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
     excludeArtifact("VertexAccount");
     excludeArtifact("VertexCore");
     excludeArtifact("VertexPolicy");
-    excludeArtifact("DefaultStrategy");
+    excludeArtifact("RelativeStrategy");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.vertexFactory_deploy.selector;

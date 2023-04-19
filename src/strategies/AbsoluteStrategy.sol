@@ -8,20 +8,20 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {Action, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 
-/// @title Vertex Strategy
-/// @author Llama (vertex@llama.xyz)
-/// @notice This is the default vertex strategy which has the following properties:
-///   - Approval/disapproval thresholds are specified as percentages of total supply.
+/// @title Absolute Vertex Strategy
+/// @author Llama (devs@llama.xyz)
+/// @notice This is a vertex strategy which has the following properties:
+///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
 ///     regardless of the roles they hold.
-contract DefaultStrategy is IVertexStrategy, Initializable {
+contract AbsoluteStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error InvalidMinApprovalPct(uint256 minApprovalPct);
+  error InvalidMinApprovalPct(uint256 minApprovals);
   error RoleNotInitialized(uint8 role);
 
   // ========================
@@ -30,7 +30,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
-  event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
+  event StrategyCreated(VertexCore vertex, VertexPolicy policy);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -63,11 +63,11 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 100_00 == 100%.
-  uint256 public minApprovalPct;
+  uint256 public minApprovals;
 
   /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
   /// action for it to be canceled. In bps, 100_00 == 100%.
-  uint256 public minDisapprovalPct;
+  uint256 public minDisapprovals;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;
@@ -101,7 +101,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function initialize(bytes memory config) external initializer {
-    DefaultStrategyConfig memory strategyConfig = abi.decode(config, (DefaultStrategyConfig));
+    AbsoluteStrategyConfig memory strategyConfig = abi.decode(config, (AbsoluteStrategyConfig));
     vertex = VertexCore(msg.sender);
     policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
@@ -109,9 +109,9 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    if (strategyConfig.minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(minApprovalPct);
-    minApprovalPct = strategyConfig.minApprovalPct;
-    minDisapprovalPct = strategyConfig.minDisapprovalPct;
+    // TODO: Add check that minApprovals is less than total quantity
+    minApprovals = strategyConfig.minApprovals;
+    minDisapprovals = strategyConfig.minDisapprovals;
 
     uint8 numRoles = policy.numRoles();
 
@@ -135,7 +135,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit NewStrategyCreated(vertex, policy);
+    emit StrategyCreated(vertex, policy);
   }
 
   // -------- At Action Creation --------
@@ -187,7 +187,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
     Action memory action = vertex.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
-    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
+    if (minDisapprovals > actionDisapprovalSupply[actionId]) return (false, "Disapproval disabled");
     return (true, "");
   }
 
@@ -230,7 +230,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
     if (caller == action.creator) return true;
 
     // Check 2b.
-    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
+    return action.totalDisapprovals >= minDisapprovals;
   }
 
   // -------- When Determining Action State --------
@@ -243,7 +243,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionPassed(uint256 actionId) public view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
+    return action.totalApprovals >= minApprovals;
   }
 
   /// @inheritdoc IVertexStrategy
@@ -265,15 +265,6 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   // ================================
   // ======== Internal Logic ========
   // ================================
-
-  /// @dev Determine the minimum quantity needed for an action to reach quorum.
-  /// @param supply Total number of policyholders eligible for participation.
-  /// @param minPct Minimum percentage needed to reach quorum.
-  /// @return The total quantity needed to reach quorum.
-  function _getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
-    // Rounding Up
-    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
-  }
 
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {

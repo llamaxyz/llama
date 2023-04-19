@@ -12,7 +12,7 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Policy
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devs@llama.xyz)
 /// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
 /// disapprove actions.
 /// @dev TODO Add comments here around limitations/expectations of this contract, namely the "total

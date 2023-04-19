@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "lib/forge-std/src/console.sol";
 import {Test, stdError, console2} from "lib/forge-std/src/Test.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";

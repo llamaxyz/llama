@@ -11,12 +11,12 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -139,7 +139,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    bytes[] memory strategyConfigs = defaultStrategyConfigs();
+    bytes[] memory strategyConfigs = relativeStrategyConfigs();
     RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
@@ -273,11 +273,11 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
+  function relativeStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
     strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
   }
 
-  function toIVertexStrategy(DefaultStrategyConfig[] memory strategies)
+  function toIVertexStrategy(RelativeStrategyConfig[] memory strategies)
     internal
     pure
     returns (IVertexStrategy[] memory converted)
@@ -287,7 +287,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     }
   }
 
-  function toIVertexStrategy(DefaultStrategyConfig memory strategy)
+  function toIVertexStrategy(RelativeStrategyConfig memory strategy)
     internal
     pure
     returns (IVertexStrategy[] memory converted)

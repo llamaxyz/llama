@@ -6,14 +6,14 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devs@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactoryWithoutInitialization is VertexFactory {
   constructor(
