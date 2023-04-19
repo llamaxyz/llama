@@ -27,7 +27,7 @@ contract VertexFactoryTest is VertexTestSetup {
   );
   event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
-  event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
+  event PolicyTokenURISet(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   event ActionCreated(
     uint256 id,
@@ -92,7 +92,7 @@ contract Constructor is VertexFactoryTest {
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyTokenURIUpdated(policyTokenURI);
+    emit PolicyTokenURISet(policyTokenURI);
     deployVertexFactory();
   }
 
@@ -292,7 +292,7 @@ contract SetPolicyTokenURI is VertexFactoryTest {
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit PolicyTokenURIUpdated(VertexPolicyTokenURI(_policyTokenURI));
+    emit PolicyTokenURISet(VertexPolicyTokenURI(_policyTokenURI));
     factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
     assertEq(address(factory.vertexPolicyTokenURI()), _policyTokenURI);
   }

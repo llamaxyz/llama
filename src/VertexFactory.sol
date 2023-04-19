@@ -42,8 +42,8 @@ contract VertexFactory {
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
 
-  /// @dev Emitted when a new Vertex Policy Token URI Parameter Registry is set.
-  event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
+  /// @dev Emitted when a new Vertex Policy Token URI is set.
+  event PolicyTokenURISet(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -212,6 +212,6 @@ contract VertexFactory {
   /// @dev Sets the Vertex Policy Token URI contract.
   function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
     vertexPolicyTokenURI = _vertexPolicyTokenURI;
-    emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);
+    emit PolicyTokenURISet(_vertexPolicyTokenURI);
   }
 }
