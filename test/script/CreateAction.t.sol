@@ -2,20 +2,21 @@
 pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
 import {Action} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {DeployVertex} from "script/DeployVertex.s.sol";
-import {CreateActionToDeployVertexInstance} from "script/CreateAction.s.sol";
-
-// TODO probably remove
-import {VertexStrategy} from "src/VertexStrategy.sol";
+import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {DeployVertex} from "script/DeployVertex.s.sol";
+import {CreateActionToDeployVertexInstance} from "script/CreateAction.s.sol";
 
 contract CreateActionTest is Test, DeployVertex {
   CreateActionToDeployVertexInstance script;
@@ -133,18 +134,107 @@ contract Run is CreateActionTest {
 
     rootVertex.queueAction(deployActionId);
 
-    Action memory action = rootVertex.getAction(deployActionId);
-
     // Advance the clock to execute the action.
     vm.roll(block.number + 1);
+    Action memory action = rootVertex.getAction(deployActionId);
     vm.warp(action.minExecutionTime + 1);
 
     // Confirm that a new vertex instance was created.
+    assertEq(factory.vertexCount(), 1);
+    vm.recordLogs();
     bytes memory deployResult = rootVertex.executeAction(deployActionId);
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+    assertEq(factory.vertexCount(), 2);
     VertexCore vertexInstance = abi.decode(deployResult, (VertexCore));
     assertEq(address(vertexInstance.factory()), address(factory));
     assertNotEq(address(vertexInstance), address(rootVertex));
 
-    // Confirm new vertex instance has the desired setup.
+    // Confirm new vertex instance has the desired properties.
+
+    // There are two strategies we expect to have been deployed.
+    VertexStrategy[] memory strategiesAuthorized = new VertexStrategy[](2);
+    uint8 strategiesCount;
+    bytes32 strategiesAuthorizedSig = keccak256(
+      "StrategyAuthorized(address,address,(uint256,uint256,uint256,uint256,uint256,bool,uint8,uint8,uint8[],uint8[]))"
+    );
+
+    // There are two accounts we expect to have been deployed.
+    VertexAccount[] memory accountsAuthorized = new VertexAccount[](2);
+    uint8 accountsCount;
+    bytes32 accountAuthorizedSig = keccak256("AccountAuthorized(address,address,string)");
+
+    Vm.Log memory _event;
+    for (uint256 i; i < emittedEvents.length; i++) {
+      _event = emittedEvents[i];
+      if (_event.topics[0] == strategiesAuthorizedSig) {
+        // event StrategyAuthorized(
+        //   VertexStrategy indexed strategy,  <-- The topic we want.
+        //   address indexed strategyLogic,
+        //   Strategy strategyData
+        // );
+        address strategy = address(uint160(uint256(_event.topics[1])));
+        strategiesAuthorized[strategiesCount++] = VertexStrategy(strategy);
+      }
+      if (_event.topics[0] == accountAuthorizedSig) {
+        // event AccountAuthorized(
+        //   VertexAccount indexed account,  <-- The topic we want.
+        //   address indexed accountLogic,
+        //   string name
+        // );
+        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
+        accountsAuthorized[accountsCount++] = VertexAccount(account);
+      }
+    }
+
+    VertexStrategy firstStrategy = strategiesAuthorized[0];
+    assertEq(vertexInstance.authorizedStrategies(firstStrategy), true);
+    assertEq(firstStrategy.approvalPeriod(), 172_800);
+    assertEq(firstStrategy.approvalRole(), 2);
+    assertEq(firstStrategy.disapprovalRole(), 3);
+    assertEq(firstStrategy.expirationPeriod(), 86_400);
+    assertEq(firstStrategy.isFixedLengthApprovalPeriod(), false);
+    assertEq(firstStrategy.minApprovalPct(), 8000);
+    assertEq(firstStrategy.minDisapprovalPct(), 10_001);
+    assertEq(firstStrategy.queuingPeriod(), 0);
+    assertEq(firstStrategy.forceApprovalRole(1), true);
+    assertEq(firstStrategy.forceDisapprovalRole(1), true);
+
+    VertexStrategy secondStrategy = strategiesAuthorized[1];
+    assertEq(vertexInstance.authorizedStrategies(secondStrategy), true);
+    assertEq(secondStrategy.approvalPeriod(), 172_800);
+    assertEq(secondStrategy.approvalRole(), 2);
+    assertEq(secondStrategy.disapprovalRole(), 3);
+    assertEq(secondStrategy.expirationPeriod(), 691_200);
+    assertEq(secondStrategy.isFixedLengthApprovalPeriod(), true);
+    assertEq(secondStrategy.minApprovalPct(), 4000);
+    assertEq(secondStrategy.minDisapprovalPct(), 2000);
+    assertEq(secondStrategy.queuingPeriod(), 345_600);
+    assertEq(secondStrategy.forceApprovalRole(1), false);
+    assertEq(secondStrategy.forceDisapprovalRole(1), false);
+
+    VertexAccount firstAccount = accountsAuthorized[0];
+    assertEq(firstAccount.vertex(), address(vertexInstance));
+    assertEq(
+      keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
+      keccak256("MP Treasury")
+    );
+
+    VertexAccount secondAccount = accountsAuthorized[1];
+    assertEq(secondAccount.vertex(), address(vertexInstance));
+    assertEq(
+      keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
+      keccak256("MP Grants")
+    );
+
+    VertexPolicy policy = vertexInstance.policy();
+    assertEq(address(policy.factory()), address(factory));
+    assertEq(policy.numRoles(), 8);
+
+    address initRoleHolder = makeAddr("actionCreatorAaron");
+    assertEq(policy.hasRole(initRoleHolder, ACTION_CREATOR_ROLE_ID), true);
+    Checkpoints.History memory balances = policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
+    Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    assertEq(checkpoint.expiration, type(uint64).max);
+    assertEq(checkpoint.quantity, 1);
   }
 }

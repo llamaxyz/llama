@@ -22,18 +22,6 @@
         "approvalPeriod": 172800,
         "approvalRole": 2,
         "disapprovalRole": 3,
-        "expirationPeriod": 691200,
-        "forceApprovalRoles": [],
-        "forceDisapprovalRoles": [],
-        "isFixedLengthApprovalPeriod": true,
-        "minApprovalPct": 4000,
-        "minDisapprovalPct": 2000,
-        "queuingPeriod": 345600
-      },
-      {
-        "approvalPeriod": 172800,
-        "approvalRole": 2,
-        "disapprovalRole": 3,
         "expirationPeriod": 86400,
         "forceApprovalRoles": [1],
         "forceDisapprovalRoles": [1],
@@ -41,6 +29,18 @@
         "minApprovalPct": 8000,
         "minDisapprovalPct": 10001,
         "queuingPeriod": 0
+      },
+      {
+        "approvalPeriod": 172800,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
+        "expirationPeriod": 691200,
+        "forceApprovalRoles": [],
+        "forceDisapprovalRoles": [],
+        "isFixedLengthApprovalPeriod": true,
+        "minApprovalPct": 4000,
+        "minDisapprovalPct": 2000,
+        "queuingPeriod": 345600
       }
     ],
     "initialRoleHolders": [
