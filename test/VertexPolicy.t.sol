@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "lib/forge-std/src/console.sol";
-import {Test, stdError, console2} from "lib/forge-std/src/Test.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {VertexLens} from "src/VertexLens.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Test, stdError, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@solady/utils/Base64.sol";
-import {console} from "lib/forge-std/src/console.sol";
+import {Solarray} from "@solarray/Solarray.sol";
+
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
+import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {VertexLens} from "src/VertexLens.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexPolicyTest is VertexTestSetup {
   event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
