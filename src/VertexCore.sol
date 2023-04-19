@@ -418,9 +418,9 @@ contract VertexCore is Initializable {
     }
   }
 
-  /// @notice Deploy new accounts and add them to the mapping of authorized accounts.
-  /// @param accounts list of new accounts to be authorized.
-  function createAndAuthorizeAccounts(string[] calldata accounts) external onlyVertex {
+  /// @notice Deploy new accounts.
+  /// @param accounts List of names of new accounts to be created.
+  function createAccounts(string[] calldata accounts) external onlyVertex {
     _deployAccounts(accounts);
   }
 

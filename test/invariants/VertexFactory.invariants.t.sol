@@ -81,14 +81,7 @@ contract VertexFactoryHandler is BaseHandler {
 
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.deploy(
-      name(),
-      strategyLogic,
-      accountLogic,
-      new bytes[](0),
-      new string[](0),
-      roleDescriptions,
-      roleHolders,
-      new RolePermissionData[](0)
+      name(), strategyLogic, new bytes[](0), new string[](0), roleDescriptions, roleHolders, new RolePermissionData[](0)
     );
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
@@ -100,15 +93,6 @@ contract VertexFactoryHandler is BaseHandler {
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
-  }
-
-  function vertexFactory_authorizeAccountLogic(VertexAccount newAccountLogic)
-    public
-    recordCall("vertexFactory_authorizeAccountLogic")
-    useCurrentTimestamp
-  {
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
   }
 
   function vertexFactory_setPolicyTokenURI(VertexPolicyTokenURI newPolicyTokenURI)
