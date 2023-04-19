@@ -28,8 +28,8 @@ contract Run is DeployVertexTest {
     assertNotEq(address(factory), address(0));
     assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
+    assertEq(address(factory.VERTEX_ACCOUNT_LOGIC()), address(accountLogic));
     assertEq(factory.authorizedStrategyLogics(strategyLogic), true);
-    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootVertex() public {
@@ -49,7 +49,7 @@ contract Run is DeployVertexTest {
     // There are two accounts we expect to have been deployed.
     VertexAccount[] memory accountsAuthorized = new VertexAccount[](2);
     uint8 accountsCount;
-    bytes32 accountAuthorizedSig = keccak256("AccountAuthorized(address,address,string)");
+    bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,string)");
 
     Vm.Log memory _event;
     for (uint256 i; i < emittedEvents.length; i++) {
@@ -66,7 +66,6 @@ contract Run is DeployVertexTest {
       if (_event.topics[0] == accountAuthorizedSig) {
         // event AccountAuthorized(
         //   VertexAccount indexed account,  <-- The topic we want.
-        //   address indexed accountLogic,
         //   string name
         // );
         address payable account = payable(address(uint160(uint256(_event.topics[1]))));
@@ -101,14 +100,14 @@ contract Run is DeployVertexTest {
     assertEq(toDefaultStrategy(secondStrategy).forceDisapprovalRole(1), true);
 
     VertexAccount firstAccount = accountsAuthorized[0];
-    assertEq(firstAccount.vertex(), address(rootVertex));
+    assertEq(firstAccount.vertexCore(), address(rootVertex));
     assertEq(
       keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("Llama Treasury")
     );
 
     VertexAccount secondAccount = accountsAuthorized[1];
-    assertEq(secondAccount.vertex(), address(rootVertex));
+    assertEq(secondAccount.vertexCore(), address(rootVertex));
     assertEq(
       keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("Llama Grants")

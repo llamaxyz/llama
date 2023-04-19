@@ -28,7 +28,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error AllHoldersRole();
   error AlreadyInitialized();
   error CallReverted(uint256 index, bytes revertData);
-  error InvalidInput();
+  error InvalidRoleHolderInput();
   error MissingAdmin();
   error NonTransferableToken();
   error OnlyVertex();
@@ -36,7 +36,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error UserDoesNotHoldPolicy(address user);
 
   modifier onlyVertex() {
-    if (msg.sender != vertex) revert OnlyVertex();
+    if (msg.sender != vertexCore) revert OnlyVertex();
     _;
   }
 
@@ -81,7 +81,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   uint8 public numRoles;
 
   /// @notice The address of the `VertexCore` instance that governs this contract.
-  address public vertex;
+  address public vertexCore;
 
   /// @notice The address of the `VertexFactory` contract.
   VertexFactory public factory;
@@ -115,7 +115,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     // Must have assigned roles during initialization, otherwise the system cannot be used. However,
     // we do not check that roles were assigned "properly" as there is no single correct way, so
     // this is more of a sanity check, not a guarantee that the system will work after initialization.
-    if (numRoles == 0 || getSupply(ALL_HOLDERS_ROLE) == 0) revert InvalidInput();
+    if (numRoles == 0 || getSupply(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
   }
 
   // ===========================================
@@ -124,10 +124,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Sets the address of the `VertexCore` contract.
   /// @dev This method can only be called once.
-  /// @param _vertex The address of the `VertexCore` contract.
-  function setVertex(address _vertex) external {
-    if (vertex != address(0)) revert AlreadyInitialized();
-    vertex = _vertex;
+  /// @param _vertexCore The address of the `VertexCore` contract.
+  function setVertex(address _vertexCore) external {
+    if (vertexCore != address(0)) revert AlreadyInitialized();
+    vertexCore = _vertexCore;
   }
 
   // -------- Role and Permission Management --------
@@ -202,6 +202,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));
+  }
+
+  /// @notice Updates the description of a role.
+  /// @param role ID of the role to update.
+  /// @param description New description of the role.
+  function updateRoleDescription(uint8 role, RoleDescription description) external onlyVertex {
+    emit RoleInitialized(role, description);
   }
 
   // -------- Role and Permission Getters --------
@@ -283,7 +290,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return factory.tokenURI(VertexCore(vertex), name, symbol, tokenId);
+    return factory.tokenURI(VertexCore(vertexCore), name, symbol, tokenId);
   }
 
   // -------- ERC-721 Methods --------
@@ -344,7 +351,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
       //   - quantity == 0 && expiration == 0: This means you are removing a role
       bool case1 = quantity > 0 && expiration > block.timestamp;
       bool case2 = quantity == 0 && expiration == 0;
-      if (!(case1 || case2)) revert InvalidInput();
+      if (!(case1 || case2)) revert InvalidRoleHolderInput();
     }
 
     // Save off whether or not the user has a nonzero quantity of this role. This is used below when
@@ -382,7 +389,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     // Read the most recent checkpoint for the user's role balance.
     uint256 tokenId = _tokenId(user);
     (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    if (quantity == 0 || expiration == 0 || expiration > block.timestamp) revert InvalidInput();
+    if (quantity == 0 || expiration > block.timestamp) revert InvalidRoleHolderInput();
     _setRoleHolder(role, user, 0, 0);
   }
 

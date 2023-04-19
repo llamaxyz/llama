@@ -45,9 +45,9 @@ contract VertexFactoryHandler is BaseHandler {
     accountLogic = _accountLogic;
   }
 
-  // ==========================
-  // ======== Helpers =========
-  // ==========================
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   // The salt is a function of name and symbol. To ensure we get a different contract address each
   // time we use this method.
@@ -65,9 +65,9 @@ contract VertexFactoryHandler is BaseHandler {
     console2.log("vertexFactory_deploy             ", calls["vertexFactory_deploy"]);
   }
 
-  // =====================================
-  // ======== Methods for Fuzzer =========
-  // =====================================
+  // ====================================
+  // ======== Methods for Fuzzer ========
+  // ====================================
 
   function vertexFactory_deploy() public recordCall("vertexFactory_deploy") useCurrentTimestamp {
     // We don't care about the parameters, we just need it to execute successfully.
@@ -81,14 +81,7 @@ contract VertexFactoryHandler is BaseHandler {
 
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.deploy(
-      name(),
-      strategyLogic,
-      accountLogic,
-      new bytes[](0),
-      new string[](0),
-      roleDescriptions,
-      roleHolders,
-      new RolePermissionData[](0)
+      name(), strategyLogic, new bytes[](0), new string[](0), roleDescriptions, roleHolders, new RolePermissionData[](0)
     );
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
@@ -100,15 +93,6 @@ contract VertexFactoryHandler is BaseHandler {
   {
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
-  }
-
-  function vertexFactory_authorizeAccountLogic(VertexAccount newAccountLogic)
-    public
-    recordCall("vertexFactory_authorizeAccountLogic")
-    useCurrentTimestamp
-  {
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.authorizeAccountLogic(newAccountLogic);
   }
 
   function vertexFactory_setPolicyTokenURI(VertexPolicyTokenURI newPolicyTokenURI)

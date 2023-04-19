@@ -35,7 +35,7 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   error FailedExecution(bytes result);
 
   modifier onlyVertex() {
-    if (msg.sender != vertex) revert OnlyVertex();
+    if (msg.sender != vertexCore) revert OnlyVertex();
     _;
   }
 
@@ -47,7 +47,7 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   string public name;
 
   /// @notice Vertex system.
-  address public vertex;
+  address public vertexCore;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -58,7 +58,7 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Initializes a new VertexAccount clone.
   /// @param _name The name of the VertexAccount clone.
   function initialize(string memory _name) external initializer {
-    vertex = msg.sender;
+    vertexCore = msg.sender;
     name = _name;
   }
 

@@ -64,7 +64,7 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     policy.setVertex(address(vertex));
 
     unchecked {
-      emit VertexCreated(vertexCount++, name, address(vertex), address(policy));
+      emit VertexCreated(vertexCount++, name, address(vertex), address(policy), block.chainid);
     }
   }
 
