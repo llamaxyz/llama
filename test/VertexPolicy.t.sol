@@ -550,10 +550,6 @@ contract SetApprovalForAll is VertexPolicyTest {
 // The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
 // that's added on top of that.
 
-// TODO Once the `expiration` timestamp is hit, the role is expired. Confirm that this is the
-// desired behavior, i.e. should roles become expired at `expiration` or at `expiration + 1`?
-// Ensure this inclusive vs. exclusive behavior is consistent across all timestamp usage.
-
 contract GetQuantity is VertexPolicyTest {
   function test_ReturnsZeroIfUserDoesNotHoldRole() public {
     assertEq(mpPolicy.getQuantity(arbitraryAddress, uint8(Roles.MadeUpRole)), 0);

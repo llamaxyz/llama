@@ -237,7 +237,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
   }
 
   /// @inheritdoc IVertexStrategy
@@ -249,7 +249,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.minExecutionTime + expirationPeriod < block.timestamp;
+    return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
   // ========================================

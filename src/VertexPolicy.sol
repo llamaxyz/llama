@@ -270,9 +270,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
-  function isRoleExpired(address user, uint8 role) external view returns (bool) {
-    (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
-    return expiration < block.timestamp;
+  function isRoleExpired(address user, uint8 role) public view returns (bool) {
+    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return quantity > 0 && block.timestamp > expiration;
   }
 
   function roleExpiration(address user, uint8 role) external view returns (uint256) {
@@ -399,9 +399,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   function _revokeExpiredRole(uint8 role, address user) internal {
     // Read the most recent checkpoint for the user's role balance.
-    uint256 tokenId = _tokenId(user);
-    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[tokenId][role].latestCheckpoint();
-    if (quantity == 0 || expiration > block.timestamp) revert InvalidRoleHolderInput();
+    if (!isRoleExpired(user, role)) revert InvalidRoleHolderInput();
     _setRoleHolder(role, user, 0, 0);
   }
 
