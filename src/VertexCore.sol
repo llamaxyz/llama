@@ -14,7 +14,7 @@ import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol
 
 /// @title Core of a Vertex instance
 /// @author Llama (vertex@llama.xyz)
-/// @notice Main point of interaction of a Vertex instance (i.e entry into and exit from).
+/// @notice Main point of interaction of a Vertex instance (i.e. entry into and exit from).
 contract VertexCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
