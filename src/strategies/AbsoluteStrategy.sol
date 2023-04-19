@@ -61,12 +61,10 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint256 public expirationPeriod;
 
-  /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
-  /// action to be queued. In bps, where 100_00 == 100%.
+  /// @notice Minimum total quantity of approvals for the action to be queued
   uint256 public minApprovals;
 
-  /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
-  /// action for it to be canceled. In bps, 100_00 == 100%.
+  /// @notice Minimum total quantity of disapprovals for the action to be canceled
   uint256 public minDisapprovals;
 
   /// @notice The role that can approve an action.
