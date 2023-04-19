@@ -22,7 +22,9 @@ import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
-  event VertexCreated(uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy);
+  event VertexCreated(
+    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy, uint256 chainId
+  );
   event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
@@ -137,14 +139,14 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertIf_CallerIsNotVertex(address caller) public {
+  function test_RevertIf_CallerIsNotRootVertex(address caller) public {
     vm.assume(caller != address(rootCore));
     bytes[] memory strategyConfigs = defaultStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(caller));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     factory.deploy(
       "NewProject",
       strategyLogic,
@@ -221,10 +223,10 @@ contract Deploy is VertexFactoryTest {
     _vertex.initialize("NewProject", _policy, strategyLogic, accountLogic, strategyConfigs, accounts);
   }
 
-  function test_SetsVertexCoreAddressOnThePolicy() public {
+  function test_SetsVertexCoreOnThePolicy() public {
     VertexCore _vertex = deployVertex();
     VertexPolicy _policy = _vertex.policy();
-    VertexCore _vertexFromPolicy = VertexCore(_policy.vertex());
+    VertexCore _vertexFromPolicy = VertexCore(_policy.vertexCore());
     assertEq(address(_vertexFromPolicy), address(_vertex));
   }
 
@@ -243,7 +245,7 @@ contract Deploy is VertexFactoryTest {
     vm.expectEmit();
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy));
+    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy), block.chainid);
     deployVertex();
   }
 
@@ -251,15 +253,15 @@ contract Deploy is VertexFactoryTest {
     VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
     VertexCore newVertex = deployVertex();
     assertEq(address(newVertex), address(computedVertex));
-    assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertex());
-    assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertex());
+    assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertexCore());
+    assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertexCore());
   }
 }
 
 contract AuthorizeStrategyLogic is VertexFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address _caller) public {
+  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller) public {
     vm.assume(_caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     vm.prank(_caller);
     factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
   }
@@ -280,10 +282,10 @@ contract AuthorizeStrategyLogic is VertexFactoryTest {
 }
 
 contract SetPolicyTokenURI is VertexFactoryTest {
-  function testFuzz_RevertIf_NotCalledByVertex(address _caller, address _policyTokenURI) public {
+  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller, address _policyTokenURI) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
-    vm.expectRevert(VertexFactory.OnlyVertex.selector);
+    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
     factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
   }
 

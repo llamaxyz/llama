@@ -393,8 +393,8 @@ contract Initialize is VertexCoreTest {
       uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(accountAddresses[0].vertex()), address(uninitializedVertex));
-    assertEq(address(accountAddresses[1].vertex()), address(uninitializedVertex));
+    assertEq(address(accountAddresses[0].vertexCore()), address(uninitializedVertex));
+    assertEq(address(accountAddresses[1].vertexCore()), address(uninitializedVertex));
   }
 
   function test_AccountsHaveNameInStorage() public {

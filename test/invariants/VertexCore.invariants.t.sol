@@ -52,9 +52,9 @@ contract VertexCoreHandler is BaseHandler {
     (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
   }
 
-  // ==========================
-  // ======== Helpers =========
-  // ==========================
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
   function getAction(uint256 index) internal view returns (uint256) {
     return _bound(index, actionsCounts[0], actionsCounts[actionsCounts.length - 1]);
@@ -129,9 +129,9 @@ contract VertexCoreHandler is BaseHandler {
     console2.log("vertexCore_castDisapproval_noop_2       ", calls["vertexCore_castDisapproval_noop_2"]);
   }
 
-  // =====================================
-  // ======== Methods for Fuzzer =========
-  // =====================================
+  // ====================================
+  // ======== Methods for Fuzzer ========
+  // ====================================
 
   function vertexCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
     public

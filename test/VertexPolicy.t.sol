@@ -70,7 +70,7 @@ contract Initialize is VertexPolicyTest {
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     VertexPolicy localPolicy = VertexPolicy(Clones.clone(address(mpPolicy)));
     localPolicy.setVertex(address(this));
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     localPolicy.initialize(
       "Test Policy", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
     );
@@ -162,7 +162,7 @@ contract Initialize is VertexPolicyTest {
 contract SetVertex is VertexPolicyTest {
   function test_SetsVertexAddress() public {
     // This test is a no-op because this functionality is already tested in
-    // `test_SetsVertexCoreAddressOnThePolicy`, which also is a stronger test since it tests that
+    // `test_SetsVertexCoreOnThePolicy`, which also is a stronger test since it tests that
     // method in the context it is used, instead of as a pure unit test.
   }
 
@@ -249,7 +249,7 @@ contract SetRoleHolder is VertexPolicyTest {
   function test_RevertIf_InvalidQuantity() public {
     vm.startPrank(address(mpCore));
 
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, 0, DEFAULT_ROLE_EXPIRATION);
   }
 
@@ -318,7 +318,7 @@ contract RevokeExpiredRole is VertexPolicyTest {
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
 
-    vm.expectRevert(VertexPolicy.InvalidInput.selector);
+    vm.expectRevert(VertexPolicy.InvalidRoleHolderInput.selector);
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
   }
 }
@@ -989,5 +989,20 @@ contract IsRoleExpired is VertexPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
+}
+
+contract UpdateRoleDescription is VertexPolicyTest {
+  function test_UpdatesRoleDescription() public {
+    vm.prank(address(mpCore));
+    vm.expectEmit();
+    emit RoleInitialized(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+
+    mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+  }
+
+  function test_FailsForNonOwner() public {
+    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
+    mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
   }
 }
