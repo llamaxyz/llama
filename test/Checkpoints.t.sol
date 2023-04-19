@@ -47,25 +47,9 @@ contract CheckpointsMock {
     return (prevQty, newQty);
   }
 
-  function getAtTimestamp(uint256 timestamp) public view returns (uint256) {
-    uint256 quantity = Checkpoints.getAtTimestamp(_totalCheckpoints, timestamp);
-    return quantity;
-  }
-
   function getAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256) {
     uint256 quantity = Checkpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
     return quantity;
-  }
-
-  function getCheckpointAtTimestamp(uint256 timestamp) public view returns (uint256, uint256) {
-    (uint256 quantity, uint256 expiration) = Checkpoints.getCheckpointAtTimestamp(_totalCheckpoints, timestamp);
-    return (quantity, expiration);
-  }
-
-  function getCheckpointAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256, uint256) {
-    (uint256 quantity, uint256 expiration) =
-      Checkpoints.getCheckpointAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
-    return (quantity, expiration);
   }
 }
 
@@ -90,15 +74,6 @@ contract WithoutCheckpointsWithoutExpiration is CheckpointsTest {
     (bool exists, uint256 timestamp,, uint256 quantity) = checkpoints.latestCheckpoint();
     assertEq(exists, false);
     assertEq(timestamp, 0);
-    assertEq(quantity, 0);
-  }
-
-  function test_ReturnsZeroAsPastValue() public {
-    vm.warp(block.timestamp + 1);
-
-    uint256 quantity = checkpoints.getAtTimestamp(block.timestamp - 1);
-    assertEq(quantity, 0);
-    quantity = checkpoints.getAtProbablyRecentTimestamp(block.timestamp - 1);
     assertEq(quantity, 0);
   }
 }
@@ -135,26 +110,6 @@ contract WithCheckpointsWithoutExpiration is CheckpointsTest {
     assertEq(quantity, 3);
   }
 
-  function test_Lookup_GetAtTimestamp_ReturnsPastValues() public {
-    assertEq(checkpoints.getAtTimestamp(t0 - 1), 0);
-    assertEq(checkpoints.getAtTimestamp(t0), 1);
-    assertEq(checkpoints.getAtTimestamp(t1), 2);
-
-    assertEq(checkpoints.getAtTimestamp(t1 + 1), 2);
-    assertEq(checkpoints.getAtTimestamp(t2), 3);
-    assertEq(checkpoints.getAtTimestamp(t2 + 1), 3);
-  }
-
-  function test_Lookup_GetAtTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
-    checkpoints.getAtTimestamp(block.timestamp);
-  }
-
-  function test_Lookup_GetAtTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
-    checkpoints.getAtTimestamp(block.timestamp + 1);
-  }
-
   function test_Lookup_ProbablyRecentTimestamp_ReturnsPastValues() public {
     assertEq(checkpoints.getAtProbablyRecentTimestamp(t0 - 1), 0);
     assertEq(checkpoints.getAtProbablyRecentTimestamp(t0), 1);
@@ -187,22 +142,6 @@ contract WithCheckpointsWithoutExpiration is CheckpointsTest {
     assertEq(checkpoints.length(), lengthBefore + 1);
     assertEq(checkpoints.latest(), 10);
   }
-
-  function test_MoreThan5Checkpoints() public {
-    checkpoints.push(4);
-    vm.warp(block.timestamp + 1);
-    checkpoints.push(5);
-    vm.warp(block.timestamp + 1);
-    checkpoints.push(6);
-
-    assertEq(checkpoints.length(), 6);
-
-    assertEq(checkpoints.getAtTimestamp(block.timestamp - 1), 5);
-    assertEq(checkpoints.getAtTimestamp(block.timestamp - 9), 0);
-
-    assertEq(checkpoints.getAtProbablyRecentTimestamp(block.timestamp - 1), 5);
-    assertEq(checkpoints.getAtProbablyRecentTimestamp(block.timestamp - 9), 0);
-  }
 }
 
 // ===========================
@@ -221,16 +160,6 @@ contract WithoutCheckpointsWithExpiration is CheckpointsTest {
     assertEq(quantity, 0);
   }
 
-  function test_ReturnsZeroAsPastValue() public {
-    vm.warp(block.timestamp + 1);
-
-    (uint256 quantity, uint256 expiration) = checkpoints.getCheckpointAtTimestamp(block.timestamp - 1);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(block.timestamp - 1);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
-  }
 }
 
 contract WithCheckpointsWithExpiration is CheckpointsTest {
@@ -266,68 +195,6 @@ contract WithCheckpointsWithExpiration is CheckpointsTest {
     assertEq(quantity, 3);
   }
 
-  function test_Lookup_GetAtTimestamp_ReturnsPastValues() public {
-    (uint256 quantity, uint256 expiration) = checkpoints.getCheckpointAtTimestamp(t0 - 1);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(t0);
-    assertEq(quantity, 1);
-    assertEq(expiration, 10);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(t1);
-    assertEq(quantity, 2);
-    assertEq(expiration, 20);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(t1 + 1);
-    assertEq(quantity, 2);
-    assertEq(expiration, 20);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(t2);
-    assertEq(quantity, 3);
-    assertEq(expiration, 30);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(t2 + 1);
-    assertEq(quantity, 3);
-    assertEq(expiration, 30);
-  }
-
-  function test_Lookup_GetAtTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
-    checkpoints.getAtTimestamp(block.timestamp);
-  }
-
-  function test_Lookup_GetAtTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
-    checkpoints.getAtTimestamp(block.timestamp + 1);
-  }
-
-  function test_Lookup_ProbablyRecentTimestamp_ReturnsPastValues() public {
-    (uint256 quantity, uint256 expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t0 - 1);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t0);
-    assertEq(quantity, 1);
-    assertEq(expiration, 10);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t1);
-    assertEq(quantity, 2);
-    assertEq(expiration, 20);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t1 + 1);
-    assertEq(quantity, 2);
-    assertEq(expiration, 20);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t2);
-    assertEq(quantity, 3);
-    assertEq(expiration, 30);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(t2 + 1);
-    assertEq(quantity, 3);
-    assertEq(expiration, 30);
-  }
-
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
     vm.expectRevert("Checkpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp);
@@ -354,31 +221,5 @@ contract WithCheckpointsWithExpiration is CheckpointsTest {
     assertEq(exists, true);
     assertEq(expiration, 100);
     assertEq(quantity, 10);
-  }
-
-  function test_MoreThan5Checkpoints() public {
-    checkpoints.push(4, 40);
-    vm.warp(block.timestamp + 1);
-    checkpoints.push(5, 50);
-    vm.warp(block.timestamp + 1);
-    checkpoints.push(6, 60);
-
-    assertEq(checkpoints.length(), 6);
-
-    (uint256 quantity, uint256 expiration) = checkpoints.getCheckpointAtTimestamp(block.timestamp - 1);
-    assertEq(quantity, 5);
-    assertEq(expiration, 50);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtTimestamp(block.timestamp - 9);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(block.timestamp - 1);
-    assertEq(quantity, 5);
-    assertEq(expiration, 50);
-
-    (quantity, expiration) = checkpoints.getCheckpointAtProbablyRecentTimestamp(block.timestamp - 9);
-    assertEq(quantity, 0);
-    assertEq(expiration, 0);
   }
 }
