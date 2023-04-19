@@ -36,7 +36,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error UserDoesNotHoldPolicy(address user);
 
   modifier onlyVertex() {
-    if (msg.sender != vertexCoreAddress) revert OnlyVertex();
+    if (msg.sender != vertexCore) revert OnlyVertex();
     _;
   }
 
@@ -81,7 +81,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   uint8 public numRoles;
 
   /// @notice The address of the `VertexCore` instance that governs this contract.
-  address public vertexCoreAddress;
+  address public vertexCore;
 
   /// @notice The address of the `VertexFactory` contract.
   VertexFactory public factory;
@@ -124,10 +124,10 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Sets the address of the `VertexCore` contract.
   /// @dev This method can only be called once.
-  /// @param _vertexCoreAddress The address of the `VertexCore` contract.
-  function setVertex(address _vertexCoreAddress) external {
-    if (vertexCoreAddress != address(0)) revert AlreadyInitialized();
-    vertexCoreAddress = _vertexCoreAddress;
+  /// @param _vertexCore The address of the `VertexCore` contract.
+  function setVertex(address _vertexCore) external {
+    if (vertexCore != address(0)) revert AlreadyInitialized();
+    vertexCore = _vertexCore;
   }
 
   // -------- Role and Permission Management --------
@@ -290,7 +290,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return factory.tokenURI(VertexCore(vertexCoreAddress), name, symbol, tokenId);
+    return factory.tokenURI(VertexCore(vertexCore), name, symbol, tokenId);
   }
 
   // -------- ERC-721 Methods --------

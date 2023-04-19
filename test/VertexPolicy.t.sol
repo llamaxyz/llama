@@ -162,7 +162,7 @@ contract Initialize is VertexPolicyTest {
 contract SetVertex is VertexPolicyTest {
   function test_SetsVertexAddress() public {
     // This test is a no-op because this functionality is already tested in
-    // `test_SetsVertexCoreAddressOnThePolicy`, which also is a stronger test since it tests that
+    // `test_SetsVertexCoreOnThePolicy`, which also is a stronger test since it tests that
     // method in the context it is used, instead of as a pure unit test.
   }
 
