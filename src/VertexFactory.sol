@@ -36,7 +36,7 @@ contract VertexFactory {
 
   /// @dev Emitted when a new Vertex instance is created.
   event VertexCreated(
-    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicyNFT, uint256 chainId
+    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy, uint256 chainId
   );
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
