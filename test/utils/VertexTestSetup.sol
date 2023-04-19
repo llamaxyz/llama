@@ -96,7 +96,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
   bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
-  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x0db24798; // createAndAuthorizeAccounts(address,string[])
+  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
 
   // Permission IDs for those selectors.
@@ -147,7 +147,6 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
       strategyLogic,
-      accountLogic,
       strategyConfigs,
       mpAccounts,
       roleDescriptionStrings,
