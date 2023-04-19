@@ -28,15 +28,14 @@ contract VertexCore is Initializable {
   error OnlyVertex();
   error InvalidSignature();
   error TimelockNotFinished();
-  error FailedActionExecution(bytes);
+  error FailedActionExecution(bytes reason);
   error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
-  error TargetCannotBeCoreOrPolicy();
-  error ScriptCannotBeCoreOrPolicy();
+  error CannotUseCoreOrPolicy();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
 
@@ -438,7 +437,7 @@ contract VertexCore is Initializable {
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
-    if (target == address(this) || target == address(policy)) revert TargetCannotBeCoreOrPolicy();
+    if (target == address(this) || target == address(policy)) revert CannotUseCoreOrPolicy();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
   }
@@ -446,7 +445,7 @@ contract VertexCore is Initializable {
   /// @notice Authorizes `script` as the action guard for the given `target` and `selector`.
   /// @dev To remove a script, set `authorized` to false.
   function authorizeScript(address script, bool authorized) external onlyVertex {
-    if (script == address(this) || script == address(policy)) revert ScriptCannotBeCoreOrPolicy();
+    if (script == address(this) || script == address(policy)) revert CannotUseCoreOrPolicy();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
   }

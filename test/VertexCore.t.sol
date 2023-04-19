@@ -802,7 +802,7 @@ contract ExecuteAction is VertexCoreTest {
     mpCore.executeAction(0);
   }
 
-  function test_ScriptActionExecution() public {
+  function test_ScriptsAlwaysUseDelegatecall() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
     vm.prank(address(mpCore));
@@ -1696,13 +1696,13 @@ contract SetGuard is VertexCoreTest {
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.TargetCannotBeCoreOrPolicy.selector);
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.TargetCannotBeCoreOrPolicy.selector);
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 }
@@ -1717,7 +1717,7 @@ contract AuthorizeScript is VertexCoreTest {
     mpCore.authorizeScript(script, authorized);
   }
 
-  function testFuzz_UpdatesScriptAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+  function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ScriptAuthorized(script, authorized);
@@ -1727,13 +1727,13 @@ contract AuthorizeScript is VertexCoreTest {
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.ScriptCannotBeCoreOrPolicy.selector);
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.ScriptCannotBeCoreOrPolicy.selector);
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 }
