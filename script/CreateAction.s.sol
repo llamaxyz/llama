@@ -23,7 +23,6 @@ contract CreateActionToDeployVertexInstance is Script {
 
     bytes memory deployData = abi.encode(
       jsonInput.readString(".newVertexName"),
-      uint8(jsonInput.readUint(".rootVertexActionCreatorRole")),
       jsonInput.readAddress(".strategyLogic"),
       jsonInput.readAddress(".accountLogic"),
       DeployUtils.readStrategies(jsonInput),

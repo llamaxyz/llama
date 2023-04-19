@@ -8,7 +8,6 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexStrategy} from "src/VertexStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 

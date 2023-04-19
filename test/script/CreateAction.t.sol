@@ -10,6 +10,13 @@ import {ActionState} from "src/lib/Enums.sol";
 import {DeployVertex} from "script/DeployVertex.s.sol";
 import {CreateActionToDeployVertexInstance} from "script/CreateAction.s.sol";
 
+// TODO probably remove
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexStrategy} from "src/VertexStrategy.sol";
+import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+
 contract CreateActionTest is Test, DeployVertex {
   CreateActionToDeployVertexInstance script;
 
@@ -37,6 +44,17 @@ contract Run is CreateActionTest {
     // TODO revert if initial role holder quantity in input is not the DEFAULT_ROLE_QTY
   }
 
+  struct VarsForCreatesAnActionOnTheRootVertex {
+    string name;
+    VertexStrategy strategyLogic;
+    VertexAccount accountLogic;
+    Strategy[] initialStrategies;
+    string[] initialAccounts;
+    RoleDescription[] initialRoleDescriptions;
+    RoleHolderData[] initialRoleHolders;
+    RolePermissionData[] initialRolePermissions;
+  }
+
   function test_createsAnActionOnTheRootVertex() public {
     uint256 initActionCount = rootVertex.actionsCount();
 
@@ -53,6 +71,38 @@ contract Run is CreateActionTest {
     assertFalse(action.canceled);
     assertEq(action.selector, VertexFactory.deploy.selector);
     assertEq(action.target, address(factory));
+    VarsForCreatesAnActionOnTheRootVertex memory vars;
+    (
+      vars.name,
+      vars.strategyLogic,
+      vars.accountLogic,
+      vars.initialStrategies,
+      vars.initialAccounts,
+      vars.initialRoleDescriptions,
+      vars.initialRoleHolders,
+      vars.initialRolePermissions
+    ) = abi.decode(action.data, (
+      string,
+      VertexStrategy,
+      VertexAccount,
+      Strategy[],
+      string[],
+      RoleDescription[],
+      RoleHolderData[],
+      RolePermissionData[]
+    ));
+    assertEq(vars.name, "Mock Protocol Vertex");
+    assertEq(address(vars.strategyLogic), 0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496);
+    assertEq(address(vars.accountLogic), 0xBb2180ebd78ce97360503434eD37fcf4a1Df61c3);
+    assertEq(
+      keccak256(abi.encodePacked(vars.initialAccounts[0])),
+      keccak256("MP Treasury")
+    );
+    assertEq(
+      keccak256(abi.encodePacked(vars.initialAccounts[1])),
+      keccak256("MP Grants")
+    );
+    // TODO assert against more action.data
     assertEq(
       uint8(rootVertex.getActionState(newActionId)),
       uint8(ActionState.Active)
@@ -89,10 +139,12 @@ contract Run is CreateActionTest {
     vm.roll(block.number + 1);
     vm.warp(action.minExecutionTime + 1);
 
+    // Confirm that a new vertex instance was created.
     bytes memory deployResult = rootVertex.executeAction(deployActionId);
     VertexCore vertexInstance = abi.decode(deployResult, (VertexCore));
     assertEq(address(vertexInstance.factory()), address(factory));
-    // TODO confirm that a new vertex instance is created
-    // TODO confirm new vertex instance properties
+    assertNotEq(address(vertexInstance), address(rootVertex));
+
+    // Confirm new vertex instance has the desired setup.
   }
 }
