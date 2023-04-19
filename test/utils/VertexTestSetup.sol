@@ -10,6 +10,7 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
+import {MockScript} from "test/mock/MockScript.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
@@ -61,6 +62,9 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   // Mock protocol for action targets.
   MockProtocol public mockProtocol;
 
+  // Mock script for action targets.
+  MockScript public mockScript;
+
   // Root vertex action creator.
   address rootVertexActionCreator;
   uint256 rootVertexActionCreatorPrivateKey;
@@ -93,6 +97,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x0db24798; // createAndAuthorizeAccounts(address,string[])
+  bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
@@ -102,6 +107,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   bytes32 createStrategyId;
   bytes32 createAccountId;
   bytes32 pausePermissionId2;
+  bytes32 executeScriptPermissionId;
 
   // Other addresses and constants.
   address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
@@ -180,6 +186,9 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new MockProtocol(address(mpCore));
 
+    // Deploy the mock script
+    mockScript = new MockScript();
+
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
     rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
@@ -200,8 +209,9 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
     createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
+    executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
 
-    bytes[] memory permissionsToSet = new bytes[](7);
+    bytes[] memory permissionsToSet = new bytes[](8);
     permissionsToSet[0] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
     permissionsToSet[1] =
@@ -216,6 +226,8 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createAccountId, true));
     permissionsToSet[6] =
       abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), pausePermissionId2, true));
+    permissionsToSet[7] =
+      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeScriptPermissionId, true));
 
     vm.prank(address(mpCore));
     mpPolicy.aggregate(permissionsToSet);
@@ -254,6 +266,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     require(bytes32(0) != executeActionId, "executeActionId not set");
     require(bytes32(0) != createStrategyId, "createStrategyId not set");
     require(bytes32(0) != createAccountId, "createAccountId not set");
+    require(bytes32(0) != executeScriptPermissionId, "executeScriptPermissionId not set");
   }
 
   function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {

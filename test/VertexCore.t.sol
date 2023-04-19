@@ -36,7 +36,9 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   event ActionQueued(
     uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
+  event ActionExecuted(
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, bytes result
+  );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
@@ -112,7 +114,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
 
   function _executeAction() public {
     vm.expectEmit();
-    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
+    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, bytes(""));
     mpCore.executeAction(0);
 
     Action memory action = mpCore.getAction(0);
@@ -796,9 +798,43 @@ contract ExecuteAction is VertexCoreTest {
     vm.warp(block.timestamp + 6 days);
 
     vm.expectEmit();
-    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron);
-    bytes memory result = mpCore.executeAction(0);
-    assertEq(result, "");
+    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, bytes(""));
+    mpCore.executeAction(0);
+  }
+
+  function test_ScriptsAlwaysUseDelegatecall() public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    vm.prank(address(mpCore));
+    mpCore.authorizeScript(address(mockScript), true);
+
+    vm.prank(actionCreatorAustin);
+    actionId = mpCore.createAction(
+      uint8(Roles.TestRole2),
+      mpStrategy1,
+      address(mockScript),
+      0, // value
+      EXECUTE_SCRIPT_SELECTOR,
+      abi.encode("")
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionId);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectEmit();
+    emit ActionExecuted(actionId, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    mpCore.executeAction(actionId);
   }
 
   function test_RevertIf_NotQueued() public {
@@ -893,6 +929,10 @@ contract ExecuteAction is VertexCoreTest {
       FAIL_SELECTOR,
       abi.encode("")
     );
+    bytes memory expectedErr = abi.encodeWithSelector(
+      VertexCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
+    );
+
     vm.warp(block.timestamp + 1);
 
     _approveAction(approverAdam, actionId);
@@ -906,12 +946,16 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(VertexCore.FailedActionExecution.selector);
+    vm.expectRevert(expectedErr);
     mpCore.executeAction(actionId);
   }
 
   function test_HandlesReentrancy() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
+    bytes memory expectedErr = abi.encodeWithSelector(
+      VertexCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(VertexCore.InvalidActionState.selector, (ActionState.Queued))
+    );
 
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -938,7 +982,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(VertexCore.FailedActionExecution.selector);
+    vm.expectRevert(expectedErr);
     mpCore.executeAction(actionId);
   }
 }
@@ -1648,6 +1692,49 @@ contract SetGuard is VertexCoreTest {
     emit ActionGuardSet(target, selector, guard);
     mpCore.setGuard(target, selector, guard);
     assertEq(address(mpCore.actionGuard(target, selector)), address(guard));
+  }
+
+  function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    mpCore.setGuard(address(mpCore), selector, guard);
+  }
+
+  function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    mpCore.setGuard(address(mpPolicy), selector, guard);
+  }
+}
+
+contract AuthorizeScript is VertexCoreTest {
+  event ScriptAuthorized(address indexed script, bool authorized);
+
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller, address script, bool authorized) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    vm.prank(caller);
+    mpCore.authorizeScript(script, authorized);
+  }
+
+  function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectEmit();
+    emit ScriptAuthorized(script, authorized);
+    mpCore.authorizeScript(script, authorized);
+    assertEq(mpCore.authorizedScripts(script), authorized);
+  }
+
+  function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    mpCore.authorizeScript(address(mpCore), authorized);
+  }
+
+  function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
+    vm.prank(address(mpCore));
+    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 }
 

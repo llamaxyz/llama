@@ -28,13 +28,14 @@ contract VertexCore is Initializable {
   error OnlyVertex();
   error InvalidSignature();
   error TimelockNotFinished();
-  error FailedActionExecution();
+  error FailedActionExecution(bytes reason);
   error DuplicateCast();
   error PolicyholderDoesNotHavePermission();
   error InsufficientMsgValue();
   error RoleHasZeroSupply(uint8 role);
   error UnauthorizedStrategyLogic();
   error UnauthorizedAccountLogic();
+  error CannotUseCoreOrPolicy();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
 
@@ -61,7 +62,9 @@ contract VertexCore is Initializable {
   event ActionQueued(
     uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
-  event ActionExecuted(uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator);
+  event ActionExecuted(
+    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, bytes result
+  );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
@@ -69,6 +72,7 @@ contract VertexCore is Initializable {
   );
   event StrategyUnauthorized(IVertexStrategy indexed strategy);
   event AccountAuthorized(VertexAccount indexed account, VertexAccount indexed accountLogic, string name);
+  event ScriptAuthorized(address indexed script, bool authorized);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -120,6 +124,9 @@ contract VertexCore is Initializable {
 
   /// @notice Mapping of all authorized strategies.
   mapping(IVertexStrategy => bool) public authorizedStrategies;
+
+  /// @notice Mapping of all authorized scripts.
+  mapping(address => bool) public authorizedScripts;
 
   /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
@@ -248,8 +255,7 @@ contract VertexCore is Initializable {
 
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
   /// @param actionId Id of the action to execute.
-  /// @return The result returned from the call to the target contract.
-  function executeAction(uint256 actionId) external payable returns (bytes memory) {
+  function executeAction(uint256 actionId) external payable {
     // Initial checks that action is ready to execute.
     if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
 
@@ -266,9 +272,16 @@ contract VertexCore is Initializable {
 
     // Execute action.
     action.executed = true;
-    (bool success, bytes memory result) =
-      action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
-    if (!success) revert FailedActionExecution();
+    bool success;
+    bytes memory result;
+
+    if (authorizedScripts[action.target]) {
+      (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
+    } else {
+      (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+    }
+
+    if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
     if (guard != IActionGuard(address(0))) {
@@ -277,8 +290,7 @@ contract VertexCore is Initializable {
     }
 
     // Action successfully executed.
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator);
-    return result;
+    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator, result);
   }
 
   /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
@@ -425,8 +437,17 @@ contract VertexCore is Initializable {
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+    if (target == address(this) || target == address(policy)) revert CannotUseCoreOrPolicy();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
+  }
+
+  /// @notice Authorizes `script` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a script, set `authorized` to false.
+  function authorizeScript(address script, bool authorized) external onlyVertex {
+    if (script == address(this) || script == address(policy)) revert CannotUseCoreOrPolicy();
+    authorizedScripts[script] = authorized;
+    emit ScriptAuthorized(script, authorized);
   }
 
   /// @notice Get an Action struct by actionId.
