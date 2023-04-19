@@ -12,7 +12,7 @@ pragma solidity 0.8.19;
 ///   - Verify the USD value of an account has not decreased by more than a certain amount during
 ///     execution, i.e. between `validatePreActionExecution` and `validatePostActionExecution`.
 /// than a certain amount.
-/// @dev These interfaces only take `actionId` as an argument. This is because the action guard may
+/// These interfaces only take `actionId` as an argument. This is because the action guard may
 /// read any state it needs from the VertexCore contracts.
 interface IActionGuard {
   /// @notice Returns `true` if `actionId` is allowed to be created, and `false` otherwise. May

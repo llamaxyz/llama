@@ -5,6 +5,10 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Solarray} from "solarray/Solarray.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
+
+import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
+import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexCore} from "src/VertexCore.sol";
@@ -15,9 +19,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, RoleHolderData, RolePermissionData, DefaultStrategyConfig, PermissionData} from "src/lib/Structs.sol";
-import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;

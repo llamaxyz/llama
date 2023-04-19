@@ -2,12 +2,14 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
 import {VertexCore} from "src/VertexCore.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {DefaultStrategyConfig, PermissionData} from "src/lib/Structs.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexLensTestSetup is VertexTestSetup {}
 

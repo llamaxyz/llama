@@ -3,14 +3,15 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {

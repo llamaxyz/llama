@@ -3,6 +3,9 @@ pragma solidity ^0.8.19;
 
 import {console2} from "forge-std/Test.sol";
 
+import {BaseHandler} from "test/invariants/BaseHandler.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -11,9 +14,6 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-
-import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
