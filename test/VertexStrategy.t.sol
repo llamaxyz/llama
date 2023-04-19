@@ -281,7 +281,7 @@ contract Constructor is VertexStrategyTest {
     assertEq(address(newStrategy.policy()), address(mpPolicy));
   }
 
-  function test_SetsStrategyStorageVertex(  ) public {
+  function test_SetsStrategyStorageVertex() public {
     IVertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),

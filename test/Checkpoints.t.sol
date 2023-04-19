@@ -159,7 +159,6 @@ contract WithoutCheckpointsWithExpiration is CheckpointsTest {
     assertEq(expiration, 0);
     assertEq(quantity, 0);
   }
-
 }
 
 contract WithCheckpointsWithExpiration is CheckpointsTest {
