@@ -56,6 +56,9 @@ contract VertexFactory {
   /// @notice The Vertex Policy implementation (logic) contract.
   VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
+  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
+  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
+
   /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
   mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
 
@@ -67,9 +70,6 @@ contract VertexFactory {
 
   /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenURI;
-
-  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
-  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The current number of Vertex instances created.
   uint256 public vertexCount;
