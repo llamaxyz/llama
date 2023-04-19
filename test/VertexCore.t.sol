@@ -369,6 +369,7 @@ contract Initialize is VertexCoreTest {
 
     vm.expectEmit();
     emit AccountCreated(accountAddresses[0], accounts[0]);
+    vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accounts[1]);
     modifiedFactory.initialize(
       uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
