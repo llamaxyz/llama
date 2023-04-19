@@ -41,6 +41,8 @@ contract VertexFactory {
 
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
+
+  /// @dev Emitted when a new Vertex Policy Token URI Parameter Registry is set.
   event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
@@ -185,7 +187,6 @@ contract VertexFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (VertexCore vertex) {
-    // Deploy the system.
     VertexPolicy policy =
       VertexPolicy(Clones.cloneDeterministic(address(VERTEX_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
@@ -208,6 +209,7 @@ contract VertexFactory {
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
+  /// @dev Sets the Vertex Policy Token URI contract.
   function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
     vertexPolicyTokenURI = _vertexPolicyTokenURI;
     emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);

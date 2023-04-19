@@ -1639,6 +1639,7 @@ contract SetGuard is VertexCoreTest {
   }
 
   function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
+    vm.assume(target != address(mpCore) && target != address(mpPolicy));
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ActionGuardSet(target, selector, guard);
@@ -1670,6 +1671,7 @@ contract AuthorizeScript is VertexCoreTest {
   }
 
   function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+    vm.assume(script != address(mpCore) && script != address(mpPolicy));
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ScriptAuthorized(script, authorized);
