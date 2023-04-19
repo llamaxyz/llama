@@ -187,6 +187,10 @@ contract DeployVertexProtocol is Script {
     encoded = abi.encode(strategy);
   }
 
+  function encodeStrategy(AbsoluteStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+    encoded = abi.encode(strategy);
+  }
+
   function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
     internal
     pure
@@ -198,7 +202,24 @@ contract DeployVertexProtocol is Script {
     }
   }
 
+  function encodeStrategyConfigs(AbsoluteStrategyConfig[] memory strategies)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
+    encoded = new bytes[](strategies.length);
+    for (uint256 i; i < strategies.length; i++) {
+      encoded[i] = encodeStrategy(strategies[i]);
+    }
+  }
+
   function toRelativeStrategy(IVertexStrategy strategy) internal pure returns (RelativeStrategy converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toAbsoluteStrategy(IVertexStrategy strategy) internal pure returns (AbsoluteStrategy converted) {
     assembly {
       converted := strategy
     }

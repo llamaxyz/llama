@@ -9,7 +9,7 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
-import {RoleHolderData, RolePermissionData, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, RoleHolderData, RolePermissionData, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -87,6 +87,58 @@ contract VertexStrategyTest is VertexTestSetup {
 
     newStrategy =
       lens.computeVertexStrategyAddress(address(relativeStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+  }
+
+  function deployAbsoluteStrategyAndSetRole(
+    uint8 _role,
+    bytes32 _permission,
+    address _policyHolder,
+    uint256 _queuingDuration,
+    uint256 _expirationDelay,
+    uint256 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint256 _minApprovals,
+    uint256 _minDisapprovals,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (IVertexStrategy newStrategy) {
+    {
+      vm.prank(address(rootCore));
+      factory.authorizeStrategyLogic(absoluteStrategyLogic);
+      // Initialize roles if required.
+      initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
+
+      bytes[] memory roleAndPermissionAssignments = new bytes[](2);
+      roleAndPermissionAssignments[0] =
+        abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
+      roleAndPermissionAssignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
+
+      vm.prank(address(mpCore));
+      mpPolicy.aggregate(roleAndPermissionAssignments);
+    }
+
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovals: _minApprovals,
+      minDisapprovals: _minDisapprovals,
+      approvalRole: _role,
+      disapprovalRole: _role,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpCore));
+
+    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy =
+      lens.computeVertexStrategyAddress(address(absoluteStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
   }
 
   function deployTestStrategy() internal returns (IVertexStrategy testStrategy) {
@@ -318,6 +370,23 @@ contract Constructor is VertexStrategyTest {
     assertEq(toRelativeStrategy(newStrategy).minApprovalPct(), _percent);
   }
 
+  function testFuzz_SetsStrategyStorageMinApprovals(uint256 _approvals) public {
+    IVertexStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      _approvals,
+      5,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    assertEq(toAbsoluteStrategy(newStrategy).minApprovals(), _approvals);
+  }
+
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint256 _percent) public {
     IVertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
@@ -333,6 +402,23 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0)
     );
     assertEq(toRelativeStrategy(newStrategy).minDisapprovalPct(), _percent);
+  }
+
+  function testFuzz_SetsStrategyStorageMinDisapprovals(uint256 _disapprovals) public {
+    IVertexStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      1,
+      _disapprovals,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    assertEq(toAbsoluteStrategy(newStrategy).minDisapprovals(), _disapprovals);
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
@@ -451,11 +537,75 @@ contract IsActionPassed is VertexStrategyTest {
     assertEq(isActionPassed, true);
   }
 
+  function testFuzz_AbsoluteStrategy_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals =
+      bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
+
+    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      _actionApprovals,
+      5,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    uint256 actionId = createAction(testStrategy);
+
+    approveAction(_actionApprovals, actionId);
+
+    bool isActionPassed = testStrategy.isActionPassed(actionId);
+
+    assertEq(isActionPassed, true);
+  }
+
   function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
 
     IVertexStrategy testStrategy = deployTestStrategy();
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    uint256 actionId = createAction(testStrategy);
+
+    approveAction(_actionApprovals, actionId);
+
+    bool isActionPassed = testStrategy.isActionPassed(actionId);
+
+    assertEq(isActionPassed, false);
+  }
+
+  function testFuzz_AbsoluteStrategy_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
+    uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
+
+    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      approvalThreshold,
+      5,
+      new uint8[](0),
+      new uint8[](0)
+    );
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -499,6 +649,41 @@ contract IsActionCancelationValid is VertexStrategyTest {
     assertEq(isActionCancelled, true);
   }
 
+  function testFuzz_AbsoluteStrategy_ReturnsTrueForDisapprovedActions(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals =
+      bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
+
+    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      0,
+      _actionDisapprovals,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    uint256 actionId = createAction(testStrategy);
+
+    mpCore.queueAction(actionId);
+
+    disapproveAction(_actionDisapprovals, actionId);
+
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+
+    assertEq(isActionCancelled, true);
+  }
+
   function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionDisapprovals, uint256 _numberOfPolicies)
     public
   {
@@ -513,6 +698,41 @@ contract IsActionCancelationValid is VertexStrategyTest {
 
     vm.prank(address(approverAdam));
     mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
+
+    mpCore.queueAction(actionId);
+
+    disapproveAction(_actionDisapprovals, actionId);
+
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+
+    assertEq(isActionCancelled, false);
+  }
+
+  function testFuzz_AbsoluteStrategy_ReturnsFalseForActionsNotFullyDisapproved(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+    uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
+
+    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      0,
+      disapprovalThreshold,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    uint256 actionId = createAction(testStrategy);
 
     mpCore.queueAction(actionId);
 
