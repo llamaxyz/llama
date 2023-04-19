@@ -7,13 +7,14 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {RoleHolderData, RolePermissionData, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract VertexStrategyTest is VertexTestSetup {
-  event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
+  event StrategyCreated(VertexCore vertex, VertexPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
@@ -211,7 +212,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).queuingPeriod(), _queuingDuration);
+    assertEq(toRelativeStrategy(newStrategy).queuingPeriod(), _queuingDuration);
   }
 
   function testFuzz_SetsStrategyStorageExpirationDelay(uint256 _expirationDelay) public {
@@ -228,7 +229,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).expirationPeriod(), _expirationDelay);
+    assertEq(toRelativeStrategy(newStrategy).expirationPeriod(), _expirationDelay);
   }
 
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
@@ -245,7 +246,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
+    assertEq(toRelativeStrategy(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
   }
 
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint256 _approvalPeriod) public {
@@ -262,7 +263,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).approvalPeriod(), _approvalPeriod);
+    assertEq(toRelativeStrategy(newStrategy).approvalPeriod(), _approvalPeriod);
   }
 
   function testFuzz_SetsStrategyStoragePolicy( /*TODO fuzz this test */ ) public {
@@ -314,7 +315,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).minApprovalPct(), _percent);
+    assertEq(toRelativeStrategy(newStrategy).minApprovalPct(), _percent);
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint256 _percent) public {
@@ -331,7 +332,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).minDisapprovalPct(), _percent);
+    assertEq(toRelativeStrategy(newStrategy).minDisapprovalPct(), _percent);
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
@@ -349,7 +350,7 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0)
     );
     for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
-      assertEq(toDefaultStrategy(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
+      assertEq(toRelativeStrategy(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
     }
   }
 
@@ -368,7 +369,7 @@ contract Constructor is VertexStrategyTest {
       forceDisapprovalRoles
     );
     for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
-      assertEq(toDefaultStrategy(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
+      assertEq(toRelativeStrategy(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
     }
   }
 
@@ -389,7 +390,7 @@ contract Constructor is VertexStrategyTest {
       forceApprovalRoles,
       new uint8[](0)
     );
-    assertEq(toDefaultStrategy(newStrategy).forceApprovalRole(_role), true);
+    assertEq(toRelativeStrategy(newStrategy).forceApprovalRole(_role), true);
   }
 
   function testFuzz_HandlesDuplicateDisapprovalRoles(uint8 _role) public {
@@ -409,12 +410,12 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       forceDisapprovalRoles
     );
-    assertEq(toDefaultStrategy(newStrategy).forceDisapprovalRole(_role), true);
+    assertEq(toRelativeStrategy(newStrategy).forceDisapprovalRole(_role), true);
   }
 
-  function testFuzz_EmitsNewStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
+  function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
     vm.expectEmit();
-    emit NewStrategyCreated(mpCore, mpPolicy);
+    emit StrategyCreated(mpCore, mpPolicy);
     deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -731,7 +732,7 @@ contract GetDisapprovalQuantityAt is VertexStrategyTest {
   }
 }
 
-contract DefaultStrategyHarness is DefaultStrategy {
+contract RelativeStrategyHarness is RelativeStrategy {
   function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256) {
     return _getMinimumAmountNeeded(supply, minPct);
   }
@@ -739,7 +740,7 @@ contract DefaultStrategyHarness is DefaultStrategy {
 
 contract GetMinimumAmountNeeded is VertexStrategyTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
-    DefaultStrategyHarness newStrategy = new DefaultStrategyHarness();
+    RelativeStrategyHarness newStrategy = new RelativeStrategyHarness();
     minPct = bound(minPct, 0, 10_000);
     vm.assume(minPct == 0 || supply <= type(uint256).max / minPct); // avoid solmate revert statement
 

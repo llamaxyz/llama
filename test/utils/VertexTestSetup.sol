@@ -138,7 +138,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    bytes[] memory strategyConfigs = defaultStrategyConfigs();
+    bytes[] memory strategyConfigs = relativeStrategyConfigs();
     RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
@@ -276,7 +276,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
+  function relativeStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
     strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
   }
 
