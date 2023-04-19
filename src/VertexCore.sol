@@ -589,7 +589,7 @@ contract VertexCore is Initializable {
     }
 
     uint256 strategyLength = strategies.length;
-    for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
 
       IVertexStrategy strategy = IVertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
@@ -601,7 +601,7 @@ contract VertexCore is Initializable {
 
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
-    for (uint256 i; i < accountLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
       VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
       account.initialize(accounts[i]);
