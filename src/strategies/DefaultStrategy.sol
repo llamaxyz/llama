@@ -142,9 +142,9 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
-    uint256 approvalPolicySupply = policy.getSupply(approvalRole);
+    uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
-    uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
