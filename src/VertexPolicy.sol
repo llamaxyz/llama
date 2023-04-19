@@ -275,8 +275,13 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   function isRoleExpired(address user, uint8 role) external view returns (bool) {
-    (, uint64 expiration,,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
     return expiration < block.timestamp;
+  }
+
+  function roleExpiration(address user, uint8 role) external view returns (uint256) {
+    (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(user)][role].latestCheckpoint();
+    return expiration;
   }
 
   /// @notice Returns the total number of policies in existence.
