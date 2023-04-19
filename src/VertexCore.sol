@@ -518,6 +518,9 @@ contract VertexCore is Initializable {
     newAction.data = data;
     newAction.creationTime = block.timestamp;
 
+    // Safety: Can never overflow a uint256 by incrementing.
+    actionsCount = _uncheckedIncrement(actionsCount);
+
     (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
     if (!allowed) revert ProhibitedByStrategy(reason);
 
@@ -527,10 +530,6 @@ contract VertexCore is Initializable {
     if (guard != IActionGuard(address(0))) {
       (allowed, reason) = guard.validateActionCreation(actionId);
       if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
-
-    unchecked {
-      ++actionsCount;
     }
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
