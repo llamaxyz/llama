@@ -1671,6 +1671,7 @@ contract AuthorizeScript is VertexCoreTest {
   }
 
   function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+    vm.assume(script != address(mpCore) && script != address(mpPolicy));
     vm.prank(address(mpCore));
     vm.expectEmit();
     emit ScriptAuthorized(script, authorized);
