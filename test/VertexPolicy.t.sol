@@ -262,78 +262,79 @@ contract SetRoleHolder is VertexPolicyTest {
 
   function test_SetsRoleHolder(address user) public {
     vm.assume(user != address(0));
+    if (mpPolicy.balanceOf(user) > 0) user = makeAddr("userWithoutPolicy");
     vm.startPrank(address(mpCore));
 
     uint256 initRoleHolders = 7;
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
 
     // Assign role to user with quantity of 1.
     vm.expectEmit();
     emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(1, 1));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "10");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "20");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "30");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "40");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1, "50");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "60");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "70");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "90");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "100");
 
     // Adjust user's policy to have quantity greater than 1.
     vm.expectEmit();
     emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, VertexPolicy.RoleSupply(1, 5));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 5, DEFAULT_ROLE_EXPIRATION - 10);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 5);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION - 10);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 5);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "110");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 5, "120");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION - 10, "130");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "140");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 5, "150");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "160");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "170");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "200");
 
     // Add another user with a quantity of 3.
     vm.expectEmit();
     emit RoleAssigned(arbitraryUser, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(2, 8));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, 3, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.TestRole1)), 3);
-    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 2);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 8);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true, "210");
+    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.TestRole1)), 3, "220");
+    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "230");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 2, "240");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 8, "250");
 
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.AllHolders)), true);
-    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.AllHolders)), 1);
-    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2);
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.AllHolders)), true, "260");
+    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.AllHolders)), 1, "270");
+    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "280");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "290");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "300");
 
     // Revoke the original user's role. We did not revoke their policy so they still have the all holders role.
     vm.expectEmit();
     emit RoleAssigned(user, uint8(Roles.TestRole1), 0, VertexPolicy.RoleSupply(1, 3));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 0, 0);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 0);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), 0);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 3);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false, "310");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 0, "320");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), 0, "330");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "340");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 3, "350");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true);
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1);
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION);
-    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2);
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "360");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "370");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "380");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "390");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "400");
   }
 }
 
@@ -791,58 +792,6 @@ contract TotalSupply is VertexPolicyTest {
     }
 
     assertEq(mpPolicy.totalSupply(), initPolicySupply + numberOfPolicies);
-  }
-}
-
-contract Aggregate is VertexPolicyTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    bytes[] memory calls = new bytes[](3);
-
-    vm.prank(caller);
-    mpPolicy.aggregate(calls);
-  }
-
-  function test_AggregatesSetRoleHolderCalls() public {
-    address newRoleHolder = makeAddr("newRoleHolder");
-
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call2 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole2), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call3 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-
-    bytes[] memory calls = new bytes[](3);
-    calls[0] = call1;
-    calls[1] = call2;
-    calls[2] = call3;
-
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
-
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole2)), true);
-    assertEq(mpPolicy.hasRole(newRoleHolder, uint8(Roles.TestRole1)), true);
-  }
-
-  function test_RevertIf_CalldataIsIncorrect() public {
-    uint8 uninitializedRole = NUM_INIT_ROLES + 1;
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uninitializedRole, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes[] memory calls = new bytes[](1);
-    calls[0] = call1;
-
-    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, uninitializedRole);
-
-    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
   }
 }
 

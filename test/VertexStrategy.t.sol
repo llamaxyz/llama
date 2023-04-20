@@ -57,13 +57,10 @@ contract VertexStrategyTest is VertexTestSetup {
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
-      bytes[] memory roleAndPermissionAssignments = new bytes[](2);
-      roleAndPermissionAssignments[0] =
-        abi.encodeCall(VertexPolicy.setRoleHolder, (_role, _policyHolder, 1, type(uint64).max));
-      roleAndPermissionAssignments[1] = abi.encodeCall(VertexPolicy.setRolePermission, (_role, _permission, true));
-
       vm.prank(address(mpCore));
-      mpPolicy.aggregate(roleAndPermissionAssignments);
+      mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
+      vm.prank(address(mpCore));
+      mpPolicy.setRolePermission(_role, _permission, true);
     }
 
     RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
@@ -236,17 +233,13 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 
   function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
-    bytes[] memory setRoleHolderCalls = new bytes[](numberOfHolders);
-
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 100));
       if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        setRoleHolderCalls[i] =
-          abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max));
+        vm.prank(address(mpCore));
+        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
       }
     }
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(setRoleHolderCalls);
   }
 }
 
