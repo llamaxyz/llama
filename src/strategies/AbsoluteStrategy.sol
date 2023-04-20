@@ -79,12 +79,6 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
   /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
-  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
-  mapping(uint256 => uint256) public actionApprovalSupply;
-
-  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
-  mapping(uint256 => uint256) public actionDisapprovalSupply;
-
   // =============================
   // ======== Constructor ========
   // =============================
@@ -141,7 +135,7 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc IVertexStrategy
-  function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
+  function validateActionCreation(uint256 actionId) external view returns (bool, bytes32) {
     uint256 approvalPolicySupply = policy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsQuantitySum(disapprovalRole);
@@ -160,9 +154,6 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
       disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
     }
 
-    // Save off the supplies to use for checking quorum.
-    actionApprovalSupply[actionId] = approvalPolicySupply;
-    actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
     return (true, "");
   }
 
