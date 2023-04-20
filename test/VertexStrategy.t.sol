@@ -310,7 +310,7 @@ contract Constructor is VertexStrategyTest {
     assertEq(toRelativeStrategy(newStrategy).approvalPeriod(), _approvalPeriod);
   }
 
-  function testFuzz_SetsStrategyStoragePolicy( /*TODO fuzz this test */ ) public {
+  function test_SetsStrategyStoragePolicy() public {
     IVertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -327,7 +327,7 @@ contract Constructor is VertexStrategyTest {
     assertEq(address(newStrategy.policy()), address(mpPolicy));
   }
 
-  function testFuzz_SetsStrategyStorageVertex( /*TODO fuzz this test */ ) public {
+  function test_SetsStrategyStorageVertex() public {
     IVertexStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
