@@ -22,9 +22,13 @@ contract VertexCrosschainRelayer {
       messageId,
       action.destinationChain,
       100_000, // 100k gas to use in the recipient's handle function
-      msg.sender
+      address(this)
     );
 
     return nonce;
   }
+
+  fallback() external payable {}
+
+  receive() external payable {}
 }

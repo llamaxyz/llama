@@ -4,8 +4,8 @@
     "initialStrategies": [
       {
         "approvalPeriod": 172800,
-        "approvalRole": 3,
-        "disapprovalRole": 4,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
         "expirationPeriod": 691200,
         "forceApprovalRoles": [],
         "forceDisapprovalRoles": [],
@@ -16,8 +16,8 @@
       },
       {
         "approvalPeriod": 172800,
-        "approvalRole": 3,
-        "disapprovalRole": 4,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
         "expirationPeriod": 86400,
         "forceApprovalRoles": [2],
         "forceDisapprovalRoles": [2],
@@ -40,6 +40,13 @@
         "expiration": 18446744073709551615,
         "quantity": 1,
         "role": 2,
+        "user": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e"
+      },
+      {
+        "comment": "This will assign the Disapprover role (role 3) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",
+        "expiration": 18446744073709551615,
+        "quantity": 1,
+        "role": 3,
         "user": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e"
       }
     ],

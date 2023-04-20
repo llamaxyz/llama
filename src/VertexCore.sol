@@ -284,7 +284,9 @@ contract VertexCore is Initializable {
     bytes memory result;
 
     if (action.destinationChain != 0 && action.destinationRecipient != address(0)) {
-      VertexCrosschainRelayer(action.relayer).relayCalls(actionId, action);
+      address payable addr = payable(action.relayer);
+      VertexCrosschainRelayer(addr).relayCalls{value: action.value}(actionId, action);
+      success = true;
     } else if (authorizedScripts[action.target]) {
       (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
     } else {

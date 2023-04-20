@@ -18,7 +18,7 @@ contract VertexCrosschainExecutor is IMessageRecipient {
 
   address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70; // Same across all chains
   IMailbox private constant mailbox = IMailbox(HYPERLANE_MAILBOX);
-  uint256 private constant originDomain = 137; // Only accept from Polygon for extra security
+  uint256 private constant originDomain = 1; // Only accept from Polygon for extra security
 
   mapping(uint256 => bool) public executedNonces;
 
@@ -29,7 +29,8 @@ contract VertexCrosschainExecutor is IMessageRecipient {
   }
 
   function handle(uint32 originChain, bytes32 caller, bytes calldata message) external onlyTrustedInbox(originChain) {
-    VertexCrosschainRelayer relayer = VertexCrosschainRelayer(TypeCasts.bytes32ToAddress(caller));
+    address payable addr = payable(TypeCasts.bytes32ToAddress(caller));
+    VertexCrosschainRelayer relayer = VertexCrosschainRelayer(addr);
 
     (uint256 nonce, address actionSender, uint256 actionId, Action memory action) =
       abi.decode(message, (uint256, address, uint256, Action));

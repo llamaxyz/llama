@@ -2,6 +2,8 @@
 pragma solidity ^0.8.19;
 
 contract MockProtocol {
+  event Paused();
+
   error OnlyOwner();
   error Failed();
 
@@ -23,6 +25,7 @@ contract MockProtocol {
 
   function pause(bool isPaused) external onlyOwner {
     paused = isPaused;
+    emit Paused();
   }
 
   function fail() external view onlyOwner {
