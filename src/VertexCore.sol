@@ -10,12 +10,12 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {Action, PermissionData} from "src/lib/Structs.sol";
 
 import {VertexCrosschainRelayer} from "src/crosschain/VertexCrosschainRelayer.sol";
 
 /// @title Core of a Vertex instance
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Main point of interaction of a Vertex instance (i.e. entry into and exit from).
 contract VertexCore is Initializable {
   // ======================================
@@ -95,9 +95,6 @@ contract VertexCore is Initializable {
   /// @notice EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
     keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
-
-  /// @notice Equivalent to 100%, but scaled for precision
-  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice The VertexFactory contract that deployed this Vertex system.
   VertexFactory public factory;
@@ -536,6 +533,9 @@ contract VertexCore is Initializable {
     newAction.destinationRecipient = destinationRecipient;
     newAction.relayer = relayer;
 
+    // Safety: Can never overflow a uint256 by incrementing.
+    actionsCount = _uncheckedIncrement(actionsCount);
+
     (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
     if (!allowed) revert ProhibitedByStrategy(reason);
 
@@ -608,7 +608,7 @@ contract VertexCore is Initializable {
     }
 
     uint256 strategyLength = strategies.length;
-    for (uint256 i; i < strategyLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
 
       IVertexStrategy strategy = IVertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
@@ -620,7 +620,7 @@ contract VertexCore is Initializable {
 
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
-    for (uint256 i; i < accountLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
       VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
       account.initialize(accounts[i]);

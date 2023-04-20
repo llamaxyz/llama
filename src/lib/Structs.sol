@@ -44,13 +44,27 @@ struct Action {
   address relayer;
 }
 
-struct DefaultStrategyConfig {
+struct RelativeStrategyConfig {
   uint256 approvalPeriod; // The length of time of the approval period.
   uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.
   uint256 expirationPeriod; // The length of time an action can be executed before it expires.
   uint256 minApprovalPct; // Minimum percentage of total approval quantity / total approval supply.
   uint256 minDisapprovalPct; // Minimum percentage of total disapproval quantity / total disapproval supply.
+  bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
+  uint8 approvalRole; // Anyone with this role can cast approval of an action.
+  uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
+  uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
+  uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
+}
+
+struct AbsoluteStrategyConfig {
+  uint256 approvalPeriod; // The length of time of the approval period.
+  uint256 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
+    // enabled.
+  uint256 expirationPeriod; // The length of time an action can be executed before it expires.
+  uint256 minApprovals; // Minimum number of total approval quantity.
+  uint256 minDisapprovals; // Minimum number of total disapproval quantity.
   bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
   uint8 approvalRole; // Anyone with this role can cast approval of an action.
   uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.

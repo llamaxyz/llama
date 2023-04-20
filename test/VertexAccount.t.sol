@@ -18,8 +18,7 @@ import {
   ERC721OperatorData,
   ERC1155Data,
   ERC1155BatchData,
-  ERC1155OperatorData,
-  DefaultStrategyConfig
+  ERC1155OperatorData
 } from "src/lib/Structs.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
@@ -191,13 +190,13 @@ contract Initialize is VertexAccountTest {
   }
 }
 
-contract Transfer is VertexAccountTest {
+contract TransferNativeToken is VertexAccountTest {
   function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(VertexAccount.OnlyVertex.selector);
 
     vm.prank(caller);
-    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
   }
 
   function test_TransferETH() public {
@@ -208,7 +207,7 @@ contract Transfer is VertexAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
-    mpAccount1.transferNativeToken(payable(ETH_WHALE), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -218,7 +217,53 @@ contract Transfer is VertexAccountTest {
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
     vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    mpAccount1.transferNativeToken(payable(address(0)), ETH_AMOUNT);
+    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
+    vm.stopPrank();
+  }
+}
+
+contract BatchTransferNativeToken is VertexAccountTest {
+  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+    vm.assume(caller != address(mpCore));
+    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+
+    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](1);
+    data[0] = VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT);
+
+    vm.prank(caller);
+    mpAccount1.batchTransferNativeToken(data);
+  }
+
+  function test_BatchTransferETH() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    uint256 accountETHBalance = mpAccount1Addr.balance;
+    uint256 whaleETHBalance = ETH_WHALE.balance;
+
+    address randomRecipient = makeAddr("randomRecipient");
+    uint256 randomRecipientBalance = randomRecipient.balance;
+
+    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](2);
+    data[0] = VertexAccount.NativeTokenData(payable(ETH_WHALE), 0.1 ether);
+    data[1] = VertexAccount.NativeTokenData(payable(randomRecipient), ETH_AMOUNT - 0.1 ether);
+
+    // Transfer ETH from account to whale
+    vm.startPrank(address(mpCore));
+    mpAccount1.batchTransferNativeToken(data);
+    assertEq(mpAccount1Addr.balance, 0);
+    assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
+    assertEq(ETH_WHALE.balance, whaleETHBalance + 0.1 ether);
+    assertEq(randomRecipient.balance, randomRecipientBalance + ETH_AMOUNT - 0.1 ether);
+    vm.stopPrank();
+  }
+
+  function test_RevertIf_ToZeroAddress() public {
+    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](1);
+    data[0] = VertexAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT);
+
+    vm.startPrank(address(mpCore));
+    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    mpAccount1.batchTransferNativeToken(data);
     vm.stopPrank();
   }
 }

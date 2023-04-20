@@ -8,15 +8,15 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {Action, DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {Action, RelativeStrategyConfig} from "src/lib/Structs.sol";
 
-/// @title Vertex Strategy
-/// @author Llama (vertex@llama.xyz)
+/// @title Relative Vertex Strategy
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the default vertex strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
 ///     regardless of the roles they hold.
-contract DefaultStrategy is IVertexStrategy, Initializable {
+contract RelativeStrategy is IVertexStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -30,7 +30,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
-  event NewStrategyCreated(VertexCore vertex, VertexPolicy policy);
+  event StrategyCreated(VertexCore vertex, VertexPolicy policy);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -101,7 +101,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function initialize(bytes memory config) external initializer {
-    DefaultStrategyConfig memory strategyConfig = abi.decode(config, (DefaultStrategyConfig));
+    RelativeStrategyConfig memory strategyConfig = abi.decode(config, (RelativeStrategyConfig));
     vertex = VertexCore(msg.sender);
     policy = vertex.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
@@ -121,30 +121,30 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit NewStrategyCreated(vertex, policy);
+    emit StrategyCreated(vertex, policy);
   }
 
   // -------- At Action Creation --------
 
   /// @inheritdoc IVertexStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
-    uint256 approvalPolicySupply = policy.getSupply(approvalRole);
+    uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
-    uint256 disapprovalPolicySupply = policy.getSupply(disapprovalRole);
+    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
@@ -237,7 +237,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
 
   /// @inheritdoc IVertexStrategy
   function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
   }
 
   /// @inheritdoc IVertexStrategy
@@ -249,7 +249,7 @@ contract DefaultStrategy is IVertexStrategy, Initializable {
   /// @inheritdoc IVertexStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = vertex.getAction(actionId);
-    return action.minExecutionTime + expirationPeriod < block.timestamp;
+    return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
   // ========================================

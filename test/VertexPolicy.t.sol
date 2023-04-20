@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "lib/forge-std/src/console.sol";
 import {Test, stdError, console2} from "lib/forge-std/src/Test.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
@@ -17,7 +17,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {Solarray} from "solarray/Solarray.sol";
 
 contract VertexPolicyTest is VertexTestSetup {
-  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, uint256 roleSupply);
+  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, VertexPolicy.RoleSupply roleSupply);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
@@ -128,14 +128,14 @@ contract Initialize is VertexPolicyTest {
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
     rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
-    uint256 prevSupply = localPolicy.getSupply(INIT_TEST_ROLE);
+    uint256 prevSupply = localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE);
 
     vm.expectEmit();
-    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(1, 1));
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
 
-    assertEq(localPolicy.getSupply(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
+    assertEq(localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
     assertEq(localPolicy.numRoles(), 1);
   }
 
@@ -262,13 +262,79 @@ contract SetRoleHolder is VertexPolicyTest {
 
   function test_SetsRoleHolder(address user) public {
     vm.assume(user != address(0));
-    vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
-
+    if (mpPolicy.balanceOf(user) > 0) user = makeAddr("userWithoutPolicy");
     vm.startPrank(address(mpCore));
+
+    uint256 initRoleHolders = 7;
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
+
+    // Assign role to user with quantity of 1.
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(1, 1));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "10");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "20");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "30");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "40");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1, "50");
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "60");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "70");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "90");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "100");
+
+    // Adjust user's policy to have quantity greater than 1.
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, VertexPolicy.RoleSupply(1, 5));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 5, DEFAULT_ROLE_EXPIRATION - 10);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "110");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 5, "120");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION - 10, "130");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "140");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 5, "150");
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "160");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "170");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "200");
+
+    // Add another user with a quantity of 3.
+    vm.expectEmit();
+    emit RoleAssigned(arbitraryUser, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(2, 8));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, 3, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true, "210");
+    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.TestRole1)), 3, "220");
+    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "230");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 2, "240");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 8, "250");
+
+    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.AllHolders)), true, "260");
+    assertEq(mpPolicy.getQuantity(arbitraryUser, uint8(Roles.AllHolders)), 1, "270");
+    assertEq(mpPolicy.roleExpiration(arbitraryUser, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "280");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "290");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "300");
+
+    // Revoke the original user's role. We did not revoke their policy so they still have the all holders role.
+    vm.expectEmit();
+    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, VertexPolicy.RoleSupply(1, 3));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 0, 0);
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false, "310");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 0, "320");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), 0, "330");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "340");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 3, "350");
+
+    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "360");
+    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "370");
+    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "380");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "390");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "400");
   }
 }
 
@@ -294,15 +360,15 @@ contract SetRolePermission is VertexPolicyTest {
 contract RevokeExpiredRole is VertexPolicyTest {
   function test_RevokesExpiredRole(address user, uint64 expiration) public {
     vm.assume(user != address(0));
-    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
+    expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
 
-    vm.warp(expiration);
+    vm.warp(expiration + 1);
 
     vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, 0);
+    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, VertexPolicy.RoleSupply(0, 0));
 
     assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
 
@@ -389,14 +455,16 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     for (uint8 i = 2; i < 255; i++) {
       localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(1, 1));
       localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
     for (uint8 i; i < 254; i++) {
-      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
+      emit RoleAssigned(
+        arbitraryAddress, i + 1, 0, VertexPolicy.RoleSupply(uint128(roleSupply) - 1, uint128(roleSupply) - 1)
+      );
     }
 
     localPolicy.revokePolicy(arbitraryAddress);
@@ -410,16 +478,18 @@ contract RevokePolicyRolesOverload is VertexPolicyTest {
     for (uint8 i = 2; i < 255; i++) {
       localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, VertexPolicy.RoleSupply(1, 1));
       localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
     uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
     for (uint8 i; i < 254; i++) {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
-      uint256 roleSupply = localPolicy.getSupply(i + 1);
+      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i + 1, 0, roleSupply - 1);
+      emit RoleAssigned(
+        arbitraryAddress, i + 1, 0, VertexPolicy.RoleSupply(uint128(roleSupply) - 1, uint128(roleSupply) - 1)
+      );
     }
 
     vm.expectEmit();
@@ -480,10 +550,6 @@ contract SetApprovalForAll is VertexPolicyTest {
 // ====================================
 // The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
 // that's added on top of that.
-
-// TODO Once the `expiration` timestamp is hit, the role is expired. Confirm that this is the
-// desired behavior, i.e. should roles become expired at `expiration` or at `expiration + 1`?
-// Ensure this inclusive vs. exclusive behavior is consistent across all timestamp usage.
 
 contract GetQuantity is VertexPolicyTest {
   function test_ReturnsZeroIfUserDoesNotHoldRole() public {
@@ -567,107 +633,46 @@ contract GetSupply is VertexPolicyTest {
   }
 
   function test_IncrementsWhenRolesAreAddedAndDecrementsWhenRolesAreRemoved() public {
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 0);
-    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 0);
+    uint256 initPolicySupply = mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE);
 
     // Assigning a role increases supply.
     vm.warp(100);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Updating the role does not change supply.
     vm.warp(110);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Assigning the role to a new person increases supply.
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, 200);
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 2);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 2);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
     // Assigning new role to the same person does not change supply.
     vm.warp(130);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 300);
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 2);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 2);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 2);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
     // Revoking all roles from the user should only decrease supply by 1.
     vm.warp(140);
     mpPolicy.revokePolicy(newRoleHolder, Solarray.uint8s(uint8(Roles.TestRole1), uint8(Roles.TestRole2)));
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 1);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
     // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
     // it doesn't change the total supply.
     vm.warp(200);
     mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 0);
-    assertEq(mpPolicy.getSupply(ALL_HOLDERS_ROLE), initPolicySupply + 1);
-  }
-}
-
-contract GetPastSupply is VertexPolicyTest {
-  function setUp() public override {
-    VertexPolicyTest.setUp();
-    vm.startPrank(address(mpCore));
-  }
-
-  function test_IncrementsWhenRolesAreAddedAndDecrementsWhenRolesAreRemoved() public {
-    // This is similar to the `getSupply` test, but with all warps/role setting first, then
-    // assertions after using `getPastSupply`
-    assertEq(mpPolicy.getSupply(uint8(Roles.TestRole1)), 0);
-    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
-
-    // Assigning a role increases supply.
-    vm.warp(100);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
-
-    // Updating the role does not change supply.
-    vm.warp(110);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
-
-    // Assigning the role to a new person increases supply.
-    vm.warp(120);
-    address newRoleHolder = makeAddr("newRoleHolder");
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, 200);
-
-    // Assigning new role to the same person does not change supply.
-    vm.warp(130);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), newRoleHolder, DEFAULT_ROLE_QTY, 300);
-
-    // Revoking all roles from the user should only decrease supply by 1.
-    vm.warp(140);
-    mpPolicy.revokePolicy(newRoleHolder, Solarray.uint8s(uint8(Roles.TestRole1), uint8(Roles.TestRole2)));
-
-    // Revoking expired roles changes supply of the revoked role, but they still hold a policy, so
-    // it doesn't change the total supply.
-    vm.warp(200);
-    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), arbitraryUser);
-
-    vm.warp(201);
-
-    // Now we assert the past supply.
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 100), 1);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 100), initPolicySupply + 1);
-
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 110), 1);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 110), initPolicySupply + 1);
-
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 120), 2);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 120), initPolicySupply + 2);
-
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 130), 2);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 130), initPolicySupply + 2);
-
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 140), 1);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 140), initPolicySupply + 1);
-
-    assertEq(mpPolicy.getPastSupply(uint8(Roles.TestRole1), 200), 0);
-    assertEq(mpPolicy.getPastSupply(ALL_HOLDERS_ROLE, 200), initPolicySupply + 1);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 0);
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 1);
   }
 }
 
@@ -679,7 +684,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 150);
 
     vm.warp(110);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 160);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, 159);
 
     vm.warp(120);
     address newRoleHolder = makeAddr("newRoleHolder");
@@ -704,7 +709,7 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     assertEq(rbCheckpoint1._checkpoints[0].expiration, 150);
     assertEq(rbCheckpoint1._checkpoints[0].quantity, 1);
     assertEq(rbCheckpoint1._checkpoints[1].timestamp, 110);
-    assertEq(rbCheckpoint1._checkpoints[1].expiration, 160);
+    assertEq(rbCheckpoint1._checkpoints[1].expiration, 159);
     assertEq(rbCheckpoint1._checkpoints[1].quantity, 1);
     assertEq(rbCheckpoint1._checkpoints[2].timestamp, 160);
     assertEq(rbCheckpoint1._checkpoints[2].expiration, 0);
@@ -720,37 +725,6 @@ contract RoleBalanceCheckpoints is VertexPolicyTest {
     assertEq(rbCheckpoint2._checkpoints[2].timestamp, 140);
     assertEq(rbCheckpoint2._checkpoints[2].expiration, 0);
     assertEq(rbCheckpoint2._checkpoints[2].quantity, 0);
-  }
-}
-
-contract RoleSupplyCheckpoints is VertexPolicyTest {
-  function test_ReturnsSupplyCheckpoint(uint8 supply, uint8 quantity) public {
-    vm.assume(quantity > 0);
-    supply = uint8(bound(supply, 0, type(uint8).max - 100));
-
-    uint256 initialTimestamp = block.timestamp;
-
-    for (uint8 i = 100; i < supply + 100; i++) {
-      vm.warp(block.timestamp + 1);
-      vm.prank(address(mpCore));
-      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(i)), quantity, DEFAULT_ROLE_EXPIRATION);
-    }
-
-    vm.warp(block.timestamp + 1);
-
-    uint256 roleSupply = mpPolicy.getSupply(uint8(Roles.TestRole1));
-    assertEq(roleSupply, uint256(supply) * uint256(quantity));
-
-    Checkpoints.History memory rsCheckpoint = mpPolicy.roleSupplyCheckpoints(uint8(Roles.TestRole1));
-    assertEq(rsCheckpoint._checkpoints.length, supply);
-    if (supply > 0) {
-      assertEq(rsCheckpoint._checkpoints[0].timestamp, initialTimestamp + 1);
-      assertEq(rsCheckpoint._checkpoints[0].quantity, quantity);
-      assertEq(rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].timestamp, block.timestamp - 1);
-      assertEq(
-        rsCheckpoint._checkpoints[rsCheckpoint._checkpoints.length - 1].quantity, uint256(supply) * uint256(quantity)
-      );
-    }
   }
 }
 
@@ -785,7 +759,7 @@ contract HasRoleUint256Overload is VertexPolicyTest {
 }
 
 contract HasPermissionId is VertexPolicyTest {
-  function test_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
+  function testFuzz_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
     vm.startPrank(address(mpCore));
 
     vm.warp(100);
@@ -799,7 +773,7 @@ contract HasPermissionId is VertexPolicyTest {
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), pausePermissionId), false);
   }
 
-  function test_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
+  function testFuzz_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     assertEq(mpPolicy.hasPermissionId(arbitraryUser, uint8(Roles.TestRole1), permissionId), false);
@@ -807,8 +781,8 @@ contract HasPermissionId is VertexPolicyTest {
 }
 
 contract TotalSupply is VertexPolicyTest {
-  function test_getsTotalSupply(uint256 numberOfPolicies) public {
-    uint256 initPolicySupply = mpPolicy.getSupply(ALL_HOLDERS_ROLE);
+  function testFuzz_getsTotalSupply(uint256 numberOfPolicies) public {
+    uint256 initPolicySupply = mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE);
     numberOfPolicies = bound(numberOfPolicies, 1, 10_000);
     for (uint256 i = 0; i < numberOfPolicies; i++) {
       vm.prank(address(mpCore));
@@ -818,58 +792,6 @@ contract TotalSupply is VertexPolicyTest {
     }
 
     assertEq(mpPolicy.totalSupply(), initPolicySupply + numberOfPolicies);
-  }
-}
-
-contract Aggregate is VertexPolicyTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
-    vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexPolicy.OnlyVertex.selector);
-    bytes[] memory calls = new bytes[](3);
-
-    vm.prank(caller);
-    mpPolicy.aggregate(calls);
-  }
-
-  function test_AggregatesSetRoleHolderCalls() public {
-    address newRoleHolder = makeAddr("newRoleHolder");
-
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call2 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole2), arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes memory call3 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uint8(Roles.TestRole1), newRoleHolder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-
-    bytes[] memory calls = new bytes[](3);
-    calls[0] = call1;
-    calls[1] = call2;
-    calls[2] = call3;
-
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
-
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole1)), true);
-    assertEq(mpPolicy.hasRole(arbitraryUser, uint8(Roles.TestRole2)), true);
-    assertEq(mpPolicy.hasRole(newRoleHolder, uint8(Roles.TestRole1)), true);
-  }
-
-  function test_RevertIf_CalldataIsIncorrect() public {
-    uint8 uninitializedRole = NUM_INIT_ROLES + 1;
-    bytes memory call1 = abi.encodeCall(
-      VertexPolicy.setRoleHolder, (uninitializedRole, arbitraryUser, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION)
-    );
-    bytes[] memory calls = new bytes[](1);
-    calls[0] = call1;
-
-    bytes memory failedResponse = abi.encodeWithSelector(VertexPolicy.RoleNotInitialized.selector, uninitializedRole);
-
-    vm.expectRevert(abi.encodeWithSelector(VertexPolicy.CallReverted.selector, 0, failedResponse));
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(calls);
   }
 }
 
@@ -971,7 +893,7 @@ contract TokenURI is VertexPolicyTest {
 }
 
 contract IsRoleExpired is VertexPolicyTest {
-  function test_ReturnsTrueForExpiredRole(uint64 expiration) public {
+  function testFuzz_ReturnsTrueForExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.prank(address(mpCore));
@@ -982,13 +904,20 @@ contract IsRoleExpired is VertexPolicyTest {
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), true);
   }
 
-  function test_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
+  function testFuzz_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryUser, DEFAULT_ROLE_QTY, expiration);
 
     assertEq(mpPolicy.isRoleExpired(arbitraryUser, uint8(Roles.TestRole1)), false);
+  }
+
+  function test_ReturnsFalseIfNoRole() public {
+    address randomUser = makeAddr("randomUser");
+    // Make sure user has no role, in and in that case expired should be false.
+    assertEq(mpPolicy.getQuantity(randomUser, uint8(Roles.TestRole1)), 0);
+    assertFalse(mpPolicy.isRoleExpired(randomUser, uint8(Roles.TestRole1)));
   }
 }
 
