@@ -8,7 +8,6 @@ import {ActionState} from "src/lib/Enums.sol";
 import {Action} from "src/lib/Structs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 

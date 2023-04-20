@@ -11,8 +11,9 @@ import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
-import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 contract DeployVertexProtocol is Script {
@@ -20,7 +21,8 @@ contract DeployVertexProtocol is Script {
 
   // Logic contracts.
   VertexCore coreLogic;
-  DefaultStrategy strategyLogic;
+  RelativeStrategy relativeStrategyLogic;
+  AbsoluteStrategy absoluteStrategyLogic;
   VertexAccount accountLogic;
   VertexPolicy policyLogic;
 
@@ -67,8 +69,12 @@ contract DeployVertexProtocol is Script {
     print(string.concat("  VertexCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    strategyLogic = new DefaultStrategy();
-    print(string.concat("  VertexStrategyLogic:", vm.toString(address(strategyLogic))));
+    relativeStrategyLogic = new RelativeStrategy();
+    print(string.concat("  VertexRelativeStrategyLogic:", vm.toString(address(relativeStrategyLogic))));
+
+    vm.broadcast();
+    absoluteStrategyLogic = new AbsoluteStrategy();
+    print(string.concat("  VertexAbsoluteStrategyLogic:", vm.toString(address(absoluteStrategyLogic))));
 
     vm.broadcast();
     accountLogic = new VertexAccount();
@@ -87,7 +93,7 @@ contract DeployVertexProtocol is Script {
     vm.broadcast();
     factory = new VertexFactory(
       coreLogic,
-      strategyLogic,
+      relativeStrategyLogic,
       accountLogic,
       policyLogic,
       policyTokenURI,
@@ -117,12 +123,12 @@ contract DeployVertexProtocol is Script {
   function readStrategies(string memory jsonInput)
     internal
     pure
-    returns (DefaultStrategyConfig[] memory strategyConfigs)
+    returns (RelativeStrategyConfig[] memory strategyConfigs)
   {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
     RawStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawStrategyData[]));
 
-    strategyConfigs = new DefaultStrategyConfig[](rawStrategyConfigs.length);
+    strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
       RawStrategyData memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
@@ -140,7 +146,7 @@ contract DeployVertexProtocol is Script {
 
   function readRoleDescriptions(string memory jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
     string[] memory descriptions = jsonInput.readStringArray(".initialRoleDescriptions");
-    for (uint256 i; i < descriptions.length; i++) {
+    for (uint256 i = 0; i < descriptions.length; i++) {
       require(bytes(descriptions[i]).length <= 32, "Role description is too long");
     }
     roleDescriptions = abi.decode(abi.encode(descriptions), (RoleDescription[]));
@@ -177,11 +183,26 @@ contract DeployVertexProtocol is Script {
     }
   }
 
-  function encodeStrategy(DefaultStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(RelativeStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategyConfigs(DefaultStrategyConfig[] memory strategies)
+  function encodeStrategy(AbsoluteStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+    encoded = abi.encode(strategy);
+  }
+
+  function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
+    encoded = new bytes[](strategies.length);
+    for (uint256 i = 0; i < strategies.length; i++) {
+      encoded[i] = encodeStrategy(strategies[i]);
+    }
+  }
+
+  function encodeStrategyConfigs(AbsoluteStrategyConfig[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)
@@ -192,7 +213,13 @@ contract DeployVertexProtocol is Script {
     }
   }
 
-  function toDefaultStrategy(IVertexStrategy strategy) internal pure returns (DefaultStrategy converted) {
+  function toRelativeStrategy(IVertexStrategy strategy) internal pure returns (RelativeStrategy converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toAbsoluteStrategy(IVertexStrategy strategy) internal pure returns (AbsoluteStrategy converted) {
     assembly {
       converted := strategy
     }

@@ -11,12 +11,11 @@ import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexLens} from "src/VertexLens.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, DefaultStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
@@ -139,14 +138,14 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    bytes[] memory strategyConfigs = defaultStrategyConfigs();
+    bytes[] memory strategyConfigs = relativeStrategyConfigs();
     RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
     string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
 
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
       "Mock Protocol Vertex",
-      strategyLogic,
+      relativeStrategyLogic,
       strategyConfigs,
       mpAccounts,
       roleDescriptionStrings,
@@ -156,10 +155,12 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpPolicy = mpCore.policy();
 
     // Set strategy addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
+    rootStrategy1 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -168,19 +169,15 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // Add approvers and disapprovers to the mock protocol's vertex.
-    // forgefmt: disable-start
-    bytes[] memory roleAssignmentCalls = new bytes[](7);
-    roleAssignmentCalls[0] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[1] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[2] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[3] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[4] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[5] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    roleAssignmentCalls[6] = abi.encodeCall(VertexPolicy.setRoleHolder, (uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION));
-    // forgefmt: disable-end
-
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(roleAssignmentCalls);
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAndy, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDave, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDiane, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.stopPrank();
 
     // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
     mockProtocol = new MockProtocol(address(mpCore));
@@ -189,10 +186,12 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategyConfigs[1], address(mpCore));
+    rootStrategy1 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+    rootStrategy2 =
+      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -210,26 +209,16 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
     executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
 
-    bytes[] memory permissionsToSet = new bytes[](8);
-    permissionsToSet[0] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), pausePermissionId, true));
-    permissionsToSet[1] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), failPermissionId, true));
-    permissionsToSet[2] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.ActionCreator), receiveEthPermissionId, true));
-    permissionsToSet[3] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeActionId, true));
-    permissionsToSet[4] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createStrategyId, true));
-    permissionsToSet[5] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), createAccountId, true));
-    permissionsToSet[6] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), pausePermissionId2, true));
-    permissionsToSet[7] =
-      abi.encodeCall(VertexPolicy.setRolePermission, (uint8(Roles.TestRole2), executeScriptPermissionId, true));
-
-    vm.prank(address(mpCore));
-    mpPolicy.aggregate(permissionsToSet);
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), failPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeActionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createStrategyId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createAccountId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), pausePermissionId2, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptPermissionId, true);
+    vm.stopPrank();
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
     vm.warp(block.timestamp + 1);
@@ -237,7 +226,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(strategyLogic), "strategyLogic not set");
+    require(address(0) != address(relativeStrategyLogic), "relativeStrategyLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -273,11 +262,11 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
+  function relativeStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
     strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
   }
 
-  function toIVertexStrategy(DefaultStrategyConfig[] memory strategies)
+  function toIVertexStrategy(RelativeStrategyConfig[] memory strategies)
     internal
     pure
     returns (IVertexStrategy[] memory converted)
@@ -287,7 +276,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     }
   }
 
-  function toIVertexStrategy(DefaultStrategyConfig memory strategy)
+  function toIVertexStrategy(RelativeStrategyConfig memory strategy)
     internal
     pure
     returns (IVertexStrategy[] memory converted)
