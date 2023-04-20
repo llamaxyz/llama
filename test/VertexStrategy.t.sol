@@ -546,6 +546,8 @@ contract IsActionPassed is VertexStrategyTest {
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
+    generateAndSetRoleHolders(_numberOfPolicies);
+
     IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -559,8 +561,6 @@ contract IsActionPassed is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-
-    generateAndSetRoleHolders(_numberOfPolicies);
 
     uint256 actionId = createAction(testStrategy);
 
@@ -595,6 +595,8 @@ contract IsActionPassed is VertexStrategyTest {
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
     uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
 
+    generateAndSetRoleHolders(_numberOfPolicies);
+
     IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -608,8 +610,6 @@ contract IsActionPassed is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-
-    generateAndSetRoleHolders(_numberOfPolicies);
 
     uint256 actionId = createAction(testStrategy);
 
