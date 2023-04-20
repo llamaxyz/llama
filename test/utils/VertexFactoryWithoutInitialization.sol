@@ -13,7 +13,7 @@ import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 
 /// @title Vertex Factory
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Vertex systems.
 contract VertexFactoryWithoutInitialization is VertexFactory {
   constructor(
@@ -72,11 +72,11 @@ contract VertexFactoryWithoutInitialization is VertexFactory {
     VertexCore vertex,
     VertexPolicy policy,
     string memory name,
-    IVertexStrategy strategyLogic,
+    IVertexStrategy relativeStrategyLogic,
     VertexAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts
   ) external {
-    vertex.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+    vertex.initialize(name, policy, relativeStrategyLogic, accountLogic, initialStrategies, initialAccounts);
   }
 }

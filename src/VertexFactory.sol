@@ -13,7 +13,7 @@ import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
 
 /// @title Vertex Factory
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Vertex instances.
 contract VertexFactory {
   // ======================================

@@ -10,7 +10,7 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 
 /// @title Vertex Lens
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Vertex contract addresses.
 contract VertexLens {
   /// @notice Hashes a permission.

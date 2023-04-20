@@ -6,7 +6,7 @@ import {Base64} from "@openzeppelin/utils/Base64.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 
 /// @title Vertex Policy Metadata
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Vertex Policy metadata.
 contract VertexPolicyTokenURI {
   // ===========================================

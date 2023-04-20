@@ -20,11 +20,17 @@ import {
 } from "src/lib/Structs.sol";
 
 /// @title Vertex Account
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
 contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   using SafeERC20 for IERC20;
   using Address for address payable;
+
+  /// @dev Data for sending native tokens to recipients.
+  struct NativeTokenData {
+    address payable recipient;
+    uint256 amount;
+  }
 
   // ======================================
   // ======== Errors and Modifiers ========
@@ -72,11 +78,19 @@ contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   receive() external payable {}
 
   /// @notice Function for Vertex to transfer native tokens to other parties.
-  /// @param recipient Transfer's recipient.
-  /// @param amount Amount to transfer.
-  function transferNativeToken(address payable recipient, uint256 amount) external onlyVertex {
-    if (recipient == address(0)) revert Invalid0xRecipient();
-    recipient.sendValue(amount);
+  /// @param nativeTokenData The data of the native token transfer.
+  function transferNativeToken(NativeTokenData calldata nativeTokenData) public onlyVertex {
+    if (nativeTokenData.recipient == address(0)) revert Invalid0xRecipient();
+    nativeTokenData.recipient.sendValue(nativeTokenData.amount);
+  }
+
+  /// @notice Function for Vertex to batch transfer native tokens to other parties.
+  /// @param nativeTokenData The data of the native token transfer.
+  function batchTransferNativeToken(NativeTokenData[] calldata nativeTokenData) external onlyVertex {
+    uint256 length = nativeTokenData.length;
+    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+      transferNativeToken(nativeTokenData[i]);
+    }
   }
 
   // -------- ERC20 Token --------
