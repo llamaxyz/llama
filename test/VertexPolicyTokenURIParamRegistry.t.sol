@@ -3,9 +3,10 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
-import {VertexCore} from "src/VertexCore.sol";
 import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
 
 contract VertexPolicyTokenURIParamRegistryTest is VertexTestSetup {
   event ColorSet(VertexCore indexed vertexCore, string color);

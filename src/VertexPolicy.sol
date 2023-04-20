@@ -2,14 +2,13 @@
 pragma solidity 0.8.19;
 
 import {LibString} from "@solady/utils/LibString.sol";
-import {Base64} from "@openzeppelin/utils/Base64.sol";
 
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
 
 /// @title Vertex Policy
 /// @author Llama (devsdosomething@llama.xyz)

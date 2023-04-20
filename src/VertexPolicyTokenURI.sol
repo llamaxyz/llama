@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {LibString} from "@solady/utils/LibString.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
+
+import {LibString} from "@solady/utils/LibString.sol";
 
 /// @title Vertex Policy Metadata
 /// @author Llama (devsdosomething@llama.xyz)

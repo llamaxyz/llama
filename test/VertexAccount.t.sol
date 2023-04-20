@@ -2,16 +2,16 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
-import {MockExtension} from "test/mock/MockExtension.sol";
+
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
+import {MockExtension} from "test/mock/MockExtension.sol";
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
 import {
   ERC20Data,
   ERC721Data,
@@ -20,7 +20,10 @@ import {
   ERC1155BatchData,
   ERC1155OperatorData
 } from "src/lib/Structs.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 
 contract VertexAccountTest is VertexTestSetup {
   // Testing Parameters

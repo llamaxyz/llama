@@ -6,11 +6,11 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData} from "src/lib/Structs.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
 
 /// @title Core of a Vertex instance
 /// @author Llama (devsdosomething@llama.xyz)

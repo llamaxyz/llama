@@ -6,6 +6,7 @@ pragma solidity ^0.8.19;
 /// do not follow the "one contract per method" pattern).
 /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/test/utils/Checkpoints.test.js
 import {Test, console2} from "forge-std/Test.sol";
+
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 
 /// @dev The CheckpointsMock harness contract has its external functions written according to
