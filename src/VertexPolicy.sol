@@ -15,8 +15,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
 /// disapprove actions.
-/// @dev TODO Add comments here around limitations/expectations of this contract, namely the "total
-/// supply issue", the fact that quantities cannot be larger than 1, and burning a policy.
 /// @dev The roles determine how the token can interact with the Vertex Core contract.
 contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
@@ -41,7 +39,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   modifier nonTransferableToken() {
-    _; // We put this ahead of the revert so we don't get an unreachable code warning. TODO Confirm this is safe.
+    _; // We put this ahead of the revert so we don't get an unreachable code warning.
     revert NonTransferableToken();
   }
 
@@ -60,8 +58,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice A special role used to reference all policy holders.
   /// @dev DO NOT assign users this role directly. Doing so can result in the wrong total supply
   /// values for this role.
-  // TODO Confirm zero is safe here.
-  // TODO If zero is NOT safe, update the deploy script to add an 'AllHolders' role description.
   uint8 public constant ALL_HOLDERS_ROLE = 0;
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
@@ -218,7 +214,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// value is the quantity of the role when approving/disapproving (regardless of strategy).
   function getPastQuantity(address user, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 tokenId = _tokenId(user);
-    return roleBalanceCkpts[tokenId][role].getAtTimestamp(timestamp);
+    return roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the total number of `role` holders.
@@ -247,7 +243,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `user` has the `role` at `timestamp`, false otherwise.
   function hasRole(address user, uint8 role, uint256 timestamp) external view returns (bool) {
-    uint256 quantity = roleBalanceCkpts[_tokenId(user)][role].getAtTimestamp(timestamp);
+    uint256 quantity = roleBalanceCkpts[_tokenId(user)][role].getAtProbablyRecentTimestamp(timestamp);
     return quantity > 0;
   }
 

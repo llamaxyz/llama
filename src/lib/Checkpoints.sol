@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 // forgefmt: disable-start
-// TODO Consider replacing these OpenZeppelin math methods with optimized solmate (or solady) ones.
 pragma solidity ^0.8.0;
 
 /**
@@ -25,40 +24,6 @@ library Checkpoints {
         uint64 timestamp;
         uint64 expiration;
         uint128 quantity;
-    }
-
-    /**
-     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that timestamp, the
-     * closest one before it is returned, or zero otherwise.
-     */
-    function getAtTimestamp(History storage self, uint256 timestamp) internal view returns (uint256) {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
-        uint64 _timestamp = toUint64(timestamp);
-
-        uint256 len = self._checkpoints.length;
-        uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, 0, len);
-        return pos == 0 ? 0 : _unsafeAccess(self._checkpoints, pos - 1).quantity;
-    }
-
-    /**
-     * @dev Returns the quantity and expiration at a given block timestamp. If a checkpoint is not available at that
-     * timestamp, the closest one before it is returned, or zero otherwise.
-     * @dev This is identical to the `getAtTimestamp` method, but returns the expiration as well.
-     */
-    function getCheckpointAtTimestamp(History storage self, uint256 timestamp)
-        internal
-        view
-        returns (uint256 quantity, uint256 expiration)
-    {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
-        uint64 _timestamp = toUint64(timestamp);
-
-        uint256 len = self._checkpoints.length;
-        uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, 0, len);
-
-        if (pos == 0) return (0, 0);
-        Checkpoint storage ckpt = _unsafeAccess(self._checkpoints, pos - 1);
-        return (ckpt.quantity, ckpt.expiration);
     }
 
     /**
@@ -88,42 +53,6 @@ library Checkpoints {
         uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, low, high);
 
         return pos == 0 ? 0 : _unsafeAccess(self._checkpoints, pos - 1).quantity;
-    }
-
-    /**
-     * @dev Returns the quantity and expiration at a given block timestamp. If a checkpoint is not available at that
-     * time, the closest one, before it is returned, or zero otherwise. Similar to {upperLookup} but optimized for the
-     * case when the searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where
-     * N is the timestamp of checkpoints.
-     * @dev This is identical to the `getAtProbablyRecentTimestamp` method, but returns the expiration as well.
-     */
-    function getCheckpointAtProbablyRecentTimestamp(History storage self, uint256 timestamp)
-        internal
-        view
-        returns (uint256 quantity, uint256 expiration)
-    {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
-        uint64 _timestamp = toUint64(timestamp);
-
-        uint256 len = self._checkpoints.length;
-
-        uint256 low = 0;
-        uint256 high = len;
-
-        if (len > 5) {
-            uint256 mid = len - sqrt(len);
-            if (_timestamp < _unsafeAccess(self._checkpoints, mid).timestamp) {
-                high = mid;
-            } else {
-                low = mid + 1;
-            }
-        }
-
-        uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, low, high);
-
-        if (pos == 0) return (0, 0);
-        Checkpoint storage ckpt = _unsafeAccess(self._checkpoints, pos - 1);
-        return (ckpt.quantity, ckpt.expiration);
     }
 
     /**
@@ -286,90 +215,71 @@ library Checkpoints {
     }
 
     /**
-     * @dev Returns the square root of a number. If the number is not a perfect square, the value is rounded down.
-     *
-     * Inspired by Henry S. Warren, Jr.'s "Hacker's Delight" (Chapter 11).
+     * @dev This was copied from Solmate v7 https://github.com/transmissions11/solmate/blob/e8f96f25d48fe702117ce76c79228ca4f20206cb/src/utils/FixedPointMathLib.sol
+     * @notice The math utils in solmate v7 were reviewed/audited by spearbit as part of the art gobblers audit, and are more efficient than the v6 versions.
      */
-    function sqrt(uint256 a) private pure returns (uint256) {
-        if (a == 0) {
-            return 0;
+    function sqrt(uint256 x) internal pure returns (uint256 z) {
+        assembly {
+            let y := x // We start y at x, which will help us make our initial estimate.
+
+            z := 181 // The "correct" value is 1, but this saves a multiplication later.
+
+            // This segment is to get a reasonable initial estimate for the Babylonian method. With a bad
+            // start, the correct # of bits increases ~linearly each iteration instead of ~quadratically.
+
+            // We check y >= 2^(k + 8) but shift right by k bits
+            // each branch to ensure that if x >= 256, then y >= 256.
+            if iszero(lt(y, 0x10000000000000000000000000000000000)) {
+                y := shr(128, y)
+                z := shl(64, z)
+            }
+            if iszero(lt(y, 0x1000000000000000000)) {
+                y := shr(64, y)
+                z := shl(32, z)
+            }
+            if iszero(lt(y, 0x10000000000)) {
+                y := shr(32, y)
+                z := shl(16, z)
+            }
+            if iszero(lt(y, 0x1000000)) {
+                y := shr(16, y)
+                z := shl(8, z)
+            }
+
+            // Goal was to get z*z*y within a small factor of x. More iterations could
+            // get y in a tighter range. Currently, we will have y in [256, 256*2^16).
+            // We ensured y >= 256 so that the relative difference between y and y+1 is small.
+            // That's not possible if x < 256 but we can just verify those cases exhaustively.
+
+            // Now, z*z*y <= x < z*z*(y+1), and y <= 2^(16+8), and either y >= 256, or x < 256.
+            // Correctness can be checked exhaustively for x < 256, so we assume y >= 256.
+            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of sqrt(x), or about 20bps.
+
+            // For s in the range [1/256, 256], the estimate f(s) = (181/1024) * (s+1) is in the range
+            // (1/2.84 * sqrt(s), 2.84 * sqrt(s)), with largest error when s = 1 and when s = 256 or 1/256.
+
+            // Since y is in [256, 256*2^16), let a = y/65536, so that a is in [1/256, 256). Then we can estimate
+            // sqrt(y) using sqrt(65536) * 181/1024 * (a + 1) = 181/4 * (y + 65536)/65536 = 181 * (y + 65536)/2^18.
+
+            // There is no overflow risk here since y < 2^136 after the first branch above.
+            z := shr(18, mul(z, add(y, 65536))) // A mul() is saved from starting z at 181.
+
+            // Given the worst case multiplicative error of 2.84 above, 7 iterations should be enough.
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+            z := shr(1, add(z, div(x, z)))
+
+            // If x+1 is a perfect square, the Babylonian method cycles between
+            // floor(sqrt(x)) and ceil(sqrt(x)). This statement ensures we return floor.
+            // See: https://en.wikipedia.org/wiki/Integer_square_root#Using_only_integer_division
+            // Since the ceil is rare, we save gas on the assignment and repeat division in the rare case.
+            // If you don't care whether the floor or ceil square root is returned, you can remove this statement.
+            z := sub(z, lt(div(x, z), z))
         }
-
-        // For our first guess, we get the biggest power of 2 which is smaller than the square root of the target.
-        //
-        // We know that the "msb" (most significant bit) of our target number `a` is a power of 2 such that we have
-        // `msb(a) <= a < 2*msb(a)`. This value can be written `msb(a)=2**k` with `k=log2(a)`.
-        //
-        // This can be rewritten `2**log2(a) <= a < 2**(log2(a) + 1)`
-        // → `sqrt(2**k) <= sqrt(a) < sqrt(2**(k+1))`
-        // → `2**(k/2) <= sqrt(a) < 2**((k+1)/2) <= 2**(k/2 + 1)`
-        //
-        // Consequently, `2**(log2(a) / 2)` is a good first approximation of `sqrt(a)` with at least 1 correct bit.
-        uint256 result = 1 << (log2(a) >> 1);
-
-        // At this point `result` is an estimation with one bit of precision. We know the true value is a uint128,
-        // since it is the square root of a uint256. Newton's method converges quadratically (precision doubles at
-        // every iteration). We thus need at most 7 iteration to turn our partial result with one bit of precision
-        // into the expected uint128 result.
-        unchecked {
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            result = (result + a / result) >> 1;
-            return min(result, a / result);
-        }
-    }
-
-    /**
-     * @dev Return the log in base 2, rounded down, of a positive value.
-     * Returns 0 if given 0.
-     */
-    function log2(uint256 value) private pure returns (uint256) {
-        uint256 result = 0;
-        unchecked {
-            if (value >> 128 > 0) {
-                value >>= 128;
-                result += 128;
-            }
-            if (value >> 64 > 0) {
-                value >>= 64;
-                result += 64;
-            }
-            if (value >> 32 > 0) {
-                value >>= 32;
-                result += 32;
-            }
-            if (value >> 16 > 0) {
-                value >>= 16;
-                result += 16;
-            }
-            if (value >> 8 > 0) {
-                value >>= 8;
-                result += 8;
-            }
-            if (value >> 4 > 0) {
-                value >>= 4;
-                result += 4;
-            }
-            if (value >> 2 > 0) {
-                value >>= 2;
-                result += 2;
-            }
-            if (value >> 1 > 0) {
-                result += 1;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @dev Returns the smallest of two numbers.
-     */
-    function min(uint256 a, uint256 b) private pure returns (uint256) {
-        return a < b ? a : b;
     }
 
     /**
