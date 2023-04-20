@@ -138,22 +138,6 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   // -------- Role and Permission Management --------
 
-  /// @notice Aggregate calls of multiple functions in the current contract into a single call.
-  /// @dev The `msg.value` should not be trusted for any method callable from this method. No
-  /// methods in this contract are `payable` so this should not be an issue, but it's mentioned
-  /// here in case this contract is modified in the future.
-  /// @param calls ABI-encoded array of calls to be executed in order.
-  /// @return returnData The return data of each call.
-  function aggregate(bytes[] calldata calls) external onlyVertex returns (bytes[] memory returnData) {
-    returnData = new bytes[](calls.length);
-
-    for (uint256 i = 0; i < calls.length; i = _uncheckedIncrement(i)) {
-      (bool success, bytes memory response) = address(this).delegatecall(calls[i]);
-      if (!success) revert CallReverted(i, response);
-      returnData[i] = response;
-    }
-  }
-
   /// @notice Initializes a new role with the given `role` ID and `description`
   function initializeRole(RoleDescription description) external onlyVertex {
     _initializeRole(description);
@@ -193,6 +177,9 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Revokes all roles from the `user` and burns their policy.
   function revokePolicy(address user) external onlyVertex {
     if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
+    // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
+    // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
+    // the last role is also revoked.
     for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), user, 0, 0);
     }
@@ -205,6 +192,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   function revokePolicy(address user, uint8[] calldata roles) external onlyVertex {
     if (balanceOf(user) == 0) revert UserDoesNotHoldPolicy(user);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
+      if (roles[i] == 0) revert AllHoldersRole();
       _setRoleHolder(roles[i], user, 0, 0);
     }
     _burn(_tokenId(user));

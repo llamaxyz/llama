@@ -251,7 +251,9 @@ contract Initialize is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), strategyConfigs[0]);
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), strategyConfigs[1]);
+
     modifiedFactory.initialize(
       uninitializedVertex, policy, "NewProject", strategyLogic, accountLogic, strategyConfigs, accounts
     );
@@ -1281,7 +1283,9 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], address(strategyLogic), encodeStrategy(newStrategies[0]));
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], address(strategyLogic), encodeStrategy(newStrategies[1]));
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], address(strategyLogic), encodeStrategy(newStrategies[2]));
 
     mpCore.createAndAuthorizeStrategies(strategyLogic, encodeStrategyConfigs(newStrategies));
@@ -1345,7 +1349,9 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, encodeStrategy(newStrategies[0]));
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, encodeStrategy(newStrategies[1]));
+    vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, encodeStrategy(newStrategies[2]));
 
     mpCore.createAndAuthorizeStrategies(IVertexStrategy(additionalStrategyLogic), encodeStrategyConfigs(newStrategies));
@@ -1497,6 +1503,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
 
     vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy1);
+    vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy2);
 
     IVertexStrategy[] memory strategies = new IVertexStrategy[](2);
