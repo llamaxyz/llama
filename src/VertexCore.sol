@@ -12,6 +12,8 @@ import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
 
+import {VertexCrosschainRelayer} from "src/crosschain/VertexCrosschainRelayer.sol";
+
 /// @title Core of a Vertex instance
 /// @author Llama (vertex@llama.xyz)
 /// @notice Main point of interaction of a Vertex instance (i.e. entry into and exit from).
@@ -187,9 +189,14 @@ contract VertexCore is Initializable {
     address target,
     uint256 value,
     bytes4 selector,
-    bytes calldata data
+    bytes calldata data,
+    uint32 destinationChain,
+    address destinationRecipient,
+    address relayer
   ) external returns (uint256 actionId) {
-    actionId = _createAction(msg.sender, role, strategy, target, value, selector, data);
+    actionId = _createAction(
+      msg.sender, role, strategy, target, value, selector, data, destinationChain, destinationRecipient, relayer
+    );
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -242,7 +249,7 @@ contract VertexCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != user) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, selector, data);
+    actionId = _createAction(signer, role, strategy, target, value, selector, data, 0, address(0), address(0));
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -279,7 +286,9 @@ contract VertexCore is Initializable {
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[action.target]) {
+    if (action.destinationChain != 0 && action.destinationRecipient != address(0)) {
+      VertexCrosschainRelayer(action.relayer).relayCalls(actionId, action);
+    } else if (authorizedScripts[action.target]) {
       (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
     } else {
       (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
@@ -493,7 +502,10 @@ contract VertexCore is Initializable {
     address target,
     uint256 value,
     bytes4 selector,
-    bytes calldata data
+    bytes calldata data,
+    uint32 destinationChain,
+    address destinationRecipient,
+    address relayer
   ) internal returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
@@ -520,23 +532,26 @@ contract VertexCore is Initializable {
     newAction.selector = selector;
     newAction.data = data;
     newAction.creationTime = block.timestamp;
+    newAction.destinationChain = destinationChain;
+    newAction.destinationRecipient = destinationRecipient;
+    newAction.relayer = relayer;
 
     (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
     if (!allowed) revert ProhibitedByStrategy(reason);
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
-    IActionGuard guard = actionGuard[target][selector];
-    if (guard != IActionGuard(address(0))) {
-      (allowed, reason) = guard.validateActionCreation(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    // IActionGuard guard = actionGuard[target][selector];
+    // if (guard != IActionGuard(address(0))) {
+    //   (allowed, reason) = guard.validateActionCreation(actionId);
+    //   if (!allowed) revert ProhibitedByActionGuard(reason);
+    // }
 
     unchecked {
       ++actionsCount;
     }
 
-    emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
+    // emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {

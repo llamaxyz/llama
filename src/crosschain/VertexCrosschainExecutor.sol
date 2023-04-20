@@ -6,13 +6,13 @@ import {IMailbox} from "./interfaces/IMailbox.sol";
 import {IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
 import {VertexCrosschainRelayer} from "./VertexCrosschainRelayer.sol";
-import {Action} from "./Structs.sol";
+import {Action} from "src/lib/Structs.sol";
 
 contract VertexCrosschainExecutor is IMessageRecipient {
   event ExecutedCalls(VertexCrosschainRelayer indexed relayer, uint256 indexed nonce);
 
   error CallsAlreadyExecuted(uint256 nonce);
-  error CallFailure(uint256 callIndex, bytes errorData);
+  error CallFailure(uint256 actionId, bytes errorData);
   error InvalidOriginChain();
   error InvalidSender();
 
@@ -31,31 +31,26 @@ contract VertexCrosschainExecutor is IMessageRecipient {
   function handle(uint32 originChain, bytes32 caller, bytes calldata message) external onlyTrustedInbox(originChain) {
     VertexCrosschainRelayer relayer = VertexCrosschainRelayer(TypeCasts.bytes32ToAddress(caller));
 
-    (uint256 nonce, address actionSender, Action[] memory actions) = abi.decode(message, (uint256, address, Action[]));
+    (uint256 nonce, address actionSender, uint256 actionId, Action memory action) =
+      abi.decode(message, (uint256, address, uint256, Action));
 
-    _executeCalls(relayer, nonce, actionSender, actions);
+    _executeCalls(relayer, nonce, actionSender, actionId, action);
   }
 
-  function _executeCalls(VertexCrosschainRelayer relayer, uint256 nonce, address sender, Action[] memory actions)
-    internal
-  {
+  function _executeCalls(
+    VertexCrosschainRelayer relayer,
+    uint256 nonce,
+    address sender,
+    uint256 actionId,
+    Action memory action
+  ) internal {
     if (executedNonces[nonce]) revert CallsAlreadyExecuted(nonce);
 
     executedNonces[nonce] = true;
 
-    uint256 actionsLength = actions.length;
-    for (uint256 idx; idx < actionsLength; ++idx) {
-      Action memory action = actions[idx];
-      console2.logBytes32(action.selector);
-      console2.logBytes(action.data);
-      console2.logBytes(abi.encodePacked(action.selector, action.data));
-      console2.log(action.target);
-      console2.logBytes(action.target.code);
+    (bool success, bytes memory returnData) = action.target.call(abi.encodePacked(action.selector, action.data));
 
-      (bool success, bytes memory returnData) = action.target.call(abi.encodePacked(action.selector, action.data));
-
-      if (!success) revert CallFailure(idx, returnData);
-    }
+    if (!success) revert CallFailure(actionId, returnData);
 
     emit ExecutedCalls(relayer, nonce);
   }

@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IInterchainGasPaymaster} from "./interfaces/IInterchainGasPaymaster.sol";
 import {IMailbox} from "./interfaces/IMailbox.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
-import {Action} from "./Structs.sol";
+import {Action} from "src/lib/Structs.sol";
 
 contract VertexCrosschainRelayer {
   address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70; // Same across all chains
@@ -13,17 +13,14 @@ contract VertexCrosschainRelayer {
 
   uint256 internal nonce;
 
-  function relayCalls(Action[] calldata actions, uint32 destinationChain, address recipientAddress)
-    external
-    payable
-    returns (uint256)
-  {
-    bytes32 recipient = TypeCasts.addressToBytes32(recipientAddress);
-    bytes32 messageId = mailbox.dispatch(destinationChain, recipient, abi.encode(++nonce, msg.sender, actions));
+  function relayCalls(uint256 actionId, Action calldata action) external payable returns (uint256) {
+    bytes32 recipient = TypeCasts.addressToBytes32(action.destinationRecipient);
+    bytes32 messageId =
+      mailbox.dispatch(action.destinationChain, recipient, abi.encode(++nonce, msg.sender, actionId, action));
 
     igp.payForGas{value: msg.value}(
       messageId,
-      destinationChain,
+      action.destinationChain,
       100_000, // 100k gas to use in the recipient's handle function
       msg.sender
     );

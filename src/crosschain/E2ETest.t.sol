@@ -7,7 +7,9 @@ import {IMailbox} from "./interfaces/IMailbox.sol";
 import {MockTarget} from "./MockTarget.sol";
 import {VertexCrosschainExecutor} from "./VertexCrosschainExecutor.sol";
 import {VertexCrosschainRelayer} from "./VertexCrosschainRelayer.sol";
-import {Action} from "./Structs.sol";
+import {Action} from "src/lib/Structs.sol";
+
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 
 contract VertexUnchainedE2ETest is Test {
   address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70;
@@ -34,14 +36,26 @@ contract VertexUnchainedE2ETest is Test {
     vm.selectFork(polygonFork);
     VertexCrosschainRelayer relayer = new VertexCrosschainRelayer();
 
-    Action[] memory actions = new Action[](1);
-    actions[0].target = address(target);
-    actions[0].data = abi.encode("my super string");
-    actions[0].selector = MockTarget.receiveMessage.selector;
-    console2.logBytes32(bytes32(actions[0].selector));
+    Action memory action = Action(
+      address(0),
+      false,
+      false,
+      MockTarget.receiveMessage.selector,
+      IVertexStrategy(address(0)),
+      address(target),
+      abi.encode("my super string"),
+      0,
+      0,
+      0,
+      0,
+      0,
+      MAINNET,
+      address(executor),
+      address(relayer)
+    );
 
     deal(address(this), 100 ether);
-    relayer.relayCalls{value: 100e18}(actions, MAINNET, address(executor));
+    relayer.relayCalls{value: 100e18}(1, action);
 
     bytes memory message =
       hex"000000127000000089000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a000000010000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b00000000000000000000000000000000000000000000000000000000000000010000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e14960000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000000000000000000000000000000000000000000060f953cec70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f6d7920737570657220737472696e670000000000000000000000000000000000";

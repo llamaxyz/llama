@@ -22,6 +22,11 @@ import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
 
+import {VertexCrosschainRelayer} from "src/crosschain/VertexCrosschainRelayer.sol";
+import {VertexCrosschainExecutor} from "src/crosschain/VertexCrosschainExecutor.sol";
+import {IInterchainSecurityModule} from "src/crosschain/interfaces/IInterchainSecurityModule.sol";
+import {IMailbox} from "src/crosschain/interfaces/IMailbox.sol";
+
 contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   event ActionCreated(
     uint256 id,
@@ -71,7 +76,10 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true)
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
     vm.warp(block.timestamp + 1);
   }
@@ -144,7 +152,7 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
     vm.prank(address(rootCore));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
-  }
+}
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
     internal
@@ -423,7 +431,15 @@ contract CreateAction is VertexCoreTest {
     emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
     vm.prank(actionCreatorAaron);
     uint256 _actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
 
     Action memory action = mpCore.getAction(_actionId);
@@ -443,7 +459,15 @@ contract CreateAction is VertexCoreTest {
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(_target),
+      _value,
+      PAUSE_SELECTOR,
+      abi.encode(_data),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -457,7 +481,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(expectedErr);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -466,7 +498,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      unauthorizedStrategy,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -475,7 +515,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.InvalidStrategy.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      unauthorizedStrategy,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -485,7 +533,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(user);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -493,7 +549,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy2,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -501,7 +565,17 @@ contract CreateAction is VertexCoreTest {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      _incorrectTarget,
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
+    );
   }
 
   function testFuzz_RevertIf_BadPermissionForSelector(bytes4 _badSelector) public {
@@ -509,7 +583,15 @@ contract CreateAction is VertexCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      _badSelector,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 
@@ -523,7 +605,15 @@ contract CreateAction is VertexCoreTest {
 
     vm.prank(address(actionCreatorAustin));
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
 
     vm.warp(_expirationTimestamp + 1);
@@ -532,7 +622,15 @@ contract CreateAction is VertexCoreTest {
     vm.startPrank(address(actionCreatorAustin));
     vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 }
@@ -755,6 +853,77 @@ contract QueueAction is VertexCoreTest {
   }
 }
 
+contract ExecuteActionCrosschain is VertexCoreTest {
+  event Dispatch(address indexed sender, uint32 indexed destination, bytes32 indexed recipient, bytes message);
+
+  address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70;
+  address private constant POLYGON_RELAYER = 0x6c10b77002Fd0309c196DF237F1C5F394Da64f14;
+  address private constant MAINNNET_ISM = 0xec48E52D960E54a179f70907bF28b105813877ee;
+
+  IMailbox private constant mailbox = IMailbox(HYPERLANE_MAILBOX);
+  IInterchainSecurityModule private constant ism = IInterchainSecurityModule(MAINNNET_ISM);
+
+  uint256 actionId;
+  uint256 mainnetFork;
+  uint256 polygonFork;
+
+  function setUp() public override {
+    mainnetFork = vm.createFork(vm.rpcUrl("mainnet"), 17_076_708);
+    polygonFork = vm.createFork(vm.rpcUrl("polygon"), 41_688_510);
+
+    vm.selectFork(polygonFork);
+    VertexCrosschainExecutor executor = new VertexCrosschainExecutor();
+
+    vm.selectFork(mainnetFork);
+    VertexCrosschainRelayer relayer = new VertexCrosschainRelayer();
+
+    VertexCoreTest.setUp();
+
+    vm.prank(actionCreatorAaron);
+    actionId = mpCore.createAction(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0, // value
+      PAUSE_SELECTOR,
+      abi.encode(true),
+      137,
+      address(executor),
+      address(relayer)
+    );
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionId);
+    _approveAction(approverAlicia, actionId);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionPassed(actionId), true);
+  }
+
+  function test_ActionExecution() public {
+    mpCore.queueAction(0);
+    vm.warp(block.timestamp + 6 days);
+
+    vm.expectEmit();
+    emit Dispatch(address(this), 137, bytes32(""), bytes(""));
+
+    vm.expectEmit();
+    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, bytes(""));
+    mpCore.executeAction(0);
+
+    bytes memory message =
+      hex"000000127000000089000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a000000010000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b00000000000000000000000000000000000000000000000000000000000000010000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e14960000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000000000000000000000000000000000000000000060f953cec70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f6d7920737570657220737472696e670000000000000000000000000000000000";
+
+    vm.selectFork(polygonFork);
+    vm.startPrank(POLYGON_RELAYER);
+    vm.mockCall(
+      MAINNNET_ISM, abi.encodeWithSelector(IInterchainSecurityModule.verify.selector, "", message), abi.encode(true)
+    );
+    mailbox.process("", message);
+  }
+}
+
 contract ExecuteAction is VertexCoreTest {
   uint256 actionId;
 
@@ -795,7 +964,10 @@ contract ExecuteAction is VertexCoreTest {
       address(mockScript),
       0, // value
       EXECUTE_SCRIPT_SELECTOR,
-      abi.encode("")
+      abi.encode(""),
+      0,
+      address(0),
+      address(0)
     );
 
     vm.warp(block.timestamp + 1);
@@ -879,7 +1051,15 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIf_InsufficientMsgValue() public {
     vm.prank(actionCreatorAaron);
     actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true)
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      1e18,
+      RECEIVE_ETH_SELECTOR,
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
     vm.warp(block.timestamp + 1);
 
@@ -904,7 +1084,10 @@ contract ExecuteAction is VertexCoreTest {
       address(mockProtocol),
       0, // value
       FAIL_SELECTOR,
-      abi.encode("")
+      abi.encode(""),
+      0,
+      address(0),
+      address(0)
     );
     bytes memory expectedErr = abi.encodeWithSelector(
       VertexCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
@@ -945,7 +1128,10 @@ contract ExecuteAction is VertexCoreTest {
       address(mpCore),
       0, // value
       EXECUTE_ACTION_SELECTOR,
-      abi.encode(actionId)
+      abi.encode(actionId),
+      0,
+      address(0),
+      address(0)
     );
 
     vm.warp(block.timestamp + 1);
@@ -1460,7 +1646,10 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       address(mpCore),
       0, // value
       CREATE_STRATEGY_SELECTOR,
-      abi.encode(address(strategyLogic), encodeStrategyConfigs(newStrategies))
+      abi.encode(address(strategyLogic), encodeStrategyConfigs(newStrategies)),
+      0,
+      address(0),
+      address(0)
     );
 
     vm.warp(block.timestamp + 1);
@@ -1517,7 +1706,10 @@ contract UnauthorizeStrategies is VertexCoreTest {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true)
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
   }
 }
@@ -1606,7 +1798,10 @@ contract CreateAccounts is VertexCoreTest {
       address(mpCore),
       0, // value
       CREATE_ACCOUNT_SELECTOR,
-      abi.encode(newAccounts)
+      abi.encode(newAccounts),
+      0,
+      address(0),
+      address(0)
     );
 
     vm.warp(block.timestamp + 1);
@@ -1722,7 +1917,10 @@ contract GetActionState is VertexCoreTest {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true)
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
 
     uint256 currentState = uint256(mpCore.getActionState(actionId));
@@ -1756,7 +1954,10 @@ contract GetActionState is VertexCoreTest {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true)
+      abi.encode(true),
+      0,
+      address(0),
+      address(0)
     );
     vm.warp(block.timestamp + 1);
 
