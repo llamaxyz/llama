@@ -8,7 +8,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
