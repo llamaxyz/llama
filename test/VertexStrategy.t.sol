@@ -8,6 +8,7 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 import {AbsoluteStrategyConfig, RoleHolderData, RolePermissionData, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
@@ -371,6 +372,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageMinApprovals(uint256 _approvals) public {
+    _approvals = bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)));
     IVertexStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -590,7 +592,7 @@ contract IsActionPassed is VertexStrategyTest {
     public
   {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
+    _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
     uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
 
     IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(

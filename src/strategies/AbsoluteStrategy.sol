@@ -108,7 +108,7 @@ contract AbsoluteStrategy is IVertexStrategy, Initializable {
     approvalPeriod = strategyConfig.approvalPeriod;
 
     if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) {
-      revert InvalidMinApprovals(minApprovals);
+      revert InvalidMinApprovals(strategyConfig.minApprovals);
     }
     minApprovals = strategyConfig.minApprovals;
     minDisapprovals = strategyConfig.minDisapprovals;
