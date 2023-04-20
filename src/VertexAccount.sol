@@ -20,7 +20,7 @@ import {
 } from "src/lib/Structs.sol";
 
 /// @title Vertex Account
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice The contract that holds the Vertex system's assets.
 contract VertexAccount is ERC721Holder, ERC1155Holder, Initializable {
   using SafeERC20 for IERC20;

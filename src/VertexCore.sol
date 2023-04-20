@@ -10,10 +10,10 @@ import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData, DefaultStrategyConfig} from "src/lib/Structs.sol";
+import {Action, PermissionData} from "src/lib/Structs.sol";
 
 /// @title Core of a Vertex instance
-/// @author Llama (vertex@llama.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice Main point of interaction of a Vertex instance (i.e. entry into and exit from).
 contract VertexCore is Initializable {
   // ======================================

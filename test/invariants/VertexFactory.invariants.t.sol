@@ -4,13 +4,13 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {DefaultStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {DefaultStrategy} from "src/strategies/DefaultStrategy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
@@ -24,7 +24,7 @@ contract VertexFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  IVertexStrategy public strategyLogic;
+  IVertexStrategy public relativeStrategyLogic;
   VertexAccount public accountLogic;
 
   // Used to track the last seen `vertexCount` value.
@@ -37,11 +37,11 @@ contract VertexFactoryHandler is BaseHandler {
   constructor(
     VertexFactory _vertexFactory,
     VertexCore _vertexCore,
-    IVertexStrategy _strategyLogic,
+    IVertexStrategy _relativeStrategyLogic,
     VertexAccount _accountLogic
   ) BaseHandler(_vertexFactory, _vertexCore) {
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
-    strategyLogic = _strategyLogic;
+    relativeStrategyLogic = _relativeStrategyLogic;
     accountLogic = _accountLogic;
   }
 
@@ -81,7 +81,13 @@ contract VertexFactoryHandler is BaseHandler {
 
     vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
     VERTEX_FACTORY.deploy(
-      name(), strategyLogic, new bytes[](0), new string[](0), roleDescriptions, roleHolders, new RolePermissionData[](0)
+      name(),
+      relativeStrategyLogic,
+      new bytes[](0),
+      new string[](0),
+      roleDescriptions,
+      roleHolders,
+      new RolePermissionData[](0)
     );
     vertexCounts.push(VERTEX_FACTORY.vertexCount());
   }
@@ -110,7 +116,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
 
   function setUp() public override {
     VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore, strategyLogic, accountLogic);
+    handler = new VertexFactoryHandler(factory, mpCore, relativeStrategyLogic, accountLogic);
 
     // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
@@ -120,7 +126,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
     excludeArtifact("VertexAccount");
     excludeArtifact("VertexCore");
     excludeArtifact("VertexPolicy");
-    excludeArtifact("DefaultStrategy");
+    excludeArtifact("RelativeStrategy");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.vertexFactory_deploy.selector;
