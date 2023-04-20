@@ -216,6 +216,7 @@ library Checkpoints {
 
     /**
      * @dev This was copied from Solmate v7 https://github.com/transmissions11/solmate/blob/e8f96f25d48fe702117ce76c79228ca4f20206cb/src/utils/FixedPointMathLib.sol
+     * @notice The math utils in solmate v7 were reviewed/audited by spearbit as part of the art gobblers audit, and are more efficient than the v6 versions.
      */
     function sqrt(uint256 x) internal pure returns (uint256 z) {
         assembly {
