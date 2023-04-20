@@ -244,9 +244,9 @@ contract BatchTransferNativeToken is VertexAccountTest {
     address randomRecipient = makeAddr("randomRecipient");
     uint256 randomRecipientBalance = randomRecipient.balance;
 
-    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](1);
+    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](2);
     data[0] = VertexAccount.NativeTokenData(payable(ETH_WHALE), 0.1 ether);
-    data[1] = VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT - 0.1 ether);
+    data[1] = VertexAccount.NativeTokenData(payable(randomRecipient), ETH_AMOUNT - 0.1 ether);
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
