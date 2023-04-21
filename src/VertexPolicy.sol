@@ -30,7 +30,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error NonTransferableToken();
   error OnlyVertex();
   error RoleNotInitialized(uint8 role);
-  error UserDoesNotHoldPolicy(address policyholder);
+  error PolicyholderDoesNotHoldPolicy(address policyholder);
 
   modifier onlyVertex() {
     if (msg.sender != vertexCore) revert OnlyVertex();
@@ -142,7 +142,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Assigns a role to a policyholder.
   /// @param role ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
-  /// @param policyholder User to assign the role to.
+  /// @param policyholder Policyholder to assign the role to.
   /// @param quantity Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   /// @param expiration When the role expires.
   function setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) external onlyVertex {
@@ -159,7 +159,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes an expired role.
   /// @param role Role that has expired.
-  /// @param policyholder User that held the role.
+  /// @param policyholder Policyholder that held the role.
   /// @dev WARNING: The contract cannot enumerate all expired roles for a policyholder, so the caller MUST
   /// provide the full list of expired roles to revoke. Not properly providing this data can result
   /// in an inconsistent internal state. It is expected that roles are revoked as needed before
@@ -173,7 +173,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.
   function revokePolicy(address policyholder) external onlyVertex {
-    if (balanceOf(policyholder) == 0) revert UserDoesNotHoldPolicy(policyholder);
+    if (balanceOf(policyholder) == 0) revert PolicyholderDoesNotHoldPolicy(policyholder);
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
     // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
     // the last role is also revoked.
@@ -187,7 +187,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address policyholder, uint8[] calldata roles) external onlyVertex {
-    if (balanceOf(policyholder) == 0) revert UserDoesNotHoldPolicy(policyholder);
+    if (balanceOf(policyholder) == 0) revert PolicyholderDoesNotHoldPolicy(policyholder);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       if (roles[i] == 0) revert AllHoldersRole();
       _setRoleHolder(roles[i], policyholder, 0, 0);

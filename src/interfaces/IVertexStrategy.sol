@@ -77,7 +77,7 @@ interface IVertexStrategy {
 
   /// @notice Get whether an action has eligible to be canceled.
   /// @param actionId id of the action.
-  /// @param caller User initiating the cancelation.
+  /// @param caller Policyholder initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool);
 
