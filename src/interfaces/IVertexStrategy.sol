@@ -37,7 +37,7 @@ interface IVertexStrategy {
 
   // -------- When Casting Approval --------
 
-  /// @notice Returns true if approvals are allowed with this strategy for the given user, false
+  /// @notice Returns true if approvals are allowed with this strategy for the given policyholder, false
   /// otherwise.  May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
@@ -52,7 +52,7 @@ interface IVertexStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Returns true if disapprovals are allowed with this strategy for the given user, false
+  /// @notice Returns true if disapprovals are allowed with this strategy for the given policyholder, false
   /// otherwise. May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
