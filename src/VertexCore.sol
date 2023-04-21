@@ -127,7 +127,7 @@ contract VertexCore is Initializable {
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
 
-  /// @notice Mapping of users to function selectors to current nonces for EIP-712 signatures.
+  /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
   /// castApproval and castDisapproval) signed by the policyholder.
   mapping(address => mapping(bytes4 => uint256)) public nonces;
@@ -197,7 +197,7 @@ contract VertexCore is Initializable {
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
   /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
-  /// @param user The user that signed the message.
+  /// @param policyholder The policyholder that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
@@ -209,7 +209,7 @@ contract VertexCore is Initializable {
     uint256 value,
     bytes4 selector,
     bytes calldata data,
-    address user,
+    address policyholder,
     uint8 v,
     bytes32 r,
     bytes32 s
@@ -231,14 +231,14 @@ contract VertexCore is Initializable {
             value,
             selector,
             keccak256(data),
-            user,
-            _useNonce(user, msg.sig)
+            policyholder,
+            _useNonce(policyholder, msg.sig)
           )
         )
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != user) revert InvalidSignature();
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     actionId = _createAction(signer, role, strategy, target, value, selector, data);
   }
 
@@ -325,7 +325,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param reason The reason given for the approval by the policyholder.
-  /// @param user The user that signed the message.
+  /// @param policyholder The policyholder that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
@@ -333,7 +333,7 @@ contract VertexCore is Initializable {
     uint256 actionId,
     uint8 role,
     string calldata reason,
-    address user,
+    address policyholder,
     uint8 v,
     bytes32 r,
     bytes32 s
@@ -347,12 +347,19 @@ contract VertexCore is Initializable {
           )
         ),
         keccak256(
-          abi.encode(CAST_APPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig))
+          abi.encode(
+            CAST_APPROVAL_TYPEHASH,
+            actionId,
+            role,
+            keccak256(bytes(reason)),
+            policyholder,
+            _useNonce(policyholder, msg.sig)
+          )
         )
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != user) revert InvalidSignature();
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castApproval(signer, role, actionId, reason);
   }
 
@@ -375,7 +382,7 @@ contract VertexCore is Initializable {
   /// @param actionId The id of the action.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param reason The reason given for the approval by the policyholder.
-  /// @param user The user that signed the message.
+  /// @param policyholder The policyholder that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
@@ -383,7 +390,7 @@ contract VertexCore is Initializable {
     uint256 actionId,
     uint8 role,
     string calldata reason,
-    address user,
+    address policyholder,
     uint8 v,
     bytes32 r,
     bytes32 s
@@ -398,13 +405,18 @@ contract VertexCore is Initializable {
         ),
         keccak256(
           abi.encode(
-            CAST_DISAPPROVAL_TYPEHASH, actionId, role, keccak256(bytes(reason)), user, _useNonce(user, msg.sig)
+            CAST_DISAPPROVAL_TYPEHASH,
+            actionId,
+            role,
+            keccak256(bytes(reason)),
+            policyholder,
+            _useNonce(policyholder, msg.sig)
           )
         )
       )
     );
     address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != user) revert InvalidSignature();
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castDisapproval(signer, role, actionId, reason);
   }
 
@@ -609,10 +621,10 @@ contract VertexCore is Initializable {
     }
   }
 
-  function _useNonce(address user, bytes4 selector) internal returns (uint256 nonce) {
-    nonce = nonces[user][selector];
+  function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
+    nonce = nonces[policyholder][selector];
     unchecked {
-      nonces[user][selector] = nonce + 1;
+      nonces[policyholder][selector] = nonce + 1;
     }
   }
 

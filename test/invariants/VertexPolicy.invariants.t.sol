@@ -79,7 +79,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
 
   // For a given permission ID and timestamp, the sum of that permission's quantity over all users
   // with that permission should equal the total supply of that permission ID.
-  function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public view {
+  function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllPolicyholdersEqualsTotalSupply() public view {
     // TODO Update this for the new permissions scheme.
 
     // bytes32[] memory allPermissionIds = handler.getPermissionIds();
@@ -88,16 +88,16 @@ contract VertexFactoryInvariants is VertexCoreTest {
     // mpPolicy.getTokenPermissionSupplyCheckpoints(allPermissionIds[i]);
 
     //   for (uint256 j = 0; j < checkpoints.length; j++) {
-    //     uint256 sumOfPermissionsOverAllUsers = 0;
+    //     uint256 sumOfPermissionsOverAllPolicyholders = 0;
     //     address[] memory policyholders = handler.getActors();
 
     //     for (uint256 k = 0; k < policyholders.length; k++) {
     //       bool hasPermission =
     //         mpPolicy.holderQuantityAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
-    //       sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
+    //       sumOfPermissionsOverAllPolicyholders += hasPermission ? 1 : 0;
     //     }
     //     require(
-    //       sumOfPermissionsOverAllUsers == checkpoints[j].quantity,
+    //       sumOfPermissionsOverAllPolicyholders == checkpoints[j].quantity,
     //       string.concat(
     //         "sum of permissions over all users should equal total supply: ",
     //         "(permissionId, timestamp) =",
@@ -166,7 +166,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // =================================
 
   function invariant_AllPolicyInvariants() public view {
-    assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
+    assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllPolicyholdersEqualsTotalSupply();
     assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
     assertInvariant_DeterministicPolicyIds();
     assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT();

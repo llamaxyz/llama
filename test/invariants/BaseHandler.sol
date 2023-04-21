@@ -45,7 +45,7 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   }
 
   // =================================================
-  // ======== Methods and Modifiers for Users ========
+  // ======== Methods and Modifiers for Policyholders ========
   // =================================================
 
   // -------- Metrics --------

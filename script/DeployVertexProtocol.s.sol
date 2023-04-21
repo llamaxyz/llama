@@ -50,9 +50,9 @@ contract DeployVertexProtocol is Script {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
     uint64 expiration;
+    address policyholder;
     uint128 quantity;
     uint8 role;
-    address user;
   }
 
   struct RawRolePermissionData {
@@ -160,7 +160,7 @@ contract DeployVertexProtocol is Script {
     for (uint256 i = 0; i < rawRoleHolders.length; i++) {
       RawRoleHolderData memory rawRoleHolder = rawRoleHolders[i];
       roleHolders[i].role = rawRoleHolder.role;
-      roleHolders[i].user = rawRoleHolder.user;
+      roleHolders[i].policyholder = rawRoleHolder.policyholder;
       roleHolders[i].quantity = rawRoleHolder.quantity;
       roleHolders[i].expiration = rawRoleHolder.expiration;
     }

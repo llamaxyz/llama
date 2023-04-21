@@ -9,8 +9,8 @@ import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 
 struct RoleHolderData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
-  address user; // User to assign the role to.
-  uint128 quantity; // Quantity of the role to assign to the user, i.e. their (dis)approval quantity.
+  address policyholder; // Policyholder to assign the role to.
+  uint128 quantity; // Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   uint64 expiration; // When the role expires.
 }
 
