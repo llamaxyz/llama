@@ -13,7 +13,7 @@ pragma solidity 0.8.19;
 ///     execution, i.e. between `validatePreActionExecution` and `validatePostActionExecution`.
 /// than a certain amount.
 /// @dev These interfaces only take `actionId` as an argument. This is because the action guard may
-/// read any state it needs from the VertexCore contracts.
+/// read any state it needs from the LlamaCore contracts.
 interface IActionGuard {
   /// @notice Returns `true` if `actionId` is allowed to be created, and `false` otherwise. May
   /// also return a reason string for why the action is not allowed.

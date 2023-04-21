@@ -7,18 +7,18 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {VertexCoreTest} from "test/VertexCore.t.sol";
+import {LlamaCoreTest} from "test/LlamaCore.t.sol";
 
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract VertexPolicyHandler is BaseHandler {
+contract LlamaPolicyHandler is BaseHandler {
   // =============================
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
+  constructor(LlamaFactory _llamaFactory, LlamaCore _llamaCore) BaseHandler(_llamaFactory, _llamaCore) {
     // TODO Set some initial permissions, each actor is a policyholder.
   }
 
@@ -28,9 +28,9 @@ contract VertexPolicyHandler is BaseHandler {
 
   function callSummary() public view override {
     BaseHandler.callSummary();
-    console2.log("vertexPolicyNFT_batchGrantPolicies      ", calls["vertexPolicyNFT_batchGrantPolicies"]);
-    console2.log("vertexPolicyNFT_batchUpdatePermissions  ", calls["vertexPolicyNFT_batchUpdatePermissions"]);
-    console2.log("vertexPolicyNFT_batchRevokePolicies     ", calls["vertexPolicyNFT_batchRevokePolicies"]);
+    console2.log("llamaPolicyNFT_batchGrantPolicies      ", calls["llamaPolicyNFT_batchGrantPolicies"]);
+    console2.log("llamaPolicyNFT_batchUpdatePermissions  ", calls["llamaPolicyNFT_batchUpdatePermissions"]);
+    console2.log("llamaPolicyNFT_batchRevokePolicies     ", calls["llamaPolicyNFT_batchRevokePolicies"]);
     console2.log("-----------------------------------------------");
     console2.log("policyholdersHadBalanceOf_0      ", calls["policyholdersHadBalanceOf_0"]);
     console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
@@ -40,32 +40,32 @@ contract VertexPolicyHandler is BaseHandler {
   // ======== Methods for Fuzzer ========
   // ====================================
 
-  function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchGrantPolicies() public recordCall("llamaPolicyNFT_batchGrantPolicies") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
-  function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchUpdatePermissions() public recordCall("llamaPolicyNFT_batchUpdatePermissions") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
-  function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchRevokePolicies() public recordCall("llamaPolicyNFT_batchRevokePolicies") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }
 
-contract VertexFactoryInvariants is VertexCoreTest {
-  // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
+contract LlamaFactoryInvariants is LlamaCoreTest {
+  // TODO Remove inheritance on LlamaCoreTest once https://github.com/llamaxyz/llama/issues/38 is
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
 
-  VertexPolicyHandler public handler;
+  LlamaPolicyHandler public handler;
 
   function setUp() public override {
-    VertexCoreTest.setUp();
-    handler = new VertexPolicyHandler(factory, mpCore);
+    LlamaCoreTest.setUp();
+    handler = new LlamaPolicyHandler(factory, mpCore);
 
     // TODO Set this up and write tests.
     targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being

@@ -10,7 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {
   ERC20Data,
@@ -20,12 +20,12 @@ import {
   ERC1155BatchData,
   ERC1155OperatorData
 } from "src/lib/Structs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract VertexAccountTest is VertexTestSetup {
+contract LlamaAccountTest is LlamaTestSetup {
   // Testing Parameters
   // Native Token
   address public constant ETH_WHALE = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
@@ -81,7 +81,7 @@ contract VertexAccountTest is VertexTestSetup {
 
   function setUp() public override {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 16_573_464);
-    VertexTestSetup.setUp();
+    LlamaTestSetup.setUp();
     mpAccount1Addr = address(mpAccount1); // For convenience, to avoid tons of casting to address.
   }
 
@@ -178,9 +178,9 @@ contract VertexAccountTest is VertexTestSetup {
   }
 }
 
-contract Initialize is VertexAccountTest {
-  function test_SetsVertexCore() public {
-    assertEq(mpAccount1.vertexCore(), address(mpCore));
+contract Initialize is LlamaAccountTest {
+  function test_SetsLlamaCore() public {
+    assertEq(mpAccount1.llamaCore(), address(mpCore));
   }
 
   function test_SetsAccountName() public {
@@ -193,13 +193,13 @@ contract Initialize is VertexAccountTest {
   }
 }
 
-contract TransferNativeToken is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract TransferNativeToken is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
+    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
   }
 
   function test_TransferETH() public {
@@ -210,7 +210,7 @@ contract TransferNativeToken is VertexAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
-    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
+    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -219,19 +219,19 @@ contract TransferNativeToken is VertexAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
-    mpAccount1.transferNativeToken(VertexAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
     vm.stopPrank();
   }
 }
 
-contract BatchTransferNativeToken is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchTransferNativeToken is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
-    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](1);
-    data[0] = VertexAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT);
+    LlamaAccount.NativeTokenData[] memory data = new LlamaAccount.NativeTokenData[](1);
+    data[0] = LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT);
 
     vm.prank(caller);
     mpAccount1.batchTransferNativeToken(data);
@@ -246,9 +246,9 @@ contract BatchTransferNativeToken is VertexAccountTest {
     address randomRecipient = makeAddr("randomRecipient");
     uint256 randomRecipientBalance = randomRecipient.balance;
 
-    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](2);
-    data[0] = VertexAccount.NativeTokenData(payable(ETH_WHALE), 0.1 ether);
-    data[1] = VertexAccount.NativeTokenData(payable(randomRecipient), ETH_AMOUNT - 0.1 ether);
+    LlamaAccount.NativeTokenData[] memory data = new LlamaAccount.NativeTokenData[](2);
+    data[0] = LlamaAccount.NativeTokenData(payable(ETH_WHALE), 0.1 ether);
+    data[1] = LlamaAccount.NativeTokenData(payable(randomRecipient), ETH_AMOUNT - 0.1 ether);
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpCore));
@@ -261,20 +261,20 @@ contract BatchTransferNativeToken is VertexAccountTest {
   }
 
   function test_RevertIf_ToZeroAddress() public {
-    VertexAccount.NativeTokenData[] memory data = new VertexAccount.NativeTokenData[](1);
-    data[0] = VertexAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT);
+    LlamaAccount.NativeTokenData[] memory data = new LlamaAccount.NativeTokenData[](1);
+    data[0] = LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT);
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.batchTransferNativeToken(data);
     vm.stopPrank();
   }
 }
 
-contract TransferERC20 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract TransferERC20 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
@@ -297,16 +297,16 @@ contract TransferERC20 is VertexAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
 }
 
-contract BatchTransferERC20 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchTransferERC20 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
     vm.prank(caller);
@@ -343,16 +343,16 @@ contract BatchTransferERC20 is VertexAccountTest {
     erc20Data[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
 }
 
-contract ApproveERC20 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract ApproveERC20 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
@@ -387,10 +387,10 @@ contract ApproveERC20 is VertexAccountTest {
   }
 }
 
-contract BatchApproveERC20 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchApproveERC20 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
     vm.prank(caller);
@@ -411,10 +411,10 @@ contract BatchApproveERC20 is VertexAccountTest {
   }
 }
 
-contract TransferERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract TransferERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
@@ -438,16 +438,16 @@ contract TransferERC721 is VertexAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
 }
 
-contract BatchTransferERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchTransferERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.prank(caller);
@@ -484,16 +484,16 @@ contract BatchTransferERC721 is VertexAccountTest {
     erc721Data[0] = ERC721Data(BAYC, address(0), BAYC_ID);
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
 }
 
-contract ApproveERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract ApproveERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
@@ -505,10 +505,10 @@ contract ApproveERC721 is VertexAccountTest {
   }
 }
 
-contract BatchApproveERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchApproveERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.prank(caller);
@@ -532,10 +532,10 @@ contract BatchApproveERC721 is VertexAccountTest {
   }
 }
 
-contract ApproveOperatorERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract ApproveOperatorERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
@@ -550,10 +550,10 @@ contract ApproveOperatorERC721 is VertexAccountTest {
   }
 }
 
-contract BatchApproveOperatorERC721 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchApproveOperatorERC721 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
     vm.prank(caller);
@@ -574,10 +574,10 @@ contract BatchApproveOperatorERC721 is VertexAccountTest {
   }
 }
 
-contract TransferERC1155 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract TransferERC1155 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
@@ -600,16 +600,16 @@ contract TransferERC1155 is VertexAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
 }
 
-contract BatchTransferSingleERC1155 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchTransferSingleERC1155 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     uint256[] memory tokenIDs = new uint256[](2);
     tokenIDs[0] = RARI_ID_1;
     tokenIDs[1] = RARI_ID_2;
@@ -661,16 +661,16 @@ contract BatchTransferSingleERC1155 is VertexAccountTest {
     amounts[1] = RARI_ID_2_AMOUNT;
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
     vm.stopPrank();
   }
 }
 
-contract BatchTransferMultipleERC1155 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchTransferMultipleERC1155 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
 
     vm.prank(caller);
@@ -729,16 +729,16 @@ contract BatchTransferMultipleERC1155 is VertexAccountTest {
     erc1155BatchData[0] = ERC1155BatchData(RARI, address(0), tokenIDs, amounts, "");
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(VertexAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
     mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
     vm.stopPrank();
   }
 }
 
-contract ApproveOperatorERC1155 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract ApproveOperatorERC1155 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
     mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
@@ -753,10 +753,10 @@ contract ApproveOperatorERC1155 is VertexAccountTest {
   }
 }
 
-contract BatchApproveOperatorERC1155 is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract BatchApproveOperatorERC1155 is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
 
     vm.prank(caller);
@@ -776,18 +776,18 @@ contract BatchApproveOperatorERC1155 is VertexAccountTest {
   }
 }
 
-contract Execute is VertexAccountTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract Execute is LlamaAccountTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     MockExtension mockExtension = new MockExtension();
 
-    vm.expectRevert(VertexAccount.OnlyVertex.selector);
+    vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     vm.prank(caller);
     mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
   }
 
   function test_CallCryptoPunk() public {
-    // Transfer Punk to Account to have it stuck in the Vertex Account
+    // Transfer Punk to Account to have it stuck in the Llama Account
     transferPUNKToAccount(PUNK_ID);
 
     uint256 accountNFTBalance = PUNK.balanceOf(mpAccount1Addr);
@@ -819,14 +819,14 @@ contract Execute is VertexAccountTest {
     MockExtension mockExtension = new MockExtension();
 
     vm.startPrank(address(mpCore));
-    vm.expectRevert(abi.encodeWithSelector(VertexAccount.FailedExecution.selector, ""));
+    vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
     mpAccount1.execute(address(mockExtension), abi.encodePacked("", ""), true);
     vm.stopPrank();
   }
 }
 
-contract Integration is VertexAccountTest {
-  // Test that VertexAccount can receive ETH
+contract Integration is LlamaAccountTest {
+  // Test that LlamaAccount can receive ETH
   function test_ReceiveETH() public {
     assertEq(mpAccount1Addr.balance, 0);
 
@@ -836,7 +836,7 @@ contract Integration is VertexAccountTest {
     assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
   }
 
-  // Test that VertexAccount can receive ERC20 tokens
+  // Test that LlamaAccount can receive ERC20 tokens
   function test_ReceiveERC20() public {
     assertEq(USDC.balanceOf(mpAccount1Addr), 0);
 
@@ -845,7 +845,7 @@ contract Integration is VertexAccountTest {
     assertEq(USDC.balanceOf(mpAccount1Addr), USDC_AMOUNT);
   }
 
-  // Test that approved ERC20 tokens can be transferred from VertexAccount to a recipient
+  // Test that approved ERC20 tokens can be transferred from LlamaAccount to a recipient
   function test_TransferApprovedERC20() public {
     transferUSDCToAccount(USDC_AMOUNT);
     approveUSDCToRecipient(USDC_AMOUNT);
@@ -862,12 +862,12 @@ contract Integration is VertexAccountTest {
     vm.stopPrank();
   }
 
-  // Test that VertexAccount can receive ERC721 tokens
+  // Test that LlamaAccount can receive ERC721 tokens
   function test_ReceiveERC721() public {
     transferBAYCToAccount(BAYC_ID);
   }
 
-  // Test that VertexAccount can safe receive ERC721 tokens
+  // Test that LlamaAccount can safe receive ERC721 tokens
   function test_SafeReceiveERC721() public {
     assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
     assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
@@ -879,7 +879,7 @@ contract Integration is VertexAccountTest {
     vm.stopPrank();
   }
 
-  // Test that approved ERC721 tokens can be transferred from VertexAccount to a recipient
+  // Test that approved ERC721 tokens can be transferred from LlamaAccount to a recipient
   function test_TransferApprovedERC721() public {
     transferBAYCToAccount(BAYC_ID);
     approveBAYCToRecipient(BAYC_ID);
@@ -897,7 +897,7 @@ contract Integration is VertexAccountTest {
     vm.stopPrank();
   }
 
-  // Test that approved Operator ERC721 tokens can be transferred from VertexAccount to a recipient
+  // Test that approved Operator ERC721 tokens can be transferred from LlamaAccount to a recipient
   function test_TransferApprovedOperatorERC721() public {
     vm.startPrank(BAYC_WHALE);
     BAYC.transferFrom(BAYC_WHALE, mpAccount1Addr, BAYC_ID);
@@ -920,12 +920,12 @@ contract Integration is VertexAccountTest {
     vm.stopPrank();
   }
 
-  // Test that VertexAccount can receive ERC1155 tokens
+  // Test that LlamaAccount can receive ERC1155 tokens
   function test_ReceiveERC1155() public {
     transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
   }
 
-  // Test that approved ERC1155 tokens can be transferred from VertexAccount to a recipient
+  // Test that approved ERC1155 tokens can be transferred from LlamaAccount to a recipient
   function test_TransferApprovedERC1155() public {
     transferRARIToAccount(RARI_ID_1, RARI_ID_1_AMOUNT);
     transferRARIToAccount(RARI_ID_2, RARI_ID_2_AMOUNT);

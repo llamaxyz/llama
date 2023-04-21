@@ -6,9 +6,9 @@ import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // =========================
@@ -16,9 +16,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // =========================
 
   // Protocol contracts.
-  VertexFactory public immutable VERTEX_FACTORY;
-  VertexCore public immutable VERTEX_CORE;
-  VertexPolicy public immutable POLICY;
+  LlamaFactory public immutable LLAMA_FACTORY;
+  LlamaCore public immutable LLAMA_CORE;
+  LlamaPolicy public immutable POLICY;
 
   // Handler state.
   address[] internal actors;
@@ -35,10 +35,10 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) {
-    VERTEX_FACTORY = _vertexFactory;
-    VERTEX_CORE = _vertexCore;
-    POLICY = VERTEX_CORE.policy();
+  constructor(LlamaFactory _llamaFactory, LlamaCore _llamaCore) {
+    LLAMA_FACTORY = _llamaFactory;
+    LLAMA_CORE = _llamaCore;
+    POLICY = LLAMA_CORE.policy();
 
     // Set initial timestamp to current timestamp.
     _handler_increaseTimestampBy(block.timestamp);

@@ -1,0 +1,42 @@
+{
+  "comment": "This data is currently just used for fork tests, please update before running the script on mainnet!",
+  "rootLlamaName": "Root Llama",
+  "initialStrategies": [
+    {
+      "approvalPeriod": 172800,
+      "approvalRole": 3,
+      "disapprovalRole": 4,
+      "expirationPeriod": 691200,
+      "forceApprovalRoles": [],
+      "forceDisapprovalRoles": [],
+      "isFixedLengthApprovalPeriod": true,
+      "minApprovalPct": 4000,
+      "minDisapprovalPct": 2000,
+      "queuingPeriod": 345600
+    },
+    {
+      "approvalPeriod": 172800,
+      "approvalRole": 3,
+      "disapprovalRole": 4,
+      "expirationPeriod": 86400,
+      "forceApprovalRoles": [2],
+      "forceDisapprovalRoles": [2],
+      "isFixedLengthApprovalPeriod": false,
+      "minApprovalPct": 8000,
+      "minDisapprovalPct": 10001,
+      "queuingPeriod": 0
+    }
+  ],
+  "initialAccountNames": ["Llama Treasury", "Llama Grants"],
+  "initialRoleDescriptions": ["AllHolders", "ActionCreator", "Approver", "Disapprover"],
+  "initialRoleHolders": [
+    {
+      "comment": "This will assign the ActionCreator role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",
+      "expiration": 18446744073709551615,
+      "quantity": 1,
+      "role": 2,
+      "user": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e"
+    }
+  ],
+  "initialRolePermissions": []
+}

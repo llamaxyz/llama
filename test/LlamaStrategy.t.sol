@@ -5,18 +5,18 @@ import {Test, console2} from "forge-std/Test.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract VertexStrategyTest is VertexTestSetup {
-  event StrategyCreated(VertexCore vertex, VertexPolicy policy);
+contract LlamaStrategyTest is LlamaTestSetup {
+  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
@@ -53,7 +53,7 @@ contract VertexStrategyTest is VertexTestSetup {
     uint256 _minDisapprovalPct,
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
-  ) internal returns (IVertexStrategy newStrategy) {
+  ) internal returns (ILlamaStrategy newStrategy) {
     {
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
@@ -85,7 +85,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(strategyConfigs));
 
     newStrategy =
-      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
   }
 
   function deployAbsoluteStrategyAndSetRole(
@@ -100,7 +100,7 @@ contract VertexStrategyTest is VertexTestSetup {
     uint256 _minDisapprovals,
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
-  ) internal returns (IVertexStrategy newStrategy) {
+  ) internal returns (ILlamaStrategy newStrategy) {
     {
       vm.prank(address(rootCore));
       factory.authorizeStrategyLogic(absoluteStrategyLogic);
@@ -134,10 +134,10 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, encodeStrategyConfigs(strategyConfigs));
 
     newStrategy =
-      lens.computeVertexStrategyAddress(address(absoluteStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+      lens.computeLlamaStrategyAddress(address(absoluteStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
   }
 
-  function deployTestStrategy() internal returns (IVertexStrategy testStrategy) {
+  function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
     RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
@@ -150,7 +150,7 @@ contract VertexStrategyTest is VertexTestSetup {
       forceApprovalRoles: new uint8[](0),
       forceDisapprovalRoles: new uint8[](0)
     });
-    testStrategy = lens.computeVertexStrategyAddress(
+    testStrategy = lens.computeLlamaStrategyAddress(
       address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
     );
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
@@ -159,7 +159,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(testStrategies));
   }
 
-  function deployTestStrategyWithForceApproval() internal returns (IVertexStrategy testStrategy) {
+  function deployTestStrategyWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
     // Define strategy parameters.
     uint8[] memory forceApproveRoles = new uint8[](1);
     forceApproveRoles[0] = uint8(Roles.ForceApprover);
@@ -180,7 +180,7 @@ contract VertexStrategyTest is VertexTestSetup {
     });
 
     // Get the address of the strategy we'll deploy.
-    testStrategy = lens.computeVertexStrategyAddress(
+    testStrategy = lens.computeLlamaStrategyAddress(
       address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
     );
 
@@ -194,7 +194,7 @@ contract VertexStrategyTest is VertexTestSetup {
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
   }
 
-  function createAction(IVertexStrategy testStrategy) internal returns (uint256 actionId) {
+  function createAction(ILlamaStrategy testStrategy) internal returns (uint256 actionId) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpCore));
@@ -241,9 +241,9 @@ contract VertexStrategyTest is VertexTestSetup {
   }
 }
 
-contract Constructor is VertexStrategyTest {
+contract Constructor is LlamaStrategyTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint256 _queuingDuration) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -260,7 +260,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageExpirationDelay(uint256 _expirationDelay) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -277,7 +277,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -294,7 +294,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint256 _approvalPeriod) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -311,7 +311,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function test_SetsStrategyStoragePolicy() public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -327,8 +327,8 @@ contract Constructor is VertexStrategyTest {
     assertEq(address(newStrategy.policy()), address(mpPolicy));
   }
 
-  function test_SetsStrategyStorageVertex() public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+  function test_SetsStrategyStorageLlama() public {
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -341,12 +341,12 @@ contract Constructor is VertexStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(address(newStrategy.vertex()), address(mpCore));
+    assertEq(address(newStrategy.llama()), address(mpCore));
   }
 
   function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {
     _percent = bound(_percent, 0, 10_000);
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -364,7 +364,7 @@ contract Constructor is VertexStrategyTest {
 
   function testFuzz_SetsStrategyStorageMinApprovals(uint256 _approvals) public {
     _approvals = bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)));
-    IVertexStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -381,7 +381,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint256 _percent) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -398,7 +398,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovals(uint256 _disapprovals) public {
-    IVertexStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -415,7 +415,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -434,7 +434,7 @@ contract Constructor is VertexStrategyTest {
   }
 
   function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDisapprovalRoles) public {
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -456,7 +456,7 @@ contract Constructor is VertexStrategyTest {
     uint8[] memory forceApprovalRoles = new uint8[](2);
     forceApprovalRoles[0] = _role;
     forceApprovalRoles[1] = _role;
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -476,7 +476,7 @@ contract Constructor is VertexStrategyTest {
     uint8[] memory forceDisapprovalRoles = new uint8[](2);
     forceDisapprovalRoles[0] = _role;
     forceDisapprovalRoles[1] = _role;
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -511,13 +511,13 @@ contract Constructor is VertexStrategyTest {
   }
 }
 
-contract IsActionPassed is VertexStrategyTest {
+contract IsActionPassed is LlamaStrategyTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
-    IVertexStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -539,7 +539,7 @@ contract IsActionPassed is VertexStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -566,7 +566,7 @@ contract IsActionPassed is VertexStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
 
-    IVertexStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -588,7 +588,7 @@ contract IsActionPassed is VertexStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -612,19 +612,19 @@ contract IsActionPassed is VertexStrategyTest {
   }
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.expectRevert(LlamaCore.InvalidActionId.selector);
     vm.prank(address(approverAdam));
     mpCore.castApproval(_actionId, uint8(Roles.Approver));
   }
 }
 
-contract IsActionCancelationValid is VertexStrategyTest {
+contract IsActionCancelationValid is LlamaStrategyTest {
   function testFuzz_ReturnsTrueForDisapprovedActions(uint256 _actionDisapprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals =
       bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
 
-    IVertexStrategy testStrategy = deployTestStrategyWithForceApproval();
+    ILlamaStrategy testStrategy = deployTestStrategyWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -650,7 +650,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
     _actionDisapprovals =
       bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
 
-    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -683,7 +683,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    IVertexStrategy testStrategy = deployTestStrategyWithForceApproval();
+    ILlamaStrategy testStrategy = deployTestStrategyWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -709,7 +709,7 @@ contract IsActionCancelationValid is VertexStrategyTest {
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
     uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
 
-    IVertexStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -737,13 +737,13 @@ contract IsActionCancelationValid is VertexStrategyTest {
   }
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.expectRevert(LlamaCore.InvalidActionId.selector);
     vm.prank(address(disapproverDave));
     mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
   }
 }
 
-contract GetApprovalQuantityAt is VertexStrategyTest {
+contract GetApprovalQuantityAt is LlamaStrategyTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
@@ -757,7 +757,7 @@ contract GetApprovalQuantityAt is VertexStrategyTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -778,7 +778,7 @@ contract GetApprovalQuantityAt is VertexStrategyTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
@@ -799,7 +799,7 @@ contract GetApprovalQuantityAt is VertexStrategyTest {
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
     vm.assume(_role != 0);
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -821,7 +821,7 @@ contract GetApprovalQuantityAt is VertexStrategyTest {
       // roles
     vm.assume(_policyHolder != address(0));
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       _policyHolder,
@@ -844,7 +844,7 @@ contract GetApprovalQuantityAt is VertexStrategyTest {
   }
 }
 
-contract GetDisapprovalQuantityAt is VertexStrategyTest {
+contract GetDisapprovalQuantityAt is LlamaStrategyTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     bytes32 _permission,
@@ -858,7 +858,7 @@ contract GetDisapprovalQuantityAt is VertexStrategyTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -879,7 +879,7 @@ contract GetDisapprovalQuantityAt is VertexStrategyTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
@@ -900,7 +900,7 @@ contract GetDisapprovalQuantityAt is VertexStrategyTest {
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
     vm.assume(_role != 0);
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -922,7 +922,7 @@ contract GetDisapprovalQuantityAt is VertexStrategyTest {
       // roles
     vm.assume(_policyHolder != address(0));
 
-    IVertexStrategy newStrategy = deployStrategyAndSetRole(
+    ILlamaStrategy newStrategy = deployStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       _policyHolder,
@@ -951,7 +951,7 @@ contract RelativeStrategyHarness is RelativeStrategy {
   }
 }
 
-contract GetMinimumAmountNeeded is VertexStrategyTest {
+contract GetMinimumAmountNeeded is LlamaStrategyTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
     RelativeStrategyHarness newStrategy = new RelativeStrategyHarness();
     minPct = bound(minPct, 0, 10_000);

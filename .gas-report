@@ -1,4 +1,4 @@
-| src/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
+| src/LlamaAccount.sol:LlamaAccount contract |                 |       |        |       |         |
 |----------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                              | Deployment Size |       |        |       |         |
 | 3161238                                      | 16355           |       |        |       |         |
@@ -26,7 +26,7 @@
 | transferERC721                               | 2610            | 6128  | 2952   | 12824 | 3       |
 
 
-| src/VertexCore.sol:VertexCore contract  |                 |        |        |         |         |
+| src/LlamaCore.sol:LlamaCore contract  |                 |        |        |         |         |
 |-----------------------------------------|-----------------|--------|--------|---------|---------|
 | Deployment Cost                         | Deployment Size |        |        |         |         |
 | 4473143                                 | 22906           |        |        |         |         |
@@ -50,7 +50,7 @@
 | unauthorizeStrategies                   | 8716            | 8716   | 8716   | 8716    | 1       |
 
 
-| src/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
+| src/LlamaFactory.sol:LlamaFactory contract |                 |         |         |         |         |
 |----------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                              | Deployment Size |         |         |         |         |
 | 3153222                                      | 17568           |         |         |         |         |
@@ -60,25 +60,25 @@
 | authorizedAccountLogics                      | 890             | 1031    | 890     | 2890    | 212     |
 | authorizedStrategyLogics                     | 912             | 1044    | 912     | 2912    | 211     |
 | deploy                                       | 13244           | 1318602 | 1330430 | 1349230 | 207     |
-| rootVertex                                   | 579             | 579     | 579     | 579     | 196     |
+| rootLlama                                   | 579             | 579     | 579     | 579     | 196     |
 | tokenURI                                     | 905011          | 905011  | 905011  | 905011  | 1       |
-| vertexCoreLogic                              | 667             | 667     | 667     | 667     | 1       |
-| vertexCount                                  | 517             | 1317    | 517     | 2517    | 5       |
-| vertexPolicyLogic                            | 578             | 578     | 578     | 578     | 1       |
+| llamaCoreLogic                              | 667             | 667     | 667     | 667     | 1       |
+| llamaCount                                  | 517             | 1317    | 517     | 2517    | 5       |
+| llamaPolicyLogic                            | 578             | 578     | 578     | 578     | 1       |
 
 
-| src/VertexLens.sol:VertexLens contract |                 |      |        |      |         |
+| src/LlamaLens.sol:LlamaLens contract |                 |      |        |      |         |
 |----------------------------------------|-----------------|------|--------|------|---------|
 | Deployment Cost                        | Deployment Size |      |        |      |         |
 | 704734                                 | 3552            |      |        |      |         |
 | Function Name                          | min             | avg  | median | max  | # calls |
-| computeVertexAccountAddress            | 2080            | 2080 | 2080   | 2080 | 793     |
-| computeVertexCoreAddress               | 2734            | 2734 | 2734   | 2734 | 5       |
-| computeVertexPolicyAddress             | 2712            | 2712 | 2712   | 2712 | 6       |
-| computeVertexStrategyAddress           | 5356            | 5582 | 5356   | 5812 | 790     |
+| computeLlamaAccountAddress            | 2080            | 2080 | 2080   | 2080 | 793     |
+| computeLlamaCoreAddress               | 2734            | 2734 | 2734   | 2734 | 5       |
+| computeLlamaPolicyAddress             | 2712            | 2712 | 2712   | 2712 | 6       |
+| computeLlamaStrategyAddress           | 5356            | 5582 | 5356   | 5812 | 790     |
 
 
-| src/VertexPolicy.sol:VertexPolicy contract      |                 |        |        |        |         |
+| src/LlamaPolicy.sol:LlamaPolicy contract      |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
 | 3806258                                         | 19576           |        |        |        |         |
@@ -101,14 +101,14 @@
 | safeTransferFrom(address,address,uint256,bytes) | 1228            | 1228   | 1228   | 1228   | 1       |
 | setApprovalForAll                               | 733             | 733    | 733    | 733    | 1       |
 | setRoleHolders                                  | 56362           | 809456 | 859112 | 859112 | 209     |
-| setVertex                                       | 2703            | 22787  | 22837  | 22837  | 403     |
+| setLlama                                       | 2703            | 22787  | 22837  | 22837  | 403     |
 | symbol                                          | 1535            | 2535   | 2535   | 3535   | 2       |
 | tokenURI                                        | 957388          | 957388 | 957388 | 957388 | 1       |
 | transferFrom                                    | 923             | 923    | 923    | 923    | 1       |
-| vertex                                          | 559             | 559    | 559    | 559    | 3       |
+| llama                                          | 559             | 559    | 559    | 559    | 3       |
 
 
-| src/VertexStrategy.sol:VertexStrategy contract |                 |        |        |        |         |
+| src/LlamaStrategy.sol:LlamaStrategy contract |                 |        |        |        |         |
 |------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1312314                                        | 7121            |        |        |        |         |

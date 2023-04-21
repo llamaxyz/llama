@@ -5,19 +5,19 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, RelativeStrategyConfig} from "src/lib/Structs.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Relative Vertex Strategy
+/// @title Relative Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is the default vertex strategy which has the following properties:
+/// @notice This is the default llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
 ///     regardless of the roles they hold.
-contract RelativeStrategy is IVertexStrategy, Initializable {
+contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -31,7 +31,7 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
-  event StrategyCreated(VertexCore vertex, VertexPolicy policy);
+  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -39,11 +39,11 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- Interface Requirements --------
 
-  /// @inheritdoc IVertexStrategy
-  VertexCore public vertex;
+  /// @inheritdoc ILlamaStrategy
+  LlamaCore public llama;
 
-  /// @inheritdoc IVertexStrategy
-  VertexPolicy public policy;
+  /// @inheritdoc ILlamaStrategy
+  LlamaPolicy public policy;
 
   // -------- Strategy Configuration --------
 
@@ -100,11 +100,11 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- At Strategy Creation --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
     RelativeStrategyConfig memory strategyConfig = abi.decode(config, (RelativeStrategyConfig));
-    vertex = VertexCore(msg.sender);
-    policy = vertex.policy();
+    llama = LlamaCore(msg.sender);
+    policy = llama.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
@@ -136,12 +136,12 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit StrategyCreated(vertex, policy);
+    emit StrategyCreated(llama, policy);
   }
 
   // -------- At Action Creation --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
     uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
@@ -149,7 +149,7 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     unchecked {
       // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
@@ -169,14 +169,14 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- When Casting Approval --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot approve");
     return (true, "");
   }
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
     uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceApprovalRole[role] ? type(uint256).max : quantity;
@@ -184,15 +184,15 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- When Casting Disapproval --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
     return (true, "");
   }
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
@@ -204,14 +204,14 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- When Queueing --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function minExecutionTime(uint256) external view returns (uint256) {
     return block.timestamp + queuingPeriod;
   }
 
   // -------- When Canceling --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool) {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
@@ -220,14 +220,14 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
     //        b. The action is Queued, but the number of disapprovals is >= the disapproval threshold.
 
     // Check 1.
-    ActionState state = vertex.getActionState(actionId);
+    ActionState state = llama.getActionState(actionId);
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
     ) return false;
 
     // Check 2a.
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     if (caller == action.creator) return true;
 
     // Check 2b.
@@ -236,20 +236,20 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   // -------- When Determining Action State --------
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isActive(uint256 actionId) external view returns (bool) {
     return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
   }
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isActionPassed(uint256 actionId) public view returns (bool) {
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
   }
 
-  /// @inheritdoc IVertexStrategy
+  /// @inheritdoc ILlamaStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
@@ -259,7 +259,7 @@ contract RelativeStrategy is IVertexStrategy, Initializable {
 
   /// @notice Returns the timestamp at which the approval period ends.
   function approvalEndTime(uint256 actionId) public view returns (uint256) {
-    Action memory action = vertex.getAction(actionId);
+    Action memory action = llama.getAction(actionId);
     return action.creationTime + approvalPeriod;
   }
 
