@@ -4,14 +4,13 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {VertexPolicyTokenURIParamRegistry} from "src/VertexPolicyTokenURIParamRegistry.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Vertex Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -42,8 +41,8 @@ contract VertexFactory {
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Vertex Instances.
   event StrategyLogicAuthorized(IVertexStrategy indexed strategyLogic);
 
-  /// @dev Emitted when a new Vertex Policy Token URI Parameter Registry is set.
-  event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
+  /// @dev Emitted when a new Vertex Policy Token URI is set.
+  event PolicyTokenURISet(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -55,17 +54,17 @@ contract VertexFactory {
   /// @notice The Vertex Policy implementation (logic) contract.
   VertexPolicy public immutable VERTEX_POLICY_LOGIC;
 
-  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
-  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
-
   /// @notice The Vertex Account implementation (logic) contract.
   VertexAccount public immutable VERTEX_ACCOUNT_LOGIC;
 
-  /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
-  mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
+  /// @notice The Vertex Policy Token URI Parameter Registry contract for onchain image formats.
+  VertexPolicyTokenURIParamRegistry public immutable VERTEX_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Vertex instance responsible for deploying new Vertex instances.
   VertexCore public immutable ROOT_VERTEX;
+
+  /// @notice Mapping of all authorized Vertex Strategy implementation (logic) contracts.
+  mapping(IVertexStrategy => bool) public authorizedStrategyLogics;
 
   /// @notice The Vertex Policy Token URI contract.
   VertexPolicyTokenURI public vertexPolicyTokenURI;
@@ -92,8 +91,8 @@ contract VertexFactory {
     RolePermissionData[] memory initialRolePermissions
   ) {
     VERTEX_CORE_LOGIC = vertexCoreLogic;
-    VERTEX_ACCOUNT_LOGIC = vertexAccountLogic;
     VERTEX_POLICY_LOGIC = vertexPolicyLogic;
+    VERTEX_ACCOUNT_LOGIC = vertexAccountLogic;
 
     _setPolicyTokenURI(_vertexPolicyTokenURI);
     _authorizeStrategyLogic(initialVertexStrategyLogic);
@@ -212,6 +211,6 @@ contract VertexFactory {
   /// @dev Sets the Vertex Policy Token URI contract.
   function _setPolicyTokenURI(VertexPolicyTokenURI _vertexPolicyTokenURI) internal {
     vertexPolicyTokenURI = _vertexPolicyTokenURI;
-    emit PolicyTokenURIUpdated(_vertexPolicyTokenURI);
+    emit PolicyTokenURISet(_vertexPolicyTokenURI);
   }
 }

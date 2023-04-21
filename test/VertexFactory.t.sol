@@ -2,22 +2,20 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Solarray} from "solarray/Solarray.sol";
-import {Clones} from "@openzeppelin/proxy/Clones.sol";
-import {ERC20Mock} from "@openzeppelin/mocks/ERC20Mock.sol";
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexLens} from "src/VertexLens.sol";
-import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
-import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
-import {VertexTestSetup, Roles} from "test/utils/VertexTestSetup.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
+
+import {Solarray} from "@solarray/Solarray.sol";
+
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
+import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
+import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+import {VertexAccount} from "src/VertexAccount.sol";
+import {VertexCore} from "src/VertexCore.sol";
+import {VertexFactory} from "src/VertexFactory.sol";
+import {VertexPolicy} from "src/VertexPolicy.sol";
+import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 
 contract VertexFactoryTest is VertexTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
@@ -27,7 +25,7 @@ contract VertexFactoryTest is VertexTestSetup {
   );
   event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
-  event PolicyTokenURIUpdated(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
+  event PolicyTokenURISet(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
 
   event ActionCreated(
     uint256 id,
@@ -92,7 +90,7 @@ contract Constructor is VertexFactoryTest {
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyTokenURIUpdated(policyTokenURI);
+    emit PolicyTokenURISet(policyTokenURI);
     deployVertexFactory();
   }
 
@@ -304,7 +302,7 @@ contract SetPolicyTokenURI is VertexFactoryTest {
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit PolicyTokenURIUpdated(VertexPolicyTokenURI(_policyTokenURI));
+    emit PolicyTokenURISet(VertexPolicyTokenURI(_policyTokenURI));
     factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
     assertEq(address(factory.vertexPolicyTokenURI()), _policyTokenURI);
   }

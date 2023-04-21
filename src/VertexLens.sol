@@ -4,10 +4,10 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {PermissionData} from "src/lib/Structs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-import {PermissionData} from "src/lib/Structs.sol";
 
 /// @title Vertex Lens
 /// @author Llama (devsdosomething@llama.xyz)

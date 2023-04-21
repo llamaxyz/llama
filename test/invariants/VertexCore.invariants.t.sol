@@ -3,13 +3,14 @@ pragma solidity ^0.8.19;
 
 import {console2} from "forge-std/Test.sol";
 
+import {BaseHandler} from "test/invariants/BaseHandler.sol";
+import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+
 import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action} from "src/lib/Structs.sol";
 import {VertexCore} from "src/VertexCore.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
-import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
 
 contract VertexCoreHandler is BaseHandler {
   // =========================
