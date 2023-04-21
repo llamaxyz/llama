@@ -185,7 +185,8 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
     );
   }
 
-  /// @notice Function for the llama instance to batch transfer ERC1155 tokens of a single ERC1155 collection to other parties.
+  /// @notice Function for the llama instance to batch transfer ERC1155 tokens of a single ERC1155 collection to other
+  /// parties.
   /// @param erc1155BatchData The data of the ERC1155 batch transfer.
   function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) public onlyLlama {
     if (erc1155BatchData.recipient == address(0)) revert Invalid0xRecipient();
@@ -198,7 +199,8 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
     );
   }
 
-  /// @notice Function for the llama instance to batch transfer ERC1155 tokens of multiple ERC1155 collections to other parties.
+  /// @notice Function for the llama instance to batch transfer ERC1155 tokens of multiple ERC1155 collections to other
+  /// parties.
   /// @param erc1155BatchData The data of the ERC1155 batch transfers.
   function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyLlama {
     uint256 length = erc1155BatchData.length;
