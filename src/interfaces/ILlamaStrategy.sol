@@ -37,7 +37,7 @@ interface ILlamaStrategy {
 
   // -------- When Casting Approval --------
 
-  /// @notice Returns true if approvals are allowed with this strategy for the given user, false
+  /// @notice Returns true if approvals are allowed with this strategy for the given policyholder, false
   /// otherwise.  May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
@@ -52,7 +52,7 @@ interface ILlamaStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Returns true if disapprovals are allowed with this strategy for the given user, false
+  /// @notice Returns true if disapprovals are allowed with this strategy for the given policyholder, false
   /// otherwise. May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
@@ -77,7 +77,7 @@ interface ILlamaStrategy {
 
   /// @notice Get whether an action has eligible to be canceled.
   /// @param actionId id of the action.
-  /// @param caller User initiating the cancelation.
+  /// @param caller Policyholder initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool);
 

@@ -153,7 +153,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     unchecked {
       // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
-      // the action creator without overflow, since a user can never have a quantity greater than
+      // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
       uint256 actionCreatorApprovalRoleQty = policy.getQuantity(action.creator, approvalRole);
       approvalPolicySupply -= actionCreatorApprovalRoleQty;

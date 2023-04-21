@@ -33,9 +33,9 @@
     {
       "comment": "This will assign the ActionCreator role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",
       "expiration": 18446744073709551615,
+      "policyholder": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e",
       "quantity": 1,
-      "role": 2,
-      "user": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e"
+      "role": 2
     }
   ],
   "initialRolePermissions": []
