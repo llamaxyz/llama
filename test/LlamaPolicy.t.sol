@@ -17,7 +17,9 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaPolicyTest is LlamaTestSetup {
-  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply);
+  event RoleAssigned(
+    address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply
+  );
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
