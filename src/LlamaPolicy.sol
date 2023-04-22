@@ -7,15 +7,15 @@ import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
 
-/// @title Vertex Policy
+/// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
 /// disapprove actions.
-/// @dev The roles determine how the token can interact with the Vertex Core contract.
-contract VertexPolicy is ERC721NonTransferableMinimalProxy {
+/// @dev The roles determine how the token can interact with the  Core contract.
+contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
 
   // ======================================
@@ -28,12 +28,12 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   error InvalidRoleHolderInput();
   error MissingAdmin();
   error NonTransferableToken();
-  error OnlyVertex();
+  error OnlyLlama();
   error RoleNotInitialized(uint8 role);
   error PolicyholderDoesNotHoldPolicy(address policyholder);
 
-  modifier onlyVertex() {
-    if (msg.sender != vertexCore) revert OnlyVertex();
+  modifier onlyLlama() {
+    if (msg.sender != llamaCore) revert OnlyLlama();
     _;
   }
 
@@ -81,11 +81,11 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The highest role ID that has been initialized.
   uint8 public numRoles;
 
-  /// @notice The address of the `VertexCore` instance that governs this contract.
-  address public vertexCore;
+  /// @notice The address of the `LlamaCore` instance that governs this contract.
+  address public llamaCore;
 
-  /// @notice The address of the `VertexFactory` contract.
-  VertexFactory public factory;
+  /// @notice The address of the `LlamaFactory` contract.
+  LlamaFactory public factory;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -100,7 +100,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
-    factory = VertexFactory(msg.sender);
+    factory = LlamaFactory(msg.sender);
     for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
       _initializeRole(roleDescriptions[i]);
     }
@@ -125,18 +125,18 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Sets the address of the `VertexCore` contract.
+  /// @notice Sets the address of the `LlamaCore` contract.
   /// @dev This method can only be called once.
-  /// @param _vertexCore The address of the `VertexCore` contract.
-  function setVertex(address _vertexCore) external {
-    if (vertexCore != address(0)) revert AlreadyInitialized();
-    vertexCore = _vertexCore;
+  /// @param _llamaCore The address of the `LlamaCore` contract.
+  function setLlama(address _llamaCore) external {
+    if (llamaCore != address(0)) revert AlreadyInitialized();
+    llamaCore = _llamaCore;
   }
 
   // -------- Role and Permission Management --------
 
   /// @notice Initializes a new role with the given `role` ID and `description`
-  function initializeRole(RoleDescription description) external onlyVertex {
+  function initializeRole(RoleDescription description) external onlyLlama {
     _initializeRole(description);
   }
 
@@ -145,7 +145,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @param policyholder Policyholder to assign the role to.
   /// @param quantity Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   /// @param expiration When the role expires.
-  function setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) external onlyVertex {
+  function setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) external onlyLlama {
     _setRoleHolder(role, policyholder, quantity, expiration);
   }
 
@@ -153,7 +153,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @param role Name of the role to set.
   /// @param permissionId Permission ID to assign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
-  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyVertex {
+  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyLlama {
     _setRolePermission(role, permissionId, hasPermission);
   }
 
@@ -172,7 +172,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.
-  function revokePolicy(address policyholder) external onlyVertex {
+  function revokePolicy(address policyholder) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert PolicyholderDoesNotHoldPolicy(policyholder);
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
     // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
@@ -186,7 +186,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Revokes all `roles` from the `policyholder` and burns their policy.
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
-  function revokePolicy(address policyholder, uint8[] calldata roles) external onlyVertex {
+  function revokePolicy(address policyholder, uint8[] calldata roles) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert PolicyholderDoesNotHoldPolicy(policyholder);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       if (roles[i] == 0) revert AllHoldersRole();
@@ -198,7 +198,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Updates the description of a role.
   /// @param role ID of the role to update.
   /// @param description New description of the role.
-  function updateRoleDescription(uint8 role, RoleDescription description) external onlyVertex {
+  function updateRoleDescription(uint8 role, RoleDescription description) external onlyLlama {
     emit RoleInitialized(role, description);
   }
 
@@ -276,7 +276,7 @@ contract VertexPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return factory.tokenURI(VertexCore(vertexCore), name, symbol, tokenId);
+    return factory.tokenURI(LlamaCore(llamaCore), name, symbol, tokenId);
   }
 
   // -------- ERC-721 Methods --------

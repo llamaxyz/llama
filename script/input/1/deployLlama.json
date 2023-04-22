@@ -1,6 +1,6 @@
 {
   "comment": "This data is currently just used for fork tests, please update before running the script on mainnet!",
-  "rootVertexName": "Root Vertex",
+  "rootLlamaName": "Root Llama",
   "initialStrategies": [
     {
       "approvalPeriod": 172800,
@@ -28,12 +28,7 @@
     }
   ],
   "initialAccountNames": ["Llama Treasury", "Llama Grants"],
-  "initialRoleDescriptions": [
-    "AllHolders",
-    "ActionCreator",
-    "Approver",
-    "Disapprover"
-  ],
+  "initialRoleDescriptions": ["AllHolders", "ActionCreator", "Approver", "Disapprover"],
   "initialRoleHolders": [
     {
       "comment": "This will assign the ActionCreator role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",

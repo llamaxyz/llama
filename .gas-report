@@ -1,130 +1,141 @@
-| src/VertexAccount.sol:VertexAccount contract |                 |       |        |       |         |
-|----------------------------------------------|-----------------|-------|--------|-------|---------|
-| Deployment Cost                              | Deployment Size |       |        |       |         |
-| 3161238                                      | 16355           |       |        |       |         |
-| Function Name                                | min             | avg   | median | max   | # calls |
-| approveERC20                                 | 2654            | 26089 | 29394  | 48394 | 15      |
-| approveERC721                                | 2632            | 19636 | 28138  | 28138 | 3       |
-| approveOperatorERC1155                       | 2610            | 18700 | 20331  | 31531 | 4       |
-| approveOperatorERC721                        | 2609            | 18570 | 20157  | 31357 | 4       |
-| batchApproveERC20                            | 2785            | 42156 | 42156  | 81527 | 2       |
-| batchApproveERC721                           | 2786            | 28099 | 28099  | 53412 | 2       |
-| batchApproveOperatorERC1155                  | 2720            | 31797 | 31797  | 60875 | 2       |
-| batchApproveOperatorERC721                   | 2809            | 31851 | 31851  | 60894 | 2       |
-| batchTransferERC20                           | 2807            | 7184  | 3430   | 15316 | 3       |
-| batchTransferERC721                          | 2698            | 11579 | 3321   | 28720 | 3       |
-| batchTransferMultipleERC1155                 | 2764            | 9891  | 3498   | 23413 | 3       |
-| batchTransferSingleERC1155                   | 2602            | 5912  | 2944   | 12190 | 3       |
-| execute                                      | 3096            | 5002  | 4310   | 8291  | 4       |
-| initialize                                   | 1917            | 70071 | 70485  | 70485 | 820     |
-| onERC1155Received                            | 1974            | 1974  | 1974   | 1974  | 10      |
-| onERC721Received                             | 1869            | 1869  | 1869   | 1869  | 1       |
-| receive                                      | 55              | 55    | 55     | 55    | 2       |
-| transfer                                     | 2962            | 5373  | 2997   | 10161 | 3       |
-| transferERC1155                              | 2668            | 4664  | 3010   | 8316  | 3       |
-| transferERC20                                | 2566            | 4592  | 2908   | 8303  | 3       |
-| transferERC721                               | 2610            | 6128  | 2952   | 12824 | 3       |
+| src/LlamaAccount.sol:LlamaAccount contract |                 |       |        |       |         |
+|--------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                            | Deployment Size |       |        |       |         |
+| 3278182                                    | 16939           |       |        |       |         |
+| Function Name                              | min             | avg   | median | max   | # calls |
+| approveERC20                               | 2588            | 26426 | 29328  | 48328 | 15      |
+| approveERC721                              | 2676            | 19680 | 28182  | 28182 | 3       |
+| approveOperatorERC1155                     | 2654            | 18744 | 20375  | 31575 | 4       |
+| approveOperatorERC721                      | 2587            | 18548 | 20135  | 31335 | 4       |
+| batchApproveERC20                          | 2763            | 42177 | 42177  | 81591 | 2       |
+| batchApproveERC721                         | 2808            | 28164 | 28164  | 53520 | 2       |
+| batchApproveOperatorERC1155                | 2720            | 31840 | 31840  | 60961 | 2       |
+| batchApproveOperatorERC721                 | 2809            | 31894 | 31894  | 60980 | 2       |
+| batchTransferERC20                         | 2785            | 11347 | 3408   | 27848 | 3       |
+| batchTransferERC721                        | 2698            | 11602 | 3321   | 28788 | 3       |
+| batchTransferMultipleERC1155               | 2786            | 9935  | 3520   | 23500 | 3       |
+| batchTransferNativeToken                   | 2720            | 16729 | 3343   | 44124 | 3       |
+| batchTransferSingleERC1155                 | 2602            | 5912  | 2944   | 12190 | 3       |
+| execute                                    | 3140            | 5043  | 4354   | 8326  | 4       |
+| initialize                                 | 1895            | 70060 | 70463  | 70463 | 1337    |
+| llamaCore                                  | 581             | 981   | 581    | 2581  | 5       |
+| name                                       | 1491            | 1891  | 1491   | 3491  | 5       |
+| onERC1155Received                          | 2019            | 2019  | 2019   | 2019  | 10      |
+| onERC721Received                           | 1869            | 1869  | 1869   | 1869  | 1       |
+| receive                                    | 55              | 55    | 55     | 55    | 1       |
+| transferERC1155                            | 2668            | 4664  | 3010   | 8316  | 3       |
+| transferERC20                              | 2566            | 6939  | 2908   | 15343 | 3       |
+| transferERC721                             | 2632            | 6149  | 2974   | 12841 | 3       |
+| transferNativeToken                        | 2610            | 5330  | 2952   | 10430 | 3       |
 
 
-| src/VertexCore.sol:VertexCore contract  |                 |        |        |         |         |
-|-----------------------------------------|-----------------|--------|--------|---------|---------|
-| Deployment Cost                         | Deployment Size |        |        |         |         |
-| 4473143                                 | 22906           |        |        |         |         |
-| Function Name                           | min             | avg    | median | max     | # calls |
-| actionsCount                            | 474             | 474    | 474    | 474     | 1       |
-| authorizedStrategies                    | 933             | 1433   | 933    | 2933    | 12      |
-| cancelAction                            | 2674            | 23241  | 21953  | 54550   | 10      |
-| castApproval(uint256,bytes32)           | 4719            | 59023  | 56637  | 96587   | 48      |
-| castApproval(uint256,bytes32,string)    | 77626           | 77626  | 77626  | 77626   | 1       |
-| castDisapproval(uint256,bytes32)        | 8362            | 63795  | 87430  | 87430   | 11      |
-| castDisapproval(uint256,bytes32,string) | 88876           | 88876  | 88876  | 88876   | 1       |
-| createAction                            | 3842            | 210387 | 227731 | 260531  | 37      |
-| createAndAuthorizeAccounts              | 9448            | 271740 | 358005 | 361505  | 4       |
-| createAndAuthorizeStrategies            | 11631           | 544807 | 807896 | 814896  | 3       |
-| executeAction                           | 680             | 31341  | 25916  | 52782   | 7       |
-| getAction                               | 6213            | 9863   | 6213   | 24213   | 61      |
-| initialize                              | 3050            | 908300 | 911483 | 1029383 | 403     |
-| name                                    | 1492            | 2158   | 1492   | 3492    | 3       |
-| policy                                  | 739             | 739    | 739    | 739     | 403     |
-| queueAction                             | 724             | 42917  | 40386  | 79386   | 15      |
-| unauthorizeStrategies                   | 8716            | 8716   | 8716   | 8716    | 1       |
+| src/LlamaCore.sol:LlamaCore contract  |                 |                     |        |                     |         |
+|---------------------------------------|-----------------|---------------------|--------|---------------------|---------|
+| Deployment Cost                       | Deployment Size |                     |        |                     |         |
+| 4974035                               | 25407           |                     |        |                     |         |
+| Function Name                         | min             | avg                 | median | max                 | # calls |
+| actionGuard                           | 1403            | 1403                | 1403   | 1403                | 1       |
+| actionsCount                          | 540             | 1001                | 540    | 2540                | 13      |
+| approvals                             | 1155            | 1155                | 1155   | 1155                | 2       |
+| authorizeScript                       | 786             | 7667                | 2999   | 26806               | 5       |
+| authorizedScripts                     | 912             | 912                 | 912    | 912                 | 1       |
+| authorizedStrategies                  | 956             | 1527                | 956    | 2956                | 21      |
+| cancelAction                          | 5054            | 39332               | 30958  | 64956               | 13      |
+| castApproval(uint256,uint8)           | 2949            | 75015               | 68031  | 129931              | 133     |
+| castApproval(uint256,uint8,string)    | 93016           | 93016               | 93016  | 93016               | 1       |
+| castApprovalBySig                     | 9237            | 74519               | 77836  | 124536              | 6       |
+| castDisapproval(uint256,uint8)        | 2993            | 98206               | 99219  | 121119              | 99      |
+| castDisapproval(uint256,uint8,string) | 119072          | 119072              | 119072 | 119072              | 1       |
+| castDisapprovalBySig                  | 9259            | 87724               | 91045  | 150931              | 6       |
+| createAccounts                        | 584             | 2513641910770446395 | 353977 | 8797746687696147373 | 7       |
+| createAction                          | 1846            | 237987              | 249420 | 575907              | 82      |
+| createActionBySig                     | 10405           | 167849              | 171166 | 310027              | 6       |
+| createAndAuthorizeStrategies          | 865             | 451166496805259394  | 276557 | 8797746687696140447 | 39      |
+| disapprovals                          | 1132            | 1132                | 1132   | 1132                | 2       |
+| executeAction                         | 699             | 80561               | 69563  | 322257              | 17      |
+| factory                               | 2809            | 2809                | 2809   | 2809                | 1       |
+| getAction                             | 5688            | 6421                | 5688   | 21688               | 1087    |
+| getActionState                        | 1246            | 28380               | 28042  | 61739               | 37      |
+| initialize                            | 3182            | 881166              | 882363 | 1001642             | 656     |
+| llamaAccountLogic                     | 782             | 1782                | 1782   | 2782                | 2       |
+| name                                  | 1492            | 1529                | 1492   | 3492                | 106     |
+| nonces                                | 1101            | 2101                | 2101   | 3101                | 6       |
+| policy                                | 739             | 775                 | 739    | 2739                | 1977    |
+| queueAction                           | 702             | 55611               | 50398  | 87398               | 37      |
+| setGuard                              | 1047            | 16642               | 27773  | 27773               | 7       |
+| unauthorizeStrategies                 | 629             | 4707                | 4707   | 8785                | 2       |
 
 
-| src/VertexFactory.sol:VertexFactory contract |                 |         |         |         |         |
-|----------------------------------------------|-----------------|---------|---------|---------|---------|
-| Deployment Cost                              | Deployment Size |         |         |         |         |
-| 3153222                                      | 17568           |         |         |         |         |
-| Function Name                                | min             | avg     | median  | max     | # calls |
-| authorizeAccountLogic                        | 567             | 17627   | 22981   | 23981   | 4       |
-| authorizeStrategyLogic                       | 545             | 17605   | 22959   | 23959   | 4       |
-| authorizedAccountLogics                      | 890             | 1031    | 890     | 2890    | 212     |
-| authorizedStrategyLogics                     | 912             | 1044    | 912     | 2912    | 211     |
-| deploy                                       | 13244           | 1318602 | 1330430 | 1349230 | 207     |
-| rootVertex                                   | 579             | 579     | 579     | 579     | 196     |
-| tokenURI                                     | 905011          | 905011  | 905011  | 905011  | 1       |
-| vertexCoreLogic                              | 667             | 667     | 667     | 667     | 1       |
-| vertexCount                                  | 517             | 1317    | 517     | 2517    | 5       |
-| vertexPolicyLogic                            | 578             | 578     | 578     | 578     | 1       |
+| src/LlamaFactory.sol:LlamaFactory contract |                 |         |         |         |         |
+|--------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                            | Deployment Size |         |         |         |         |
+| 3876370                                    | 22102           |         |         |         |         |
+| Function Name                              | min             | avg     | median  | max     | # calls |
+| LLAMA_ACCOUNT_LOGIC                        | 557             | 557     | 557     | 557     | 2       |
+| LLAMA_CORE_LOGIC                           | 600             | 600     | 600     | 600     | 2       |
+| LLAMA_POLICY_LOGIC                         | 667             | 667     | 667     | 667     | 2       |
+| LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 622             | 622     | 622     | 622     | 315     |
+| ROOT_LLAMA                                 | 623             | 623     | 623     | 623     | 309     |
+| authorizeStrategyLogic                     | 565             | 21437   | 23979   | 23979   | 10      |
+| authorizedStrategyLogics                   | 910             | 1148    | 910     | 2910    | 360     |
+| deploy                                     | 8867            | 1313860 | 1324118 | 1337839 | 320     |
+| llamaCount                                 | 452             | 1118    | 452     | 2452    | 6       |
+| llamaPolicyTokenURI                        | 780             | 1780    | 1780    | 2780    | 2       |
+| setPolicyTokenURI                          | 654             | 3766    | 3766    | 6878    | 2       |
+| tokenURI                                   | 1213552         | 1213757 | 1213757 | 1213963 | 2       |
 
 
-| src/VertexLens.sol:VertexLens contract |                 |      |        |      |         |
-|----------------------------------------|-----------------|------|--------|------|---------|
-| Deployment Cost                        | Deployment Size |      |        |      |         |
-| 704734                                 | 3552            |      |        |      |         |
-| Function Name                          | min             | avg  | median | max  | # calls |
-| computeVertexAccountAddress            | 2080            | 2080 | 2080   | 2080 | 793     |
-| computeVertexCoreAddress               | 2734            | 2734 | 2734   | 2734 | 5       |
-| computeVertexPolicyAddress             | 2712            | 2712 | 2712   | 2712 | 6       |
-| computeVertexStrategyAddress           | 5356            | 5582 | 5356   | 5812 | 790     |
+| src/LlamaLens.sol:LlamaLens contract |                 |      |        |      |         |
+|--------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                      | Deployment Size |      |        |      |         |
+| 567200                               | 2865            |      |        |      |         |
+| Function Name                        | min             | avg  | median | max  | # calls |
+| computeLlamaAccountAddress           | 2115            | 2115 | 2115   | 2115 | 2475    |
+| computeLlamaCoreAddress              | 2734            | 2734 | 2734   | 2734 | 5       |
+| computeLlamaPolicyAddress            | 2756            | 2756 | 2756   | 2756 | 6       |
+| computeLlamaStrategyAddress          | 2276            | 2288 | 2276   | 3330 | 2508    |
+| computePermissionId                  | 2083            | 2083 | 2083   | 2083 | 2       |
 
 
-| src/VertexPolicy.sol:VertexPolicy contract      |                 |        |        |        |         |
-|-------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 3806258                                         | 19576           |        |        |        |         |
-| Function Name                                   | min             | avg    | median | max    | # calls |
-| approve                                         | 773             | 773    | 773    | 773    | 1       |
-| balanceOf                                       | 1009            | 2437   | 3009   | 3009   | 7       |
-| baseURI                                         | 3283            | 3283   | 3283   | 3283   | 1       |
-| getPastSupply                                   | 3590            | 3909   | 3768   | 4548   | 12      |
-| getPastWeight                                   | 3501            | 6106   | 7501   | 12171  | 73      |
-| getSupply                                       | 1982            | 3607   | 1982   | 5982   | 80      |
-| getWeight                                       | 2429            | 2686   | 2439   | 3439   | 4       |
-| hasPermissionId                                 | 3624            | 6443   | 4921   | 8921   | 36      |
-| hasRole(address,bytes32)(bool)                  | 1442            | 2330   | 2442   | 2442   | 36      |
-| hasRole(address,bytes32,uint256)(bool)          | 3430            | 3430   | 3430   | 3430   | 55      |
-| initialize                                      | 2191            | 283040 | 284433 | 284433 | 404     |
-| name                                            | 1492            | 2158   | 1492   | 3492   | 3       |
-| revokeExpiredRoles                              | 57940           | 57940  | 57940  | 57940  | 2       |
-| revokePolicy                                    | 69761           | 99145  | 113837 | 113837 | 3       |
-| safeTransferFrom(address,address,uint256)       | 967             | 967    | 967    | 967    | 1       |
-| safeTransferFrom(address,address,uint256,bytes) | 1228            | 1228   | 1228   | 1228   | 1       |
-| setApprovalForAll                               | 733             | 733    | 733    | 733    | 1       |
-| setRoleHolders                                  | 56362           | 809456 | 859112 | 859112 | 209     |
-| setVertex                                       | 2703            | 22787  | 22837  | 22837  | 403     |
-| symbol                                          | 1535            | 2535   | 2535   | 3535   | 2       |
-| tokenURI                                        | 957388          | 957388 | 957388 | 957388 | 1       |
-| transferFrom                                    | 923             | 923    | 923    | 923    | 1       |
-| vertex                                          | 559             | 559    | 559    | 559    | 3       |
-
-
-| src/VertexStrategy.sol:VertexStrategy contract |                 |        |        |        |         |
-|------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                | Deployment Size |        |        |        |         |
-| 1312314                                        | 7121            |        |        |        |         |
-| Function Name                                  | min             | avg    | median | max    | # calls |
-| approvalPeriod                                 | 496             | 1067   | 496    | 2496   | 91      |
-| approvalRole                                   | 474             | 1411   | 474    | 2474   | 32      |
-| disapprovalRole                                | 497             | 1434   | 497    | 2497   | 32      |
-| expirationPeriod                               | 451             | 1751   | 2451   | 2451   | 20      |
-| getApprovalWeightAt                            | 5969            | 7795   | 7969   | 9969   | 46      |
-| getDisapprovalWeightAt                         | 6013            | 7568   | 8013   | 8013   | 9       |
-| initialize                                     | 188212          | 221828 | 208112 | 236046 | 810     |
-| isActionCancelationValid                       | 11871           | 19204  | 13871  | 31871  | 3       |
-| isActionPassed                                 | 11958           | 16266  | 11958  | 33958  | 55      |
-| isFixedLengthApprovalPeriod                    | 610             | 1456   | 610    | 2610   | 52      |
-| minDisapprovalPct                              | 452             | 2007   | 2452   | 2452   | 9       |
-| queuingPeriod                                  | 495             | 1733   | 2495   | 2495   | 21      |
+| src/LlamaPolicy.sol:LlamaPolicy contract        |                 |         |         |         |         |
+|-------------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                                 | Deployment Size |         |         |         |         |
+| 4172938                                         | 21407           |         |         |         |         |
+| Function Name                                   | min             | avg     | median  | max     | # calls |
+| ALL_HOLDERS_ROLE                                | 381             | 381     | 381     | 381     | 1       |
+| approve                                         | 773             | 773     | 773     | 773     | 1       |
+| balanceOf                                       | 943             | 2919    | 2943    | 2943    | 519     |
+| canCreateAction                                 | 1133            | 1799    | 1133    | 3133    | 3       |
+| factory                                         | 825             | 825     | 825     | 825     | 1       |
+| getPastQuantity                                 | 2599            | 3409    | 3275    | 12159   | 256     |
+| getQuantity                                     | 1305            | 3010    | 3305    | 3305    | 165     |
+| getRoleSupplyAsNumberOfHolders                  | 957             | 2088    | 2957    | 2957    | 152     |
+| getRoleSupplyAsQuantitySum                      | 1028            | 1049    | 1028    | 3028    | 549     |
+| hasPermissionId                                 | 2093            | 5814    | 6402    | 8402    | 85      |
+| hasRole(address,uint8)(bool)                    | 2373            | 2440    | 2373    | 3389    | 15      |
+| hasRole(address,uint8,uint256)(bool)            | 2566            | 4528    | 3242    | 7242    | 237     |
+| initialize                                      | 2119            | 325622  | 329042  | 512720  | 665     |
+| initializeRole                                  | 1134            | 3171    | 3154    | 7954    | 2038    |
+| isRoleExpired                                   | 1423            | 2078    | 2406    | 2406    | 3       |
+| llamaCore                                       | 609             | 609     | 609     | 609     | 3       |
+| name                                            | 1492            | 2292    | 1492    | 3492    | 5       |
+| numRoles                                        | 604             | 628     | 604     | 2604    | 2907    |
+| revokeExpiredRole                               | 2365            | 23155   | 27344   | 31379   | 5       |
+| revokePolicy(address)                           | 2820            | 543539  | 337708  | 1990740 | 5       |
+| revokePolicy(address,uint8[])                   | 1053            | 556374  | 65605   | 2093232 | 4       |
+| roleBalanceCheckpoints                          | 3118            | 4896    | 5785    | 5785    | 3       |
+| roleExpiration                                  | 2371            | 2371    | 2371    | 2371    | 8       |
+| safeTransferFrom(address,address,uint256)       | 923             | 923     | 923     | 923     | 1       |
+| safeTransferFrom(address,address,uint256,bytes) | 1206            | 1206    | 1206    | 1206    | 1       |
+| setApprovalForAll                               | 800             | 800     | 800     | 800     | 1       |
+| setLlama                                        | 1061            | 1327    | 1061    | 22961   | 664     |
+| setRoleHolder                                   | 1691            | 140662  | 147732  | 176432  | 9428    |
+| setRolePermission                               | 3100            | 25396   | 25404   | 27404   | 2494    |
+| symbol                                          | 1491            | 2491    | 2491    | 3491    | 4       |
+| tokenURI                                        | 1281190         | 1281190 | 1281190 | 1281190 | 1       |
+| totalSupply                                     | 708             | 708     | 708     | 708     | 1       |
+| transferFrom                                    | 989             | 989     | 989     | 989     | 1       |
+| updateRoleDescription                           | 2880            | 3673    | 3673    | 4467    | 2       |
 
 
 

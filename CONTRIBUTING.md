@@ -2,7 +2,7 @@
 
 NOTE: This format should only be followed after your PR gets approved and you are squashing your commits to merge to main.
 
-## Vertex Development
+## Llama Development
 
 Please consider these guidelines when filing a pull request:
 

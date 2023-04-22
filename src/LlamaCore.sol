@@ -5,17 +5,17 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, PermissionData} from "src/lib/Structs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Core of a Vertex instance
+/// @title Core of a llama instance
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Main point of interaction of a Vertex instance (i.e. entry into and exit from).
-contract VertexCore is Initializable {
+/// @notice Main point of interaction of a llama instance (i.e. entry into and exit from).
+contract LlamaCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -25,7 +25,7 @@ contract VertexCore is Initializable {
   error InvalidCancelation();
   error InvalidActionId();
   error InvalidActionState(ActionState expected);
-  error OnlyVertex();
+  error OnlyLlama();
   error InvalidSignature();
   error TimelockNotFinished();
   error FailedActionExecution(bytes reason);
@@ -38,8 +38,8 @@ contract VertexCore is Initializable {
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
 
-  modifier onlyVertex() {
-    if (msg.sender != address(this)) revert OnlyVertex();
+  modifier onlyLlama() {
+    if (msg.sender != address(this)) revert OnlyLlama();
     _;
   }
 
@@ -50,7 +50,7 @@ contract VertexCore is Initializable {
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    IVertexStrategy indexed strategy,
+    ILlamaStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -59,18 +59,18 @@ contract VertexCore is Initializable {
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
-    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(
-    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, bytes result
+    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(
-    IVertexStrategy indexed strategy, IVertexStrategy indexed strategyLogic, bytes initializationData
+    ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
-  event StrategyUnauthorized(IVertexStrategy indexed strategy);
-  event AccountCreated(VertexAccount indexed account, string name);
+  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
+  event AccountCreated(LlamaAccount indexed account, string name);
   event ScriptAuthorized(address indexed script, bool authorized);
 
   // =============================================================
@@ -94,16 +94,16 @@ contract VertexCore is Initializable {
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
     keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
 
-  /// @notice The VertexFactory contract that deployed this Vertex system.
-  VertexFactory public factory;
+  /// @notice The LlamaFactory contract that deployed this llama instance.
+  LlamaFactory public factory;
 
-  /// @notice The NFT contract that defines the policies for this Vertex system.
-  VertexPolicy public policy;
+  /// @notice The NFT contract that defines the policies for this llama instance.
+  LlamaPolicy public policy;
 
-  /// @notice The Vertex Account implementation (logic) contract.
-  VertexAccount public vertexAccountLogic;
+  /// @notice The Llama Account implementation (logic) contract.
+  LlamaAccount public llamaAccountLogic;
 
-  /// @notice Name of this Vertex system.
+  /// @notice Name of this llama instance.
   string public name;
 
   /// @notice The current number of actions created.
@@ -122,7 +122,7 @@ contract VertexCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(IVertexStrategy => bool) public authorizedStrategies;
+  mapping(ILlamaStrategy => bool) public authorizedStrategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -141,27 +141,27 @@ contract VertexCore is Initializable {
 
   constructor() initializer {}
 
-  /// @notice Initializes a new VertexCore clone.
-  /// @param _name The name of the VertexCore clone.
-  /// @param _policy This Vertex instance's policy contract.
-  /// @param _vertexStrategyLogic The Vertex Strategy implementation (logic) contract.
-  /// @param _vertexAccountLogic The Vertex Account implementation (logic) contract.
+  /// @notice Initializes a new LlamaCore clone.
+  /// @param _name The name of the LlamaCore clone.
+  /// @param _policy This llama instance's policy contract.
+  /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
+  /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
   /// @param initialStrategies The configuration of the initial strategies.
   /// @param initialAccounts The configuration of the initial strategies.
   function initialize(
     string memory _name,
-    VertexPolicy _policy,
-    IVertexStrategy _vertexStrategyLogic,
-    VertexAccount _vertexAccountLogic,
+    LlamaPolicy _policy,
+    ILlamaStrategy _llamaStrategyLogic,
+    LlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
     string[] calldata initialAccounts
   ) external initializer {
-    factory = VertexFactory(msg.sender);
+    factory = LlamaFactory(msg.sender);
     name = _name;
     policy = _policy;
-    vertexAccountLogic = _vertexAccountLogic;
+    llamaAccountLogic = _llamaAccountLogic;
 
-    _deployStrategies(_vertexStrategyLogic, initialStrategies);
+    _deployStrategies(_llamaStrategyLogic, initialStrategies);
     _deployAccounts(initialAccounts);
   }
 
@@ -172,7 +172,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
   /// {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -180,7 +180,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
-    IVertexStrategy strategy,
+    ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -192,7 +192,7 @@ contract VertexCore is Initializable {
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
   /// the provided {target, selector, strategy}.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The IVertexStrategy contract that will determine how the action is executed.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param selector The function selector that will be called when the action is executed.
@@ -204,7 +204,7 @@ contract VertexCore is Initializable {
   /// @return actionId actionId of the newly created action.
   function createActionBySig(
     uint8 role,
-    IVertexStrategy strategy,
+    ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -421,18 +421,18 @@ contract VertexCore is Initializable {
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
-  /// @param vertexStrategyLogic address of the Vertex Strategy logic contract.
+  /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
   /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies)
+  function createAndAuthorizeStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
     external
-    onlyVertex
+    onlyLlama
   {
-    _deployStrategies(vertexStrategyLogic, strategies);
+    _deployStrategies(llamaStrategyLogic, strategies);
   }
 
   /// @notice Remove strategies from the mapping of authorized strategies.
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(IVertexStrategy[] calldata strategies) external onlyVertex {
+  function unauthorizeStrategies(ILlamaStrategy[] calldata strategies) external onlyLlama {
     uint256 strategiesLength = strategies.length;
     for (uint256 i = 0; i < strategiesLength; i = _uncheckedIncrement(i)) {
       delete authorizedStrategies[strategies[i]];
@@ -442,13 +442,13 @@ contract VertexCore is Initializable {
 
   /// @notice Deploy new accounts.
   /// @param accounts List of names of new accounts to be created.
-  function createAccounts(string[] calldata accounts) external onlyVertex {
+  function createAccounts(string[] calldata accounts) external onlyLlama {
     _deployAccounts(accounts);
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
   /// @dev To remove a guard, set `guard` to the zero address.
-  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyVertex {
+  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
     if (target == address(this) || target == address(policy)) revert CannotUseCoreOrPolicy();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
@@ -456,7 +456,7 @@ contract VertexCore is Initializable {
 
   /// @notice Authorizes `script` as the action guard for the given `target` and `selector`.
   /// @dev To remove a script, set `authorized` to false.
-  function authorizeScript(address script, bool authorized) external onlyVertex {
+  function authorizeScript(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert CannotUseCoreOrPolicy();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
@@ -498,7 +498,7 @@ contract VertexCore is Initializable {
   function _createAction(
     address policyholder,
     uint8 role,
-    IVertexStrategy strategy,
+    ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -593,10 +593,10 @@ contract VertexCore is Initializable {
     return currentCount + quantity;
   }
 
-  function _deployStrategies(IVertexStrategy vertexStrategyLogic, bytes[] calldata strategies) internal {
-    if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(vertexStrategyLogic)) {
-      // The only edge case where this check is skipped is if `_deployStrategies()` is called by Root Vertex Instance
-      // during Vertex Factory construction. This is because there is no code at the Vertex Factory address yet.
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies) internal {
+    if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(llamaStrategyLogic)) {
+      // The only edge case where this check is skipped is if `_deployStrategies()` is called by root llama instance
+      // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
       revert UnauthorizedStrategyLogic();
     }
 
@@ -604,10 +604,10 @@ contract VertexCore is Initializable {
     for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
 
-      IVertexStrategy strategy = IVertexStrategy(Clones.cloneDeterministic(address(vertexStrategyLogic), salt));
+      ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;
-      emit StrategyAuthorized(strategy, vertexStrategyLogic, strategies[i]);
+      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategies[i]);
     }
   }
 
@@ -615,7 +615,7 @@ contract VertexCore is Initializable {
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
-      VertexAccount account = VertexAccount(payable(Clones.cloneDeterministic(address(vertexAccountLogic), salt)));
+      LlamaAccount account = LlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
       account.initialize(accounts[i]);
       emit AccountCreated(account, accounts[i]);
     }

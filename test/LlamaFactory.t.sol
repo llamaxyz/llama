@@ -5,32 +5,32 @@ import {Test, console2} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
 
-import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
-import {VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
+import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
-import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
 
-contract VertexFactoryTest is VertexTestSetup {
+contract LlamaFactoryTest is LlamaTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
-  event VertexCreated(
-    uint256 indexed id, string indexed name, address vertexCore, address vertexPolicy, uint256 chainId
+  event LlamaInstanceCreated(
+    uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId
   );
-  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event AccountAuthorized(VertexAccount indexed account, address indexed accountLogic, string name);
-  event PolicyTokenURISet(VertexPolicyTokenURI indexed vertexPolicyTokenURI);
+  event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
+  event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
+  event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
 
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    IVertexStrategy indexed strategy,
+    ILlamaStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -38,32 +38,32 @@ contract VertexFactoryTest is VertexTestSetup {
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
-    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategiesAuthorized(RelativeStrategyConfig[] strategies);
-  event StrategiesUnauthorized(IVertexStrategy[] strategies);
-  event StrategyLogicAuthorized(IVertexStrategy indexed relativeStrategyLogic);
-  event AccountLogicAuthorized(VertexAccount indexed accountLogic);
+  event StrategiesUnauthorized(ILlamaStrategy[] strategies);
+  event StrategyLogicAuthorized(ILlamaStrategy indexed relativeStrategyLogic);
+  event AccountLogicAuthorized(LlamaAccount indexed accountLogic);
 }
 
-contract Constructor is VertexFactoryTest {
-  function deployVertexFactory() internal returns (VertexFactory) {
+contract Constructor is LlamaFactoryTest {
+  function deployLlamaFactory() internal returns (LlamaFactory) {
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
 
-    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    return new VertexFactory(
+    return new LlamaFactory(
       coreLogic,
       relativeStrategyLogic,
       accountLogic,
       policyLogic,
       policyTokenURI,
-      "Root Vertex",
+      "Root Llama",
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -72,55 +72,55 @@ contract Constructor is VertexFactoryTest {
     );
   }
 
-  function test_SetsVertexCoreLogicAddress() public {
-    assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
+  function test_SetsLlamaCoreLogicAddress() public {
+    assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
   }
 
-  function test_SetsVertexPolicyLogicAddress() public {
-    assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
+  function test_SetsLlamaPolicyLogicAddress() public {
+    assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
   }
 
-  function test_SetsVertexAccountLogicAddress() public {
-    assertEq(address(factory.VERTEX_ACCOUNT_LOGIC()), address(accountLogic));
+  function test_SetsLlamaAccountLogicAddress() public {
+    assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
   }
 
-  function test_SetsVertexPolicyTokenURIAddress() public {
-    assertEq(address(factory.vertexPolicyTokenURI()), address(policyTokenURI));
+  function test_SetsLlamaPolicyTokenURIAddress() public {
+    assertEq(address(factory.llamaPolicyTokenURI()), address(policyTokenURI));
   }
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
     emit PolicyTokenURISet(policyTokenURI);
-    deployVertexFactory();
+    deployLlamaFactory();
   }
 
-  function test_SetsVertexStrategyLogicAddress() public {
+  function test_SetsLlamaStrategyLogicAddress() public {
     assertTrue(factory.authorizedStrategyLogics(relativeStrategyLogic));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
     emit StrategyLogicAuthorized(relativeStrategyLogic);
-    deployVertexFactory();
+    deployLlamaFactory();
   }
 
-  function test_SetsRootVertexAddress() public {
-    assertEq(address(factory.ROOT_VERTEX()), address(rootCore));
+  function test_SetsRootLlamaAddress() public {
+    assertEq(address(factory.ROOT_LLAMA()), address(rootCore));
   }
 
-  function test_DeploysRootVertexViaInternalDeployMethod() public {
+  function test_DeploysRootLlamaViaInternalDeployMethod() public {
     // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
     // one side effect of that method as a sanity check it was called. If it was called, the
-    // vertex count should no longer be zero.
-    assertEq(factory.vertexCount(), 2);
+    // llama count should no longer be zero.
+    assertEq(factory.llamaCount(), 2);
   }
 }
 
-contract Deploy is VertexFactoryTest {
-  function deployVertex() internal returns (VertexCore) {
+contract Deploy is LlamaFactoryTest {
+  function deployLlama() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
@@ -137,14 +137,14 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_RevertIf_CallerIsNotRootVertex(address caller) public {
+  function test_RevertIf_CallerIsNotRootLlama(address caller) public {
     vm.assume(caller != address(rootCore));
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(caller));
-    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
+    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     factory.deploy(
       "NewProject",
       relativeStrategyLogic,
@@ -159,7 +159,7 @@ contract Deploy is VertexFactoryTest {
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    RoleDescription[] memory roleDescriptionStrings = SolarrayVertex.roleDescription(
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
@@ -187,128 +187,128 @@ contract Deploy is VertexFactoryTest {
     );
   }
 
-  function test_IncrementsVertexCountByOne() public {
-    uint256 initialVertexCount = factory.vertexCount();
-    deployVertex();
-    assertEq(factory.vertexCount(), initialVertexCount + 1);
+  function test_IncrementsLlamaCountByOne() public {
+    uint256 initialLlamaCount = factory.llamaCount();
+    deployLlama();
+    assertEq(factory.llamaCount(), initialLlamaCount + 1);
   }
 
   function test_DeploysPolicy() public {
-    VertexPolicy _policy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(policyLogic), address(factory));
     assertEq(address(_policy).code.length, 0);
-    deployVertex();
+    deployLlama();
     assertGt(address(_policy).code.length, 0);
   }
 
-  function test_InitializesVertexPolicy() public {
-    VertexPolicy _policy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
+  function test_InitializesLlamaPolicy() public {
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(policyLogic), address(factory));
 
     assertEq(address(_policy).code.length, 0);
-    deployVertex();
+    deployLlama();
     assertGt(address(_policy).code.length, 0);
 
     vm.expectRevert("Initializable: contract is already initialized");
     _policy.initialize("Test", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0));
   }
 
-  function test_DeploysVertexCore() public {
-    VertexCore _vertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
-    assertEq(address(_vertex).code.length, 0);
-    deployVertex();
-    assertGt(address(_vertex).code.length, 0);
-    assertGt(address(_vertex.policy()).code.length, 0);
-    VertexCore(address(_vertex)).name(); // Sanity check that this doesn't revert.
-    VertexCore(address(_vertex.policy())).name(); // Sanity check that this doesn't revert.
+  function test_DeploysLlamaCore() public {
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(coreLogic), address(factory));
+    assertEq(address(_llama).code.length, 0);
+    deployLlama();
+    assertGt(address(_llama).code.length, 0);
+    assertGt(address(_llama.policy()).code.length, 0);
+    LlamaCore(address(_llama)).name(); // Sanity check that this doesn't revert.
+    LlamaCore(address(_llama.policy())).name(); // Sanity check that this doesn't revert.
   }
 
-  function test_InitializesVertexCore() public {
-    VertexCore _vertex = deployVertex();
-    assertEq(_vertex.name(), "NewProject");
+  function test_InitializesLlamaCore() public {
+    LlamaCore _llama = deployLlama();
+    assertEq(_llama.name(), "NewProject");
 
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
 
-    VertexPolicy _policy = _vertex.policy();
+    LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _vertex.initialize("NewProject", _policy, relativeStrategyLogic, accountLogic, strategyConfigs, accounts);
+    _llama.initialize("NewProject", _policy, relativeStrategyLogic, accountLogic, strategyConfigs, accounts);
   }
 
-  function test_SetsVertexCoreOnThePolicy() public {
-    VertexCore _vertex = deployVertex();
-    VertexPolicy _policy = _vertex.policy();
-    VertexCore _vertexFromPolicy = VertexCore(_policy.vertexCore());
-    assertEq(address(_vertexFromPolicy), address(_vertex));
+  function test_SetsLlamaCoreOnThePolicy() public {
+    LlamaCore _llama = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    LlamaCore _llamaFromPolicy = LlamaCore(_policy.llamaCore());
+    assertEq(address(_llamaFromPolicy), address(_llama));
   }
 
-  function test_SetsPolicyAddressOnVertexCore() public {
-    VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    VertexCore _vertex = deployVertex();
-    assertEq(address(_vertex.policy()), address(computedPolicy));
+  function test_SetsPolicyAddressOnLlamaCore() public {
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(policyLogic), address(factory));
+    LlamaCore _llama = deployLlama();
+    assertEq(address(_llama.policy()), address(computedPolicy));
   }
 
-  function test_SetsAccountLogicAddressOnVertexCore() public {
-    VertexCore _vertex = deployVertex();
-    assertEq(address(_vertex.vertexAccountLogic()), address(accountLogic));
+  function test_SetsAccountLogicAddressOnLlamaCore() public {
+    LlamaCore _llama = deployLlama();
+    assertEq(address(_llama.llamaAccountLogic()), address(accountLogic));
   }
 
-  function test_EmitsVertexCreatedEvent() public {
+  function test_EmitsLlamaInstanceCreatedEvent() public {
     vm.expectEmit();
-    VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
-    VertexPolicy computedPolicy = lens.computeVertexPolicyAddress("NewProject", address(policyLogic), address(factory));
-    emit VertexCreated(2, "NewProject", address(computedVertex), address(computedPolicy), block.chainid);
-    deployVertex();
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(coreLogic), address(factory));
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(policyLogic), address(factory));
+    emit LlamaInstanceCreated(2, "NewProject", address(computedLlama), address(computedPolicy), block.chainid);
+    deployLlama();
   }
 
-  function test_ReturnsAddressOfTheNewVertexCoreContract() public {
-    VertexCore computedVertex = lens.computeVertexCoreAddress("NewProject", address(coreLogic), address(factory));
-    VertexCore newVertex = deployVertex();
-    assertEq(address(newVertex), address(computedVertex));
-    assertEq(address(computedVertex), VertexPolicy(computedVertex.policy()).vertexCore());
-    assertEq(address(computedVertex), VertexPolicy(newVertex.policy()).vertexCore());
+  function test_ReturnsAddressOfTheNewLlamaCoreContract() public {
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(coreLogic), address(factory));
+    LlamaCore newLlama = deployLlama();
+    assertEq(address(newLlama), address(computedLlama));
+    assertEq(address(computedLlama), LlamaPolicy(computedLlama.policy()).llamaCore());
+    assertEq(address(computedLlama), LlamaPolicy(newLlama.policy()).llamaCore());
   }
 }
 
-contract AuthorizeStrategyLogic is VertexFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller) public {
+contract AuthorizeStrategyLogic is LlamaFactoryTest {
+  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
     vm.assume(_caller != address(rootCore));
-    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
+    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     vm.prank(_caller);
-    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), false);
+    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
     vm.prank(address(rootCore));
-    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
-    assertEq(factory.authorizedStrategyLogics(IVertexStrategy(randomLogicAddress)), true);
+    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
+    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit StrategyLogicAuthorized(IVertexStrategy(randomLogicAddress));
-    factory.authorizeStrategyLogic(IVertexStrategy(randomLogicAddress));
+    emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress));
+    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
   }
 }
 
-contract SetPolicyTokenURI is VertexFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootVertex(address _caller, address _policyTokenURI) public {
+contract SetPolicyTokenURI is LlamaFactoryTest {
+  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller, address _policyTokenURI) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
-    vm.expectRevert(VertexFactory.OnlyRootVertex.selector);
-    factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
+    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
+    factory.setPolicyTokenURI(LlamaPolicyTokenURI(_policyTokenURI));
   }
 
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit PolicyTokenURISet(VertexPolicyTokenURI(_policyTokenURI));
-    factory.setPolicyTokenURI(VertexPolicyTokenURI(_policyTokenURI));
-    assertEq(address(factory.vertexPolicyTokenURI()), _policyTokenURI);
+    emit PolicyTokenURISet(LlamaPolicyTokenURI(_policyTokenURI));
+    factory.setPolicyTokenURI(LlamaPolicyTokenURI(_policyTokenURI));
+    assertEq(address(factory.llamaPolicyTokenURI()), _policyTokenURI);
   }
 }
 
-contract TokenURI is VertexFactoryTest {
+contract TokenURI is LlamaFactoryTest {
   function setTokenURIMetadata() internal {
     string memory color = "#FF0000";
     string memory logo =

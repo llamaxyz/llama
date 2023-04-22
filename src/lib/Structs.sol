@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 
 struct RoleHolderData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
@@ -23,7 +23,7 @@ struct RolePermissionData {
 struct PermissionData {
   address target; // Contract being called by an action.
   bytes4 selector; // Selector of the function being called by an action.
-  IVertexStrategy strategy; // Strategy used to govern the action.
+  ILlamaStrategy strategy; // Strategy used to govern the action.
 }
 
 struct Action {
@@ -31,7 +31,7 @@ struct Action {
   bool executed; // has action executed.
   bool canceled; // is action canceled.
   bytes4 selector; // The function selector that will be called when the action is executed.
-  IVertexStrategy strategy; // strategy that determines the validation process of this action.
+  ILlamaStrategy strategy; // strategy that determines the validation process of this action.
   address target; // The contract called when the action is executed
   bytes data; //  The encoded arguments to be passed to the function that is called when the action is executed.
   uint256 value; // The value in wei to be sent when the action is executed.

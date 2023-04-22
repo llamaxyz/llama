@@ -1,5 +1,5 @@
 {
-  "rootVertexName": "Root Vertex",
+  "rootLlamaName": "Root Llama",
   "initialStrategies": [
     {
       "approvalPeriod": 172800,

@@ -3,12 +3,12 @@
   ffi = true
   fs_permissions = [{ access = "read", path = "./script/input" }]
   gas_reports = [
-    "VertexAccount",
-    "VertexCore",
-    "VertexFactory",
-    "VertexLens",
-    "VertexPolicy",
-    "VertexStrategy",
+    "LlamaAccount",
+    "LlamaCore",
+    "LlamaFactory",
+    "LlamaLens",
+    "LlamaPolicy",
+    "LlamaStrategy",
   ]
   invariant = { fail_on_revert = true }
   optimizer = false
@@ -44,4 +44,4 @@
   wrap_comments = true
 
 [doc]
-  title = "Vertex v1 Documentation"
+  title = "Llama Documentation"

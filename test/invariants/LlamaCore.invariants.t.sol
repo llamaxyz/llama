@@ -4,25 +4,25 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action} from "src/lib/Structs.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
 
-contract VertexCoreHandler is BaseHandler {
+contract LlamaCoreHandler is BaseHandler {
   // =========================
   // ======== Storage ========
   // =========================
 
   // Parameters we'll need to create valid actions.
   address mockProtocol;
-  IVertexStrategy[2] strategies;
+  ILlamaStrategy[2] strategies;
   bytes32[3] permissionIds;
 
-  // Duplicated parameters from `VertexTestSetup` that we use here.
+  // Duplicated parameters from `LlamaTestSetup` that we use here.
   address actionCreatorAaron;
   uint256 actionCreatorAaronPrivateKey;
 
@@ -34,18 +34,18 @@ contract VertexCoreHandler is BaseHandler {
   // =============================
 
   constructor(
-    VertexFactory _vertexFactory,
-    VertexCore _vertexCore,
-    IVertexStrategy[2] memory _strategies,
+    LlamaFactory _llamaFactory,
+    LlamaCore _llamaCore,
+    ILlamaStrategy[2] memory _strategies,
     bytes32[3] memory _permissionIds,
     address _mockProtocol
-  ) BaseHandler(_vertexFactory, _vertexCore) {
+  ) BaseHandler(_llamaFactory, _llamaCore) {
     strategies = _strategies;
     permissionIds = _permissionIds;
     mockProtocol = _mockProtocol;
 
     // Save off each existing action
-    for (uint256 i = 0; i < VERTEX_CORE.actionsCount(); i++) {
+    for (uint256 i = 0; i < LLAMA_CORE.actionsCount(); i++) {
       actionsCounts.push(i);
     }
 
@@ -61,11 +61,11 @@ contract VertexCoreHandler is BaseHandler {
   }
 
   // Note this function is sensitive to the order of the `permissionIds` array and the configuration
-  // in `VertexTestSetup`. If you change either of those, you'll need to update this function.
+  // in `LlamaTestSetup`. If you change either of those, you'll need to update this function.
   function permissionIdIndexToData(uint256 index)
     internal
     view
-    returns (address target, bytes4 selector, IVertexStrategy strategy)
+    returns (address target, bytes4 selector, ILlamaStrategy strategy)
   {
     index = _bound(index, 0, permissionIds.length - 1);
 
@@ -82,13 +82,13 @@ contract VertexCoreHandler is BaseHandler {
   // Given an index and target action state, find the first action in that state. If one does not
   // exist, a value of `type(uint256).max` is returned.
   function findActionByState(uint256 index, ActionState targetState) internal view returns (uint256) {
-    uint256 actionCount = VERTEX_CORE.actionsCount();
+    uint256 actionCount = LLAMA_CORE.actionsCount();
     if (actionCount == 0) return type(uint256).max;
 
     uint256 actionId = _bound(index, 0, actionCount - 1);
     for (uint256 i = 0; i < actionCount; i++) {
       actionId = actionId % actionCount;
-      if (VERTEX_CORE.getActionState(actionId) == targetState) return actionId;
+      if (LLAMA_CORE.getActionState(actionId) == targetState) return actionId;
       actionId++;
     }
     return type(uint256).max;
@@ -100,47 +100,47 @@ contract VertexCoreHandler is BaseHandler {
 
   function callSummary() public view override {
     BaseHandler.callSummary();
-    console2.log("vertexCore_createAction                 ", calls["vertexCore_createAction"]);
-    console2.log("vertexCore_queueAction                  ", calls["vertexCore_queueAction"]);
-    console2.log("vertexCore_executeAction                ", calls["vertexCore_executeAction"]);
-    console2.log("vertexCore_cancelAction                 ", calls["vertexCore_cancelAction"]);
-    console2.log("vertexCore_castApproval                 ", calls["vertexCore_castApproval"]);
-    console2.log("vertexCore_castApprovalWithReason       ", calls["vertexCore_castApprovalWithReason"]);
-    console2.log("vertexCore_castApprovalBySig            ", calls["vertexCore_castApprovalBySig"]);
-    console2.log("vertexCore_castDisapproval              ", calls["vertexCore_castDisapproval"]);
-    console2.log("vertexCore_castDisapprovalWithReason    ", calls["vertexCore_castDisapprovalWithReason"]);
-    console2.log("vertexCore_castDisapprovalBySig         ", calls["vertexCore_castDisapprovalBySig"]);
-    console2.log("vertexCore_createAndAuthorizeStrategies ", calls["vertexCore_createAndAuthorizeStrategies"]);
-    console2.log("vertexCore_unauthorizeStrategies        ", calls["vertexCore_unauthorizeStrategies"]);
-    console2.log("vertexCore_createAndAuthorizeAccounts   ", calls["vertexCore_createAndAuthorizeAccounts"]);
+    console2.log("llamaCore_createAction                 ", calls["llamaCore_createAction"]);
+    console2.log("llamaCore_queueAction                  ", calls["llamaCore_queueAction"]);
+    console2.log("llamaCore_executeAction                ", calls["llamaCore_executeAction"]);
+    console2.log("llamaCore_cancelAction                 ", calls["llamaCore_cancelAction"]);
+    console2.log("llamaCore_castApproval                 ", calls["llamaCore_castApproval"]);
+    console2.log("llamaCore_castApprovalWithReason       ", calls["llamaCore_castApprovalWithReason"]);
+    console2.log("llamaCore_castApprovalBySig            ", calls["llamaCore_castApprovalBySig"]);
+    console2.log("llamaCore_castDisapproval              ", calls["llamaCore_castDisapproval"]);
+    console2.log("llamaCore_castDisapprovalWithReason    ", calls["llamaCore_castDisapprovalWithReason"]);
+    console2.log("llamaCore_castDisapprovalBySig         ", calls["llamaCore_castDisapprovalBySig"]);
+    console2.log("llamaCore_createAndAuthorizeStrategies ", calls["llamaCore_createAndAuthorizeStrategies"]);
+    console2.log("llamaCore_unauthorizeStrategies        ", calls["llamaCore_unauthorizeStrategies"]);
+    console2.log("llamaCore_createAndAuthorizeAccounts   ", calls["llamaCore_createAndAuthorizeAccounts"]);
     console2.log("-----------------------------------------------");
-    console2.log("vertexCore_queueAction_queued           ", calls["vertexCore_queueAction_queued"]);
-    console2.log("vertexCore_queueAction_noop             ", calls["vertexCore_queueAction_noop"]);
-    console2.log("vertexCore_executeAction_executed       ", calls["vertexCore_executeAction_executed"]);
-    console2.log("vertexCore_executeAction_executionRevert", calls["vertexCore_executeAction_executionRevert"]);
-    console2.log("vertexCore_executeAction_noop           ", calls["vertexCore_executeAction_noop"]);
-    console2.log("vertexCore_cancelAction_canceled        ", calls["vertexCore_cancelAction_canceled"]);
-    console2.log("vertexCore_cancelAction_noop            ", calls["vertexCore_cancelAction_noop"]);
-    console2.log("vertexCore_castApproval_approved        ", calls["vertexCore_castApproval_approved"]);
-    console2.log("vertexCore_castApproval_noop_1          ", calls["vertexCore_castApproval_noop_1"]);
-    console2.log("vertexCore_castApproval_noop_2          ", calls["vertexCore_castApproval_noop_2"]);
-    console2.log("vertexCore_castDisapproval_approved     ", calls["vertexCore_castDisapproval_approved"]);
-    console2.log("vertexCore_castDisapproval_noop_1       ", calls["vertexCore_castDisapproval_noop_1"]);
-    console2.log("vertexCore_castDisapproval_noop_2       ", calls["vertexCore_castDisapproval_noop_2"]);
+    console2.log("llamaCore_queueAction_queued           ", calls["llamaCore_queueAction_queued"]);
+    console2.log("llamaCore_queueAction_noop             ", calls["llamaCore_queueAction_noop"]);
+    console2.log("llamaCore_executeAction_executed       ", calls["llamaCore_executeAction_executed"]);
+    console2.log("llamaCore_executeAction_executionRevert", calls["llamaCore_executeAction_executionRevert"]);
+    console2.log("llamaCore_executeAction_noop           ", calls["llamaCore_executeAction_noop"]);
+    console2.log("llamaCore_cancelAction_canceled        ", calls["llamaCore_cancelAction_canceled"]);
+    console2.log("llamaCore_cancelAction_noop            ", calls["llamaCore_cancelAction_noop"]);
+    console2.log("llamaCore_castApproval_approved        ", calls["llamaCore_castApproval_approved"]);
+    console2.log("llamaCore_castApproval_noop_1          ", calls["llamaCore_castApproval_noop_1"]);
+    console2.log("llamaCore_castApproval_noop_2          ", calls["llamaCore_castApproval_noop_2"]);
+    console2.log("llamaCore_castDisapproval_approved     ", calls["llamaCore_castDisapproval_approved"]);
+    console2.log("llamaCore_castDisapproval_noop_1       ", calls["llamaCore_castDisapproval_noop_1"]);
+    console2.log("llamaCore_castDisapproval_noop_2       ", calls["llamaCore_castDisapproval_noop_2"]);
   }
 
   // ====================================
   // ======== Methods for Fuzzer ========
   // ====================================
 
-  function vertexCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
+  function llamaCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
     public
-    recordCall("vertexCore_createAction")
+    recordCall("llamaCore_createAction")
     useCurrentTimestamp
   {
     // We don't want action creation to revert, so we pull from arrays of known good values instead
     // of lettings the fuzzer have full control over input values.
-    (address target, bytes4 selector, IVertexStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
+    (address target, bytes4 selector, ILlamaStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
 
     // We only have one function that can receive ETH, if we're calling that function, we randomize
     // how much ETH to send, otherwise we send 0.
@@ -152,67 +152,67 @@ contract VertexCoreHandler is BaseHandler {
 
     // We can now execute the action.
     vm.prank(actionCreatorAaron);
-    uint256 actionId = VERTEX_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
+    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
     actionsCounts.push(actionId);
   }
 
-  function vertexCore_queueAction(uint256 index) public recordCall("vertexCore_queueAction") useCurrentTimestamp {
+  function llamaCore_queueAction(uint256 index) public recordCall("llamaCore_queueAction") useCurrentTimestamp {
     // We only want to queue actions that are in the `Approved` state. If no actions are ready to be
     // queued, we exit and this is a no-op.
     uint256 actionId = findActionByState(index, ActionState.Approved);
     if (actionId == type(uint256).max) {
-      recordMetric("vertexCore_queueAction_noop");
+      recordMetric("llamaCore_queueAction_noop");
       return;
     }
 
-    VERTEX_CORE.queueAction(actionId);
-    recordMetric("vertexCore_queueAction_queued");
+    LLAMA_CORE.queueAction(actionId);
+    recordMetric("llamaCore_queueAction_queued");
   }
 
-  function vertexCore_executeAction(uint256 index) public recordCall("vertexCore_executeAction") useCurrentTimestamp {
+  function llamaCore_executeAction(uint256 index) public recordCall("llamaCore_executeAction") useCurrentTimestamp {
     // We only want to execute actions that are in the `Queued` state. If no actions are ready to be
     // executed, we exit and this is a no-op.
     uint256 actionId = findActionByState(index, ActionState.Queued);
     if (actionId == type(uint256).max) {
-      recordMetric("vertexCore_executeAction_noop");
+      recordMetric("llamaCore_executeAction_noop");
       return;
     }
 
-    vm.warp(VERTEX_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
-    try VERTEX_CORE.executeAction(actionId) {
-      recordMetric("vertexCore_executeAction_executed");
+    vm.warp(LLAMA_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
+    try LLAMA_CORE.executeAction(actionId) {
+      recordMetric("llamaCore_executeAction_executed");
     } catch {
       // We don't care about reverts, we just want to know if the action was executed or not.
-      recordMetric("vertexCore_executeAction_executionRevert");
+      recordMetric("llamaCore_executeAction_executionRevert");
     }
   }
 
-  function vertexCore_cancelAction(uint256 index) public recordCall("vertexCore_cancelAction") useCurrentTimestamp {
+  function llamaCore_cancelAction(uint256 index) public recordCall("llamaCore_cancelAction") useCurrentTimestamp {
     // We can only cancel actions that are not in any of the following state: executed, canceled,
     // expired, or failed. If all actions are in one of those states, we exit and this is a no-op.
     uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
     for (uint256 i = 0; i < actionsCounts.length; i++) {
       actionId = actionsCounts[(actionId + i) % actionsCounts.length];
-      ActionState state = VERTEX_CORE.getActionState(actionId);
+      ActionState state = LLAMA_CORE.getActionState(actionId);
       if (
         state != ActionState.Executed && state != ActionState.Canceled && state != ActionState.Expired
           && state != ActionState.Failed
       ) {
         // Prank as the action creator so we don't need to worry about disapprovals to cancel the action.
-        Action memory action = VERTEX_CORE.getAction(actionId);
+        Action memory action = LLAMA_CORE.getAction(actionId);
         vm.prank(action.creator);
-        VERTEX_CORE.cancelAction(actionId);
-        recordMetric("vertexCore_cancelAction_canceled");
+        LLAMA_CORE.cancelAction(actionId);
+        recordMetric("llamaCore_cancelAction_canceled");
         return;
       }
     }
-    recordMetric("vertexCore_cancelAction_noop");
+    recordMetric("llamaCore_cancelAction_noop");
   }
 
-  function vertexCore_castApproval(uint256 index) public recordCall("vertexCore_castApproval") useCurrentTimestamp {
+  function llamaCore_castApproval(uint256 index) public recordCall("llamaCore_castApproval") useCurrentTimestamp {
     uint256 actionId = findActionByState(index, ActionState.Active);
     if (actionId == type(uint256).max) {
-      recordMetric("vertexCore_castApproval_noop_1");
+      recordMetric("llamaCore_castApproval_noop_1");
       return;
     }
 
@@ -220,24 +220,20 @@ contract VertexCoreHandler is BaseHandler {
     uint256 newIndex = uint256(keccak256(abi.encode(index)));
     address approver = approvers[_bound(newIndex, 0, approvers.length - 1)];
 
-    if (VERTEX_CORE.approvals(actionId, approver)) {
-      recordMetric("vertexCore_castApproval_noop_2");
+    if (LLAMA_CORE.approvals(actionId, approver)) {
+      recordMetric("llamaCore_castApproval_noop_2");
       return;
     }
 
     vm.prank(approver);
-    VERTEX_CORE.castApproval(actionId, uint8(Roles.Approver));
-    recordMetric("vertexCore_castApproval_approved");
+    LLAMA_CORE.castApproval(actionId, uint8(Roles.Approver));
+    recordMetric("llamaCore_castApproval_approved");
   }
 
-  function vertexCore_castDisapproval(uint256 index)
-    public
-    recordCall("vertexCore_castDisapproval")
-    useCurrentTimestamp
-  {
+  function llamaCore_castDisapproval(uint256 index) public recordCall("llamaCore_castDisapproval") useCurrentTimestamp {
     uint256 actionId = findActionByState(index, ActionState.Queued);
     if (actionId == type(uint256).max) {
-      recordMetric("vertexCore_castDisapproval_noop_1");
+      recordMetric("llamaCore_castDisapproval_noop_1");
       return;
     }
 
@@ -246,39 +242,39 @@ contract VertexCoreHandler is BaseHandler {
     uint256 newIndex = uint256(keccak256(abi.encode(index)));
     address disapprover = disapprovers[_bound(newIndex, 0, disapprovers.length - 1)];
 
-    if (VERTEX_CORE.disapprovals(actionId, disapprover)) {
-      recordMetric("vertexCore_castDisapproval_noop_2");
+    if (LLAMA_CORE.disapprovals(actionId, disapprover)) {
+      recordMetric("llamaCore_castDisapproval_noop_2");
       return;
     }
 
     vm.prank(disapprover);
-    VERTEX_CORE.castDisapproval(actionId, uint8(Roles.Disapprover));
-    recordMetric("vertexCore_castDisapproval_disapproved");
+    LLAMA_CORE.castDisapproval(actionId, uint8(Roles.Disapprover));
+    recordMetric("llamaCore_castDisapproval_disapproved");
   }
 
   // These methods are the same underlying functionality as the above methods, so they're omitted
   // from the handler for simplicity/brevity.
-  //   vertexCore_castApprovalWithReason
-  //   vertexCore_castApprovalBySig
-  //   vertexCore_castDisapprovalWithReason
-  //   vertexCore_castDisapprovalBySig
+  //   llamaCore_castApprovalWithReason
+  //   llamaCore_castApprovalBySig
+  //   llamaCore_castDisapprovalWithReason
+  //   llamaCore_castDisapprovalBySig
 
   // These methods do not affect any of the invariants we're testing, so they're omitted from the
   // handler for simplicity/brevity.
-  //   vertexCore_createAndAuthorizeStrategies
-  //   vertexCore_unauthorizeStrategies
-  //   vertexCore_createAndAuthorizeAccounts
+  //   llamaCore_createAndAuthorizeStrategies
+  //   llamaCore_unauthorizeStrategies
+  //   llamaCore_createAndAuthorizeAccounts
 }
 
-contract VertexFactoryInvariants is VertexTestSetup {
-  VertexCoreHandler public handler;
+contract LlamaFactoryInvariants is LlamaTestSetup {
+  LlamaCoreHandler public handler;
 
   uint256 executedActionId;
   uint256 canceledActionId;
   uint256 expiredActionId;
 
   function setUp() public override {
-    VertexTestSetup.setUp();
+    LlamaTestSetup.setUp();
 
     // We push through 3 actions: one that's executed, one that's canceled, and one that's expired.
     // First, we execute an action.
@@ -314,9 +310,9 @@ contract VertexFactoryInvariants is VertexTestSetup {
     require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId");
 
     // Now we deploy our handler and inform it of these actions.
-    IVertexStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
+    ILlamaStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
     bytes32[3] memory permissionIds = [pausePermissionId, failPermissionId, receiveEthPermissionId];
-    handler = new VertexCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
+    handler = new LlamaCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
 
     targetContract(address(handler));
     targetSender(msg.sender);
@@ -351,9 +347,9 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // The `actionsCount` state variable should only increase, and be incremented by 1 with each
   // successful `createAction` call.
   function assertInvariant_ActionsCountMonotonicallyIncreases() internal view {
-    uint256[] memory vertexCounts = handler.getActionsCounts();
-    for (uint256 i = 1; i < vertexCounts.length; i++) {
-      require(vertexCounts[i] == vertexCounts[i - 1] + 1, "vertexCount did not monotonically increase");
+    uint256[] memory llamaCounts = handler.getActionsCounts();
+    for (uint256 i = 1; i < llamaCounts.length; i++) {
+      require(llamaCounts[i] == llamaCounts[i - 1] + 1, "llamaCount did not monotonically increase");
     }
   }
 
