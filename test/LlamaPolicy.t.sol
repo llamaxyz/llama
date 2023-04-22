@@ -17,7 +17,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaPolicyTest is LlamaTestSetup {
-  event RoleAssigned(address indexed user, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply);
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
@@ -260,49 +260,49 @@ contract SetRoleHolder is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function test_SetsRoleHolder(address user) public {
-    vm.assume(user != address(0));
-    if (mpPolicy.balanceOf(user) > 0) user = makeAddr("userWithoutPolicy");
+  function test_SetsRoleHolder(address policyholder) public {
+    vm.assume(policyholder != address(0));
+    if (mpPolicy.balanceOf(policyholder) > 0) policyholder = makeAddr("policyholderWithoutPolicy");
     vm.startPrank(address(mpCore));
 
     uint256 initRoleHolders = 7;
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
 
-    // Assign role to user with quantity of 1.
+    // Assign role to policyholder with quantity of 1.
     vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "10");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "20");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "30");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "10");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "20");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "30");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "40");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1, "50");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "60");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "70");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "60");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "70");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "90");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "100");
 
-    // Adjust user's policy to have quantity greater than 1.
+    // Adjust policyholder's policy to have quantity greater than 1.
     vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, LlamaPolicy.RoleSupply(1, 5));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 5, DEFAULT_ROLE_EXPIRATION - 10);
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, LlamaPolicy.RoleSupply(1, 5));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 5, DEFAULT_ROLE_EXPIRATION - 10);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true, "110");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 5, "120");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION - 10, "130");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "110");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 5, "120");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION - 10, "130");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "140");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 5, "150");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "160");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "170");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "160");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "170");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "200");
 
-    // Add another user with a quantity of 3.
+    // Add another policyholder with a quantity of 3.
     vm.expectEmit();
     emit RoleAssigned(
       arbitraryPolicyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(2, 8)
@@ -321,20 +321,20 @@ contract SetRoleHolder is LlamaPolicyTest {
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "290");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "300");
 
-    // Revoke the original user's role. We did not revoke their policy so they still have the all holders role.
+    // Revoke the original policyholder's role. We did not revoke their policy so they still have the all holders role.
     vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(1, 3));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, 0, 0);
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(1, 3));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false, "310");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.TestRole1)), 0, "320");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.TestRole1)), 0, "330");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "310");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0, "320");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0, "330");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "340");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 3, "350");
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.AllHolders)), true, "360");
-    assertEq(mpPolicy.getQuantity(user, uint8(Roles.AllHolders)), 1, "370");
-    assertEq(mpPolicy.roleExpiration(user, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "380");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "360");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "370");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "380");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "390");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "400");
   }
@@ -360,34 +360,34 @@ contract SetRolePermission is LlamaPolicyTest {
 }
 
 contract RevokeExpiredRole is LlamaPolicyTest {
-  function test_RevokesExpiredRole(address user, uint64 expiration) public {
-    vm.assume(user != address(0));
+  function test_RevokesExpiredRole(address policyholder, uint64 expiration) public {
+    vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
     vm.startPrank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.warp(expiration + 1);
 
     vm.expectEmit();
-    emit RoleAssigned(user, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(0, 0));
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(0, 0));
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), true);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true);
 
-    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), policyholder);
 
-    assertEq(mpPolicy.hasRole(user, uint8(Roles.TestRole1)), false);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false);
   }
 
-  function test_RevertIf_NotExpiredYet(address user, uint64 expiration) public {
-    vm.assume(user != address(0));
+  function test_RevertIf_NotExpiredYet(address policyholder, uint64 expiration) public {
+    vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
     vm.startPrank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, expiration);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
-    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), user);
+    mpPolicy.revokeExpiredRole(uint8(Roles.TestRole1), policyholder);
   }
 }
 
@@ -397,33 +397,33 @@ contract RevokePolicy is LlamaPolicyTest {
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpPolicy.revokePolicy(makeAddr("user"));
+    mpPolicy.revokePolicy(makeAddr("policyholder"));
   }
 
-  function test_RevokesPolicy(address user) public {
-    vm.assume(user != address(0));
-    vm.assume(mpPolicy.balanceOf(user) == 0);
+  function test_RevokesPolicy(address policyholder) public {
+    vm.assume(policyholder != address(0));
+    vm.assume(mpPolicy.balanceOf(policyholder) == 0);
 
     vm.startPrank(address(mpCore));
 
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), user, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    assertEq(mpPolicy.balanceOf(user), 1);
+    assertEq(mpPolicy.balanceOf(policyholder), 1);
 
     vm.expectEmit();
-    emit Transfer(user, address(0), uint256(uint160(user)));
+    emit Transfer(policyholder, address(0), uint256(uint160(policyholder)));
 
-    mpPolicy.revokePolicy(user);
+    mpPolicy.revokePolicy(policyholder);
 
-    assertEq(mpPolicy.balanceOf(user), 0);
+    assertEq(mpPolicy.balanceOf(policyholder), 0);
   }
 
-  function test_RevertIf_PolicyDoesNotExist(address user) public {
-    vm.assume(user != address(0));
-    vm.assume(mpPolicy.balanceOf(user) == 0);
-    vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.UserDoesNotHoldPolicy.selector, user));
+  function test_RevertIf_PolicyDoesNotExist(address policyholder) public {
+    vm.assume(policyholder != address(0));
+    vm.assume(mpPolicy.balanceOf(policyholder) == 0);
+    vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.UserDoesNotHoldPolicy.selector, policyholder));
     vm.prank(address(mpCore));
-    mpPolicy.revokePolicy(user);
+    mpPolicy.revokePolicy(policyholder);
   }
 }
 
@@ -664,7 +664,7 @@ contract GetSupply is LlamaPolicyTest {
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 2);
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 2);
 
-    // Revoking all roles from the user should only decrease supply by 1.
+    // Revoking all roles from the policyholder should only decrease supply by 1.
     vm.warp(140);
     mpPolicy.revokePolicy(newRoleHolder, Solarray.uint8s(uint8(Roles.TestRole1), uint8(Roles.TestRole2)));
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
@@ -845,7 +845,7 @@ contract TokenURI is LlamaPolicyTest {
     string[17] memory parts;
 
     parts[0] =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><g clip-path="url(#a)"><rect width="390" height="500" fill="#0B101A" rx="13.393" /><mask id="b" width="364" height="305" x="4" y="30" maskUnits="userSpaceOnUse" style="mask-type:alpha"><ellipse cx="186.475" cy="182.744" fill="#8000FF" rx="196.994" ry="131.329" transform="rotate(-31.49 186.475 182.744)" /></mask><g mask="url(#b)"><g filter="url(#c)"><ellipse cx="237.625" cy="248.968" fill="#6A45EC" rx="140.048" ry="59.062" transform="rotate(-31.49 237.625 248.968)" /></g><g filter="url(#d)"><ellipse cx="286.654" cy="297.122" fill="';
+      '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="500" fill="none"><g clip-path="url(#a)"><rect width="390" height="500" fill="#0B101A" rx="13.393" /><mask id="b" width="364" height="305" x="4" y="30" maskUnits="policyholderSpaceOnUse" style="mask-type:alpha"><ellipse cx="186.475" cy="182.744" fill="#8000FF" rx="196.994" ry="131.329" transform="rotate(-31.49 186.475 182.744)" /></mask><g mask="url(#b)"><g filter="url(#c)"><ellipse cx="237.625" cy="248.968" fill="#6A45EC" rx="140.048" ry="59.062" transform="rotate(-31.49 237.625 248.968)" /></g><g filter="url(#d)"><ellipse cx="286.654" cy="297.122" fill="';
 
     parts[1] = color;
 
@@ -878,7 +878,7 @@ contract TokenURI is LlamaPolicyTest {
     parts[13] = color;
 
     parts[14] =
-      '" d="M36.08 53.84h1.696l3.52-10.88h-1.632l-2.704 9.087h-.064l-2.704-9.088H32.56l3.52 10.88Zm7.891 0h7.216v-1.36h-5.696v-3.505h4.96v-1.36h-4.96V44.32h5.696v-1.36h-7.216v10.88Zm13.609-4.593 2.544 4.592h1.744L59.18 49.2c.848-.096 1.392-.4 1.808-.816.56-.56.784-1.344.784-2.304 0-1.008-.24-1.808-.816-2.336-.576-.528-1.472-.784-2.592-.784h-4.096v10.88h1.52v-4.592h1.792Zm-1.792-1.296V44.32h3.136c.768 0 1.248.448 1.248 1.184v1.2c0 .672-.448 1.248-1.248 1.248h-3.136Zm7.78-3.632h3.249v9.52h1.52v-9.52h3.248v-1.36h-8.016v1.36Zm10.464 9.52h7.216v-1.36h-5.696v-3.504h4.96v-1.36h-4.96V44.32h5.696v-1.36h-7.216v10.88Zm9.192 0h1.68l2.592-4.256 2.56 4.256h1.696l-3.44-5.584 3.312-5.296H89.96l-2.464 4.016-2.416-4.016h-1.664l3.28 5.296-3.472 5.584Z"/><path fill="#fff" d="M341 127.067a11.433 11.433 0 0 0 8.066-8.067 11.436 11.436 0 0 0 8.067 8.067 11.433 11.433 0 0 0-8.067 8.066 11.43 11.43 0 0 0-8.066-8.066Z" /><path stroke="#fff" stroke-width="1.5" d="M349.036 248.018V140.875" /><circle cx="349.036" cy="259.178" r="4.018" fill="#fff" /><path stroke="#fff" stroke-width="1.5" d="M349.036 292.214v-21.429" /></g><filter id="c" width="514.606" height="445.5" x="-19.678" y="26.218" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><filter id="d" width="514.606" height="445.5" x="29.352" y="74.373" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><filter id="e" width="514.606" height="445.5" x="-19.678" y="26.219" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><radialGradient id="f" cx="0" cy="0" r="1" gradientTransform="matrix(23.59563 32 -33.15047 24.44394 98.506 137.893)" gradientUnits="userSpaceOnUse"> <stop stop-color="#0B101A" /><stop offset=".609" stop-color="';
+      '" d="M36.08 53.84h1.696l3.52-10.88h-1.632l-2.704 9.087h-.064l-2.704-9.088H32.56l3.52 10.88Zm7.891 0h7.216v-1.36h-5.696v-3.505h4.96v-1.36h-4.96V44.32h5.696v-1.36h-7.216v10.88Zm13.609-4.593 2.544 4.592h1.744L59.18 49.2c.848-.096 1.392-.4 1.808-.816.56-.56.784-1.344.784-2.304 0-1.008-.24-1.808-.816-2.336-.576-.528-1.472-.784-2.592-.784h-4.096v10.88h1.52v-4.592h1.792Zm-1.792-1.296V44.32h3.136c.768 0 1.248.448 1.248 1.184v1.2c0 .672-.448 1.248-1.248 1.248h-3.136Zm7.78-3.632h3.249v9.52h1.52v-9.52h3.248v-1.36h-8.016v1.36Zm10.464 9.52h7.216v-1.36h-5.696v-3.504h4.96v-1.36h-4.96V44.32h5.696v-1.36h-7.216v10.88Zm9.192 0h1.68l2.592-4.256 2.56 4.256h1.696l-3.44-5.584 3.312-5.296H89.96l-2.464 4.016-2.416-4.016h-1.664l3.28 5.296-3.472 5.584Z"/><path fill="#fff" d="M341 127.067a11.433 11.433 0 0 0 8.066-8.067 11.436 11.436 0 0 0 8.067 8.067 11.433 11.433 0 0 0-8.067 8.066 11.43 11.43 0 0 0-8.066-8.066Z" /><path stroke="#fff" stroke-width="1.5" d="M349.036 248.018V140.875" /><circle cx="349.036" cy="259.178" r="4.018" fill="#fff" /><path stroke="#fff" stroke-width="1.5" d="M349.036 292.214v-21.429" /></g><filter id="c" width="514.606" height="445.5" x="-19.678" y="26.218" color-interpolation-filters="sRGB" filterUnits="policyholderSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><filter id="d" width="514.606" height="445.5" x="29.352" y="74.373" color-interpolation-filters="sRGB" filterUnits="policyholderSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><filter id="e" width="514.606" height="445.5" x="-19.678" y="26.219" color-interpolation-filters="sRGB" filterUnits="policyholderSpaceOnUse"> <feFlood flood-opacity="0" result="BackgroundImageFix" /><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" /><feGaussianBlur result="effect1_foregroundBlur_123_5" stdDeviation="66.964" /></filter><radialGradient id="f" cx="0" cy="0" r="1" gradientTransform="matrix(23.59563 32 -33.15047 24.44394 98.506 137.893)" gradientUnits="policyholderSpaceOnUse"> <stop stop-color="#0B101A" /><stop offset=".609" stop-color="';
 
     parts[15] = color;
 
@@ -919,7 +919,7 @@ contract IsRoleExpired is LlamaPolicyTest {
 
   function test_ReturnsFalseIfNoRole() public {
     address randomPolicyholder = makeAddr("randomPolicyholder");
-    // Make sure user has no role, in and in that case expired should be false.
+    // Make sure policyholder has no role, in and in that case expired should be false.
     assertEq(mpPolicy.getQuantity(randomPolicyholder, uint8(Roles.TestRole1)), 0);
     assertFalse(mpPolicy.isRoleExpired(randomPolicyholder, uint8(Roles.TestRole1)));
   }
