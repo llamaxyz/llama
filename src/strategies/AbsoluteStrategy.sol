@@ -136,7 +136,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
+  function validateActionCreation(uint256 actionId) external view returns (bool, bytes32) {
     uint256 approvalPolicySupply = policy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) return (false, "No approval supply");
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsQuantitySum(disapprovalRole);
@@ -155,9 +155,10 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
       }
 
       uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(action.creator, disapprovalRole);
-      if (minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty) {
-        return (false, "Not enough disapproval quantity");
-      }
+      if (
+        minDisapprovals != type(uint256).max
+          && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
+      ) return (false, "Not enough disapproval quantity");
     }
 
     return (true, "");
