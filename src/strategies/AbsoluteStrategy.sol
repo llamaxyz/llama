@@ -80,12 +80,6 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
-  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
-  mapping(uint256 => uint256) public actionApprovalSupply;
-
-  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
-  mapping(uint256 => uint256) public actionDisapprovalSupply;
-
   // =============================
   // ======== Constructor ========
   // =============================
@@ -156,14 +150,16 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
       // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
       uint256 actionCreatorApprovalRoleQty = policy.getQuantity(action.creator, approvalRole);
-      approvalPolicySupply -= actionCreatorApprovalRoleQty;
+      if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) {
+        return (false, "Not enough approval quantity");
+      }
+
       uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(action.creator, disapprovalRole);
-      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
+      if (minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty) {
+        return (false, "Not enough disapproval quantity");
+      }
     }
 
-    // Save off the supplies to use for checking quorum.
-    actionApprovalSupply[actionId] = approvalPolicySupply;
-    actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
     return (true, "");
   }
 
@@ -188,7 +184,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
     Action memory action = llamaCore.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
-    if (minDisapprovals > actionDisapprovalSupply[actionId]) return (false, "Disapproval disabled");
+    if (minDisapprovals == type(uint256).max) return (false, "Disapproval disabled");
     return (true, "");
   }
 

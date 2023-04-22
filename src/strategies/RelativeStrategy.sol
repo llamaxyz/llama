@@ -151,14 +151,10 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
     Action memory action = llamaCore.getAction(actionId);
     unchecked {
-      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
-      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
-      // the action creator without overflow, since a policyholder can never have a quantity greater than
-      // the total supply.
-      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(action.creator, approvalRole);
-      approvalPolicySupply -= actionCreatorApprovalRoleQty;
-      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(action.creator, disapprovalRole);
-      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
+      // Safety: We check the supply of the role above, and this supply is inclusive of the action creator. Therefore we
+      // can reduce the total supply by 1 without underflow, since the supply is at least 1
+      if (policy.hasRole(action.creator, approvalRole)) approvalPolicySupply -= 1;
+      if (policy.hasRole(action.creator, disapprovalRole)) disapprovalPolicySupply -= 1;
     }
 
     // Save off the supplies to use for checking quorum.
