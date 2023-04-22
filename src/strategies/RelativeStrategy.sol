@@ -12,7 +12,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Relative Llama Strategy
-/// @author Llama (devsdosomething@llama.xyz)
+/// @author Llama (devsdosomething@llamaCore.xyz)
 /// @notice This is the default llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
@@ -31,7 +31,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   event ForceApprovalRoleAdded(uint8 role);
   event ForceDisapprovalRoleAdded(uint8 role);
-  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
+  event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -40,7 +40,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- Interface Requirements --------
 
   /// @inheritdoc ILlamaStrategy
-  LlamaCore public llama;
+  LlamaCore public llamaCore;
 
   /// @inheritdoc ILlamaStrategy
   LlamaPolicy public policy;
@@ -103,8 +103,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
     RelativeStrategyConfig memory strategyConfig = abi.decode(config, (RelativeStrategyConfig));
-    llama = LlamaCore(msg.sender);
-    policy = llama.policy();
+    llamaCore = LlamaCore(msg.sender);
+    policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
     expirationPeriod = strategyConfig.expirationPeriod;
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
@@ -136,7 +136,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
       emit ForceDisapprovalRoleAdded(role);
     }
 
-    emit StrategyCreated(llama, policy);
+    emit StrategyCreated(llamaCore, policy);
   }
 
   // -------- At Action Creation --------
@@ -149,7 +149,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     unchecked {
       // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
@@ -171,7 +171,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot approve");
     return (true, "");
   }
@@ -186,7 +186,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
     return (true, "");
@@ -220,14 +220,14 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     //        b. The action is Queued, but the number of disapprovals is >= the disapproval threshold.
 
     // Check 1.
-    ActionState state = llama.getActionState(actionId);
+    ActionState state = llamaCore.getActionState(actionId);
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
     ) return false;
 
     // Check 2a.
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     if (caller == action.creator) return true;
 
     // Check 2b.
@@ -243,13 +243,13 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isActionPassed(uint256 actionId) public view returns (bool) {
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
@@ -259,7 +259,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @notice Returns the timestamp at which the approval period ends.
   function approvalEndTime(uint256 actionId) public view returns (uint256) {
-    Action memory action = llama.getAction(actionId);
+    Action memory action = llamaCore.getAction(actionId);
     return action.creationTime + approvalPeriod;
   }
 

@@ -64,7 +64,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     policy.setLlama(address(llama));
 
     unchecked {
-      emit LlamaCreated(llamaCount++, name, address(llama), address(policy), block.chainid);
+      emit LlamaInstanceCreated(llamaCount++, name, address(llama), address(policy), block.chainid);
     }
   }
 

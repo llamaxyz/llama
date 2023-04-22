@@ -341,7 +341,7 @@ contract Constructor is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(address(newStrategy.llama()), address(mpCore));
+    assertEq(address(newStrategy.llamaCore()), address(mpCore));
   }
 
   function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {

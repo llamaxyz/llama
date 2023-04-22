@@ -5261,7 +5261,7 @@
       },
       {
         "type": "node",
-        "name": "LlamaCreated(llamaCount,name,address(llama),address(policy),block.chainid)",
+        "name": "LlamaInstanceCreated(llamaCount,name,address(llama),address(policy),block.chainid)",
         "source_mapping": {
           "start": 8273,
           "length": 86,
@@ -5325,8 +5325,8 @@
         "additional_fields": { "underlying_type": "event" }
       }
     ],
-    "description": "Reentrancy in LlamaFactory._deploy(string,ILlamaStrategy,bytes[],string[],RoleDescription[],RoleHolderData[],RolePermissionData[]) (src/LlamaFactory.sol#181-204):\n\tExternal calls:\n\t- policy.initialize(name,initialRoleDescriptions,initialRoleHolders,initialRolePermissions) (src/LlamaFactory.sol#192)\n\t- llama.initialize(name,policy,strategyLogic,LLAMA_ACCOUNT_LOGIC,initialStrategies,initialAccounts) (src/LlamaFactory.sol#195)\n\t- policy.setLlama(address(llama)) (src/LlamaFactory.sol#197)\n\tEvent emitted after the call(s):\n\t- LlamaCreated(llamaCount,name,address(llama),address(policy),block.chainid) (src/LlamaFactory.sol#199)\n",
-    "markdown": "Reentrancy in [LlamaFactory._deploy(string,ILlamaStrategy,bytes[],string[],RoleDescription[],RoleHolderData[],RolePermissionData[])](src/LlamaFactory.sol#L181-L204):\n\tExternal calls:\n\t- [policy.initialize(name,initialRoleDescriptions,initialRoleHolders,initialRolePermissions)](src/LlamaFactory.sol#L192)\n\t- [llama.initialize(name,policy,strategyLogic,LLAMA_ACCOUNT_LOGIC,initialStrategies,initialAccounts)](src/LlamaFactory.sol#L195)\n\t- [policy.setLlama(address(llama))](src/LlamaFactory.sol#L197)\n\tEvent emitted after the call(s):\n\t- [LlamaCreated(llamaCount,name,address(llama),address(policy),block.chainid)](src/LlamaFactory.sol#L199)\n",
+    "description": "Reentrancy in LlamaFactory._deploy(string,ILlamaStrategy,bytes[],string[],RoleDescription[],RoleHolderData[],RolePermissionData[]) (src/LlamaFactory.sol#181-204):\n\tExternal calls:\n\t- policy.initialize(name,initialRoleDescriptions,initialRoleHolders,initialRolePermissions) (src/LlamaFactory.sol#192)\n\t- llama.initialize(name,policy,strategyLogic,LLAMA_ACCOUNT_LOGIC,initialStrategies,initialAccounts) (src/LlamaFactory.sol#195)\n\t- policy.setLlama(address(llama)) (src/LlamaFactory.sol#197)\n\tEvent emitted after the call(s):\n\t- LlamaInstanceCreated(llamaCount,name,address(llama),address(policy),block.chainid) (src/LlamaFactory.sol#199)\n",
+    "markdown": "Reentrancy in [LlamaFactory._deploy(string,ILlamaStrategy,bytes[],string[],RoleDescription[],RoleHolderData[],RolePermissionData[])](src/LlamaFactory.sol#L181-L204):\n\tExternal calls:\n\t- [policy.initialize(name,initialRoleDescriptions,initialRoleHolders,initialRolePermissions)](src/LlamaFactory.sol#L192)\n\t- [llama.initialize(name,policy,strategyLogic,LLAMA_ACCOUNT_LOGIC,initialStrategies,initialAccounts)](src/LlamaFactory.sol#L195)\n\t- [policy.setLlama(address(llama))](src/LlamaFactory.sol#L197)\n\tEvent emitted after the call(s):\n\t- [LlamaInstanceCreated(llamaCount,name,address(llama),address(policy),block.chainid)](src/LlamaFactory.sol#L199)\n",
     "first_markdown_element": "src/LlamaFactory.sol#L181-L204",
     "id": "da82fb4e067be1ce28229b228e53af14ae49172eeb887097384b411fb034f607",
     "check": "reentrancy-events",

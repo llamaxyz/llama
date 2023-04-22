@@ -13,7 +13,7 @@ interface ILlamaStrategy {
   // These are not strictly required by the core, but are useful for inspecting a strategy contract.
 
   /// @notice Returns the address of the Ll contract that this strategy is registered to.
-  function llama() external view returns (LlamaCore);
+  function llamaCore() external view returns (LlamaCore);
 
   /// @notice Returns the name of the policy contract that this strategy is registered to.
   function policy() external view returns (LlamaPolicy);

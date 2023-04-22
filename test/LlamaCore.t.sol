@@ -277,8 +277,8 @@ contract Initialize is LlamaCoreTest {
       uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(strategyAddresses[0].llama()), address(uninitializedLlama));
-    assertEq(address(strategyAddresses[1].llama()), address(uninitializedLlama));
+    assertEq(address(strategyAddresses[0].llamaCore()), address(uninitializedLlama));
+    assertEq(address(strategyAddresses[1].llamaCore()), address(uninitializedLlama));
   }
 
   function test_StrategiesHavePolicyAddressInStorage() public {

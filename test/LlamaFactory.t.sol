@@ -20,7 +20,9 @@ import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
 contract LlamaFactoryTest is LlamaTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
 
-  event LlamaCreated(uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId);
+  event LlamaInstanceCreated(
+    uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId
+  );
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
   event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
@@ -249,11 +251,11 @@ contract Deploy is LlamaFactoryTest {
     assertEq(address(_llama.llamaAccountLogic()), address(accountLogic));
   }
 
-  function test_EmitsLlamaCreatedEvent() public {
+  function test_EmitsLlamaInstanceCreatedEvent() public {
     vm.expectEmit();
     LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(coreLogic), address(factory));
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(policyLogic), address(factory));
-    emit LlamaCreated(2, "NewProject", address(computedLlama), address(computedPolicy), block.chainid);
+    emit LlamaInstanceCreated(2, "NewProject", address(computedLlama), address(computedPolicy), block.chainid);
     deployLlama();
   }
 

@@ -34,7 +34,9 @@ contract LlamaFactory {
   // ========================
 
   /// @dev Emitted when a new Llama instance is created.
-  event LlamaCreated(uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId);
+  event LlamaInstanceCreated(
+    uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId
+  );
 
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by ll.
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
@@ -193,7 +195,7 @@ contract LlamaFactory {
 
     policy.setLlama(address(llama));
 
-    emit LlamaCreated(llamaCount, name, address(llama), address(policy), block.chainid);
+    emit LlamaInstanceCreated(llamaCount, name, address(llama), address(policy), block.chainid);
 
     unchecked {
       ++llamaCount;
