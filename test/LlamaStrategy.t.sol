@@ -1095,7 +1095,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     );
   }
 
-  function test_AbsoluteStrategy_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
+  function testFuzz_AbsoluteStrategy_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     ILlamaStrategy testStrategy =
       createStrategyWithDisproportionateQuantity(false, type(uint256).max, _roleQuantity, _otherRoleHolders);
 
@@ -1114,5 +1114,37 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     vm.expectRevert(bytes.concat(LlamaCore.ProhibitedByStrategy.selector, bytes32("Disapproval disabled")));
     mpCore.castDisapproval(actionId, uint8(Roles.TestRole1));
+  }
+
+  function test_DoNotChangeSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+
+    ILlamaStrategy testStrategy = deployTestStrategy();
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    uint256 actionId = createAction(testStrategy);
+
+    assertEq(RelativeStrategy(address(testStrategy)).actionApprovalSupply(actionId), _numberOfPolicies);
+    assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionId), _numberOfPolicies);
+  }
+
+  function test_ChangeSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _creatorQuantity = bound(_creatorQuantity, 1, 1000);
+
+    ILlamaStrategy testStrategy = deployTestStrategy();
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint128(_creatorQuantity), type(uint64).max);
+
+    uint256 supplyWithoutCreator = mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)) - 1;
+
+    uint256 actionId = createAction(testStrategy);
+
+    assertEq(RelativeStrategy(address(testStrategy)).actionApprovalSupply(actionId), supplyWithoutCreator);
+    assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionId), supplyWithoutCreator);
   }
 }
