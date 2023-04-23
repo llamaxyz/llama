@@ -12,7 +12,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Absolute Llama Strategy
-/// @author Llama (devsdosomething@llamaCore.xyz)
+/// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,

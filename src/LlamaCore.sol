@@ -603,7 +603,6 @@ contract LlamaCore is Initializable {
     uint256 strategyLength = strategies.length;
     for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
-
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;

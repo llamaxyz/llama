@@ -44,9 +44,9 @@ contract BaseHandler is CommonBase, StdCheats, StdUtils {
     _handler_increaseTimestampBy(block.timestamp);
   }
 
-  // =================================================
+  // =========================================================
   // ======== Methods and Modifiers for Policyholders ========
-  // =================================================
+  // =========================================================
 
   // -------- Metrics --------
   // Used to record the number of times each method on a handler contract is called.
