@@ -105,6 +105,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) {
       revert InvalidMinApprovals(strategyConfig.minApprovals);
     }
+
     minApprovals = strategyConfig.minApprovals;
     minDisapprovals = strategyConfig.minDisapprovals;
 
@@ -184,8 +185,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
     Action memory action = llamaCore.getAction(actionId);
-    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
     if (minDisapprovals == type(uint256).max) return (false, "Disapproval disabled");
+    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
     return (true, "");
   }
 
