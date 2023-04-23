@@ -536,6 +536,7 @@ contract IsActionPassed is LlamaStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
+    uint256 disapprovalThreshold = _numberOfPolicies > 0 ? _numberOfPolicies - 1 : 0;
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -548,7 +549,7 @@ contract IsActionPassed is LlamaStrategyTest {
       1 days,
       true,
       _actionApprovals,
-      5,
+      disapprovalThreshold,
       new uint8[](0),
       new uint8[](0)
     );
@@ -585,6 +586,7 @@ contract IsActionPassed is LlamaStrategyTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
     uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
+    uint256 disapprovalThreshold = _numberOfPolicies > 0 ? _numberOfPolicies - 1 : 0;
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -597,7 +599,7 @@ contract IsActionPassed is LlamaStrategyTest {
       1 days,
       true,
       approvalThreshold,
-      5,
+      disapprovalThreshold,
       new uint8[](0),
       new uint8[](0)
     );
