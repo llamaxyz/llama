@@ -423,7 +423,7 @@ contract RevokePolicy is LlamaPolicyTest {
   function test_RevertIf_PolicyDoesNotExist(address policyholder) public {
     vm.assume(policyholder != address(0));
     vm.assume(mpPolicy.balanceOf(policyholder) == 0);
-    vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.UserDoesNotHoldPolicy.selector, policyholder));
+    vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.AddressDoesNotHoldPolicy.selector, policyholder));
     vm.prank(address(mpCore));
     mpPolicy.revokePolicy(policyholder);
   }

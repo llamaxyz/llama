@@ -115,7 +115,7 @@ contract LlamaCore is Initializable {
   /// without the optimizer so `forge coverage` can be used.
   mapping(uint256 => Action) internal actions;
 
-  /// @notice Mapping of actionIds to policyholders to approvals.
+  /// @notice Mapping of actionIds to policyholders to approvals. 
   mapping(uint256 => mapping(address => bool)) public approvals;
 
   /// @notice Mapping of action ids to policyholders to disapprovals.
@@ -603,7 +603,6 @@ contract LlamaCore is Initializable {
     uint256 strategyLength = strategies.length;
     for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
-
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;

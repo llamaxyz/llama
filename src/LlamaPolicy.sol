@@ -30,7 +30,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   error NonTransferableToken();
   error OnlyLlama();
   error RoleNotInitialized(uint8 role);
-  error UserDoesNotHoldPolicy(address user);
+  error AddressDoesNotHoldPolicy(address userAddress);
 
   modifier onlyLlama() {
     if (msg.sender != llamaCore) revert OnlyLlama();
@@ -173,7 +173,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.
   function revokePolicy(address policyholder) external onlyLlama {
-    if (balanceOf(policyholder) == 0) revert UserDoesNotHoldPolicy(policyholder);
+    if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
     // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
     // the last role is also revoked.
@@ -187,7 +187,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method only exists to ensure policies can still be revoked in the case where the
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address policyholder, uint8[] calldata roles) external onlyLlama {
-    if (balanceOf(policyholder) == 0) revert UserDoesNotHoldPolicy(policyholder);
+    if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
     for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
       if (roles[i] == 0) revert AllHoldersRole();
       _setRoleHolder(roles[i], policyholder, 0, 0);
