@@ -115,7 +115,7 @@ contract LlamaCore is Initializable {
   /// without the optimizer so `forge coverage` can be used.
   mapping(uint256 => Action) internal actions;
 
-  /// @notice Mapping of actionIds to policyholders to approvals. 
+  /// @notice Mapping of actionIds to policyholders to approvals.
   mapping(uint256 => mapping(address => bool)) public approvals;
 
   /// @notice Mapping of action ids to policyholders to disapprovals.
