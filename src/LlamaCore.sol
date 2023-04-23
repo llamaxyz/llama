@@ -484,6 +484,8 @@ contract LlamaCore is Initializable {
 
     if (action.minExecutionTime == 0) return ActionState.Approved;
 
+    if (action.strategy.isActionVetoed(actionId)) return ActionState.Failed;
+
     if (action.executed) return ActionState.Executed;
 
     if (action.strategy.isActionExpired(actionId)) return ActionState.Expired;
@@ -614,7 +616,7 @@ contract LlamaCore is Initializable {
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+      bytes32 salt = bytes32(keccak256(abi.encodePacked(accounts[i])));
       LlamaAccount account = LlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
       account.initialize(accounts[i]);
       emit AccountCreated(account, accounts[i]);

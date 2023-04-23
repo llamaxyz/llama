@@ -248,6 +248,12 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   }
 
   /// @inheritdoc ILlamaStrategy
+  function isActionVetoed(uint256 actionId) public view returns (bool) {
+    Action memory action = llamaCore.getAction(actionId);
+    return action.totalDisapprovals >= minDisapprovals;
+  }
+
+  /// @inheritdoc ILlamaStrategy
   function isActionExpired(uint256 actionId) external view returns (bool) {
     Action memory action = llamaCore.getAction(actionId);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
