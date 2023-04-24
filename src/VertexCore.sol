@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
@@ -277,7 +275,6 @@ contract VertexCore is Initializable {
     // Execute action.
     bool success;
     bytes memory result;
-    console2.logBytes(action.data);
 
     if (authorizedScripts[action.target]) {
       (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
