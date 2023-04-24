@@ -904,7 +904,7 @@ contract GetMinimumAmountNeeded is LlamaStrategyTest {
   }
 }
 
-contract isActionVetoed is LlamaStrategyTest {
+contract IsActionVetoed is LlamaStrategyTest {
   function testFuzz_AbsoluteStrategy_ReturnsTrueForDisapprovedActions(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
