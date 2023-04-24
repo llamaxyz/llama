@@ -148,15 +148,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
 
-    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    Action memory action = llamaCore.getAction(actionId);
-    unchecked {
-      // Safety: We check the supply of the role above, and this supply is inclusive of the action creator. Therefore we
-      // can reduce the total supply by 1 without underflow, since the supply is at least 1
-      if (policy.hasRole(action.creator, approvalRole)) approvalPolicySupply -= 1;
-      if (policy.hasRole(action.creator, disapprovalRole)) disapprovalPolicySupply -= 1;
-    }
-
     // Save off the supplies to use for checking quorum.
     actionApprovalSupply[actionId] = approvalPolicySupply;
     actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
@@ -166,9 +157,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = llamaCore.getAction(actionId);
-    if (action.creator == policyholder) return (false, "Action creator cannot approve");
+  function isApprovalEnabled(uint256 /* actionId */, address /* policyholder */) external pure returns (bool, bytes32) {
     return (true, "");
   }
 
@@ -181,9 +170,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32) {
-    Action memory action = llamaCore.getAction(actionId);
-    if (action.creator == policyholder) return (false, "Action creator cannot disapprove");
+  function isDisapprovalEnabled(uint256 /* actionId */, address /* policyholder */) external view returns (bool, bytes32) {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
     return (true, "");
   }

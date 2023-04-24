@@ -1116,7 +1116,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     mpCore.castDisapproval(actionId, uint8(Roles.TestRole1));
   }
 
-  function test_DoNotChangeSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
+  function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 
     ILlamaStrategy testStrategy = deployTestStrategy();
@@ -1129,7 +1129,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionId), _numberOfPolicies);
   }
 
-  function test_ChangeSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
+  function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
 
@@ -1140,11 +1140,11 @@ contract ValidateActionCreation is LlamaStrategyTest {
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint128(_creatorQuantity), type(uint64).max);
 
-    uint256 supplyWithoutCreator = mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)) - 1;
+    uint256 supply = mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1));
 
     uint256 actionId = createAction(testStrategy);
 
-    assertEq(RelativeStrategy(address(testStrategy)).actionApprovalSupply(actionId), supplyWithoutCreator);
-    assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionId), supplyWithoutCreator);
+    assertEq(RelativeStrategy(address(testStrategy)).actionApprovalSupply(actionId), supply);
+    assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionId), supply);
   }
 }
