@@ -208,10 +208,7 @@ contract VertexStrategyTest is VertexTestSetup {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true),
-      0,
-      address(0),
-      address(0)
+      abi.encode(true)
     );
 
     vm.warp(block.timestamp + 1);

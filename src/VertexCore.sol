@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
@@ -11,8 +13,6 @@ import {Action, PermissionData} from "src/lib/Structs.sol";
 import {VertexAccount} from "src/VertexAccount.sol";
 import {VertexFactory} from "src/VertexFactory.sol";
 import {VertexPolicy} from "src/VertexPolicy.sol";
-
-import {VertexCrosschainRelayer} from "src/crosschain/VertexCrosschainRelayer.sol";
 
 /// @title Core of a Vertex instance
 /// @author Llama (devsdosomething@llama.xyz)
@@ -186,14 +186,9 @@ contract VertexCore is Initializable {
     address target,
     uint256 value,
     bytes4 selector,
-    bytes calldata data,
-    uint32 destinationChain,
-    address destinationRecipient,
-    address relayer
+    bytes calldata data
   ) external returns (uint256 actionId) {
-    actionId = _createAction(
-      msg.sender, role, strategy, target, value, selector, data, destinationChain, destinationRecipient, relayer
-    );
+    actionId = _createAction(msg.sender, role, strategy, target, value, selector, data);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -246,7 +241,7 @@ contract VertexCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != user) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, selector, data, 0, address(0), address(0));
+    actionId = _createAction(signer, role, strategy, target, value, selector, data);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -282,12 +277,9 @@ contract VertexCore is Initializable {
     // Execute action.
     bool success;
     bytes memory result;
+    console2.logBytes(action.data);
 
-    if (action.destinationChain != 0 && action.destinationRecipient != address(0)) {
-      address payable addr = payable(action.relayer);
-      VertexCrosschainRelayer(addr).relayCalls{value: action.value}(actionId, action);
-      success = true;
-    } else if (authorizedScripts[action.target]) {
+    if (authorizedScripts[action.target]) {
       (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
     } else {
       (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
@@ -501,10 +493,7 @@ contract VertexCore is Initializable {
     address target,
     uint256 value,
     bytes4 selector,
-    bytes calldata data,
-    uint32 destinationChain,
-    address destinationRecipient,
-    address relayer
+    bytes calldata data
   ) internal returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
@@ -531,9 +520,6 @@ contract VertexCore is Initializable {
     newAction.selector = selector;
     newAction.data = data;
     newAction.creationTime = block.timestamp;
-    newAction.destinationChain = destinationChain;
-    newAction.destinationRecipient = destinationRecipient;
-    newAction.relayer = relayer;
 
     // Safety: Can never overflow a uint256 by incrementing.
     actionsCount = _uncheckedIncrement(actionsCount);
@@ -543,17 +529,17 @@ contract VertexCore is Initializable {
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
-    // IActionGuard guard = actionGuard[target][selector];
-    // if (guard != IActionGuard(address(0))) {
-    //   (allowed, reason) = guard.validateActionCreation(actionId);
-    //   if (!allowed) revert ProhibitedByActionGuard(reason);
-    // }
+    IActionGuard guard = actionGuard[target][selector];
+    if (guard != IActionGuard(address(0))) {
+      (allowed, reason) = guard.validateActionCreation(actionId);
+      if (!allowed) revert ProhibitedByActionGuard(reason);
+    }
 
     unchecked {
       ++actionsCount;
     }
 
-    // emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
+    emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
   }
 
   function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {

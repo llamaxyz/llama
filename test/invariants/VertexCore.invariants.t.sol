@@ -152,9 +152,7 @@ contract VertexCoreHandler is BaseHandler {
 
     // We can now execute the action.
     vm.prank(actionCreatorAaron);
-    uint256 actionId = VERTEX_CORE.createAction(
-      uint8(Roles.ActionCreator), strategy, target, value, selector, data, 0, address(0), address(0)
-    );
+    uint256 actionId = VERTEX_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
     actionsCounts.push(actionId);
   }
 
@@ -336,10 +334,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
       address(mockProtocol),
       0, // value
       PAUSE_SELECTOR,
-      abi.encode(true),
-      0,
-      address(0),
-      address(0)
+      abi.encode(true)
     );
     vm.warp(block.timestamp + 1);
   }

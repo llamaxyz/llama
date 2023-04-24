@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {IInterchainGasPaymaster} from "./interfaces/IInterchainGasPaymaster.sol";
 import {IMailbox} from "./interfaces/IMailbox.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
@@ -13,14 +15,16 @@ contract VertexCrosschainRelayer {
 
   uint256 internal nonce;
 
-  function relayCalls(uint256 actionId, Action calldata action) external payable returns (uint256) {
-    bytes32 recipient = TypeCasts.addressToBytes32(action.destinationRecipient);
-    bytes32 messageId =
-      mailbox.dispatch(action.destinationChain, recipient, abi.encode(++nonce, msg.sender, actionId, action));
+  function relayCalls(bytes calldata data) external payable returns (uint256) {
+    console2.logBytes(data);
+    (uint32 destinationChain, address destinationRecipient, bytes memory executionData) =
+      abi.decode(data, (uint32, address, bytes));
+    bytes32 recipient = TypeCasts.addressToBytes32(destinationRecipient);
+    bytes32 messageId = mailbox.dispatch(destinationChain, recipient, abi.encode(++nonce, msg.sender, executionData));
 
     igp.payForGas{value: msg.value}(
       messageId,
-      action.destinationChain,
+      destinationChain,
       100_000, // 100k gas to use in the recipient's handle function
       address(this)
     );
@@ -28,7 +32,9 @@ contract VertexCrosschainRelayer {
     return nonce;
   }
 
-  fallback() external payable {}
+  fallback() external payable {
+    console2.log("here");
+  }
 
   receive() external payable {}
 }

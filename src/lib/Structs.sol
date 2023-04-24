@@ -39,9 +39,6 @@ struct Action {
   uint256 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
   uint256 totalApprovals; // The total quantity of policyholder approvals.
   uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
-  uint32 destinationChain;
-  address destinationRecipient;
-  address relayer;
 }
 
 struct RelativeStrategyConfig {
