@@ -190,8 +190,8 @@ contract LlamaFactory {
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-    llama.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
     policy.setLlama(address(llamaCore));
 
