@@ -133,8 +133,8 @@ contract VertexTestSetup is DeployVertex, CreateAction, Test {
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
     // We use input from the deploy scripts to bootstrap our test suite.
-    deployScriptInput = DeployUtils.readScriptInput('deployVertex.json');
-    createActionScriptInput = DeployUtils.readScriptInput('createAction.json');
+    deployScriptInput = DeployUtils.readScriptInput("deployVertex.json");
+    createActionScriptInput = DeployUtils.readScriptInput("createAction.json");
 
     DeployVertex.run();
 
@@ -142,7 +142,7 @@ contract VertexTestSetup is DeployVertex, CreateAction, Test {
     rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
-    string[] memory mpAccounts = createActionScriptInput.readStringArray('.newAccountNames');
+    string[] memory mpAccounts = createActionScriptInput.readStringArray(".newAccountNames");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     Strategy[] memory initRootStrategies = defaultStrategies();
     Strategy[] memory initVertexInstanceStrategies = initVertexInstanceStrategies();
@@ -196,8 +196,10 @@ contract VertexTestSetup is DeployVertex, CreateAction, Test {
     // Set strategy and account addresses.
     rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), initRootStrategies[0], address(rootCore));
     rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), initRootStrategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[1], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[0], address(mpCore));
+    mpStrategy1 =
+      lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[1], address(mpCore));
+    mpStrategy2 =
+      lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[0], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));

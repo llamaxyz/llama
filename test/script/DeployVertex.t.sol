@@ -139,11 +139,13 @@ contract Run is DeployVertexTest {
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
 
-    bytes32 permissionId = lens.computePermissionId(PermissionData(
-      address(factory), // target
-      VertexFactory.deploy.selector, // selector
-      secondStrategy // strategy
-    ));
+    bytes32 permissionId = lens.computePermissionId(
+      PermissionData(
+        address(factory), // target
+        VertexFactory.deploy.selector, // selector
+        secondStrategy // strategy
+      )
+    );
     assertTrue(rootPolicy.canCreateAction(actionCreatorRole, permissionId));
   }
 

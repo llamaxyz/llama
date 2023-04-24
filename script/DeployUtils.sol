@@ -69,10 +69,7 @@ library DeployUtils {
     }
   }
 
-  function readRoleDescriptions(string memory jsonInput)
-    internal
-    returns (RoleDescription[] memory roleDescriptions)
-  {
+  function readRoleDescriptions(string memory jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
     string[] memory descriptions = jsonInput.readStringArray(".initialRoleDescriptions");
     for (uint256 i; i < descriptions.length; i++) {
       require(bytes(descriptions[i]).length <= 32, "Role description is too long");

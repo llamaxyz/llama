@@ -79,32 +79,26 @@ contract Run is CreateActionTest {
       vars.initialRoleDescriptions,
       vars.initialRoleHolders,
       vars.initialRolePermissions
-    ) = abi.decode(action.data, (
-      string, // Name.
-      VertexStrategy,
-      VertexAccount,
-      Strategy[],
-      string[], // Account names.
-      RoleDescription[],
-      RoleHolderData[],
-      RolePermissionData[]
-    ));
+    ) = abi.decode(
+      action.data,
+      (
+        string, // Name.
+        VertexStrategy,
+        VertexAccount,
+        Strategy[],
+        string[], // Account names.
+        RoleDescription[],
+        RoleHolderData[],
+        RolePermissionData[]
+      )
+    );
     assertEq(vars.name, "Mock Protocol Vertex");
     assertEq(address(vars.strategyLogic), 0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496);
     assertEq(address(vars.accountLogic), 0xBb2180ebd78ce97360503434eD37fcf4a1Df61c3);
-    assertEq(
-      keccak256(abi.encodePacked(vars.initialAccounts[0])),
-      keccak256("MP Treasury")
-    );
-    assertEq(
-      keccak256(abi.encodePacked(vars.initialAccounts[1])),
-      keccak256("MP Grants")
-    );
+    assertEq(keccak256(abi.encodePacked(vars.initialAccounts[0])), keccak256("MP Treasury"));
+    assertEq(keccak256(abi.encodePacked(vars.initialAccounts[1])), keccak256("MP Grants"));
     // TODO assert against more action.data
-    assertEq(
-      uint8(rootVertex.getActionState(newActionId)),
-      uint8(ActionState.Active)
-    );
+    assertEq(uint8(rootVertex.getActionState(newActionId)), uint8(ActionState.Active));
   }
 
   function test_actionCanBeExecuted() public {
@@ -116,18 +110,12 @@ contract Run is CreateActionTest {
 
     uint256 deployActionId = 0;
 
-    assertEq(
-      uint8(rootVertex.getActionState(deployActionId)),
-      uint8(ActionState.Active)
-    );
+    assertEq(uint8(rootVertex.getActionState(deployActionId)), uint8(ActionState.Active));
 
     vm.prank(VERTEX_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
     rootVertex.castApproval(deployActionId, ACTION_CREATOR_ROLE_ID);
 
-    assertEq(
-      uint8(rootVertex.getActionState(deployActionId)),
-      uint8(ActionState.Approved)
-    );
+    assertEq(uint8(rootVertex.getActionState(deployActionId)), uint8(ActionState.Approved));
 
     rootVertex.queueAction(deployActionId);
 

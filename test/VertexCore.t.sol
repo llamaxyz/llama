@@ -204,10 +204,7 @@ contract Initialize is VertexCoreTest {
     );
 
     (vertex, policy) = modifiedFactory.deployWithoutInitialization(
-      "NewProject",
-      rootVertexRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0)
+      "NewProject", rootVertexRoleDescriptions(), roleHolders, new RolePermissionData[](0)
     );
   }
 
