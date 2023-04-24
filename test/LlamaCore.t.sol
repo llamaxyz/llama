@@ -132,8 +132,6 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    _disapproveAction(disapproverDave);
-
     vm.warp(block.timestamp + 5 days);
 
     _executeAction();
@@ -705,24 +703,6 @@ contract CancelAction is LlamaCoreTest {
     mpCore.cancelAction(0);
   }
 
-  function test_CancelIfDisapproved() public {
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
-
-    vm.warp(block.timestamp + 6 days);
-
-    assertEq(mpStrategy1.isActionPassed(0), true);
-    _queueAction();
-
-    _disapproveAction(disapproverDave);
-    _disapproveAction(disapproverDiane);
-    _disapproveAction(disapproverDrake);
-
-    vm.expectEmit();
-    emit ActionCanceled(0);
-    mpCore.cancelAction(0);
-  }
-
   function test_RevertIf_DisapprovalDoesNotReachQuorum() public {
     _approveAction(approverAdam);
     _approveAction(approverAlicia);
@@ -1145,16 +1125,6 @@ contract CastDisapproval is LlamaCoreTest {
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 
-  function test_RevertIf_DuplicateDisapproval() public {
-    actionId = _createApproveAndQueueAction();
-
-    _disapproveAction(disapproverDrake, actionId);
-
-    vm.expectRevert(LlamaCore.DuplicateCast.selector);
-    vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
-  }
-
   function test_RevertIf_InvalidPolicyholder() public {
     actionId = _createApproveAndQueueAction();
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
@@ -1165,6 +1135,20 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+  }
+
+  function test_FailsIfDisapproved() public {
+    actionId = _createApproveAndQueueAction();
+
+    vm.prank(disapproverDave);
+    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover)); // since the disapproval pct is 20%, one disapproval is
+      // all that is needed for the action to fail
+
+    ActionState state = mpCore.getActionState(actionId);
+    assertEq(uint8(state), uint8(ActionState.Failed));
+
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
+    mpCore.executeAction(actionId);
   }
 }
 
@@ -1254,6 +1238,25 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castDisapprovalBySig(actionId, (v + 1), r, s);
+  }
+
+  function test_FailsIfDisapproved() public {
+    uint256 actionId = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+
+    vm.expectEmit();
+    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+
+    castDisapprovalBySig(actionId, v, r, s);
+
+    assertEq(mpCore.getAction(actionId).totalDisapprovals, 1);
+
+    ActionState state = mpCore.getActionState(actionId);
+    assertEq(uint8(state), uint8(ActionState.Failed));
+
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
+    mpCore.executeAction(actionId);
   }
 }
 
@@ -1828,8 +1831,6 @@ contract GetActionState is LlamaCoreTest {
 
     assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
-
-    _disapproveAction(disapproverDave);
 
     vm.warp(block.timestamp + 5 days);
 
