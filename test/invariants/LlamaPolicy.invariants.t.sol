@@ -77,7 +77,7 @@ contract LlamaFactoryInvariants is LlamaCoreTest {
   // ======== Invariant Assertions ========
   // ======================================
 
-  // For a given permission ID and timestamp, the sum of that permission's quantity over all users
+  // For a given permission ID and timestamp, the sum of that permission's quantity over all policyholders
   // with that permission should equal the total supply of that permission ID.
   function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllPolicyholdersEqualsTotalSupply() public view {
     // TODO Update this for the new permissions scheme.
@@ -99,7 +99,7 @@ contract LlamaFactoryInvariants is LlamaCoreTest {
     //     require(
     //       sumOfPermissionsOverAllPolicyholders == checkpoints[j].quantity,
     //       string.concat(
-    //         "sum of permissions over all users should equal total supply: ",
+    //         "sum of permissions over all policyholders should equal total supply: ",
     //         "(permissionId, timestamp) =",
     //         "(",
     //         vm.toString(allPermissionIds[i]),
@@ -143,17 +143,17 @@ contract LlamaFactoryInvariants is LlamaCoreTest {
     // }
   }
 
-  // The policyId, i.e. the token ID, held by a given user should always match that user's address.
+  // The policyId, i.e. the token ID, held by a given policyholder should always match that policyholder's address.
   function assertInvariant_DeterministicPolicyIds() public view {
     address[] memory policyholders = handler.getActors();
     for (uint256 i = 0; i < policyholders.length; i++) {
       if (mpPolicy.balanceOf(policyholders[i]) == 0) continue;
       uint256 expectedTokenId = uint256(uint160(policyholders[i]));
-      require(mpPolicy.ownerOf(expectedTokenId) == policyholders[i], "policyId should match user address");
+      require(mpPolicy.ownerOf(expectedTokenId) == policyholders[i], "policyId should match policyholder address");
     }
   }
 
-  // A user should never have more than one policy NFT.
+  // A policyholder should never have more than one policy NFT.
   function assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT() public view {
     address[] memory policyholders = handler.getActors();
     for (uint256 i = 0; i < policyholders.length; i++) {

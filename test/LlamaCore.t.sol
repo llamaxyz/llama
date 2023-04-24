@@ -484,10 +484,10 @@ contract CreateAction is LlamaCoreTest {
     );
   }
 
-  function testFuzz_RevertIf_PolicyholderNotMinted(address user) public {
-    if (user == address(0)) user = address(100); // Faster than vm.assume, since 0 comes up a lot.
-    vm.assume(mpPolicy.balanceOf(user) == 0);
-    vm.prank(user);
+  function testFuzz_RevertIf_PolicyholderNotMinted(address policyholder) public {
+    if (policyholder == address(0)) policyholder = address(100); // Faster than vm.assume, since 0 comes up a lot.
+    vm.assume(mpPolicy.balanceOf(policyholder) == 0);
+    vm.prank(policyholder);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)

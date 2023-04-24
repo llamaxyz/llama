@@ -38,7 +38,7 @@ contract LlamaFactory {
     uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId
   );
 
-  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by ll.
+  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
   /// @dev Emitted when a new Llama Policy Token URI is set.
@@ -185,7 +185,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) internal returns (LlamaCore llama) {
+  ) internal returns (LlamaCore llamaCore) {
     LlamaPolicy policy =
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
@@ -193,9 +193,9 @@ contract LlamaFactory {
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     llama.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
-    policy.setLlama(address(llama));
+    policy.setLlama(address(llamaCore));
 
-    emit LlamaInstanceCreated(llamaCount, name, address(llama), address(policy), block.chainid);
+    emit LlamaInstanceCreated(llamaCount, name, address(llamaCore), address(policy), block.chainid);
 
     unchecked {
       ++llamaCount;
