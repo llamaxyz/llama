@@ -129,7 +129,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionApproved(0), true);
     _queueAction();
 
     vm.warp(block.timestamp + 5 days);
@@ -680,7 +680,7 @@ contract CancelAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionApproved(0), true);
     _queueAction();
 
     _disapproveAction(disapproverDave);
@@ -697,7 +697,7 @@ contract CancelAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), false);
+    assertEq(mpStrategy1.isActionApproved(0), false);
 
     vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
@@ -709,7 +709,7 @@ contract CancelAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionApproved(0), true);
     _queueAction();
 
     vm.expectRevert(LlamaCore.InvalidCancelation.selector);
@@ -754,7 +754,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(actionId), true);
+    assertEq(mpStrategy1.isActionApproved(actionId), true);
   }
 
   function test_ActionExecution() public {
@@ -905,7 +905,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(actionId), true);
+    assertEq(mpStrategy1.isActionApproved(actionId), true);
 
     mpCore.queueAction(actionId);
 
@@ -1093,7 +1093,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(_actionId), true);
+    assertEq(mpStrategy1.isActionApproved(_actionId), true);
     _queueAction(_actionId);
   }
 
@@ -1180,7 +1180,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(_actionId), true);
+    assertEq(mpStrategy1.isActionApproved(_actionId), true);
     _queueAction(_actionId);
   }
 
@@ -1813,7 +1813,7 @@ contract GetActionState is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionApproved(0), true);
     _queueAction();
 
     uint256 currentState = uint256(mpCore.getActionState(0));
@@ -1829,7 +1829,7 @@ contract GetActionState is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionPassed(0), true);
+    assertEq(mpStrategy1.isActionApproved(0), true);
     _queueAction();
 
     vm.warp(block.timestamp + 5 days);
