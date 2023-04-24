@@ -198,16 +198,14 @@ contract Initialize is VertexCoreTest {
       "Root Vertex",
       strategies,
       accounts,
-      SolarrayVertex.roleDescription("AllHolders","ActionCreator","Approver","Disapprover","TestRole1","TestRole2","MadeUpRole"),
+      rootVertexRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0)
     );
 
     (vertex, policy) = modifiedFactory.deployWithoutInitialization(
       "NewProject",
-      SolarrayVertex.roleDescription(
-        "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-      ),
+      rootVertexRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0)
     );

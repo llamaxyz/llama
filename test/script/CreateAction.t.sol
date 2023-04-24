@@ -16,10 +16,10 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 import {Strategy, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertex} from "script/DeployVertex.s.sol";
-import {CreateActionToDeployVertexInstance} from "script/CreateAction.s.sol";
+import {CreateAction} from "script/CreateAction.s.sol";
 
 contract CreateActionTest is Test, DeployVertex {
-  CreateActionToDeployVertexInstance script;
+  CreateAction script;
 
   VertexCore rootVertex;
 
@@ -27,7 +27,7 @@ contract CreateActionTest is Test, DeployVertex {
     // Deploy the root vertex infra.
     DeployVertex.run();
     rootVertex = factory.ROOT_VERTEX();
-    script = new CreateActionToDeployVertexInstance();
+    script = new CreateAction();
   }
 }
 
@@ -83,11 +83,11 @@ contract Run is CreateActionTest {
       vars.initialRoleHolders,
       vars.initialRolePermissions
     ) = abi.decode(action.data, (
-      string,
+      string, // Name.
       VertexStrategy,
       VertexAccount,
       Strategy[],
-      string[],
+      string[], // Account names.
       RoleDescription[],
       RoleHolderData[],
       RolePermissionData[]

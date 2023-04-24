@@ -18,6 +18,7 @@ import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
 import {Action, Strategy, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertex} from "script/DeployVertex.s.sol";
+import {CreateAction} from "script/CreateAction.s.sol";
 import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
 
 // TODO probably remove?
@@ -36,7 +37,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is DeployVertex, Test {
+contract VertexTestSetup is DeployVertex, CreateAction, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -44,6 +45,11 @@ contract VertexTestSetup is DeployVertex, Test {
   // "AllHolders" role listed in the enum, this ends up being the correct number
   // of roles.
   uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
+
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new Vertex instances. It could be
+  // replaced with any address that we hold the private key for.
+  address VERTEX_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
 
   // Root Vertex instance.
   VertexCore rootCore;
@@ -112,7 +118,8 @@ contract VertexTestSetup is DeployVertex, Test {
   uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
-  string scriptInput;
+  string deployScriptInput;
+  string createActionScriptInput;
 
   function setUp() public virtual {
     // Setting up user addresses and private keys.
@@ -125,39 +132,42 @@ contract VertexTestSetup is DeployVertex, Test {
     (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
+    // We use input from the deploy scripts to bootstrap our test suite.
+    deployScriptInput = DeployUtils.readScriptInput('deployVertex.json');
+    createActionScriptInput = DeployUtils.readScriptInput('createAction.json');
+
     DeployVertex.run();
 
     rootCore = factory.ROOT_VERTEX();
     rootPolicy = rootCore.policy();
 
-    // We use input from the deploy script to bootstrap our test suite.
-    scriptInput = DeployUtils.readScriptInput('deployVertex.json');
-
     // Now we deploy a mock protocol's vertex, again with a single action creator role.
-    string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
+    string[] memory mpAccounts = createActionScriptInput.readStringArray('.newAccountNames');
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    Strategy[] memory strategies = defaultStrategies();
-    RoleDescription[] memory roleDescriptionStrings = DeployUtils.readRoleDescriptions(scriptInput);
-    string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
+    Strategy[] memory initRootStrategies = defaultStrategies();
+    Strategy[] memory initVertexInstanceStrategies = initVertexInstanceStrategies();
+    string[] memory rootAccounts = deployScriptInput.readStringArray(".initialAccountNames");
 
-    vm.prank(address(rootCore));
-    mpCore = factory.deploy(
-      "Mock Protocol Vertex",
-      strategyLogic,
-      accountLogic,
-      strategies,
-      mpAccounts,
-      roleDescriptionStrings,
-      mpRoleHolders,
-      new RolePermissionData[](0)
-    );
+    // First we create an action to deploy a new vertex instance.
+    CreateAction.run(VERTEX_INSTANCE_DEPLOYER);
+
+    // Advance the clock so that checkpoints take effect.
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    // Second, we approve the action.
+    vm.prank(VERTEX_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
+    rootCore.castApproval(deployActionId, uint8(Roles.ActionCreator));
+    rootCore.queueAction(deployActionId);
+
+    // Advance the clock to execute the action.
+    vm.roll(block.number + 1);
+    Action memory action = rootCore.getAction(deployActionId);
+    console2.log("david here");
+    vm.warp(action.minExecutionTime + 1);
+    bytes memory deployResult = rootCore.executeAction(deployActionId);
+    mpCore = abi.decode(deployResult, (VertexCore));
     mpPolicy = mpCore.policy();
-
-    // Set strategy addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -184,10 +194,10 @@ contract VertexTestSetup is DeployVertex, Test {
     mockProtocol = new MockProtocol(address(mpCore));
 
     // Set strategy and account addresses.
-    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(rootCore));
-    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), strategies[1], address(mpCore));
+    rootStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), initRootStrategies[0], address(rootCore));
+    rootStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), initRootStrategies[1], address(rootCore));
+    mpStrategy1 = lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[1], address(mpCore));
+    mpStrategy2 = lens.computeVertexStrategyAddress(address(strategyLogic), initVertexInstanceStrategies[0], address(mpCore));
 
     // Set vertex account addresses.
     rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -264,7 +274,15 @@ contract VertexTestSetup is DeployVertex, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function defaultStrategies() internal view returns (Strategy[] memory strategies) {
-    strategies = DeployUtils.readStrategies(scriptInput);
+  function rootVertexRoleDescriptions() internal returns (RoleDescription[] memory) {
+    return DeployUtils.readRoleDescriptions(deployScriptInput);
+  }
+
+  function defaultStrategies() internal view returns (Strategy[] memory) {
+    return DeployUtils.readStrategies(deployScriptInput);
+  }
+
+  function initVertexInstanceStrategies() internal view returns (Strategy[] memory) {
+    return DeployUtils.readStrategies(createActionScriptInput);
   }
 }

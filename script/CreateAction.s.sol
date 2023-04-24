@@ -9,14 +9,17 @@ import {VertexStrategy} from "src/VertexStrategy.sol";
 // TODO rename JsonUtils??
 import {DeployUtils} from "script/DeployUtils.sol";
 
-contract CreateActionToDeployVertexInstance is Script {
+contract CreateAction is Script {
   using stdJson for string;
+
+  // The ID of the action created on the root vertex.
+  uint256 deployActionId;
 
   function run(address deployer) public {
     // TODO
     // * grant the ActionCreator role to an account we have keys to
     // * run this with an EOA that has the ActionCreator role
-    string memory jsonInput = DeployUtils.readScriptInput("createActionToDeployVertexInstance.json");
+    string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
 
     // TODO console.logs
     // TODO sort the input json
@@ -36,7 +39,7 @@ contract CreateActionToDeployVertexInstance is Script {
     VertexCore rootVertex = factory.ROOT_VERTEX();
 
     vm.broadcast(deployer);
-    rootVertex.createAction(
+    deployActionId = rootVertex.createAction(
       uint8(jsonInput.readUint(".rootVertexActionCreatorRole")),
       VertexStrategy(jsonInput.readAddress(".rootVertexActionCreationStrategy")),
       jsonInput.readAddress(".factory"),
