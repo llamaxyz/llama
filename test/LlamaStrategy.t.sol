@@ -525,9 +525,9 @@ contract isActionApproved is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionApproved = testStrategy.isActionApproved(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionApproved, true);
+    assertEq(_isActionApproved, true);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -557,9 +557,9 @@ contract isActionApproved is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionApproved = testStrategy.isActionApproved(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionApproved, true);
+    assertEq(_isActionApproved, true);
   }
 
   function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
@@ -574,9 +574,9 @@ contract isActionApproved is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionApproved = testStrategy.isActionApproved(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionApproved, false);
+    assertEq(_isActionApproved, false);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -606,9 +606,9 @@ contract isActionApproved is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionApproved = testStrategy.isActionApproved(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionApproved, false);
+    assertEq(_isActionApproved, false);
   }
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
