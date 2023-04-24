@@ -21,9 +21,6 @@ contract CreateAction is Script {
     // * run this with an EOA that has the ActionCreator role
     string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
 
-    // TODO console.logs
-    // TODO sort the input json
-
     bytes memory deployData = abi.encode(
       jsonInput.readString(".newVertexName"),
       jsonInput.readAddress(".strategyLogic"),
@@ -47,5 +44,7 @@ contract CreateAction is Script {
       VertexFactory.deploy.selector,
       deployData
     );
+
+    console2.log("Created action ID", deployActionId);
   }
 }

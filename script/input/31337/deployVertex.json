@@ -65,6 +65,11 @@
         "comment": "This gives the ActionCreator permission to call VertexFactory.deploy which creates new Vertex instances. The permissionId was derived by encoding and hashing (a) the VertexFactory address that this script deploys, (b) VertexFactory.deploy.selector, and (c) the address of the second Strategy specified above -- the one without a fixed voting period.",
         "permissionId": "0x67482452490baf27d7ef4fadfc89ea226dad9455ef5138f3dfcf8f47cbfaa3eb",
         "role": 1
+      },
+      {
+        "comment": "This is just used for the DeployVertex test file. It also gives the ActionCreator permission to call VertexFactory.deploy which creates new Vertex instances.",
+        "permissionId": "0x10aa48bea40c71fce5d9713b8ce994d76c6445b870b3fc429c39ac7524ae9536",
+        "role": 1
       }
     ]
 }

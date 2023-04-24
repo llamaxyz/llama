@@ -18,16 +18,13 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployVertex} from "script/DeployVertex.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 
-contract CreateActionTest is Test, DeployVertex {
-  CreateAction script;
-
+contract CreateActionTest is Test, DeployVertex, CreateAction {
   VertexCore rootVertex;
 
   function setUp() public virtual {
     // Deploy the root vertex infra.
     DeployVertex.run();
     rootVertex = factory.ROOT_VERTEX();
-    script = new CreateAction();
   }
 }
 
@@ -59,7 +56,7 @@ contract Run is CreateActionTest {
   function test_createsAnActionOnTheRootVertex() public {
     uint256 initActionCount = rootVertex.actionsCount();
 
-    script.run(VERTEX_INSTANCE_DEPLOYER);
+    CreateAction.run(VERTEX_INSTANCE_DEPLOYER);
 
     uint256 newActionCount = rootVertex.actionsCount();
     assertEq(initActionCount + 1, newActionCount);
@@ -111,7 +108,7 @@ contract Run is CreateActionTest {
   }
 
   function test_actionCanBeExecuted() public {
-    script.run(VERTEX_INSTANCE_DEPLOYER);
+    CreateAction.run(VERTEX_INSTANCE_DEPLOYER);
 
     // Advance the clock so that checkpoints take effect.
     vm.roll(block.number + 1);
