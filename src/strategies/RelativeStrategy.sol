@@ -238,11 +238,11 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionPassed(actionId));
+    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionApproved(actionId));
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionPassed(uint256 actionId) public view returns (bool) {
+  function isActionApproved(uint256 actionId) public view returns (bool) {
     Action memory action = llamaCore.getAction(actionId);
     return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
   }
