@@ -511,7 +511,7 @@ contract Constructor is LlamaStrategyTest {
   }
 }
 
-contract IsActionPassed is LlamaStrategyTest {
+contract isActionApproved is LlamaStrategyTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -525,9 +525,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, true);
+    assertEq(isActionApproved, true);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -557,9 +557,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, true);
+    assertEq(isActionApproved, true);
   }
 
   function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
@@ -574,9 +574,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, false);
+    assertEq(isActionApproved, false);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -606,9 +606,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, false);
+    assertEq(isActionApproved, false);
   }
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
