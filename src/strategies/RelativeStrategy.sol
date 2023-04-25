@@ -7,7 +7,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -22,7 +22,12 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error ActionCreatorCannotCast();
+  error CannotCancelInState(ActionState state);
+  error DisapprovalDisabled();
+  error DisapprovalThresholdNotMet();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
+  error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
 
   // ========================
@@ -54,21 +59,23 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
-  uint256 public approvalPeriod;
+  uint64 public approvalPeriod;
 
   /// @notice Minimum time, in seconds, between queueing and execution of action.
-  uint256 public queuingPeriod;
+  uint64 public queuingPeriod;
 
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
-  uint256 public expirationPeriod;
+  uint64 public expirationPeriod;
 
   /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
-  /// action to be queued. In bps, where 100_00 == 100%.
-  uint256 public minApprovalPct;
+  /// action to be queued. In bps, where 10,000 == 100%.
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minApprovalPct;
 
   /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
-  /// action for it to be canceled. In bps, 100_00 == 100%.
-  uint256 public minDisapprovalPct;
+  /// action for it to be canceled. In bps, 10,000 == 100%.
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minDisapprovalPct;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;
@@ -142,23 +149,35 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(uint256 actionId) external returns (bool, bytes32) {
+  function validateActionCreation(ActionInfo calldata actionInfo) external {
     uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
-    if (approvalPolicySupply == 0) return (false, "No approval supply");
+    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
+
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
-    if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+
+    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
+    unchecked {
+      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
+      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
+      // the action creator without overflow, since a policyholder can never have a quantity greater than
+      // the total supply.
+      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(actionInfo.creator, approvalRole);
+      approvalPolicySupply -= actionCreatorApprovalRoleQty;
+      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
+      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
+    }
 
     // Save off the supplies to use for checking quorum.
-    actionApprovalSupply[actionId] = approvalPolicySupply;
-    actionDisapprovalSupply[actionId] = disapprovalPolicySupply;
-    return (true, "");
+    actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
+    actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
   }
 
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(uint256, /* actionId */ address /* policyholder */ ) external pure returns (bool, bytes32) {
-    return (true, "");
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external pure {
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -170,13 +189,9 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(uint256, /* actionId */ address /* policyholder */ )
-    external
-    view
-    returns (bool, bytes32)
-  {
-    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
-    return (true, "");
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external view {
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -192,14 +207,14 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Queueing --------
 
   /// @inheritdoc ILlamaStrategy
-  function minExecutionTime(uint256) external view returns (uint256) {
+  function minExecutionTime(ActionInfo calldata) external view returns (uint256) {
     return block.timestamp + queuingPeriod;
   }
 
   // -------- When Canceling --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool) {
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
     //   2. For all other states (Active, Approved, Queued) the action can be canceled if:
@@ -207,42 +222,44 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     //        b. The action is Queued, but the number of disapprovals is >= the disapproval threshold.
 
     // Check 1.
-    ActionState state = llamaCore.getActionState(actionId);
+    ActionState state = llamaCore.getActionState(actionInfo);
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
-    ) return false;
+    ) revert CannotCancelInState(state);
 
     // Check 2a.
-    Action memory action = llamaCore.getAction(actionId);
-    if (caller == action.creator) return true;
+    Action memory action = llamaCore.getAction(actionInfo.id);
+    if (caller == actionInfo.creator) return;
 
     // Check 2b.
-    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
+    if (action.totalDisapprovals < _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct)) {
+      revert DisapprovalThresholdNotMet();
+    }
   }
 
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActive(uint256 actionId) external view returns (bool) {
-    return block.timestamp <= approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || !isActionApproved(actionId));
+  function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
+    return block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionApproved(uint256 actionId) public view returns (bool) {
-    Action memory action = llamaCore.getAction(actionId);
-    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionId], minApprovalPct);
+  function isActionApproved(ActionInfo calldata actionInfo) public view returns (bool) {
+    Action memory action = llamaCore.getAction(actionInfo.id);
+    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionInfo.id], minApprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionDisapproved(uint256 actionId) public view returns (bool) {
-    Action memory action = llamaCore.getAction(actionId);
-    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
+  function isActionDisapproved(ActionInfo calldata actionInfo) public view returns (bool) {
+    Action memory action = llamaCore.getAction(actionInfo.id);
+    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionExpired(uint256 actionId) external view returns (bool) {
-    Action memory action = llamaCore.getAction(actionId);
+  function isActionExpired(ActionInfo calldata actionInfo) external view returns (bool) {
+    Action memory action = llamaCore.getAction(actionInfo.id);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
@@ -251,8 +268,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ========================================
 
   /// @notice Returns the timestamp at which the approval period ends.
-  function approvalEndTime(uint256 actionId) public view returns (uint256) {
-    Action memory action = llamaCore.getAction(actionId);
+  function approvalEndTime(ActionInfo calldata actionInfo) public view returns (uint256) {
+    Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;
   }
 

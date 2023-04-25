@@ -15,7 +15,14 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  Action,
+  ActionInfo,
+  RelativeStrategyConfig,
+  PermissionData,
+  RoleHolderData,
+  RolePermissionData
+} from "src/lib/Structs.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -24,13 +31,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
-    uint256 id,
-    address indexed creator,
-    ILlamaStrategy indexed strategy,
-    address target,
-    uint256 value,
-    bytes4 selector,
-    bytes data
+    uint256 id, address indexed creator, ILlamaStrategy indexed strategy, address target, uint256 value, bytes data
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
@@ -44,6 +45,9 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
   event AccountCreated(LlamaAccount indexed account, string name);
+
+  // We use this to easily generate, save off, and pass around `ActionInfo` structs.
+  // mapping (uint256 actionId => ActionInfo) actionInfo;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -63,78 +67,58 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   // ======== Helpers ========
   // =========================
 
-  function _createAction() public returns (uint256 actionId) {
+  function _createAction() public returns (ActionInfo memory actionInfo) {
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
   }
 
-  function _approveAction(address _policyholder, uint256 _actionId) public {
+  function _approveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit ApprovalCast(_actionId, _policyholder, 1, "");
+    emit ApprovalCast(actionInfo.id, _policyholder, 1, "");
     vm.prank(_policyholder);
-    mpCore.castApproval(_actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
-  function _approveAction(address _policyholder) public {
-    uint256 _assumedActionId = 0;
-    _approveAction(_policyholder, _assumedActionId);
-  }
-
-  function _disapproveAction(address _policyholder, uint256 _actionId) public {
+  function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit DisapprovalCast(_actionId, _policyholder, 1, "");
+    emit DisapprovalCast(actionInfo.id, _policyholder, 1, "");
     vm.prank(_policyholder);
-    mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
 
-  function _disapproveAction(address _policyholder) public {
-    uint256 _assumedActionId = 0;
-    _disapproveAction(_policyholder, _assumedActionId);
-  }
-
-  function _queueAction(uint256 _actionId) public {
+  function _queueAction(ActionInfo memory actionInfo) public {
     uint256 executionTime = block.timestamp + toRelativeStrategy(mpStrategy1).queuingPeriod();
     vm.expectEmit();
-    emit ActionQueued(_actionId, address(this), mpStrategy1, actionCreatorAaron, executionTime);
-    mpCore.queueAction(_actionId);
+    emit ActionQueued(actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, executionTime);
+    mpCore.queueAction(actionInfo);
   }
 
-  function _queueAction() public {
-    uint256 _assumedActionId = 0;
-    _queueAction(_assumedActionId);
-  }
-
-  function _executeAction() public {
+  function _executeAction(ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, bytes(""));
-    mpCore.executeAction(0);
+    emit ActionExecuted(actionInfo.id, address(this), actionInfo.strategy, actionInfo.creator, bytes(""));
+    mpCore.executeAction(actionInfo);
 
-    Action memory action = mpCore.getAction(0);
+    Action memory action = mpCore.getAction(actionInfo.id);
     assertEq(action.executed, true);
   }
 
-  function _executeCompleteActionFlow() internal {
-    _createAction();
+  function _executeCompleteActionFlow() internal returns (ActionInfo memory actionInfo) {
+    actionInfo = _createAction();
 
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), true);
-    _queueAction();
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
-    _executeAction();
+    _executeAction(actionInfo);
   }
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
@@ -150,12 +134,12 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     returns (RelativeStrategyConfig memory)
   {
     return RelativeStrategyConfig({
-      approvalPeriod: salt % 1000 days,
-      queuingPeriod: salt % 1001 days,
-      expirationPeriod: salt % 1002 days,
+      approvalPeriod: toUint64(salt % 1000 days),
+      queuingPeriod: toUint64(salt % 1001 days),
+      expirationPeriod: toUint64(salt % 1002 days),
       isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
-      minApprovalPct: salt % 10_000,
-      minDisapprovalPct: salt % 10_100,
+      minApprovalPct: toUint16(salt % 10_000),
+      minDisapprovalPct: toUint16(salt % 10_100),
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
       forceApprovalRoles: new uint8[](0),
@@ -423,65 +407,58 @@ contract Initialize is LlamaCoreTest {
 }
 
 contract CreateAction is LlamaCoreTest {
+  bytes data = abi.encodeCall(MockProtocol.pause, (true));
+
   function test_CreatesAnAction() public {
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
     vm.prank(actionCreatorAaron);
-    uint256 _actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
-    Action memory action = mpCore.getAction(_actionId);
-    uint256 approvalPeriodEnd = toRelativeStrategy(action.strategy).approvalEndTime(_actionId);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionInfo.id);
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
 
-    assertEq(_actionId, 0);
+    assertEq(actionInfo.id, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
-    assertEq(toRelativeStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
   }
 
-  function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
+  function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
     vm.assume(_target != address(mockProtocol));
 
+    bytes memory dataTrue = abi.encodeCall(MockProtocol.pause, (true));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, dataTrue);
   }
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
-    bytes memory expectedErr = bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(expectedErr);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    vm.expectRevert("no action creation");
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
   }
 
   function test_RevertIf_StrategyUnauthorized() public {
     ILlamaStrategy unauthorizedStrategy = ILlamaStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data);
   }
 
   function test_RevertIf_StrategyIsFromAnotherLlama() public {
     ILlamaStrategy unauthorizedStrategy = rootStrategy1;
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data);
   }
 
   function testFuzz_RevertIf_PolicyholderNotMinted(address policyholder) public {
@@ -489,24 +466,20 @@ contract CreateAction is LlamaCoreTest {
     vm.assume(mpPolicy.balanceOf(policyholder) == 0);
     vm.prank(policyholder);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
   }
 
   function test_RevertIf_NoPermissionForStrategy() public {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, data);
   }
 
   function testFuzz_RevertIf_NoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, data);
   }
 
   function testFuzz_RevertIf_BadPermissionForSelector(bytes4 _badSelector) public {
@@ -514,7 +487,7 @@ contract CreateAction is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true)
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeWithSelector(_badSelector)
     );
   }
 
@@ -527,18 +500,14 @@ contract CreateAction is LlamaCoreTest {
     vm.stopPrank();
 
     vm.prank(address(actionCreatorAustin));
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
     vm.warp(_expirationTimestamp + 1);
     mpPolicy.revokeExpiredRole(uint8(Roles.ActionCreator), actionCreatorAustin);
 
     vm.startPrank(address(actionCreatorAustin));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
-    );
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
   }
 }
 
@@ -549,8 +518,7 @@ contract CreateActionBySig is LlamaCoreTest {
       strategy: address(mpStrategy1),
       target: address(mockProtocol),
       value: 0,
-      selector: PAUSE_SELECTOR,
-      data: abi.encode(true),
+      data: abi.encodeCall(MockProtocol.pause, (true)),
       policyholder: actionCreatorAaron,
       nonce: 0
     });
@@ -564,8 +532,7 @@ contract CreateActionBySig is LlamaCoreTest {
       mpStrategy1,
       address(mockProtocol),
       0,
-      PAUSE_SELECTOR,
-      abi.encode(true),
+      abi.encodeCall(MockProtocol.pause, (true)),
       actionCreatorAaron,
       v,
       r,
@@ -575,21 +542,23 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function test_CreatesActionBySig() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
 
-    uint256 _actionId = createActionBySig(v, r, s);
+    uint256 actionId = createActionBySig(v, r, s);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionId);
 
-    Action memory action = mpCore.getAction(_actionId);
-    uint256 approvalPeriodEnd = toRelativeStrategy(action.strategy).approvalEndTime(_actionId);
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
 
-    assertEq(_actionId, 0);
+    assertEq(actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(action.strategy).actionApprovalSupply(_actionId), 3);
-    assertEq(toRelativeStrategy(action.strategy).actionDisapprovalSupply(_actionId), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionId), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
   }
 
   function test_CheckNonceIncrements() public {
@@ -627,18 +596,20 @@ contract CreateActionBySig is LlamaCoreTest {
 }
 
 contract CancelAction is LlamaCoreTest {
+  ActionInfo actionInfo;
+
   function setUp() public override {
     LlamaCoreTest.setUp();
-    _createAction();
+    actionInfo = _createAction();
   }
 
   function test_CreatorCancelFlow() public {
     vm.prank(actionCreatorAaron);
     vm.expectEmit();
-    emit ActionCanceled(0);
-    mpCore.cancelAction(0);
+    emit ActionCanceled(actionInfo.id);
+    mpCore.cancelAction(actionInfo);
 
-    uint256 state = uint256(mpCore.getActionState(0));
+    uint256 state = uint256(mpCore.getActionState(actionInfo));
     uint256 canceled = uint256(ActionState.Canceled);
     assertEq(state, canceled);
   }
@@ -646,124 +617,113 @@ contract CancelAction is LlamaCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
+    mpCore.cancelAction(actionInfo);
   }
 
-  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
-    invalidActionId = bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
+  function testFuzz_RevertIf_InvalidActionId(ActionInfo calldata _actionInfo) public {
     vm.prank(actionCreatorAaron);
-    // We expect a low-level revert with no error message because if the action doesn't exist the strategy will be the
-    // zero address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
-    vm.expectRevert();
-    mpCore.cancelAction(invalidActionId);
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.cancelAction(_actionInfo);
   }
 
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
-    mpCore.cancelAction(0);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    mpCore.cancelAction(actionInfo);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Canceled));
+    mpCore.cancelAction(actionInfo);
   }
 
   function test_RevertIf_ActionExecuted() public {
-    _executeCompleteActionFlow();
+    ActionInfo memory _actionInfo = _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Executed));
+    mpCore.cancelAction(_actionInfo);
   }
 
   function test_RevertIf_ActionExpired() public {
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), true);
-    _queueAction();
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
 
-    _disapproveAction(disapproverDave);
+    _disapproveAction(disapproverDave, actionInfo);
 
     vm.warp(block.timestamp + 15 days);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Expired));
+    mpCore.cancelAction(actionInfo);
   }
 
   function test_RevertIf_ActionFailed() public {
-    _approveAction(approverAdam);
+    _approveAction(approverAdam, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), false);
+    assertEq(mpStrategy1.isActionApproved(actionInfo), false);
 
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Failed));
+    mpCore.cancelAction(actionInfo);
   }
 
   function test_RevertIf_DisapprovalDoesNotReachQuorum() public {
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), true);
-    _queueAction();
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
 
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(0);
+    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
+    mpCore.cancelAction(actionInfo);
   }
 }
 
 contract QueueAction is LlamaCoreTest {
   function test_RevertIf_NotApproved() public {
-    _createAction();
-    _approveAction(approverAdam);
+    ActionInfo memory actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Approved)));
-    mpCore.queueAction(0);
+    mpCore.queueAction(actionInfo);
   }
 
-  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
-    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
-    _createAction();
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
-    _approveAction(approverAndy);
-
-    vm.warp(block.timestamp + 6 days);
-
-    vm.expectRevert(LlamaCore.InvalidActionId.selector);
-    mpCore.queueAction(1);
+  function testFuzz_RevertIf_InvalidActionId(ActionInfo calldata actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.queueAction(actionInfo);
   }
 }
 
 contract ExecuteAction is LlamaCoreTest {
-  uint256 actionId;
+  ActionInfo actionInfo;
 
   function setUp() public override {
     LlamaCoreTest.setUp();
 
-    actionId = _createAction();
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(actionId), true);
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
   }
 
   function test_ActionExecution() public {
-    mpCore.queueAction(0);
+    mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
     vm.expectEmit();
     emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, bytes(""));
-    mpCore.executeAction(0);
+    mpCore.executeAction(actionInfo);
   }
 
   function test_ScriptsAlwaysUseDelegatecall() public {
@@ -775,144 +735,128 @@ contract ExecuteAction is LlamaCoreTest {
     vm.prank(address(mpCore));
     mpCore.authorizeScript(address(mockScript), true);
 
+    bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
-    actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy1,
-      address(mockScript),
-      0, // value
-      EXECUTE_SCRIPT_SELECTOR,
-      abi.encode("")
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
+    ActionInfo memory _actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mockScript), 0, data);
 
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(_actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
     // Checking that the result is a delegatecall because msg.sender is this contract and not mpCore
-    emit ActionExecuted(actionId, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
-    mpCore.executeAction(actionId);
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    mpCore.executeAction(_actionInfo);
   }
 
   function test_RevertIf_NotQueued() public {
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(actionInfo);
 
     // Check that it's in the Approved state
-    assertEq(uint256(mpCore.getActionState(0)), uint256(3));
+    assertEq(uint256(mpCore.getActionState(actionInfo)), uint256(3));
   }
 
   function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
-    bytes memory expectedErr =
-      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
-    mpCore.queueAction(0);
+    mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(expectedErr);
-    mpCore.executeAction(0);
+    vm.expectRevert("no action pre-execution");
+    mpCore.executeAction(actionInfo);
   }
 
   function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
-    bytes memory expectedErr =
-      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
-    mpCore.queueAction(0);
+    mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(expectedErr);
-    mpCore.executeAction(0);
+    vm.expectRevert("no action post-execution");
+    mpCore.executeAction(actionInfo);
   }
 
-  function testFuzz_RevertIf_InvalidActionId(uint256 invalidActionId) public {
-    bound(invalidActionId, mpCore.actionsCount(), type(uint256).max);
-    mpCore.queueAction(actionId);
-
-    vm.warp(block.timestamp + 5 days);
-
-    vm.expectRevert(LlamaCore.InvalidActionId.selector);
-    mpCore.executeAction(actionId + 1);
+  function testFuzz_RevertIf_InvalidAction(ActionInfo calldata _actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.executeAction(_actionInfo);
   }
 
   function testFuzz_RevertIf_TimelockNotFinished(uint256 timeElapsed) public {
     // Using a reasonable upper limit for elapsedTime
     vm.assume(timeElapsed < 10_000 days);
-    mpCore.queueAction(actionId);
-    uint256 executionTime = mpCore.getAction(actionId).minExecutionTime;
+    mpCore.queueAction(actionInfo);
+    uint256 executionTime = mpCore.getAction(actionInfo.id).minExecutionTime;
 
     vm.warp(block.timestamp + timeElapsed);
 
     if (executionTime > block.timestamp) {
       vm.expectRevert(LlamaCore.TimelockNotFinished.selector);
-      mpCore.executeAction(actionId);
+      mpCore.executeAction(actionInfo);
     }
   }
 
   function test_RevertIf_InsufficientMsgValue() public {
+    bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
-    actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, RECEIVE_ETH_SELECTOR, abi.encode(true)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, data);
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 1e18, data);
+
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(_actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectRevert(LlamaCore.InsufficientMsgValue.selector);
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(_actionInfo);
   }
 
   function test_RevertIf_FailedActionExecution() public {
+    bytes memory data = abi.encodeCall(MockProtocol.fail, ());
     vm.prank(actionCreatorAaron);
-    actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0, // value
-      FAIL_SELECTOR,
-      abi.encode("")
-    );
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
 
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(actionId), true);
+    assertEq(mpStrategy1.isActionApproved(_actionInfo), true);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(_actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
+    );
     vm.expectRevert(expectedErr);
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(_actionInfo);
   }
 
   function test_HandlesReentrancy() public {
@@ -926,93 +870,88 @@ contract ExecuteAction is LlamaCoreTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
+    bytes memory data = abi.encodeCall(LlamaCore.executeAction, (actionInfo));
     vm.prank(actionCreatorAustin);
-    actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy1,
-      address(mpCore),
-      0, // value
-      EXECUTE_ACTION_SELECTOR,
-      abi.encode(actionId)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    ActionInfo memory _actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mpCore), 0, data);
 
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(_actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectRevert(expectedErr);
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(_actionInfo);
   }
 }
 
 contract CastApproval is LlamaCoreTest {
-  uint256 actionId;
+  ActionInfo actionInfo;
+
+  function setUp() public override {
+    LlamaCoreTest.setUp();
+    actionInfo = _createAction();
+  }
 
   function test_SuccessfulApproval() public {
-    actionId = _createAction();
-    _approveAction(approverAdam, actionId);
+    _approveAction(approverAdam, actionInfo);
     assertEq(mpCore.getAction(0).totalApprovals, 1);
     assertEq(mpCore.approvals(0, approverAdam), true);
   }
 
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
-    actionId = _createAction();
     vm.expectEmit();
-    emit ApprovalCast(actionId, approverAdam, 1, reason);
+    emit ApprovalCast(actionInfo.id, approverAdam, 1, reason);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, uint8(Roles.Approver), reason);
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver), reason);
   }
 
   function test_RevertIf_ActionNotActive() public {
-    actionId = _createAction();
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
-    mpCore.castApproval(actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
   function test_RevertIf_DuplicateApproval() public {
-    actionId = _createAction();
-    _approveAction(approverAdam, actionId);
+    _approveAction(approverAdam, actionInfo);
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
-    actionId = _createAction();
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castApproval(actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
 
     vm.prank(approverAdam);
-    mpCore.castApproval(actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 }
 
 contract CastApprovalBySig is LlamaCoreTest {
-  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
+  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
   {
     LlamaCoreSigUtils.CastApproval memory castApproval = LlamaCoreSigUtils.CastApproval({
-      actionId: _actionId,
+      actionInfo: actionInfo,
       role: uint8(Roles.Approver),
       reason: "",
       policyholder: approverAdam,
@@ -1022,144 +961,152 @@ contract CastApprovalBySig is LlamaCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
-  function castApprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
-    mpCore.castApprovalBySig(actionId, uint8(Roles.Approver), "", approverAdam, v, r, s);
+  function castApprovalBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castApprovalBySig(actionInfo, uint8(Roles.Approver), "", approverAdam, v, r, s);
   }
 
   function test_CastsApprovalBySig() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
 
     vm.expectEmit();
-    emit ApprovalCast(actionId, approverAdam, 1, "");
+    emit ApprovalCast(actionInfo.id, approverAdam, 1, "");
 
-    castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionInfo, v, r, s);
 
     assertEq(mpCore.getAction(0).totalApprovals, 1);
     assertEq(mpCore.approvals(0, approverAdam), true);
   }
 
   function test_CheckNonceIncrements() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
 
     assertEq(mpCore.nonces(approverAdam, LlamaCore.castApprovalBySig.selector), 0);
-    castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionInfo, v, r, s);
     assertEq(mpCore.nonces(approverAdam, LlamaCore.castApprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
-    castApprovalBySig(actionId, v, r, s);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    castApprovalBySig(actionInfo, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionInfo, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
     // parameter.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castApprovalBySig(actionId, v, r, s);
+    castApprovalBySig(actionInfo, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castApprovalBySig(actionId, (v + 1), r, s);
+    castApprovalBySig(actionInfo, (v + 1), r, s);
   }
 }
 
 contract CastDisapproval is LlamaCoreTest {
-  uint256 actionId;
-
-  function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
-    _actionId = _createAction();
-    _approveAction(approverAdam, _actionId);
-    _approveAction(approverAlicia, _actionId);
+  function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(_actionId), true);
-    _queueAction(_actionId);
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
   }
 
   function test_SuccessfulDisapproval() public {
-    actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDrake);
     vm.expectEmit();
-    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
 
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
   }
 
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
-    actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
     vm.expectEmit();
-    emit DisapprovalCast(actionId, disapproverDrake, 1, reason);
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, reason);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover), reason);
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover), reason);
   }
 
   function test_RevertIf_ActionNotQueued() public {
-    actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+  }
+
+  function test_RevertIf_DuplicateDisapproval() public {
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    _disapproveAction(disapproverDrake, actionInfo);
+
+    vm.expectRevert(LlamaCore.DuplicateCast.selector);
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
-    actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
 
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
 
   function test_FailsIfDisapproved() public {
-    actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(actionId, uint8(Roles.Disapprover)); // since the disapproval pct is 20%, one disapproval is
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover)); // since the disapproval pct is 20%, one disapproval is
       // all that is needed for the action to fail
 
-    ActionState state = mpCore.getActionState(actionId);
+    ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(actionInfo);
   }
 }
 
 contract CastDisapprovalBySig is LlamaCoreTest {
-  function createOffchainSignature(uint256 _actionId, uint256 privateKey)
+  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
   {
     LlamaCoreSigUtils.CastDisapproval memory castDisapproval = LlamaCoreSigUtils.CastDisapproval({
-      actionId: _actionId,
+      actionInfo: actionInfo,
       role: uint8(Roles.Disapprover),
       reason: "",
       policyholder: disapproverDrake,
@@ -1169,94 +1116,94 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
-  function castDisapprovalBySig(uint256 actionId, uint8 v, bytes32 r, bytes32 s) internal {
-    mpCore.castDisapprovalBySig(actionId, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
+  function castDisapprovalBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.castDisapprovalBySig(actionInfo, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
   }
 
-  function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
-    _actionId = _createAction();
-    _approveAction(approverAdam, _actionId);
-    _approveAction(approverAlicia, _actionId);
+  function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(_actionId), true);
-    _queueAction(_actionId);
+    assertEq(actionInfo.strategy.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
   }
 
   function test_CastsDisapprovalBySig() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
     vm.expectEmit();
-    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
 
-    castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionInfo, v, r, s);
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
   }
 
   function test_CheckNonceIncrements() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
     assertEq(mpCore.nonces(disapproverDrake, LlamaCore.castDisapprovalBySig.selector), 0);
-    castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionInfo, v, r, s);
     assertEq(mpCore.nonces(disapproverDrake, LlamaCore.castDisapprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
-    castDisapprovalBySig(actionId, v, r, s);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    castDisapprovalBySig(actionInfo, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 
   function test_RevertIf_SignerIsNotPolicyHolder() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 
   function test_RevertIf_SignerIsZeroAddress() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    castDisapprovalBySig(actionId, (v + 1), r, s);
+    castDisapprovalBySig(actionInfo, (v + 1), r, s);
   }
 
   function test_FailsIfDisapproved() public {
-    uint256 actionId = _createApproveAndQueueAction();
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
     vm.expectEmit();
-    emit DisapprovalCast(actionId, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
 
-    castDisapprovalBySig(actionId, v, r, s);
+    castDisapprovalBySig(actionInfo, v, r, s);
 
-    assertEq(mpCore.getAction(actionId).totalDisapprovals, 1);
+    assertEq(mpCore.getAction(actionInfo.id).totalDisapprovals, 1);
 
-    ActionState state = mpCore.getActionState(actionId);
+    ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(actionInfo);
   }
 }
 
@@ -1470,28 +1417,25 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy1,
-      address(mpCore),
-      0, // value
-      CREATE_STRATEGY_SELECTOR,
-      abi.encode(address(relativeStrategyLogic), encodeStrategyConfigs(newStrategies))
+    bytes memory data = abi.encodeCall(
+      LlamaCore.createAndAuthorizeStrategies, (relativeStrategyLogic, encodeStrategyConfigs(newStrategies))
     );
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mpCore), 0, data);
 
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(actionInfo);
 
     assertEq(mpCore.authorizedStrategies(strategyAddress), true);
   }
@@ -1530,12 +1474,7 @@ contract UnauthorizeStrategies is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
   }
 }
@@ -1617,30 +1556,25 @@ contract CreateAccounts is LlamaCoreTest {
 
     LlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), name, address(mpCore));
 
+    bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (newAccounts));
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy1,
-      address(mpCore),
-      0, // value
-      CREATE_ACCOUNT_SELECTOR,
-      abi.encode(newAccounts)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mpCore), 0, data);
 
     vm.warp(block.timestamp + 1);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
     emit AccountCreated(accountAddress, name);
-    mpCore.executeAction(actionId);
+    mpCore.executeAction(actionInfo);
   }
 }
 
@@ -1711,17 +1645,17 @@ contract AuthorizeScript is LlamaCoreTest {
 }
 
 contract GetActionState is LlamaCoreTest {
-  function testFuzz_RevertsOnInvalidAction(uint256 invalidActionId) public {
-    vm.expectRevert(LlamaCore.InvalidActionId.selector);
-    mpCore.getActionState(invalidActionId);
+  function testFuzz_RevertsOnInvalidAction(ActionInfo calldata actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.getActionState(actionInfo);
   }
 
   function test_CanceledActionsHaveStateCanceled() public {
-    uint256 actionId = _createAction();
+    ActionInfo memory actionInfo = _createAction();
     vm.prank(actionCreatorAaron);
-    mpCore.cancelAction(actionId);
+    mpCore.cancelAction(actionInfo);
 
-    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 canceledState = uint256(ActionState.Canceled);
     assertEq(currentState, canceledState);
   }
@@ -1735,27 +1669,26 @@ contract GetActionState is LlamaCoreTest {
 
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy2,
-      address(mockProtocol),
-      0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
+      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
 
-    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAustin, mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+    );
+
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 activeState = uint256(ActionState.Active);
     assertEq(currentState, activeState);
   }
 
   function test_ApprovedActionsWithFixedLengthHaveStateActive() public {
-    uint256 actionId = _createAction();
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
+    ActionInfo memory actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 1 days);
 
-    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 activeState = uint256(ActionState.Active);
     assertEq(currentState, activeState);
   }
@@ -1769,84 +1702,118 @@ contract GetActionState is LlamaCoreTest {
 
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2),
-      mpStrategy2,
-      address(mockProtocol),
-      0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
+      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
     vm.warp(block.timestamp + 1);
 
-    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAustin, mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+    );
+
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 activeState = uint256(ActionState.Active);
     assertEq(currentState, activeState);
 
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
-    _approveAction(approverAndy, actionId);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+    _approveAction(approverAndy, actionInfo);
 
-    currentState = uint256(mpCore.getActionState(actionId));
+    currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 approvedState = uint256(ActionState.Approved);
     assertEq(currentState, approvedState);
   }
 
   function testFuzz_ApprovedActionsHaveStateApproved(uint256 _timeSinceCreation) public {
-    uint256 actionId = _createAction();
-    _approveAction(approverAdam, actionId);
-    _approveAction(approverAlicia, actionId);
-    Action memory action = mpCore.getAction(actionId);
-    uint256 approvalEndTime = toRelativeStrategy(action.strategy).approvalEndTime(actionId);
+    ActionInfo memory actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    uint256 approvalEndTime = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
     vm.assume(_timeSinceCreation < toRelativeStrategy(mpStrategy1).approvalPeriod() * 2);
     vm.warp(block.timestamp + _timeSinceCreation);
 
-    uint256 currentState = uint256(mpCore.getActionState(actionId));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 expectedState = uint256(block.timestamp < approvalEndTime ? ActionState.Active : ActionState.Approved);
     assertEq(currentState, expectedState);
   }
 
   function test_QueuedActionsHaveStateQueued() public {
-    _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), true);
-    _queueAction();
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
 
-    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 queuedState = uint256(ActionState.Queued);
     assertEq(currentState, queuedState);
   }
 
   function test_ExecutedActionsHaveStateExecuted() public {
-    _createAction();
+    ActionInfo memory actionInfo = _createAction();
 
-    _approveAction(approverAdam);
-    _approveAction(approverAlicia);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
 
     vm.warp(block.timestamp + 6 days);
 
-    assertEq(mpStrategy1.isActionApproved(0), true);
-    _queueAction();
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
+
+    _disapproveAction(disapproverDave, actionInfo);
 
     vm.warp(block.timestamp + 5 days);
 
-    _executeAction();
+    _executeAction(actionInfo);
 
-    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 executedState = uint256(ActionState.Executed);
     assertEq(currentState, executedState);
   }
 
   function test_RejectedActionsHaveStateFailed() public {
-    _createAction();
+    ActionInfo memory actionInfo = _createAction();
     vm.warp(block.timestamp + 12 days);
 
-    uint256 currentState = uint256(mpCore.getActionState(0));
+    uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 failedState = uint256(ActionState.Failed);
     assertEq(currentState, failedState);
+  }
+}
+
+contract LlamaCoreHarness is LlamaCore {
+  function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
+    return _infoHash(actionInfo);
+  }
+
+  function infoHash_exposed(
+    uint256 id,
+    address creator,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data
+  ) external pure returns (bytes32) {
+    return _infoHash(id, creator, strategy, target, value, data);
+  }
+}
+
+contract InfoHash is LlamaCoreTest {
+  LlamaCoreHarness llamaCoreHarness;
+
+  function setUp() public override {
+    llamaCoreHarness = new LlamaCoreHarness();
+  }
+
+  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+    bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
+    bytes32 infoHash2 = llamaCoreHarness.infoHash_exposed(
+      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+    );
+    assertEq(infoHash1, infoHash2);
   }
 }

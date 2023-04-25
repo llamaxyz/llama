@@ -8,7 +8,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action} from "src/lib/Structs.sol";
+import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 
@@ -29,6 +29,9 @@ contract LlamaCoreHandler is BaseHandler {
   // Used to track the last seen `actionsCount` value.
   uint256[] public actionsCounts;
 
+  // Mapping from action ID to the action info struct
+  mapping(uint256 actionId => ActionInfo) public actionInfos;
+
   // =============================
   // ======== Constructor ========
   // =============================
@@ -47,6 +50,7 @@ contract LlamaCoreHandler is BaseHandler {
     // Save off each existing action
     for (uint256 i = 0; i < LLAMA_CORE.actionsCount(); i++) {
       actionsCounts.push(i);
+      actionInfos[i] = LlamaFactoryInvariants(msg.sender).getActionInfo(i);
     }
 
     (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
@@ -88,7 +92,7 @@ contract LlamaCoreHandler is BaseHandler {
     uint256 actionId = _bound(index, 0, actionCount - 1);
     for (uint256 i = 0; i < actionCount; i++) {
       actionId = actionId % actionCount;
-      if (LLAMA_CORE.getActionState(actionId) == targetState) return actionId;
+      if (LLAMA_CORE.getActionState(actionInfos[actionId]) == targetState) return actionId;
       actionId++;
     }
     return type(uint256).max;
@@ -149,11 +153,13 @@ contract LlamaCoreHandler is BaseHandler {
     // We only have one function that takes calldata, if we're calling that function, we randomize
     // the calldata;
     bytes memory data = selector == bytes4(keccak256("pause(bool)")) ? abi.encode(_bound(dataSeed, 0, 1)) : bytes("");
+    data = abi.encodeWithSelector(selector, data);
 
     // We can now execute the action.
     vm.prank(actionCreatorAaron);
-    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
+    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, data);
     actionsCounts.push(actionId);
+    actionInfos[actionId] = ActionInfo(actionId, actionCreatorAaron, strategy, target, value, data);
   }
 
   function llamaCore_queueAction(uint256 index) public recordCall("llamaCore_queueAction") useCurrentTimestamp {
@@ -165,7 +171,7 @@ contract LlamaCoreHandler is BaseHandler {
       return;
     }
 
-    LLAMA_CORE.queueAction(actionId);
+    LLAMA_CORE.queueAction(actionInfos[actionId]);
     recordMetric("llamaCore_queueAction_queued");
   }
 
@@ -179,7 +185,7 @@ contract LlamaCoreHandler is BaseHandler {
     }
 
     vm.warp(LLAMA_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
-    try LLAMA_CORE.executeAction(actionId) {
+    try LLAMA_CORE.executeAction(actionInfos[actionId]) {
       recordMetric("llamaCore_executeAction_executed");
     } catch {
       // We don't care about reverts, we just want to know if the action was executed or not.
@@ -193,15 +199,15 @@ contract LlamaCoreHandler is BaseHandler {
     uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
     for (uint256 i = 0; i < actionsCounts.length; i++) {
       actionId = actionsCounts[(actionId + i) % actionsCounts.length];
-      ActionState state = LLAMA_CORE.getActionState(actionId);
+      ActionInfo memory actionInfo = actionInfos[actionId];
+      ActionState state = LLAMA_CORE.getActionState(actionInfo);
       if (
         state != ActionState.Executed && state != ActionState.Canceled && state != ActionState.Expired
           && state != ActionState.Failed
       ) {
         // Prank as the action creator so we don't need to worry about disapprovals to cancel the action.
-        Action memory action = LLAMA_CORE.getAction(actionId);
-        vm.prank(action.creator);
-        LLAMA_CORE.cancelAction(actionId);
+        vm.prank(actionInfo.creator);
+        LLAMA_CORE.cancelAction(actionInfo);
         recordMetric("llamaCore_cancelAction_canceled");
         return;
       }
@@ -226,7 +232,7 @@ contract LlamaCoreHandler is BaseHandler {
     }
 
     vm.prank(approver);
-    LLAMA_CORE.castApproval(actionId, uint8(Roles.Approver));
+    LLAMA_CORE.castApproval(actionInfos[actionId], uint8(Roles.Approver));
     recordMetric("llamaCore_castApproval_approved");
   }
 
@@ -248,7 +254,7 @@ contract LlamaCoreHandler is BaseHandler {
     }
 
     vm.prank(disapprover);
-    LLAMA_CORE.castDisapproval(actionId, uint8(Roles.Disapprover));
+    LLAMA_CORE.castDisapproval(actionInfos[actionId], uint8(Roles.Disapprover));
     recordMetric("llamaCore_castDisapproval_disapproved");
   }
 
@@ -269,45 +275,53 @@ contract LlamaCoreHandler is BaseHandler {
 contract LlamaFactoryInvariants is LlamaTestSetup {
   LlamaCoreHandler public handler;
 
-  uint256 executedActionId;
-  uint256 canceledActionId;
-  uint256 expiredActionId;
+  ActionInfo executedAction;
+  ActionInfo canceledAction;
+  ActionInfo expiredAction;
+
+  // Mapping from action ID to action info, used for the handler to initialize this mapping in it's own storage.
+  mapping(uint256 actionId => ActionInfo) public actionInfos;
 
   function setUp() public override {
     LlamaTestSetup.setUp();
 
     // We push through 3 actions: one that's executed, one that's canceled, and one that's expired.
     // First, we execute an action.
-    executedActionId = createAction();
-    approveAction(approverAdam, executedActionId);
-    approveAction(approverAlicia, executedActionId);
+    executedAction = createAction();
+    approveAction(approverAdam, executedAction);
+    approveAction(approverAlicia, executedAction);
     vm.warp(block.timestamp + 6 days);
-    mpCore.queueAction(executedActionId);
+    mpCore.queueAction(executedAction);
     vm.warp(block.timestamp + 5 days);
-    mpCore.executeAction(executedActionId);
+    mpCore.executeAction(executedAction);
     vm.warp(block.timestamp + 1 days);
 
     // Now we cancel an action.
-    canceledActionId = createAction();
+    canceledAction = createAction();
     vm.prank(actionCreatorAaron);
-    mpCore.cancelAction(canceledActionId);
+    mpCore.cancelAction(canceledAction);
     vm.warp(block.timestamp + 1 days);
 
     // Lastly, we let an action expire.
-    expiredActionId = createAction();
-    approveAction(approverAdam, expiredActionId);
-    approveAction(approverAlicia, expiredActionId);
+    expiredAction = createAction();
+    approveAction(approverAdam, expiredAction);
+    approveAction(approverAlicia, expiredAction);
     vm.warp(block.timestamp + 6 days);
-    mpCore.queueAction(expiredActionId);
+    mpCore.queueAction(expiredAction);
     vm.warp(block.timestamp + 15 days);
 
+    // Save off the actions.
+    actionInfos[executedAction.id] = executedAction;
+    actionInfos[canceledAction.id] = canceledAction;
+    actionInfos[expiredAction.id] = expiredAction;
+
     // Verify our setup. Note that we rely on the fact that the action IDs are assigned sequentially in the handler.
-    require(executedActionId == 0, "executedActionId");
-    require(canceledActionId == 1, "canceledActionId");
-    require(expiredActionId == 2, "expiredActionId");
-    require(mpCore.getActionState(executedActionId) == ActionState.Executed, "executedActionId");
-    require(mpCore.getActionState(canceledActionId) == ActionState.Canceled, "canceledActionId");
-    require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId");
+    require(executedAction.id == 0, "executedActionId");
+    require(canceledAction.id == 1, "canceledActionId");
+    require(expiredAction.id == 2, "expiredActionId");
+    require(mpCore.getActionState(executedAction) == ActionState.Executed, "executedActionId");
+    require(mpCore.getActionState(canceledAction) == ActionState.Canceled, "canceledActionId");
+    require(mpCore.getActionState(expiredAction) == ActionState.Expired, "expiredActionId");
 
     // Now we deploy our handler and inform it of these actions.
     ILlamaStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
@@ -322,22 +336,21 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
   // ======== Helpers ========
   // =========================
 
-  function createAction() internal returns (uint256 actionId) {
+  function getActionInfo(uint256 actionId) external view returns (ActionInfo memory actionInfo) {
+    actionInfo = actionInfos[actionId];
+  }
+
+  function createAction() internal returns (ActionInfo memory actionInfo) {
+    bytes memory data = abi.encodeWithSelector(PAUSE_SELECTOR, true);
     vm.prank(actionCreatorAaron);
-    actionId = mpCore.createAction(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
   }
 
-  function approveAction(address policyholder, uint256 actionId) public {
+  function approveAction(address policyholder, ActionInfo memory actionInfo) public {
     vm.prank(policyholder);
-    mpCore.castApproval(actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
   // ======================================
@@ -356,19 +369,19 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
   // Once an action is executed, it's state is final and should never change, i.e. it cannot be
   // queued or executed again.
   function assertInvariant_ExecutedActionsAreFinalized() internal view {
-    require(mpCore.getActionState(executedActionId) == ActionState.Executed, "executedActionId state changed");
+    require(mpCore.getActionState(executedAction) == ActionState.Executed, "executedAction state changed");
   }
 
   // Once an action is canceled, it's state is final and should never change, i.e. it cannot
   // cannot be later be queued, executed, or canceled again.
   function assertInvariant_CanceledActionsAreFinalized() internal view {
-    require(mpCore.getActionState(canceledActionId) == ActionState.Canceled, "canceledActionId state changed");
+    require(mpCore.getActionState(canceledAction) == ActionState.Canceled, "canceledAction state changed");
   }
 
   // Once an action is expired, it's state is final and should never change, i.e. it cannot be
   // later be queued and executed.
   function assertInvariant_ExpiredActionsAreFinalized() internal view {
-    require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId state changed");
+    require(mpCore.getActionState(expiredAction) == ActionState.Expired, "expiredAction state changed");
   }
 
   // =================================
