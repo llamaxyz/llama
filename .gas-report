@@ -3,82 +3,82 @@
 | Deployment Cost                            | Deployment Size |       |        |       |         |
 | 2065034                                    | 10497           |       |        |       |         |
 | Function Name                              | min             | avg   | median | max   | # calls |
-| approveERC20                               | 3496            | 26429 | 27427  | 46427 | 14      |
-| approveERC721                              | 27452           | 27452 | 27452  | 27452 | 2       |
+| approveERC20                               | 2687            | 24846 | 27427  | 46427 | 15      |
+| approveERC721                              | 2665            | 19189 | 27452  | 27452 | 3       |
 | approveOperatorERC1155                     | 2643            | 18029 | 19425  | 30625 | 4       |
-| approveOperatorERC721                      | 10662           | 23095 | 28062  | 30562 | 3       |
-| batchApproveERC20                          | 77587           | 77587 | 77587  | 77587 | 1       |
+| approveOperatorERC721                      | 2753            | 18009 | 19362  | 30562 | 4       |
+| batchApproveERC20                          | 2988            | 40287 | 40287  | 77587 | 2       |
 | batchApproveERC721                         | 2727            | 27271 | 27271  | 51816 | 2       |
-| batchApproveOperatorERC1155                | 58845           | 58845 | 58845  | 58845 | 1       |
-| batchApproveOperatorERC721                 | 58731           | 58731 | 58731  | 58731 | 1       |
-| batchTransferERC20                         | 3328            | 14131 | 14131  | 24934 | 2       |
-| batchTransferERC721                        | 2941            | 14854 | 14854  | 26768 | 2       |
-| batchTransferMultipleERC1155               | 2999            | 11763 | 11763  | 20528 | 2       |
-| batchTransferNativeToken                   | 2996            | 22642 | 22642  | 42288 | 2       |
-| batchTransferSingleERC1155                 | 2496            | 6610  | 6610   | 10725 | 2       |
-| execute                                    | 3313            | 4884  | 3676   | 7664  | 3       |
-| initialize                                 | 1449            | 68782 | 69180  | 69180 | 1337    |
+| batchApproveOperatorERC1155                | 2639            | 30742 | 30742  | 58845 | 2       |
+| batchApproveOperatorERC721                 | 2595            | 30663 | 30663  | 58731 | 2       |
+| batchTransferERC20                         | 3004            | 10422 | 3328   | 24934 | 3       |
+| batchTransferERC721                        | 2617            | 10775 | 2941   | 26768 | 3       |
+| batchTransferMultipleERC1155               | 2654            | 8727  | 2999   | 20528 | 3       |
+| batchTransferNativeToken                   | 2735            | 16006 | 2996   | 42288 | 3       |
+| batchTransferSingleERC1155                 | 2396            | 5205  | 2496   | 10725 | 3       |
+| execute                                    | 2844            | 4374  | 3494   | 7664  | 4       |
+| initialize                                 | 1449            | 68779 | 69180  | 69180 | 1329    |
 | llamaCore                                  | 577             | 977   | 577    | 2577  | 5       |
 | name                                       | 929             | 1329  | 929    | 2929  | 5       |
 | onERC1155Received                          | 1134            | 1134  | 1134   | 1134  | 10      |
 | onERC721Received                           | 782             | 782   | 782    | 782   | 1       |
 | receive                                    | 67              | 67    | 67     | 67    | 1       |
-| transferERC1155                            | 2556            | 4784  | 4784   | 7012  | 2       |
+| transferERC1155                            | 2461            | 4009  | 2556   | 7012  | 3       |
 | transferERC20                              | 2555            | 6348  | 2635   | 13854 | 3       |
 | transferERC721                             | 2489            | 5624  | 2572   | 11811 | 3       |
-| transferNativeToken                        | 2550            | 6035  | 6035   | 9521  | 2       |
+| transferNativeToken                        | 2467            | 4846  | 2550   | 9521  | 3       |
 
 
-| src/LlamaCore.sol:LlamaCore contract  |                 |                     |        |                     |         |
-|---------------------------------------|-----------------|---------------------|--------|---------------------|---------|
-| Deployment Cost                       | Deployment Size |                     |        |                     |         |
-| 3334349                               | 16836           |                     |        |                     |         |
-| Function Name                         | min             | avg                 | median | max                 | # calls |
-| actionGuard                           | 1049            | 1049                | 1049   | 1049                | 1       |
-| actionsCount                          | 563             | 1024                | 563    | 2563                | 13      |
-| approvals                             | 815             | 815                 | 815    | 815                 | 2       |
-| authorizeScript                       | 887             | 7665                | 3080   | 26656               | 5       |
-| authorizedScripts                     | 658             | 658                 | 658    | 658                 | 1       |
-| authorizedStrategies                  | 570             | 1141                | 570    | 2570                | 21      |
-| cancelAction                          | 3844            | 27398               | 19476  | 53651               | 13      |
-| castApproval(uint256,uint8)           | 3085            | 53625               | 48101  | 114001              | 271     |
-| castApproval(uint256,uint8,string)    | 77102           | 77102               | 77102  | 77102               | 1       |
-| castApprovalBySig                     | 6247            | 63518               | 66835  | 105523              | 6       |
-| castDisapproval(uint256,uint8)        | 3132            | 67864               | 67938  | 91812               | 243     |
-| castDisapproval(uint256,uint8,string) | 92719           | 92719               | 92719  | 92719               | 1       |
-| castDisapprovalBySig                  | 6269            | 71420               | 74742  | 121315              | 6       |
-| createAccounts                        | 680             | 2513641910770444430 | 347682 | 8797746687696147654 | 7       |
-| createAction                          | 993             | 227460              | 238135 | 564813              | 82      |
-| createActionBySig                     | 6990            | 159030              | 162347 | 295804              | 6       |
-| createAndAuthorizeStrategies          | 832             | 451166496805353121  | 268621 | 8797746687696142401 | 39      |
-| disapprovals                          | 705             | 705                 | 705    | 705                 | 2       |
-| executeAction                         | 757             | 63450               | 51405  | 296563              | 17      |
-| factory                               | 2773            | 2773                | 2773   | 2773                | 1       |
-| getAction                             | 3398            | 3784                | 3398   | 19398               | 2083    |
-| getActionState                        | 797             | 18295               | 17655  | 49679               | 37      |
-| initialize                            | 1656            | 859511              | 860103 | 978224              | 656     |
-| llamaAccountLogic                     | 635             | 1635                | 1635   | 2635                | 2       |
-| name                                  | 894             | 931                 | 894    | 2894                | 106     |
-| nonces                                | 999             | 1999                | 1999   | 2999                | 6       |
-| policy                                | 253             | 289                 | 253    | 2253                | 1977    |
-| queueAction                           | 420             | 43332               | 38240  | 75240               | 37      |
-| setGuard                              | 781             | 16076               | 26988  | 26988               | 7       |
-| unauthorizeStrategies                 | 400             | 3982                | 3982   | 7564                | 2       |
+| src/LlamaCore.sol:LlamaCore contract                                          |                 |                     |        |                     |         |
+|-------------------------------------------------------------------------------|-----------------|---------------------|--------|---------------------|---------|
+| Deployment Cost                                                               | Deployment Size |                     |        |                     |         |
+| 3298309                                                                       | 16656           |                     |        |                     |         |
+| Function Name                                                                 | min             | avg                 | median | max                 | # calls |
+| actionGuard                                                                   | 1049            | 1049                | 1049   | 1049                | 1       |
+| actionsCount                                                                  | 541             | 541                 | 541    | 541                 | 2       |
+| approvals                                                                     | 815             | 815                 | 815    | 815                 | 2       |
+| authorizeScript                                                               | 865             | 7643                | 3058   | 26634               | 5       |
+| authorizedScripts                                                             | 614             | 614                 | 614    | 614                 | 1       |
+| authorizedStrategies                                                          | 482             | 1053                | 482    | 2482                | 21      |
+| cancelAction                                                                  | 3910            | 34599               | 32460  | 60292               | 11      |
+| castApproval((uint256,address,address,address,uint256,bytes),uint8)           | 3602            | 50228               | 43430  | 99330               | 260     |
+| castApproval((uint256,address,address,address,uint256,bytes),uint8,string)    | 100816          | 100816              | 100816 | 100816              | 1       |
+| castApprovalBySig                                                             | 7001            | 67110               | 70427  | 111953              | 6       |
+| castDisapproval((uint256,address,address,address,uint256,bytes),uint8)        | 3689            | 57404               | 57205  | 83542               | 243     |
+| castDisapproval((uint256,address,address,address,uint256,bytes),uint8,string) | 85159           | 85159               | 85159  | 85159               | 1       |
+| castDisapprovalBySig                                                          | 7262            | 68444               | 71761  | 114360              | 6       |
+| createAccounts                                                                | 658             | 2513641910770444520 | 347930 | 8797746687696147697 | 7       |
+| createAction                                                                  | 894             | 130782              | 136701 | 162701              | 75      |
+| createActionBySig                                                             | 6962            | 107574              | 110891 | 192921              | 6       |
+| createAndAuthorizeStrategies                                                  | 832             | 451166496805353768  | 268704 | 8797746687696142561 | 39      |
+| disapprovals                                                                  | 661             | 661                 | 661    | 661                 | 2       |
+| executeAction                                                                 | 3823            | 71022               | 48118  | 292573              | 15      |
+| factory                                                                       | 2773            | 2773                | 2773   | 2773                | 1       |
+| getAction                                                                     | 1847            | 2169                | 1847   | 9847                | 1446    |
+| getActionState                                                                | 2047            | 16994               | 19381  | 37518               | 26      |
+| initialize                                                                    | 1612            | 859804              | 860396 | 978607              | 652     |
+| llamaAccountLogic                                                             | 635             | 1635                | 1635   | 2635                | 2       |
+| name                                                                          | 894             | 931                 | 894    | 2894                | 106     |
+| nonces                                                                        | 999             | 1999                | 1999   | 2999                | 6       |
+| policy                                                                        | 253             | 289                 | 253    | 2253                | 1963    |
+| queueAction                                                                   | 3398            | 41135               | 37717  | 64717               | 32      |
+| setGuard                                                                      | 781             | 16076               | 26988  | 26988               | 7       |
+| unauthorizeStrategies                                                         | 400             | 3982                | 3982   | 7564                | 2       |
 
 
 | src/LlamaFactory.sol:LlamaFactory contract |                 |         |         |         |         |
 |--------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                            | Deployment Size |         |         |         |         |
-| 3006298                                    | 13646           |         |         |         |         |
+| 3014657                                    | 13774           |         |         |         |         |
 | Function Name                              | min             | avg     | median  | max     | # calls |
 | LLAMA_ACCOUNT_LOGIC                        | 164             | 164     | 164     | 164     | 2       |
 | LLAMA_CORE_LOGIC                           | 342             | 342     | 342     | 342     | 2       |
 | LLAMA_POLICY_LOGIC                         | 276             | 276     | 276     | 276     | 2       |
-| LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 364             | 364     | 364     | 364     | 315     |
-| ROOT_LLAMA                                 | 232             | 232     | 232     | 232     | 309     |
+| LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 364             | 364     | 364     | 364     | 313     |
+| ROOT_LLAMA                                 | 232             | 232     | 232     | 232     | 307     |
 | authorizeStrategyLogic                     | 387             | 21156   | 23686   | 23686   | 10      |
-| authorizedStrategyLogics                   | 556             | 794     | 556     | 2556    | 360     |
-| deploy                                     | 5257            | 1270079 | 1278765 | 1427444 | 320     |
+| authorizedStrategyLogics                   | 556             | 796     | 556     | 2556    | 358     |
+| deploy                                     | 5257            | 1270316 | 1279058 | 1427737 | 318     |
 | llamaCount                                 | 285             | 951     | 285     | 2285    | 6       |
 | llamaPolicyTokenURI                        | 489             | 1489    | 1489    | 2489    | 2       |
 | setPolicyTokenURI                          | 313             | 3378    | 3378    | 6443    | 2       |
@@ -90,10 +90,10 @@
 | Deployment Cost                      | Deployment Size |      |        |      |         |
 | 323168                               | 1642            |      |        |      |         |
 | Function Name                        | min             | avg  | median | max  | # calls |
-| computeLlamaAccountAddress           | 1004            | 1004 | 1004   | 1004 | 2475    |
+| computeLlamaAccountAddress           | 1004            | 1004 | 1004   | 1004 | 2459    |
 | computeLlamaCoreAddress              | 1354            | 1354 | 1354   | 1354 | 5       |
 | computeLlamaPolicyAddress            | 1371            | 1371 | 1371   | 1371 | 6       |
-| computeLlamaStrategyAddress          | 1105            | 1118 | 1105   | 3446 | 2508    |
+| computeLlamaStrategyAddress          | 1105            | 1118 | 1105   | 3446 | 2492    |
 | computePermissionId                  | 476             | 476  | 476    | 476  | 2       |
 
 
@@ -107,19 +107,19 @@
 | balanceOf                                       | 759             | 2702    | 2759    | 2759    | 850     |
 | canCreateAction                                 | 1143            | 1809    | 1143    | 3143    | 3       |
 | factory                                         | 881             | 881     | 881     | 881     | 1       |
-| getPastQuantity                                 | 1298            | 2215    | 2170    | 10462   | 538     |
-| getQuantity                                     | 1156            | 2841    | 3156    | 3156    | 165     |
-| getRoleSupplyAsNumberOfHolders                  | 983             | 2114    | 2983    | 2983    | 152     |
+| getPastQuantity                                 | 1298            | 2216    | 2170    | 10462   | 527     |
+| getQuantity                                     | 1156            | 2917    | 3156    | 3156    | 151     |
+| getRoleSupplyAsNumberOfHolders                  | 983             | 2055    | 2983    | 2983    | 138     |
 | getRoleSupplyAsQuantitySum                      | 1222            | 1243    | 1222    | 3222    | 549     |
-| hasPermissionId                                 | 1588            | 5275    | 5854    | 7854    | 85      |
+| hasPermissionId                                 | 1588            | 5121    | 5854    | 7854    | 78      |
 | hasRole(address,uint8)(bool)                    | 1512            | 1616    | 1512    | 3081    | 15      |
-| hasRole(address,uint8,uint256)(bool)            | 1912            | 2834    | 2242    | 6242    | 519     |
-| initialize                                      | 1966            | 316189  | 318457  | 746591  | 665     |
-| initializeRole                                  | 639             | 2171    | 2155    | 6955    | 2035    |
+| hasRole(address,uint8,uint256)(bool)            | 1912            | 2824    | 2242    | 6242    | 508     |
+| initialize                                      | 1966            | 316175  | 318457  | 746591  | 661     |
+| initializeRole                                  | 639             | 2170    | 2155    | 6955    | 2184    |
 | isRoleExpired                                   | 827             | 1103    | 1241    | 1241    | 3       |
 | llamaCore                                       | 579             | 579     | 579     | 579     | 3       |
 | name                                            | 918             | 1718    | 918     | 2918    | 5       |
-| numRoles                                        | 661             | 685     | 661     | 2661    | 2904    |
+| numRoles                                        | 661             | 684     | 661     | 2661    | 3045    |
 | revokeExpiredRole                               | 1376            | 20170   | 24065   | 27281   | 5       |
 | revokePolicy(address)                           | 2841            | 386047  | 316342  | 1245396 | 5       |
 | revokePolicy(address,uint8[])                   | 914             | 351743  | 59937   | 1286183 | 4       |
@@ -128,9 +128,9 @@
 | safeTransferFrom(address,address,uint256)       | 476             | 476     | 476     | 476     | 1       |
 | safeTransferFrom(address,address,uint256,bytes) | 1025            | 1025    | 1025    | 1025    | 1       |
 | setApprovalForAll                               | 784             | 784     | 784     | 784     | 1       |
-| setLlama                                        | 680             | 946     | 680     | 22580   | 664     |
-| setRoleHolder                                   | 994             | 139135  | 144064  | 172764  | 13523   |
-| setRolePermission                               | 2868            | 24932   | 24948   | 26948   | 2494    |
+| setLlama                                        | 680             | 948     | 680     | 22580   | 660     |
+| setRoleHolder                                   | 994             | 139144  | 144064  | 172764  | 13509   |
+| setRolePermission                               | 2868            | 24932   | 24948   | 26948   | 2478    |
 | symbol                                          | 1336            | 2336    | 2336    | 3336    | 4       |
 | tokenURI                                        | 1314609         | 1314609 | 1314609 | 1314609 | 1       |
 | totalSupply                                     | 463             | 463     | 463     | 463     | 1       |
@@ -144,52 +144,10 @@ Failing tests:
 Encountered 1 failing test in test/Checkpoints.t.sol:WithCheckpointsWithoutExpiration
 [31m[FAIL. Reason: Assertion failed.][0m test_Lookup_ProbablyRecentTimestamp_ReturnsPastValues() (gas: 42357)
 
-Encountered 1 failing test in test/LlamaAccount.t.sol:ApproveERC20
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1939, μ: 16838, ~: 16838)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:ApproveERC721
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 16816, ~: 16816)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:ApproveOperatorERC721
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 16910, ~: 16910)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchApproveERC20
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e464800000000000000000000000000000000000000000000000000000000000045df, args=[0x00000000000000000000000000000000000045df]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 70, μ: 17597, ~: 17597)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchApproveOperatorERC1155
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 17694, ~: 17694)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchApproveOperatorERC721
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 17650, ~: 17650)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchTransferERC20
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000000000000000000000000000000000000002dea, args=[0x0000000000000000000000000000000000002deA]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 113, μ: 17654, ~: 17654)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchTransferERC721
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e4648000000000000000000000000d012cf6ca9c469c1d603557ed6c333169f059ac5, args=[0xD012cF6ca9c469c1D603557Ed6C333169f059ac5]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1941, μ: 17660, ~: 17660)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchTransferMultipleERC1155
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 18873, ~: 18873)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchTransferNativeToken
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 17547, ~: 17547)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:BatchTransferSingleERC1155
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 18121, ~: 18121)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:Execute
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 71923, ~: 71923)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:TransferERC1155
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e46480000000000000000000000000e1ed6ba0641cba90464febc2af54b43bc672934, args=[0x0E1ed6bA0641Cba90464febC2af54b43Bc672934]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 1940, μ: 17051, ~: 17051)
-
-Encountered 1 failing test in test/LlamaAccount.t.sol:TransferNativeToken
-[31m[FAIL. Reason: Call reverted as expected, but without data Counterexample: calldata=0x311e464800000000000000000000000000000000000000000000000000000000000039de, args=[0x00000000000000000000000000000000000039DE]][0m testFuzz_RevertIf_CallerIsNotLlama(address) (runs: 23, μ: 16561, ~: 16561)
-
 Encountered 1 failing test in test/LlamaStrategy.t.sol:GetApprovalQuantityAt
 [31m[FAIL. Reason: Checkpoints: timestamp is not in the past Counterexample: calldata=0x2f06353e0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001, args=[3, 1, 0x0000000000000000000000000000000000000000000000000000000000000001, 0x0000000000000000000000000000000000000001]][0m testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(uint256,uint8,bytes32,address) (runs: 0, μ: 0, ~: 0)
 
 Encountered 1 failing test in test/LlamaStrategy.t.sol:GetDisapprovalQuantityAt
 [31m[FAIL. Reason: Checkpoints: timestamp is not in the past Counterexample: calldata=0x6a7ccd080000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001, args=[3, 0x0000000000000000000000000000000000000000000000000000000000000001, 1, 0x0000000000000000000000000000000000000001]][0m testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(uint256,bytes32,uint8,address) (runs: 0, μ: 0, ~: 0)
 
-Encountered a total of [31m17[0m failing tests, [32m386[0m tests succeeded
+Encountered a total of [31m3[0m failing tests, [32m398[0m tests succeeded
