@@ -440,13 +440,12 @@ contract CreateAction is LlamaCoreTest {
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
-    bytes memory expectedErr = bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(expectedErr);
+    vm.expectRevert("no action creation");
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
   }
 
@@ -788,8 +787,6 @@ contract ExecuteAction is LlamaCoreTest {
 
   function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
-    bytes memory expectedErr =
-      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -797,14 +794,12 @@ contract ExecuteAction is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(expectedErr);
+    vm.expectRevert("no action pre-execution");
     mpCore.executeAction(actionInfo);
   }
 
   function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
-    bytes memory expectedErr =
-      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -812,7 +807,7 @@ contract ExecuteAction is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(expectedErr);
+    vm.expectRevert("no action post-execution");
     mpCore.executeAction(actionInfo);
   }
 

@@ -257,10 +257,7 @@ contract LlamaCore is Initializable {
 
     // Check pre-execution action guard.
     IActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validatePreActionExecution(actionInfo.id);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
     bool success;
@@ -272,10 +269,7 @@ contract LlamaCore is Initializable {
     if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validatePostActionExecution(actionInfo.id);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    if (guard != IActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
 
     // Action successfully executed.
     emit ActionExecuted(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, result);
@@ -511,25 +505,20 @@ contract LlamaCore is Initializable {
     // this race condition is unlikely to matter.
     if (!policy.hasPermissionId(policyholder, role, permissionId)) revert PolicyholderDoesNotHavePermission();
 
+    // Validate action creation.
     actionId = actionsCount;
-    Action storage newAction = actions[actionId];
-
-    newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
-    newAction.creationTime = block.timestamp;
-
-    // Safety: Can never overflow a uint256 by incrementing.
-    actionsCount = _uncheckedIncrement(actionsCount);
 
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
-    // If an action guard is present, call it to determine if the action can be created. We must do
-    // this after the action is written to storage so that the action guard can any state it needs.
     IActionGuard guard = actionGuard[target][bytes4(data)];
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+
+    // Save action.
+    Action storage newAction = actions[actionId];
+    newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
+    newAction.creationTime = block.timestamp;
+    actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, data);
   }
