@@ -7887,7 +7887,7 @@
       },
       {
         "type": "node",
-        "name": "block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionPassed(actionId))",
+        "name": "block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionApproved(actionId))",
         "source_mapping": {
           "start": 9877,
           "length": 112,
@@ -7950,8 +7950,8 @@
         }
       }
     ],
-    "description": "DefaultStrategy.isActive(uint256) (src/strategies/DefaultStrategy.sol#239-241) uses timestamp for comparisons\n\tDangerous comparisons:\n\t- block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionPassed(actionId)) (src/strategies/DefaultStrategy.sol#240)\n",
-    "markdown": "[DefaultStrategy.isActive(uint256)](src/strategies/DefaultStrategy.sol#L239-L241) uses timestamp for comparisons\n\tDangerous comparisons:\n\t- [block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionPassed(actionId))](src/strategies/DefaultStrategy.sol#L240)\n",
+    "description": "DefaultStrategy.isActive(uint256) (src/strategies/DefaultStrategy.sol#239-241) uses timestamp for comparisons\n\tDangerous comparisons:\n\t- block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionApproved(actionId)) (src/strategies/DefaultStrategy.sol#240)\n",
+    "markdown": "[DefaultStrategy.isActive(uint256)](src/strategies/DefaultStrategy.sol#L239-L241) uses timestamp for comparisons\n\tDangerous comparisons:\n\t- [block.timestamp < approvalEndTime(actionId) && (isFixedLengthApprovalPeriod || ! isActionApproved(actionId))](src/strategies/DefaultStrategy.sol#L240)\n",
     "first_markdown_element": "src/strategies/DefaultStrategy.sol#L239-L241",
     "id": "36f6af5a98a7a01074c9b8ae4ebe5f2f12a79783f63ed8a93464f7ba97b337f6",
     "check": "timestamp",

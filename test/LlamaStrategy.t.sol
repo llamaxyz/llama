@@ -565,7 +565,7 @@ contract Initialize is LlamaStrategyTest {
   }
 }
 
-contract IsActionPassed is LlamaStrategyTest {
+contract isActionApproved is LlamaStrategyTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -579,9 +579,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, true);
+    assertEq(_isActionApproved, true);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -612,9 +612,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, true);
+    assertEq(_isActionApproved, true);
   }
 
   function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
@@ -629,9 +629,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, false);
+    assertEq(_isActionApproved, false);
   }
 
   function testFuzz_AbsoluteStrategy_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
@@ -662,9 +662,9 @@ contract IsActionPassed is LlamaStrategyTest {
 
     approveAction(_actionApprovals, actionId);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool _isActionApproved = testStrategy.isActionApproved(actionId);
 
-    assertEq(isActionPassed, false);
+    assertEq(_isActionApproved, false);
   }
 
   function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
@@ -675,64 +675,6 @@ contract IsActionPassed is LlamaStrategyTest {
 }
 
 contract IsActionCancelationValid is LlamaStrategyTest {
-  function testFuzz_ReturnsTrueForDisapprovedActions(uint256 _actionDisapprovals, uint256 _numberOfPolicies) public {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionDisapprovals =
-      bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
-
-    ILlamaStrategy testStrategy = deployTestStrategyWithForceApproval();
-
-    generateAndSetRoleHolders(_numberOfPolicies);
-
-    uint256 actionId = createAction(testStrategy);
-
-    vm.prank(address(approverAdam));
-    mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
-
-    mpCore.queueAction(actionId);
-
-    disapproveAction(_actionDisapprovals, actionId);
-
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
-
-    assertEq(isActionCancelled, true);
-  }
-
-  function testFuzz_AbsoluteStrategy_ReturnsTrueForDisapprovedActions(
-    uint256 _actionDisapprovals,
-    uint256 _numberOfPolicies
-  ) public {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionDisapprovals =
-      bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
-
-    ILlamaStrategy testStrategy = deployAbsoluteStrategyAndSetRole(
-      uint8(Roles.TestRole1),
-      bytes32(0),
-      address(this),
-      1 days,
-      4 days,
-      1 days,
-      false,
-      0,
-      _actionDisapprovals,
-      new uint8[](0),
-      new uint8[](0)
-    );
-
-    generateAndSetRoleHolders(_numberOfPolicies);
-
-    uint256 actionId = createAction(testStrategy);
-
-    mpCore.queueAction(actionId);
-
-    disapproveAction(_actionDisapprovals, actionId);
-
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
-
-    assertEq(isActionCancelled, true);
-  }
-
   function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionDisapprovals, uint256 _numberOfPolicies)
     public
   {

@@ -32,7 +32,7 @@ contract LlamaLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaCoreLogic,
-      keccak256(abi.encode(name)), // salt
+      keccak256(abi.encodePacked(name)), // salt
       factory // deployer
     );
     return LlamaCore(_computedAddress);
@@ -50,7 +50,7 @@ contract LlamaLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaPolicyLogic,
-      keccak256(abi.encode(name)), // salt
+      keccak256(abi.encodePacked(name)), // salt
       factory // deployer
     );
     return LlamaPolicy(_computedAddress);
@@ -86,7 +86,7 @@ contract LlamaLens {
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaAccountLogic,
-      keccak256(abi.encode(account)), // salt
+      keccak256(abi.encodePacked(account)), // salt
       llamaCore // deployer
     );
     return LlamaAccount(payable(_computedAddress));
