@@ -14,7 +14,14 @@ import {MockScript} from "test/mock/MockScript.sol";
 import {DeployLlama} from "script/DeployLlama.s.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  Action,
+  ActionInfo,
+  RelativeStrategyConfig,
+  PermissionData,
+  RoleHolderData,
+  RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -93,7 +100,7 @@ contract LlamaTestSetup is DeployLlama, Test {
   bytes4 public constant PAUSE_SELECTOR = 0x02329a29; // pause(bool)
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
-  bytes4 public constant EXECUTE_ACTION_SELECTOR = 0xc0c1cf55; // executeAction(uint256)
+  bytes4 public constant EXECUTE_ACTION_SELECTOR = LlamaCore.executeAction.selector;
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
@@ -284,5 +291,22 @@ contract LlamaTestSetup is DeployLlama, Test {
     assembly {
       converted := strategy
     }
+  }
+
+  function infoHash(ActionInfo memory actionInfo) internal pure returns (bytes32) {
+    return infoHash(
+      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+    );
+  }
+
+  function infoHash(
+    uint256 id,
+    address creator,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes memory data
+  ) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
   }
 }

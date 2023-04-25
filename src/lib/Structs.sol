@@ -26,15 +26,22 @@ struct PermissionData {
   ILlamaStrategy strategy; // Strategy used to govern the action.
 }
 
+struct ActionInfo {
+  uint256 id; // ID of the action.
+  address creator; // Address that created the action.
+  ILlamaStrategy strategy; // Strategy used to govern the action.
+  address target; // Contract being called by an action.
+  uint256 value; // Value in wei to be sent when the action is executed.
+  bytes data; // Data to be called on the `target` when the action is executed.
+}
+
 struct Action {
-  address creator; // msg.sender of createAction.
-  bool executed; // has action executed.
-  bool canceled; // is action canceled.
-  bytes4 selector; // The function selector that will be called when the action is executed.
-  ILlamaStrategy strategy; // strategy that determines the validation process of this action.
-  address target; // The contract called when the action is executed
-  bytes data; //  The encoded arguments to be passed to the function that is called when the action is executed.
-  uint256 value; // The value in wei to be sent when the action is executed.
+  // Instead of storing all data required to execute an action in storage, we only save the hash to
+  // make action creation cheaper. The hash is computed by taking the keccak256 hash of the
+  // concatenation of the each field in the `ActionInfo` struct.
+  bytes32 infoHash;
+  bool executed; // Has action executed.
+  bool canceled; // Is action canceled.
   uint256 creationTime; // The timestamp when action was created (used for policy snapshots).
   uint256 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
   uint256 totalApprovals; // The total quantity of policyholder approvals.

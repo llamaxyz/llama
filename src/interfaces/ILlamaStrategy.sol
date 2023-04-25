@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -33,7 +34,7 @@ interface ILlamaStrategy {
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
   /// @dev This method is not view because the strategy may want to save off some data at the time of creation.
-  function validateActionCreation(uint256 actionId) external returns (bool, bytes32);
+  function validateActionCreation(ActionInfo calldata actionInfo) external returns (bool, bytes32);
 
   // -------- When Casting Approval --------
 
@@ -41,7 +42,10 @@ interface ILlamaStrategy {
   /// otherwise.  May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
-  function isApprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
+    external
+    view
+    returns (bool, bytes32);
 
   /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -56,7 +60,10 @@ interface ILlamaStrategy {
   /// otherwise. May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
-  function isDisapprovalEnabled(uint256 actionId, address policyholder) external view returns (bool, bytes32);
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
+    external
+    view
+    returns (bool, bytes32);
 
   /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -71,29 +78,29 @@ interface ILlamaStrategy {
   // -------- When Queueing --------
 
   /// @notice Returns the earliest timestamp, in seconds, at which an action can be executed.
-  function minExecutionTime(uint256 actionId) external view returns (uint256);
+  function minExecutionTime(ActionInfo calldata actionInfo) external view returns (uint256);
 
   // -------- When Canceling --------
 
   /// @notice Get whether an action has eligible to be canceled.
-  /// @param actionId id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param caller Policyholder initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
-  function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool);
+  function isActionCancelationValid(ActionInfo calldata actionInfo, address caller) external view returns (bool);
 
   // -------- When Determining Action State --------
   // These are used during casting of approvals and disapprovals, when queueing, and when executing.
 
   /// @notice Returns true if an action is currently active, false otherwise.
-  function isActive(uint256 actionId) external view returns (bool);
+  function isActive(ActionInfo calldata actionInfo) external view returns (bool);
 
   /// @notice Get whether an action has passed the approval process.
-  /// @param actionId id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @return Boolean value that is true if the action has passed the approval process.
-  function isActionPassed(uint256 actionId) external view returns (bool);
+  function isActionPassed(ActionInfo calldata actionInfo) external view returns (bool);
 
   /// @notice Returns `true` if the action is expired, false otherwise.
-  /// @param actionId id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @return Boolean value that is true if the action is expired.
-  function isActionExpired(uint256 actionId) external view returns (bool);
+  function isActionExpired(ActionInfo calldata actionInfo) external view returns (bool);
 }

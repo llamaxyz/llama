@@ -5,10 +5,11 @@ import {Test, console2} from "forge-std/Test.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
+import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {ActionInfo, AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
@@ -194,39 +195,41 @@ contract LlamaStrategyTest is LlamaTestSetup {
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
   }
 
-  function createAction(ILlamaStrategy testStrategy) internal returns (uint256 actionId) {
+  function createAction(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
 
     // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    actionId = mpCore.createAction(
+    uint256 actionId = mpCore.createAction(
       uint8(Roles.ActionCreator),
       testStrategy,
       address(mockProtocol),
       0, // value
-      PAUSE_SELECTOR,
-      abi.encode(true)
+      data
     );
+
+    actionInfo = ActionInfo(actionId, actionCreatorAaron, testStrategy, address(mockProtocol), 0, data);
 
     vm.warp(block.timestamp + 1);
   }
 
-  function approveAction(uint256 numberOfApprovals, uint256 actionId) internal {
+  function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
     for (uint256 i; i < numberOfApprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
-      mpCore.castApproval(actionId, uint8(Roles.TestRole1));
+      mpCore.castApproval(actionInfo, uint8(Roles.TestRole1));
     }
   }
 
-  function disapproveAction(uint256 numberOfDisapprovals, uint256 actionId) internal {
+  function disapproveAction(uint256 numberOfDisapprovals, ActionInfo memory actionInfo) internal {
     for (uint256 i; i < numberOfDisapprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
-      mpCore.castDisapproval(actionId, uint8(Roles.TestRole1));
+      mpCore.castDisapproval(actionInfo, uint8(Roles.TestRole1));
     }
   }
 
@@ -521,11 +524,11 @@ contract IsActionPassed is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionInfo);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionPassed = testStrategy.isActionPassed(actionInfo);
 
     assertEq(isActionPassed, true);
   }
@@ -553,11 +556,11 @@ contract IsActionPassed is LlamaStrategyTest {
       new uint8[](0)
     );
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionInfo);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionPassed = testStrategy.isActionPassed(actionInfo);
 
     assertEq(isActionPassed, true);
   }
@@ -570,11 +573,11 @@ contract IsActionPassed is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionInfo);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionPassed = testStrategy.isActionPassed(actionInfo);
 
     assertEq(isActionPassed, false);
   }
@@ -602,19 +605,19 @@ contract IsActionPassed is LlamaStrategyTest {
       new uint8[](0)
     );
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    approveAction(_actionApprovals, actionId);
+    approveAction(_actionApprovals, actionInfo);
 
-    bool isActionPassed = testStrategy.isActionPassed(actionId);
+    bool isActionPassed = testStrategy.isActionPassed(actionInfo);
 
     assertEq(isActionPassed, false);
   }
 
-  function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
-    vm.expectRevert(LlamaCore.InvalidActionId.selector);
+  function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(approverAdam));
-    mpCore.castApproval(_actionId, uint8(Roles.Approver));
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 }
 
@@ -628,16 +631,16 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
+    mpCore.castApproval(actionInfo, uint8(Roles.ForceApprover));
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
-    disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
 
     assertEq(isActionCancelled, true);
   }
@@ -666,13 +669,13 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
-    disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
 
     assertEq(isActionCancelled, true);
   }
@@ -687,16 +690,16 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(actionId, uint8(Roles.ForceApprover));
+    mpCore.castApproval(actionInfo, uint8(Roles.ForceApprover));
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
-    disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
 
     assertEq(isActionCancelled, false);
   }
@@ -725,21 +728,21 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    uint256 actionId = createAction(testStrategy);
+    ActionInfo memory actionInfo = createAction(testStrategy);
 
-    mpCore.queueAction(actionId);
+    mpCore.queueAction(actionInfo);
 
-    disapproveAction(_actionDisapprovals, actionId);
+    disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionId, address(this));
+    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
 
     assertEq(isActionCancelled, false);
   }
 
-  function testFuzz_RevertForNonExistentActionId(uint256 _actionId) public {
-    vm.expectRevert(LlamaCore.InvalidActionId.selector);
+  function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(disapproverDave));
-    mpCore.castDisapproval(_actionId, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
 }
 
