@@ -63,11 +63,11 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   uint256 public expirationPeriod;
 
   /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
-  /// action to be queued. In bps, where 100_00 == 100%.
+  /// action to be queued. In bps, where 10,000 == 100%.
   uint256 public minApprovalPct;
 
   /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
-  /// action for it to be canceled. In bps, 100_00 == 100%.
+  /// action for it to be canceled. In bps, 10,000 == 100%.
   uint256 public minDisapprovalPct;
 
   /// @notice The role that can approve an action.
