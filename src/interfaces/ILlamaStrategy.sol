@@ -9,6 +9,8 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Llama strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
+/// @dev Validation methods are not `view` because (1) the strategy may want to save off some data
+/// during the call, and (2) having `view` methods that can revert isn't great UX.
 interface ILlamaStrategy {
   // -------- For Inspection --------
   // These are not strictly required by the core, but are useful for inspecting a strategy contract.
@@ -29,23 +31,13 @@ interface ILlamaStrategy {
 
   // -------- At Action Creation --------
 
-  /// @notice Returns `true` if the action is allowed to be created, false otherwise.  May also
-  /// return a reason string for why the action is not allowed.
-  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
-  /// string that consumes too much gas when copied to memory.
-  /// @dev This method is not view because the strategy may want to save off some data at the time of creation.
-  function validateActionCreation(ActionInfo calldata actionInfo) external returns (bool, bytes32);
+  /// @notice Reverts if action creation is not allowed.
+  function validateActionCreation(ActionInfo calldata actionInfo) external;
 
   // -------- When Casting Approval --------
 
-  /// @notice Returns true if approvals are allowed with this strategy for the given policyholder, false
-  /// otherwise.  May also return a reason string for why the action is not allowed.
-  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
-  /// string that consumes too much gas when copied to memory.
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
-    external
-    view
-    returns (bool, bytes32);
+  /// @notice Reverts if approvals are not allowed with this strategy for the given policyholder.
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external;
 
   /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -56,14 +48,8 @@ interface ILlamaStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Returns true if disapprovals are allowed with this strategy for the given policyholder, false
-  /// otherwise. May also return a reason string for why the action is not allowed.
-  /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
-  /// string that consumes too much gas when copied to memory.
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
-    external
-    view
-    returns (bool, bytes32);
+  /// @notice Reverts if disapprovals are not allowed with this strategy for the given policyholder.
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external;
 
   /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -82,11 +68,10 @@ interface ILlamaStrategy {
 
   // -------- When Canceling --------
 
-  /// @notice Get whether an action has eligible to be canceled.
+  /// @notice Reverts if the action cannot be canceled.
   /// @param actionInfo Data required to create an action.
   /// @param caller Policyholder initiating the cancelation.
-  /// @return Boolean value that is true if the action can be canceled.
-  function isActionCancelationValid(ActionInfo calldata actionInfo, address caller) external view returns (bool);
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external;
 
   // -------- When Determining Action State --------
   // These are used during casting of approvals and disapprovals, when queueing, and when executing.

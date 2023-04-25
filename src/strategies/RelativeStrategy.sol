@@ -22,7 +22,12 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error ActionCreatorCannotCast();
+  error CannotCancelInState(ActionState state);
+  error DisapprovalDisabled();
+  error DisapprovalThresholdNotMet();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
+  error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
 
   // ========================
@@ -144,11 +149,12 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external returns (bool, bytes32) {
+  function validateActionCreation(ActionInfo calldata actionInfo) external {
     uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
-    if (approvalPolicySupply == 0) return (false, "No approval supply");
+    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
+
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
-    if (disapprovalPolicySupply == 0) return (false, "No disapproval supply");
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
     unchecked {
@@ -165,19 +171,13 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     // Save off the supplies to use for checking quorum.
     actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
     actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
-    return (true, "");
   }
 
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
-    external
-    pure
-    returns (bool, bytes32)
-  {
-    if (actionInfo.creator == policyholder) return (false, "Action creator cannot approve");
-    return (true, "");
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external pure {
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -189,14 +189,9 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder)
-    external
-    view
-    returns (bool, bytes32)
-  {
-    if (actionInfo.creator == policyholder) return (false, "Action creator cannot disapprove");
-    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
-    return (true, "");
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external view {
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -219,7 +214,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Canceling --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActionCancelationValid(ActionInfo calldata actionInfo, address caller) external view returns (bool) {
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
     //   2. For all other states (Active, Approved, Queued) the action can be canceled if:
@@ -231,15 +226,16 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
-    ) return false;
+    ) revert CannotCancelInState(state);
 
     // Check 2a.
     Action memory action = llamaCore.getAction(actionInfo.id);
-    if (caller == actionInfo.creator) return true;
+    if (caller == actionInfo.creator) return;
 
     // Check 2b.
-    return
-      action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
+    if (action.totalDisapprovals < _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct)) {
+      revert DisapprovalThresholdNotMet();
+    }
   }
 
   // -------- When Determining Action State --------

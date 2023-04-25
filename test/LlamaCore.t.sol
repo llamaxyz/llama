@@ -105,8 +105,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     assertEq(action.executed, true);
   }
 
-  function _executeCompleteActionFlow() internal {
-    ActionInfo memory actionInfo = _createAction();
+  function _executeCompleteActionFlow() internal returns (ActionInfo memory actionInfo) {
+    actionInfo = _createAction();
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
@@ -620,7 +620,7 @@ contract CancelAction is LlamaCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
+    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
     mpCore.cancelAction(actionInfo);
   }
 
@@ -633,16 +633,16 @@ contract CancelAction is LlamaCoreTest {
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Canceled));
     mpCore.cancelAction(actionInfo);
   }
 
   function test_RevertIf_ActionExecuted() public {
-    _executeCompleteActionFlow();
+    ActionInfo memory _actionInfo = _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
-    mpCore.cancelAction(actionInfo);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Executed));
+    mpCore.cancelAction(_actionInfo);
   }
 
   function test_RevertIf_ActionExpired() public {
@@ -659,7 +659,7 @@ contract CancelAction is LlamaCoreTest {
     vm.warp(block.timestamp + 15 days);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Expired));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -670,7 +670,7 @@ contract CancelAction is LlamaCoreTest {
 
     assertEq(mpStrategy1.isActionPassed(actionInfo), false);
 
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Failed));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -701,7 +701,7 @@ contract CancelAction is LlamaCoreTest {
     assertEq(mpStrategy1.isActionPassed(actionInfo), true);
     _queueAction(actionInfo);
 
-    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
+    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
     mpCore.cancelAction(actionInfo);
   }
 }

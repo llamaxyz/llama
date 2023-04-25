@@ -622,7 +622,7 @@ contract IsActionPassed is LlamaStrategyTest {
 }
 
 contract IsActionCancelationValid is LlamaStrategyTest {
-  function testFuzz_ReturnsTrueForDisapprovedActions(uint256 _actionDisapprovals, uint256 _numberOfPolicies) public {
+  function testFuzz_DoesNotRevertForDisapprovedActions(uint256 _actionDisapprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals =
       bound(_actionDisapprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000), _numberOfPolicies);
@@ -640,12 +640,11 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
-
-    assertEq(isActionCancelled, true);
+    // Cancelation is valid, so this should not revert.
+    testStrategy.validateActionCancelation(actionInfo, address(this));
   }
 
-  function testFuzz_AbsoluteStrategy_ReturnsTrueForDisapprovedActions(
+  function testFuzz_AbsoluteStrategy_DoesNotRevertForDisapprovedActions(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
   ) public {
@@ -675,12 +674,11 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
-
-    assertEq(isActionCancelled, true);
+    // Cancelation is valid, so this should not revert.
+    testStrategy.validateActionCancelation(actionInfo, address(this));
   }
 
-  function testFuzz_ReturnsFalseForActionsNotFullyDisapproved(uint256 _actionDisapprovals, uint256 _numberOfPolicies)
+  function testFuzz_RevertsIf_ActionIsNotFullyDisapproved(uint256 _actionDisapprovals, uint256 _numberOfPolicies)
     public
   {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
@@ -699,12 +697,11 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
-
-    assertEq(isActionCancelled, false);
+    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
+    testStrategy.validateActionCancelation(actionInfo, address(this));
   }
 
-  function testFuzz_AbsoluteStrategy_ReturnsFalseForActionsNotFullyDisapproved(
+  function testFuzz_AbsoluteStrategy_RevertIf_ActionIsNotFullyDisapproved(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
   ) public {
@@ -734,9 +731,8 @@ contract IsActionCancelationValid is LlamaStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionInfo);
 
-    bool isActionCancelled = testStrategy.isActionCancelationValid(actionInfo, address(this));
-
-    assertEq(isActionCancelled, false);
+    vm.expectRevert(AbsoluteStrategy.DisapprovalThresholdNotMet.selector);
+    testStrategy.validateActionCancelation(actionInfo, address(this));
   }
 
   function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {

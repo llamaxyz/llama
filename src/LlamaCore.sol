@@ -288,8 +288,8 @@ contract LlamaCore is Initializable {
     _assertMatchingInfoHash(action.infoHash, actionInfo);
 
     // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
-    // address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
-    if (!actionInfo.strategy.isActionCancelationValid(actionInfo, msg.sender)) revert InvalidCancelation();
+    // address, and Solidity will revert since there is no code at the zero address.
+    actionInfo.strategy.validateActionCancelation(actionInfo, msg.sender);
 
     action.canceled = true;
     emit ActionCanceled(actionInfo.id);
@@ -471,13 +471,13 @@ contract LlamaCore is Initializable {
 
     if (action.canceled) return ActionState.Canceled;
 
+    if (action.executed) return ActionState.Executed;
+
     if (actionInfo.strategy.isActive(actionInfo)) return ActionState.Active;
 
     if (!actionInfo.strategy.isActionPassed(actionInfo)) return ActionState.Failed;
 
     if (action.minExecutionTime == 0) return ActionState.Approved;
-
-    if (action.executed) return ActionState.Executed;
 
     if (actionInfo.strategy.isActionExpired(actionInfo)) return ActionState.Expired;
 
@@ -521,14 +521,13 @@ contract LlamaCore is Initializable {
     actionsCount = _uncheckedIncrement(actionsCount);
 
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, strategy, target, value, data);
-    (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionInfo);
-    if (!allowed) revert ProhibitedByStrategy(reason);
+    strategy.validateActionCreation(actionInfo);
 
     // If an action guard is present, call it to determine if the action can be created. We must do
     // this after the action is written to storage so that the action guard can any state it needs.
     IActionGuard guard = actionGuard[target][bytes4(data)];
     if (guard != IActionGuard(address(0))) {
-      (allowed, reason) = guard.validateActionCreation(actionId);
+      (bool allowed, bytes32 reason) = guard.validateActionCreation(actionId);
       if (!allowed) revert ProhibitedByActionGuard(reason);
     }
 
@@ -563,7 +562,7 @@ contract LlamaCore is Initializable {
     address policyholder,
     uint8 role,
     ActionState expectedState
-  ) internal view returns (Action storage action) {
+  ) internal returns (Action storage action) {
     action = actions[actionInfo.id];
     _assertMatchingInfoHash(action.infoHash, actionInfo);
 
@@ -576,10 +575,9 @@ contract LlamaCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    (bool isEnabled, bytes32 reason) = isApproval
+    isApproval
       ? actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender)
       : actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender);
-    if (!isEnabled) revert ProhibitedByStrategy(reason);
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
