@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-library SolarrayVertex {
+library SolarrayLlama {
   function roleDescription(bytes32 a) internal pure returns (RoleDescription[] memory) {
     RoleDescription[] memory arr = new RoleDescription[](1);
     arr[0] = RoleDescription.wrap(a);

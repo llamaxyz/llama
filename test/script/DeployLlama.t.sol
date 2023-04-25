@@ -4,50 +4,50 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
+import {DeployLlama} from "script/DeployLlama.s.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexLens} from "src/VertexLens.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaLens} from "src/LlamaLens.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract DeployVertexTest is Test, DeployVertexProtocol {
+contract DeployLlamaTest is Test, DeployLlama {
   function setUp() public virtual {}
 }
 
-contract Run is DeployVertexTest {
+contract Run is DeployLlamaTest {
   function test_DeploysFactory() public {
     assertEq(address(factory), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(factory), address(0));
-    assertEq(address(factory.VERTEX_CORE_LOGIC()), address(coreLogic));
-    assertEq(address(factory.VERTEX_POLICY_LOGIC()), address(policyLogic));
-    assertEq(address(factory.VERTEX_ACCOUNT_LOGIC()), address(accountLogic));
+    assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
+    assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
+    assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
     assertEq(factory.authorizedStrategyLogics(relativeStrategyLogic), true);
   }
 
-  function test_DeploysRootVertex() public {
+  function test_DeploysRootLlama() public {
     vm.recordLogs();
-    DeployVertexProtocol.run();
+    DeployLlama.run();
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
-    assertEq(factory.vertexCount(), 1);
-    VertexCore rootVertex = factory.ROOT_VERTEX();
-    assertEq(rootVertex.name(), "Root Vertex");
+    assertEq(factory.llamaCount(), 1);
+    LlamaCore rootLlama = factory.ROOT_LLAMA();
+    assertEq(rootLlama.name(), "Root Llama");
 
     // There are two strategies we expect to have been deployed.
-    IVertexStrategy[] memory strategiesAuthorized = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](2);
     uint8 strategiesCount;
     bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
-    VertexAccount[] memory accountsAuthorized = new VertexAccount[](2);
+    LlamaAccount[] memory accountsAuthorized = new LlamaAccount[](2);
     uint8 accountsCount;
     bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,string)");
 
@@ -56,25 +56,25 @@ contract Run is DeployVertexTest {
       _event = emittedEvents[i];
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   IVertexStrategy indexed strategy,  <-- The topic we want.
+        //   ILlamaStrategy indexed strategy,  <-- The topic we want.
         //   address indexed relativeStrategyLogic,
         //   Strategy strategyData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
-        strategiesAuthorized[strategiesCount++] = IVertexStrategy(strategy);
+        strategiesAuthorized[strategiesCount++] = ILlamaStrategy(strategy);
       }
       if (_event.topics[0] == accountAuthorizedSig) {
         // event AccountAuthorized(
-        //   VertexAccount indexed account,  <-- The topic we want.
+        //   LlamaAccount indexed account,  <-- The topic we want.
         //   string name
         // );
         address payable account = payable(address(uint160(uint256(_event.topics[1]))));
-        accountsAuthorized[accountsCount++] = VertexAccount(account);
+        accountsAuthorized[accountsCount++] = LlamaAccount(account);
       }
     }
 
-    IVertexStrategy firstStrategy = strategiesAuthorized[0];
-    assertEq(rootVertex.authorizedStrategies(firstStrategy), true);
+    ILlamaStrategy firstStrategy = strategiesAuthorized[0];
+    assertEq(rootLlama.authorizedStrategies(firstStrategy), true);
     assertEq(toRelativeStrategy(firstStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeStrategy(firstStrategy).approvalRole(), 2);
     assertEq(toRelativeStrategy(firstStrategy).disapprovalRole(), 3);
@@ -86,8 +86,8 @@ contract Run is DeployVertexTest {
     assertEq(toRelativeStrategy(firstStrategy).forceApprovalRole(1), false);
     assertEq(toRelativeStrategy(firstStrategy).forceDisapprovalRole(1), false);
 
-    IVertexStrategy secondStrategy = strategiesAuthorized[1];
-    assertEq(rootVertex.authorizedStrategies(secondStrategy), true);
+    ILlamaStrategy secondStrategy = strategiesAuthorized[1];
+    assertEq(rootLlama.authorizedStrategies(secondStrategy), true);
     assertEq(toRelativeStrategy(secondStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeStrategy(secondStrategy).approvalRole(), 2);
     assertEq(toRelativeStrategy(secondStrategy).disapprovalRole(), 3);
@@ -99,21 +99,21 @@ contract Run is DeployVertexTest {
     assertEq(toRelativeStrategy(secondStrategy).forceApprovalRole(1), true);
     assertEq(toRelativeStrategy(secondStrategy).forceDisapprovalRole(1), true);
 
-    VertexAccount firstAccount = accountsAuthorized[0];
-    assertEq(firstAccount.vertexCore(), address(rootVertex));
+    LlamaAccount firstAccount = accountsAuthorized[0];
+    assertEq(firstAccount.llamaCore(), address(rootLlama));
     assertEq(
       keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("Llama Treasury")
     );
 
-    VertexAccount secondAccount = accountsAuthorized[1];
-    assertEq(secondAccount.vertexCore(), address(rootVertex));
+    LlamaAccount secondAccount = accountsAuthorized[1];
+    assertEq(secondAccount.llamaCore(), address(rootLlama));
     assertEq(
       keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("Llama Grants")
     );
 
-    VertexPolicy rootPolicy = rootVertex.policy();
+    LlamaPolicy rootPolicy = rootLlama.policy();
     assertEq(address(rootPolicy.factory()), address(factory));
     assertEq(rootPolicy.numRoles(), 8);
 
@@ -129,7 +129,7 @@ contract Run is DeployVertexTest {
   function test_DeploysCoreLogic() public {
     assertEq(address(coreLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(coreLogic), address(0));
   }
@@ -137,7 +137,7 @@ contract Run is DeployVertexTest {
   function test_DeploysStrategyLogic() public {
     assertEq(address(relativeStrategyLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(relativeStrategyLogic), address(0));
   }
@@ -145,7 +145,7 @@ contract Run is DeployVertexTest {
   function test_DeploysAccountLogic() public {
     assertEq(address(accountLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(accountLogic), address(0));
   }
@@ -153,7 +153,7 @@ contract Run is DeployVertexTest {
   function test_DeploysPolicyLogic() public {
     assertEq(address(policyLogic), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(policyLogic), address(0));
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
@@ -162,22 +162,22 @@ contract Run is DeployVertexTest {
   function test_DeploysPolicyTokenURI() public {
     assertEq(address(policyTokenURI), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(policyTokenURI), address(0));
-    assertNotEq(policyTokenURI.tokenURI("MyVertex", "MTX", 42, "teal", "https://logo.com"), "");
+    assertNotEq(policyTokenURI.tokenURI("MyLlama", "MTX", 42, "teal", "https://logo.com"), "");
   }
 
   function test_DeploysLens() public {
     assertEq(address(lens), address(0));
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
     assertNotEq(address(lens), address(0));
     PermissionData memory permissionData = PermissionData(
       makeAddr("target"), // Could be any address, choosing a random one.
       bytes4(bytes32("transfer(address,uint256)")),
-      IVertexStrategy(makeAddr("strategy"))
+      ILlamaStrategy(makeAddr("strategy"))
     );
     assertEq(
       lens.computePermissionId(permissionData),

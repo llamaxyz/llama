@@ -4,17 +4,17 @@ pragma solidity ^0.8.19;
 import {console2} from "forge-std/Test.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicyTokenURI} from "src/VertexPolicyTokenURI.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
 
-contract VertexFactoryHandler is BaseHandler {
+contract LlamaFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
@@ -23,23 +23,23 @@ contract VertexFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  IVertexStrategy public relativeStrategyLogic;
-  VertexAccount public accountLogic;
+  ILlamaStrategy public relativeStrategyLogic;
+  LlamaAccount public accountLogic;
 
-  // Used to track the last seen `vertexCount` value.
-  uint256[] public vertexCounts;
+  // Used to track the last seen `llamaCount` value.
+  uint256[] public llamaCounts;
 
   // =============================
   // ======== Constructor ========
   // =============================
 
   constructor(
-    VertexFactory _vertexFactory,
-    VertexCore _vertexCore,
-    IVertexStrategy _relativeStrategyLogic,
-    VertexAccount _accountLogic
-  ) BaseHandler(_vertexFactory, _vertexCore) {
-    vertexCounts.push(VERTEX_FACTORY.vertexCount());
+    LlamaFactory _llamaFactory,
+    LlamaCore _llamaCore,
+    ILlamaStrategy _relativeStrategyLogic,
+    LlamaAccount _accountLogic
+  ) BaseHandler(_llamaFactory, _llamaCore) {
+    llamaCounts.push(LLAMA_FACTORY.llamaCount());
     relativeStrategyLogic = _relativeStrategyLogic;
     accountLogic = _accountLogic;
   }
@@ -51,24 +51,24 @@ contract VertexFactoryHandler is BaseHandler {
   // The salt is a function of name and symbol. To ensure we get a different contract address each
   // time we use this method.
   function name() internal view returns (string memory currentName) {
-    uint256 lastCount = vertexCounts[vertexCounts.length - 1];
+    uint256 lastCount = llamaCounts[llamaCounts.length - 1];
     currentName = string.concat("NAME_", vm.toString(lastCount));
   }
 
-  function getVertexCounts() public view returns (uint256[] memory) {
-    return vertexCounts;
+  function getLlamaCounts() public view returns (uint256[] memory) {
+    return llamaCounts;
   }
 
   function callSummary() public view override {
     BaseHandler.callSummary();
-    console2.log("vertexFactory_deploy             ", calls["vertexFactory_deploy"]);
+    console2.log("llamaFactory_deploy             ", calls["llamaFactory_deploy"]);
   }
 
   // ====================================
   // ======== Methods for Fuzzer ========
   // ====================================
 
-  function vertexFactory_deploy() public recordCall("vertexFactory_deploy") useCurrentTimestamp {
+  function llamaFactory_deploy() public recordCall("llamaFactory_deploy") useCurrentTimestamp {
     // We don't care about the parameters, we just need it to execute successfully.
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(
@@ -78,8 +78,8 @@ contract VertexFactoryHandler is BaseHandler {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Action Creator");
 
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.deploy(
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    LLAMA_FACTORY.deploy(
       name(),
       relativeStrategyLogic,
       new bytes[](0),
@@ -88,47 +88,47 @@ contract VertexFactoryHandler is BaseHandler {
       roleHolders,
       new RolePermissionData[](0)
     );
-    vertexCounts.push(VERTEX_FACTORY.vertexCount());
+    llamaCounts.push(LLAMA_FACTORY.llamaCount());
   }
 
-  function vertexFactory_authorizeStrategyLogic(IVertexStrategy newStrategyLogic)
+  function llamaFactory_authorizeStrategyLogic(ILlamaStrategy newStrategyLogic)
     public
-    recordCall("vertexFactory_authorizeStrategyLogic")
+    recordCall("llamaFactory_authorizeStrategyLogic")
     useCurrentTimestamp
   {
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.authorizeStrategyLogic(newStrategyLogic);
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    LLAMA_FACTORY.authorizeStrategyLogic(newStrategyLogic);
   }
 
-  function vertexFactory_setPolicyTokenURI(VertexPolicyTokenURI newPolicyTokenURI)
+  function llamaFactory_setPolicyTokenURI(LlamaPolicyTokenURI newPolicyTokenURI)
     public
-    recordCall("vertexFactory_setPolicyTokenURI")
+    recordCall("llamaFactory_setPolicyTokenURI")
     useCurrentTimestamp
   {
-    vm.prank(address(VERTEX_FACTORY.ROOT_VERTEX()));
-    VERTEX_FACTORY.setPolicyTokenURI(newPolicyTokenURI);
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    LLAMA_FACTORY.setPolicyTokenURI(newPolicyTokenURI);
   }
 }
 
-contract VertexFactoryInvariants is VertexTestSetup {
-  VertexFactoryHandler public handler;
+contract LlamaFactoryInvariants is LlamaTestSetup {
+  LlamaFactoryHandler public handler;
 
   function setUp() public override {
-    VertexTestSetup.setUp();
-    handler = new VertexFactoryHandler(factory, mpCore, relativeStrategyLogic, accountLogic);
+    LlamaTestSetup.setUp();
+    handler = new LlamaFactoryHandler(factory, mpCore, relativeStrategyLogic, accountLogic);
 
-    // Target the handler contract and only call it's `vertexFactory_deploy` method. We use
+    // Target the handler contract and only call it's `llamaFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
     // added to the target contracts list (by default, deployed contracts are automatically
     // added to the target contracts list). We then use `targetSelector` to filter out all
-    // methods from the handler except for `vertexFactory_deploy`.
-    excludeArtifact("VertexAccount");
-    excludeArtifact("VertexCore");
-    excludeArtifact("VertexPolicy");
+    // methods from the handler except for `llamaFactory_deploy`.
+    excludeArtifact("LlamaAccount");
+    excludeArtifact("LlamaCore");
+    excludeArtifact("LlamaPolicy");
     excludeArtifact("RelativeStrategy");
 
     bytes4[] memory selectors = new bytes4[](2);
-    selectors[0] = handler.vertexFactory_deploy.selector;
+    selectors[0] = handler.llamaFactory_deploy.selector;
     selectors[1] = handler.handler_increaseTimestampBy.selector;
     FuzzSelector memory selector = FuzzSelector({addr: address(handler), selectors: selectors});
     targetSelector(selector);
@@ -141,12 +141,12 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // ======== Invariant Assertions ========
   // ======================================
 
-  // The vertexCount state variable should only increase, and be incremented by 1 with each
+  // The llamaCount state variable should only increase, and be incremented by 1 with each
   // successful deploy.
-  function assertInvariant_VertexCountMonotonicallyIncreases() internal view {
-    uint256[] memory vertexCounts = handler.getVertexCounts();
-    for (uint256 i = 1; i < vertexCounts.length; i++) {
-      require(vertexCounts[i] == vertexCounts[i - 1] + 1, "vertexCount did not monotonically increase");
+  function assertInvariant_LlamaCountMonotonicallyIncreases() internal view {
+    uint256[] memory llamaCounts = handler.getLlamaCounts();
+    for (uint256 i = 1; i < llamaCounts.length; i++) {
+      require(llamaCounts[i] == llamaCounts[i - 1] + 1, "llamaCount did not monotonically increase");
     }
   }
 
@@ -155,7 +155,7 @@ contract VertexFactoryInvariants is VertexTestSetup {
   // =================================
 
   function invariant_AllFactoryInvariants() public view {
-    assertInvariant_VertexCountMonotonicallyIncreases();
+    assertInvariant_LlamaCountMonotonicallyIncreases();
   }
 
   function invariant_CallSummary() public view {

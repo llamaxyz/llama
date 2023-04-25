@@ -5,20 +5,20 @@ import {Base64} from "@openzeppelin/utils/Base64.sol";
 
 import {LibString} from "@solady/utils/LibString.sol";
 
-/// @title Vertex Policy Metadata
+/// @title Llama Policy Metadata
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Utility contract to compute Vertex Policy metadata.
-contract VertexPolicyTokenURI {
+/// @notice Utility contract to compute llama policy metadata.
+contract LlamaPolicyTokenURI {
   // ===========================================
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Returns the token URI for a given Vertex Policy Holder.
-  /// @param name The name of the Vertex system.
-  /// @param symbol The symbol of the Vertex system.
-  /// @param tokenId The token ID of the Vertex Policy Holder.
-  /// @param color The color of the Vertex system
-  /// @param logo The logo of the Vertex system
+  /// @notice Returns the token URI for a given llama policyholder.
+  /// @param name The name of the llama instance.
+  /// @param symbol The symbol of the llama instance.
+  /// @param tokenId The token ID of the llama policyholder.
+  /// @param color The color of the llama instance.
+  /// @param logo The logo of the llama instance.
   function tokenURI(string memory name, string memory symbol, uint256 tokenId, string memory color, string memory logo)
     external
     pure
@@ -78,11 +78,11 @@ contract VertexPolicyTokenURI {
       bytes(
         string(
           abi.encodePacked(
-            '{"name": "Vertex Policy ID: ',
+            '{"name": "Llama Policy ID: ',
             LibString.toString(tokenId),
             " - ",
             symbol,
-            '", "description": "Vertex is a framework for onchain organizations.", "image": "data:image/svg+xml;base64,',
+            '", "description": "Llama is a framework for onchain organizations.", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )

@@ -7,31 +7,31 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {SolarrayVertex} from "test/utils/SolarrayVertex.sol";
-import {VertexCoreSigUtils} from "test/utils/VertexCoreSigUtils.sol";
-import {VertexFactoryWithoutInitialization} from "test/utils/VertexFactoryWithoutInitialization.sol";
-import {Roles, VertexTestSetup} from "test/utils/VertexTestSetup.sol";
+import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
+import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
+import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutInitialization.sol";
+import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-import {VertexCrosschainRelayer} from "src/crosschain/VertexCrosschainRelayer.sol";
-import {VertexCrosschainExecutor} from "src/crosschain/VertexCrosschainExecutor.sol";
+import {LlamaCrosschainRelayer} from "src/crosschain/LlamaCrosschainRelayer.sol";
+import {LlamaCrosschainExecutor} from "src/crosschain/LlamaCrosschainExecutor.sol";
 import {IInterchainSecurityModule} from "src/crosschain/interfaces/IInterchainSecurityModule.sol";
 import {IMailbox} from "src/crosschain/interfaces/IMailbox.sol";
 
-contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
+contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
     uint256 id,
     address indexed creator,
-    IVertexStrategy indexed strategy,
+    ILlamaStrategy indexed strategy,
     address target,
     uint256 value,
     bytes4 selector,
@@ -39,23 +39,23 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
-    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
   event ActionExecuted(
-    uint256 id, address indexed caller, IVertexStrategy indexed strategy, address indexed creator, bytes result
+    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategyAuthorized(IVertexStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event StrategyUnauthorized(IVertexStrategy indexed strategy);
-  event AccountCreated(VertexAccount indexed account, string name);
+  event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
+  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
+  event AccountCreated(LlamaAccount indexed account, string name);
 
   function setUp() public virtual override {
-    VertexTestSetup.setUp();
+    LlamaTestSetup.setUp();
 
     // Setting Mock Protocol Core's EIP-712 Domain Hash
     setDomainHash(
-      VertexCoreSigUtils.EIP712Domain({
+      LlamaCoreSigUtils.EIP712Domain({
         name: mpCore.name(),
         version: "1",
         chainId: block.chainid,
@@ -171,49 +171,49 @@ contract VertexCoreTest is VertexTestSetup, VertexCoreSigUtils {
   }
 }
 
-contract Setup is VertexCoreTest {
+contract Setup is LlamaCoreTest {
   function test_setUp() public {
     assertEq(address(mpCore.factory()), address(factory));
-    assertEq(mpCore.name(), "Mock Protocol Vertex");
+    assertEq(mpCore.name(), "Mock Protocol Llama");
     assertEq(address(mpCore.policy()), address(mpPolicy));
-    assertEq(address(mpCore.vertexAccountLogic()), address(accountLogic));
+    assertEq(address(mpCore.llamaAccountLogic()), address(accountLogic));
 
     assertTrue(mpCore.authorizedStrategies(mpStrategy1));
     assertTrue(mpCore.authorizedStrategies(mpStrategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    mpAccount1.initialize("VertexAccount0");
+    mpAccount1.initialize("LlamaAccount0");
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    mpAccount2.initialize("VertexAccount1");
+    mpAccount2.initialize("LlamaAccount1");
   }
 }
 
-contract Initialize is VertexCoreTest {
+contract Initialize is LlamaCoreTest {
   function deployWithoutInitialization()
     internal
-    returns (VertexFactoryWithoutInitialization modifiedFactory, VertexCore vertex, VertexPolicy policy)
+    returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy)
   {
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    modifiedFactory = new VertexFactoryWithoutInitialization(
+    modifiedFactory = new LlamaFactoryWithoutInitialization(
       coreLogic,
       relativeStrategyLogic,
       accountLogic,
       policyLogic,
       policyTokenURI,
-      "Root Vertex",
+      "Root Llama",
       strategyConfigs,
       accounts,
-      SolarrayVertex.roleDescription("AllHolders","ActionCreator","Approver","Disapprover","TestRole1","TestRole2","MadeUpRole"),
+      SolarrayLlama.roleDescription("AllHolders","ActionCreator","Approver","Disapprover","TestRole1","TestRole2","MadeUpRole"),
       roleHolders,
       new RolePermissionData[](0)
     );
 
-    (vertex, policy) = modifiedFactory.deployWithoutInitialization(
+    (llama, policy) = modifiedFactory.deployWithoutInitialization(
       "NewProject",
-      SolarrayVertex.roleDescription(
+      SolarrayLlama.roleDescription(
         "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
       ),
       roleHolders,
@@ -222,14 +222,14 @@ contract Initialize is VertexCoreTest {
   }
 
   function test_StrategiesAreDeployedAtExpectedAddress() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
       );
     }
 
@@ -237,7 +237,7 @@ contract Initialize is VertexCoreTest {
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -245,14 +245,14 @@ contract Initialize is VertexCoreTest {
   }
 
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
       );
     }
 
@@ -262,108 +262,108 @@ contract Initialize is VertexCoreTest {
     emit StrategyAuthorized(strategyAddresses[1], address(relativeStrategyLogic), strategyConfigs[1]);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
-  function test_StrategiesHaveVertexCoreAddressInStorage() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+  function test_StrategiesHaveLlamaCoreAddressInStorage() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
       );
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(strategyAddresses[0].vertex()), address(uninitializedVertex));
-    assertEq(address(strategyAddresses[1].vertex()), address(uninitializedVertex));
+    assertEq(address(strategyAddresses[0].llamaCore()), address(uninitializedLlama));
+    assertEq(address(strategyAddresses[1].llamaCore()), address(uninitializedLlama));
   }
 
   function test_StrategiesHavePolicyAddressInStorage() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
       );
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
     assertEq(address(strategyAddresses[1].policy()), address(policy));
   }
 
-  function test_StrategiesAreAuthorizedByVertexCore() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+  function test_StrategiesAreAuthorizedByLlamaCore() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedVertex)
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
       );
     }
 
-    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), false);
-    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), false);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), false);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(uninitializedVertex.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), true);
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
     vm.assume(notStrategyLogic != address(relativeStrategyLogic));
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
 
-    vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
+    vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
     modifiedFactory.initialize(
-      uninitializedVertex,
+      uninitializedLlama,
       policy,
       "NewProject",
-      IVertexStrategy(notStrategyLogic),
-      VertexAccount(accountLogic),
+      ILlamaStrategy(notStrategyLogic),
+      LlamaAccount(accountLogic),
       strategyConfigs,
       accounts
     );
   }
 
   function test_AccountsAreDeployedAtExpectedAddress() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](2);
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
       accountAddresses[i] =
-        lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     assertEq(address(accountAddresses[0]).code.length, 0);
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -371,14 +371,14 @@ contract Initialize is VertexCoreTest {
   }
 
   function test_EmitsAccountCreatedEventForEachAccount() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](2);
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
       accountAddresses[i] =
-        lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     vm.expectEmit();
@@ -386,42 +386,42 @@ contract Initialize is VertexCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accounts[1]);
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
-  function test_AccountsHaveVertexCoreAddressInStorage() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+  function test_AccountsHaveLlamaCoreAddressInStorage() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](2);
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
       accountAddresses[i] =
-        lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(accountAddresses[0].vertexCore()), address(uninitializedVertex));
-    assertEq(address(accountAddresses[1].vertexCore()), address(uninitializedVertex));
+    assertEq(address(accountAddresses[0].llamaCore()), address(uninitializedLlama));
+    assertEq(address(accountAddresses[1].llamaCore()), address(uninitializedLlama));
   }
 
   function test_AccountsHaveNameInStorage() public {
-    (VertexFactoryWithoutInitialization modifiedFactory, VertexCore uninitializedVertex, VertexPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](2);
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
       accountAddresses[i] =
-        lens.computeVertexAccountAddress(address(accountLogic), accounts[i], address(uninitializedVertex));
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
-      uninitializedVertex, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(accountAddresses[0].name(), "Account1");
@@ -429,7 +429,7 @@ contract Initialize is VertexCoreTest {
   }
 }
 
-contract CreateAction is VertexCoreTest {
+contract CreateAction is LlamaCoreTest {
   function test_CreatesAnAction() public {
     vm.expectEmit();
     emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true));
@@ -452,7 +452,7 @@ contract CreateAction is VertexCoreTest {
   function testFuzz_CreatesAnAction(address _target, uint256 _value, bytes memory _data) public {
     vm.assume(_target != address(mockProtocol));
 
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, PAUSE_SELECTOR, abi.encode(_data)
@@ -461,7 +461,7 @@ contract CreateAction is VertexCoreTest {
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
-    bytes memory expectedErr = bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
+    bytes memory expectedErr = bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action creation"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -474,28 +474,28 @@ contract CreateAction is VertexCoreTest {
   }
 
   function test_RevertIf_StrategyUnauthorized() public {
-    IVertexStrategy unauthorizedStrategy = IVertexStrategy(makeAddr("unauthorized strategy"));
+    ILlamaStrategy unauthorizedStrategy = ILlamaStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidStrategy.selector);
+    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
   }
 
-  function test_RevertIf_StrategyIsFromAnotherVertex() public {
-    IVertexStrategy unauthorizedStrategy = rootStrategy1;
+  function test_RevertIf_StrategyIsFromAnotherLlama() public {
+    ILlamaStrategy unauthorizedStrategy = rootStrategy1;
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidStrategy.selector);
+    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
   }
 
-  function testFuzz_RevertIf_PolicyholderNotMinted(address user) public {
-    if (user == address(0)) user = address(100); // Faster than vm.assume, since 0 comes up a lot.
-    vm.assume(mpPolicy.balanceOf(user) == 0);
-    vm.prank(user);
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+  function testFuzz_RevertIf_PolicyholderNotMinted(address policyholder) public {
+    if (policyholder == address(0)) policyholder = address(100); // Faster than vm.assume, since 0 comes up a lot.
+    vm.assume(mpPolicy.balanceOf(policyholder) == 0);
+    vm.prank(policyholder);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
@@ -503,7 +503,7 @@ contract CreateAction is VertexCoreTest {
 
   function test_RevertIf_NoPermissionForStrategy() public {
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
@@ -512,14 +512,14 @@ contract CreateAction is VertexCoreTest {
   function testFuzz_RevertIf_NoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol));
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, PAUSE_SELECTOR, abi.encode(true));
   }
 
   function testFuzz_RevertIf_BadPermissionForSelector(bytes4 _badSelector) public {
     vm.assume(_badSelector != PAUSE_SELECTOR && _badSelector != FAIL_SELECTOR && _badSelector != RECEIVE_ETH_SELECTOR);
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, _badSelector, abi.encode(true)
     );
@@ -542,16 +542,16 @@ contract CreateAction is VertexCoreTest {
     mpPolicy.revokeExpiredRole(uint8(Roles.ActionCreator), actionCreatorAustin);
 
     vm.startPrank(address(actionCreatorAustin));
-    vm.expectRevert(VertexCore.PolicyholderDoesNotHavePermission.selector);
+    vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, PAUSE_SELECTOR, abi.encode(true)
     );
   }
 }
 
-contract CreateActionBySig is VertexCoreTest {
+contract CreateActionBySig is LlamaCoreTest {
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
-    VertexCoreSigUtils.CreateAction memory createAction = VertexCoreSigUtils.CreateAction({
+    LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
       strategy: address(mpStrategy1),
       target: address(mockProtocol),
@@ -601,9 +601,9 @@ contract CreateActionBySig is VertexCoreTest {
 
   function test_CheckNonceIncrements() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 0);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, VertexCore.createActionBySig.selector), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -611,7 +611,7 @@ contract CreateActionBySig is VertexCoreTest {
     createActionBySig(v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig(v, r, s);
   }
 
@@ -620,7 +620,7 @@ contract CreateActionBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
     // parameter.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig(v, r, s);
   }
 
@@ -628,14 +628,14 @@ contract CreateActionBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig((v + 1), r, s);
   }
 }
 
-contract CancelAction is VertexCoreTest {
+contract CancelAction is LlamaCoreTest {
   function setUp() public override {
-    VertexCoreTest.setUp();
+    LlamaCoreTest.setUp();
     _createAction();
   }
 
@@ -653,7 +653,7 @@ contract CancelAction is VertexCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
@@ -669,7 +669,7 @@ contract CancelAction is VertexCoreTest {
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(0);
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
@@ -677,7 +677,7 @@ contract CancelAction is VertexCoreTest {
     _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
@@ -695,7 +695,7 @@ contract CancelAction is VertexCoreTest {
     vm.warp(block.timestamp + 15 days);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
@@ -706,7 +706,7 @@ contract CancelAction is VertexCoreTest {
 
     assertEq(mpStrategy1.isActionPassed(0), false);
 
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 
@@ -737,19 +737,19 @@ contract CancelAction is VertexCoreTest {
     assertEq(mpStrategy1.isActionPassed(0), true);
     _queueAction();
 
-    vm.expectRevert(VertexCore.InvalidCancelation.selector);
+    vm.expectRevert(LlamaCore.InvalidCancelation.selector);
     mpCore.cancelAction(0);
   }
 }
 
-contract QueueAction is VertexCoreTest {
+contract QueueAction is LlamaCoreTest {
   function test_RevertIf_NotApproved() public {
     _createAction();
     _approveAction(approverAdam);
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Approved)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Approved)));
     mpCore.queueAction(0);
   }
 
@@ -762,12 +762,12 @@ contract QueueAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.expectRevert(LlamaCore.InvalidActionId.selector);
     mpCore.queueAction(1);
   }
 }
 
-contract ExecuteActionCrosschain is VertexCoreTest {
+contract ExecuteActionCrosschain is LlamaCoreTest {
   event Dispatch(address indexed sender, uint32 indexed destination, bytes32 indexed recipient, bytes message);
   event Paused();
 
@@ -786,15 +786,15 @@ contract ExecuteActionCrosschain is VertexCoreTest {
     polygonFork = vm.createFork(vm.rpcUrl("polygon"), 41_688_510);
 
     vm.selectFork(polygonFork);
-    VertexCrosschainExecutor executor = new VertexCrosschainExecutor();
+    LlamaCrosschainExecutor executor = new LlamaCrosschainExecutor();
     MockProtocol protocol = new MockProtocol(address(executor));
 
     vm.selectFork(mainnetFork);
-    VertexCrosschainRelayer relayer = new VertexCrosschainRelayer();
+    LlamaCrosschainRelayer relayer = new LlamaCrosschainRelayer();
 
-    VertexCoreTest.setUp();
+    LlamaCoreTest.setUp();
 
-    bytes4 relayCallsSelector = 0x31b9bcf3; // relayCalls(bytes)
+    bytes4 relayCallsSelector = 0x31b9bcf3;
 
     bytes32 relayCallsPermissionId = keccak256(abi.encode(address(relayer), relayCallsSelector, mpStrategy1));
     vm.prank(address(mpCore));
@@ -845,11 +845,11 @@ contract ExecuteActionCrosschain is VertexCoreTest {
   }
 }
 
-contract ExecuteAction is VertexCoreTest {
+contract ExecuteAction is LlamaCoreTest {
   uint256 actionId;
 
   function setUp() public override {
-    VertexCoreTest.setUp();
+    LlamaCoreTest.setUp();
 
     actionId = _createAction();
     _approveAction(approverAdam, actionId);
@@ -906,7 +906,7 @@ contract ExecuteAction is VertexCoreTest {
   }
 
   function test_RevertIf_NotQueued() public {
-    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.executeAction(actionId);
 
     // Check that it's in the Approved state
@@ -916,7 +916,7 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
     bytes memory expectedErr =
-      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
+      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action pre-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -931,7 +931,7 @@ contract ExecuteAction is VertexCoreTest {
   function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
     bytes memory expectedErr =
-      bytes.concat(VertexCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
+      bytes.concat(LlamaCore.ProhibitedByActionGuard.selector, bytes32("no action post-execution"));
 
     vm.prank(address(mpCore));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -949,7 +949,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.expectRevert(LlamaCore.InvalidActionId.selector);
     mpCore.executeAction(actionId + 1);
   }
 
@@ -962,7 +962,7 @@ contract ExecuteAction is VertexCoreTest {
     vm.warp(block.timestamp + timeElapsed);
 
     if (executionTime > block.timestamp) {
-      vm.expectRevert(VertexCore.TimelockNotFinished.selector);
+      vm.expectRevert(LlamaCore.TimelockNotFinished.selector);
       mpCore.executeAction(actionId);
     }
   }
@@ -983,7 +983,7 @@ contract ExecuteAction is VertexCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(VertexCore.InsufficientMsgValue.selector);
+    vm.expectRevert(LlamaCore.InsufficientMsgValue.selector);
     mpCore.executeAction(actionId);
   }
 
@@ -998,7 +998,7 @@ contract ExecuteAction is VertexCoreTest {
       abi.encode("")
     );
     bytes memory expectedErr = abi.encodeWithSelector(
-      VertexCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
+      LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(MockProtocol.Failed.selector)
     );
 
     vm.warp(block.timestamp + 1);
@@ -1021,8 +1021,8 @@ contract ExecuteAction is VertexCoreTest {
   function test_HandlesReentrancy() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     bytes memory expectedErr = abi.encodeWithSelector(
-      VertexCore.FailedActionExecution.selector,
-      abi.encodeWithSelector(VertexCore.InvalidActionState.selector, (ActionState.Queued))
+      LlamaCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, (ActionState.Queued))
     );
 
     vm.startPrank(address(mpCore));
@@ -1055,7 +1055,7 @@ contract ExecuteAction is VertexCoreTest {
   }
 }
 
-contract CastApproval is VertexCoreTest {
+contract CastApproval is LlamaCoreTest {
   uint256 actionId;
 
   function test_SuccessfulApproval() public {
@@ -1082,7 +1082,7 @@ contract CastApproval is VertexCoreTest {
 
     mpCore.queueAction(actionId);
 
-    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Active)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
 
@@ -1090,7 +1090,7 @@ contract CastApproval is VertexCoreTest {
     actionId = _createAction();
     _approveAction(approverAdam, actionId);
 
-    vm.expectRevert(VertexCore.DuplicateCast.selector);
+    vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(approverAdam);
     mpCore.castApproval(actionId, uint8(Roles.Approver));
   }
@@ -1100,7 +1100,7 @@ contract CastApproval is VertexCoreTest {
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
-    vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
     mpCore.castApproval(actionId, uint8(Roles.Approver));
 
     vm.prank(approverAdam);
@@ -1108,13 +1108,13 @@ contract CastApproval is VertexCoreTest {
   }
 }
 
-contract CastApprovalBySig is VertexCoreTest {
+contract CastApprovalBySig is LlamaCoreTest {
   function createOffchainSignature(uint256 _actionId, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
   {
-    VertexCoreSigUtils.CastApproval memory castApproval = VertexCoreSigUtils.CastApproval({
+    LlamaCoreSigUtils.CastApproval memory castApproval = LlamaCoreSigUtils.CastApproval({
       actionId: _actionId,
       role: uint8(Roles.Approver),
       reason: "",
@@ -1148,9 +1148,9 @@ contract CastApprovalBySig is VertexCoreTest {
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
 
-    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 0);
+    assertEq(mpCore.nonces(approverAdam, LlamaCore.castApprovalBySig.selector), 0);
     castApprovalBySig(actionId, v, r, s);
-    assertEq(mpCore.nonces(approverAdam, VertexCore.castApprovalBySig.selector), 1);
+    assertEq(mpCore.nonces(approverAdam, LlamaCore.castApprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -1160,7 +1160,7 @@ contract CastApprovalBySig is VertexCoreTest {
     castApprovalBySig(actionId, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionId, v, r, s);
   }
 
@@ -1171,7 +1171,7 @@ contract CastApprovalBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
     // parameter.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionId, v, r, s);
   }
 
@@ -1181,12 +1181,12 @@ contract CastApprovalBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, approverAdamPrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
-contract CastDisapproval is VertexCoreTest {
+contract CastDisapproval is LlamaCoreTest {
   uint256 actionId;
 
   function _createApproveAndQueueAction() internal returns (uint256 _actionId) {
@@ -1224,7 +1224,7 @@ contract CastDisapproval is VertexCoreTest {
   function test_RevertIf_ActionNotQueued() public {
     actionId = _createAction();
 
-    vm.expectRevert(abi.encodePacked(VertexCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
 
@@ -1233,7 +1233,7 @@ contract CastDisapproval is VertexCoreTest {
 
     _disapproveAction(disapproverDrake, actionId);
 
-    vm.expectRevert(VertexCore.DuplicateCast.selector);
+    vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
   }
@@ -1243,7 +1243,7 @@ contract CastDisapproval is VertexCoreTest {
     address notPolicyholder = 0x9D3de545F58C696946b4Cf2c884fcF4f7914cB53;
     vm.prank(notPolicyholder);
 
-    vm.expectRevert(VertexCore.InvalidPolicyholder.selector);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
     mpCore.castDisapproval(actionId, uint8(Roles.Disapprover));
 
     vm.prank(disapproverDrake);
@@ -1251,13 +1251,13 @@ contract CastDisapproval is VertexCoreTest {
   }
 }
 
-contract CastDisapprovalBySig is VertexCoreTest {
+contract CastDisapprovalBySig is LlamaCoreTest {
   function createOffchainSignature(uint256 _actionId, uint256 privateKey)
     internal
     view
     returns (uint8 v, bytes32 r, bytes32 s)
   {
-    VertexCoreSigUtils.CastDisapproval memory castDisapproval = VertexCoreSigUtils.CastDisapproval({
+    LlamaCoreSigUtils.CastDisapproval memory castDisapproval = LlamaCoreSigUtils.CastDisapproval({
       actionId: _actionId,
       role: uint8(Roles.Disapprover),
       reason: "",
@@ -1302,9 +1302,9 @@ contract CastDisapprovalBySig is VertexCoreTest {
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
 
-    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 0);
+    assertEq(mpCore.nonces(disapproverDrake, LlamaCore.castDisapprovalBySig.selector), 0);
     castDisapprovalBySig(actionId, v, r, s);
-    assertEq(mpCore.nonces(disapproverDrake, VertexCore.castDisapprovalBySig.selector), 1);
+    assertEq(mpCore.nonces(disapproverDrake, LlamaCore.castDisapprovalBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -1314,7 +1314,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
     castDisapprovalBySig(actionId, v, r, s);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castDisapprovalBySig(actionId, v, r, s);
   }
 
@@ -1325,7 +1325,7 @@ contract CastDisapprovalBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, randomSignerPrivateKey);
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castDisapprovalBySig(actionId, v, r, s);
   }
 
@@ -1335,15 +1335,15 @@ contract CastDisapprovalBySig is VertexCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionId, disapproverDrakePrivateKey);
     // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
     // (v,r,s).
-    vm.expectRevert(VertexCore.InvalidSignature.selector);
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castDisapprovalBySig(actionId, (v + 1), r, s);
   }
 }
 
-contract CreateAndAuthorizeStrategies is VertexCoreTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract CreateAndAuthorizeStrategies is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
@@ -1354,7 +1354,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     public
   {
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](3);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     vm.assume(salt1 != salt2);
     vm.assume(salt1 != salt3);
     vm.assume(salt2 != salt3);
@@ -1364,7 +1364,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     newStrategies[2] = _createStrategy(salt3, isFixedLengthApprovalPeriod);
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeVertexStrategyAddress(
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), encodeStrategy(newStrategies[i]), address(mpCore)
       );
     }
@@ -1389,7 +1389,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
 
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
-    IVertexStrategy[] memory strategyAddresses = new IVertexStrategy[](3);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
 
     newStrategies[0] = RelativeStrategyConfig({
       approvalPeriod: 4 days,
@@ -1432,7 +1432,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     for (uint256 i; i < newStrategies.length; i++) {
       strategyAddresses[i] =
-        lens.computeVertexStrategyAddress(additionalStrategyLogic, encodeStrategy(newStrategies[i]), address(mpCore));
+        lens.computeLlamaStrategyAddress(additionalStrategyLogic, encodeStrategy(newStrategies[i]), address(mpCore));
     }
 
     vm.startPrank(address(mpCore));
@@ -1444,7 +1444,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(IVertexStrategy(additionalStrategyLogic), encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(ILlamaStrategy(additionalStrategyLogic), encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1469,8 +1469,8 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
 
     vm.startPrank(address(mpCore));
 
-    vm.expectRevert(VertexCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(IVertexStrategy(randomLogicAddress), encodeStrategyConfigs(newStrategies));
+    vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
+    mpCore.createAndAuthorizeStrategies(ILlamaStrategy(randomLogicAddress), encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1543,7 +1543,7 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    IVertexStrategy strategyAddress = lens.computeVertexStrategyAddress(
+    ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
       address(relativeStrategyLogic), encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
@@ -1577,11 +1577,11 @@ contract CreateAndAuthorizeStrategies is VertexCoreTest {
   }
 }
 
-contract UnauthorizeStrategies is VertexCoreTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract UnauthorizeStrategies is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexCore.OnlyVertex.selector);
-    IVertexStrategy[] memory strategies = new IVertexStrategy[](0);
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
 
     vm.prank(caller);
     mpCore.unauthorizeStrategies(strategies);
@@ -1597,7 +1597,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
     vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy2);
 
-    IVertexStrategy[] memory strategies = new IVertexStrategy[](2);
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](2);
     strategies[0] = mpStrategy1;
     strategies[1] = mpStrategy2;
 
@@ -1608,7 +1608,7 @@ contract UnauthorizeStrategies is VertexCoreTest {
     vm.stopPrank();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(VertexCore.InvalidStrategy.selector);
+    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
     mpCore.createAction(
       uint8(Roles.ActionCreator),
       mpStrategy1,
@@ -1620,22 +1620,22 @@ contract UnauthorizeStrategies is VertexCoreTest {
   }
 }
 
-contract CreateAccounts is VertexCoreTest {
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller) public {
+contract CreateAccounts is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexCore.OnlyVertex.selector);
-    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
 
     vm.prank(caller);
     mpCore.createAccounts(newAccounts);
   }
 
   function test_CreateNewAccounts() public {
-    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](3);
+    string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
     vm.expectEmit();
@@ -1650,11 +1650,11 @@ contract CreateAccounts is VertexCoreTest {
   }
 
   function test_RevertIf_Reinitialized() public {
-    string[] memory newAccounts = Solarray.strings("VertexAccount2", "VertexAccount3", "VertexAccount4");
-    VertexAccount[] memory accountAddresses = new VertexAccount[](3);
+    string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
+    LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeVertexAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
     vm.startPrank(address(mpCore));
@@ -1671,15 +1671,15 @@ contract CreateAccounts is VertexCoreTest {
   }
 
   function test_RevertIf_AccountsAreIdentical() public {
-    string[] memory newAccounts = Solarray.strings("VertexAccount1", "VertexAccount1");
+    string[] memory newAccounts = Solarray.strings("LlamaAccount1", "LlamaAccount1");
     vm.prank(address(mpCore));
     vm.expectRevert("ERC1167: create2 failed");
     mpCore.createAccounts(newAccounts);
   }
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
-    string[] memory newAccounts1 = Solarray.strings("VertexAccount1");
-    string[] memory newAccounts2 = Solarray.strings("VertexAccount1");
+    string[] memory newAccounts1 = Solarray.strings("LlamaAccount1");
+    string[] memory newAccounts2 = Solarray.strings("LlamaAccount1");
     vm.startPrank(address(mpCore));
     mpCore.createAccounts(newAccounts1);
 
@@ -1688,14 +1688,14 @@ contract CreateAccounts is VertexCoreTest {
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
-    string memory name = "VertexAccount1";
+    string memory name = "LlamaAccount1";
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     string[] memory newAccounts = Solarray.strings(name);
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    VertexAccount accountAddress = lens.computeVertexAccountAddress(address(accountLogic), name, address(mpCore));
+    LlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), name, address(mpCore));
 
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(
@@ -1724,14 +1724,14 @@ contract CreateAccounts is VertexCoreTest {
   }
 }
 
-contract SetGuard is VertexCoreTest {
+contract SetGuard is LlamaCoreTest {
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
 
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller, address target, bytes4 selector, IActionGuard guard)
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, IActionGuard guard)
     public
   {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.setGuard(target, selector, guard);
   }
@@ -1747,23 +1747,23 @@ contract SetGuard is VertexCoreTest {
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 }
 
-contract AuthorizeScript is VertexCoreTest {
+contract AuthorizeScript is LlamaCoreTest {
   event ScriptAuthorized(address indexed script, bool authorized);
 
-  function testFuzz_RevertIf_CallerIsNotVertex(address caller, address script, bool authorized) public {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller, address script, bool authorized) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(VertexCore.OnlyVertex.selector);
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.authorizeScript(script, authorized);
   }
@@ -1779,20 +1779,20 @@ contract AuthorizeScript is VertexCoreTest {
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
     vm.prank(address(mpCore));
-    vm.expectRevert(VertexCore.CannotUseCoreOrPolicy.selector);
+    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 }
 
-contract GetActionState is VertexCoreTest {
+contract GetActionState is LlamaCoreTest {
   function testFuzz_RevertsOnInvalidAction(uint256 invalidActionId) public {
-    vm.expectRevert(VertexCore.InvalidActionId.selector);
+    vm.expectRevert(LlamaCore.InvalidActionId.selector);
     mpCore.getActionState(invalidActionId);
   }
 

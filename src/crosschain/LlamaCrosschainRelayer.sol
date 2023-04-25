@@ -6,7 +6,7 @@ import {IMailbox} from "./interfaces/IMailbox.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
 import {Action} from "src/lib/Structs.sol";
 
-contract VertexCrosschainRelayer {
+contract LlamaCrosschainRelayer {
   address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70; // Same across all chains
   IMailbox private constant mailbox = IMailbox(HYPERLANE_MAILBOX);
   IInterchainGasPaymaster private constant igp = IInterchainGasPaymaster(0x56f52c0A1ddcD557285f7CBc782D3d83096CE1Cc);

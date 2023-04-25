@@ -1,6 +1,6 @@
-# Vertex v1
+# Llama
 
-Vertex v1 is a smart contract access control and administration framework.
+Llama is a governance system for onchain organizations. It uses non-transferable NFTs to encode access control, features programmatic fund management, and includes a modular framework to define action execution rules.
 
 ## Prerequisites
 
@@ -15,8 +15,8 @@ You can get Solidity support for Visual Studio Code by installing the [Hardhat S
 ## Installation
 
 ```sh
-$ git clone https://github.com/llama-community/vertex-v1.git
-$ cd vertex-v1
+$ git clone https://github.com/llamaxyz/llama.git
+$ cd llama
 $ forge install
 
 # Configure git to ignore commits that aren't relevant to git blame. Read the

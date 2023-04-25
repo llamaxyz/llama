@@ -5,11 +5,11 @@ import {console2} from "forge-std/Test.sol";
 import {IMailbox} from "./interfaces/IMailbox.sol";
 import {IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
-import {VertexCrosschainRelayer} from "./VertexCrosschainRelayer.sol";
+import {LlamaCrosschainRelayer} from "./LlamaCrosschainRelayer.sol";
 import {Action} from "src/lib/Structs.sol";
 
-contract VertexCrosschainExecutor is IMessageRecipient {
-  event ExecutedCalls(VertexCrosschainRelayer indexed relayer, uint256 indexed nonce);
+contract LlamaCrosschainExecutor is IMessageRecipient {
+  event ExecutedCalls(LlamaCrosschainRelayer indexed relayer, uint256 indexed nonce);
 
   error CallsAlreadyExecuted(uint256 nonce);
   error CallFailure(bytes errorData);
@@ -30,14 +30,14 @@ contract VertexCrosschainExecutor is IMessageRecipient {
 
   function handle(uint32 originChain, bytes32 caller, bytes calldata message) external onlyTrustedInbox(originChain) {
     address payable addr = payable(TypeCasts.bytes32ToAddress(caller));
-    VertexCrosschainRelayer relayer = VertexCrosschainRelayer(addr);
+    LlamaCrosschainRelayer relayer = LlamaCrosschainRelayer(addr);
 
     (uint256 nonce, address actionSender, bytes memory data) = abi.decode(message, (uint256, address, bytes));
 
     _executeCalls(relayer, nonce, actionSender, data);
   }
 
-  function _executeCalls(VertexCrosschainRelayer relayer, uint256 nonce, address sender, bytes memory data) internal {
+  function _executeCalls(LlamaCrosschainRelayer relayer, uint256 nonce, address sender, bytes memory data) internal {
     if (executedNonces[nonce]) revert CallsAlreadyExecuted(nonce);
 
     executedNonces[nonce] = true;

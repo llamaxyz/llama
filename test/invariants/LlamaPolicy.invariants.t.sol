@@ -7,18 +7,18 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
-import {VertexCoreTest} from "test/VertexCore.t.sol";
+import {LlamaCoreTest} from "test/LlamaCore.t.sol";
 
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexFactory} from "src/VertexFactory.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract VertexPolicyHandler is BaseHandler {
+contract LlamaPolicyHandler is BaseHandler {
   // =============================
   // ======== Constructor ========
   // =============================
 
-  constructor(VertexFactory _vertexFactory, VertexCore _vertexCore) BaseHandler(_vertexFactory, _vertexCore) {
+  constructor(LlamaFactory _llamaFactory, LlamaCore _llamaCore) BaseHandler(_llamaFactory, _llamaCore) {
     // TODO Set some initial permissions, each actor is a policyholder.
   }
 
@@ -28,9 +28,9 @@ contract VertexPolicyHandler is BaseHandler {
 
   function callSummary() public view override {
     BaseHandler.callSummary();
-    console2.log("vertexPolicyNFT_batchGrantPolicies      ", calls["vertexPolicyNFT_batchGrantPolicies"]);
-    console2.log("vertexPolicyNFT_batchUpdatePermissions  ", calls["vertexPolicyNFT_batchUpdatePermissions"]);
-    console2.log("vertexPolicyNFT_batchRevokePolicies     ", calls["vertexPolicyNFT_batchRevokePolicies"]);
+    console2.log("llamaPolicyNFT_batchGrantPolicies      ", calls["llamaPolicyNFT_batchGrantPolicies"]);
+    console2.log("llamaPolicyNFT_batchUpdatePermissions  ", calls["llamaPolicyNFT_batchUpdatePermissions"]);
+    console2.log("llamaPolicyNFT_batchRevokePolicies     ", calls["llamaPolicyNFT_batchRevokePolicies"]);
     console2.log("-----------------------------------------------");
     console2.log("policyholdersHadBalanceOf_0      ", calls["policyholdersHadBalanceOf_0"]);
     console2.log("policyholdersHadBalanceOf_1      ", calls["policyholdersHadBalanceOf_1"]);
@@ -40,32 +40,32 @@ contract VertexPolicyHandler is BaseHandler {
   // ======== Methods for Fuzzer ========
   // ====================================
 
-  function vertexPolicyNFT_batchGrantPolicies() public recordCall("vertexPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchGrantPolicies() public recordCall("llamaPolicyNFT_batchGrantPolicies") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
-  function vertexPolicyNFT_batchUpdatePermissions() public recordCall("vertexPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchUpdatePermissions() public recordCall("llamaPolicyNFT_batchUpdatePermissions") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
-  function vertexPolicyNFT_batchRevokePolicies() public recordCall("vertexPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(POLICY.vertexCore()));
+  function llamaPolicyNFT_batchRevokePolicies() public recordCall("llamaPolicyNFT_batchRevokePolicies") {
+    vm.prank(address(POLICY.llamaCore()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }
 
-contract VertexFactoryInvariants is VertexCoreTest {
-  // TODO Remove inheritance on VertexCoreTest once https://github.com/llama-community/vertex-v1/issues/38 is
+contract LlamaFactoryInvariants is LlamaCoreTest {
+  // TODO Remove inheritance on LlamaCoreTest once https://github.com/llamaxyz/llama/issues/38 is
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
 
-  VertexPolicyHandler public handler;
+  LlamaPolicyHandler public handler;
 
   function setUp() public override {
-    VertexCoreTest.setUp();
-    handler = new VertexPolicyHandler(factory, mpCore);
+    LlamaCoreTest.setUp();
+    handler = new LlamaPolicyHandler(factory, mpCore);
 
     // TODO Set this up and write tests.
     targetSender(makeAddr("invariantSender")); // TODO why does removing this result in failure due to clone being
@@ -77,9 +77,9 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // ======== Invariant Assertions ========
   // ======================================
 
-  // For a given permission ID and timestamp, the sum of that permission's quantity over all users
+  // For a given permission ID and timestamp, the sum of that permission's quantity over all policyholders
   // with that permission should equal the total supply of that permission ID.
-  function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply() public view {
+  function assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllPolicyholdersEqualsTotalSupply() public view {
     // TODO Update this for the new permissions scheme.
 
     // bytes32[] memory allPermissionIds = handler.getPermissionIds();
@@ -88,18 +88,18 @@ contract VertexFactoryInvariants is VertexCoreTest {
     // mpPolicy.getTokenPermissionSupplyCheckpoints(allPermissionIds[i]);
 
     //   for (uint256 j = 0; j < checkpoints.length; j++) {
-    //     uint256 sumOfPermissionsOverAllUsers = 0;
+    //     uint256 sumOfPermissionsOverAllPolicyholders = 0;
     //     address[] memory policyholders = handler.getActors();
 
     //     for (uint256 k = 0; k < policyholders.length; k++) {
     //       bool hasPermission =
     //         mpPolicy.holderQuantityAt(policyholders[k], allPermissionIds[i], checkpoints[j].timestamp) > 0;
-    //       sumOfPermissionsOverAllUsers += hasPermission ? 1 : 0;
+    //       sumOfPermissionsOverAllPolicyholders += hasPermission ? 1 : 0;
     //     }
     //     require(
-    //       sumOfPermissionsOverAllUsers == checkpoints[j].quantity,
+    //       sumOfPermissionsOverAllPolicyholders == checkpoints[j].quantity,
     //       string.concat(
-    //         "sum of permissions over all users should equal total supply: ",
+    //         "sum of permissions over all policyholders should equal total supply: ",
     //         "(permissionId, timestamp) =",
     //         "(",
     //         vm.toString(allPermissionIds[i]),
@@ -143,17 +143,17 @@ contract VertexFactoryInvariants is VertexCoreTest {
     // }
   }
 
-  // The policyId, i.e. the token ID, held by a given user should always match that user's address.
+  // The policyId, i.e. the token ID, held by a given policyholder should always match that policyholder's address.
   function assertInvariant_DeterministicPolicyIds() public view {
     address[] memory policyholders = handler.getActors();
     for (uint256 i = 0; i < policyholders.length; i++) {
       if (mpPolicy.balanceOf(policyholders[i]) == 0) continue;
       uint256 expectedTokenId = uint256(uint160(policyholders[i]));
-      require(mpPolicy.ownerOf(expectedTokenId) == policyholders[i], "policyId should match user address");
+      require(mpPolicy.ownerOf(expectedTokenId) == policyholders[i], "policyId should match policyholder address");
     }
   }
 
-  // A user should never have more than one policy NFT.
+  // A policyholder should never have more than one policy NFT.
   function assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT() public view {
     address[] memory policyholders = handler.getActors();
     for (uint256 i = 0; i < policyholders.length; i++) {
@@ -166,7 +166,7 @@ contract VertexFactoryInvariants is VertexCoreTest {
   // =================================
 
   function invariant_AllPolicyInvariants() public view {
-    assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllUsersEqualsTotalSupply();
+    assertInvariant_ForEachPermissionId_SumOfPermissionsOverAllPolicyholdersEqualsTotalSupply();
     assertInvariant_TokenPermissionSupplyCheckpointsAreAlwaysSortedByUniqueTimestamp();
     assertInvariant_DeterministicPolicyIds();
     assertInvariant_PolicyholdersShouldNeverHaveMoreThanOneNFT();

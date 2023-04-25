@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Vertex Strategy Interface
+/// @title Llama Strategy Interface
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is the interface for Vertex strategies which determine the rules of an action's process.
+/// @notice This is the interface for Llama strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
-interface IVertexStrategy {
+interface ILlamaStrategy {
   // -------- For Inspection --------
   // These are not strictly required by the core, but are useful for inspecting a strategy contract.
 
-  /// @notice Returns the address of the Vertex contract that this strategy is registered to.
-  function vertex() external view returns (VertexCore);
+  /// @notice Returns the address of the Ll contract that this strategy is registered to.
+  function llamaCore() external view returns (LlamaCore);
 
   /// @notice Returns the name of the policy contract that this strategy is registered to.
-  function policy() external view returns (VertexPolicy);
+  function policy() external view returns (LlamaPolicy);
 
   // -------- At Strategy Creation --------
 
@@ -37,7 +37,7 @@ interface IVertexStrategy {
 
   // -------- When Casting Approval --------
 
-  /// @notice Returns true if approvals are allowed with this strategy for the given user, false
+  /// @notice Returns true if approvals are allowed with this strategy for the given policyholder, false
   /// otherwise.  May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
@@ -52,7 +52,7 @@ interface IVertexStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Returns true if disapprovals are allowed with this strategy for the given user, false
+  /// @notice Returns true if disapprovals are allowed with this strategy for the given policyholder, false
   /// otherwise. May also return a reason string for why the action is not allowed.
   /// @dev Reason string is limited to `bytes32` to reduce the risk of a revert due to a large
   /// string that consumes too much gas when copied to memory.
@@ -77,7 +77,7 @@ interface IVertexStrategy {
 
   /// @notice Get whether an action has eligible to be canceled.
   /// @param actionId id of the action.
-  /// @param caller User initiating the cancelation.
+  /// @param caller Policyholder initiating the cancelation.
   /// @return Boolean value that is true if the action can be canceled.
   function isActionCancelationValid(uint256 actionId, address caller) external view returns (bool);
 

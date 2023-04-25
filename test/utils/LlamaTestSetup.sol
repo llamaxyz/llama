@@ -11,14 +11,14 @@ import {Solarray} from "@solarray/Solarray.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
-import {DeployVertexProtocol} from "script/DeployVertexProtocol.s.sol";
+import {DeployLlama} from "script/DeployLlama.s.sol";
 
-import {IVertexStrategy} from "src/interfaces/IVertexStrategy.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, RelativeStrategyConfig, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {VertexAccount} from "src/VertexAccount.sol";
-import {VertexCore} from "src/VertexCore.sol";
-import {VertexPolicy} from "src/VertexPolicy.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
 enum Roles {
@@ -33,7 +33,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract VertexTestSetup is DeployVertexProtocol, Test {
+contract LlamaTestSetup is DeployLlama, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -42,21 +42,21 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   // of roles.
   uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
 
-  // Root Vertex instance.
-  VertexCore rootCore;
-  VertexPolicy rootPolicy;
-  IVertexStrategy rootStrategy1;
-  IVertexStrategy rootStrategy2;
-  VertexAccount rootAccount1;
-  VertexAccount rootAccount2;
+  // Root Llama instance.
+  LlamaCore rootCore;
+  LlamaPolicy rootPolicy;
+  ILlamaStrategy rootStrategy1;
+  ILlamaStrategy rootStrategy2;
+  LlamaAccount rootAccount1;
+  LlamaAccount rootAccount2;
 
-  // Mock protocol's (mp) vertex instance.
-  VertexCore mpCore;
-  VertexPolicy mpPolicy;
-  IVertexStrategy mpStrategy1;
-  IVertexStrategy mpStrategy2;
-  VertexAccount mpAccount1;
-  VertexAccount mpAccount2;
+  // Mock protocol's (mp) llama instance.
+  LlamaCore mpCore;
+  LlamaPolicy mpPolicy;
+  ILlamaStrategy mpStrategy1;
+  ILlamaStrategy mpStrategy2;
+  LlamaAccount mpAccount1;
+  LlamaAccount mpAccount2;
 
   // Mock protocol for action targets.
   MockProtocol public mockProtocol;
@@ -64,9 +64,9 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
   // Mock script for action targets.
   MockScript public mockScript;
 
-  // Root vertex action creator.
-  address rootVertexActionCreator;
-  uint256 rootVertexActionCreatorPrivateKey;
+  // Root llama action creator.
+  address rootLlamaActionCreator;
+  uint256 rootLlamaActionCreatorPrivateKey;
 
   // Mock protocol users.
   address actionCreatorAaron;
@@ -118,7 +118,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
   function setUp() public virtual {
     // Setting up user addresses and private keys.
-    (rootVertexActionCreator, rootVertexActionCreatorPrivateKey) = makeAddrAndKey("rootVertexActionCreator");
+    (rootLlamaActionCreator, rootLlamaActionCreatorPrivateKey) = makeAddrAndKey("rootLlamaActionCreator");
     (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
     (approverAdam, approverAdamPrivateKey) = makeAddrAndKey("approverAdam");
     (approverAlicia, approverAliciaPrivateKey) = makeAddrAndKey("approverAlicia");
@@ -127,15 +127,15 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
-    DeployVertexProtocol.run();
+    DeployLlama.run();
 
-    rootCore = factory.ROOT_VERTEX();
+    rootCore = factory.ROOT_LLAMA();
     rootPolicy = rootCore.policy();
 
     // We use input from the deploy script to bootstrap our test suite.
     scriptInput = readScriptInput();
 
-    // Now we deploy a mock protocol's vertex, again with a single action creator role.
+    // Now we deploy a mock protocol's llama, again with a single action creator role.
     string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
     RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     bytes[] memory strategyConfigs = relativeStrategyConfigs();
@@ -144,7 +144,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
     vm.prank(address(rootCore));
     mpCore = factory.deploy(
-      "Mock Protocol Vertex",
+      "Mock Protocol Llama",
       relativeStrategyLogic,
       strategyConfigs,
       mpAccounts,
@@ -156,19 +156,19 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
     // Set strategy addresses.
     rootStrategy1 =
-      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
     rootStrategy2 =
-      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
-    // Set vertex account addresses.
-    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+    // Set llama account addresses.
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
-    // Add approvers and disapprovers to the mock protocol's vertex.
+    // Add approvers and disapprovers to the mock protocol's llama.
     vm.startPrank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -179,7 +179,7 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
-    // With the mock protocol's vertex instance deployed, we deploy the mock protocol.
+    // With the mock protocol's llama instance deployed, we deploy the mock protocol.
     mockProtocol = new MockProtocol(address(mpCore));
 
     // Deploy the mock script
@@ -187,17 +187,17 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
 
     // Set strategy and account addresses.
     rootStrategy1 =
-      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
     rootStrategy2 =
-      lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeVertexStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
+    mpStrategy1 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
+    mpStrategy2 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
 
-    // Set vertex account addresses.
-    rootAccount1 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeVertexAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeVertexAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
+    // Set llama account addresses.
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // With the protocol deployed, we can set special permissions.
     pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
@@ -266,20 +266,20 @@ contract VertexTestSetup is DeployVertexProtocol, Test {
     strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
   }
 
-  function toIVertexStrategy(RelativeStrategyConfig[] memory strategies)
+  function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
     internal
     pure
-    returns (IVertexStrategy[] memory converted)
+    returns (ILlamaStrategy[] memory converted)
   {
     assembly {
       converted := strategies
     }
   }
 
-  function toIVertexStrategy(RelativeStrategyConfig memory strategy)
+  function toILlamaStrategy(RelativeStrategyConfig memory strategy)
     internal
     pure
-    returns (IVertexStrategy[] memory converted)
+    returns (ILlamaStrategy[] memory converted)
   {
     assembly {
       converted := strategy
