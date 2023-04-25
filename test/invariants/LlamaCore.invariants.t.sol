@@ -1,390 +1,401 @@
-// // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.19;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
 
-// import {console2} from "forge-std/Test.sol";
+import {console2} from "forge-std/Test.sol";
 
-// import {BaseHandler} from "test/invariants/BaseHandler.sol";
-// import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {BaseHandler} from "test/invariants/BaseHandler.sol";
+import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-// import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-// import {ActionState} from "src/lib/Enums.sol";
-// import {Action} from "src/lib/Structs.sol";
-// import {LlamaCore} from "src/LlamaCore.sol";
-// import {LlamaFactory} from "src/LlamaFactory.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {ActionState} from "src/lib/Enums.sol";
+import {Action, ActionInfo} from "src/lib/Structs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
 
-// contract LlamaCoreHandler is BaseHandler {
-//   // =========================
-//   // ======== Storage ========
-//   // =========================
+contract LlamaCoreHandler is BaseHandler {
+  // =========================
+  // ======== Storage ========
+  // =========================
 
-//   // Parameters we'll need to create valid actions.
-//   address mockProtocol;
-//   ILlamaStrategy[2] strategies;
-//   bytes32[3] permissionIds;
+  // Parameters we'll need to create valid actions.
+  address mockProtocol;
+  ILlamaStrategy[2] strategies;
+  bytes32[3] permissionIds;
 
-//   // Duplicated parameters from `LlamaTestSetup` that we use here.
-//   address actionCreatorAaron;
-//   uint256 actionCreatorAaronPrivateKey;
+  // Duplicated parameters from `LlamaTestSetup` that we use here.
+  address actionCreatorAaron;
+  uint256 actionCreatorAaronPrivateKey;
 
-//   // Used to track the last seen `actionsCount` value.
-//   uint256[] public actionsCounts;
+  // Used to track the last seen `actionsCount` value.
+  uint256[] public actionsCounts;
 
-//   // =============================
-//   // ======== Constructor ========
-//   // =============================
+  // Mapping from action ID to the action info struct
+  mapping(uint256 actionId => ActionInfo) public actionInfos;
 
-//   constructor(
-//     LlamaFactory _llamaFactory,
-//     LlamaCore _llamaCore,
-//     ILlamaStrategy[2] memory _strategies,
-//     bytes32[3] memory _permissionIds,
-//     address _mockProtocol
-//   ) BaseHandler(_llamaFactory, _llamaCore) {
-//     strategies = _strategies;
-//     permissionIds = _permissionIds;
-//     mockProtocol = _mockProtocol;
+  // =============================
+  // ======== Constructor ========
+  // =============================
 
-//     // Save off each existing action
-//     for (uint256 i = 0; i < LLAMA_CORE.actionsCount(); i++) {
-//       actionsCounts.push(i);
-//     }
+  constructor(
+    LlamaFactory _llamaFactory,
+    LlamaCore _llamaCore,
+    ILlamaStrategy[2] memory _strategies,
+    bytes32[3] memory _permissionIds,
+    address _mockProtocol
+  ) BaseHandler(_llamaFactory, _llamaCore) {
+    strategies = _strategies;
+    permissionIds = _permissionIds;
+    mockProtocol = _mockProtocol;
 
-//     (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
-//   }
+    // Save off each existing action
+    for (uint256 i = 0; i < LLAMA_CORE.actionsCount(); i++) {
+      actionsCounts.push(i);
+      actionInfos[i] = LlamaFactoryInvariants(msg.sender).getActionInfo(i);
+    }
 
-//   // =========================
-//   // ======== Helpers ========
-//   // =========================
+    (actionCreatorAaron, actionCreatorAaronPrivateKey) = makeAddrAndKey("actionCreatorAaron");
+  }
 
-//   function getAction(uint256 index) internal view returns (uint256) {
-//     return _bound(index, actionsCounts[0], actionsCounts[actionsCounts.length - 1]);
-//   }
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
-//   // Note this function is sensitive to the order of the `permissionIds` array and the configuration
-//   // in `LlamaTestSetup`. If you change either of those, you'll need to update this function.
-//   function permissionIdIndexToData(uint256 index)
-//     internal
-//     view
-//     returns (address target, bytes4 selector, ILlamaStrategy strategy)
-//   {
-//     index = _bound(index, 0, permissionIds.length - 1);
+  function getAction(uint256 index) internal view returns (uint256) {
+    return _bound(index, actionsCounts[0], actionsCounts[actionsCounts.length - 1]);
+  }
 
-//     // pausePermissionId
-//     if (index == 0) return (mockProtocol, bytes4(keccak256("pause(bool)")), strategies[0]);
-//     // failPermissionId
-//     else if (index == 1) return (mockProtocol, bytes4(keccak256("fail()")), strategies[0]);
-//     // receiveEthPermissionId
-//     else if (index == 2) return (mockProtocol, bytes4(keccak256("receiveEth()")), strategies[0]);
+  // Note this function is sensitive to the order of the `permissionIds` array and the configuration
+  // in `LlamaTestSetup`. If you change either of those, you'll need to update this function.
+  function permissionIdIndexToData(uint256 index)
+    internal
+    view
+    returns (address target, bytes4 selector, ILlamaStrategy strategy)
+  {
+    index = _bound(index, 0, permissionIds.length - 1);
 
-//     revert("unhandled index");
-//   }
+    // pausePermissionId
+    if (index == 0) return (mockProtocol, bytes4(keccak256("pause(bool)")), strategies[0]);
+    // failPermissionId
+    else if (index == 1) return (mockProtocol, bytes4(keccak256("fail()")), strategies[0]);
+    // receiveEthPermissionId
+    else if (index == 2) return (mockProtocol, bytes4(keccak256("receiveEth()")), strategies[0]);
 
-//   // Given an index and target action state, find the first action in that state. If one does not
-//   // exist, a value of `type(uint256).max` is returned.
-//   function findActionByState(uint256 index, ActionState targetState) internal view returns (uint256) {
-//     uint256 actionCount = LLAMA_CORE.actionsCount();
-//     if (actionCount == 0) return type(uint256).max;
+    revert("unhandled index");
+  }
 
-//     uint256 actionId = _bound(index, 0, actionCount - 1);
-//     for (uint256 i = 0; i < actionCount; i++) {
-//       actionId = actionId % actionCount;
-//       if (LLAMA_CORE.getActionState(actionId) == targetState) return actionId;
-//       actionId++;
-//     }
-//     return type(uint256).max;
-//   }
+  // Given an index and target action state, find the first action in that state. If one does not
+  // exist, a value of `type(uint256).max` is returned.
+  function findActionByState(uint256 index, ActionState targetState) internal view returns (uint256) {
+    uint256 actionCount = LLAMA_CORE.actionsCount();
+    if (actionCount == 0) return type(uint256).max;
 
-//   function getActionsCounts() public view returns (uint256[] memory) {
-//     return actionsCounts;
-//   }
+    uint256 actionId = _bound(index, 0, actionCount - 1);
+    for (uint256 i = 0; i < actionCount; i++) {
+      actionId = actionId % actionCount;
+      if (LLAMA_CORE.getActionState(actionInfos[actionId]) == targetState) return actionId;
+      actionId++;
+    }
+    return type(uint256).max;
+  }
 
-//   function callSummary() public view override {
-//     BaseHandler.callSummary();
-//     console2.log("llamaCore_createAction                 ", calls["llamaCore_createAction"]);
-//     console2.log("llamaCore_queueAction                  ", calls["llamaCore_queueAction"]);
-//     console2.log("llamaCore_executeAction                ", calls["llamaCore_executeAction"]);
-//     console2.log("llamaCore_cancelAction                 ", calls["llamaCore_cancelAction"]);
-//     console2.log("llamaCore_castApproval                 ", calls["llamaCore_castApproval"]);
-//     console2.log("llamaCore_castApprovalWithReason       ", calls["llamaCore_castApprovalWithReason"]);
-//     console2.log("llamaCore_castApprovalBySig            ", calls["llamaCore_castApprovalBySig"]);
-//     console2.log("llamaCore_castDisapproval              ", calls["llamaCore_castDisapproval"]);
-//     console2.log("llamaCore_castDisapprovalWithReason    ", calls["llamaCore_castDisapprovalWithReason"]);
-//     console2.log("llamaCore_castDisapprovalBySig         ", calls["llamaCore_castDisapprovalBySig"]);
-//     console2.log("llamaCore_createAndAuthorizeStrategies ", calls["llamaCore_createAndAuthorizeStrategies"]);
-//     console2.log("llamaCore_unauthorizeStrategies        ", calls["llamaCore_unauthorizeStrategies"]);
-//     console2.log("llamaCore_createAndAuthorizeAccounts   ", calls["llamaCore_createAndAuthorizeAccounts"]);
-//     console2.log("-----------------------------------------------");
-//     console2.log("llamaCore_queueAction_queued           ", calls["llamaCore_queueAction_queued"]);
-//     console2.log("llamaCore_queueAction_noop             ", calls["llamaCore_queueAction_noop"]);
-//     console2.log("llamaCore_executeAction_executed       ", calls["llamaCore_executeAction_executed"]);
-//     console2.log("llamaCore_executeAction_executionRevert", calls["llamaCore_executeAction_executionRevert"]);
-//     console2.log("llamaCore_executeAction_noop           ", calls["llamaCore_executeAction_noop"]);
-//     console2.log("llamaCore_cancelAction_canceled        ", calls["llamaCore_cancelAction_canceled"]);
-//     console2.log("llamaCore_cancelAction_noop            ", calls["llamaCore_cancelAction_noop"]);
-//     console2.log("llamaCore_castApproval_approved        ", calls["llamaCore_castApproval_approved"]);
-//     console2.log("llamaCore_castApproval_noop_1          ", calls["llamaCore_castApproval_noop_1"]);
-//     console2.log("llamaCore_castApproval_noop_2          ", calls["llamaCore_castApproval_noop_2"]);
-//     console2.log("llamaCore_castDisapproval_approved     ", calls["llamaCore_castDisapproval_approved"]);
-//     console2.log("llamaCore_castDisapproval_noop_1       ", calls["llamaCore_castDisapproval_noop_1"]);
-//     console2.log("llamaCore_castDisapproval_noop_2       ", calls["llamaCore_castDisapproval_noop_2"]);
-//   }
+  function getActionsCounts() public view returns (uint256[] memory) {
+    return actionsCounts;
+  }
 
-//   // ====================================
-//   // ======== Methods for Fuzzer ========
-//   // ====================================
+  function callSummary() public view override {
+    BaseHandler.callSummary();
+    console2.log("llamaCore_createAction                 ", calls["llamaCore_createAction"]);
+    console2.log("llamaCore_queueAction                  ", calls["llamaCore_queueAction"]);
+    console2.log("llamaCore_executeAction                ", calls["llamaCore_executeAction"]);
+    console2.log("llamaCore_cancelAction                 ", calls["llamaCore_cancelAction"]);
+    console2.log("llamaCore_castApproval                 ", calls["llamaCore_castApproval"]);
+    console2.log("llamaCore_castApprovalWithReason       ", calls["llamaCore_castApprovalWithReason"]);
+    console2.log("llamaCore_castApprovalBySig            ", calls["llamaCore_castApprovalBySig"]);
+    console2.log("llamaCore_castDisapproval              ", calls["llamaCore_castDisapproval"]);
+    console2.log("llamaCore_castDisapprovalWithReason    ", calls["llamaCore_castDisapprovalWithReason"]);
+    console2.log("llamaCore_castDisapprovalBySig         ", calls["llamaCore_castDisapprovalBySig"]);
+    console2.log("llamaCore_createAndAuthorizeStrategies ", calls["llamaCore_createAndAuthorizeStrategies"]);
+    console2.log("llamaCore_unauthorizeStrategies        ", calls["llamaCore_unauthorizeStrategies"]);
+    console2.log("llamaCore_createAndAuthorizeAccounts   ", calls["llamaCore_createAndAuthorizeAccounts"]);
+    console2.log("-----------------------------------------------");
+    console2.log("llamaCore_queueAction_queued           ", calls["llamaCore_queueAction_queued"]);
+    console2.log("llamaCore_queueAction_noop             ", calls["llamaCore_queueAction_noop"]);
+    console2.log("llamaCore_executeAction_executed       ", calls["llamaCore_executeAction_executed"]);
+    console2.log("llamaCore_executeAction_executionRevert", calls["llamaCore_executeAction_executionRevert"]);
+    console2.log("llamaCore_executeAction_noop           ", calls["llamaCore_executeAction_noop"]);
+    console2.log("llamaCore_cancelAction_canceled        ", calls["llamaCore_cancelAction_canceled"]);
+    console2.log("llamaCore_cancelAction_noop            ", calls["llamaCore_cancelAction_noop"]);
+    console2.log("llamaCore_castApproval_approved        ", calls["llamaCore_castApproval_approved"]);
+    console2.log("llamaCore_castApproval_noop_1          ", calls["llamaCore_castApproval_noop_1"]);
+    console2.log("llamaCore_castApproval_noop_2          ", calls["llamaCore_castApproval_noop_2"]);
+    console2.log("llamaCore_castDisapproval_approved     ", calls["llamaCore_castDisapproval_approved"]);
+    console2.log("llamaCore_castDisapproval_noop_1       ", calls["llamaCore_castDisapproval_noop_1"]);
+    console2.log("llamaCore_castDisapproval_noop_2       ", calls["llamaCore_castDisapproval_noop_2"]);
+  }
 
-//   function llamaCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
-//     public
-//     recordCall("llamaCore_createAction")
-//     useCurrentTimestamp
-//   {
-//     // We don't want action creation to revert, so we pull from arrays of known good values instead
-//     // of lettings the fuzzer have full control over input values.
-//     (address target, bytes4 selector, ILlamaStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
+  // ====================================
+  // ======== Methods for Fuzzer ========
+  // ====================================
 
-//     // We only have one function that can receive ETH, if we're calling that function, we randomize
-//     // how much ETH to send, otherwise we send 0.
-//     value = selector == bytes4(keccak256("receiveEth()")) ? _bound(value, 0, 1000 ether) : 0;
+  function llamaCore_createAction(uint256 permissionIdIndex, uint256 value, uint256 dataSeed)
+    public
+    recordCall("llamaCore_createAction")
+    useCurrentTimestamp
+  {
+    // We don't want action creation to revert, so we pull from arrays of known good values instead
+    // of lettings the fuzzer have full control over input values.
+    (address target, bytes4 selector, ILlamaStrategy strategy) = permissionIdIndexToData(permissionIdIndex);
 
-//     // We only have one function that takes calldata, if we're calling that function, we randomize
-//     // the calldata;
-//     bytes memory data = selector == bytes4(keccak256("pause(bool)")) ? abi.encode(_bound(dataSeed, 0, 1)) :
-// bytes("");
+    // We only have one function that can receive ETH, if we're calling that function, we randomize
+    // how much ETH to send, otherwise we send 0.
+    value = selector == bytes4(keccak256("receiveEth()")) ? _bound(value, 0, 1000 ether) : 0;
 
-//     // We can now execute the action.
-//     vm.prank(actionCreatorAaron);
-//     uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, selector, data);
-//     actionsCounts.push(actionId);
-//   }
+    // We only have one function that takes calldata, if we're calling that function, we randomize
+    // the calldata;
+    bytes memory data = selector == bytes4(keccak256("pause(bool)")) ? abi.encode(_bound(dataSeed, 0, 1)) : bytes("");
+    data = abi.encodeWithSelector(selector, data);
 
-//   function llamaCore_queueAction(uint256 index) public recordCall("llamaCore_queueAction") useCurrentTimestamp {
-//     // We only want to queue actions that are in the `Approved` state. If no actions are ready to be
-//     // queued, we exit and this is a no-op.
-//     uint256 actionId = findActionByState(index, ActionState.Approved);
-//     if (actionId == type(uint256).max) {
-//       recordMetric("llamaCore_queueAction_noop");
-//       return;
-//     }
+    // We can now execute the action.
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, data);
+    actionsCounts.push(actionId);
+    actionInfos[actionId] = ActionInfo(actionId, actionCreatorAaron, strategy, target, value, data);
+  }
 
-//     LLAMA_CORE.queueAction(actionId);
-//     recordMetric("llamaCore_queueAction_queued");
-//   }
+  function llamaCore_queueAction(uint256 index) public recordCall("llamaCore_queueAction") useCurrentTimestamp {
+    // We only want to queue actions that are in the `Approved` state. If no actions are ready to be
+    // queued, we exit and this is a no-op.
+    uint256 actionId = findActionByState(index, ActionState.Approved);
+    if (actionId == type(uint256).max) {
+      recordMetric("llamaCore_queueAction_noop");
+      return;
+    }
 
-//   function llamaCore_executeAction(uint256 index) public recordCall("llamaCore_executeAction") useCurrentTimestamp {
-//     // We only want to execute actions that are in the `Queued` state. If no actions are ready to be
-//     // executed, we exit and this is a no-op.
-//     uint256 actionId = findActionByState(index, ActionState.Queued);
-//     if (actionId == type(uint256).max) {
-//       recordMetric("llamaCore_executeAction_noop");
-//       return;
-//     }
+    LLAMA_CORE.queueAction(actionInfos[actionId]);
+    recordMetric("llamaCore_queueAction_queued");
+  }
 
-//     vm.warp(LLAMA_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
-//     try LLAMA_CORE.executeAction(actionId) {
-//       recordMetric("llamaCore_executeAction_executed");
-//     } catch {
-//       // We don't care about reverts, we just want to know if the action was executed or not.
-//       recordMetric("llamaCore_executeAction_executionRevert");
-//     }
-//   }
+  function llamaCore_executeAction(uint256 index) public recordCall("llamaCore_executeAction") useCurrentTimestamp {
+    // We only want to execute actions that are in the `Queued` state. If no actions are ready to be
+    // executed, we exit and this is a no-op.
+    uint256 actionId = findActionByState(index, ActionState.Queued);
+    if (actionId == type(uint256).max) {
+      recordMetric("llamaCore_executeAction_noop");
+      return;
+    }
 
-//   function llamaCore_cancelAction(uint256 index) public recordCall("llamaCore_cancelAction") useCurrentTimestamp {
-//     // We can only cancel actions that are not in any of the following state: executed, canceled,
-//     // expired, or failed. If all actions are in one of those states, we exit and this is a no-op.
-//     uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
-//     for (uint256 i = 0; i < actionsCounts.length; i++) {
-//       actionId = actionsCounts[(actionId + i) % actionsCounts.length];
-//       ActionState state = LLAMA_CORE.getActionState(actionId);
-//       if (
-//         state != ActionState.Executed && state != ActionState.Canceled && state != ActionState.Expired
-//           && state != ActionState.Failed
-//       ) {
-//         // Prank as the action creator so we don't need to worry about disapprovals to cancel the action.
-//         Action memory action = LLAMA_CORE.getAction(actionId);
-//         vm.prank(action.creator);
-//         LLAMA_CORE.cancelAction(actionId);
-//         recordMetric("llamaCore_cancelAction_canceled");
-//         return;
-//       }
-//     }
-//     recordMetric("llamaCore_cancelAction_noop");
-//   }
+    vm.warp(LLAMA_CORE.getAction(actionId).minExecutionTime); // Ensure the action is ready to be executed.
+    try LLAMA_CORE.executeAction(actionInfos[actionId]) {
+      recordMetric("llamaCore_executeAction_executed");
+    } catch {
+      // We don't care about reverts, we just want to know if the action was executed or not.
+      recordMetric("llamaCore_executeAction_executionRevert");
+    }
+  }
 
-//   function llamaCore_castApproval(uint256 index) public recordCall("llamaCore_castApproval") useCurrentTimestamp {
-//     uint256 actionId = findActionByState(index, ActionState.Active);
-//     if (actionId == type(uint256).max) {
-//       recordMetric("llamaCore_castApproval_noop_1");
-//       return;
-//     }
+  function llamaCore_cancelAction(uint256 index) public recordCall("llamaCore_cancelAction") useCurrentTimestamp {
+    // We can only cancel actions that are not in any of the following state: executed, canceled,
+    // expired, or failed. If all actions are in one of those states, we exit and this is a no-op.
+    uint256 actionId = _bound(index, 0, actionsCounts.length - 1);
+    for (uint256 i = 0; i < actionsCounts.length; i++) {
+      actionId = actionsCounts[(actionId + i) % actionsCounts.length];
+      ActionInfo memory actionInfo = actionInfos[actionId];
+      ActionState state = LLAMA_CORE.getActionState(actionInfo);
+      if (
+        state != ActionState.Executed && state != ActionState.Canceled && state != ActionState.Expired
+          && state != ActionState.Failed
+      ) {
+        // Prank as the action creator so we don't need to worry about disapprovals to cancel the action.
+        vm.prank(actionInfo.creator);
+        LLAMA_CORE.cancelAction(actionInfo);
+        recordMetric("llamaCore_cancelAction_canceled");
+        return;
+      }
+    }
+    recordMetric("llamaCore_cancelAction_noop");
+  }
 
-//     address[3] memory approvers = [makeAddr("approverAdam"), makeAddr("approverAlicia"), makeAddr("approverAndy")];
-//     uint256 newIndex = uint256(keccak256(abi.encode(index)));
-//     address approver = approvers[_bound(newIndex, 0, approvers.length - 1)];
+  function llamaCore_castApproval(uint256 index) public recordCall("llamaCore_castApproval") useCurrentTimestamp {
+    uint256 actionId = findActionByState(index, ActionState.Active);
+    if (actionId == type(uint256).max) {
+      recordMetric("llamaCore_castApproval_noop_1");
+      return;
+    }
 
-//     if (LLAMA_CORE.approvals(actionId, approver)) {
-//       recordMetric("llamaCore_castApproval_noop_2");
-//       return;
-//     }
+    address[3] memory approvers = [makeAddr("approverAdam"), makeAddr("approverAlicia"), makeAddr("approverAndy")];
+    uint256 newIndex = uint256(keccak256(abi.encode(index)));
+    address approver = approvers[_bound(newIndex, 0, approvers.length - 1)];
 
-//     vm.prank(approver);
-//     LLAMA_CORE.castApproval(actionId, uint8(Roles.Approver));
-//     recordMetric("llamaCore_castApproval_approved");
-//   }
+    if (LLAMA_CORE.approvals(actionId, approver)) {
+      recordMetric("llamaCore_castApproval_noop_2");
+      return;
+    }
 
-//   function llamaCore_castDisapproval(uint256 index) public recordCall("llamaCore_castDisapproval")
-// useCurrentTimestamp {
-//     uint256 actionId = findActionByState(index, ActionState.Queued);
-//     if (actionId == type(uint256).max) {
-//       recordMetric("llamaCore_castDisapproval_noop_1");
-//       return;
-//     }
+    vm.prank(approver);
+    LLAMA_CORE.castApproval(actionInfos[actionId], uint8(Roles.Approver));
+    recordMetric("llamaCore_castApproval_approved");
+  }
 
-//     address[3] memory disapprovers =
-//       [makeAddr("disapproverDave"), makeAddr("disapproverDiane"), makeAddr("disapproverDrake")];
-//     uint256 newIndex = uint256(keccak256(abi.encode(index)));
-//     address disapprover = disapprovers[_bound(newIndex, 0, disapprovers.length - 1)];
+  function llamaCore_castDisapproval(uint256 index) public recordCall("llamaCore_castDisapproval") useCurrentTimestamp {
+    uint256 actionId = findActionByState(index, ActionState.Queued);
+    if (actionId == type(uint256).max) {
+      recordMetric("llamaCore_castDisapproval_noop_1");
+      return;
+    }
 
-//     if (LLAMA_CORE.disapprovals(actionId, disapprover)) {
-//       recordMetric("llamaCore_castDisapproval_noop_2");
-//       return;
-//     }
+    address[3] memory disapprovers =
+      [makeAddr("disapproverDave"), makeAddr("disapproverDiane"), makeAddr("disapproverDrake")];
+    uint256 newIndex = uint256(keccak256(abi.encode(index)));
+    address disapprover = disapprovers[_bound(newIndex, 0, disapprovers.length - 1)];
 
-//     vm.prank(disapprover);
-//     LLAMA_CORE.castDisapproval(actionId, uint8(Roles.Disapprover));
-//     recordMetric("llamaCore_castDisapproval_disapproved");
-//   }
+    if (LLAMA_CORE.disapprovals(actionId, disapprover)) {
+      recordMetric("llamaCore_castDisapproval_noop_2");
+      return;
+    }
 
-//   // These methods are the same underlying functionality as the above methods, so they're omitted
-//   // from the handler for simplicity/brevity.
-//   //   llamaCore_castApprovalWithReason
-//   //   llamaCore_castApprovalBySig
-//   //   llamaCore_castDisapprovalWithReason
-//   //   llamaCore_castDisapprovalBySig
+    vm.prank(disapprover);
+    LLAMA_CORE.castDisapproval(actionInfos[actionId], uint8(Roles.Disapprover));
+    recordMetric("llamaCore_castDisapproval_disapproved");
+  }
 
-//   // These methods do not affect any of the invariants we're testing, so they're omitted from the
-//   // handler for simplicity/brevity.
-//   //   llamaCore_createAndAuthorizeStrategies
-//   //   llamaCore_unauthorizeStrategies
-//   //   llamaCore_createAndAuthorizeAccounts
-// }
+  // These methods are the same underlying functionality as the above methods, so they're omitted
+  // from the handler for simplicity/brevity.
+  //   llamaCore_castApprovalWithReason
+  //   llamaCore_castApprovalBySig
+  //   llamaCore_castDisapprovalWithReason
+  //   llamaCore_castDisapprovalBySig
 
-// contract LlamaFactoryInvariants is LlamaTestSetup {
-//   LlamaCoreHandler public handler;
+  // These methods do not affect any of the invariants we're testing, so they're omitted from the
+  // handler for simplicity/brevity.
+  //   llamaCore_createAndAuthorizeStrategies
+  //   llamaCore_unauthorizeStrategies
+  //   llamaCore_createAndAuthorizeAccounts
+}
 
-//   uint256 executedActionId;
-//   uint256 canceledActionId;
-//   uint256 expiredActionId;
+contract LlamaFactoryInvariants is LlamaTestSetup {
+  LlamaCoreHandler public handler;
 
-//   function setUp() public override {
-//     LlamaTestSetup.setUp();
+  ActionInfo executedAction;
+  ActionInfo canceledAction;
+  ActionInfo expiredAction;
 
-//     // We push through 3 actions: one that's executed, one that's canceled, and one that's expired.
-//     // First, we execute an action.
-//     executedActionId = createAction();
-//     approveAction(approverAdam, executedActionId);
-//     approveAction(approverAlicia, executedActionId);
-//     vm.warp(block.timestamp + 6 days);
-//     mpCore.queueAction(executedActionId);
-//     vm.warp(block.timestamp + 5 days);
-//     mpCore.executeAction(executedActionId);
-//     vm.warp(block.timestamp + 1 days);
+  // Mapping from action ID to action info, used for the handler to initialize this mapping in it's own storage.
+  mapping(uint256 actionId => ActionInfo) public actionInfos;
 
-//     // Now we cancel an action.
-//     canceledActionId = createAction();
-//     vm.prank(actionCreatorAaron);
-//     mpCore.cancelAction(canceledActionId);
-//     vm.warp(block.timestamp + 1 days);
+  function setUp() public override {
+    LlamaTestSetup.setUp();
 
-//     // Lastly, we let an action expire.
-//     expiredActionId = createAction();
-//     approveAction(approverAdam, expiredActionId);
-//     approveAction(approverAlicia, expiredActionId);
-//     vm.warp(block.timestamp + 6 days);
-//     mpCore.queueAction(expiredActionId);
-//     vm.warp(block.timestamp + 15 days);
+    // We push through 3 actions: one that's executed, one that's canceled, and one that's expired.
+    // First, we execute an action.
+    executedAction = createAction();
+    approveAction(approverAdam, executedAction);
+    approveAction(approverAlicia, executedAction);
+    vm.warp(block.timestamp + 6 days);
+    mpCore.queueAction(executedAction);
+    vm.warp(block.timestamp + 5 days);
+    mpCore.executeAction(executedAction);
+    vm.warp(block.timestamp + 1 days);
 
-//     // Verify our setup. Note that we rely on the fact that the action IDs are assigned sequentially in the handler.
-//     require(executedActionId == 0, "executedActionId");
-//     require(canceledActionId == 1, "canceledActionId");
-//     require(expiredActionId == 2, "expiredActionId");
-//     require(mpCore.getActionState(executedActionId) == ActionState.Executed, "executedActionId");
-//     require(mpCore.getActionState(canceledActionId) == ActionState.Canceled, "canceledActionId");
-//     require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId");
+    // Now we cancel an action.
+    canceledAction = createAction();
+    vm.prank(actionCreatorAaron);
+    mpCore.cancelAction(canceledAction);
+    vm.warp(block.timestamp + 1 days);
 
-//     // Now we deploy our handler and inform it of these actions.
-//     ILlamaStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
-//     bytes32[3] memory permissionIds = [pausePermissionId, failPermissionId, receiveEthPermissionId];
-//     handler = new LlamaCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
+    // Lastly, we let an action expire.
+    expiredAction = createAction();
+    approveAction(approverAdam, expiredAction);
+    approveAction(approverAlicia, expiredAction);
+    vm.warp(block.timestamp + 6 days);
+    mpCore.queueAction(expiredAction);
+    vm.warp(block.timestamp + 15 days);
 
-//     targetContract(address(handler));
-//     targetSender(msg.sender);
-//   }
+    // Save off the actions.
+    actionInfos[executedAction.id] = executedAction;
+    actionInfos[canceledAction.id] = canceledAction;
+    actionInfos[expiredAction.id] = expiredAction;
 
-//   // =========================
-//   // ======== Helpers ========
-//   // =========================
+    // Verify our setup. Note that we rely on the fact that the action IDs are assigned sequentially in the handler.
+    require(executedAction.id == 0, "executedActionId");
+    require(canceledAction.id == 1, "canceledActionId");
+    require(expiredAction.id == 2, "expiredActionId");
+    require(mpCore.getActionState(executedAction) == ActionState.Executed, "executedActionId");
+    require(mpCore.getActionState(canceledAction) == ActionState.Canceled, "canceledActionId");
+    require(mpCore.getActionState(expiredAction) == ActionState.Expired, "expiredActionId");
 
-//   function createAction() internal returns (uint256 actionId) {
-//     vm.prank(actionCreatorAaron);
-//     actionId = mpCore.createAction(
-//       uint8(Roles.ActionCreator),
-//       mpStrategy1,
-//       address(mockProtocol),
-//       0, // value
-//       PAUSE_SELECTOR,
-//       abi.encode(true)
-//     );
-//     vm.warp(block.timestamp + 1);
-//   }
+    // Now we deploy our handler and inform it of these actions.
+    ILlamaStrategy[2] memory strategies = [mpStrategy1, mpStrategy2];
+    bytes32[3] memory permissionIds = [pausePermissionId, failPermissionId, receiveEthPermissionId];
+    handler = new LlamaCoreHandler(factory, mpCore, strategies, permissionIds, address(mockProtocol));
 
-//   function approveAction(address policyholder, uint256 actionId) public {
-//     vm.prank(policyholder);
-//     mpCore.castApproval(actionId, uint8(Roles.Approver));
-//   }
+    targetContract(address(handler));
+    targetSender(msg.sender);
+  }
 
-//   // ======================================
-//   // ======== Invariant Assertions ========
-//   // ======================================
+  // =========================
+  // ======== Helpers ========
+  // =========================
 
-//   // The `actionsCount` state variable should only increase, and be incremented by 1 with each
-//   // successful `createAction` call.
-//   function assertInvariant_ActionsCountMonotonicallyIncreases() internal view {
-//     uint256[] memory llamaCounts = handler.getActionsCounts();
-//     for (uint256 i = 1; i < llamaCounts.length; i++) {
-//       require(llamaCounts[i] == llamaCounts[i - 1] + 1, "llamaCount did not monotonically increase");
-//     }
-//   }
+  function getActionInfo(uint256 actionId) external view returns (ActionInfo memory actionInfo) {
+    actionInfo = actionInfos[actionId];
+  }
 
-//   // Once an action is executed, it's state is final and should never change, i.e. it cannot be
-//   // queued or executed again.
-//   function assertInvariant_ExecutedActionsAreFinalized() internal view {
-//     require(mpCore.getActionState(executedActionId) == ActionState.Executed, "executedActionId state changed");
-//   }
+  function createAction() internal returns (ActionInfo memory actionInfo) {
+    bytes memory data = abi.encodeWithSelector(PAUSE_SELECTOR, true);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+  }
 
-//   // Once an action is canceled, it's state is final and should never change, i.e. it cannot
-//   // cannot be later be queued, executed, or canceled again.
-//   function assertInvariant_CanceledActionsAreFinalized() internal view {
-//     require(mpCore.getActionState(canceledActionId) == ActionState.Canceled, "canceledActionId state changed");
-//   }
+  function approveAction(address policyholder, ActionInfo memory actionInfo) public {
+    vm.prank(policyholder);
+    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+  }
 
-//   // Once an action is expired, it's state is final and should never change, i.e. it cannot be
-//   // later be queued and executed.
-//   function assertInvariant_ExpiredActionsAreFinalized() internal view {
-//     require(mpCore.getActionState(expiredActionId) == ActionState.Expired, "expiredActionId state changed");
-//   }
+  // ======================================
+  // ======== Invariant Assertions ========
+  // ======================================
 
-//   // =================================
-//   // ======== Invariant Tests ========
-//   // =================================
+  // The `actionsCount` state variable should only increase, and be incremented by 1 with each
+  // successful `createAction` call.
+  function assertInvariant_ActionsCountMonotonicallyIncreases() internal view {
+    uint256[] memory llamaCounts = handler.getActionsCounts();
+    for (uint256 i = 1; i < llamaCounts.length; i++) {
+      require(llamaCounts[i] == llamaCounts[i - 1] + 1, "llamaCount did not monotonically increase");
+    }
+  }
 
-//   function invariant_AllCoreInvariants() public view {
-//     assertInvariant_ActionsCountMonotonicallyIncreases();
-//     assertInvariant_ExecutedActionsAreFinalized();
-//     assertInvariant_CanceledActionsAreFinalized();
-//     assertInvariant_ExpiredActionsAreFinalized();
-//   }
+  // Once an action is executed, it's state is final and should never change, i.e. it cannot be
+  // queued or executed again.
+  function assertInvariant_ExecutedActionsAreFinalized() internal view {
+    require(mpCore.getActionState(executedAction) == ActionState.Executed, "executedAction state changed");
+  }
 
-//   function invariant_CallSummary() public view {
-//     handler.callSummary();
-//   }
-// }
+  // Once an action is canceled, it's state is final and should never change, i.e. it cannot
+  // cannot be later be queued, executed, or canceled again.
+  function assertInvariant_CanceledActionsAreFinalized() internal view {
+    require(mpCore.getActionState(canceledAction) == ActionState.Canceled, "canceledAction state changed");
+  }
+
+  // Once an action is expired, it's state is final and should never change, i.e. it cannot be
+  // later be queued and executed.
+  function assertInvariant_ExpiredActionsAreFinalized() internal view {
+    require(mpCore.getActionState(expiredAction) == ActionState.Expired, "expiredAction state changed");
+  }
+
+  // =================================
+  // ======== Invariant Tests ========
+  // =================================
+
+  function invariant_AllCoreInvariants() public view {
+    assertInvariant_ActionsCountMonotonicallyIncreases();
+    assertInvariant_ExecutedActionsAreFinalized();
+    assertInvariant_CanceledActionsAreFinalized();
+    assertInvariant_ExpiredActionsAreFinalized();
+  }
+
+  function invariant_CallSummary() public view {
+    handler.callSummary();
+  }
+}
