@@ -157,7 +157,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(uint256 /* actionId */, address /* policyholder */) external pure returns (bool, bytes32) {
+  function isApprovalEnabled(uint256, /* actionId */ address /* policyholder */ ) external pure returns (bool, bytes32) {
     return (true, "");
   }
 
@@ -170,7 +170,11 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(uint256 /* actionId */, address /* policyholder */) external view returns (bool, bytes32) {
+  function isDisapprovalEnabled(uint256, /* actionId */ address /* policyholder */ )
+    external
+    view
+    returns (bool, bytes32)
+  {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) return (false, "Disapproval disabled");
     return (true, "");
   }
