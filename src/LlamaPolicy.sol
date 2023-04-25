@@ -219,7 +219,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the total number of `role` holders.
-  /// @dev The value returned by this method must equal the sum of the quantity of the role
+  /// @dev The value returned by this method must equal the total number of holders of this role
   /// across all policyholders at that timestamp.
   function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint256) {
     return roleSupply[role].numberOfHolders;
