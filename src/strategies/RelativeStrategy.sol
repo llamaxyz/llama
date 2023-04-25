@@ -248,7 +248,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionVetoed(uint256 actionId) public view returns (bool) {
+  function isActionDisapproved(uint256 actionId) public view returns (bool) {
     Action memory action = llamaCore.getAction(actionId);
     return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionId], minDisapprovalPct);
   }

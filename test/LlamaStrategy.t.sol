@@ -904,7 +904,7 @@ contract GetMinimumAmountNeeded is LlamaStrategyTest {
   }
 }
 
-contract IsActionVetoed is LlamaStrategyTest {
+contract isActionDisapproved is LlamaStrategyTest {
   function testFuzz_AbsoluteStrategy_ReturnsTrueForDisapprovedActions(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -935,9 +935,9 @@ contract IsActionVetoed is LlamaStrategyTest {
 
     disapproveAction(_actionDisapprovals, actionId);
 
-    bool isActionVetoed = testStrategy.isActionVetoed(actionId);
+    bool isActionDisapproved = testStrategy.isActionDisapproved(actionId);
 
-    assertEq(isActionVetoed, true);
+    assertEq(isActionDisapproved, true);
   }
 
   function test_AbsoluteStrategy_ReturnsFalseForNonDisapprovedActions() public {
@@ -959,8 +959,8 @@ contract IsActionVetoed is LlamaStrategyTest {
 
     mpCore.queueAction(actionId);
 
-    bool isActionVetoed = testStrategy.isActionVetoed(actionId);
+    bool isActionDisapproved = testStrategy.isActionDisapproved(actionId);
 
-    assertEq(isActionVetoed, false);
+    assertEq(isActionDisapproved, false);
   }
 }

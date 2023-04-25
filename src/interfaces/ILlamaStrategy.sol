@@ -95,7 +95,7 @@ interface ILlamaStrategy {
   /// @notice Get whether an action has been vetoed during the disapproval process.
   /// @param actionId id of the action.
   /// @return Boolean value that is true if the action has been vetoed during the disapproval process.
-  function isActionVetoed(uint256 actionId) external view returns (bool);
+  function isActionDisapproved(uint256 actionId) external view returns (bool);
 
   /// @notice Returns `true` if the action is expired, false otherwise.
   /// @param actionId id of the action.

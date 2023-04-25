@@ -484,7 +484,7 @@ contract LlamaCore is Initializable {
 
     if (action.minExecutionTime == 0) return ActionState.Approved;
 
-    if (action.strategy.isActionVetoed(actionId)) return ActionState.Failed;
+    if (action.strategy.isActionDisapproved(actionId)) return ActionState.Failed;
 
     if (action.executed) return ActionState.Executed;
 
