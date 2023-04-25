@@ -54,19 +54,21 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
-  uint256 public approvalPeriod;
+  uint64 public approvalPeriod;
 
   /// @notice Minimum time, in seconds, between queueing and execution of action.
-  uint256 public queuingPeriod;
+  uint64 public queuingPeriod;
 
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
-  uint256 public expirationPeriod;
+  uint64 public expirationPeriod;
 
-  /// @notice Minimum total quantity of approvals for the action to be queued
-  uint256 public minApprovals;
+  /// @notice Minimum total quantity of approvals for the action to be queued.
+  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
+  uint128 public minApprovals;
 
-  /// @notice Minimum total quantity of disapprovals for the action to be canceled
-  uint256 public minDisapprovals;
+  /// @notice Minimum total quantity of disapprovals for the action to be canceled.
+  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
+  uint128 public minDisapprovals;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;

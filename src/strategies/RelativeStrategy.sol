@@ -54,21 +54,23 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
-  uint256 public approvalPeriod;
+  uint64 public approvalPeriod;
 
   /// @notice Minimum time, in seconds, between queueing and execution of action.
-  uint256 public queuingPeriod;
+  uint64 public queuingPeriod;
 
   /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
-  uint256 public expirationPeriod;
+  uint64 public expirationPeriod;
 
   /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 10,000 == 100%.
-  uint256 public minApprovalPct;
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minApprovalPct;
 
   /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
   /// action for it to be canceled. In bps, 10,000 == 100%.
-  uint256 public minDisapprovalPct;
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minDisapprovalPct;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;

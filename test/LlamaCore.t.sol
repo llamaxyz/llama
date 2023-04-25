@@ -136,12 +136,12 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     returns (RelativeStrategyConfig memory)
   {
     return RelativeStrategyConfig({
-      approvalPeriod: salt % 1000 days,
-      queuingPeriod: salt % 1001 days,
-      expirationPeriod: salt % 1002 days,
+      approvalPeriod: toUint64(salt % 1000 days),
+      queuingPeriod: toUint64(salt % 1001 days),
+      expirationPeriod: toUint64(salt % 1002 days),
       isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
-      minApprovalPct: salt % 10_000,
-      minDisapprovalPct: salt % 10_100,
+      minApprovalPct: toUint16(salt % 10_000),
+      minDisapprovalPct: toUint16(salt % 10_100),
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
       forceApprovalRoles: new uint8[](0),

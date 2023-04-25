@@ -309,4 +309,19 @@ contract LlamaTestSetup is DeployLlama, Test {
   ) internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
   }
+
+  function toUint128(uint256 n) internal pure returns (uint128) {
+    require(n <= type(uint128).max, string.concat("Value cannot fit in a uint128: ", vm.toString(n)));
+    return uint128(n);
+  }
+
+  function toUint64(uint256 n) internal pure returns (uint64) {
+    require(n <= type(uint64).max, string.concat("Value cannot fit in a uint64: ", vm.toString(n)));
+    return uint64(n);
+  }
+
+  function toUint16(uint256 n) internal pure returns (uint16) {
+    require(n <= type(uint16).max, string.concat("Value cannot fit in a uint16: ", vm.toString(n)));
+    return uint16(n);
+  }
 }
