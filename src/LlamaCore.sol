@@ -234,7 +234,7 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function queueAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
-    _assertMatchingInfoHash(action.infoHash, actionInfo);
+    _validateActionInfoHash(action.infoHash, actionInfo);
     if (getActionState(actionInfo) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
 
     uint256 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
@@ -246,7 +246,7 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
     Action storage action = actions[actionInfo.id];
-    _assertMatchingInfoHash(action.infoHash, actionInfo);
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
     // Initial checks that action is ready to execute.
     if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
@@ -279,7 +279,7 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function cancelAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
-    _assertMatchingInfoHash(action.infoHash, actionInfo);
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
     // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
     // address, and Solidity will revert since there is no code at the zero address.
@@ -461,7 +461,7 @@ contract LlamaCore is Initializable {
     // bypassing this check by providing a non-existent actionId would require finding a collision
     // to get a hash of zero.
     Action storage action = actions[actionInfo.id];
-    _assertMatchingInfoHash(action.infoHash, actionInfo);
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
     if (action.canceled) return ActionState.Canceled;
 
@@ -553,7 +553,7 @@ contract LlamaCore is Initializable {
     ActionState expectedState
   ) internal returns (Action storage action) {
     action = actions[actionInfo.id];
-    _assertMatchingInfoHash(action.infoHash, actionInfo);
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
     if (getActionState(actionInfo) != expectedState) revert InvalidActionState(expectedState);
 
@@ -619,7 +619,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
   }
 
-  function _assertMatchingInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
+  function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
     bytes32 expectedHash = _infoHash(actionInfo);
     if (actualHash != expectedHash) revert InfoHashMismatch();
   }
