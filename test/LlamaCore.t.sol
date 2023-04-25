@@ -1771,3 +1771,36 @@ contract GetActionState is LlamaCoreTest {
     assertEq(currentState, failedState);
   }
 }
+
+contract LlamaCoreHarness is LlamaCore {
+  function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
+    return _infoHash(actionInfo);
+  }
+
+  function infoHash_exposed(
+    uint256 id,
+    address creator,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data
+  ) external pure returns (bytes32) {
+    return _infoHash(id, creator, strategy, target, value, data);
+  }
+}
+
+contract InfoHash is LlamaCoreTest {
+  LlamaCoreHarness llamaCoreHarness;
+
+  function setUp() public override {
+    llamaCoreHarness = new LlamaCoreHarness();
+  }
+
+  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+    bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
+    bytes32 infoHash2 = llamaCoreHarness.infoHash_exposed(
+      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+    );
+    assertEq(infoHash1, infoHash2);
+  }
+}
