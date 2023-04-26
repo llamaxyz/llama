@@ -22,7 +22,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error ActionCreatorCannotCast();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error DisapprovalThresholdNotMet();
@@ -164,8 +163,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external pure {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+  function isApprovalEnabled(ActionInfo calldata, address) external pure {
+    // Approvals are always enabled for this strategy.
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -177,8 +176,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external view {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+  function isDisapprovalEnabled(ActionInfo calldata, address) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
   }
 
