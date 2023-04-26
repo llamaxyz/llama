@@ -2,8 +2,6 @@
 pragma solidity ^0.8.19;
 
 /// @dev A mock script that can be configured for testing.
-contract BaseScript /* is LlamaStorage */ {
-  function executeScript() external {
-  }
+contract BaseScript /* is LlamaStorage */ {}
   
 }
