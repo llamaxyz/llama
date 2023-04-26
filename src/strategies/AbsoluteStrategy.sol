@@ -160,13 +160,11 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
       // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
       uint256 actionCreatorApprovalRoleQty = policy.getQuantity(actionInfo.creator, approvalRole);
-      if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) {
-        revert InsufficientApprovalQuantity();
-      }
+      if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
 
       uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
       if (
-        minDisapprovals != type(uint256).max
+        minDisapprovals != type(uint128).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
       ) revert InsufficientDisapprovalQuantity();
     }
@@ -189,8 +187,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external view {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -239,7 +237,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
-    return block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
+    return
+      block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
 
   /// @inheritdoc ILlamaStrategy

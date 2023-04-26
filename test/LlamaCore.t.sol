@@ -1088,8 +1088,9 @@ contract CastDisapproval is LlamaCoreTest {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover)); // since the disapproval pct is 20%, one disapproval is
-      // all that is needed for the action to fail
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
 
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
@@ -1192,13 +1193,17 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
+    // First disapproval.
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
-
     castDisapprovalBySig(actionInfo, v, r, s);
-
     assertEq(mpCore.getAction(actionInfo.id).totalDisapprovals, 1);
 
+    // Second disapproval.
+    vm.prank(disapproverDave);
+    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+
+    // Assertions.
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
 

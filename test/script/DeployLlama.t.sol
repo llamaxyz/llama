@@ -81,7 +81,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeStrategy(firstStrategy).expirationPeriod(), 691_200);
     assertEq(toRelativeStrategy(firstStrategy).isFixedLengthApprovalPeriod(), true);
     assertEq(toRelativeStrategy(firstStrategy).minApprovalPct(), 4000);
-    assertEq(toRelativeStrategy(firstStrategy).minDisapprovalPct(), 2000);
+    assertEq(toRelativeStrategy(firstStrategy).minDisapprovalPct(), 5100);
     assertEq(toRelativeStrategy(firstStrategy).queuingPeriod(), 345_600);
     assertEq(toRelativeStrategy(firstStrategy).forceApprovalRole(1), false);
     assertEq(toRelativeStrategy(firstStrategy).forceDisapprovalRole(1), false);

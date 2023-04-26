@@ -156,18 +156,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
-    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    unchecked {
-      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
-      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
-      // the action creator without overflow, since a policyholder can never have a quantity greater than
-      // the total supply.
-      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(actionInfo.creator, approvalRole);
-      approvalPolicySupply -= actionCreatorApprovalRoleQty;
-      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
-      disapprovalPolicySupply -= actionCreatorDisapprovalRoleQty;
-    }
-
     // Save off the supplies to use for checking quorum.
     actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
     actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
@@ -242,7 +230,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
-    return block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
+    return
+      block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -254,7 +243,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isActionDisapproved(ActionInfo calldata actionInfo) public view returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
-    return action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
+    return
+      action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy

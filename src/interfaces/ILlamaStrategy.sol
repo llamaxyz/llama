@@ -89,7 +89,6 @@ interface ILlamaStrategy {
   /// @return Boolean value that is true if the action has been vetoed during the disapproval process.
   function isActionDisapproved(ActionInfo calldata actionInfo) external view returns (bool);
 
-
   /// @notice Returns `true` if the action is expired, false otherwise.
   /// @param actionInfo Data required to create an action.
   /// @return Boolean value that is true if the action is expired.
