@@ -197,7 +197,7 @@ contract LlamaCore is Initializable {
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param data Data to be called on the `target` when the action is executed.
-  /// @param description Title and description of the action in markdown format
+  /// @param description A human readable description of the action and the changes it will enact.
   /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
@@ -268,7 +268,7 @@ contract LlamaCore is Initializable {
   /// @param value The value in wei to be sent when the action is executed.
   /// @param data Data to be called on the `target` when the action is executed.
   /// @param policyholder The policyholder that signed the message.
-  /// @param description The title and description of the action in markdowwn format.
+  /// @param description A human readable description of the action and the changes it will enact.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
