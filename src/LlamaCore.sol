@@ -232,32 +232,8 @@ contract LlamaCore is Initializable {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
-    address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, data, "");
+  ) external returns (uint256) {
+    return _createActionBySig(role, strategy, target, value, data, policyholder, "", v, r, s);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -285,31 +261,7 @@ contract LlamaCore is Initializable {
     bytes32 r,
     bytes32 s
   ) external returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
-    address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, data, description);
+    return _createActionBySig(role, strategy, target, value, data, policyholder, description, v, r, s);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -765,5 +717,44 @@ contract LlamaCore is Initializable {
     unchecked {
       return i + 1;
     }
+  }
+
+  function _createActionBySig(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    address policyholder,
+    string memory description,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) internal returns (uint256 actionId) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_TYPEHASH,
+            role,
+            address(strategy),
+            target,
+            value,
+            keccak256(data),
+            policyholder,
+            _useNonce(policyholder, msg.sig)
+          )
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, data, description);
   }
 }
