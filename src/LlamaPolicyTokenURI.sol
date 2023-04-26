@@ -82,7 +82,9 @@ contract LlamaPolicyTokenURI {
             LibString.toString(tokenId),
             " - ",
             symbol,
-            '", "description": "Llama is a framework for onchain organizations.", "image": "data:image/svg+xml;base64,',
+            '", "description": "This policy represents membership in the Llama organization: ',
+            name,
+            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )
@@ -92,5 +94,18 @@ contract LlamaPolicyTokenURI {
     output = string(abi.encodePacked("data:application/json;base64,", json));
 
     return output;
+  }
+
+  function contractURI(string memory name) public pure returns (string memory) {
+    string[5] memory parts;
+    parts[0] = '{ "name": "Llama Policies: ';
+    parts[1] = name;
+    parts[2] = '", "description": "This collection represents memberships in the Llama organization: ';
+    parts[3] = name;
+    parts[4] =
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://app.llama.xyz/policy-nft/policy.png", "external_link": "https://app.llama.xyz", "banner":"https://app.llama.xyz/policy-nft/banner.png" }';
+    string memory json =
+      Base64.encode(bytes(string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4]))));
+    return string(abi.encodePacked("data:application/json;base64,", json));
   }
 }

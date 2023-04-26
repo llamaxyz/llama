@@ -172,6 +172,13 @@ contract LlamaFactory {
     return llamaPolicyTokenURI.tokenURI(name, symbol, tokenId, color, logo);
   }
 
+  /// @notice Returns the token URI for a given Llama policyholder.
+  /// @param name The name of the Llama system.
+  /// @return The contract URI for the given Llama instance.
+  function contractURI(string memory name) external view returns (string memory) {
+    return llamaPolicyTokenURI.contractURI(name);
+  }
+
   // ================================
   // ======== Internal Logic ========
   // ================================
