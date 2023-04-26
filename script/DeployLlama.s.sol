@@ -32,18 +32,18 @@ contract DeployLlama is Script {
   LlamaPolicyTokenURIParamRegistry policyTokenURIParamRegistry;
   LlamaLens lens;
 
-  struct RawStrategyData {
+  struct RawRelativeStrategyData {
     // Attributes need to be in alphabetical order so JSON decodes properly.
-    uint256 approvalPeriod;
+    uint64 approvalPeriod;
     uint8 approvalRole;
     uint8 disapprovalRole;
-    uint256 expirationPeriod;
+    uint64 expirationPeriod;
     uint8[] forceApprovalRoles;
     uint8[] forceDisapprovalRoles;
     bool isFixedLengthApprovalPeriod;
-    uint256 minApprovalPct;
-    uint256 minDisapprovalPct;
-    uint256 queuingPeriod;
+    uint16 minApprovalPct;
+    uint16 minDisapprovalPct;
+    uint64 queuingPeriod;
   }
 
   struct RawRoleHolderData {
@@ -126,11 +126,11 @@ contract DeployLlama is Script {
     returns (RelativeStrategyConfig[] memory strategyConfigs)
   {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RawStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawStrategyData[]));
+    RawRelativeStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawRelativeStrategyData[]));
 
     strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
-      RawStrategyData memory rawStrategy = rawStrategyConfigs[i];
+      RawRelativeStrategyData memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
       strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
       strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
