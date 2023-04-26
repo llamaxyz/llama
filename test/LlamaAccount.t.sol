@@ -10,6 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
+import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {
@@ -822,6 +823,20 @@ contract Execute is LlamaAccountTest {
     vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
     mpAccount1.execute(address(mockExtension), abi.encodePacked("", ""), true);
     vm.stopPrank();
+  }
+
+  function test_RevertIf_Slot0Changes() public {
+    MockMaliciousExtension mockExtension = new MockMaliciousExtension();
+
+    bytes memory data = abi.encodeCall(MockMaliciousExtension.attack1, ());
+    vm.prank(address(mpCore));
+    vm.expectRevert(LlamaAccount.Slot0Changed.selector);
+    mpAccount1.execute(address(mockExtension), data, true);
+
+    data = abi.encodeCall(MockMaliciousExtension.attack2, ());
+    vm.prank(address(mpCore));
+    vm.expectRevert(LlamaAccount.Slot0Changed.selector);
+    mpAccount1.execute(address(mockExtension), data, true);
   }
 }
 
