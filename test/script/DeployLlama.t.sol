@@ -14,12 +14,19 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 
 contract DeployLlamaTest is Test, DeployLlama {
   function setUp() public virtual {}
 }
 
 contract Run is DeployLlamaTest {
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new llamaCore instances. It could be
+  // replaced with any address that we hold the private key for.
+  // TODO is this really needed?
+  address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
+
   function test_DeploysFactory() public {
     assertEq(address(factory), address(0));
 
@@ -124,6 +131,22 @@ contract Run is DeployLlamaTest {
     Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
+
+    uint8 actionCreatorRole = 1;
+    assertEq(rootPolicy.hasRole(LLAMA_INSTANCE_DEPLOYER, actionCreatorRole), true);
+    balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    checkpoint = balances._checkpoints[0];
+    assertEq(checkpoint.expiration, type(uint64).max);
+    assertEq(checkpoint.quantity, 1);
+
+    bytes32 permissionId = lens.computePermissionId(
+      PermissionData(
+        address(factory), // target
+        LlamaFactory.deploy.selector, // selector
+        secondStrategy // strategy
+      )
+    );
+    assertTrue(rootPolicy.canCreateAction(actionCreatorRole, permissionId));
   }
 
   function test_DeploysCoreLogic() public {
@@ -183,5 +206,11 @@ contract Run is DeployLlamaTest {
       lens.computePermissionId(permissionData),
       bytes32(0xb015298f3f29356efa6d653f1f06c375fa6ad631144702003798f9939f8ce444)
     );
+  }
+
+  function toRelativeStrategy(ILlamaStrategy strategy) internal pure returns (RelativeStrategy converted) {
+    assembly {
+      converted := strategy
+    }
   }
 }

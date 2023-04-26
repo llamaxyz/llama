@@ -1,0 +1,56 @@
+{
+    "comment": "These addresses and IDs are what you get when you run the DeployLlama script test. The initialRoleDescriptions are expected to match those in the DeployLlama script.",
+    "factory": "0x62c20Aa1e0272312BC100b4e23B4DC1Ed96dD7D1",
+    "rootLlamaActionCreationStrategy": "0xe6Ee7dD7dB93E49f01b16689030288e825E91363",
+    "rootLlamaActionCreatorRole": 1,
+    "newLlamaName": "Mock Protocol Llama",
+    "newAccountNames": ["MP Treasury", "MP Grants"],
+    "initialRoleDescriptions": [
+      "ActionCreator",
+      "Approver",
+      "Disapprover",
+      "ForceApprover",
+      "ForceDisapprover",
+      "TestRole1",
+      "TestRole2",
+      "MadeUpRole"
+    ],
+    "strategyLogic": "0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496",
+    "accountLogic": "0xBb2180ebd78ce97360503434eD37fcf4a1Df61c3",
+    "initialStrategies": [
+      {
+        "approvalPeriod": 172800,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
+        "expirationPeriod": 86400,
+        "forceApprovalRoles": [1],
+        "forceDisapprovalRoles": [1],
+        "isFixedLengthApprovalPeriod": false,
+        "minApprovalPct": 8000,
+        "minDisapprovalPct": 10001,
+        "queuingPeriod": 0
+      },
+      {
+        "approvalPeriod": 172800,
+        "approvalRole": 2,
+        "disapprovalRole": 3,
+        "expirationPeriod": 691200,
+        "forceApprovalRoles": [],
+        "forceDisapprovalRoles": [],
+        "isFixedLengthApprovalPeriod": true,
+        "minApprovalPct": 4000,
+        "minDisapprovalPct": 2000,
+        "queuingPeriod": 345600
+      }
+    ],
+    "initialRoleHolders": [
+      {
+        "comment": "This will assign the ActionCreator role (role 1) to the address derived from `makeAddrAndKey('actionCreatorAaron')`. The role assignment is set to never expire (type(uint64).max) because this is the default. The quantity is likewise the default.",
+        "expiration": 18446744073709551615,
+        "quantity": 1,
+        "role": 1,
+        "user": "0x1f48298c8E770Efd59209fD5D893afAaA6BFf7Bf"
+      }
+    ],
+    "initialRolePermissions": []
+}
