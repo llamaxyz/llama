@@ -20,23 +20,24 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error InvalidStrategy();
-  error InvalidPolicyholder();
-  error InvalidCancelation();
-  error InvalidActionState(ActionState expected);
-  error OnlyLlama();
-  error InvalidSignature();
-  error TimelockNotFinished();
-  error FailedActionExecution(bytes reason);
-  error DuplicateCast();
-  error PolicyholderDoesNotHavePermission();
-  error InsufficientMsgValue();
-  error RoleHasZeroSupply(uint8 role);
-  error UnauthorizedStrategyLogic();
   error CannotUseCoreOrPolicy();
+  error DuplicateCast();
+  error FailedActionExecution(bytes reason);
+  error InfoHashMismatch();
+  error InsufficientMsgValue();
+  error InvalidActionState(ActionState expected);
+  error InvalidCancelation();
+  error InvalidPolicyholder();
+  error InvalidSignature();
+  error InvalidStrategy();
+  error OnlyLlama();
+  error PolicyholderDoesNotHavePermission();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
-  error InfoHashMismatch();
+  error RoleHasZeroSupply(uint8 role);
+  error TimelockNotFinished();
+  error UnauthorizedStrategyLogic();
+  error UnsafeCast(uint256 n);
 
   modifier onlyLlama() {
     if (msg.sender != address(this)) revert OnlyLlama();
@@ -237,7 +238,7 @@ contract LlamaCore is Initializable {
     _validateActionInfoHash(action.infoHash, actionInfo);
     if (getActionState(actionInfo) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
 
-    uint256 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
+    uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
     action.minExecutionTime = minExecutionTime;
     emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
@@ -519,7 +520,7 @@ contract LlamaCore is Initializable {
     // Save action.
     Action storage newAction = actions[actionId];
     newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
-    newAction.creationTime = block.timestamp;
+    newAction.creationTime = _toUint64(block.timestamp);
     actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, data);
@@ -530,7 +531,7 @@ contract LlamaCore is Initializable {
   {
     Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
 
-    uint256 quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+    uint128 quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
     emit ApprovalCast(actionInfo.id, policyholder, quantity, reason);
@@ -541,7 +542,7 @@ contract LlamaCore is Initializable {
   {
     Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
-    uint256 quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+    uint128 quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
     emit DisapprovalCast(actionInfo.id, policyholder, quantity, reason);
@@ -572,8 +573,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
-  function _newCastCount(uint256 currentCount, uint256 quantity) internal pure returns (uint256) {
-    if (currentCount == type(uint256).max || quantity == type(uint256).max) return type(uint256).max;
+  function _newCastCount(uint128 currentCount, uint128 quantity) internal pure returns (uint128) {
+    if (currentCount == type(uint128).max || quantity == type(uint128).max) return type(uint128).max;
     return currentCount + quantity;
   }
 
@@ -631,6 +632,12 @@ contract LlamaCore is Initializable {
     unchecked {
       nonces[policyholder][selector] = nonce + 1;
     }
+  }
+
+  /// @dev Reverts if `n` does not fit in a uint64.
+  function _toUint64(uint256 n) internal pure returns (uint64) {
+    if (n > type(uint64).max) revert UnsafeCast(n);
+    return uint64(n);
   }
 
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {

@@ -32,7 +32,7 @@ library Checkpoints {
      * searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where N is the
      * timestamp of checkpoints.
      */
-    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint256) {
+    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint128) {
         require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
         uint64 _timestamp = toUint64(timestamp);
 
@@ -61,7 +61,7 @@ library Checkpoints {
      *
      * Returns previous quantity and new quantity.
      */
-    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint256, uint256) {
+    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint128, uint128) {
         return _insert(self._checkpoints, toUint64(block.timestamp), toUint64(expiration), toUint128(quantity));
     }
 
@@ -71,7 +71,7 @@ library Checkpoints {
      *
      * Returns previous quantity and new quantity.
      */
-    function push(History storage self, uint256 quantity) internal returns (uint256, uint256) {
+    function push(History storage self, uint256 quantity) internal returns (uint128, uint128) {
         return push(self, quantity, type(uint64).max);
     }
 

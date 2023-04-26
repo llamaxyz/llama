@@ -42,10 +42,10 @@ struct Action {
   bytes32 infoHash;
   bool executed; // Has action executed.
   bool canceled; // Is action canceled.
-  uint256 creationTime; // The timestamp when action was created (used for policy snapshots).
-  uint256 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
-  uint256 totalApprovals; // The total quantity of policyholder approvals.
-  uint256 totalDisapprovals; // The total quantity of policyholder disapprovals.
+  uint64 creationTime; // The timestamp when action was created (used for policy snapshots).
+  uint64 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
+  uint128 totalApprovals; // The total quantity of policyholder approvals.
+  uint128 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
 struct RelativeStrategyConfig {

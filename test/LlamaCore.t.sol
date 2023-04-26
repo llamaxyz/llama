@@ -617,7 +617,7 @@ contract CancelAction is LlamaCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
+    vm.expectRevert(RelativeStrategy.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 
@@ -680,7 +680,7 @@ contract CancelAction is LlamaCoreTest {
     assertEq(mpStrategy1.isActionApproved(actionInfo), true);
     _queueAction(actionInfo);
 
-    vm.expectRevert(RelativeStrategy.DisapprovalThresholdNotMet.selector);
+    vm.expectRevert(RelativeStrategy.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 }

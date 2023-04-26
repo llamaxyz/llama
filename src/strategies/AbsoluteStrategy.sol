@@ -31,6 +31,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
+  error UnsafeCast(uint256 n);
 
   // ========================
   // ======== Events ========
@@ -178,9 +179,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   }
 
   /// @inheritdoc ILlamaStrategy
-  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
-    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceApprovalRole[role] ? type(uint256).max : quantity;
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
   }
 
   // -------- When Casting Disapproval --------
@@ -195,17 +196,17 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
-    returns (uint256)
+    returns (uint128)
   {
-    uint256 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceDisapprovalRole[role] ? type(uint256).max : quantity;
+    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
   }
 
   // -------- When Queueing --------
 
   /// @inheritdoc ILlamaStrategy
-  function minExecutionTime(ActionInfo calldata) external view returns (uint256) {
-    return block.timestamp + queuingPeriod;
+  function minExecutionTime(ActionInfo calldata) external view returns (uint64) {
+    return _toUint64(block.timestamp + queuingPeriod);
   }
 
   // -------- When Canceling --------
@@ -272,6 +273,12 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
+  }
+
+  /// @dev Reverts if `n` does not fit in a uint64.
+  function _toUint64(uint256 n) internal pure returns (uint64) {
+    if (n > type(uint64).max) revert UnsafeCast(n);
+    return uint64(n);
   }
 
   /// @dev Increments `i` by 1, but does not check for overflow.
