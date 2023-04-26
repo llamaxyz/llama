@@ -32,7 +32,13 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
-    uint256 id, address indexed creator, ILlamaStrategy indexed strategy, address target, uint256 value, bytes data
+    uint256 indexed id,
+    address indexed creator,
+    ILlamaStrategy indexed strategy,
+    address target,
+    uint256 value,
+    bytes data,
+    string description
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
@@ -412,7 +418,7 @@ contract CreateAction is LlamaCoreTest {
 
   function test_CreatesAnAction() public {
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
@@ -546,7 +552,7 @@ contract CreateActionBySig is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
 
     uint256 actionId = createActionBySig(v, r, s);
     ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
@@ -564,9 +570,9 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function test_CheckNonceIncrements() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 0);
+    assertEq(mpCore.nonces(actionCreatorAaron, 0xc7d0e062), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, 0xc7d0e062), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
