@@ -670,7 +670,7 @@ contract IsActionApproved is LlamaStrategyTest {
   }
 }
 
-contract IsActionCancelationValid is LlamaStrategyTest {
+contract ValidateActionCancelation is LlamaStrategyTest {
   function testFuzz_RevertIf_RelativeStrategy_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
