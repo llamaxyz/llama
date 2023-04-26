@@ -60,42 +60,28 @@ contract Run is CreateActionTest {
     uint256 newActionCount = rootLlama.actionsCount();
     assertEq(initActionCount + 1, newActionCount);
 
-    uint256 newActionId = initActionCount;
-    Action memory action = rootLlama.getAction(newActionId);
+    Action memory action = rootLlama.getAction(deployActionId);
 
-    assertEq(action.creator, LLAMA_INSTANCE_DEPLOYER);
+    string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
+    bytes32 deployActionInfoHash = keccak256(abi.encodePacked(
+      deployActionid,
+      LLAMA_INSTANCE_DEPLOYER, // creator
+      ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
+      address(factory), // target
+      0, // value
+      createActionCallData
+    ));
+
+    assertEq(deployActionInfoHash, action.infoHash);
     assertFalse(action.executed);
     assertFalse(action.canceled);
-    assertEq(action.selector, LlamaFactory.deploy.selector);
-    assertEq(action.target, address(factory));
-    VarsForCreatesAnActionOnTheRootLlama memory vars;
-    (
-      vars.name,
-      vars.strategyLogic,
-      vars.initialStrategies,
-      vars.initialAccounts,
-      vars.initialRoleDescriptions,
-      vars.initialRoleHolders,
-      vars.initialRolePermissions
-    ) = abi.decode(
-      action.data,
-      (
-        string, // Name.
-        ILlamaStrategy,
-        bytes[], // initialStrategies.
-        string[], // initialAccounts.
-        RoleDescription[],
-        RoleHolderData[],
-        RolePermissionData[]
-      )
-    );
 
     assertEq(vars.name, "Mock Protocol Llama");
     assertEq(address(vars.strategyLogic), 0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496);
     assertEq(keccak256(abi.encodePacked(vars.initialAccounts[0])), keccak256("MP Treasury"));
     assertEq(keccak256(abi.encodePacked(vars.initialAccounts[1])), keccak256("MP Grants"));
     // TODO assert against more action.data
-    assertEq(uint8(rootLlama.getActionState(newActionId)), uint8(ActionState.Active));
+    assertEq(uint8(rootLlama.getActionState(deployActionid)), uint8(ActionState.Active));
   }
 
   function test_actionCanBeExecuted() public {

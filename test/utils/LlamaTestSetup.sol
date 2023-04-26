@@ -171,8 +171,16 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     // Second, we approve the action.
     vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
-    rootCore.castApproval(deployActionId, uint8(Roles.ActionCreator));
-    rootCore.queueAction(deployActionId);
+    ActionInfo memory deployActionInfo = ActionInfo(
+      deployActionId,
+      LLAMA_INSTANCE_DEPLOYER, // creator
+      ILlamaStrategy(createActionScriptInput.readAddress(".rootLlamaActionCreationStrategy")),
+      address(factory), // target
+      0, // value
+      createActionCallData
+    );
+    rootCore.castApproval(deployActionInfo, uint8(Roles.ActionCreator));
+    rootCore.queueAction(deployActionInfo);
 
     // Advance the clock to execute the action.
     vm.roll(block.number + 1);
@@ -181,7 +189,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     // Execute the action and get a reference to the deployed LlamaCore.
     vm.recordLogs();
-    rootCore.executeAction(deployActionId);
+    rootCore.executeAction(deployActionInfo);
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,uint256)");

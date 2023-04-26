@@ -14,17 +14,23 @@ contract CreateAction is Script {
   // The ID of the action created on the root vertex.
   uint256 deployActionId;
 
+  // The data needed to for the Factory.deploy call
+  bytes createActionCallData;
+
   function run(address deployer) public {
     string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
 
-    bytes memory deployData = abi.encode(
-      jsonInput.readString(".newLlamaName"),
-      jsonInput.readAddress(".strategyLogic"),
-      DeployUtils.readRelativeStrategies(jsonInput),
-      jsonInput.readStringArray(".newAccountNames"),
-      DeployUtils.readRoleDescriptions(jsonInput),
-      DeployUtils.readRoleHolders(jsonInput),
-      DeployUtils.readRolePermissions(jsonInput)
+    createActionCallData = abi.encodeCall(
+      LlamaFactory.deploy,
+      (
+        jsonInput.readString(".newLlamaName"),
+        ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
+        DeployUtils.readRelativeStrategies(jsonInput),
+        jsonInput.readStringArray(".newAccountNames"),
+        DeployUtils.readRoleDescriptions(jsonInput),
+        DeployUtils.readRoleHolders(jsonInput),
+        DeployUtils.readRolePermissions(jsonInput)
+      )
     );
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
@@ -36,8 +42,7 @@ contract CreateAction is Script {
       ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
       jsonInput.readAddress(".factory"),
       0, // No ETH needs to be sent to deploy a new core instance.
-      LlamaFactory.deploy.selector,
-      deployData
+      createActionCallData
     );
 
     console2.log("Created action ID", deployActionId);
