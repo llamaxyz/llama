@@ -434,6 +434,27 @@ contract CreateAction is LlamaCoreTest {
     assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
   }
 
+  function test_CreatesAnActionWithDescription() public {
+    string memory description =
+      "# Transfer USDC to service provider \n This action transfers 10,000 USDC to our trusted provider.";
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description);
+
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionInfo.id);
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+
+    assertEq(actionInfo.id, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+  }
+
   function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
     vm.assume(_target != address(mockProtocol));
 
@@ -568,11 +589,47 @@ contract CreateActionBySig is LlamaCoreTest {
     assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
   }
 
-  function test_CheckNonceIncrements() public {
+  function test_CreatesActionBySigWithDescription() public {
+    string memory description = "# Action 0 \n This is my action.";
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, 0xc7d0e062), 0);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+
+    uint256 actionId = mpCore.createActionBySig(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      abi.encodeCall(MockProtocol.pause, (true)),
+      actionCreatorAaron,
+      description,
+      v,
+      r,
+      s
+    );
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionId);
+
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+
+    assertEq(actionId, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionId), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+  }
+
+  function test_CheckNonceIncrements() public {
+    // We need to manually calculate the function selector because we are using function overloading with the
+    // createActionBySig function
+    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, 0xc7d0e062), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
