@@ -25,10 +25,10 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   error ActionCreatorCannotCast();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
-  error DisapprovalThresholdNotMet();
   error InsufficientApprovalQuantity();
   error InsufficientDisapprovalQuantity();
   error InvalidMinApprovals(uint256 minApprovals);
+  error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
 
@@ -213,10 +213,10 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view {
     // The rules for cancelation are:
-    //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled, Expired, Failed.
-    //   2. For all other states (Active, Approved, Queued) the action can be canceled if:
-    //        a. The caller is the action creator.
-    //        b. The action is Queued, but the number of disapprovals is >= the disapproval threshold.
+    //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled,
+    //      Expired, Failed.
+    //   2. For all other states (Active, Approved, Queued) the action can be canceled if the caller
+    //      is the action creator.
 
     // Check 1.
     ActionState state = llamaCore.getActionState(actionInfo);
@@ -225,12 +225,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
         || state == ActionState.Failed
     ) revert CannotCancelInState(state);
 
-    // Check 2a.
-    Action memory action = llamaCore.getAction(actionInfo.id);
-    if (caller == actionInfo.creator) return;
-
-    // Check 2b.
-    if (action.totalDisapprovals < minDisapprovals) revert DisapprovalThresholdNotMet();
+    // Check 2.
+    if (caller != actionInfo.creator) revert OnlyActionCreator();
   }
 
   // -------- When Determining Action State --------
