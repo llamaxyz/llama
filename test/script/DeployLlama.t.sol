@@ -24,7 +24,6 @@ contract Run is DeployLlamaTest {
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
   // replaced with any address that we hold the private key for.
-  // TODO is this really needed?
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
 
   function test_DeploysFactory() public {

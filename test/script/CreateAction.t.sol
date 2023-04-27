@@ -52,12 +52,6 @@ contract Run is CreateActionTest {
     );
   }
 
-  function test_deploy() public {
-    // TODO revert if root llama is not at the address in the deploy script
-    // TODO revert if initial role holder role ID in input is not ActionCreator
-    // TODO revert if initial role holder quantity in input is not the DEFAULT_ROLE_QTY
-  }
-
   function test_createsAnActionOnTheRootLlama() public {
     uint256 initActionCount = rootLlama.actionsCount();
 

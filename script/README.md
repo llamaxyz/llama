@@ -37,3 +37,25 @@ just deploy
 When you are ready to deploy to a live network, simply follow the steps above
 but with `SCRIPT_RPC_URL` pointing to the appropriate node and
 `SCRIPT_PRIVATE_KEY` set to the deployer private key.
+
+## CreateAction
+
+The `CreateAction` script presupposes that the `DeployLlama` script has already
+been run for a given chain. So follow the instructions above before continuing
+here.
+
+Once `DeployLlama` has been run, set a `SCRIPT_DEPLOYER_ADDRESS` in your `.env` that corresponds to the `SCRIPT_PRIVATE_KEY` that you want to sign the action-creation transactions.
+It does *not* have to be the same address that did the initial deploy, but it could be.
+
+Once your `.env` file is configured and anvil is running, you can perform a dry
+run like this:
+
+```shell
+just dry-run-create-new-llama
+```
+
+If all goes well, broadcast as follows:
+
+```shell
+just create-new-llama
+```
