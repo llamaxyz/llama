@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/Script.sol";
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -12,7 +13,11 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
 import {DeployLlama} from "script/DeployLlama.s.sol";
+import {CreateAction} from "script/CreateAction.s.sol";
+import {DeployUtils} from "script/DeployUtils.sol";
 
+import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
@@ -40,7 +45,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract LlamaTestSetup is DeployLlama, Test {
+contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -48,6 +53,11 @@ contract LlamaTestSetup is DeployLlama, Test {
   // "AllHolders" role listed in the enum, this ends up being the correct number
   // of roles.
   uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
+
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new llamaCore instances. It could be
+  // replaced with any address that we hold the private key for.
+  address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
 
   // Root Llama instance.
   LlamaCore rootCore;
@@ -121,7 +131,8 @@ contract LlamaTestSetup is DeployLlama, Test {
   uint128 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
-  string scriptInput;
+  string deployScriptInput;
+  string createActionScriptInput;
 
   function setUp() public virtual {
     // Setting up user addresses and private keys.
@@ -134,40 +145,66 @@ contract LlamaTestSetup is DeployLlama, Test {
     (disapproverDiane, disapproverDianePrivateKey) = makeAddrAndKey("disapproverDiane");
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
+    // We use input from the deploy scripts to bootstrap our test suite.
+    deployScriptInput = DeployUtils.readScriptInput("deployLlama.json");
+    createActionScriptInput = DeployUtils.readScriptInput("createAction.json");
+
     DeployLlama.run();
 
     rootCore = factory.ROOT_LLAMA();
     rootPolicy = rootCore.policy();
 
-    // We use input from the deploy script to bootstrap our test suite.
-    scriptInput = readScriptInput();
-
     // Now we deploy a mock protocol's llama, again with a single action creator role.
-    string[] memory mpAccounts = Solarray.strings("MP Treasury", "MP Grants");
-    RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
-    RoleDescription[] memory roleDescriptionStrings = readRoleDescriptions(scriptInput);
-    string[] memory rootAccounts = scriptInput.readStringArray(".initialAccountNames");
+    string[] memory mpAccounts = createActionScriptInput.readStringArray(".newAccountNames");
+    bytes[] memory rootStrategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
+    string[] memory rootAccounts = deployScriptInput.readStringArray(".initialAccountNames");
 
-    vm.prank(address(rootCore));
-    mpCore = factory.deploy(
-      "Mock Protocol Llama",
-      relativeStrategyLogic,
-      strategyConfigs,
-      mpAccounts,
-      roleDescriptionStrings,
-      mpRoleHolders,
-      new RolePermissionData[](0)
+    // First we create an action to deploy a new llamaCore instance.
+    CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
+
+    // Advance the clock so that checkpoints take effect.
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    // Second, we approve the action.
+    vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
+    ActionInfo memory deployActionInfo = ActionInfo(
+      deployActionId,
+      LLAMA_INSTANCE_DEPLOYER, // creator
+      ILlamaStrategy(createActionScriptInput.readAddress(".rootLlamaActionCreationStrategy")),
+      address(factory), // target
+      0, // value
+      createActionCallData
     );
-    mpPolicy = mpCore.policy();
+    rootCore.castApproval(deployActionInfo, uint8(Roles.ActionCreator));
+    rootCore.queueAction(deployActionInfo);
 
-    // Set strategy addresses.
-    rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
-    rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
+    // Advance the clock to execute the action.
+    vm.roll(block.number + 1);
+    Action memory action = rootCore.getAction(deployActionId);
+    vm.warp(action.minExecutionTime + 1);
+
+    // Execute the action and get a reference to the deployed LlamaCore.
+    vm.recordLogs();
+    rootCore.executeAction(deployActionInfo);
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+    Vm.Log memory _event;
+    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,uint256)");
+    for (uint256 i; i < emittedEvents.length; i++) {
+      _event = emittedEvents[i];
+      if (_event.topics[0] == llamaInstanceCreatedSig) {
+        // event LlamaInstanceCreated(
+        //   uint256 indexed id,
+        //   string indexed name,
+        //   address llamaCore,       <--- What we want.
+        //   address llamaPolicy,
+        //   uint256 chainId
+        // )
+        (mpCore,,) = abi.decode(_event.data, (LlamaCore, address, uint256));
+      }
+    }
+    mpPolicy = mpCore.policy();
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -194,11 +231,13 @@ contract LlamaTestSetup is DeployLlama, Test {
 
     // Set strategy and account addresses.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[0], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore));
-    mpStrategy1 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(mpCore));
-    mpStrategy2 = lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[1], address(rootCore));
+    mpStrategy1 =
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[0], address(mpCore));
+    mpStrategy2 =
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -269,8 +308,16 @@ contract LlamaTestSetup is DeployLlama, Test {
     roleHolders[0] = RoleHolderData(uint8(Roles.ActionCreator), who, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function relativeStrategyConfigs() internal view returns (bytes[] memory strategyConfigs) {
-    strategyConfigs = encodeStrategyConfigs(readStrategies(scriptInput));
+  function strategyConfigsRootLlama() internal view returns (bytes[] memory) {
+    return DeployUtils.readRelativeStrategies(deployScriptInput);
+  }
+
+  function strategyConfigsLlamaInstance() internal view returns (bytes[] memory) {
+    return DeployUtils.readRelativeStrategies(createActionScriptInput);
+  }
+
+  function rootLlamaRoleDescriptions() internal returns (RoleDescription[] memory) {
+    return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
   function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
@@ -288,6 +335,18 @@ contract LlamaTestSetup is DeployLlama, Test {
     pure
     returns (ILlamaStrategy[] memory converted)
   {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toRelativeStrategy(ILlamaStrategy strategy) internal pure returns (RelativeStrategy converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toAbsoluteStrategy(ILlamaStrategy strategy) internal pure returns (AbsoluteStrategy converted) {
     assembly {
       converted := strategy
     }
