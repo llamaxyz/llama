@@ -6,6 +6,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
+import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -755,6 +756,55 @@ contract ExecuteAction is LlamaCoreTest {
     // Checking that the result is a delegatecall because msg.sender is this contract and not mpCore
     emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
     mpCore.executeAction(_actionInfo);
+  }
+
+  function test_RevertIf_Slot0Changes() public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+    MockMaliciousExtension mockMaliciousScript = new MockMaliciousExtension();
+
+    bytes32 permissionId1 =
+      keccak256(abi.encode(address(mockMaliciousScript), MockMaliciousExtension.attack1.selector, mpStrategy1));
+    bytes32 permissionId2 =
+      keccak256(abi.encode(address(mockMaliciousScript), MockMaliciousExtension.attack2.selector, mpStrategy1));
+
+    vm.startPrank(address(mpCore));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    mpCore.authorizeScript(address(mockMaliciousScript), true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), permissionId1, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), permissionId2, true);
+    vm.stopPrank();
+
+    bytes memory data1 = abi.encodeCall(MockMaliciousExtension.attack1, ());
+    bytes memory data2 = abi.encodeCall(MockMaliciousExtension.attack2, ());
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId1 = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data1);
+    ActionInfo memory _actionInfo1 =
+      ActionInfo(actionId1, actionCreatorAustin, mpStrategy1, address(mockMaliciousScript), 0, data1);
+
+    vm.prank(actionCreatorAustin);
+    uint256 actionId2 = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data2);
+    ActionInfo memory _actionInfo2 =
+      ActionInfo(actionId2, actionCreatorAustin, mpStrategy1, address(mockMaliciousScript), 0, data2);
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo1);
+    _approveAction(approverAlicia, _actionInfo1);
+    _approveAction(approverAdam, _actionInfo2);
+    _approveAction(approverAlicia, _actionInfo2);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(_actionInfo1);
+    mpCore.queueAction(_actionInfo2);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectRevert(LlamaCore.Slot0Changed.selector);
+    mpCore.executeAction(_actionInfo1);
+
+    vm.expectRevert(LlamaCore.Slot0Changed.selector);
+    mpCore.executeAction(_actionInfo2);
   }
 
   function test_RevertIf_NotQueued() public {

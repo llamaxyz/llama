@@ -35,6 +35,7 @@ contract LlamaCore is Initializable {
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
   error RoleHasZeroSupply(uint8 role);
+  error Slot0Changed();
   error TimelockNotFinished();
   error UnauthorizedStrategyLogic();
   error UnsafeCast(uint256 n);
@@ -91,11 +92,13 @@ contract LlamaCore is Initializable {
     "CastDisapproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
   );
 
+  /// @notice The NFT contract that defines the policies for this llama instance.
+  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
+  // variables, which are the key variables we want to check before and after a delegatecall.
+  LlamaPolicy public policy;
+
   /// @notice The LlamaFactory contract that deployed this llama instance.
   LlamaFactory public factory;
-
-  /// @notice The NFT contract that defines the policies for this llama instance.
-  LlamaPolicy public policy;
 
   /// @notice The Llama Account implementation (logic) contract.
   LlamaAccount public llamaAccountLogic;
@@ -264,8 +267,39 @@ contract LlamaCore is Initializable {
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[actionInfo.target]) (success, result) = actionInfo.target.delegatecall(actionInfo.data);
-    else (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
+    if (authorizedScripts[actionInfo.target]) {
+      // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
+      // none of the storage in this contract changes in unexpected ways, as this could let someone
+      // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
+      // However, this contract has a lot of storage so it's not practical to check all slots,
+      // especially since some may be expected to change. Therefore we instead just check slot0,
+      // since that slot (1) contains core variables that should never be changed, and (2) is the
+      // first slot so it's the most likely to be accidentally overwritten with a bad script. The
+      // storage layout of this contract is below:
+      //
+      // | Variable Name        | Type                                                         | Slot | Offset | Bytes |
+      // |----------------------|--------------------------------------------------------------|------|--------|-------|
+      // | _initialized         | uint8                                                        | 0    | 0      | 1     |
+      // | _initializing        | bool                                                         | 0    | 1      | 1     |
+      // | policy               | contract LlamaPolicy                                         | 0    | 2      | 20    |
+      // | factory              | contract LlamaFactory                                        | 1    | 0      | 20    |
+      // | llamaAccountLogic    | contract LlamaAccount                                        | 2    | 0      | 20    |
+      // | name                 | string                                                       | 3    | 0      | 32    |
+      // | actionsCount         | uint256                                                      | 4    | 0      | 32    |
+      // | actions              | mapping(uint256 => struct Action)                            | 5    | 0      | 32    |
+      // | approvals            | mapping(uint256 => mapping(address => bool))                 | 6    | 0      | 32    |
+      // | disapprovals         | mapping(uint256 => mapping(address => bool))                 | 7    | 0      | 32    |
+      // | authorizedStrategies | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
+      // | authorizedScripts    | mapping(address => bool)                                     | 9    | 0      | 32    |
+      // | nonces               | mapping(address => mapping(bytes4 => uint256))               | 10   | 0      | 32    |
+      // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
+
+      bytes32 originalStorage = _readSlot0();
+      (success, result) = actionInfo.target.delegatecall(actionInfo.data);
+      if (originalStorage != _readSlot0()) revert Slot0Changed();
+    } else {
+      (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
+    }
 
     if (!success) revert FailedActionExecution(result);
 
@@ -640,6 +674,14 @@ contract LlamaCore is Initializable {
     return uint64(n);
   }
 
+  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
+  function _readSlot0() internal view returns (bytes32 slot0) {
+    assembly {
+      slot0 := sload(0)
+    }
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;
