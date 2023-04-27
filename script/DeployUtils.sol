@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Vm} from "forge-std/Vm.sol";
+import {VmSafe} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/Script.sol";
 
 import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -11,9 +11,9 @@ library DeployUtils {
   using stdJson for string;
 
   address internal constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
-  Vm internal constant vm = Vm(VM_ADDRESS);
+  VmSafe internal constant VM = VmSafe(VM_ADDRESS);
 
-  struct RawRelativeStrategyData {
+  struct RelativeStrategyJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 approvalPeriod;
     uint8 approvalRole;
@@ -27,7 +27,7 @@ library DeployUtils {
     uint64 queuingPeriod;
   }
 
-  struct RawRoleHolderData {
+  struct RoleHolderJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
     uint64 expiration;
@@ -36,7 +36,7 @@ library DeployUtils {
     uint8 role;
   }
 
-  struct RawRolePermissionData {
+  struct RolePermissionJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
     bytes32 permissionId;
@@ -44,18 +44,18 @@ library DeployUtils {
   }
 
   function readScriptInput(string memory filename) internal view returns (string memory) {
-    string memory inputDir = string.concat(vm.projectRoot(), "/script/input/");
-    string memory chainDir = string.concat(vm.toString(block.chainid), "/");
-    return vm.readFile(string.concat(inputDir, chainDir, filename));
+    string memory inputDir = string.concat(VM.projectRoot(), "/script/input/");
+    string memory chainDir = string.concat(VM.toString(block.chainid), "/");
+    return VM.readFile(string.concat(inputDir, chainDir, filename));
   }
 
   function readRelativeStrategies(string memory jsonInput) internal pure returns (bytes[] memory) {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RawRelativeStrategyData[] memory rawStrategyConfigs = abi.decode(strategyData, (RawRelativeStrategyData[]));
+    RelativeStrategyJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeStrategyJsonInputs[]));
 
     RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
-      RawRelativeStrategyData memory rawStrategy = rawStrategyConfigs[i];
+      RelativeStrategyJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
       strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
       strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
@@ -81,11 +81,11 @@ library DeployUtils {
 
   function readRoleHolders(string memory jsonInput) internal pure returns (RoleHolderData[] memory roleHolders) {
     bytes memory roleHolderData = jsonInput.parseRaw(".initialRoleHolders");
-    RawRoleHolderData[] memory rawRoleHolders = abi.decode(roleHolderData, (RawRoleHolderData[]));
+    RoleHolderJsonInputs[] memory rawRoleHolders = abi.decode(roleHolderData, (RoleHolderJsonInputs[]));
 
     roleHolders = new RoleHolderData[](rawRoleHolders.length);
     for (uint256 i = 0; i < rawRoleHolders.length; i++) {
-      RawRoleHolderData memory rawRoleHolder = rawRoleHolders[i];
+      RoleHolderJsonInputs memory rawRoleHolder = rawRoleHolders[i];
       roleHolders[i].role = rawRoleHolder.role;
       roleHolders[i].policyholder = rawRoleHolder.policyholder;
       roleHolders[i].quantity = rawRoleHolder.quantity;
@@ -99,11 +99,11 @@ library DeployUtils {
     returns (RolePermissionData[] memory rolePermissions)
   {
     bytes memory rolePermissionData = jsonInput.parseRaw(".initialRolePermissions");
-    RawRolePermissionData[] memory rawRolePermissions = abi.decode(rolePermissionData, (RawRolePermissionData[]));
+    RolePermissionJsonInputs[] memory rawRolePermissions = abi.decode(rolePermissionData, (RolePermissionJsonInputs[]));
 
     rolePermissions = new RolePermissionData[](rawRolePermissions.length);
     for (uint256 i = 0; i < rawRolePermissions.length; i++) {
-      RawRolePermissionData memory rawRolePermission = rawRolePermissions[i];
+      RolePermissionJsonInputs memory rawRolePermission = rawRolePermissions[i];
       rolePermissions[i].role = rawRolePermission.role;
       rolePermissions[i].permissionId = rawRolePermission.permissionId;
       rolePermissions[i].hasPermission = true;

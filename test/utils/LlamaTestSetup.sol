@@ -157,7 +157,6 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     // Now we deploy a mock protocol's llama, again with a single action creator role.
     string[] memory mpAccounts = createActionScriptInput.readStringArray(".newAccountNames");
-    RoleHolderData[] memory mpRoleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     bytes[] memory rootStrategyConfigs = strategyConfigsRootLlama();
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
     string[] memory rootAccounts = deployScriptInput.readStringArray(".initialAccountNames");
@@ -193,7 +192,6 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,uint256)");
-    LlamaCore llamaInstance;
     for (uint256 i; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == llamaInstanceCreatedSig) {
