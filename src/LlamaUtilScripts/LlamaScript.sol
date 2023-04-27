@@ -54,9 +54,9 @@ contract CoreAndPolicyManagerScript {
   // =======================================
   // ======== Arbitrary Aggregation =========
   // =======================================
-  ///@notice this method should be assigned carefully, since it allows for arbitrary calls to be made within the context
-  /// of LlamaCore, since this script will be delegate called. It is safer to permission out the functions below as
-  /// needed then to permission the aggregate function itself
+  ///@notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
+  /// of LlamaCore, since this script will be delegatecalled. It is safer to permission out the functions below as
+  /// needed than to permission the aggregate function itself
   function aggregate(bytes[] calldata calls) external returns (bytes[] memory returnData) {
     uint256 length = calls.length;
     returnData = new bytes[](length);
