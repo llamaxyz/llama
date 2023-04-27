@@ -45,10 +45,10 @@
     "initialRoleHolders": [
       {
         "comment": "This will assign the ActionCreator role (role 1) to the address derived from `makeAddrAndKey('actionCreatorAaron')`. The role assignment is set to never expire (type(uint64).max) because this is the default. The quantity is likewise the default.",
+        "policyholder": "0x1f48298c8E770Efd59209fD5D893afAaA6BFf7Bf",
         "expiration": 18446744073709551615,
         "quantity": 1,
-        "role": 1,
-        "user": "0x1f48298c8E770Efd59209fD5D893afAaA6BFf7Bf"
+        "role": 1
       }
     ],
     "initialRolePermissions": []
