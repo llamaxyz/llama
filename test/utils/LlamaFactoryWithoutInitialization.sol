@@ -61,7 +61,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
-    policy.setLlama(address(llama));
+    policy.finalizeInitialization(address(llama), bytes32(0));
 
     unchecked {
       emit LlamaInstanceCreated(llamaCount++, name, address(llama), address(policy), block.chainid);

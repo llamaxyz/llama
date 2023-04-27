@@ -177,6 +177,41 @@ contract Deploy is LlamaFactoryTest {
     );
   }
 
+  function test_RevertIf_NoRoleHoldersHaveRoleId1() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+    vm.startPrank(address(rootCore));
+
+    // Overwrite all role IDs to 2.
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      roleHolders[i].role = 2;
+    }
+
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    factory.deploy(
+      "NewProject",
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+
+    // Pass an empty array of role holders.
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    factory.deploy(
+      "NewProject",
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      new RoleHolderData[](0),
+      new RolePermissionData[](0)
+    );
+  }
+
   function test_IncrementsLlamaCountByOne() public {
     uint256 initialLlamaCount = factory.llamaCount();
     deployLlama();

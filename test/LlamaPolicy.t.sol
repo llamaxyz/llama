@@ -73,7 +73,6 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.setLlama(address(this));
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     localPolicy.initialize(
       "Test Policy", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
@@ -94,7 +93,6 @@ contract Initialize is LlamaPolicyTest {
     }
 
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.setLlama(address(this));
     localPolicy.initialize(
       "Test Policy", roleDescriptions, defaultActionCreatorRoleHolder(actionCreatorAaron), new RolePermissionData[](0)
     );
@@ -108,7 +106,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_SetsRoleDescriptions() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.setLlama(address(this));
+
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
@@ -124,7 +122,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_SetsRoleHolders() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.setLlama(address(this));
+
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
@@ -146,7 +144,6 @@ contract Initialize is LlamaPolicyTest {
   function test_SetsRolePermissions() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     assertFalse(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
-    localPolicy.setLlama(makeAddr("the factory"));
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
@@ -172,7 +169,7 @@ contract SetLlama is LlamaPolicyTest {
 
   function test_RevertIf_LlamaAddressIsSet() public {
     vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
-    mpPolicy.setLlama(arbitraryAddress);
+    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
   }
 }
 
@@ -438,8 +435,8 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     roleDescriptions[0] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(uint256(1))))));
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(uint8(1), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    localPolicy.setLlama(address(this));
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
+    localPolicy.finalizeInitialization(address(this), bytes32(0));
 
     vm.startPrank(address(this));
   }
