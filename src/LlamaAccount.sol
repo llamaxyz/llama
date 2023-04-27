@@ -260,8 +260,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
 
       bytes32 originalStorage = _readSlot0();
       (success, result) = target.delegatecall(callData);
-      bytes32 newStorage = _readSlot0();
-      if (originalStorage != newStorage) revert Slot0Changed();
+      if (originalStorage != _readSlot0()) revert Slot0Changed();
     } else {
       (success, result) = target.call{value: msg.value}(callData);
     }

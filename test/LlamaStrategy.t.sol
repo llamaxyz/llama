@@ -16,6 +16,7 @@ import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaStrategyTest is LlamaTestSetup {
   event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
@@ -84,10 +85,11 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(strategyConfigs));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
-    newStrategy =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
   }
 
   function deployAbsoluteStrategy(
@@ -119,10 +121,11 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, encodeStrategyConfigs(strategyConfigs));
+    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
-    newStrategy =
-      lens.computeLlamaStrategyAddress(address(absoluteStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
   }
 
   function deployAbsoluteStrategyAndSetRole(
@@ -168,10 +171,11 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, encodeStrategyConfigs(strategyConfigs));
+    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
-    newStrategy =
-      lens.computeLlamaStrategyAddress(address(absoluteStrategyLogic), encodeStrategy(strategyConfig), address(mpCore));
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
   }
 
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
@@ -188,12 +192,12 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: new uint8[](0)
     });
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeStrategyLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(testStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
   function deployRelativeStrategyWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
@@ -218,14 +222,14 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeStrategyLogic), encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeStrategyLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
 
     // Create and authorize the strategy.
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(testStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);

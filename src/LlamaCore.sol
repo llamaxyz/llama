@@ -35,6 +35,7 @@ contract LlamaCore is Initializable {
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
   error RoleHasZeroSupply(uint8 role);
+  error Slot0Changed();
   error TimelockNotFinished();
   error UnauthorizedStrategyLogic();
   error UnsafeCast(uint256 n);
@@ -49,7 +50,13 @@ contract LlamaCore is Initializable {
   // ========================
 
   event ActionCreated(
-    uint256 id, address indexed creator, ILlamaStrategy indexed strategy, address target, uint256 value, bytes data
+    uint256 indexed id,
+    address indexed creator,
+    ILlamaStrategy indexed strategy,
+    address target,
+    uint256 value,
+    bytes data,
+    string description
   );
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
@@ -91,11 +98,13 @@ contract LlamaCore is Initializable {
     "CastDisapproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
   );
 
+  /// @notice The NFT contract that defines the policies for this llama instance.
+  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
+  // variables, which are the key variables we want to check before and after a delegatecall.
+  LlamaPolicy public policy;
+
   /// @notice The LlamaFactory contract that deployed this llama instance.
   LlamaFactory public factory;
-
-  /// @notice The NFT contract that defines the policies for this llama instance.
-  LlamaPolicy public policy;
 
   /// @notice The Llama Account implementation (logic) contract.
   LlamaAccount public llamaAccountLogic;
@@ -178,7 +187,27 @@ contract LlamaCore is Initializable {
     external
     returns (uint256 actionId)
   {
-    actionId = _createAction(msg.sender, role, strategy, target, value, data);
+    actionId = _createAction(msg.sender, role, strategy, target, value, data, "");
+  }
+
+  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
+  /// {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param description A human readable description of the action and the changes it will enact.
+  /// @return actionId actionId of the newly created action.
+  function createAction(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    string memory description
+  ) external returns (uint256 actionId) {
+    actionId = _createAction(msg.sender, role, strategy, target, value, data, description);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -203,32 +232,36 @@ contract LlamaCore is Initializable {
     uint8 v,
     bytes32 r,
     bytes32 s
+  ) external returns (uint256) {
+    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, "");
+  }
+
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
+  /// the provided {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param description A human readable description of the action and the changes it will enact.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  /// @return actionId actionId of the newly created action.
+  function createActionBySig(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    address policyholder,
+    uint8 v,
+    bytes32 r,
+    bytes32 s,
+    string memory description
   ) external returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
-    address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, data);
+    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, description);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -264,8 +297,39 @@ contract LlamaCore is Initializable {
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[actionInfo.target]) (success, result) = actionInfo.target.delegatecall(actionInfo.data);
-    else (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
+    if (authorizedScripts[actionInfo.target]) {
+      // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
+      // none of the storage in this contract changes in unexpected ways, as this could let someone
+      // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
+      // However, this contract has a lot of storage so it's not practical to check all slots,
+      // especially since some may be expected to change. Therefore we instead just check slot0,
+      // since that slot (1) contains core variables that should never be changed, and (2) is the
+      // first slot so it's the most likely to be accidentally overwritten with a bad script. The
+      // storage layout of this contract is below:
+      //
+      // | Variable Name        | Type                                                         | Slot | Offset | Bytes |
+      // |----------------------|--------------------------------------------------------------|------|--------|-------|
+      // | _initialized         | uint8                                                        | 0    | 0      | 1     |
+      // | _initializing        | bool                                                         | 0    | 1      | 1     |
+      // | policy               | contract LlamaPolicy                                         | 0    | 2      | 20    |
+      // | factory              | contract LlamaFactory                                        | 1    | 0      | 20    |
+      // | llamaAccountLogic    | contract LlamaAccount                                        | 2    | 0      | 20    |
+      // | name                 | string                                                       | 3    | 0      | 32    |
+      // | actionsCount         | uint256                                                      | 4    | 0      | 32    |
+      // | actions              | mapping(uint256 => struct Action)                            | 5    | 0      | 32    |
+      // | approvals            | mapping(uint256 => mapping(address => bool))                 | 6    | 0      | 32    |
+      // | disapprovals         | mapping(uint256 => mapping(address => bool))                 | 7    | 0      | 32    |
+      // | authorizedStrategies | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
+      // | authorizedScripts    | mapping(address => bool)                                     | 9    | 0      | 32    |
+      // | nonces               | mapping(address => mapping(bytes4 => uint256))               | 10   | 0      | 32    |
+      // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
+
+      bytes32 originalStorage = _readSlot0();
+      (success, result) = actionInfo.target.delegatecall(actionInfo.data);
+      if (originalStorage != _readSlot0()) revert Slot0Changed();
+    } else {
+      (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
+    }
 
     if (!success) revert FailedActionExecution(result);
 
@@ -491,7 +555,8 @@ contract LlamaCore is Initializable {
     ILlamaStrategy strategy,
     address target,
     uint256 value,
-    bytes calldata data
+    bytes calldata data,
+    string memory description
   ) internal returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
@@ -523,7 +588,46 @@ contract LlamaCore is Initializable {
     newAction.creationTime = _toUint64(block.timestamp);
     actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
-    emit ActionCreated(actionId, policyholder, strategy, target, value, data);
+    emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);
+  }
+
+  function _createActionBySig(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    address policyholder,
+    uint8 v,
+    bytes32 r,
+    bytes32 s,
+    string memory description
+  ) internal returns (uint256 actionId) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_TYPEHASH,
+            role,
+            address(strategy),
+            target,
+            value,
+            keccak256(data),
+            policyholder,
+            _useNonce(policyholder, msg.sig)
+          )
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, data, description);
   }
 
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
@@ -640,6 +744,14 @@ contract LlamaCore is Initializable {
     return uint64(n);
   }
 
+  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
+  function _readSlot0() internal view returns (bytes32 slot0) {
+    assembly {
+      slot0 := sload(0)
+    }
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;

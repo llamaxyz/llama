@@ -34,7 +34,7 @@ contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     address expected =
       address(lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[0], address(rootCore)));
     assertEq(expected, address(rootStrategy1));
