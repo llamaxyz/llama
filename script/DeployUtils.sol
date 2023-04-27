@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import {VmSafe} from "forge-std/Vm.sol";
-import {stdJson} from "forge-std/Script.sol";
+import {console2, stdJson} from "forge-std/Script.sol";
 
 import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -41,6 +41,13 @@ library DeployUtils {
     string comment;
     bytes32 permissionId;
     uint8 role;
+  }
+
+  function print(string memory message) internal view {
+    // Avoid getting flooded with logs during tests. Note that fork tests will show logs with this
+    // approach, because there's currently no way to tell which environment we're in, e.g. script
+    // or test. This is being tracked in https://github.com/foundry-rs/foundry/issues/2900.
+    if (block.chainid != 31_337) console2.log(message);
   }
 
   function readScriptInput(string memory filename) internal view returns (string memory) {

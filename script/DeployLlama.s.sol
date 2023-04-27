@@ -34,31 +34,31 @@ contract DeployLlama is Script {
   LlamaLens lens;
 
   function run() public {
-    print(string.concat("Deploying Llama framework to chain:", vm.toString(block.chainid)));
+    DeployUtils.print(string.concat("Deploying Llama framework to chain:", vm.toString(block.chainid)));
 
     vm.broadcast();
     coreLogic = new LlamaCore();
-    print(string.concat("  LlamaCoreLogic:", vm.toString(address(coreLogic))));
+    DeployUtils.print(string.concat("  LlamaCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
     relativeStrategyLogic = new RelativeStrategy();
-    print(string.concat("  LlamaRelativeStrategyLogic:", vm.toString(address(relativeStrategyLogic))));
+    DeployUtils.print(string.concat("  LlamaRelativeStrategyLogic:", vm.toString(address(relativeStrategyLogic))));
 
     vm.broadcast();
     absoluteStrategyLogic = new AbsoluteStrategy();
-    print(string.concat("  LlamaAbsoluteStrategyLogic:", vm.toString(address(absoluteStrategyLogic))));
+    DeployUtils.print(string.concat("  LlamaAbsoluteStrategyLogic:", vm.toString(address(absoluteStrategyLogic))));
 
     vm.broadcast();
     accountLogic = new LlamaAccount();
-    print(string.concat("  LlamaAccountLogic:", vm.toString(address(accountLogic))));
+    DeployUtils.print(string.concat("  LlamaAccountLogic:", vm.toString(address(accountLogic))));
 
     vm.broadcast();
     policyLogic = new LlamaPolicy();
-    print(string.concat("  LlamaPolicyLogic:", vm.toString(address(policyLogic))));
+    DeployUtils.print(string.concat("  LlamaPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
     policyTokenURI = new LlamaPolicyMetadata();
-    print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyTokenURI))));
+    DeployUtils.print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyTokenURI))));
 
     string memory jsonInput = DeployUtils.readScriptInput("deployLlama.json");
 
@@ -76,20 +76,15 @@ contract DeployLlama is Script {
       DeployUtils.readRoleHolders(jsonInput),
       DeployUtils.readRolePermissions(jsonInput)
     );
-    print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
+    DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
     policyTokenURIParamRegistry = factory.LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY();
-    print(string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyTokenURIParamRegistry))));
+    DeployUtils.print(
+      string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyTokenURIParamRegistry)))
+    );
 
     vm.broadcast();
     lens = new LlamaLens();
-    print(string.concat("  LlamaLens:", vm.toString(address(lens))));
-  }
-
-  function print(string memory message) internal view {
-    // Avoid getting flooded with logs during tests. Note that fork tests will show logs with this
-    // approach, because there's currently no way to tell which environment we're in, e.g. script
-    // or test. This is being tracked in https://github.com/foundry-rs/foundry/issues/2900.
-    if (block.chainid != 31_337) console2.log(message);
+    DeployUtils.print(string.concat("  LlamaLens:", vm.toString(address(lens))));
   }
 }
