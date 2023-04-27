@@ -26,16 +26,6 @@ contract LlamaFactoryTest is LlamaTestSetup {
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
   event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
-
-  event ActionCreated(
-    uint256 id,
-    address indexed creator,
-    ILlamaStrategy indexed strategy,
-    address target,
-    uint256 value,
-    bytes4 selector,
-    bytes data
-  );
   event ActionCanceled(uint256 id);
   event ActionQueued(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
