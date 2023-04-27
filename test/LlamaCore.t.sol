@@ -590,12 +590,11 @@ contract CreateActionBySig is LlamaCoreTest {
   }
 
   function test_CreatesActionBySigWithDescription() public {
-    string memory description = "# Action 0 \n This is my action.";
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action.");
 
     uint256 actionId = mpCore.createActionBySig(
       uint8(Roles.ActionCreator),
@@ -604,10 +603,10 @@ contract CreateActionBySig is LlamaCoreTest {
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
       actionCreatorAaron,
-      description,
       v,
       r,
-      s
+      s,
+      "# Action 0 \n This is my action."
     );
     ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionId);
