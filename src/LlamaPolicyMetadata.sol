@@ -64,7 +64,7 @@ contract LlamaPolicyMetadata {
     string memory output1 =
       string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
     string memory output2 = string(abi.encodePacked(parts[9], parts[10], parts[11], parts[12]));
-    string memory output = LibString.concat(output1, output2);
+    string memory output = string(abi.encodePacked(output1, output2));
 
     string memory json = Base64.encode(
       bytes(

@@ -9815,7 +9815,7 @@
         "type_specific_fields": {
           "parent": {
             "type": "function",
-            "name": "setPolicyTokenURI",
+            "name": "setPolicyTokenMetadata",
             "source_mapping": {
               "start": 6468,
               "length": 147,
@@ -9854,15 +9854,15 @@
                   "ending_column": 2
                 }
               },
-              "signature": "setPolicyTokenURI(LlamaPolicyMetadata)"
+              "signature": "setPolicyTokenMetadata(LlamaPolicyMetadata)"
             }
           }
         },
         "additional_fields": { "target": "parameter", "convention": "mixedCase" }
       }
     ],
-    "description": "Parameter LlamaFactory.setPolicyTokenURI(LlamaPolicyMetadata)._llamaPolicyMetadata (src/LlamaFactory.sol#158) is not in mixedCase\n",
-    "markdown": "Parameter [LlamaFactory.setPolicyTokenURI(LlamaPolicyMetadata)._llamaPolicyMetadata](src/LlamaFactory.sol#L158) is not in mixedCase\n",
+    "description": "Parameter LlamaFactory.setPolicyTokenMetadata(LlamaPolicyMetadata)._llamaPolicyMetadata (src/LlamaFactory.sol#158) is not in mixedCase\n",
+    "markdown": "Parameter [LlamaFactory.setPolicyTokenMetadata(LlamaPolicyMetadata)._llamaPolicyMetadata](src/LlamaFactory.sol#L158) is not in mixedCase\n",
     "first_markdown_element": "src/LlamaFactory.sol#L158",
     "id": "5c0664d3f9a2c209571a9926f4f9a8a6879aed8ce9ba5545c9168a2f25fe30ab",
     "check": "naming-convention",

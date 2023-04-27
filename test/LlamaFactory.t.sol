@@ -291,19 +291,19 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
   }
 }
 
-contract SetPolicyTokenURI is LlamaFactoryTest {
+contract SetPolicyTokenMetadata is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller, address _policyTokenURI) public {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.setPolicyTokenURI(LlamaPolicyMetadata(_policyTokenURI));
+    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyTokenURI));
   }
 
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
     emit PolicyTokenMetadataSet(LlamaPolicyMetadata(_policyTokenURI));
-    factory.setPolicyTokenURI(LlamaPolicyMetadata(_policyTokenURI));
+    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyTokenURI));
     assertEq(address(factory.llamaPolicyMetadata()), _policyTokenURI);
   }
 }

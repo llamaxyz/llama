@@ -94,7 +94,7 @@ contract LlamaFactory {
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
     LLAMA_ACCOUNT_LOGIC = llamaAccountLogic;
 
-    _setPolicyTokenURI(_llamaPolicyMetadata);
+    _setPolicyTokenMetadata(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
 
     ROOT_LLAMA = _deploy(
@@ -154,8 +154,8 @@ contract LlamaFactory {
   /// @notice Sets the Llama Policy Token Metadata contract.
   /// @dev This function can only be called by the root Llama instance.
   /// @param _llamaPolicyMetadata The Llama Policy Token Metadata contract.
-  function setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
-    _setPolicyTokenURI(_llamaPolicyMetadata);
+  function setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+    _setPolicyTokenMetadata(_llamaPolicyMetadata);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
@@ -216,7 +216,7 @@ contract LlamaFactory {
   }
 
   /// @dev Sets the Llama Policy Token Metadata contract.
-  function _setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+  function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
   }

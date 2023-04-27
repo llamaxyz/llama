@@ -81,7 +81,7 @@
 | deploy                                     | 5257            | 1071714 | 1079152 | 1227831 | 320     |
 | llamaCount                                 | 285             | 951     | 285     | 2285    | 6       |
 | llamaPolicyMetadata                        | 489             | 1489    | 1489    | 2489    | 2       |
-| setPolicyTokenURI                          | 313             | 3378    | 3378    | 6443    | 2       |
+| setPolicyTokenMetadata                          | 313             | 3378    | 3378    | 6443    | 2       |
 | tokenURI                                   | 1254622         | 1257829 | 1257829 | 1261037 | 2       |
 
 
