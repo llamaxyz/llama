@@ -55,13 +55,13 @@ contract CoreAndPolicyManagerScript {
   // ======== Arbitrary Aggregation =========
   // =======================================
   ///@notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
-  /// of LlamaCore, since this script will be delegatecalled. It is safer to permission out the functions below as
+  /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
   /// needed than to permission the aggregate function itself
   function aggregate(bytes[] calldata calls) external returns (bytes[] memory returnData) {
     uint256 length = calls.length;
     returnData = new bytes[](length);
     for (uint256 i = 0; i < length; i++) {
-      (bool success, bytes memory response) = address(this).delegatecall(calls[i]);
+      (bool success, bytes memory response) = address(this).call(calls[i]);
       if (!success) revert CallReverted(i, response);
       returnData[i] = response;
     }
@@ -228,7 +228,7 @@ contract CoreAndPolicyManagerScript {
   }
 
   function _context() internal view returns (LlamaCore core, LlamaPolicy policy) {
-    core = LlamaCore(msg.sender);
+    core = LlamaCore(address(this));
     policy = LlamaPolicy(core.policy());
   }
 }
