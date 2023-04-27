@@ -25,7 +25,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
-  event PolicyTokenURISet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   event ActionCreated(
     uint256 id,
@@ -90,7 +90,7 @@ contract Constructor is LlamaFactoryTest {
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyTokenURISet(policyTokenURI);
+    emit PolicyTokenMetadataSet(policyTokenURI);
     deployLlamaFactory();
   }
 
@@ -302,7 +302,7 @@ contract SetPolicyTokenURI is LlamaFactoryTest {
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit PolicyTokenURISet(LlamaPolicyMetadata(_policyTokenURI));
+    emit PolicyTokenMetadataSet(LlamaPolicyMetadata(_policyTokenURI));
     factory.setPolicyTokenURI(LlamaPolicyMetadata(_policyTokenURI));
     assertEq(address(factory.llamaPolicyMetadata()), _policyTokenURI);
   }

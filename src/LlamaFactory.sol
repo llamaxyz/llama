@@ -218,6 +218,6 @@ contract LlamaFactory {
   /// @dev Sets the Llama Policy Token URI contract.
   function _setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
-    emit PolicyTokenURISet(_llamaPolicyMetadata);
+    emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
   }
 }
