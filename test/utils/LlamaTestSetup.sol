@@ -386,5 +386,4 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     require(n <= type(uint16).max, string.concat("Value cannot fit in a uint16: ", vm.toString(n)));
     return uint16(n);
   }
-
 }

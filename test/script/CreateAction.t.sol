@@ -70,14 +70,16 @@ contract Run is CreateActionTest {
     ActionInfo memory actionInfo = getActionInfo();
 
     string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
-    bytes32 deployActionInfoHash = keccak256(abi.encodePacked(
-      deployActionId,
-      LLAMA_INSTANCE_DEPLOYER, // creator
-      ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
-      address(factory), // target
-      uint256(0), // value
-      createActionCallData
-    ));
+    bytes32 deployActionInfoHash = keccak256(
+      abi.encodePacked(
+        deployActionId,
+        LLAMA_INSTANCE_DEPLOYER, // creator
+        ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
+        address(factory), // target
+        uint256(0), // value
+        createActionCallData
+      )
+    );
 
     // If the infoHash matches, then this validates that all of the Factory.deploy
     // function input data is correct, since the function calldata was passed to
