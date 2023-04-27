@@ -15,7 +15,7 @@ run-script script flags='':
   - FOUNDRY_PROFILE=ci forge script script/{{script}}.s.sol --rpc-url $SCRIPT_RPC_URL --private-key $SCRIPT_PRIVATE_KEY -vvvv {{flags}}
   mv _test test
 
-dry-run: (run-script 'DeployLlama')
+dry-run-deploy: (run-script 'DeployLlama')
 
 deploy: (run-script 'DeployLlama' '--broadcast --verify')
 

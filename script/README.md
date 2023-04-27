@@ -1,47 +1,39 @@
 # Llama Scripts
 
-There is currently only one script, `DeployLlama.s.sol`. It serves two purposes:
-* to deploy the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
-* to establish our base test setup against which most tests are run
+The current Llama scripts are:
+* `DeployLlama.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
+* `CreateAction.s.sol`, which creates actions on the root LlamaCore to deploy
+  new LlamaCore instances
 
-## Running Scripts
+Additionally, both `DeployLlama` and `CreateAction` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
-To perform a dry-run of the `DeployLlama` script on a network:
+## DeployLlama
+
+To perform a dry-run of the `DeployLlama` script on a network, first set the
+`SCRIPT_RPC_URL` variable in your `.env` file to a local node, e.g. anvil.
+
+To start anvil:
 
 ```shell
 # Start anvil, forking from the desired network.
 anvil --fork-url $OPTIMISM_RPC_URL
-
-# In a separate terminal, perform a dry run of the script.
-# You can use one of the private keys anvil provides on startup.
-FOUNDRY_PROFILE=ci forge script script/DeployLlama.s.sol
-  --rpc-url "http://127.0.0.1:8545"
-  --private-key $DEPLOYER_PRIVATE_KEY \
-  -vvvv
-
-# If the dry-run looked good, perform a deployment to the local fork on anvil.
-# This WILL NOT broadcast the script transactions on the network.
-FOUNDRY_PROFILE=ci forge script script/DeployLlama.s.sol \
-  --rpc-url "http://127.0.0.1:8545" \
-  --private-key $DEPLOYER_PRIVATE_KEY \
-  --broadcast \
-  -vvvv
 ```
+Next, set `SCRIPT_PRIVATE_KEY` in your `.env` file. For a dry run, you can just
+use one of the pre-provisioned private keys that anvil provides on startup.
 
-When you are ready to deploy to a live network:
+Then, to execute the call:
 
 ```shell
-# First, perform a dry run of the script against the live network with the
-# desired deployer as the sender.
-FOUNDRY_PROFILE=ci forge script script/DeployLlama.s.sol
-  --rpc-url $OPTIMISM_RPC_URL
-  --sender $DEPLOYER_ADDRESS
-  -vvvv
-
-# If the dry-run looked good, we're ready to broadcast to the live network.
-FOUNDRY_PROFILE=ci forge script script/DeployLlama.s.sol \
-  --rpc-url $OPTIMISM_RPC_URL
-  --private-key $DEPLOYER_PRIVATE_KEY \
-  --broadcast \
-  -vvvv
+just dry-run-deploy
 ```
+
+If that looked good, try broadcasting the script transactions to the local node.
+With the local node URL still set as `SCRIPT_RPC_URL` in your `.env` file:
+
+```shell
+just deploy
+```
+
+When you are ready to deploy to a live network, simply follow the steps above
+but with `SCRIPT_RPC_URL` pointing to the appropriate node and
+`SCRIPT_PRIVATE_KEY` set to the deployer private key.
