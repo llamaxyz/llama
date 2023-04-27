@@ -132,7 +132,7 @@ contract CoreAndPolicyManagerScript {
     setRolePermissions(_setRolePermissions);
   }
 
-  function createNewStrategiesAndNewRolseAndSetRoleHoldersAndSetRolesPermissions(
+  function createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolesPermissions(
     CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
     RoleDescription[] calldata description,
     SetRoleHolder[] calldata _setRoleHolders,
