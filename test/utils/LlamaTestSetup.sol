@@ -238,9 +238,9 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[1], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
-    mpStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[0], address(mpCore));
+    mpStrategy2 =
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
