@@ -594,7 +594,9 @@ contract CreateActionBySig is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action.");
+    emit ActionCreated(
+      0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action."
+    );
 
     uint256 actionId = mpCore.createActionBySig(
       uint8(Roles.ActionCreator),
