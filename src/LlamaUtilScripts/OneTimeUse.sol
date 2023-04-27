@@ -5,17 +5,17 @@ import {LlamaCore} from "src/LlamaCore.sol";
 
 /// @dev A mock script that can be configured for testing.
 contract OneTimeUse {
-  address immutable private thisAddress;
+  address private immutable THIS_ADDRESS;
   LlamaCore core;
 
   constructor() {
-    thisAddress = address(this);
+    THIS_ADDRESS = address(this);
   }
 
   modifier unauthorizeAfterRun() {
     _;
     core = LlamaCore(address(this));
-    core.authorizeScript(thisAddress, false);
+    core.authorizeScript(THIS_ADDRESS, false);
   }
 
   function run() external unauthorizeAfterRun {
