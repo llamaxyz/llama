@@ -41,7 +41,7 @@ contract LlamaFactory {
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
-  /// @dev Emitted when a new Llama Policy Token URI is set.
+  /// @dev Emitted when a new Llama Policy Token Metadata is set.
   event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   // =============================================================
@@ -57,7 +57,7 @@ contract LlamaFactory {
   /// @notice The Llama Account implementation (logic) contract.
   LlamaAccount public immutable LLAMA_ACCOUNT_LOGIC;
 
-  /// @notice The Llama Policy Token URI Parameter Registry contract for onchain image formats.
+  /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
   LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Llama instance responsible for deploying new Llama instances.
@@ -66,7 +66,7 @@ contract LlamaFactory {
   /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
 
-  /// @notice The Llama Policy Token URI contract.
+  /// @notice The Llama Policy Token Metadata contract.
   LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice The current number of Llama instances created.
@@ -151,9 +151,9 @@ contract LlamaFactory {
     _authorizeStrategyLogic(strategyLogic);
   }
 
-  /// @notice Sets the Llama Policy Token URI contract.
+  /// @notice Sets the Llama Policy Token Metadata contract.
   /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyMetadata The Llama Policy Token URI contract.
+  /// @param _llamaPolicyMetadata The Llama Policy Token Metadata contract.
   function setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
     _setPolicyTokenURI(_llamaPolicyMetadata);
   }
@@ -215,7 +215,7 @@ contract LlamaFactory {
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
-  /// @dev Sets the Llama Policy Token URI contract.
+  /// @dev Sets the Llama Policy Token Metadata contract.
   function _setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyTokenMetadataSet(_llamaPolicyMetadata);

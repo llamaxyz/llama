@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {LlamaCore} from "src/LlamaCore.sol";
 
-/// @title Llama Policy Token URI Parameter Registry
+/// @title Llama Policy Token Metadata Parameter Registry
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Parameter Registry contract for onchain image formats.
 contract LlamaPolicyMetadataParamRegistry {
