@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 import {Test, stdError, console2} from "forge-std/Test.sol";
 
+import {Base64} from "@openzeppelin/utils/Base64.sol";
+
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
@@ -812,6 +814,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     string name;
     string description;
     string image; // Decoded SVG.
+    string external_url;
   }
 
   function setTokenURIMetadata() internal {
@@ -900,8 +903,10 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
   // The token's JSON metadata.
   // The `image` field is the *decoded* SVG image, but in the contract it's base64-encoded.
   struct Metadata {
-    string external_url;
+    string name;
+    string description;
     string image; // Decoded SVG.
+    string external_url;
   }
 
   function setTokenURIMetadata() internal {
@@ -923,16 +928,31 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectExternalUrl() public {
-    // setTokenURIMetadata();
+    setTokenURIMetadata();
 
-    // string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
-    // Metadata memory metadata = parseMetadata(uri);
-    // string memory external_url = "https://app.llama.xyz";
-    // assertEq(metadata.external_url, external_url);
+    string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
+    Metadata memory metadata = parseMetadata(uri);
+    string memory external_url = "https://app.llama.xyz";
+    assertEq(metadata.external_url, external_url);
   }
 }
 
-contract PolicyMetadataContractURI is LlamaPolicyTest {}
+contract PolicyMetadataContractURI is LlamaPolicyTest {
+  function test_ReturnsCorrectContractURI() external {
+    string memory name = "Mock Protocol Llama";
+    string[5] memory parts;
+    parts[0] = '{ "name": "Llama Policies: ';
+    parts[1] = name;
+    parts[2] = '", "description": "This collection represents memberships in the Llama organization: ';
+    parts[3] = name;
+    parts[4] =
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://app.llama.xyz/policy-nft/policy.png", "external_link": "https://app.llama.xyz", "banner":"https://app.llama.xyz/policy-nft/banner.png" }';
+    string memory json =
+      Base64.encode(bytes(string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4]))));
+    string memory encodedContractURI = string(abi.encodePacked("data:application/json;base64,", json));
+    assertEq(mpPolicy.contractURI(), encodedContractURI);
+  }
+}
 
 contract IsRoleExpired is LlamaPolicyTest {
   function testFuzz_ReturnsTrueForExpiredRole(uint64 expiration) public {

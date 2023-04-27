@@ -18,7 +18,7 @@ metadataJson.image = svgDecoded; // Overwrite the base64 encoded image with the 
 // Define ABI for the Metadata and Svg structs in our test file. Note that the order of arguments
 // in the tuple must match the ordering of the `Metadata` struct in the tests.
 const sigMetadata =
-  'tuple(string name, string description, string image)';
+  'tuple(string name, string description, string image, string external_url)';
 const abi = [`function x(${sigMetadata})`];
 const iface = new ethers.utils.Interface(abi);
 

@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {Base64} from "@openzeppelin/utils/Base64.sol";
+
 import {LibString} from "@solady/utils/LibString.sol";
 
 /// @title Llama Policy Metadata
