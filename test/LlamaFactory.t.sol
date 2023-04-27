@@ -328,4 +328,11 @@ contract TokenURI is LlamaFactoryTest {
       policyTokenURI.tokenURI(mpPolicy.name(), mpPolicy.symbol(), _tokenId, _color, _logo)
     );
   }
+
+    function test_aaaaaaaaaaaa(uint256 _tokenId) public {
+    setTokenURIMetadata();
+
+    (string memory _color, string memory _logo) = policyTokenURIParamRegistry.getMetadata(mpCore);
+    console2.log(factory.tokenURI(mpCore, mpPolicy.name(), mpPolicy.symbol(), _tokenId));
+  }
 }
