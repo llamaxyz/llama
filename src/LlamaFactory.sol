@@ -42,7 +42,7 @@ contract LlamaFactory {
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
   /// @dev Emitted when a new Llama Policy Token URI is set.
-  event PolicyTokenURISet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
