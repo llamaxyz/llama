@@ -7,7 +7,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @dev A script that allows users to aggregate common calls on the core and policy contracts.
-contract CoreAndPolicyManagerScript {
+contract LlamaScript {
   // =============================
   // ========= Errors ============
   // =============================
