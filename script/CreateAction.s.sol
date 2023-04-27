@@ -45,6 +45,6 @@ contract CreateAction is Script {
       createActionCallData
     );
 
-    console2.log("Created action ID", deployActionId);
+    if (block.chainid != 31_337) console2.log("Created action ID", deployActionId);
   }
 }
