@@ -132,7 +132,7 @@ contract LlamaScript {
     setRolePermissions(_setRolePermissions);
   }
 
-  function createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolesPermissions(
+  function createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissions(
     CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
     RoleDescription[] calldata description,
     SetRoleHolder[] calldata _setRoleHolders,
