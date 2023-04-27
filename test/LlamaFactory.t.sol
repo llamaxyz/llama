@@ -15,7 +15,7 @@ import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaFactoryTest is LlamaTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
@@ -25,7 +25,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
-  event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
+  event PolicyTokenURISet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   event ActionCreated(
     uint256 id,
@@ -84,8 +84,8 @@ contract Constructor is LlamaFactoryTest {
     assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
   }
 
-  function test_SetsLlamaPolicyTokenURIAddress() public {
-    assertEq(address(factory.llamaPolicyTokenURI()), address(policyTokenURI));
+  function test_SetsLlamaPolicyMetadataAddress() public {
+    assertEq(address(factory.llamaPolicyMetadata()), address(policyTokenURI));
   }
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
@@ -296,15 +296,15 @@ contract SetPolicyTokenURI is LlamaFactoryTest {
     vm.assume(_caller != address(rootCore));
     vm.prank(address(_caller));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.setPolicyTokenURI(LlamaPolicyTokenURI(_policyTokenURI));
+    factory.setPolicyTokenURI(LlamaPolicyMetadata(_policyTokenURI));
   }
 
   function testFuzz_WritesMetadataAddressToStorage(address _policyTokenURI) public {
     vm.prank(address(rootCore));
     vm.expectEmit();
-    emit PolicyTokenURISet(LlamaPolicyTokenURI(_policyTokenURI));
-    factory.setPolicyTokenURI(LlamaPolicyTokenURI(_policyTokenURI));
-    assertEq(address(factory.llamaPolicyTokenURI()), _policyTokenURI);
+    emit PolicyTokenURISet(LlamaPolicyMetadata(_policyTokenURI));
+    factory.setPolicyTokenURI(LlamaPolicyMetadata(_policyTokenURI));
+    assertEq(address(factory.llamaPolicyMetadata()), _policyTokenURI);
   }
 }
 

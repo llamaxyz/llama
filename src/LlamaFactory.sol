@@ -9,8 +9,8 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
-import {LlamaPolicyTokenURIParamRegistry} from "src/LlamaPolicyTokenURIParamRegistry.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -42,7 +42,7 @@ contract LlamaFactory {
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
   /// @dev Emitted when a new Llama Policy Token URI is set.
-  event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
+  event PolicyTokenURISet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -58,7 +58,7 @@ contract LlamaFactory {
   LlamaAccount public immutable LLAMA_ACCOUNT_LOGIC;
 
   /// @notice The Llama Policy Token URI Parameter Registry contract for onchain image formats.
-  LlamaPolicyTokenURIParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
+  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA;
@@ -67,7 +67,7 @@ contract LlamaFactory {
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
 
   /// @notice The Llama Policy Token URI contract.
-  LlamaPolicyTokenURI public llamaPolicyTokenURI;
+  LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
@@ -82,7 +82,7 @@ contract LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     LlamaAccount llamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyTokenURI _llamaPolicyTokenURI,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -94,7 +94,7 @@ contract LlamaFactory {
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
     LLAMA_ACCOUNT_LOGIC = llamaAccountLogic;
 
-    _setPolicyTokenURI(_llamaPolicyTokenURI);
+    _setPolicyTokenURI(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
 
     ROOT_LLAMA = _deploy(
@@ -107,7 +107,7 @@ contract LlamaFactory {
       initialRolePermissions
     );
 
-    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyTokenURIParamRegistry(ROOT_LLAMA);
+    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA);
   }
 
   // ===========================================
@@ -153,9 +153,9 @@ contract LlamaFactory {
 
   /// @notice Sets the Llama Policy Token URI contract.
   /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyTokenURI The Llama Policy Token URI contract.
-  function setPolicyTokenURI(LlamaPolicyTokenURI _llamaPolicyTokenURI) external onlyRootLlama {
-    _setPolicyTokenURI(_llamaPolicyTokenURI);
+  /// @param _llamaPolicyMetadata The Llama Policy Token URI contract.
+  function setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+    _setPolicyTokenURI(_llamaPolicyMetadata);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
@@ -169,14 +169,14 @@ contract LlamaFactory {
     returns (string memory)
   {
     (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaCore);
-    return llamaPolicyTokenURI.tokenURI(name, symbol, tokenId, color, logo);
+    return llamaPolicyMetadata.tokenURI(name, symbol, tokenId, color, logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama system.
   /// @return The contract URI for the given Llama instance.
   function contractURI(string memory name) external view returns (string memory) {
-    return llamaPolicyTokenURI.contractURI(name);
+    return llamaPolicyMetadata.contractURI(name);
   }
 
   // ================================
@@ -216,8 +216,8 @@ contract LlamaFactory {
   }
 
   /// @dev Sets the Llama Policy Token URI contract.
-  function _setPolicyTokenURI(LlamaPolicyTokenURI _llamaPolicyTokenURI) internal {
-    llamaPolicyTokenURI = _llamaPolicyTokenURI;
-    emit PolicyTokenURISet(_llamaPolicyTokenURI);
+  function _setPolicyTokenURI(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyTokenURISet(_llamaPolicyMetadata);
   }
 }

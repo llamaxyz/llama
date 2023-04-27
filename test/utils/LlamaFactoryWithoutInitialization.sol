@@ -10,7 +10,7 @@ import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -21,7 +21,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     LlamaAccount initialLlamaAccountLogic,
     LlamaPolicy _llamaPolicyLogic,
-    LlamaPolicyTokenURI _llamaPolicyTokenUri,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -34,7 +34,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
       initialLlamaStrategyLogic,
       initialLlamaAccountLogic,
       _llamaPolicyLogic,
-      _llamaPolicyTokenUri,
+      _llamaPolicyMetadata,
       name,
       initialStrategies,
       initialAccounts,

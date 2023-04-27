@@ -12,7 +12,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaFactoryHandler is BaseHandler {
   uint128 DEFAULT_ROLE_QTY = 1;
@@ -100,7 +100,7 @@ contract LlamaFactoryHandler is BaseHandler {
     LLAMA_FACTORY.authorizeStrategyLogic(newStrategyLogic);
   }
 
-  function llamaFactory_setPolicyTokenURI(LlamaPolicyTokenURI newPolicyTokenURI)
+  function llamaFactory_setPolicyTokenURI(LlamaPolicyMetadata newPolicyTokenURI)
     public
     recordCall("llamaFactory_setPolicyTokenURI")
     useCurrentTimestamp

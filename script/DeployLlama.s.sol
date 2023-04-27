@@ -9,8 +9,8 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
-import {LlamaPolicyTokenURIParamRegistry} from "src/LlamaPolicyTokenURIParamRegistry.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -28,8 +28,8 @@ contract DeployLlama is Script {
 
   // Core Protocol.
   LlamaFactory factory;
-  LlamaPolicyTokenURI policyTokenURI;
-  LlamaPolicyTokenURIParamRegistry policyTokenURIParamRegistry;
+  LlamaPolicyMetadata policyTokenURI;
+  LlamaPolicyMetadataParamRegistry policyTokenURIParamRegistry;
   LlamaLens lens;
 
   struct RawRelativeStrategyData {
@@ -85,8 +85,8 @@ contract DeployLlama is Script {
     print(string.concat("  LlamaPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
-    policyTokenURI = new LlamaPolicyTokenURI();
-    print(string.concat("  LlamaPolicyTokenURI:", vm.toString(address(policyTokenURI))));
+    policyTokenURI = new LlamaPolicyMetadata();
+    print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyTokenURI))));
 
     string memory jsonInput = readScriptInput();
 
@@ -107,7 +107,7 @@ contract DeployLlama is Script {
     print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
     policyTokenURIParamRegistry = factory.LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY();
-    print(string.concat("  LlamaPolicyTokenURIParamRegistry:", vm.toString(address(policyTokenURIParamRegistry))));
+    print(string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyTokenURIParamRegistry))));
 
     vm.broadcast();
     lens = new LlamaLens();
