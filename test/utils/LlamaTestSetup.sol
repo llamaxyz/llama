@@ -54,6 +54,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   // of roles.
   uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
 
+  uint8 public constant BOOTSTRAP_ROLE = 1;
+
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
   // replaced with any address that we hold the private key for.
@@ -230,14 +232,16 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
+    // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
+    // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[0], address(rootCore));
-    rootStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[1], address(rootCore));
+    rootStrategy2 =
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[0], address(mpCore));
-    mpStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
+    mpStrategy2 =
+      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -301,6 +305,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     require(bytes32(0) != createStrategyId, "createStrategyId not set");
     require(bytes32(0) != createAccountId, "createAccountId not set");
     require(bytes32(0) != executeScriptPermissionId, "executeScriptPermissionId not set");
+
+    require(BOOTSTRAP_ROLE == uint8(Roles.ActionCreator), "test suite bootstrap config mismatch");
   }
 
   function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {

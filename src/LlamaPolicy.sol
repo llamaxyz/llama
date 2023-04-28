@@ -59,6 +59,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// values for this role.
   uint8 public constant ALL_HOLDERS_ROLE = 0;
 
+  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured.
+  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
+  /// unusable. See the documentation for more info.
+  uint8 public constant BOOTSTRAP_ROLE = 1;
+
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
 
@@ -125,12 +131,16 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Sets the address of the `LlamaCore` contract.
+  /// @notice Sets the address of the `LlamaCore` contract and gives holders of role ID 1 permission
+  /// to change role permissions.
   /// @dev This method can only be called once.
   /// @param _llamaCore The address of the `LlamaCore` contract.
-  function setLlama(address _llamaCore) external {
+  /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
+  function finalizeInitialization(address _llamaCore, bytes32 bootstrapPermissionId) external {
     if (llamaCore != address(0)) revert AlreadyInitialized();
+
     llamaCore = _llamaCore;
+    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
   }
 
   // -------- Role and Permission Management --------
@@ -277,6 +287,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     return factory.tokenURI(LlamaCore(llamaCore), name, symbol, tokenId);
+  }
+
+  /// @notice Returns a URI for the storefront-level metadata for your contract.
+  /// @return The contract URI for the given Llama instance.
+  function contractURI() public view returns (string memory) {
+    return factory.contractURI(name);
   }
 
   // -------- ERC-721 Methods --------

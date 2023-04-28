@@ -206,7 +206,7 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i; i < strategyConfigs.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
@@ -229,7 +229,7 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i; i < strategyConfigs.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
@@ -251,7 +251,7 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i; i < strategyConfigs.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
@@ -271,7 +271,7 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i; i < strategyConfigs.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
@@ -291,7 +291,7 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i; i < strategyConfigs.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
         address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
@@ -1587,7 +1587,7 @@ contract UnauthorizeStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyUnauthorized(mpStrategy2);
 
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](2);
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
     strategies[0] = mpStrategy1;
     strategies[1] = mpStrategy2;
 

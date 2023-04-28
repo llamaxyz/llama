@@ -9,8 +9,8 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyTokenURI} from "src/LlamaPolicyTokenURI.sol";
-import {LlamaPolicyTokenURIParamRegistry} from "src/LlamaPolicyTokenURIParamRegistry.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -19,6 +19,9 @@ contract LlamaFactory {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
+
+  /// @dev Thrown if the initial set of role holders has no one with role ID 1.
+  error InvalidDeployConfiguration();
 
   /// @dev Thrown when a protected external function in the factory is not called by the Root Llama Core.
   error OnlyRootLlama();
@@ -41,12 +44,18 @@ contract LlamaFactory {
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
-  /// @dev Emitted when a new Llama Policy Token URI is set.
-  event PolicyTokenURISet(LlamaPolicyTokenURI indexed llamaPolicyTokenURI);
+  /// @dev Emitted when a new Llama Policy Token Metadata is set.
+  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
+
+  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured.
+  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
+  /// unusable. See the documentation for more info.
+  uint8 public constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The Llama Core implementation (logic) contract.
   LlamaCore public immutable LLAMA_CORE_LOGIC;
@@ -57,8 +66,8 @@ contract LlamaFactory {
   /// @notice The Llama Account implementation (logic) contract.
   LlamaAccount public immutable LLAMA_ACCOUNT_LOGIC;
 
-  /// @notice The Llama Policy Token URI Parameter Registry contract for onchain image formats.
-  LlamaPolicyTokenURIParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
+  /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
+  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA;
@@ -66,8 +75,8 @@ contract LlamaFactory {
   /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
 
-  /// @notice The Llama Policy Token URI contract.
-  LlamaPolicyTokenURI public llamaPolicyTokenURI;
+  /// @notice The Llama Policy Token Metadata contract.
+  LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
@@ -82,7 +91,7 @@ contract LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     LlamaAccount llamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyTokenURI _llamaPolicyTokenURI,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts,
@@ -94,7 +103,7 @@ contract LlamaFactory {
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
     LLAMA_ACCOUNT_LOGIC = llamaAccountLogic;
 
-    _setPolicyTokenURI(_llamaPolicyTokenURI);
+    _setPolicyTokenMetadata(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
 
     ROOT_LLAMA = _deploy(
@@ -107,7 +116,7 @@ contract LlamaFactory {
       initialRolePermissions
     );
 
-    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyTokenURIParamRegistry(ROOT_LLAMA);
+    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA);
   }
 
   // ===========================================
@@ -151,11 +160,11 @@ contract LlamaFactory {
     _authorizeStrategyLogic(strategyLogic);
   }
 
-  /// @notice Sets the Llama Policy Token URI contract.
+  /// @notice Sets the Llama Policy Token Metadata contract.
   /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyTokenURI The Llama Policy Token URI contract.
-  function setPolicyTokenURI(LlamaPolicyTokenURI _llamaPolicyTokenURI) external onlyRootLlama {
-    _setPolicyTokenURI(_llamaPolicyTokenURI);
+  /// @param _llamaPolicyMetadata The Llama Policy Token Metadata contract.
+  function setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+    _setPolicyTokenMetadata(_llamaPolicyMetadata);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
@@ -169,7 +178,14 @@ contract LlamaFactory {
     returns (string memory)
   {
     (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaCore);
-    return llamaPolicyTokenURI.tokenURI(name, symbol, tokenId, color, logo);
+    return llamaPolicyMetadata.tokenURI(name, symbol, tokenId, color, logo);
+  }
+
+  /// @notice Returns the token URI for a given Llama policyholder.
+  /// @param name The name of the Llama system.
+  /// @return The contract URI for the given Llama instance.
+  function contractURI(string memory name) external view returns (string memory) {
+    return llamaPolicyMetadata.contractURI(name);
   }
 
   // ================================
@@ -186,20 +202,34 @@ contract LlamaFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (LlamaCore llamaCore) {
+    // There must be at least one role holder with role ID of 1, since that role ID is initially
+    // given permission to call `setRolePermission`. This is required to reduce the chance that an
+    // instance is deployed with an invalid configuration that results in the instance being unusable.
+    // Role ID 1 is referred to as the bootstrap role.
+    bool foundBootstrapRole = false;
+    for (uint256 i = 0; i < initialRoleHolders.length; i = _uncheckedIncrement(i)) {
+      if (initialRoleHolders[i].role == BOOTSTRAP_ROLE) {
+        foundBootstrapRole = true;
+        break;
+      }
+    }
+    if (!foundBootstrapRole) revert InvalidDeployConfiguration();
+
+    // Now the configuration is likely valid (it's possible the configuration of the first strategy
+    // will not actually be able to execute, but we leave that check off-chain / to the deploy
+    // scripts), so we continue with deployment of this instance.
     LlamaPolicy policy =
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-    llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
+    bytes32 bootstrapPermissionId =
+      llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
-    policy.setLlama(address(llamaCore));
+    policy.finalizeInitialization(address(llamaCore), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(llamaCount, name, address(llamaCore), address(policy), block.chainid);
-
-    unchecked {
-      ++llamaCount;
-    }
+    llamaCount = _uncheckedIncrement(llamaCount);
   }
 
   /// @dev Authorizes a strategy implementation (logic) contract.
@@ -208,9 +238,16 @@ contract LlamaFactory {
     emit StrategyLogicAuthorized(strategyLogic);
   }
 
-  /// @dev Sets the Llama Policy Token URI contract.
-  function _setPolicyTokenURI(LlamaPolicyTokenURI _llamaPolicyTokenURI) internal {
-    llamaPolicyTokenURI = _llamaPolicyTokenURI;
-    emit PolicyTokenURISet(_llamaPolicyTokenURI);
+  /// @dev Sets the Llama Policy Token Metadata contract.
+  function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
+    }
   }
 }
