@@ -195,7 +195,22 @@ contract RevokePoliciesAndUpdateRoleDescriptions is LlamaScriptTest {}
 
 contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is LlamaScriptTest {}
 
-contract InitializeRoles is LlamaScriptTest {}
+contract InitializeRoles is LlamaScriptTest {
+  function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
+    vm.assume(descriptions.length < 247); // max unit8 (256) - total number of exisitng roles (9)
+    bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    for (uint256 i = 0; i < descriptions.length; i++) {
+      vm.expectEmit();
+      emit RoleInitialized(uint8(i + 9), descriptions[i]);
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract SetRoleHolders is LlamaScriptTest {}
 
@@ -203,7 +218,9 @@ contract SetRolePermissions is LlamaScriptTest {}
 
 contract RevokeExpiredRoles is LlamaScriptTest {}
 
-contract RevokePolicies is LlamaScriptTest {}
+contract RevokePolicies is LlamaScriptTest {
+  function testFuzz_revokePolicies(LlamaScript.RevokePolicy[] memory policies) public {}
+}
 
 contract UpdateRoleDescriptions is LlamaScriptTest {
   function testFuzz_updateRoleDescriptions(LlamaScript.UpdateRoleDescription[] memory roleDescriptions) public {
