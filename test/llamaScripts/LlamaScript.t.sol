@@ -32,6 +32,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaScriptTest is LlamaTestSetup {
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   LlamaScript llamaScript;
@@ -212,7 +213,32 @@ contract InitializeRoles is LlamaScriptTest {
   }
 }
 
-contract SetRoleHolders is LlamaScriptTest {}
+contract SetRoleHolders is LlamaScriptTest {
+  function testFuzz_setRoleHolders(LlamaScript.SetRoleHolder[] memory roleHolders) public {
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, 9)); // number of exisitng roles (9) and cannot be 0 (all holders role)
+      vm.assume(roleHolders[i].expiration > block.timestamp);
+    }
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      vm.expectEmit();
+      emit RoleAssigned(
+        roleHolders[i].policyholder,
+        roleHolders[i].role,
+        roleHolders[i].expiration,
+        LlamaPolicy.RoleSupply(
+          mpPolicy.getRoleSupplyAsNumberOfHolders(roleHolders[i].role) + 1, mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + roleHolders[i].quantity
+        )
+      );
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract SetRolePermissions is LlamaScriptTest {}
 
