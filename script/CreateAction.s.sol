@@ -18,7 +18,15 @@ contract CreateAction is Script {
   bytes createActionCallData;
 
   function run(address deployer) public {
-    string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
+    // ======== START SAFETY CHECK ========
+    // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
+    // ensure it can be used to pass actions.
+    // NOTE: This check currently only supports relative strategies.
+    string memory filename = "createAction.json";
+    DeployUtils.bootstrapSafetyCheck(filename);
+    // ======== END SAFETY CHECK ========
+
+    string memory jsonInput = DeployUtils.readScriptInput(filename);
 
     createActionCallData = abi.encodeCall(
       LlamaFactory.deploy,

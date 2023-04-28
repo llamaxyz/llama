@@ -114,8 +114,8 @@ contract Run is CreateActionTest {
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     assertEq(factory.llamaCount(), 2);
 
-    // There are two strategies we expect to have been deployed.
-    RelativeStrategy[] memory strategiesAuthorized = new RelativeStrategy[](2);
+    // There are three strategies we expect to have been deployed.
+    RelativeStrategy[] memory strategiesAuthorized = new RelativeStrategy[](3);
     uint8 strategiesCount;
     bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
 
@@ -168,7 +168,7 @@ contract Run is CreateActionTest {
     RelativeStrategy firstStrategy = strategiesAuthorized[0];
     assertEq(llamaInstance.authorizedStrategies(firstStrategy), true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
-    assertEq(firstStrategy.approvalRole(), 2);
+    assertEq(firstStrategy.approvalRole(), 1);
     assertEq(firstStrategy.disapprovalRole(), 3);
     assertEq(firstStrategy.expirationPeriod(), 691_200);
     assertEq(firstStrategy.isFixedLengthApprovalPeriod(), true);
@@ -183,13 +183,26 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
     assertEq(secondStrategy.disapprovalRole(), 3);
-    assertEq(secondStrategy.expirationPeriod(), 86_400);
-    assertEq(secondStrategy.isFixedLengthApprovalPeriod(), false);
-    assertEq(secondStrategy.minApprovalPct(), 8000);
-    assertEq(secondStrategy.minDisapprovalPct(), 10_001);
-    assertEq(secondStrategy.queuingPeriod(), 0);
-    assertEq(secondStrategy.forceApprovalRole(1), true);
-    assertEq(secondStrategy.forceDisapprovalRole(1), true);
+    assertEq(secondStrategy.expirationPeriod(), 691_200);
+    assertEq(secondStrategy.isFixedLengthApprovalPeriod(), true);
+    assertEq(secondStrategy.minApprovalPct(), 4000);
+    assertEq(secondStrategy.minDisapprovalPct(), 5100);
+    assertEq(secondStrategy.queuingPeriod(), 345_600);
+    assertEq(secondStrategy.forceApprovalRole(1), false);
+    assertEq(secondStrategy.forceDisapprovalRole(1), false);
+
+    RelativeStrategy thirdStrategy = strategiesAuthorized[2];
+    assertEq(llamaInstance.authorizedStrategies(thirdStrategy), true);
+    assertEq(thirdStrategy.approvalPeriod(), 172_800);
+    assertEq(thirdStrategy.approvalRole(), 2);
+    assertEq(thirdStrategy.disapprovalRole(), 3);
+    assertEq(thirdStrategy.expirationPeriod(), 86_400);
+    assertEq(thirdStrategy.isFixedLengthApprovalPeriod(), false);
+    assertEq(thirdStrategy.minApprovalPct(), 8000);
+    assertEq(thirdStrategy.minDisapprovalPct(), 10_001);
+    assertEq(thirdStrategy.queuingPeriod(), 0);
+    assertEq(thirdStrategy.forceApprovalRole(1), true);
+    assertEq(thirdStrategy.forceDisapprovalRole(1), true);
 
     LlamaAccount firstAccount = accountsCreated[0];
     assertEq(firstAccount.llamaCore(), address(llamaInstance));

@@ -60,8 +60,15 @@ contract DeployLlama is Script {
     policyTokenURI = new LlamaPolicyMetadata();
     DeployUtils.print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyTokenURI))));
 
-    string memory jsonInput = DeployUtils.readScriptInput("deployLlama.json");
+    // ======== START SAFETY CHECK ========
+    // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
+    // ensure it can be used to pass actions.
+    // NOTE: This check currently only supports relative strategies.
+    string memory filename = "deployLlama.json";
+    DeployUtils.bootstrapSafetyCheck(filename);
+    // ======== END SAFETY CHECK ========
 
+    string memory jsonInput = DeployUtils.readScriptInput(filename);
     vm.broadcast();
     factory = new LlamaFactory(
       coreLogic,

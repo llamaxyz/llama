@@ -4,6 +4,8 @@ pragma solidity 0.8.19;
 import {VmSafe} from "forge-std/Vm.sol";
 import {console2, stdJson} from "forge-std/Script.sol";
 
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+
 import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -12,6 +14,9 @@ library DeployUtils {
 
   address internal constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
   VmSafe internal constant VM = VmSafe(VM_ADDRESS);
+
+  uint8 public constant BOOTSTRAP_ROLE = 1;
+  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   struct RelativeStrategyJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
@@ -145,5 +150,40 @@ library DeployUtils {
     for (uint256 i; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
     }
+  }
+
+  function bootstrapSafetyCheck(string memory filename) internal view {
+    // -------- Read data --------
+    // Read the raw, encoded input file
+    string memory jsonInput = readScriptInput(filename);
+
+    // Get the list of role holders.
+    RoleHolderData[] memory roleHolderData = readRoleHolders(jsonInput);
+
+    // Get the bootstrap strategy, which is the first strategy in the list.
+    bytes memory encodedStrategyConfigs = jsonInput.parseRaw(".initialStrategies");
+    RelativeStrategyJsonInputs[] memory relativeStrategyConfigs =
+      abi.decode(encodedStrategyConfigs, (RelativeStrategyJsonInputs[]));
+
+    RelativeStrategyJsonInputs memory bootstrapStrategy = relativeStrategyConfigs[0];
+
+    // -------- Validate data --------
+    // Ensure the bootstrap strategy uses the bootstrap role.
+    require(bootstrapStrategy.approvalRole == BOOTSTRAP_ROLE, "DeployLlama: bootstrap strategy uses wrong role");
+
+    // Get the number of role holders with Role ID 1, which is the bootstrap role.
+    uint256 bootstrapRoleSupply = 0;
+    for (uint256 i = 0; i < roleHolderData.length; i++) {
+      if (roleHolderData[i].role == BOOTSTRAP_ROLE) bootstrapRoleSupply++;
+    }
+
+    // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
+    // minimum number of role holders to pass a vote. The calculation here MUST match the one
+    // in the RelativeStrategy's `_getMinimumAmountNeeded` method. This check should never fail
+    // for relative strategies, but it's left in as a reminder that it needs to be checked for
+    // absolute strategies.
+    uint256 minPct = bootstrapStrategy.minApprovalPct;
+    uint256 numApprovalsRequired = FixedPointMathLib.mulDivUp(bootstrapRoleSupply, minPct, ONE_HUNDRED_IN_BPS);
+    require(numApprovalsRequired >= bootstrapRoleSupply, "DeployLlama: invalid bootstrap configuration");
   }
 }

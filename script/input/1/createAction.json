@@ -19,6 +19,18 @@
   "initialStrategies": [
     {
       "approvalPeriod": 172800,
+      "approvalRole": 1,
+      "disapprovalRole": 3,
+      "expirationPeriod": 691200,
+      "forceApprovalRoles": [],
+      "forceDisapprovalRoles": [],
+      "isFixedLengthApprovalPeriod": true,
+      "minApprovalPct": 4000,
+      "minDisapprovalPct": 5100,
+      "queuingPeriod": 345600
+    },
+    {
+      "approvalPeriod": 172800,
       "approvalRole": 2,
       "disapprovalRole": 3,
       "expirationPeriod": 691200,
