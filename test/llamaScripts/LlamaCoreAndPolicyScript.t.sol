@@ -24,7 +24,7 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaCoreAndPolicyScript} from "src/LlamaScripts/LlamaCoreAndPolicyScript.sol";
+import {LlamaCoreAndPolicyScript} from "src/llama-scripts/LlamaCoreAndPolicyScript.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";

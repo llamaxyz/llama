@@ -56,18 +56,18 @@ contract LlamaCoreAndPolicyScript {
   // =======================================
   // ======== Arbitrary Aggregation =========
   // =======================================
-  ///@notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
+  /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
   /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
   /// needed than to permission the aggregate function itself
   function aggregate(address[] calldata targets, bytes[] calldata data) external returns (bytes[] memory returnData) {
-    if (targets.length != data.length) revert(MismatchedArrayLengths());
+    if (targets.length != data.length) revert MismatchedArrayLengths();
     (LlamaCore core, LlamaPolicy policy) = _context();
     uint256 length = data.length;
     returnData = new bytes[](length);
     for (uint256 i = 0; i < length; i++) {
       bool addressIsCore = targets[i] == address(core);
       bool addressIsPolicy = targets[i] == address(policy);
-      if (!addressIsCore && !addressIsPolicy) revert(UnauthorizedTarget(targets[i]));
+      if (!addressIsCore && !addressIsPolicy) revert UnauthorizedTarget(targets[i]);
       (bool success, bytes memory response) = targets[i].call(data[i]);
       if (!success) revert CallReverted(i, response);
       returnData[i] = response;
@@ -212,11 +212,11 @@ contract LlamaCoreAndPolicyScript {
     uint256 length = _revokeExpiredRoles.length;
     for (uint256 i = 0; i < length; i++) {
       policy.revokeExpiredRole(_revokeExpiredRoles[i].role, _revokeExpiredRoles[i].policyholder);
-  ///@notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
+    }
+  }
+  
+  /// @notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
   /// if the policyholder has too many roles.
-  function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
-  /// if the policyholder has too many roles.
-
   function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
     (, LlamaPolicy policy) = _context();
     for (uint256 i = 0; i < _revokePolicies.length; i++) {
