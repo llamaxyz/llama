@@ -777,6 +777,7 @@ contract ExecuteActionCrosschain is LlamaCoreTest {
   address private constant DEFAULT_ISM = 0x61A80297e77FC5395bd6Ff60EEacf7CD4f18d4a4;
 
   IMailbox private constant MAILBOX = IMailbox(HYPERLANE_MAILBOX);
+  uint32 private constant MAINNET_CHAIN_ID = 1;
   uint32 private constant POLYGON_CHAIN_ID = 137;
 
   ActionInfo actionInfo;
@@ -789,7 +790,7 @@ contract ExecuteActionCrosschain is LlamaCoreTest {
     polygonFork = vm.createFork(vm.rpcUrl("polygon"), 41_688_510);
 
     vm.selectFork(polygonFork);
-    LlamaCrosschainExecutor executor = new LlamaCrosschainExecutor();
+    LlamaCrosschainExecutor executor = new LlamaCrosschainExecutor(MAINNET_CHAIN_ID);
     MockProtocol protocol = new MockProtocol(address(executor));
 
     vm.selectFork(mainnetFork);
@@ -834,11 +835,17 @@ contract ExecuteActionCrosschain is LlamaCoreTest {
     vm.warp(block.timestamp + 6 days);
 
     vm.expectEmit();
-    emit ActionExecuted(0, address(this), mpStrategy1, actionCreatorAaron, abi.encode(true));
+    emit ActionExecuted(
+      0,
+      address(this),
+      mpStrategy1,
+      actionCreatorAaron,
+      hex"fe14e239a8a01b411b54a70bace2ce233a01f43f185f0d08150d2fdb02d98379"
+    );
     mpCore.executeAction{value: 1e18}(actionInfo);
 
     bytes memory message =
-      hex"00000003d200000001000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a000000890000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c1b1fa79c66aa40771c03443a2bad0d5348580f1000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b02329a2900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001";
+      hex"00000003d20000000100000000000000000000000028cfca5ebb2ddbbcda620f2fde169b75252d3dc8000000890000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000002402329a29000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000";
 
     vm.selectFork(polygonFork);
     vm.startPrank(POLYGON_RELAYER);
@@ -850,6 +857,10 @@ contract ExecuteActionCrosschain is LlamaCoreTest {
     emit Paused();
     MAILBOX.process("", message);
   }
+
+  fallback() external payable {}
+
+  receive() external payable {}
 }
 
 contract ExecuteAction is LlamaCoreTest {
