@@ -29,10 +29,17 @@ import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
-    uint256 id, address indexed creator, ILlamaStrategy indexed strategy, address target, uint256 value, bytes data
+    uint256 indexed id,
+    address indexed creator,
+    ILlamaStrategy indexed strategy,
+    address target,
+    uint256 value,
+    bytes data,
+    string description
   );
   event ActionCanceled(uint256 id);
   event ActionQueued(
@@ -172,7 +179,7 @@ contract Initialize is LlamaCoreTest {
     internal
     returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy)
   {
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new LlamaFactoryWithoutInitialization(
@@ -184,25 +191,20 @@ contract Initialize is LlamaCoreTest {
       "Root Llama",
       strategyConfigs,
       accounts,
-      SolarrayLlama.roleDescription("AllHolders","ActionCreator","Approver","Disapprover","TestRole1","TestRole2","MadeUpRole"),
+      rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0)
     );
 
     (llama, policy) = modifiedFactory.deployWithoutInitialization(
-      "NewProject",
-      SolarrayLlama.roleDescription(
-        "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-      ),
-      roleHolders,
-      new RolePermissionData[](0)
+      "NewProject", rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0)
     );
   }
 
   function test_StrategiesAreDeployedAtExpectedAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
@@ -225,7 +227,7 @@ contract Initialize is LlamaCoreTest {
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
@@ -247,7 +249,7 @@ contract Initialize is LlamaCoreTest {
   function test_StrategiesHaveLlamaCoreAddressInStorage() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
@@ -267,7 +269,7 @@ contract Initialize is LlamaCoreTest {
   function test_StrategiesHavePolicyAddressInStorage() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
@@ -287,7 +289,7 @@ contract Initialize is LlamaCoreTest {
   function test_StrategiesAreAuthorizedByLlamaCore() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](2);
     for (uint256 i; i < strategyConfigs.length; i++) {
@@ -311,7 +313,7 @@ contract Initialize is LlamaCoreTest {
     vm.assume(notStrategyLogic != address(relativeStrategyLogic));
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
@@ -329,7 +331,7 @@ contract Initialize is LlamaCoreTest {
   function test_AccountsAreDeployedAtExpectedAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
@@ -351,7 +353,7 @@ contract Initialize is LlamaCoreTest {
   function test_EmitsAccountCreatedEventForEachAccount() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
@@ -371,7 +373,7 @@ contract Initialize is LlamaCoreTest {
   function test_AccountsHaveLlamaCoreAddressInStorage() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
@@ -390,7 +392,7 @@ contract Initialize is LlamaCoreTest {
   function test_AccountsHaveNameInStorage() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
-    bytes[] memory strategyConfigs = relativeStrategyConfigs();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
@@ -412,9 +414,30 @@ contract CreateAction is LlamaCoreTest {
 
   function test_CreatesAnAction() public {
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionInfo.id);
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+
+    assertEq(actionInfo.id, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+  }
+
+  function test_CreatesAnActionWithDescription() public {
+    string memory description =
+      "# Transfer USDC to service provider \n This action transfers 10,000 USDC to our trusted provider.";
+    vm.expectEmit();
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description);
 
     ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionInfo.id);
@@ -546,7 +569,7 @@ contract CreateActionBySig is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
 
     uint256 actionId = createActionBySig(v, r, s);
     ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
@@ -562,11 +585,48 @@ contract CreateActionBySig is LlamaCoreTest {
     assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
   }
 
-  function test_CheckNonceIncrements() public {
+  function test_CreatesActionBySigWithDescription() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 0);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.expectEmit();
+    emit ActionCreated(
+      0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action."
+    );
+
+    uint256 actionId = mpCore.createActionBySig(
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      abi.encodeCall(MockProtocol.pause, (true)),
+      actionCreatorAaron,
+      v,
+      r,
+      s,
+      "# Action 0 \n This is my action."
+    );
+    ActionInfo memory actionInfo = ActionInfo(actionId, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data);
+    Action memory action = mpCore.getAction(actionId);
+
+    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+
+    assertEq(actionId, 0);
+    assertEq(mpCore.actionsCount(), 1);
+    assertEq(action.creationTime, block.timestamp);
+    assertEq(approvalPeriodEnd, block.timestamp + 2 days);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionId), 3);
+    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+  }
+
+  function test_CheckNonceIncrements() public {
+    // We need to manually calculate the function selector because we are using function overloading with the
+    // createActionBySig function
+    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -1269,7 +1329,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1287,20 +1347,26 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
 
     for (uint256 i; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), encodeStrategy(newStrategies[i]), address(mpCore)
+        address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
       );
     }
 
     vm.startPrank(address(mpCore));
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], address(relativeStrategyLogic), encodeStrategy(newStrategies[0]));
+    emit StrategyAuthorized(
+      strategyAddresses[0], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[0])
+    );
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], address(relativeStrategyLogic), encodeStrategy(newStrategies[1]));
+    emit StrategyAuthorized(
+      strategyAddresses[1], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[1])
+    );
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[2], address(relativeStrategyLogic), encodeStrategy(newStrategies[2]));
+    emit StrategyAuthorized(
+      strategyAddresses[2], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[2])
+    );
 
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1353,20 +1419,23 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     });
 
     for (uint256 i; i < newStrategies.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(additionalStrategyLogic, encodeStrategy(newStrategies[i]), address(mpCore));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
+      );
     }
 
     vm.startPrank(address(mpCore));
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, encodeStrategy(newStrategies[0]));
+    emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, encodeStrategy(newStrategies[1]));
+    emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[1]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, encodeStrategy(newStrategies[2]));
+    emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(ILlamaStrategy(additionalStrategyLogic), encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(
+      ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies)
+    );
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1392,7 +1461,9 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(ILlamaStrategy(randomLogicAddress), encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(
+      ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies)
+    );
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1417,7 +1488,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1441,10 +1512,10 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies1));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, encodeStrategyConfigs(newStrategies2));
+    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1466,14 +1537,14 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     });
 
     ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
-      address(relativeStrategyLogic), encodeStrategy(newStrategies[0]), address(mpCore)
+      address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
     vm.prank(address(mpCore));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
-      LlamaCore.createAndAuthorizeStrategies, (relativeStrategyLogic, encodeStrategyConfigs(newStrategies))
+      LlamaCore.createAndAuthorizeStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
