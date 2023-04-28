@@ -36,6 +36,7 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
     address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply
   );
   event RoleInitialized(uint8 indexed role, RoleDescription description);
+  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   LlamaCoreAndPolicyScript llamaCoreAndPolicyScript;
 
@@ -265,7 +266,29 @@ contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
   }
 }
 
-contract SetRolePermissions is LlamaCoreAndPolicyScriptTest {}
+contract SetRolePermissions is LlamaCoreAndPolicyScriptTest {
+  function testFuzz_setRolePermissions(LlamaCoreAndPolicyScript.SetRolePermission[] memory rolePermissions) public {
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, 9)); // number of exisitng roles (9) and cannot
+        // be 0 (all holders role)
+    }
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      vm.expectEmit();
+      emit RolePermissionAssigned(
+        rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission
+      );
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {}
 
