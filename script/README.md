@@ -7,6 +7,26 @@ The current Llama scripts are:
 
 Additionally, both `DeployLlama` and `CreateAction` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
+## Deployment Configurations
+
+Before running any script that deploys a new Llama instance, it is important to understand the one special-cased role ID and permission ID in the system.
+
+A newly deployed Llama instance may be unusable if not properly configured. In particular, the core requirements are:
+- Someone can call the policy's `setRolePermission` method.
+- The strategy used when calling that method can be executed.
+
+With those two requirements satisfied, new permissions can be assigned to reconfigure the instance with any desired permissions.
+Therefore, we help enforce this at the protocol level with the following behavior:
+
+- We refer to the very first strategy in the `initialStrategies` array as the `bootstrapStrategy` because this strategy can be used (in tandem with the below) to bootstrap the instance to any configuration.
+- Role ID 1 is special-cased to be the corresponding `bootstrapRole` because this role can be used (in tandem with the above) to bootstrap the instance to any configuration.
+- The `LlamaFactory` internal `_deploy` method, will verify that at least 1 role holder in the `initialRoleHolders` array has the `bootstrapRole` role ID of 1. If this is not the case, deployment reverts.
+- The `_deploy` method will then deploy and initialize the `LlamaPolicy` contract, then it will deploy and initialize the `LlamaCore` contract.
+- Initialization of the `LlamaCore` contract is where the `bootstrapStrategy` is deployed, so this call computes and returns the `bootstrapPermissionId`, which is the permission ID (the `(target, selector, strategy)` tuple) that can be used to call the `setRolePermission` method.
+- Because the policy and core need to know about each other, we now finalize initialization of the `LlamaPolicy` contract by calling the `finalizeInitialization` method on it. This takes the address of the `LlamaCore` contract, along with the `bootstrapPermissionId` computed above.
+
+A key part of ensuring the instance is not misconfigured is ensuring that the `bootstrapStrategy` is a valid strategy that can actually be executed. This is checked in deploy scripts, because the strategy can have any logic, so it's not necessarily possible to check this at the protocol level.
+
 ## DeployLlama
 
 To perform a dry-run of the `DeployLlama` script on a network, first set the

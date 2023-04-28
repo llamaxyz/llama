@@ -154,6 +154,7 @@ contract LlamaCore is Initializable {
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
   /// @param initialStrategies The configuration of the initial strategies.
   /// @param initialAccounts The configuration of the initial strategies.
+  /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
   function initialize(
     string memory _name,
     LlamaPolicy _policy,
@@ -161,14 +162,18 @@ contract LlamaCore is Initializable {
     LlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
     string[] calldata initialAccounts
-  ) external initializer {
+  ) external initializer returns (bytes32 bootstrapPermissionId) {
     factory = LlamaFactory(msg.sender);
     name = _name;
     policy = _policy;
     llamaAccountLogic = _llamaAccountLogic;
 
-    _deployStrategies(_llamaStrategyLogic, initialStrategies);
+    ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
     _deployAccounts(initialAccounts);
+
+    // Now we compute the permission ID used to set role permissions and return it.
+    bytes4 selector = LlamaPolicy.setRolePermission.selector;
+    return keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
   }
 
   // ===========================================
@@ -682,7 +687,13 @@ contract LlamaCore is Initializable {
     return currentCount + quantity;
   }
 
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies) internal {
+  /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
+  /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
+  /// have permission to assign role permissions.
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
+    internal
+    returns (ILlamaStrategy firstStrategy)
+  {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(llamaStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by root llama instance
       // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
@@ -696,6 +707,7 @@ contract LlamaCore is Initializable {
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;
       emit StrategyAuthorized(strategy, llamaStrategyLogic, strategies[i]);
+      if (i == 0) firstStrategy = strategy;
     }
   }
 

@@ -20,6 +20,9 @@ contract LlamaFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Thrown if the initial set of role holders has no one with role ID 1.
+  error InvalidDeployConfiguration();
+
   /// @dev Thrown when a protected external function in the factory is not called by the Root Llama Core.
   error OnlyRootLlama();
 
@@ -47,6 +50,12 @@ contract LlamaFactory {
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
+
+  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured.
+  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
+  /// unusable. See the documentation for more info.
+  uint8 public constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The Llama Core implementation (logic) contract.
   LlamaCore public immutable LLAMA_CORE_LOGIC;
@@ -193,20 +202,34 @@ contract LlamaFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (LlamaCore llamaCore) {
+    // There must be at least one role holder with role ID of 1, since that role ID is initially
+    // given permission to call `setRolePermission`. This is required to reduce the chance that an
+    // instance is deployed with an invalid configuration that results in the instance being unusable.
+    // Role ID 1 is referred to as the bootstrap role.
+    bool foundBootstrapRole = false;
+    for (uint256 i = 0; i < initialRoleHolders.length; i = _uncheckedIncrement(i)) {
+      if (initialRoleHolders[i].role == BOOTSTRAP_ROLE) {
+        foundBootstrapRole = true;
+        break;
+      }
+    }
+    if (!foundBootstrapRole) revert InvalidDeployConfiguration();
+
+    // Now the configuration is likely valid (it's possible the configuration of the first strategy
+    // will not actually be able to execute, but we leave that check off-chain / to the deploy
+    // scripts), so we continue with deployment of this instance.
     LlamaPolicy policy =
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-    llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
+    bytes32 bootstrapPermissionId =
+      llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
-    policy.setLlama(address(llamaCore));
+    policy.finalizeInitialization(address(llamaCore), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(llamaCount, name, address(llamaCore), address(policy), block.chainid);
-
-    unchecked {
-      ++llamaCount;
-    }
+    llamaCount = _uncheckedIncrement(llamaCount);
   }
 
   /// @dev Authorizes a strategy implementation (logic) contract.
@@ -219,5 +242,12 @@ contract LlamaFactory {
   function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
+  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
+    unchecked {
+      return i + 1;
+    }
   }
 }
