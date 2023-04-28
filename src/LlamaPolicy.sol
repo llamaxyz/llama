@@ -279,6 +279,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return factory.tokenURI(LlamaCore(llamaCore), name, symbol, tokenId);
   }
 
+  /// @notice Returns a URI for the storefront-level metadata for your contract.
+  /// @return The contract URI for the given Llama instance.
+  function contractURI() public view returns (string memory) {
+    return factory.contractURI(name);
+  }
+
   // -------- ERC-721 Methods --------
 
   /// @dev overriding transferFrom to disable transfers
