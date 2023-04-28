@@ -212,10 +212,9 @@ contract LlamaCoreAndPolicyScript {
     uint256 length = _revokeExpiredRoles.length;
     for (uint256 i = 0; i < length; i++) {
       policy.revokeExpiredRole(_revokeExpiredRoles[i].role, _revokeExpiredRoles[i].policyholder);
-    }
-  }
-
   ///@notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
+  /// if the policyholder has too many roles.
+  function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
   /// if the policyholder has too many roles.
 
   function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
