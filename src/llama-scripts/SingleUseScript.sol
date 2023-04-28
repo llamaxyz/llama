@@ -15,7 +15,7 @@ abstract contract SingleUseScript {
     SELF = address(this);
   }
 
-  /// @dev Add this to your script's methods and to unauthorize the script after it has been run once.
+  /// @dev Add this to your script's methods to unauthorize the script after it has been run once.
   modifier unauthorizeAfterRun() {
     _;
     core = LlamaCore(address(this));
