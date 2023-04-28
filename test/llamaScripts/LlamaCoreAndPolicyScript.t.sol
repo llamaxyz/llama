@@ -197,7 +197,25 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
 }
 
 contract Aggregate is LlamaCoreAndPolicyScriptTest {
-  function test_aggregate() public {}
+  function test_aggregate(RoleDescription[] memory descriptions) public {
+    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+    bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
+    vm.prank(actionCreatorAaron);
+    
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+
+    for (uint256 i = 0; i < descriptions.length; i++) {
+      vm.expectEmit();
+      emit RoleInitialized(uint8(i + 9), descriptions[i]);
+    }
+    mpCore.executeAction(actionInfo);
+  }
 }
 
 contract InitializeRolesAndSetRoleHolders is LlamaCoreAndPolicyScriptTest {}
@@ -220,7 +238,7 @@ contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is LlamaCoreAn
 
 contract InitializeRoles is LlamaCoreAndPolicyScriptTest {
   function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
-    vm.assume(descriptions.length < 247); // max unit8 (256) - total number of exisitng roles (8)
+    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
     vm.prank(actionCreatorAaron);
     uint256 actionId =
@@ -312,8 +330,8 @@ contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
       roles[i] = uint8(bound(roles[i], 1, 8)); // number of exisitng roles (8) and cannot be
       vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
       vm.prank(address(mpCore));
-      mpPolicy.setRoleHolder(roles[i], address(uint160(i + 1)), 1, uint64(block.timestamp + 1));
-      expiredRoles.push(LlamaCoreAndPolicyScript.RevokeExpiredRole(roles[i], address(uint160(i + 1))));
+      mpPolicy.setRoleHolder(roles[i], address(uint160(i + 101)), 1, uint64(block.timestamp + 1));
+      expiredRoles.push(LlamaCoreAndPolicyScript.RevokeExpiredRole(roles[i], address(uint160(i + 101))));
     }
 
     vm.warp(block.timestamp + 1 days);
@@ -332,7 +350,7 @@ contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
       rolesSeen[roles[i]]++;
       vm.expectEmit();
       emit RoleAssigned(
-        address(uint160(i + 1)), roles[i], 0, LlamaPolicy.RoleSupply(newHolderSupply, newQuantitySupply)
+        address(uint160(i + 101)), roles[i], 0, LlamaPolicy.RoleSupply(newHolderSupply, newQuantitySupply)
       );
     }
     mpCore.executeAction(actionInfo);
