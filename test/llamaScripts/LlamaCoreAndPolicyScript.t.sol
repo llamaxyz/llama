@@ -331,6 +331,7 @@ contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
 contract RevokePolicies is LlamaCoreAndPolicyScriptTest {
   uint8[] public roles;
   LlamaCoreAndPolicyScript.RevokePolicy[] public revokePolicies;
+
   function test_revokePolicies() public {
     revokePolicies.push(LlamaCoreAndPolicyScript.RevokePolicy(address(disapproverDave), roles));
     bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
