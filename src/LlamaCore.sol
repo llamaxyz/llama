@@ -50,7 +50,7 @@ contract LlamaCore is Initializable {
   // ========================
 
   event ActionCreated(
-    uint256 indexed id,
+    uint256 id,
     address indexed creator,
     ILlamaStrategy indexed strategy,
     address target,
@@ -61,7 +61,11 @@ contract LlamaCore is Initializable {
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
   event ActionQueued(
-    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
+    uint256 id,
+    address indexed caller,
+    ILlamaStrategy indexed strategy,
+    address indexed creator,
+    uint256 minExecutionTime
   );
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
