@@ -692,7 +692,7 @@ contract LlamaCore is Initializable {
   /// have permission to assign role permissions.
   function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
     internal
-    returns (ILlamaStrategy bootstrapStrategy)
+    returns (ILlamaStrategy firstStrategy)
   {
     if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(llamaStrategyLogic)) {
       // The only edge case where this check is skipped is if `_deployStrategies()` is called by root llama instance
@@ -707,7 +707,7 @@ contract LlamaCore is Initializable {
       strategy.initialize(strategies[i]);
       authorizedStrategies[strategy] = true;
       emit StrategyAuthorized(strategy, llamaStrategyLogic, strategies[i]);
-      if (i == 0) bootstrapStrategy = strategy;
+      if (i == 0) firstStrategy = strategy;
     }
   }
 
