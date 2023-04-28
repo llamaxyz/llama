@@ -56,7 +56,8 @@ contract LlamaCoreAndPolicyScript {
   // =======================================
   // ======== Arbitrary Aggregation =========
   // =======================================
-  /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
+  /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the
+  /// context
   /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
   /// needed than to permission the aggregate function itself
   function aggregate(address[] calldata targets, bytes[] calldata data) external returns (bytes[] memory returnData) {
@@ -214,7 +215,7 @@ contract LlamaCoreAndPolicyScript {
       policy.revokeExpiredRole(_revokeExpiredRoles[i].role, _revokeExpiredRoles[i].policyholder);
     }
   }
-  
+
   /// @notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
   /// if the policyholder has too many roles.
   function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
