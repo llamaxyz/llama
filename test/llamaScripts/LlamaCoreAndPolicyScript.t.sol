@@ -329,7 +329,38 @@ contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
 }
 
 contract RevokePolicies is LlamaCoreAndPolicyScriptTest {
-  function testFuzz_revokePolicies(LlamaCoreAndPolicyScript.RevokePolicy[] memory policies) public {}
+  uint8[] public roles;
+  LlamaCoreAndPolicyScript.RevokePolicy[] public revokePolicies;
+  function test_revokePolicies() public {
+    revokePolicies.push(LlamaCoreAndPolicyScript.RevokePolicy(address(disapproverDave), roles));
+    bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    vm.expectEmit();
+    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, LlamaPolicy.RoleSupply(2, 2));
+    mpCore.executeAction(actionInfo);
+  }
+
+  function test_revokePoliciesOverload() public {
+    roles.push(uint8(Roles.Disapprover));
+    revokePolicies.push(LlamaCoreAndPolicyScript.RevokePolicy(address(disapproverDave), roles));
+    bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    vm.expectEmit();
+    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, LlamaPolicy.RoleSupply(2, 2));
+    mpCore.executeAction(actionInfo);
+  }
 }
 
 contract UpdateRoleDescriptions is LlamaCoreAndPolicyScriptTest {
