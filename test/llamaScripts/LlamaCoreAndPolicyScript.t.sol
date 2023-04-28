@@ -197,9 +197,7 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
 }
 
 contract Aggregate is LlamaCoreAndPolicyScriptTest {
-  function test_aggregate () public {
-
-  }
+  function test_aggregate() public {}
 }
 
 contract InitializeRolesAndSetRoleHolders is LlamaCoreAndPolicyScriptTest {}
@@ -242,8 +240,9 @@ contract InitializeRoles is LlamaCoreAndPolicyScriptTest {
 contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
   mapping(uint8 => uint128) public rolesHoldersSeen;
   mapping(uint8 => uint128) public rolesQuantitySeen;
+
   function testFuzz_setRoleHolders(LlamaCoreAndPolicyScript.SetRoleHolder[] memory roleHolders) public {
-    vm.assume(roleHolders.length < 500); 
+    vm.assume(roleHolders.length < 500);
     for (uint256 i = 0; i < roleHolders.length; i++) {
       roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, 8)); // number of exisitng roles (8) and cannot be 0
         // (all holders role)
@@ -267,7 +266,8 @@ contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
         roleHolders[i].expiration,
         LlamaPolicy.RoleSupply(
           mpPolicy.getRoleSupplyAsNumberOfHolders(roleHolders[i].role) + rolesHoldersSeen[roleHolders[i].role] + 1,
-          mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + rolesQuantitySeen[roleHolders[i].role] + roleHolders[i].quantity
+          mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + rolesQuantitySeen[roleHolders[i].role]
+            + roleHolders[i].quantity
         )
       );
       rolesHoldersSeen[roleHolders[i].role]++;
