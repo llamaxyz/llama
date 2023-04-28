@@ -57,11 +57,15 @@ contract LlamaCoreAndPolicyScript {
   ///@notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
   /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
   /// needed than to permission the aggregate function itself
-  function aggregate(bytes[] calldata calls) external returns (bytes[] memory returnData) {
-    uint256 length = calls.length;
+  function aggregate(address[] calldata targets, bytes[] calldata data) external returns (bytes[] memory returnData) {
+    (LlamaCore core, LlamaPolicy policy) = _context();
+    uint256 length = data.length;
     returnData = new bytes[](length);
     for (uint256 i = 0; i < length; i++) {
-      (bool success, bytes memory response) = address(this).call(calls[i]);
+      bool addressIsCore = targets[i] == address(core);
+      bool addressIsPolicy = targets[i] == address(policy);
+      if (!addressIsCore && !addressIsPolicy) revert("Target not authorized");
+      (bool success, bytes memory response) = targets[i].call(data[i]);
       if (!success) revert CallReverted(i, response);
       returnData[i] = response;
     }

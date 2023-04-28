@@ -37,6 +37,7 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
   );
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event AccountCreated(LlamaAccount indexed account, string name);
 
   LlamaCoreAndPolicyScript llamaCoreAndPolicyScript;
 
@@ -197,11 +198,32 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
 }
 
 contract Aggregate is LlamaCoreAndPolicyScriptTest {
+  address[] public targets;
+  bytes[] public calls;
+
   function test_aggregate(RoleDescription[] memory descriptions) public {
     vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
-    bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
+    for (uint256 i = 0; i < descriptions.length; i++) {
+      targets.push(address(mpPolicy));
+      calls.push(abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, descriptions[i]));
+
+      targets.push(address(mpPolicy));
+      calls.push(
+        abi.encodeWithSelector(
+          LlamaPolicy.setRoleHolder.selector, uint8(i + 9), address(uint160(i + 101)), 1, type(uint64).max
+        )
+      );
+    }
+
+    string[] memory newAccounts = new string[](1);
+    newAccounts[0] = "new treasury";
+
+    targets.push(address(mpCore));
+    calls.push(abi.encodeWithSelector(0x9c8b12f1, newAccounts));
+
+    bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
+
     vm.prank(actionCreatorAaron);
-    
     uint256 actionId =
       mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
 
@@ -213,7 +235,15 @@ contract Aggregate is LlamaCoreAndPolicyScriptTest {
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
       emit RoleInitialized(uint8(i + 9), descriptions[i]);
+      emit RoleAssigned(
+        address(uint160(i + 101)),
+        uint8(i + 9),
+        type(uint64).max,
+        LlamaPolicy.RoleSupply(uint128(i + 1), uint128(i + 1))
+      );
     }
+    vm.expectEmit();
+    emit AccountCreated(LlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), "new treasury");
     mpCore.executeAction(actionInfo);
   }
 }
