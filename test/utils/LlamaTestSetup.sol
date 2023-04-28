@@ -54,6 +54,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   // of roles.
   uint8 public constant NUM_INIT_ROLES = uint8(type(Roles).max);
 
+  uint8 public constant BOOTSTRAP_ROLE = 1;
+
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
   // replaced with any address that we hold the private key for.
@@ -303,6 +305,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     require(bytes32(0) != createStrategyId, "createStrategyId not set");
     require(bytes32(0) != createAccountId, "createAccountId not set");
     require(bytes32(0) != executeScriptPermissionId, "executeScriptPermissionId not set");
+
+    require(BOOTSTRAP_ROLE == uint8(Roles.ActionCreator), "test suite bootstrap config mismatch");
   }
 
   function defaultActionCreatorRoleHolder(address who) internal view returns (RoleHolderData[] memory roleHolders) {

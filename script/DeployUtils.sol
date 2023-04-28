@@ -176,6 +176,7 @@ library DeployUtils {
     for (uint256 i = 0; i < roleHolderData.length; i++) {
       if (roleHolderData[i].role == BOOTSTRAP_ROLE) bootstrapRoleSupply++;
     }
+    require(bootstrapRoleSupply > 0, "DeployLlama: no bootstrap role holders");
 
     // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
     // minimum number of role holders to pass a vote. The calculation here MUST match the one
@@ -184,6 +185,6 @@ library DeployUtils {
     // absolute strategies.
     uint256 minPct = bootstrapStrategy.minApprovalPct;
     uint256 numApprovalsRequired = FixedPointMathLib.mulDivUp(bootstrapRoleSupply, minPct, ONE_HUNDRED_IN_BPS);
-    require(numApprovalsRequired >= bootstrapRoleSupply, "DeployLlama: invalid bootstrap configuration");
+    require(bootstrapRoleSupply >= numApprovalsRequired, "DeployLlama: invalid bootstrap configuration");
   }
 }
