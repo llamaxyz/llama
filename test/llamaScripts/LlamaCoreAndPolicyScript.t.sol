@@ -248,6 +248,8 @@ contract Aggregate is LlamaCoreAndPolicyScriptTest {
   }
 }
 
+// TODO: write tests for all of the functions below
+
 contract InitializeRolesAndSetRoleHolders is LlamaCoreAndPolicyScriptTest {}
 
 contract InitializeRolesAndSetRolePermissions is LlamaCoreAndPolicyScriptTest {}
