@@ -15,7 +15,7 @@ import {Checkpoints} from "src/lib/Checkpoints.sol";
 contract CheckpointsMock {
   Checkpoints.History private _totalCheckpoints;
 
-  function print() public view {
+  function printCheckpoints() public view {
     for (uint256 i = 0; i < length(); i++) {
       Checkpoints.Checkpoint memory ckpt = _totalCheckpoints._checkpoints[i];
       console2.log(ckpt.timestamp, ckpt.quantity, ckpt.expiration);
