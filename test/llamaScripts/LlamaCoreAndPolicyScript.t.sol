@@ -196,7 +196,11 @@ contract LlamaCoreAndPolicyScriptTest is LlamaTestSetup {
   }
 }
 
-contract Aggregate is LlamaCoreAndPolicyScriptTest {}
+contract Aggregate is LlamaCoreAndPolicyScriptTest {
+  function test_aggregate () public {
+
+  }
+}
 
 contract InitializeRolesAndSetRoleHolders is LlamaCoreAndPolicyScriptTest {}
 
@@ -218,7 +222,7 @@ contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is LlamaCoreAn
 
 contract InitializeRoles is LlamaCoreAndPolicyScriptTest {
   function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
-    vm.assume(descriptions.length < 247); // max unit8 (256) - total number of exisitng roles (9)
+    vm.assume(descriptions.length < 247); // max unit8 (256) - total number of exisitng roles (8)
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
     vm.prank(actionCreatorAaron);
     uint256 actionId =
@@ -236,11 +240,16 @@ contract InitializeRoles is LlamaCoreAndPolicyScriptTest {
 }
 
 contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
+  mapping(uint8 => uint128) public rolesHoldersSeen;
+  mapping(uint8 => uint128) public rolesQuantitySeen;
   function testFuzz_setRoleHolders(LlamaCoreAndPolicyScript.SetRoleHolder[] memory roleHolders) public {
+    vm.assume(roleHolders.length < 500); 
     for (uint256 i = 0; i < roleHolders.length; i++) {
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, 9)); // number of exisitng roles (9) and cannot be 0
+      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, 8)); // number of exisitng roles (8) and cannot be 0
         // (all holders role)
-      vm.assume(roleHolders[i].expiration > block.timestamp);
+      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
+      vm.assume(roleHolders[i].policyholder != address(0));
+      roleHolders[i].quantity = uint128(bound(roleHolders[i].quantity, 1, 100));
     }
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
     vm.prank(actionCreatorAaron);
@@ -257,10 +266,12 @@ contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
         roleHolders[i].role,
         roleHolders[i].expiration,
         LlamaPolicy.RoleSupply(
-          mpPolicy.getRoleSupplyAsNumberOfHolders(roleHolders[i].role) + 1,
-          mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + roleHolders[i].quantity
+          mpPolicy.getRoleSupplyAsNumberOfHolders(roleHolders[i].role) + rolesHoldersSeen[roleHolders[i].role] + 1,
+          mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + rolesQuantitySeen[roleHolders[i].role] + roleHolders[i].quantity
         )
       );
+      rolesHoldersSeen[roleHolders[i].role]++;
+      rolesQuantitySeen[roleHolders[i].role] += roleHolders[i].quantity;
     }
     mpCore.executeAction(actionInfo);
   }
@@ -269,7 +280,7 @@ contract SetRoleHolders is LlamaCoreAndPolicyScriptTest {
 contract SetRolePermissions is LlamaCoreAndPolicyScriptTest {
   function testFuzz_setRolePermissions(LlamaCoreAndPolicyScript.SetRolePermission[] memory rolePermissions) public {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
-      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, 9)); // number of exisitng roles (9) and cannot
+      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, 9)); // number of exisitng roles (8) and cannot
         // be 0 (all holders role)
     }
     bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
@@ -298,7 +309,7 @@ contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
     vm.assume(roles.length > 0); // so we don't try to cast 0 to address
 
     for (uint256 i = 0; i < roles.length; i++) {
-      roles[i] = uint8(bound(roles[i], 1, 8)); // number of exisitng roles (9) and cannot be
+      roles[i] = uint8(bound(roles[i], 1, 8)); // number of exisitng roles (8) and cannot be
       vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
       vm.prank(address(mpCore));
       mpPolicy.setRoleHolder(roles[i], address(uint160(i + 1)), 1, uint64(block.timestamp + 1));
