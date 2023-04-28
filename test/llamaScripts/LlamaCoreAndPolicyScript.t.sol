@@ -290,7 +290,43 @@ contract SetRolePermissions is LlamaCoreAndPolicyScriptTest {
   }
 }
 
-contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {}
+contract RevokeExpiredRoles is LlamaCoreAndPolicyScriptTest {
+  LlamaCoreAndPolicyScript.RevokeExpiredRole[] public expiredRoles;
+  mapping(uint8 => uint128) public rolesSeen;
+
+  function testFuzz_revokeExpiredRoles(uint8[] memory roles) public {
+    vm.assume(roles.length > 0); // so we don't try to cast 0 to address
+
+    for (uint256 i = 0; i < roles.length; i++) {
+      roles[i] = uint8(bound(roles[i], 1, 8)); // number of exisitng roles (9) and cannot be
+      vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
+      vm.prank(address(mpCore));
+      mpPolicy.setRoleHolder(roles[i], address(uint160(i + 1)), 1, uint64(block.timestamp + 1));
+      expiredRoles.push(LlamaCoreAndPolicyScript.RevokeExpiredRole(roles[i], address(uint160(i + 1))));
+    }
+
+    vm.warp(block.timestamp + 1 days);
+
+    bytes memory data = abi.encodeWithSelector(REVOKE_EXPIRED_ROLES_SELECTOR, expiredRoles);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(llamaCoreAndPolicyScript), 0, data);
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+    for (uint256 i = 0; i < roles.length; i++) {
+      uint128 newHolderSupply = mpPolicy.getRoleSupplyAsNumberOfHolders(roles[i]) - rolesSeen[roles[i]] - 1;
+      uint128 newQuantitySupply = mpPolicy.getRoleSupplyAsQuantitySum(roles[i]) - rolesSeen[roles[i]] - 1;
+      rolesSeen[roles[i]]++;
+      vm.expectEmit();
+      emit RoleAssigned(
+        address(uint160(i + 1)), roles[i], 0, LlamaPolicy.RoleSupply(newHolderSupply, newQuantitySupply)
+      );
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract RevokePolicies is LlamaCoreAndPolicyScriptTest {
   function testFuzz_revokePolicies(LlamaCoreAndPolicyScript.RevokePolicy[] memory policies) public {}
