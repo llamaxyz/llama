@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, PermissionData} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -20,23 +20,25 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error InvalidStrategy();
-  error InvalidPolicyholder();
-  error InvalidCancelation();
-  error InvalidActionId();
-  error InvalidActionState(ActionState expected);
-  error OnlyLlama();
-  error InvalidSignature();
-  error TimelockNotFinished();
-  error FailedActionExecution(bytes reason);
-  error DuplicateCast();
-  error PolicyholderDoesNotHavePermission();
-  error InsufficientMsgValue();
-  error RoleHasZeroSupply(uint8 role);
-  error UnauthorizedStrategyLogic();
   error CannotUseCoreOrPolicy();
+  error DuplicateCast();
+  error FailedActionExecution(bytes reason);
+  error InfoHashMismatch();
+  error InsufficientMsgValue();
+  error InvalidActionState(ActionState expected);
+  error InvalidCancelation();
+  error InvalidPolicyholder();
+  error InvalidSignature();
+  error InvalidStrategy();
+  error OnlyLlama();
+  error PolicyholderDoesNotHavePermission();
   error ProhibitedByActionGuard(bytes32 reason);
   error ProhibitedByStrategy(bytes32 reason);
+  error RoleHasZeroSupply(uint8 role);
+  error Slot0Changed();
+  error TimelockNotFinished();
+  error UnauthorizedStrategyLogic();
+  error UnsafeCast(uint256 n);
 
   modifier onlyLlama() {
     if (msg.sender != address(this)) revert OnlyLlama();
@@ -48,13 +50,13 @@ contract LlamaCore is Initializable {
   // ========================
 
   event ActionCreated(
-    uint256 id,
+    uint256 indexed id,
     address indexed creator,
     ILlamaStrategy indexed strategy,
     address target,
     uint256 value,
-    bytes4 selector,
-    bytes data
+    bytes data,
+    string description
   );
   event ActionCanceled(uint256 id);
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
@@ -83,22 +85,26 @@ contract LlamaCore is Initializable {
 
   /// @notice EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
-    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes4 selector,bytes data,address policyholder,uint256 nonce)"
+    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes data,address policyholder,uint256 nonce)"
   );
 
   /// @notice EIP-712 castApproval typehash.
-  bytes32 internal constant CAST_APPROVAL_TYPEHASH =
-    keccak256("CastApproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
+  bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
+    "CastApproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+  );
 
   /// @notice EIP-712 castDisapproval typehash.
-  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
-    keccak256("CastDisapproval(uint256 actionId,uint8 role,string reason,address policyholder,uint256 nonce)");
+  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
+    "CastDisapproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+  );
+
+  /// @notice The NFT contract that defines the policies for this llama instance.
+  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
+  // variables, which are the key variables we want to check before and after a delegatecall.
+  LlamaPolicy public policy;
 
   /// @notice The LlamaFactory contract that deployed this llama instance.
   LlamaFactory public factory;
-
-  /// @notice The NFT contract that defines the policies for this llama instance.
-  LlamaPolicy public policy;
 
   /// @notice The Llama Account implementation (logic) contract.
   LlamaAccount public llamaAccountLogic;
@@ -175,18 +181,33 @@ contract LlamaCore is Initializable {
   /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param selector The function selector that will be called when the action is executed.
-  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
+  /// @return actionId actionId of the newly created action.
+  function createAction(uint8 role, ILlamaStrategy strategy, address target, uint256 value, bytes calldata data)
+    external
+    returns (uint256 actionId)
+  {
+    actionId = _createAction(msg.sender, role, strategy, target, value, data, "");
+  }
+
+  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
+  /// {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param description A human readable description of the action and the changes it will enact.
   /// @return actionId actionId of the newly created action.
   function createAction(
     uint8 role,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
-    bytes4 selector,
-    bytes calldata data
+    bytes calldata data,
+    string memory description
   ) external returns (uint256 actionId) {
-    actionId = _createAction(msg.sender, role, strategy, target, value, selector, data);
+    actionId = _createAction(msg.sender, role, strategy, target, value, data, description);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -195,8 +216,7 @@ contract LlamaCore is Initializable {
   /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param selector The function selector that will be called when the action is executed.
-  /// @param data The encoded arguments to be passed to the function that is called when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
   /// @param policyholder The policyholder that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
@@ -207,122 +227,150 @@ contract LlamaCore is Initializable {
     ILlamaStrategy strategy,
     address target,
     uint256 value,
-    bytes4 selector,
     bytes calldata data,
     address policyholder,
     uint8 v,
     bytes32 r,
     bytes32 s
+  ) external returns (uint256) {
+    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, "");
+  }
+
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
+  /// the provided {target, selector, strategy}.
+  /// @param role The role that will be used to determine the permissionId of the policy holder.
+  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @param target The contract called when the action is executed.
+  /// @param value The value in wei to be sent when the action is executed.
+  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param description A human readable description of the action and the changes it will enact.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  /// @return actionId actionId of the newly created action.
+  function createActionBySig(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    address policyholder,
+    uint8 v,
+    bytes32 r,
+    bytes32 s,
+    string memory description
   ) external returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            selector,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
-    address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, selector, data);
+    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, description);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
-  /// @param actionId Id of the action to queue.
-  function queueAction(uint256 actionId) external {
-    if (getActionState(actionId) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
+  /// @param actionInfo Data required to create an action.
+  function queueAction(ActionInfo calldata actionInfo) external {
+    Action storage action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
+    if (getActionState(actionInfo) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
 
-    Action storage action = actions[actionId];
-    uint256 minExecutionTime = action.strategy.minExecutionTime(actionId);
+    uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
     action.minExecutionTime = minExecutionTime;
-    emit ActionQueued(actionId, msg.sender, action.strategy, action.creator, minExecutionTime);
+    emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
-  /// @param actionId Id of the action to execute.
-  function executeAction(uint256 actionId) external payable {
-    // Initial checks that action is ready to execute.
-    if (getActionState(actionId) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
+  /// @param actionInfo Data required to create an action.
+  function executeAction(ActionInfo calldata actionInfo) external payable {
+    Action storage action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
-    Action storage action = actions[actionId];
+    // Initial checks that action is ready to execute.
+    if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
-    if (msg.value < action.value) revert InsufficientMsgValue();
+    if (msg.value < actionInfo.value) revert InsufficientMsgValue();
 
     action.executed = true;
 
     // Check pre-execution action guard.
-    IActionGuard guard = actionGuard[action.target][action.selector];
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validatePreActionExecution(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    IActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
+    if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[action.target]) {
-      (success, result) = action.target.delegatecall(abi.encodePacked(action.selector, action.data));
+    if (authorizedScripts[actionInfo.target]) {
+      // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
+      // none of the storage in this contract changes in unexpected ways, as this could let someone
+      // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
+      // However, this contract has a lot of storage so it's not practical to check all slots,
+      // especially since some may be expected to change. Therefore we instead just check slot0,
+      // since that slot (1) contains core variables that should never be changed, and (2) is the
+      // first slot so it's the most likely to be accidentally overwritten with a bad script. The
+      // storage layout of this contract is below:
+      //
+      // | Variable Name        | Type                                                         | Slot | Offset | Bytes |
+      // |----------------------|--------------------------------------------------------------|------|--------|-------|
+      // | _initialized         | uint8                                                        | 0    | 0      | 1     |
+      // | _initializing        | bool                                                         | 0    | 1      | 1     |
+      // | policy               | contract LlamaPolicy                                         | 0    | 2      | 20    |
+      // | factory              | contract LlamaFactory                                        | 1    | 0      | 20    |
+      // | llamaAccountLogic    | contract LlamaAccount                                        | 2    | 0      | 20    |
+      // | name                 | string                                                       | 3    | 0      | 32    |
+      // | actionsCount         | uint256                                                      | 4    | 0      | 32    |
+      // | actions              | mapping(uint256 => struct Action)                            | 5    | 0      | 32    |
+      // | approvals            | mapping(uint256 => mapping(address => bool))                 | 6    | 0      | 32    |
+      // | disapprovals         | mapping(uint256 => mapping(address => bool))                 | 7    | 0      | 32    |
+      // | authorizedStrategies | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
+      // | authorizedScripts    | mapping(address => bool)                                     | 9    | 0      | 32    |
+      // | nonces               | mapping(address => mapping(bytes4 => uint256))               | 10   | 0      | 32    |
+      // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
+
+      bytes32 originalStorage = _readSlot0();
+      (success, result) = actionInfo.target.delegatecall(actionInfo.data);
+      if (originalStorage != _readSlot0()) revert Slot0Changed();
     } else {
-      (success, result) = action.target.call{value: action.value}(abi.encodePacked(action.selector, action.data));
+      (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
     }
 
     if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
-    if (guard != IActionGuard(address(0))) {
-      (bool allowed, bytes32 reason) = guard.validatePostActionExecution(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
+    if (guard != IActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
 
     // Action successfully executed.
-    emit ActionExecuted(actionId, msg.sender, action.strategy, action.creator, result);
+    emit ActionExecuted(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, result);
   }
 
   /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
-  /// @param actionId Id of the action to cancel.
-  function cancelAction(uint256 actionId) external {
+  /// @param actionInfo Data required to create an action.
+  function cancelAction(ActionInfo calldata actionInfo) external {
+    Action storage action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
+
     // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
-    // address, and Solidity will revert when the `isActionCancelationValid` call has no return data.
-    Action storage action = actions[actionId];
-    if (!action.strategy.isActionCancelationValid(actionId, msg.sender)) revert InvalidCancelation();
+    // address, and Solidity will revert since there is no code at the zero address.
+    actionInfo.strategy.validateActionCancelation(actionInfo, msg.sender);
 
     action.canceled = true;
-    emit ActionCanceled(actionId);
+    emit ActionCanceled(actionInfo.id);
   }
 
   /// @notice How policyholders add their support of the approval of an action.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their approval.
-  function castApproval(uint256 actionId, uint8 role) external {
-    return _castApproval(msg.sender, role, actionId, "");
+  function castApproval(ActionInfo calldata actionInfo, uint8 role) external {
+    return _castApproval(msg.sender, role, actionInfo, "");
   }
 
   /// @notice How policyholders add their support of the approval of an action with a reason.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param reason The reason given for the approval by the policyholder.
-  function castApproval(uint256 actionId, uint8 role, string calldata reason) external {
-    return _castApproval(msg.sender, role, actionId, reason);
+  function castApproval(ActionInfo calldata actionInfo, uint8 role, string calldata reason) external {
+    return _castApproval(msg.sender, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param reason The reason given for the approval by the policyholder.
   /// @param policyholder The policyholder that signed the message.
@@ -330,7 +378,7 @@ contract LlamaCore is Initializable {
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   function castApprovalBySig(
-    uint256 actionId,
+    ActionInfo calldata actionInfo,
     uint8 role,
     string calldata reason,
     address policyholder,
@@ -349,7 +397,7 @@ contract LlamaCore is Initializable {
         keccak256(
           abi.encode(
             CAST_APPROVAL_TYPEHASH,
-            actionId,
+            actionInfo,
             role,
             keccak256(bytes(reason)),
             policyholder,
@@ -360,26 +408,26 @@ contract LlamaCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    return _castApproval(signer, role, actionId, reason);
+    return _castApproval(signer, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their disapproval.
-  function castDisapproval(uint256 actionId, uint8 role) external {
-    return _castDisapproval(msg.sender, role, actionId, "");
+  function castDisapproval(ActionInfo calldata actionInfo, uint8 role) external {
+    return _castDisapproval(msg.sender, role, actionInfo, "");
   }
 
   /// @notice How policyholders add their support of the disapproval of an action with a reason.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param reason The reason given for the disapproval by the policyholder.
-  function castDisapproval(uint256 actionId, uint8 role, string calldata reason) external {
-    return _castDisapproval(msg.sender, role, actionId, reason);
+  function castDisapproval(ActionInfo calldata actionInfo, uint8 role, string calldata reason) external {
+    return _castDisapproval(msg.sender, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
-  /// @param actionId The id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param reason The reason given for the approval by the policyholder.
   /// @param policyholder The policyholder that signed the message.
@@ -387,7 +435,7 @@ contract LlamaCore is Initializable {
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   function castDisapprovalBySig(
-    uint256 actionId,
+    ActionInfo calldata actionInfo,
     uint8 role,
     string calldata reason,
     address policyholder,
@@ -406,7 +454,7 @@ contract LlamaCore is Initializable {
         keccak256(
           abi.encode(
             CAST_DISAPPROVAL_TYPEHASH,
-            actionId,
+            actionInfo,
             role,
             keccak256(bytes(reason)),
             policyholder,
@@ -417,7 +465,7 @@ contract LlamaCore is Initializable {
     );
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    return _castDisapproval(signer, role, actionId, reason);
+    return _castDisapproval(signer, role, actionInfo, reason);
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
@@ -470,23 +518,29 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Get the current ActionState of an action by its actionId.
-  /// @param actionId id of the action.
+  /// @param actionInfo Data required to create an action.
   /// @return The current ActionState of the action.
-  function getActionState(uint256 actionId) public view returns (ActionState) {
-    if (actionId >= actionsCount) revert InvalidActionId();
-    Action storage action = actions[actionId];
+  function getActionState(ActionInfo calldata actionInfo) public view returns (ActionState) {
+    // We don't need an explicit check on the action ID to make sure it exists, because if the
+    // action does not exist, the expected payload hash from storage will be `bytes32(0)`, so
+    // bypassing this check by providing a non-existent actionId would require finding a collision
+    // to get a hash of zero.
+    Action storage action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
 
     if (action.canceled) return ActionState.Canceled;
 
-    if (action.strategy.isActive(actionId)) return ActionState.Active;
+    if (action.executed) return ActionState.Executed;
 
-    if (!action.strategy.isActionPassed(actionId)) return ActionState.Failed;
+    if (actionInfo.strategy.isActive(actionInfo)) return ActionState.Active;
+
+    if (!actionInfo.strategy.isActionApproved(actionInfo)) return ActionState.Failed;
 
     if (action.minExecutionTime == 0) return ActionState.Approved;
 
-    if (action.executed) return ActionState.Executed;
+    if (actionInfo.strategy.isActionDisapproved(actionInfo)) return ActionState.Failed;
 
-    if (action.strategy.isActionExpired(actionId)) return ActionState.Expired;
+    if (actionInfo.strategy.isActionExpired(actionInfo)) return ActionState.Expired;
 
     return ActionState.Queued;
   }
@@ -501,12 +555,12 @@ contract LlamaCore is Initializable {
     ILlamaStrategy strategy,
     address target,
     uint256 value,
-    bytes4 selector,
-    bytes calldata data
+    bytes calldata data,
+    string memory description
   ) internal returns (uint256 actionId) {
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
-    PermissionData memory permission = PermissionData(target, selector, strategy);
+    PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
 
     // Typically (such as in Governor contracts) this should check that the caller has permission
@@ -519,81 +573,112 @@ contract LlamaCore is Initializable {
     // this race condition is unlikely to matter.
     if (!policy.hasPermissionId(policyholder, role, permissionId)) revert PolicyholderDoesNotHavePermission();
 
+    // Validate action creation.
     actionId = actionsCount;
+
+    ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, strategy, target, value, data);
+    strategy.validateActionCreation(actionInfo);
+
+    IActionGuard guard = actionGuard[target][bytes4(data)];
+    if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+
+    // Save action.
     Action storage newAction = actions[actionId];
+    newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
+    newAction.creationTime = _toUint64(block.timestamp);
+    actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
-    newAction.creator = policyholder;
-    newAction.strategy = strategy;
-    newAction.target = target;
-    newAction.value = value;
-    newAction.selector = selector;
-    newAction.data = data;
-    newAction.creationTime = block.timestamp;
-
-    // Safety: Can never overflow a uint256 by incrementing.
-    actionsCount = _uncheckedIncrement(actionsCount);
-
-    (bool allowed, bytes32 reason) = strategy.validateActionCreation(actionId);
-    if (!allowed) revert ProhibitedByStrategy(reason);
-
-    // If an action guard is present, call it to determine if the action can be created. We must do
-    // this after the action is written to storage so that the action guard can any state it needs.
-    IActionGuard guard = actionGuard[target][selector];
-    if (guard != IActionGuard(address(0))) {
-      (allowed, reason) = guard.validateActionCreation(actionId);
-      if (!allowed) revert ProhibitedByActionGuard(reason);
-    }
-
-    unchecked {
-      ++actionsCount;
-    }
-
-    emit ActionCreated(actionId, policyholder, strategy, target, value, selector, data);
+    emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);
   }
 
-  function _castApproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Active);
+  function _createActionBySig(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    address policyholder,
+    uint8 v,
+    bytes32 r,
+    bytes32 s,
+    string memory description
+  ) internal returns (uint256 actionId) {
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        keccak256(
+          abi.encode(
+            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
+          )
+        ),
+        keccak256(
+          abi.encode(
+            CREATE_ACTION_TYPEHASH,
+            role,
+            address(strategy),
+            target,
+            value,
+            keccak256(data),
+            policyholder,
+            _useNonce(policyholder, msg.sig)
+          )
+        )
+      )
+    );
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, data, description);
+  }
 
-    uint256 quantity = action.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+  function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
+    internal
+  {
+    Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
+
+    uint128 quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
-    approvals[actionId][policyholder] = true;
-    emit ApprovalCast(actionId, policyholder, quantity, reason);
+    approvals[actionInfo.id][policyholder] = true;
+    emit ApprovalCast(actionInfo.id, policyholder, quantity, reason);
   }
 
-  function _castDisapproval(address policyholder, uint8 role, uint256 actionId, string memory reason) internal {
-    Action storage action = _preCastAssertions(actionId, policyholder, role, ActionState.Queued);
+  function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
+    internal
+  {
+    Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
-    uint256 quantity = action.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+    uint128 quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
-    disapprovals[actionId][policyholder] = true;
-    emit DisapprovalCast(actionId, policyholder, quantity, reason);
+    disapprovals[actionInfo.id][policyholder] = true;
+    emit DisapprovalCast(actionInfo.id, policyholder, quantity, reason);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
-  function _preCastAssertions(uint256 actionId, address policyholder, uint8 role, ActionState expectedState)
-    internal
-    view
-    returns (Action storage action)
-  {
-    if (getActionState(actionId) != expectedState) revert InvalidActionState(expectedState);
+  function _preCastAssertions(
+    ActionInfo calldata actionInfo,
+    address policyholder,
+    uint8 role,
+    ActionState expectedState
+  ) internal returns (Action storage action) {
+    action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
+
+    if (getActionState(actionInfo) != expectedState) revert InvalidActionState(expectedState);
 
     bool isApproval = expectedState == ActionState.Active;
-    bool alreadyCast = isApproval ? approvals[actionId][policyholder] : disapprovals[actionId][policyholder];
+    bool alreadyCast = isApproval ? approvals[actionInfo.id][policyholder] : disapprovals[actionInfo.id][policyholder];
     if (alreadyCast) revert DuplicateCast();
 
-    action = actions[actionId];
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    (bool isEnabled, bytes32 reason) = isApproval
-      ? action.strategy.isApprovalEnabled(actionId, msg.sender)
-      : action.strategy.isDisapprovalEnabled(actionId, msg.sender);
-    if (!isEnabled) revert ProhibitedByStrategy(reason);
+    isApproval
+      ? actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender)
+      : actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender);
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
-  function _newCastCount(uint256 currentCount, uint256 quantity) internal pure returns (uint256) {
-    if (currentCount == type(uint256).max || quantity == type(uint256).max) return type(uint256).max;
+  function _newCastCount(uint128 currentCount, uint128 quantity) internal pure returns (uint128) {
+    if (currentCount == type(uint128).max || quantity == type(uint128).max) return type(uint128).max;
     return currentCount + quantity;
   }
 
@@ -617,11 +702,33 @@ contract LlamaCore is Initializable {
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(abi.encode(accounts[i])));
+      bytes32 salt = bytes32(keccak256(abi.encodePacked(accounts[i])));
       LlamaAccount account = LlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
       account.initialize(accounts[i]);
       emit AccountCreated(account, accounts[i]);
     }
+  }
+
+  function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
+    return _infoHash(
+      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+    );
+  }
+
+  function _infoHash(
+    uint256 id,
+    address creator,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data
+  ) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
+  }
+
+  function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
+    bytes32 expectedHash = _infoHash(actionInfo);
+    if (actualHash != expectedHash) revert InfoHashMismatch();
   }
 
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
@@ -631,6 +738,20 @@ contract LlamaCore is Initializable {
     }
   }
 
+  /// @dev Reverts if `n` does not fit in a uint64.
+  function _toUint64(uint256 n) internal pure returns (uint64) {
+    if (n > type(uint64).max) revert UnsafeCast(n);
+    return uint64(n);
+  }
+
+  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
+  function _readSlot0() internal view returns (bytes32 slot0) {
+    assembly {
+      slot0 := sload(0)
+    }
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;

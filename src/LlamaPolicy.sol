@@ -206,27 +206,27 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the quantity of the `role` for the given `policyholder`. The returned value is the
   /// quantity of the role when approving/disapproving (regardless of strategy).
-  function getQuantity(address policyholder, uint8 role) external view returns (uint256) {
+  function getQuantity(address policyholder, uint8 role) external view returns (uint128) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `policyholder` at `timestamp`. The returned
   /// value is the quantity of the role when approving/disapproving (regardless of strategy).
-  function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint256) {
+  function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the total number of `role` holders.
-  /// @dev The value returned by this method must equal the sum of the quantity of the role
+  /// @dev The value returned by this method must equal the total number of holders of this role
   /// across all policyholders at that timestamp.
-  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint256) {
+  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint128) {
     return roleSupply[role].numberOfHolders;
   }
 
   /// @notice Returns the sum of `quantity` across all `role` holders.
-  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint256) {
+  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint128) {
     return roleSupply[role].totalQuantity;
   }
 
@@ -260,7 +260,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return quantity > 0 && block.timestamp > expiration;
   }
 
-  function roleExpiration(address policyholder, uint8 role) external view returns (uint256) {
+  function roleExpiration(address policyholder, uint8 role) external view returns (uint64) {
     (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return expiration;
   }

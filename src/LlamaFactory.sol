@@ -187,10 +187,10 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions
   ) internal returns (LlamaCore llamaCore) {
     LlamaPolicy policy =
-      LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encode(name))));
+      LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
 
     policy.setLlama(address(llamaCore));

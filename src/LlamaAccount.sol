@@ -39,6 +39,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   error OnlyLlama();
   error Invalid0xRecipient();
   error FailedExecution(bytes result);
+  error Slot0Changed();
 
   modifier onlyLlama() {
     if (msg.sender != llamaCore) revert OnlyLlama();
@@ -49,11 +50,13 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
+  /// @notice Llama instance.
+  /// @dev We intentionally put this before the `name` so it's packed with the `Initializable`
+  /// storage variables, that way we can only check one slot before and after a delegatecall.
+  address public llamaCore;
+
   /// @notice Name of this Llama Account.
   string public name;
-
-  /// @notice Llama instance.
-  address public llamaCore;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -239,8 +242,28 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
     bool success;
     bytes memory result;
 
-    if (withDelegatecall) (success, result) = target.delegatecall(callData);
-    else (success, result) = target.call{value: msg.value}(callData);
+    if (withDelegatecall) {
+      // Whenever we're executing arbitrary code in the context of this account, we want to ensure
+      // that none of the storage in this contract changes, as this could let someone who sneaks in
+      // a malicious (or buggy) target to take ownership of this contract. Slot 0 contains all
+      // relevant storage variables for security, so we check the value before and after execution
+      // to make sure it's unchanged. The contract name starts in slot 1, but it's not as important
+      // if that's changed (and it can be changed back), so to save gas we don't check the name.
+      // The storage layout of this contract is below:
+      //
+      // | Variable Name | Type    | Slot | Offset | Bytes |
+      // |---------------|---------|------|--------|-------|
+      // | _initialized  | uint8   | 0    | 0      | 1     |
+      // | _initializing | bool    | 0    | 1      | 1     |
+      // | llamaCore     | address | 0    | 2      | 20    |
+      // | name          | string  | 1    | 0      | 32    |
+
+      bytes32 originalStorage = _readSlot0();
+      (success, result) = target.delegatecall(callData);
+      if (originalStorage != _readSlot0()) revert Slot0Changed();
+    } else {
+      (success, result) = target.call{value: msg.value}(callData);
+    }
 
     if (!success) revert FailedExecution(result);
     return result;
@@ -250,6 +273,14 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
+  function _readSlot0() internal view returns (bytes32 slot0) {
+    assembly {
+      slot0 := sload(0)
+    }
+  }
+
+  /// @dev Increments a uint256 without checking for overflow.
   function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {
       return i + 1;

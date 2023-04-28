@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {console2} from "forge-std/Test.sol";
-import {IMailbox} from "./interfaces/IMailbox.sol";
 import {IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 import {TypeCasts} from "./lib/TypeCasts.sol";
 import {LlamaCrosschainRelayer} from "./LlamaCrosschainRelayer.sol";
@@ -16,15 +15,18 @@ contract LlamaCrosschainExecutor is IMessageRecipient {
   error InvalidOriginChain();
   error InvalidSender();
 
-  address private constant HYPERLANE_MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70; // Same across all chains
-  IMailbox private constant mailbox = IMailbox(HYPERLANE_MAILBOX);
-  uint256 private constant originDomain = 1; // Only accept from Mainnet for extra security
+  address private constant MAILBOX = 0x35231d4c2D8B8ADcB5617A638A0c4548684c7C70; // Same for all supported chains
+  uint256 private immutable ORIGIN_DOMAIN;
 
   mapping(uint256 => bool) public executedNonces;
 
+  constructor() {
+    ORIGIN_DOMAIN = block.chainid;
+  }
+
   modifier onlyTrustedInbox(uint32 originChain) {
-    if (originChain != originDomain) revert InvalidOriginChain();
-    if (msg.sender != address(mailbox)) revert InvalidSender();
+    if (originChain != ORIGIN_DOMAIN) revert InvalidOriginChain();
+    if (msg.sender != MAILBOX) revert InvalidSender();
     _;
   }
 
@@ -42,9 +44,9 @@ contract LlamaCrosschainExecutor is IMessageRecipient {
 
     executedNonces[nonce] = true;
 
-    (address target, bytes4 selector, bytes memory targetData) = abi.decode(data, (address, bytes4, bytes));
+    (address target, bytes memory targetData) = abi.decode(data, (address, bytes));
 
-    (bool success, bytes memory returnData) = target.call(abi.encodePacked(selector, targetData));
+    (bool success, bytes memory returnData) = target.call(targetData);
 
     if (!success) revert CallFailure(returnData);
 
