@@ -194,13 +194,13 @@ contract Run is DeployLlamaTest {
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
-  function test_DeploysPolicyTokenURI() public {
-    assertEq(address(policyTokenURI), address(0));
+  function test_DeploysPolicyMetadata() public {
+    assertEq(address(policyMetadata), address(0));
 
     DeployLlama.run();
 
-    assertNotEq(address(policyTokenURI), address(0));
-    assertNotEq(policyTokenURI.tokenURI("MyLlama", "MTX", 42, "teal", "https://logo.com"), "");
+    assertNotEq(address(policyMetadata), address(0));
+    assertNotEq(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com"), "");
   }
 
   function test_DeploysLens() public {
