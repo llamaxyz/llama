@@ -844,9 +844,13 @@ contract PolicyMetadata is LlamaPolicyTest {
 
     string memory description1 =
       LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
-    string memory description = LibString.concat(
-      description1,
-      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz to learn more."
+    string memory description = string(
+      abi.encodePacked(
+        description1,
+        ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+        policyholder,
+        " to view their profile page."
+      )
     );
     assertEq(metadata.description, description);
 

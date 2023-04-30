@@ -73,7 +73,9 @@ contract LlamaPolicyMetadata {
             name,
             ' Member", "description": "This NFT represents membership in the Llama organization: ',
             name,
-            '. The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
+            ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+            policyholder,
+            ' to view their profile page.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )

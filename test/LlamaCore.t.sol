@@ -36,7 +36,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     uint256 id,
     address indexed creator,
     ILlamaStrategy indexed strategy,
-    address target,
+    address indexed target,
     uint256 value,
     bytes data,
     string description
