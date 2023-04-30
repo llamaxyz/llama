@@ -15,11 +15,10 @@ contract LlamaPolicyMetadata {
 
   /// @notice Returns the token URI for a given llama policyholder.
   /// @param name The name of the llama instance.
-  /// @param symbol The symbol of the llama instance.
   /// @param tokenId The token ID of the llama policyholder.
   /// @param color The color of the llama instance.
   /// @param logo The logo of the llama instance.
-  function tokenURI(string memory name, string memory symbol, uint256 tokenId, string memory color, string memory logo)
+  function tokenURI(string memory name, uint256 tokenId, string memory color, string memory logo)
     external
     pure
     returns (string memory)
@@ -70,11 +69,11 @@ contract LlamaPolicyMetadata {
       bytes(
         string(
           abi.encodePacked(
-            '{"name": "Llama Policy ID: ',
-            policyholder,
-            '", "description": "This policy represents membership in the Llama organization: ',
+            '{"name": "',
             name,
-            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
+            ' Member", "description": "This NFT represents membership in the Llama organization: ',
+            name,
+            '. The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )
@@ -88,12 +87,12 @@ contract LlamaPolicyMetadata {
 
   function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
-    parts[0] = '{ "name": "Llama Members: ';
+    parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = name;
     parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
     parts[3] = name;
     parts[4] =
-      '. Go to https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json =
       Base64.encode(bytes(string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4]))));
     return string(abi.encodePacked("data:application/json;base64,", json));

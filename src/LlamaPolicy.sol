@@ -286,7 +286,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return factory.tokenURI(LlamaCore(llamaCore), name, symbol, tokenId);
+    return factory.tokenURI(LlamaCore(llamaCore), name, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.

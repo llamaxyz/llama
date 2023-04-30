@@ -29,8 +29,8 @@ contract DeployLlama is Script {
 
   // Core Protocol.
   LlamaFactory factory;
-  LlamaPolicyMetadata policyTokenURI;
-  LlamaPolicyMetadataParamRegistry policyTokenURIParamRegistry;
+  LlamaPolicyMetadata policyMetadata;
+  LlamaPolicyMetadataParamRegistry policyMetadataParamRegistry;
   LlamaLens lens;
 
   function run() public {
@@ -57,8 +57,8 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
-    policyTokenURI = new LlamaPolicyMetadata();
-    DeployUtils.print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyTokenURI))));
+    policyMetadata = new LlamaPolicyMetadata();
+    DeployUtils.print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyMetadata))));
 
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
@@ -75,7 +75,7 @@ contract DeployLlama is Script {
       relativeStrategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenURI,
+      policyMetadata,
       jsonInput.readString(".rootLlamaName"),
       DeployUtils.readRelativeStrategies(jsonInput),
       jsonInput.readStringArray(".initialAccountNames"),
@@ -85,9 +85,9 @@ contract DeployLlama is Script {
     );
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
-    policyTokenURIParamRegistry = factory.LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY();
+    policyMetadataParamRegistry = factory.LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY();
     DeployUtils.print(
-      string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyTokenURIParamRegistry)))
+      string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyMetadataParamRegistry)))
     );
 
     vm.broadcast();

@@ -187,7 +187,7 @@ contract Initialize is LlamaCoreTest {
       relativeStrategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenURI,
+      policyMetadata,
       "Root Llama",
       strategyConfigs,
       accounts,
