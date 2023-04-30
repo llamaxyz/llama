@@ -839,14 +839,15 @@ contract PolicyMetadata is LlamaPolicyTest {
     Metadata memory metadata = parseMetadata(uri);
     string memory policyholder = LibString.toHexString(uint256(uint160(address(this))));
 
-    string memory name1 = LibString.concat("Llama Policy ID: ", LibString.toString(uint256(uint160(address(this)))));
-    string memory name2 = LibString.concat(" - ", mpPolicy.symbol());
-    string memory name = LibString.concat(name1, name2);
+    string memory name = LibString.concat(mpPolicy.name(), " Member");
     assertEq(metadata.name, name);
 
     string memory description1 =
-      LibString.concat("This policy represents membership in the Llama organization: ", mpPolicy.name());
-    string memory description = LibString.concat(description1, ". Visit https://app.llama.xyz to learn more.");
+      LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
+    string memory description = LibString.concat(
+      description1,
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz to learn more."
+    );
     assertEq(metadata.description, description);
 
     (string memory color, string memory logo) = policyMetadataParamRegistry.getMetadata(mpCore);
@@ -940,10 +941,10 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = name;
-    parts[2] = '", "description": "This collection represents memberships in the Llama organization: ';
+    parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
     parts[3] = name;
     parts[4] =
-      '. Visit https://app.llama.xyz to learn more.", "image":"https://app.llama.xyz/policy-nft/policy.png", "external_link": "https://app.llama.xyz", "banner":"https://app.llama.xyz/policy-nft/banner.png" }';
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json =
       Base64.encode(bytes(string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4]))));
     string memory encodedContractURI = string(abi.encodePacked("data:application/json;base64,", json));

@@ -33,7 +33,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
-    uint256 indexed id,
+    uint256 id,
     address indexed creator,
     ILlamaStrategy indexed strategy,
     address target,
