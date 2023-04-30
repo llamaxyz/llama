@@ -4609,7 +4609,7 @@
       },
       {
         "type": "node",
-        "name": "policyTokenURI = new LlamaPolicyMetadata()",
+        "name": "policyMetadata = new LlamaPolicyMetadata()",
         "source_mapping": {
           "start": 2701,
           "length": 43,
@@ -4669,11 +4669,11 @@
             }
           }
         },
-        "additional_fields": { "underlying_type": "variables_written", "variable_name": "policyTokenURI" }
+        "additional_fields": { "underlying_type": "variables_written", "variable_name": "policyMetadata" }
       }
     ],
-    "description": "Reentrancy in DeployLlama.run() (script/DeployLlama.s.sol#62-109):\n\tExternal calls:\n\t- vm.broadcast() (script/DeployLlama.s.sol#65)\n\t- vm.broadcast() (script/DeployLlama.s.sol#69)\n\t- vm.broadcast() (script/DeployLlama.s.sol#73)\n\t- vm.broadcast() (script/DeployLlama.s.sol#77)\n\t- vm.broadcast() (script/DeployLlama.s.sol#81)\n\tState variables written after the call(s):\n\t- policyTokenURI = new LlamaPolicyMetadata() (script/DeployLlama.s.sol#82)\n",
-    "markdown": "Reentrancy in [DeployLlama.run()](script/DeployLlama.s.sol#L62-L109):\n\tExternal calls:\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L65)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L69)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L73)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L77)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L81)\n\tState variables written after the call(s):\n\t- [policyTokenURI = new LlamaPolicyMetadata()](script/DeployLlama.s.sol#L82)\n",
+    "description": "Reentrancy in DeployLlama.run() (script/DeployLlama.s.sol#62-109):\n\tExternal calls:\n\t- vm.broadcast() (script/DeployLlama.s.sol#65)\n\t- vm.broadcast() (script/DeployLlama.s.sol#69)\n\t- vm.broadcast() (script/DeployLlama.s.sol#73)\n\t- vm.broadcast() (script/DeployLlama.s.sol#77)\n\t- vm.broadcast() (script/DeployLlama.s.sol#81)\n\tState variables written after the call(s):\n\t- policyMetadata = new LlamaPolicyMetadata() (script/DeployLlama.s.sol#82)\n",
+    "markdown": "Reentrancy in [DeployLlama.run()](script/DeployLlama.s.sol#L62-L109):\n\tExternal calls:\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L65)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L69)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L73)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L77)\n\t- [vm.broadcast()](script/DeployLlama.s.sol#L81)\n\tState variables written after the call(s):\n\t- [policyMetadata = new LlamaPolicyMetadata()](script/DeployLlama.s.sol#L82)\n",
     "first_markdown_element": "script/DeployLlama.s.sol#L62-L109",
     "id": "8b23ee8255d9f5788ab5062f2c37d8735594e26fc8c3dc26170e2a5e0c373a41",
     "check": "reentrancy-benign",

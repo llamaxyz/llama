@@ -57,7 +57,7 @@ contract LlamaPolicyMetadataParamRegistry {
 
   /// @notice Sets the color code for SVG of a Llama Instance.
   /// @param llamaCore The Llama Instance.
-  /// @param _color The color code.
+  /// @param _color The color code as a hex value (eg. #00FF00)
   function setColor(LlamaCore llamaCore, string memory _color) external onlyLlama(llamaCore) {
     color[llamaCore] = _color;
     emit ColorSet(llamaCore, _color);

@@ -33,10 +33,10 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
-    uint256 indexed id,
+    uint256 id,
     address indexed creator,
     ILlamaStrategy indexed strategy,
-    address target,
+    address indexed target,
     uint256 value,
     bytes data,
     string description
@@ -187,7 +187,7 @@ contract Initialize is LlamaCoreTest {
       relativeStrategyLogic,
       accountLogic,
       policyLogic,
-      policyTokenURI,
+      policyMetadata,
       "Root Llama",
       strategyConfigs,
       accounts,

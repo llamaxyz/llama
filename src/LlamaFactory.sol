@@ -169,16 +169,11 @@ contract LlamaFactory {
 
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama system.
-  /// @param symbol The symbol of the Llama system.
   /// @param tokenId The token ID of the Llama policyholder.
   /// @return The token URI for the given Llama policyholder.
-  function tokenURI(LlamaCore llamaCore, string memory name, string memory symbol, uint256 tokenId)
-    external
-    view
-    returns (string memory)
-  {
+  function tokenURI(LlamaCore llamaCore, string memory name, uint256 tokenId) external view returns (string memory) {
     (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaCore);
-    return llamaPolicyMetadata.tokenURI(name, symbol, tokenId, color, logo);
+    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
