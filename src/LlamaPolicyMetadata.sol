@@ -71,12 +71,13 @@ contract LlamaPolicyMetadata {
         string(
           abi.encodePacked(
             '{"name": "Llama Policy ID: ',
-            LibString.toString(tokenId),
-            " - ",
-            symbol,
+            policyholder,
             '", "description": "This policy represents membership in the Llama organization: ',
             name,
-            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
+            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz',
+            '"attributes": [{ "display_type": "date", "trait_type": "Expiration Date", "value": ',
+            1_546_360_800,
+            ',}] "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )

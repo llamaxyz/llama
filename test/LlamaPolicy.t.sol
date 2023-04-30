@@ -81,7 +81,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_SetsNameAndSymbol() public {
     assertEq(mpPolicy.name(), "Mock Protocol Llama");
-    assertEq(mpPolicy.symbol(), "V_Moc");
+    assertEq(mpPolicy.symbol(), "LL-MOCK-PROTOCOL-LLAMA");
   }
 
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {

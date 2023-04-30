@@ -105,7 +105,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions
   ) external initializer {
-    __initializeERC721MinimalProxy(_name, string.concat("V_", LibString.slice(_name, 0, 3)));
+    __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     factory = LlamaFactory(msg.sender);
     for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
       _initializeRole(roleDescriptions[i]);
