@@ -74,10 +74,7 @@ contract LlamaPolicyMetadata {
             policyholder,
             '", "description": "This policy represents membership in the Llama organization: ',
             name,
-            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz',
-            '"attributes": [{ "display_type": "date", "trait_type": "Expiration Date", "value": ',
-            1_546_360_800,
-            ',}] "image": "data:image/svg+xml;base64,',
+            '. Visit https://app.llama.xyz to learn more.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(output)),
             '"}'
           )
@@ -91,12 +88,12 @@ contract LlamaPolicyMetadata {
 
   function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
-    parts[0] = '{ "name": "Llama Policies: ';
+    parts[0] = '{ "name": "Llama Members: ';
     parts[1] = name;
-    parts[2] = '", "description": "This collection represents memberships in the Llama organization: ';
+    parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
     parts[3] = name;
     parts[4] =
-      '. Visit https://app.llama.xyz to learn more.", "image":"https://app.llama.xyz/policy-nft/policy.png", "external_link": "https://app.llama.xyz", "banner":"https://app.llama.xyz/policy-nft/banner.png" }';
+      '. Go to https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json =
       Base64.encode(bytes(string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4]))));
     return string(abi.encodePacked("data:application/json;base64,", json));
