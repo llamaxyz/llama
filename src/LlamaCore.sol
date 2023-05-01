@@ -26,15 +26,11 @@ contract LlamaCore is Initializable {
   error InfoHashMismatch();
   error InsufficientMsgValue();
   error InvalidActionState(ActionState expected);
-  error InvalidCancelation();
   error InvalidPolicyholder();
   error InvalidSignature();
   error InvalidStrategy();
   error OnlyLlama();
   error PolicyholderDoesNotHavePermission();
-  error ProhibitedByActionGuard(bytes32 reason);
-  error ProhibitedByStrategy(bytes32 reason);
-  error RoleHasZeroSupply(uint8 role);
   error Slot0Changed();
   error TimelockNotFinished();
   error UnauthorizedStrategyLogic();
