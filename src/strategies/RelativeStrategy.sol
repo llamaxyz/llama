@@ -25,7 +25,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
-  error DisapprovalThresholdNotMet();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);

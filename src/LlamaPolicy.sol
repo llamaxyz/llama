@@ -24,9 +24,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   error AllHoldersRole();
   error AlreadyInitialized();
-  error CallReverted(uint256 index, bytes revertData);
   error InvalidRoleHolderInput();
-  error MissingAdmin();
   error NonTransferableToken();
   error OnlyLlama();
   error RoleNotInitialized(uint8 role);
