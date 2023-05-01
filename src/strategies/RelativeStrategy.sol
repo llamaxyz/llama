@@ -212,7 +212,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
     // Check 1.
     ActionState state = llamaCore.getActionState(actionInfo);
-    console2.log("state", uint8(state));
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
