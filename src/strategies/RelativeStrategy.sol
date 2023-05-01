@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {console2} from "forge-std/console2.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
@@ -25,7 +24,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
-  error DisapprovalThresholdNotMet();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
@@ -212,7 +210,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
     // Check 1.
     ActionState state = llamaCore.getActionState(actionInfo);
-    console2.log("state", uint8(state));
     if (
       state == ActionState.Executed || state == ActionState.Canceled || state == ActionState.Expired
         || state == ActionState.Failed
