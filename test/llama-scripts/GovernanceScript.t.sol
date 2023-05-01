@@ -4,31 +4,11 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
-
-import {MockActionGuard} from "test/mock/MockActionGuard.sol";
-import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
-import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutInitialization.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
-
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionState} from "src/lib/Enums.sol";
-import {
-  Action,
-  ActionInfo,
-  RelativeStrategyConfig,
-  PermissionData,
-  RoleHolderData,
-  RolePermissionData
-} from "src/lib/Structs.sol";
+import {ActionInfo} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract GovernanceScriptTest is LlamaTestSetup {
