@@ -11,7 +11,7 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 /// `address(this)`.
 abstract contract SingleUseScript {
   bytes32 public immutable SELF_PERMISSION_ID;
-  address private immutable SELF;
+  address public immutable SELF;
   uint8 public immutable ROLE;
 
   constructor(ILlamaStrategy strategy, uint8 role, bytes4 selector) {
