@@ -20,8 +20,10 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error ApprovalQuantityZero(address policyholder, uint8 role);
   error CannotUseCoreOrPolicy();
   error DuplicateCast();
+  error DisapprovalQuantityZero(address policyholder, uint8 role);
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
   error InsufficientMsgValue();
@@ -641,6 +643,7 @@ contract LlamaCore is Initializable {
     Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
 
     uint128 quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+    if (quantity == 0) revert ApprovalQuantityZero(policyholder, role);
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
     emit ApprovalCast(actionInfo.id, policyholder, quantity, reason);
@@ -652,6 +655,7 @@ contract LlamaCore is Initializable {
     Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
     uint128 quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+    if (quantity == 0) revert DisapprovalQuantityZero(policyholder, role);
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
     emit DisapprovalCast(actionInfo.id, policyholder, quantity, reason);
