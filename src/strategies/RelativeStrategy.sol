@@ -188,6 +188,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     view
     returns (uint128)
   {
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
   }
