@@ -1028,6 +1028,34 @@ contract GetDisapprovalQuantityAt is LlamaStrategyTest {
       0 // the account should not have a quantity
     );
   }
+
+  function testFuzz_returnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+    _role = uint8(bound(_role, 1, 8)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
+      // roles
+    vm.assume(_role != uint8(Roles.TestRole1));
+    vm.assume(_policyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
+    _quantity = uint128(bound(_quantity, 1, type(uint128).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+
+    ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(0xdeadbeef),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRoleHolder(_role, _policyHolder, _quantity, type(uint64).max);
+
+    assertEq(newStrategy.getDisapprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
+  }
 }
 
 contract RelativeStrategyHarness is RelativeStrategy {
