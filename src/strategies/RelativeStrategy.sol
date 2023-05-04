@@ -170,7 +170,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
-    // if (role != approvalRole) return 0;
+    if (role != approvalRole && !forceApprovalRole[role]) return 0;
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
   }
