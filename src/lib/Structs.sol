@@ -28,6 +28,7 @@ struct PermissionData {
 
 struct ActionInfo {
   uint256 id; // ID of the action.
+  uint8 role; // Role the action was created under.
   address creator; // Address that created the action.
   ILlamaStrategy strategy; // Strategy used to govern the action.
   address target; // Contract being called by an action.
@@ -40,6 +41,7 @@ struct Action {
   // make action creation cheaper. The hash is computed by taking the keccak256 hash of the
   // concatenation of the each field in the `ActionInfo` struct.
   bytes32 infoHash;
+  bool isScript; // Type of action.
   bool executed; // Has action executed.
   bool canceled; // Is action canceled.
   uint64 creationTime; // The timestamp when action was created (used for policy snapshots).

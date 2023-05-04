@@ -302,7 +302,16 @@ contract LlamaCore is Initializable {
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[actionInfo.target]) {
+    if (action.isScript) {
+      // For scripts, we always append the hidden data, and if a script doesn't need it they can
+      // choose to ignore it. To simplify the decoding of the data for scripts, we only include the
+      // bare minimum of what's needed. If we want, we can add other fixed-length data (e.g. action
+      // creator address, value, etc.) to the hidden data. Adding the full calldata isn't ideal
+      // since it's variable length and would make decoding more complicated, especially if a script
+      // takes variable length inputs (e.g. arrays).
+      bytes memory data =
+        bytes.concat(actionInfo.data, abi.encode(actionInfo.role, bytes4(actionInfo.data), actionInfo.strategy));
+
       // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
       // none of the storage in this contract changes in unexpected ways, as this could let someone
       // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
@@ -330,7 +339,7 @@ contract LlamaCore is Initializable {
       // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
 
       bytes32 originalStorage = _readSlot0();
-      (success, result) = actionInfo.target.delegatecall(actionInfo.data);
+      (success, result) = actionInfo.target.delegatecall(data);
       if (originalStorage != _readSlot0()) revert Slot0Changed();
     } else {
       (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
@@ -590,6 +599,7 @@ contract LlamaCore is Initializable {
     // Save action.
     Action storage newAction = actions[actionId];
     newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
+    newAction.isScript = authorizedScripts[target] ? true : false;
     newAction.creationTime = _toUint64(block.timestamp);
     actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 

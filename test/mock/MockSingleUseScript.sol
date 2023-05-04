@@ -12,7 +12,7 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 /// @dev This script is meant to be delegate called by the core contract, which informs our use of `SELF` and
 /// `address(this)`.
 contract MockSingleUseScript is SingleUseScript {
-  constructor(ILlamaStrategy strategy, uint8 role, bytes4 selector) SingleUseScript(strategy, role, selector) {}
+  constructor(ILlamaStrategy strategy, uint8 role, bytes4 selector) SingleUseScript() {}
 
   function pauseMockProtocol(MockProtocol mp, bool isPaused) external unauthorizeAfterRun {
     mp.pause(isPaused);
