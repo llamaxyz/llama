@@ -20,8 +20,8 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error CannotUseCoreOrPolicy();
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
+  error CannotUseCoreOrPolicy();
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
