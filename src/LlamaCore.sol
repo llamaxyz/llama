@@ -729,7 +729,7 @@ contract LlamaCore is Initializable {
     return _infoHash(
       actionInfo.id,
       actionInfo.creator,
-      actionInfo.role,
+      actionInfo.creatorRole,
       actionInfo.strategy,
       actionInfo.target,
       actionInfo.value,

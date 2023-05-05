@@ -175,7 +175,7 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
   /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
     // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    // if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.role);
+    // if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -191,7 +191,7 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     // if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
     // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.role);
+    // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
 
   /// @inheritdoc ILlamaStrategy

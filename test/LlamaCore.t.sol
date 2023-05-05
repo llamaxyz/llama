@@ -2042,7 +2042,7 @@ contract InfoHash is LlamaCoreTest {
     bytes32 infoHash2 = llamaCoreHarness.infoHash_exposed(
       actionInfo.id,
       actionInfo.creator,
-      actionInfo.role,
+      actionInfo.creatorRole,
       actionInfo.strategy,
       actionInfo.target,
       actionInfo.value,
