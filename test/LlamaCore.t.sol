@@ -1113,7 +1113,7 @@ contract CastApproval is LlamaCoreTest {
 
     vm.prank(actionCreatorAaron);
     vm.expectRevert(
-      abi.encodeWithSelector(LlamaCore.ApprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
+      abi.encodeWithSelector(LlamaCore.CannotCastWithZeroQuantity.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
     );
     mpCore.castApproval(actionInfo, uint8(Roles.ActionCreator));
   }
@@ -1293,7 +1293,7 @@ contract CastDisapproval is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
 
     vm.expectRevert(
-      abi.encodeWithSelector(LlamaCore.DisapprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
+      abi.encodeWithSelector(LlamaCore.CannotCastWithZeroQuantity.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
     );
     vm.prank(actionCreatorAaron);
     mpCore.castDisapproval(actionInfo, uint8(Roles.ActionCreator));
