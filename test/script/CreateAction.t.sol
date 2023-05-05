@@ -20,7 +20,7 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-import {Roles} from "../utils/LlamaTestSetup.sol";
+import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 contract CreateActionTest is Test, DeployLlama, CreateAction {
   LlamaCore rootLlama;
