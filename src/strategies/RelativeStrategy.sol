@@ -179,7 +179,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
+  function isDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }

@@ -177,7 +177,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
