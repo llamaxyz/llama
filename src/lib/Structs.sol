@@ -29,7 +29,7 @@ struct PermissionData {
 struct ActionInfo {
   uint256 id; // ID of the action.
   address creator; // Address that created the action.
-  uint8 creatorRole; // The Role that created the action.
+  uint8 creatorRole; // The role that created the action.
   ILlamaStrategy strategy; // Strategy used to govern the action.
   address target; // Contract being called by an action.
   uint256 value; // Value in wei to be sent when the action is executed.
