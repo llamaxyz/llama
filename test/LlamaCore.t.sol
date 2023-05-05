@@ -1289,10 +1289,10 @@ contract CastDisapproval is LlamaCoreTest {
 
     _queueAction(actionInfo);
 
-    vm.prank(actionCreatorAaron);
     vm.expectRevert(
       abi.encodeWithSelector(LlamaCore.DisapprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
     );
+    vm.prank(actionCreatorAaron);
     mpCore.castDisapproval(actionInfo, uint8(Roles.ActionCreator));
   }
 }
