@@ -36,7 +36,8 @@ interface ILlamaStrategy {
 
   // -------- When Casting Approval --------
 
-  /// @notice Reverts if approvals are not allowed with this strategy for the given policyholder.
+  /// @notice Reverts if approvals are not allowed with this strategy for the given `policyholder` when approving with
+  /// `role`.
   function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
 
   /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
@@ -48,7 +49,8 @@ interface ILlamaStrategy {
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Reverts if disapprovals are not allowed with this strategy for the given policyholder.
+  /// @notice Reverts if disapprovals are not allowed with this strategy for the given `policyholder` when disapproving
+  /// with `role`.
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
 
   /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
