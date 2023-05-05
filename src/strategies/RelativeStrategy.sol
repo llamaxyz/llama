@@ -166,7 +166,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.role);
-    // Approvals are always enabled for this strategy.
   }
 
   /// @inheritdoc ILlamaStrategy

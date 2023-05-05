@@ -28,6 +28,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   error InsufficientApprovalQuantity();
   error InsufficientDisapprovalQuantity();
   error InvalidMinApprovals(uint256 minApprovals);
+  error InvalidRole(uint8 role);
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
@@ -174,8 +175,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.role);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -191,6 +193,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.role);
   }
 
   /// @inheritdoc ILlamaStrategy
