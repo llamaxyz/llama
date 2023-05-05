@@ -11,10 +11,10 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error OnlyLlama();
+  error OnlyLlamaOrRootLlama();
 
-  modifier onlyLlama(LlamaCore llamaCore) {
-    if ((msg.sender != address(ROOT_LLAMA)) && (msg.sender != address(llamaCore))) revert OnlyLlama();
+  modifier onlyLlamaOrRootLlama(LlamaCore llamaCore) {
+    if ((msg.sender != address(ROOT_LLAMA)) && (msg.sender != address(llamaCore))) revert OnlyLlamaOrRootLlama();
     _;
   }
 
@@ -58,7 +58,7 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the color code for SVG of a Llama Instance.
   /// @param llamaCore The Llama Instance.
   /// @param _color The color code as a hex value (eg. #00FF00)
-  function setColor(LlamaCore llamaCore, string memory _color) external onlyLlama(llamaCore) {
+  function setColor(LlamaCore llamaCore, string memory _color) external onlyLlamaOrRootLlama(llamaCore) {
     color[llamaCore] = _color;
     emit ColorSet(llamaCore, _color);
   }
@@ -66,7 +66,7 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the logo for SVG of a Llama Instance.
   /// @param llamaCore The Llama Instance.
   /// @param _logo The logo.
-  function setLogo(LlamaCore llamaCore, string memory _logo) external onlyLlama(llamaCore) {
+  function setLogo(LlamaCore llamaCore, string memory _logo) external onlyLlamaOrRootLlama(llamaCore) {
     logo[llamaCore] = _logo;
     emit LogoSet(llamaCore, _logo);
   }
