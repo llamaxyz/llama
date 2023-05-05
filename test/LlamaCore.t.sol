@@ -1287,7 +1287,10 @@ contract CastDisapproval is LlamaCoreTest {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
-    _queueAction(actionInfo);
+    uint256 executionTime = block.timestamp + toAbsoluteStrategy(newStrategy).queuingPeriod();
+    vm.expectEmit();
+    emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
+    mpCore.queueAction(actionInfo);
 
     vm.expectRevert(
       abi.encodeWithSelector(LlamaCore.DisapprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
