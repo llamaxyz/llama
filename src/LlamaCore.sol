@@ -681,8 +681,8 @@ contract LlamaCore is Initializable {
     if (!hasRole) revert InvalidPolicyholder();
 
     isApproval
-      ? actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender)
-      : actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender);
+      ? actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender, role)
+      : actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender, role);
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.

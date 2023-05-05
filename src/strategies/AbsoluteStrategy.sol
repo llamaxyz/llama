@@ -174,7 +174,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external pure {
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
   }
 
@@ -188,7 +188,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder) external view {
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
   }

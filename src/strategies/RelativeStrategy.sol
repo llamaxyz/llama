@@ -21,10 +21,10 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
-
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
+  error InvalidRole(uint8 role);
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
@@ -164,7 +164,8 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata, address) external pure {
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.role);
     // Approvals are always enabled for this strategy.
   }
 
@@ -178,8 +179,9 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata, address) external view {
+  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.role);
   }
 
   /// @inheritdoc ILlamaStrategy
