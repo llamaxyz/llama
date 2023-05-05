@@ -1029,7 +1029,7 @@ contract GetDisapprovalQuantityAt is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_returnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
     _role = uint8(bound(_role, 1, 8)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
       // roles
     vm.assume(_role != uint8(Roles.TestRole1));
