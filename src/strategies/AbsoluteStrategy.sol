@@ -193,7 +193,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
