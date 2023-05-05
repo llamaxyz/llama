@@ -7,6 +7,7 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
+import {MockPoorlyImplementedAbsoluteStrategy} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -17,6 +18,7 @@ import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {
+  AbsoluteStrategyConfig,
   Action,
   ActionInfo,
   RelativeStrategyConfig,
@@ -154,6 +156,42 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
       forceApprovalRoles: new uint8[](0),
       forceDisapprovalRoles: new uint8[](0)
     });
+  }
+
+  function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
+    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedAbsoluteStrategy();
+
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovals: 2,
+      minDisapprovals: 2,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Approver),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(mockStrategyLogic);
+
+    vm.prank(address(mpCore));
+
+    mpCore.createAndAuthorizeStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(mockStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, newStrategy));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 }
 
@@ -1064,6 +1102,15 @@ contract CastApproval is LlamaCoreTest {
   }
 
   function test_RevertIf_NoQuantity() public {
+    ILlamaStrategy newStrategy = deployMockPoorStrategyAndCreatePermission();
+
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+
     vm.prank(actionCreatorAaron);
     vm.expectRevert(
       abi.encodeWithSelector(LlamaCore.ApprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
@@ -1228,7 +1275,20 @@ contract CastDisapproval is LlamaCoreTest {
   }
 
   function test_RevertIf_NoQuantity() public {
-    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    ILlamaStrategy newStrategy = deployMockPoorStrategyAndCreatePermission();
+
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    _queueAction(actionInfo);
+
     vm.prank(actionCreatorAaron);
     vm.expectRevert(
       abi.encodeWithSelector(LlamaCore.DisapprovalQuantityZero.selector, actionCreatorAaron, uint8(Roles.ActionCreator))
