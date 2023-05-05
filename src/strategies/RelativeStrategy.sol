@@ -166,7 +166,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isApprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
-    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -181,7 +181,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address, uint8 role) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
-    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
