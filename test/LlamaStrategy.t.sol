@@ -246,7 +246,8 @@ contract LlamaStrategyTest is LlamaTestSetup {
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
 
-    actionInfo = ActionInfo(actionId, actionCreatorAaron, testStrategy, address(mockProtocol), 0, data);
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
 
     vm.warp(block.timestamp + 1);
   }
@@ -1150,7 +1151,13 @@ contract ValidateActionCreation is LlamaStrategyTest {
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
     ActionInfo memory actionInfo = ActionInfo(
-      actionId, address(this), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      actionId,
+      address(this),
+      uint8(Roles.TestRole1),
+      testStrategy,
+      address(mockProtocol),
+      0,
+      abi.encodeCall(MockProtocol.pause, (true))
     );
 
     vm.warp(block.timestamp + 1);

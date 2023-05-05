@@ -215,8 +215,9 @@ contract Aggregate is GovernanceScriptTest {
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
 
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
 
@@ -262,8 +263,9 @@ contract InitializeRoles is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     for (uint256 i = 0; i < descriptions.length; i++) {
@@ -290,8 +292,9 @@ contract SetRoleHolders is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     for (uint256 i = 0; i < roleHolders.length; i++) {
@@ -322,8 +325,9 @@ contract SetRolePermissions is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     for (uint256 i = 0; i < rolePermissions.length; i++) {
@@ -356,8 +360,9 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(REVOKE_EXPIRED_ROLES_SELECTOR, expiredRoles);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     for (uint256 i = 0; i < roles.length; i++) {
@@ -382,8 +387,9 @@ contract RevokePolicies is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     vm.expectEmit();
@@ -397,8 +403,9 @@ contract RevokePolicies is GovernanceScriptTest {
     bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     vm.expectEmit();
@@ -416,8 +423,9 @@ contract UpdateRoleDescriptions is GovernanceScriptTest {
     vm.prank(actionCreatorAaron);
     bytes memory data = abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTIONS_SELECTOR, roleDescriptions);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, mpStrategy2, address(governanceScript), 0, data);
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
     _approveAction(actionInfo);
     for (uint256 i = 0; i < roleDescriptions.length; i++) {
       vm.expectEmit();

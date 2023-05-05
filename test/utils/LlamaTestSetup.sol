@@ -174,6 +174,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     ActionInfo memory deployActionInfo = ActionInfo(
       deployActionId,
       LLAMA_INSTANCE_DEPLOYER, // creator
+      uint8(Roles.ActionCreator), // role
       ILlamaStrategy(createActionScriptInput.readAddress(".rootLlamaActionCreationStrategy")),
       address(factory), // target
       0, // value

@@ -20,6 +20,8 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
+import {Roles} from "../utils/LlamaTestSetup.sol";
+
 contract CreateActionTest is Test, DeployLlama, CreateAction {
   LlamaCore rootLlama;
 
@@ -45,6 +47,7 @@ contract Run is CreateActionTest {
     return ActionInfo(
       deployActionId,
       LLAMA_INSTANCE_DEPLOYER, // creator
+      uint8(Roles.ActionCreator), // role
       ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
       address(factory), // target
       uint256(0), // value
@@ -68,6 +71,7 @@ contract Run is CreateActionTest {
       abi.encodePacked(
         deployActionId,
         LLAMA_INSTANCE_DEPLOYER, // creator
+        uint8(Roles.ActionCreator), // role
         ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
         address(factory), // target
         uint256(0), // value

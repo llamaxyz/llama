@@ -583,7 +583,7 @@ contract LlamaCore is Initializable {
     // Validate action creation.
     actionId = actionsCount;
 
-    ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, strategy, target, value, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
     IActionGuard guard = actionGuard[target][bytes4(data)];
@@ -591,7 +591,7 @@ contract LlamaCore is Initializable {
 
     // Save action.
     Action storage newAction = actions[actionId];
-    newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
+    newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
     newAction.creationTime = _toUint64(block.timestamp);
     actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
@@ -727,19 +727,26 @@ contract LlamaCore is Initializable {
 
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
-      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+      actionInfo.id,
+      actionInfo.creator,
+      actionInfo.role,
+      actionInfo.strategy,
+      actionInfo.target,
+      actionInfo.value,
+      actionInfo.data
     );
   }
 
   function _infoHash(
     uint256 id,
     address creator,
+    uint8 role,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data
   ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
+    return keccak256(abi.encodePacked(id, creator, role, strategy, target, value, data));
   }
 
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
