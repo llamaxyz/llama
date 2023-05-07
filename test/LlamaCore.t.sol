@@ -594,6 +594,36 @@ contract CreateAction is LlamaCoreTest {
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
   }
+
+  function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
+    PermissionData memory permissionData =
+      PermissionData(scriptAddress, bytes4(data), mpStrategy1);
+
+    vm.prank(address(mpCore));
+    mpCore.authorizeScript(scriptAddress, true);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(scriptAddress), 0, data);
+    Action memory action = mpCore.getAction(actionId);
+
+    assertEq(action.isScript, true);
+  }
+
+  function testFuzz_CreatesAnActionWithNonScriptAsTarget(address nonScriptAddress) public {
+    PermissionData memory permissionData = PermissionData(nonScriptAddress, bytes4(data), mpStrategy1);
+
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(nonScriptAddress), 0, data);
+    Action memory action = mpCore.getAction(actionId);
+
+    assertEq(action.isScript, false);
+  }
 }
 
 contract CreateActionBySig is LlamaCoreTest {
