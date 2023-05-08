@@ -193,6 +193,64 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
+
+  function deployAbsoluteStrategy(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint128 _minApprovals,
+    uint128 _minDisapprovals,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovals: _minApprovals,
+      minDisapprovals: _minDisapprovals,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+
+    vm.prank(address(mpCore));
+
+    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    vm.warp(block.timestamp + 1);
+  }
 }
 
 contract Setup is LlamaCoreTest {
@@ -1203,6 +1261,26 @@ contract CastApprovalBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionInfo, (v + 1), r, s);
+  }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    vm.prank(actionCreatorAaron);
+    castApprovalBySig(actionInfo, v, r, s);
   }
 }
 
