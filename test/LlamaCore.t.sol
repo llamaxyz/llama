@@ -1264,6 +1264,7 @@ contract CastApprovalBySig is LlamaCoreTest {
   }
 
   function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
@@ -1501,6 +1502,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
   }
 
   function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
