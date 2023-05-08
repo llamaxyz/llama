@@ -235,7 +235,10 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     );
   }
 
-  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
+  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy)
+    internal
+    returns (ActionInfo memory actionInfo)
+  {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpCore));
