@@ -30,7 +30,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
-  error UnsafeCast(uint256 n);
 
   // ========================
   // ======== Events ========
@@ -200,7 +199,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function minExecutionTime(ActionInfo calldata) external view returns (uint64) {
-    return _toUint64(block.timestamp + queuingPeriod);
+    return LlamaUtils.toUint64(block.timestamp + queuingPeriod);
   }
 
   // -------- When Canceling --------
@@ -277,11 +276,5 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
-  }
-
-  /// @dev Reverts if `n` does not fit in a uint64.
-  function _toUint64(uint256 n) internal pure returns (uint64) {
-    if (n > type(uint64).max) revert UnsafeCast(n);
-    return uint64(n);
   }
 }
