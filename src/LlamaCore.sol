@@ -741,13 +741,13 @@ contract LlamaCore is Initializable {
   function _infoHash(
     uint256 id,
     address creator,
-    uint8 role,
+    uint8 creatorRole,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data
   ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(id, creator, role, strategy, target, value, data));
+    return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
