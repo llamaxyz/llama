@@ -10,6 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   ERC20Data,
   ERC721Data,
@@ -18,7 +19,6 @@ import {
   ERC1155BatchData,
   ERC1155OperatorData
 } from "src/lib/Structs.sol";
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 
 /// @title Llama Account
 /// @author Llama (devsdosomething@llama.xyz)

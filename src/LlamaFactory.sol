@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
@@ -202,7 +203,7 @@ contract LlamaFactory {
     // instance is deployed with an invalid configuration that results in the instance being unusable.
     // Role ID 1 is referred to as the bootstrap role.
     bool foundBootstrapRole = false;
-    for (uint256 i = 0; i < initialRoleHolders.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < initialRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
       if (initialRoleHolders[i].role == BOOTSTRAP_ROLE) {
         foundBootstrapRole = true;
         break;
@@ -224,7 +225,7 @@ contract LlamaFactory {
     policy.finalizeInitialization(address(llamaCore), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(llamaCount, name, address(llamaCore), address(policy), block.chainid);
-    llamaCount = _uncheckedIncrement(llamaCount);
+    llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
   /// @dev Authorizes a strategy implementation (logic) contract.
@@ -237,12 +238,5 @@ contract LlamaFactory {
   function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
-  }
-
-  /// @dev Increments a uint256 without checking for overflow.
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
   }
 }
