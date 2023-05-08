@@ -1227,13 +1227,13 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract isApprovalEnabledRelative is LlamaStrategyTest {
+contract IsApprovalEnabledRelative is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
   }
 
-  function test_RevertWrongRoleIsPassed() public {
+  function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.Approver)));
     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
@@ -1241,14 +1241,14 @@ contract isApprovalEnabledRelative is LlamaStrategyTest {
   }
 }
 
-contract isDisapprovalEnabledRelative is LlamaStrategyTest {
+contract IsDisapprovalEnabledRelative is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are
       // not used
   }
 
-  function test_RevertWrongRoleIsPassed() public {
+  function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.Disapprover)));
     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
@@ -1256,7 +1256,7 @@ contract isDisapprovalEnabledRelative is LlamaStrategyTest {
   }
 }
 
-contract isApprovalEnabledAbsolute is LlamaStrategyTest {
+contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
@@ -1274,7 +1274,7 @@ contract isApprovalEnabledAbsolute is LlamaStrategyTest {
     absoluteStrategy.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
-  function test_RevertWrongRoleIsPassed() public {
+  function test_RevertIf_WrongRoleIsPassed() public {
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
@@ -1311,7 +1311,7 @@ contract isApprovalEnabledAbsolute is LlamaStrategyTest {
   }
 }
 
-contract isDisapprovalEnabledAbsolute is LlamaStrategyTest {
+contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
@@ -1329,7 +1329,7 @@ contract isDisapprovalEnabledAbsolute is LlamaStrategyTest {
     absoluteStrategy.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
-  function test_RevertWrongRoleIsPassed() public {
+  function test_RevertIf_WrongRoleIsPassed() public {
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
