@@ -8,6 +8,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -130,14 +131,14 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
@@ -282,12 +283,5 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   function _toUint64(uint256 n) internal pure returns (uint64) {
     if (n > type(uint64).max) revert UnsafeCast(n);
     return uint64(n);
-  }
-
-  /// @dev Increments `i` by 1, but does not check for overflow.
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
   }
 }
