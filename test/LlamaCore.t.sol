@@ -989,7 +989,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     (bool status, bytes memory _data) = address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
     assertFalse(status, "expectRevert: call did not revert");
-    assertEq(data, bytes.concat(LlamaCore.InvalidPolicyholder.selector));
+    assertEq(_data, bytes.concat(LlamaCore.InsufficientMsgValue.selector));
   }
 
   function test_RevertIf_FailedActionExecution() public {
