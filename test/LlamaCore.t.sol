@@ -971,7 +971,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.assume(value < 1e18);
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data);
     ActionInfo memory _actionInfo = ActionInfo(
       actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
     );
@@ -987,7 +988,8 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    (bool status, bytes memory _data) = address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
+    (bool status, bytes memory _data) =
+      address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
     assertFalse(status, "expectRevert: call did not revert");
     assertEq(_data, bytes.concat(LlamaCore.InsufficientMsgValue.selector));
   }
