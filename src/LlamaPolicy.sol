@@ -369,21 +369,30 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // was removed. Determining how to update total supply requires knowing if the policyholder currently
     // has a nonzero quantity of this role. This is strictly a quantity check and ignores the
     // expiration because this is used to determine whether or not to update the total supply.
-    uint128 quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    uint128 quantityDiff;
+    unchecked {
+      quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    }
 
     RoleSupply storage currentRoleSupply = roleSupply[role];
     uint128 newNumberOfHolders;
     uint128 newTotalQuantity;
 
     if (hadRoleQuantity && !willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
+        newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      }
     } else if (!hadRoleQuantity && willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
+        newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      }
     } else {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders;
+        newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      }
     }
 
     currentRoleSupply.numberOfHolders = newNumberOfHolders;
@@ -407,8 +416,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _mint(policyholder, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders += 1;
-    allHoldersRoleSupply.totalQuantity += 1;
+    unchecked {
+      allHoldersRoleSupply.numberOfHolders += 1;
+      allHoldersRoleSupply.totalQuantity += 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
@@ -417,8 +428,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders -= 1;
-    allHoldersRoleSupply.totalQuantity -= 1;
+    unchecked {
+      allHoldersRoleSupply.numberOfHolders -= 1;
+      allHoldersRoleSupply.totalQuantity -= 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
