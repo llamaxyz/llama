@@ -1272,7 +1272,7 @@ contract CastApprovalBySig is LlamaCoreTest {
       1 days,
       true,
       2,
-      0,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -1498,6 +1498,33 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
     mpCore.executeAction(actionInfo);
+  }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 1 days);
+
+    mpCore.queueAction(actionInfo);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    vm.prank(actionCreatorAaron);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 }
 
