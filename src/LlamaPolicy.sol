@@ -7,6 +7,7 @@ import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 
@@ -97,6 +98,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   constructor() initializer {}
 
+  /// @notice Initializes a new LlamaPolicy clone.
+  /// @param _name The name of the LlamaCore clone.
+  /// @param roleDescriptions The descriptions of the initial roles.
+  /// @param roleHolders The holders of the initial roles.
+  /// @param rolePermissions The permissions of the initial roles.
   function initialize(
     string calldata _name,
     RoleDescription[] calldata roleDescriptions,
@@ -105,17 +111,17 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     factory = LlamaFactory(msg.sender);
-    for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _initializeRole(roleDescriptions[i]);
     }
 
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(
         roleHolders[i].role, roleHolders[i].policyholder, roleHolders[i].quantity, roleHolders[i].expiration
       );
     }
 
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
 
@@ -185,7 +191,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
     // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
     // the last role is also revoked.
-    for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 1; i <= numRoles; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), policyholder, 0, 0);
     }
     _burn(_tokenId(policyholder));
@@ -196,7 +202,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address policyholder, uint8[] calldata roles) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
-    for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       if (roles[i] == 0) revert AllHoldersRole();
       _setRoleHolder(roles[i], policyholder, 0, 0);
     }
@@ -369,21 +375,30 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // was removed. Determining how to update total supply requires knowing if the policyholder currently
     // has a nonzero quantity of this role. This is strictly a quantity check and ignores the
     // expiration because this is used to determine whether or not to update the total supply.
-    uint128 quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    uint128 quantityDiff;
+    unchecked {
+      quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    }
 
     RoleSupply storage currentRoleSupply = roleSupply[role];
     uint128 newNumberOfHolders;
     uint128 newTotalQuantity;
 
     if (hadRoleQuantity && !willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
+        newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      }
     } else if (!hadRoleQuantity && willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
+        newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      }
     } else {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      unchecked {
+        newNumberOfHolders = currentRoleSupply.numberOfHolders;
+        newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      }
     }
 
     currentRoleSupply.numberOfHolders = newNumberOfHolders;
@@ -407,8 +422,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _mint(policyholder, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders += 1;
-    allHoldersRoleSupply.totalQuantity += 1;
+    unchecked {
+      allHoldersRoleSupply.numberOfHolders += 1;
+      allHoldersRoleSupply.totalQuantity += 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
@@ -417,19 +434,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders -= 1;
-    allHoldersRoleSupply.totalQuantity -= 1;
+    unchecked {
+      allHoldersRoleSupply.numberOfHolders -= 1;
+      allHoldersRoleSupply.totalQuantity -= 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
 
   function _tokenId(address policyholder) internal pure returns (uint256) {
     return uint256(uint160(policyholder));
-  }
-
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
   }
 }
