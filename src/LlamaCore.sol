@@ -20,6 +20,7 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error CannotCastWithZeroQuantity(address policyholder, uint8 role);
   error CannotUseCoreOrPolicy();
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
@@ -581,7 +582,7 @@ contract LlamaCore is Initializable {
     // Validate action creation.
     actionId = actionsCount;
 
-    ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, strategy, target, value, data);
+    ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
     IActionGuard guard = actionGuard[target][bytes4(data)];
@@ -589,7 +590,7 @@ contract LlamaCore is Initializable {
 
     // Save action.
     Action storage newAction = actions[actionId];
-    newAction.infoHash = _infoHash(actionId, policyholder, strategy, target, value, data);
+    newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
     newAction.creationTime = _toUint64(block.timestamp);
     actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
@@ -638,9 +639,8 @@ contract LlamaCore is Initializable {
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
-    Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
+    (Action storage action, uint128 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
 
-    uint128 quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
     emit ApprovalCast(actionInfo.id, policyholder, quantity, reason);
@@ -649,9 +649,8 @@ contract LlamaCore is Initializable {
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
-    Action storage action = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
+    (Action storage action, uint128 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
-    uint128 quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
     emit DisapprovalCast(actionInfo.id, policyholder, quantity, reason);
@@ -663,7 +662,7 @@ contract LlamaCore is Initializable {
     address policyholder,
     uint8 role,
     ActionState expectedState
-  ) internal returns (Action storage action) {
+  ) internal returns (Action storage action, uint128 quantity) {
     action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
 
@@ -676,9 +675,15 @@ contract LlamaCore is Initializable {
     bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
     if (!hasRole) revert InvalidPolicyholder();
 
-    isApproval
-      ? actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender)
-      : actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender);
+    if (isApproval) {
+      actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender, role);
+      quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+      if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
+    } else {
+      actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender, role);
+      quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+      if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
+    }
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
@@ -723,19 +728,26 @@ contract LlamaCore is Initializable {
 
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
-      actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
+      actionInfo.id,
+      actionInfo.creator,
+      actionInfo.creatorRole,
+      actionInfo.strategy,
+      actionInfo.target,
+      actionInfo.value,
+      actionInfo.data
     );
   }
 
   function _infoHash(
     uint256 id,
     address creator,
+    uint8 creatorRole,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data
   ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
+    return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {

@@ -11,13 +11,11 @@ import {Action, ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Absolute Llama Strategy
+/// @title MockPoorlyImplementedAbsoluteStrategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a llama strategy which has the following properties:
-///   - Approval/disapproval thresholds are specified as absolute numbers.
-///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
-///     regardless of the roles they hold.
-contract AbsoluteStrategy is ILlamaStrategy, Initializable {
+/// @notice This is the absolute strategy copy and pasted with lines 178 & 194 commented out so we can reach the
+/// ApprovalQuantityZero error
+contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -175,9 +173,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
+    // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    // if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -191,9 +189,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
+    // if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
 
   /// @inheritdoc ILlamaStrategy

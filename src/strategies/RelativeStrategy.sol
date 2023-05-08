@@ -25,6 +25,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
+  error InvalidRole(uint8 role);
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
@@ -164,12 +165,13 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata, address) external pure {
-    // Approvals are always enabled for this strategy.
+  function isApprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+    if (role != approvalRole && !forceApprovalRole[role]) return 0;
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
   }
@@ -177,8 +179,9 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata, address) external view {
+  function isDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -187,6 +190,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
     view
     returns (uint128)
   {
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
   }
