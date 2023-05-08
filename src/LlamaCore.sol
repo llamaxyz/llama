@@ -291,7 +291,7 @@ contract LlamaCore is Initializable {
     // Initial checks that action is ready to execute.
     if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
-    if (msg.value < actionInfo.value) revert InsufficientMsgValue();
+    if (msg.value != actionInfo.value) revert InsufficientMsgValue();
 
     action.executed = true;
 

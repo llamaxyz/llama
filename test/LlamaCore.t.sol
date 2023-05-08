@@ -966,12 +966,14 @@ contract ExecuteAction is LlamaCoreTest {
     }
   }
 
-  function test_RevertIf_InsufficientMsgValue() public {
+  function testFuzz_RevertIf_InsufficientMsgValue(uint256 value) public {
+    vm.assume(value != 1 ether);
+    vm.assume(value < 1e18);
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data);
     ActionInfo memory _actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, data
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
     );
 
     vm.warp(block.timestamp + 1);
@@ -985,8 +987,9 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(LlamaCore.InsufficientMsgValue.selector);
-    mpCore.executeAction(_actionInfo);
+    vm.expectRevert();
+    (bool success,) = address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
+    assertTrue(success, "expectRevert: call did not revert");
   }
 
   function test_RevertIf_FailedActionExecution() public {
