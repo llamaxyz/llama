@@ -93,7 +93,8 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 
   function deployAbsoluteStrategy(
-    uint8 _role,
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
     uint64 _queuingDuration,
     uint64 _expirationDelay,
     uint64 _approvalPeriod,
@@ -110,14 +111,18 @@ contract LlamaStrategyTest is LlamaTestSetup {
       isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
       minApprovals: _minApprovals,
       minDisapprovals: _minDisapprovals,
-      approvalRole: _role,
-      disapprovalRole: _role,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
       forceApprovalRoles: _forceApprovalRoles,
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
     AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
     vm.prank(address(mpCore));
 
@@ -561,10 +566,30 @@ contract Initialize is LlamaStrategyTest {
     vm.prank(address(rootCore));
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
+     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovals: toUint128(minApprovals),
+      minDisapprovals: 0,
+      approvalRole: uint8(Roles.TestRole1),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+
+    vm.prank(address(mpCore));
+
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidMinApprovals.selector, minApprovals));
-    deployAbsoluteStrategy(
-      uint8(Roles.TestRole1), 1 days, 4 days, 1 days, true, toUint128(minApprovals), 0, new uint8[](0), new uint8[](0)
-    );
+    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
 
@@ -1095,6 +1120,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     testStrategy = deployAbsoluteStrategy(
       uint8(Roles.TestRole1),
+      uint8(Roles.Disapprover),
       1 days,
       4 days,
       1 days,
@@ -1225,6 +1251,44 @@ contract isDisapprovalEnabledRelative is LlamaStrategyTest {
   function testFuzz_RevertWrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.Disapprover)));
+    mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
+      // used
+  }
+}
+
+contract isApprovalEnabledAbsolute is LlamaStrategyTest {
+  function testFuzz_PassesWhenCorrectRoleIsPassed() public {
+    ILlamaStrategy absoluteStrategy =
+      deployAbsoluteStrategy(uint8(Roles.Approver), uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 2, 0, new uint8[](0), new uint8[](0));
+    ActionInfo memory actionInfo = createAction(absoluteStrategy);
+    absoluteStrategy.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not
+      // used
+  }
+
+  function testFuzz_RevertWrongRoleIsPassed() public {
+    ILlamaStrategy absoluteStrategy =
+      deployAbsoluteStrategy(uint8(Roles.Approver), uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 2, 0, new uint8[](0), new uint8[](0));
+    ActionInfo memory actionInfo = createAction(absoluteStrategy);
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector, uint8(Roles.Approver)));
+    mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
+      // used
+  }
+}
+
+contract isDispprovalEnabledAbsolute is LlamaStrategyTest {
+  function testFuzz_PassesWhenCorrectRoleIsPassed() public {
+    ILlamaStrategy absoluteStrategy =
+      deployAbsoluteStrategy(uint8(Roles.Approver), uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 2, 0, new uint8[](0), new uint8[](0));
+    ActionInfo memory actionInfo = createAction(absoluteStrategy);
+    absoluteStrategy.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are not
+      // used
+  }
+
+  function testFuzz_RevertWrongRoleIsPassed() public {
+    ILlamaStrategy absoluteStrategy =
+      deployAbsoluteStrategy(uint8(Roles.Approver), uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 2, 0, new uint8[](0), new uint8[](0));
+    ActionInfo memory actionInfo = createAction(absoluteStrategy);
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector, uint8(Roles.Disapprover)));
     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
       // used
   }
