@@ -1200,3 +1200,32 @@ contract ValidateActionCreation is LlamaStrategyTest {
     assertEq(RelativeStrategy(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
   }
 }
+
+contract isApprovalEnabledRelative is LlamaStrategyTest {
+  function testFuzz_PassesWhenCorrectRoleIsPassed() public {
+    ActionInfo memory actionInfo = createAction(mpStrategy1);
+    mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
+  }
+
+  function testFuzz_RevertWrongRoleIsPassed() public {
+    ActionInfo memory actionInfo = createAction(mpStrategy1);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.Approver)));
+    mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
+      // used
+  }
+}
+
+contract isDisapprovalEnabledRelative is LlamaStrategyTest {
+  function testFuzz_PassesWhenCorrectRoleIsPassed() public {
+    ActionInfo memory actionInfo = createAction(mpStrategy1);
+    mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are
+      // not used
+  }
+
+  function testFuzz_RevertWrongRoleIsPassed() public {
+    ActionInfo memory actionInfo = createAction(mpStrategy1);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.Disapprover)));
+    mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
+      // used
+  }
+}
