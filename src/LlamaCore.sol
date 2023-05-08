@@ -25,7 +25,7 @@ contract LlamaCore is Initializable {
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
-  error InsufficientMsgValue();
+  error IncorrectMsgValue();
   error InvalidActionState(ActionState expected);
   error InvalidPolicyholder();
   error InvalidSignature();
@@ -291,7 +291,7 @@ contract LlamaCore is Initializable {
     // Initial checks that action is ready to execute.
     if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
-    if (msg.value != actionInfo.value) revert InsufficientMsgValue();
+    if (msg.value != actionInfo.value) revert IncorrectMsgValue();
 
     action.executed = true;
 

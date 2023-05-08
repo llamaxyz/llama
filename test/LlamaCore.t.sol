@@ -966,7 +966,7 @@ contract ExecuteAction is LlamaCoreTest {
     }
   }
 
-  function testFuzz_RevertIf_InsufficientMsgValue(uint256 value) public {
+  function testFuzz_RevertIf_IncorrectMsgValue(uint256 value) public {
     vm.assume(value != 1 ether);
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
@@ -993,7 +993,7 @@ contract ExecuteAction is LlamaCoreTest {
     (bool status, bytes memory _data) =
       address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
     assertFalse(status, "expectRevert: call did not revert");
-    assertEq(_data, bytes.concat(LlamaCore.InsufficientMsgValue.selector));
+    assertEq(_data, bytes.concat(LlamaCore.IncorrectMsgValue.selector));
   }
 
   function test_RevertIf_FailedActionExecution() public {
