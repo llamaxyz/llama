@@ -987,9 +987,9 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert();
-    (bool success,) = address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
-    assertTrue(success, "expectRevert: call did not revert");
+    (bool status, bytes memory _data) = address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
+    assertFalse(status, "expectRevert: call did not revert");
+    assertEq(data, bytes.concat(LlamaCore.InvalidPolicyholder.selector));
   }
 
   function test_RevertIf_FailedActionExecution() public {
