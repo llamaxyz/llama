@@ -80,7 +80,7 @@ contract LlamaPolicyMetadata {
     string memory output1 =
       string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]);
     string memory output2 = string(
-      abi.encodePacked(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17])
+      string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17])
     );
     string memory output = string.concat(output1, output2, parts[18], parts[19], parts[20]);
 
