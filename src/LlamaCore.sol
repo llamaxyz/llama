@@ -36,7 +36,6 @@ contract LlamaCore is Initializable {
   error Slot0Changed();
   error TimelockNotFinished();
   error UnauthorizedStrategyLogic();
-  error UnsafeCast(uint256 n);
 
   modifier onlyLlama() {
     if (msg.sender != address(this)) revert OnlyLlama();
