@@ -858,6 +858,27 @@ contract QueueAction is LlamaCoreTest {
 contract ExecuteAction is LlamaCoreTest {
   ActionInfo actionInfo;
 
+  function _executeScriptAuthorizationActionFlow(bool authorize) internal {
+    bytes memory data = abi.encodeCall(mpCore.authorizeScript, (address(mockScript), authorize));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data);
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data);
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    _executeAction(actionInfo);
+  }
+
   function setUp() public override {
     LlamaCoreTest.setUp();
 
@@ -1115,7 +1136,8 @@ contract ExecuteAction is LlamaCoreTest {
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
-    ActionInfo memory _actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mockScript), 0, data);
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
 
     vm.warp(block.timestamp + 1);
 
@@ -1148,7 +1170,8 @@ contract ExecuteAction is LlamaCoreTest {
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
-    ActionInfo memory _actionInfo = ActionInfo(actionId, actionCreatorAustin, mpStrategy1, address(mockScript), 0, data);
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
 
     vm.warp(block.timestamp + 1);
 
@@ -1167,6 +1190,60 @@ contract ExecuteAction is LlamaCoreTest {
     vm.expectEmit();
     // Checking that the result is a delegatecall because msg.sender is address(this) and not mpCore
     emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    mpCore.executeAction(_actionInfo);
+  }
+
+  function test_ScriptAuthorizationFromActionDoesNotAffectExecution() external {
+    _executeScriptAuthorizationActionFlow(false);
+
+    bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    _executeScriptAuthorizationActionFlow(true);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectEmit();
+    // Checking that the result is a call because msg.sender is mpCore
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(mpCore)));
+    mpCore.executeAction(_actionInfo);
+  }
+
+  function test_ScriptUnauthorizationFromActionDoesNotAffectExecution() external {
+    _executeScriptAuthorizationActionFlow(true);
+
+    bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    _executeScriptAuthorizationActionFlow(false);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectEmit();
+    // Checking that the result is a delegatecall because msg.sender is address(this) and not mpCore
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(this)));
     mpCore.executeAction(_actionInfo);
   }
 }
