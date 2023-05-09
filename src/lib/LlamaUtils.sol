@@ -10,6 +10,12 @@ library LlamaUtils {
     return uint64(n);
   }
 
+  /// @dev Reverts if `n` does not fit in a `uint128`.
+  function toUint128(uint256 n) private pure returns (uint128) {
+    if (n > type(uint128).max) revert UnsafeCast(n);
+    return uint128(n);
+  }
+
   /// @dev Increments a `uint256` without checking for overflow.
   function uncheckedIncrement(uint256 i) internal pure returns (uint256) {
     unchecked {

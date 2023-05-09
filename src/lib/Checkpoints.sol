@@ -2,6 +2,8 @@
 // forgefmt: disable-start
 pragma solidity ^0.8.0;
 
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
+
 /**
  * @dev This library defines the `History` struct, for checkpointing values as they change at different points in
  * time, and later looking up past values by block timestamp.
@@ -34,7 +36,7 @@ library Checkpoints {
      */
     function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint128) {
         require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
-        uint64 _timestamp = toUint64(timestamp);
+        uint64 _timestamp = LlamaUtils.toUint64(timestamp);
 
         uint256 len = self._checkpoints.length;
 
@@ -62,7 +64,7 @@ library Checkpoints {
      * Returns previous quantity and new quantity.
      */
     function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint128, uint128) {
-        return _insert(self._checkpoints, toUint64(block.timestamp), toUint64(expiration), toUint128(quantity));
+        return _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(expiration), LlamaUtils.toUint128(quantity));
     }
 
     /**
@@ -280,23 +282,5 @@ library Checkpoints {
             // If you don't care whether the floor or ceil square root is returned, you can remove this statement.
             z := sub(z, lt(div(x, z), z))
         }
-    }
-
-    /**
-     * @dev Returns the downcasted uint128 from uint256, reverting on
-     * overflow (when the input is greater than largest uint128).
-     */
-    function toUint128(uint256 value) private pure returns (uint128) {
-        require(value <= type(uint128).max, "SafeCast: value doesn't fit in 128 bits");
-        return uint128(value);
-    }
-
-    /**
-     * @dev Returns the downcasted uint64 from uint256, reverting on
-     * overflow (when the input is greater than largest uint64).
-     */
-    function toUint64(uint256 value) private pure returns (uint64) {
-        require(value <= type(uint64).max, "SafeCast: value doesn't fit in 64 bits");
-        return uint64(value);
     }
 }
