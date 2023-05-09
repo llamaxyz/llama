@@ -844,13 +844,11 @@ contract PolicyMetadata is LlamaPolicyTest {
 
     string memory description1 =
       LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
-    string memory description = string(
-      abi.encodePacked(
-        description1,
-        ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
-        policyholder,
-        " to view their profile page."
-      )
+    string memory description = string.concat(
+      description1,
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      policyholder,
+      " to view their profile page."
     );
     assertEq(metadata.description, description);
 
@@ -909,9 +907,8 @@ contract PolicyMetadata is LlamaPolicyTest {
 
     string memory svg1 =
       string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]);
-    string memory svg2 = string(
-      abi.encodePacked(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17])
-    );
+    string memory svg2 =
+      string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17]);
     string memory svg = string.concat(svg1, svg2, parts[18], parts[19], parts[20]);
 
     assertEq(metadata.image, svg);
