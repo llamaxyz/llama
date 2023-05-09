@@ -79,25 +79,22 @@ contract LlamaPolicyMetadata {
     // This output has been broken up into multiple outputs to avoid a stack too deep error
     string memory output1 =
       string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]);
-    string memory output2 = string(
-      string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17])
-    );
+    string memory output2 =
+      string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17]);
     string memory output = string.concat(output1, output2, parts[18], parts[19], parts[20]);
 
     string memory json = Base64.encode(
       bytes(
-        string(
-          abi.encodePacked(
-            '{"name": "',
-            name,
-            ' Member", "description": "This NFT represents membership in the Llama organization: ',
-            name,
-            ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
-            policyholder,
-            ' to view their profile page.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
-            Base64.encode(bytes(output)),
-            '"}'
-          )
+        string.concat(
+          '{"name": "',
+          name,
+          ' Member", "description": "This NFT represents membership in the Llama organization: ',
+          name,
+          ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+          policyholder,
+          ' to view their profile page.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
+          Base64.encode(bytes(output)),
+          '"}'
         )
       )
     );
