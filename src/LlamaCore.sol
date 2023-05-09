@@ -592,7 +592,7 @@ contract LlamaCore is Initializable {
     // Save action.
     Action storage newAction = actions[actionId];
     newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
-    newAction.creationTime = _toUint64(block.timestamp);
+    newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
     actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);
@@ -761,12 +761,6 @@ contract LlamaCore is Initializable {
     unchecked {
       nonces[policyholder][selector] = nonce + 1;
     }
-  }
-
-  /// @dev Reverts if `n` does not fit in a uint64.
-  function _toUint64(uint256 n) internal pure returns (uint64) {
-    if (n > type(uint64).max) revert UnsafeCast(n);
-    return uint64(n);
   }
 
   /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.

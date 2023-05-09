@@ -31,7 +31,6 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
-  error UnsafeCast(uint256 n);
 
   // ========================
   // ======== Events ========
