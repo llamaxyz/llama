@@ -193,6 +193,26 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
+
+  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy)
+    internal
+    returns (ActionInfo memory actionInfo)
+  {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    vm.warp(block.timestamp + 1);
+  }
 }
 
 contract Setup is LlamaCoreTest {
@@ -966,12 +986,14 @@ contract ExecuteAction is LlamaCoreTest {
     }
   }
 
-  function test_RevertIf_InsufficientMsgValue() public {
+  function testFuzz_RevertIf_IncorrectMsgValue(uint256 value) public {
+    vm.assume(value != 1 ether);
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, data);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data);
     ActionInfo memory _actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1e18, data
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
     );
 
     vm.warp(block.timestamp + 1);
@@ -985,8 +1007,13 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.expectRevert(LlamaCore.InsufficientMsgValue.selector);
-    mpCore.executeAction(_actionInfo);
+    vm.deal(actionCreatorAaron, value);
+
+    vm.prank(actionCreatorAaron);
+    (bool status, bytes memory _data) =
+      address(mpCore).call{value: value}((abi.encodeCall(mpCore.executeAction, (_actionInfo))));
+    assertFalse(status, "expectRevert: call did not revert");
+    assertEq(_data, bytes.concat(LlamaCore.IncorrectMsgValue.selector));
   }
 
   function test_RevertIf_FailedActionExecution() public {
@@ -1196,6 +1223,27 @@ contract CastApprovalBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionInfo, (v + 1), r, s);
+  }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    vm.prank(actionCreatorAaron);
+    castApprovalBySig(actionInfo, v, r, s);
   }
 }
 
@@ -1413,6 +1461,34 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
     mpCore.executeAction(actionInfo);
+  }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 1 days);
+
+    mpCore.queueAction(actionInfo);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    vm.prank(actionCreatorAaron);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 }
 

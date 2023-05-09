@@ -92,47 +92,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
     );
   }
 
-  function deployAbsoluteStrategy(
-    uint8 _approvalRole,
-    uint8 _disapprovalRole,
-    uint64 _queuingDuration,
-    uint64 _expirationDelay,
-    uint64 _approvalPeriod,
-    bool _isFixedLengthApprovalPeriod,
-    uint128 _minApprovals,
-    uint128 _minDisapprovals,
-    uint8[] memory _forceApprovalRoles,
-    uint8[] memory _forceDisapprovalRoles
-  ) internal returns (ILlamaStrategy newStrategy) {
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
-      approvalPeriod: _approvalPeriod,
-      queuingPeriod: _queuingDuration,
-      expirationPeriod: _expirationDelay,
-      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
-      minApprovals: _minApprovals,
-      minDisapprovals: _minDisapprovals,
-      approvalRole: _approvalRole,
-      disapprovalRole: _disapprovalRole,
-      forceApprovalRoles: _forceApprovalRoles,
-      forceDisapprovalRoles: _forceDisapprovalRoles
-    });
-
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
-    strategyConfigs[0] = strategyConfig;
-
-    vm.prank(address(rootCore));
-
-    factory.authorizeStrategyLogic(absoluteStrategyLogic);
-
-    vm.prank(address(mpCore));
-
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
-
-    newStrategy = lens.computeLlamaStrategyAddress(
-      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
-    );
-  }
-
   function deployAbsoluteStrategyAndSetRole(
     uint8 _role,
     bytes32 _permission,
