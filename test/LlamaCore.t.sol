@@ -193,6 +193,26 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(mpCore));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
+
+  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy)
+    internal
+    returns (ActionInfo memory actionInfo)
+  {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpCore));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    vm.warp(block.timestamp + 1);
+  }
 }
 
 contract Setup is LlamaCoreTest {
@@ -1204,6 +1224,27 @@ contract CastApprovalBySig is LlamaCoreTest {
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castApprovalBySig(actionInfo, (v + 1), r, s);
   }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    vm.prank(actionCreatorAaron);
+    castApprovalBySig(actionInfo, v, r, s);
+  }
 }
 
 contract CastDisapproval is LlamaCoreTest {
@@ -1420,6 +1461,34 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
     mpCore.executeAction(actionInfo);
+  }
+
+  function test_ActionCreatorCanRelayMessage() public {
+    // Testing that ActionCreatorCannotCast() error is not hit
+    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 1 days);
+
+    mpCore.queueAction(actionInfo);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    vm.prank(actionCreatorAaron);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 }
 
