@@ -11,7 +11,7 @@ library LlamaUtils {
   }
 
   /// @dev Reverts if `n` does not fit in a `uint128`.
-  function toUint128(uint256 n) private pure returns (uint128) {
+  function toUint128(uint256 n) internal pure returns (uint128) {
     if (n > type(uint128).max) revert UnsafeCast(n);
     return uint128(n);
   }
