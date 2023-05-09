@@ -25,7 +25,7 @@ contract LlamaCore is Initializable {
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
-  error InsufficientMsgValue();
+  error IncorrectMsgValue();
   error InvalidActionState(ActionState expected);
   error InvalidPolicyholder();
   error InvalidSignature();
@@ -291,7 +291,7 @@ contract LlamaCore is Initializable {
     // Initial checks that action is ready to execute.
     if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
-    if (msg.value < actionInfo.value) revert InsufficientMsgValue();
+    if (msg.value != actionInfo.value) revert IncorrectMsgValue();
 
     action.executed = true;
 
@@ -676,11 +676,11 @@ contract LlamaCore is Initializable {
     if (!hasRole) revert InvalidPolicyholder();
 
     if (isApproval) {
-      actionInfo.strategy.isApprovalEnabled(actionInfo, msg.sender, role);
+      actionInfo.strategy.isApprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
-      actionInfo.strategy.isDisapprovalEnabled(actionInfo, msg.sender, role);
+      actionInfo.strategy.isDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     }
