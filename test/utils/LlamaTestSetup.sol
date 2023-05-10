@@ -114,6 +114,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant FAIL_SELECTOR = 0xa9cc4718; // fail()
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
   bytes4 public constant EXECUTE_ACTION_SELECTOR = LlamaCore.executeAction.selector;
+  bytes4 public constant AUTHORIZE_SCRIPT_SELECTOR = LlamaCore.authorizeScript.selector;
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
@@ -123,6 +124,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
   bytes32 executeActionId;
+  bytes32 authorizeScriptId;
   bytes32 createStrategyId;
   bytes32 createAccountId;
   bytes32 pausePermissionId2;
@@ -256,6 +258,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
     receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
     executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
+    authorizeScriptId = keccak256(abi.encode(address(mpCore), AUTHORIZE_SCRIPT_SELECTOR, mpStrategy1));
     createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
     createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
@@ -265,6 +268,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), failPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), authorizeScriptId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeActionId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), createStrategyId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), createAccountId, true);
@@ -304,6 +309,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     require(bytes32(0) != failPermissionId, "failPermissionId not set");
     require(bytes32(0) != receiveEthPermissionId, "receiveEthPermissionId not set");
     require(bytes32(0) != executeActionId, "executeActionId not set");
+    require(bytes32(0) != authorizeScriptId, "authorizeScriptId not set");
     require(bytes32(0) != createStrategyId, "createStrategyId not set");
     require(bytes32(0) != createAccountId, "createAccountId not set");
     require(bytes32(0) != executeScriptPermissionId, "executeScriptPermissionId not set");
