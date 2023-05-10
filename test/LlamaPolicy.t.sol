@@ -459,7 +459,6 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     }
 
     for (uint8 i; i < 254; i++) {
-      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
       emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }
@@ -482,7 +481,6 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
     for (uint8 i; i < 254; i++) {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
-      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
       emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }
@@ -737,6 +735,11 @@ contract HasRole is LlamaPolicyTest {
   function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
     assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.TestRole1)), false);
   }
+
+  function testFuzz_ReturnsFalseIfHolderDoesNotHavePolicy(address nonPolicyHolder) public {
+    vm.assume(nonPolicyHolder != address(0) && mpPolicy.balanceOf(nonPolicyHolder) == 0);
+    assertEq(mpPolicy.hasRole(nonPolicyHolder, uint8(Roles.TestRole1)), false);
+  }
 }
 
 contract HasRoleUint256Overload is LlamaPolicyTest {
@@ -752,6 +755,12 @@ contract HasRoleUint256Overload is LlamaPolicyTest {
   function test_ReturnsFalseIfHolderDoesNotHaveRole() public {
     vm.warp(100);
     assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.TestRole1), block.timestamp - 1), false);
+  }
+
+  function testFuzz_ReturnsFalseIfHolderDoesNotHavePolicy(address nonPolicyHolder) public {
+    vm.assume(nonPolicyHolder != address(0) && mpPolicy.balanceOf(nonPolicyHolder) == 0);
+    vm.warp(100);
+    assertEq(mpPolicy.hasRole(nonPolicyHolder, uint8(Roles.TestRole1), block.timestamp - 1), false);
   }
 }
 
