@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/// @dev Shared helper methods for Llama's contracts.
 library LlamaUtils {
+  /// @dev Thrown when a value cannot be safely casted to a smaller type.
   error UnsafeCast(uint256 n);
 
   /// @dev Reverts if `n` does not fit in a `uint64`.
