@@ -5,6 +5,7 @@ import {LibString} from "@solady/utils/LibString.sol";
 
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -105,17 +106,17 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     factory = LlamaFactory(msg.sender);
-    for (uint256 i = 0; i < roleDescriptions.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _initializeRole(roleDescriptions[i]);
     }
 
-    for (uint256 i = 0; i < roleHolders.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(
         roleHolders[i].role, roleHolders[i].policyholder, roleHolders[i].quantity, roleHolders[i].expiration
       );
     }
 
-    for (uint256 i = 0; i < rolePermissions.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
     }
 
@@ -185,7 +186,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
     // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
     // the last role is also revoked.
-    for (uint256 i = 1; i <= numRoles; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 1; i <= numRoles; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), policyholder, 0, 0);
     }
     _burn(_tokenId(policyholder));
@@ -196,7 +197,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
   function revokePolicy(address policyholder, uint8[] calldata roles) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
-    for (uint256 i = 0; i < roles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < roles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       if (roles[i] == 0) revert AllHoldersRole();
       _setRoleHolder(roles[i], policyholder, 0, 0);
     }
@@ -425,11 +426,5 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   function _tokenId(address policyholder) internal pure returns (uint256) {
     return uint256(uint160(policyholder));
-  }
-
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
   }
 }

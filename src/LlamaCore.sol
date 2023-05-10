@@ -7,6 +7,7 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -35,7 +36,6 @@ contract LlamaCore is Initializable {
   error Slot0Changed();
   error TimelockNotFinished();
   error UnauthorizedStrategyLogic();
-  error UnsafeCast(uint256 n);
 
   modifier onlyLlama() {
     if (msg.sender != address(this)) revert OnlyLlama();
@@ -488,7 +488,7 @@ contract LlamaCore is Initializable {
   /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
   function unauthorizeStrategies(ILlamaStrategy[] calldata strategies) external onlyLlama {
     uint256 strategiesLength = strategies.length;
-    for (uint256 i = 0; i < strategiesLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
       delete authorizedStrategies[strategies[i]];
       emit StrategyUnauthorized(strategies[i]);
     }
@@ -591,9 +591,9 @@ contract LlamaCore is Initializable {
     // Save action.
     Action storage newAction = actions[actionId];
     newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
-    newAction.creationTime = _toUint64(block.timestamp);
+    newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
     newAction.isScript = authorizedScripts[target];
-    actionsCount = _uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
+    actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);
   }
@@ -707,7 +707,7 @@ contract LlamaCore is Initializable {
     }
 
     uint256 strategyLength = strategies.length;
-    for (uint256 i = 0; i < strategyLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(strategies[i]));
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategies[i]);
@@ -719,7 +719,7 @@ contract LlamaCore is Initializable {
 
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
-    for (uint256 i = 0; i < accountLength; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encodePacked(accounts[i])));
       LlamaAccount account = LlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
       account.initialize(accounts[i]);
@@ -763,23 +763,10 @@ contract LlamaCore is Initializable {
     }
   }
 
-  /// @dev Reverts if `n` does not fit in a uint64.
-  function _toUint64(uint256 n) internal pure returns (uint64) {
-    if (n > type(uint64).max) revert UnsafeCast(n);
-    return uint64(n);
-  }
-
   /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
   function _readSlot0() internal view returns (bytes32 slot0) {
     assembly {
       slot0 := sload(0)
-    }
-  }
-
-  /// @dev Increments a uint256 without checking for overflow.
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
     }
   }
 }

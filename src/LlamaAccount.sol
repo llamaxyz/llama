@@ -10,6 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   ERC20Data,
   ERC721Data,
@@ -91,7 +92,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param nativeTokenData The data of the native token transfer.
   function batchTransferNativeToken(NativeTokenData[] calldata nativeTokenData) external onlyLlama {
     uint256 length = nativeTokenData.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       transferNativeToken(nativeTokenData[i]);
     }
   }
@@ -109,7 +110,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc20Data The data of the ERC20 transfers.
   function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyLlama {
     uint256 length = erc20Data.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       transferERC20(erc20Data[i]);
     }
   }
@@ -124,7 +125,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc20Data The data of the ERC20 allowances.
   function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyLlama {
     uint256 length = erc20Data.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       approveERC20(erc20Data[i]);
     }
   }
@@ -142,7 +143,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721Data The data of the ERC721 transfers.
   function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyLlama {
     uint256 length = erc721Data.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       transferERC721(erc721Data[i]);
     }
   }
@@ -157,7 +158,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721Data The data of the ERC721 allowances.
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyLlama {
     uint256 length = erc721Data.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       approveERC721(erc721Data[i]);
     }
   }
@@ -172,7 +173,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc721OperatorData The data of the ERC721 operator allowances.
   function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyLlama {
     uint256 length = erc721OperatorData.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       approveOperatorERC721(erc721OperatorData[i]);
     }
   }
@@ -207,7 +208,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc1155BatchData The data of the ERC1155 batch transfers.
   function batchTransferMultipleERC1155(ERC1155BatchData[] calldata erc1155BatchData) external onlyLlama {
     uint256 length = erc1155BatchData.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       batchTransferSingleERC1155(erc1155BatchData[i]);
     }
   }
@@ -222,7 +223,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param erc1155OperatorData The data of the ERC1155 operator allowances.
   function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyLlama {
     uint256 length = erc1155OperatorData.length;
-    for (uint256 i = 0; i < length; i = _uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       approveOperatorERC1155(erc1155OperatorData[i]);
     }
   }
@@ -277,13 +278,6 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   function _readSlot0() internal view returns (bytes32 slot0) {
     assembly {
       slot0 := sload(0)
-    }
-  }
-
-  /// @dev Increments a uint256 without checking for overflow.
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
     }
   }
 }

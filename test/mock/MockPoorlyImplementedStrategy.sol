@@ -7,6 +7,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -30,7 +31,6 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
   error OnlyActionCreator();
   error RoleHasZeroSupply(uint8 role);
   error RoleNotInitialized(uint8 role);
-  error UnsafeCast(uint256 n);
 
   // ========================
   // ======== Events ========
@@ -126,14 +126,14 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = _uncheckedIncrement(i)) {
+    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
@@ -209,7 +209,7 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
 
   /// @inheritdoc ILlamaStrategy
   function minExecutionTime(ActionInfo calldata) external view returns (uint64) {
-    return _toUint64(block.timestamp + queuingPeriod);
+    return LlamaUtils.toUint64(block.timestamp + queuingPeriod);
   }
 
   // -------- When Canceling --------
@@ -276,18 +276,5 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
-  }
-
-  /// @dev Reverts if `n` does not fit in a uint64.
-  function _toUint64(uint256 n) internal pure returns (uint64) {
-    if (n > type(uint64).max) revert UnsafeCast(n);
-    return uint64(n);
-  }
-
-  /// @dev Increments `i` by 1, but does not check for overflow.
-  function _uncheckedIncrement(uint256 i) internal pure returns (uint256) {
-    unchecked {
-      return i + 1;
-    }
   }
 }
