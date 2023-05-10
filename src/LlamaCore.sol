@@ -303,7 +303,7 @@ contract LlamaCore is Initializable {
     bool success;
     bytes memory result;
 
-    if (authorizedScripts[actionInfo.target]) {
+    if (action.isScript) {
       // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
       // none of the storage in this contract changes in unexpected ways, as this could let someone
       // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
@@ -592,6 +592,7 @@ contract LlamaCore is Initializable {
     Action storage newAction = actions[actionId];
     newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
     newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
+    newAction.isScript = authorizedScripts[target];
     actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);

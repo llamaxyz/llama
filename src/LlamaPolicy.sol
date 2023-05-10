@@ -45,7 +45,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Events ========
   // ========================
 
-  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint256 expiration, RoleSupply roleSupply);
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
@@ -389,7 +389,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     currentRoleSupply.numberOfHolders = newNumberOfHolders;
     currentRoleSupply.totalQuantity = newTotalQuantity;
-    emit RoleAssigned(policyholder, role, expiration, currentRoleSupply);
+    emit RoleAssigned(policyholder, role, expiration, quantity);
   }
 
   function _setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) internal {

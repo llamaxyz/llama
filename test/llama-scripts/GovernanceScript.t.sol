@@ -32,9 +32,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract GovernanceScriptTest is LlamaTestSetup {
-  event RoleAssigned(
-    address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply
-  );
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event AccountCreated(LlamaAccount indexed account, string name);
@@ -224,12 +222,8 @@ contract Aggregate is GovernanceScriptTest {
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
       emit RoleInitialized(uint8(i + 9), descriptions[i]);
-      emit RoleAssigned(
-        address(uint160(i + 101)),
-        uint8(i + 9),
-        type(uint64).max,
-        LlamaPolicy.RoleSupply(uint128(i + 1), uint128(i + 1))
-      );
+      vm.expectEmit();
+      emit RoleAssigned(address(uint160(i + 101)), uint8(i + 9), type(uint64).max, 1);
     }
     vm.expectEmit();
     emit AccountCreated(LlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), "new treasury");
@@ -300,14 +294,7 @@ contract SetRoleHolders is GovernanceScriptTest {
     for (uint256 i = 0; i < roleHolders.length; i++) {
       vm.expectEmit();
       emit RoleAssigned(
-        roleHolders[i].policyholder,
-        roleHolders[i].role,
-        roleHolders[i].expiration,
-        LlamaPolicy.RoleSupply(
-          mpPolicy.getRoleSupplyAsNumberOfHolders(roleHolders[i].role) + rolesHoldersSeen[roleHolders[i].role] + 1,
-          mpPolicy.getRoleSupplyAsQuantitySum(roleHolders[i].role) + rolesQuantitySeen[roleHolders[i].role]
-            + roleHolders[i].quantity
-        )
+        roleHolders[i].policyholder, roleHolders[i].role, roleHolders[i].expiration, roleHolders[i].quantity
       );
       rolesHoldersSeen[roleHolders[i].role]++;
       rolesQuantitySeen[roleHolders[i].role] += roleHolders[i].quantity;
@@ -370,9 +357,7 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
       uint128 newQuantitySupply = mpPolicy.getRoleSupplyAsQuantitySum(roles[i]) - rolesSeen[roles[i]] - 1;
       rolesSeen[roles[i]]++;
       vm.expectEmit();
-      emit RoleAssigned(
-        address(uint160(i + 101)), roles[i], 0, LlamaPolicy.RoleSupply(newHolderSupply, newQuantitySupply)
-      );
+      emit RoleAssigned(address(uint160(i + 101)), roles[i], 0, 0);
     }
     mpCore.executeAction(actionInfo);
   }
@@ -393,7 +378,7 @@ contract RevokePolicies is GovernanceScriptTest {
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, LlamaPolicy.RoleSupply(2, 2));
+    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
     mpCore.executeAction(actionInfo);
   }
 
@@ -409,7 +394,7 @@ contract RevokePolicies is GovernanceScriptTest {
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, LlamaPolicy.RoleSupply(2, 2));
+    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
     mpCore.executeAction(actionInfo);
   }
 }

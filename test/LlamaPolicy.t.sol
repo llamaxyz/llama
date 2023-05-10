@@ -19,9 +19,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaPolicyTest is LlamaTestSetup {
-  event RoleAssigned(
-    address indexed policyholder, uint8 indexed role, uint256 expiration, LlamaPolicy.RoleSupply roleSupply
-  );
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
@@ -133,7 +131,7 @@ contract Initialize is LlamaPolicyTest {
     uint256 prevSupply = localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE);
 
     vm.expectEmit();
-    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
+    emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
 
     localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, rolePermissions);
 
@@ -271,7 +269,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     // Assign role to policyholder with quantity of 1.
     vm.expectEmit();
-    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "10");
@@ -288,7 +286,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     // Adjust policyholder's policy to have quantity greater than 1.
     vm.expectEmit();
-    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, LlamaPolicy.RoleSupply(1, 5));
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION - 10, 5);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 5, DEFAULT_ROLE_EXPIRATION - 10);
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "110");
@@ -305,9 +303,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     // Add another policyholder with a quantity of 3.
     vm.expectEmit();
-    emit RoleAssigned(
-      arbitraryPolicyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(2, 8)
-    );
+    emit RoleAssigned(arbitraryPolicyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, 3);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, 3, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.TestRole1)), true, "210");
@@ -324,7 +320,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     // Revoke the original policyholder's role. We did not revoke their policy so they still have the all holders role.
     vm.expectEmit();
-    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(1, 3));
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, 0);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "310");
@@ -371,7 +367,7 @@ contract RevokeExpiredRole is LlamaPolicyTest {
     vm.warp(expiration + 1);
 
     vm.expectEmit();
-    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, LlamaPolicy.RoleSupply(0, 0));
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, 0);
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true);
 
@@ -458,16 +454,14 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     for (uint8 i = 2; i < 255; i++) {
       localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
       localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
     for (uint8 i; i < 254; i++) {
       uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
-      emit RoleAssigned(
-        arbitraryAddress, i + 1, 0, LlamaPolicy.RoleSupply(uint128(roleSupply) - 1, uint128(roleSupply) - 1)
-      );
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }
 
     localPolicy.revokePolicy(arbitraryAddress);
@@ -481,7 +475,7 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     for (uint8 i = 2; i < 255; i++) {
       localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
       vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, LlamaPolicy.RoleSupply(1, 1));
+      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
       localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     }
 
@@ -490,9 +484,7 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
       uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
-      emit RoleAssigned(
-        arbitraryAddress, i + 1, 0, LlamaPolicy.RoleSupply(uint128(roleSupply) - 1, uint128(roleSupply) - 1)
-      );
+      emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }
 
     vm.expectEmit();
