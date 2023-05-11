@@ -1017,9 +1017,8 @@ contract PolicyMetadata is LlamaPolicyTest {
 
   function test_ReturnsCorrectTokenURIWhenAddressHasLeadingZeroes(uint256 tokenIdWithLeadingZeroes) public {
     // Setting this number as the upper limit ensures when this `tokenId` is converted to an address it will be be less
-    // than
-    // 0x0000000fffffffffffffffffffffffffffffffff
-    // This guarantees that the fuzz output will result in an address with at least 7 leading zeroes
+    // than `0x00000000000fffffffffffffffffffffffffffff`. This guarantees that the fuzz output will have at least 11
+    // leading zeroes
     tokenIdWithLeadingZeroes = bound(tokenIdWithLeadingZeroes, 0, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
 
     setTokenURIMetadata();
