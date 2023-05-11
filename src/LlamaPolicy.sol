@@ -370,6 +370,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     // Now we update the policyholder's role balance checkpoint.
     roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
+
+    // If they don't hold a policy, we mint one for them. This means that even if you use 0 quantity
+    // and 0 expiration, a policy is still minted even though they hold no roles. This is because
+    // they do hold the ALL_HOLDERS_ROLE simply by having a policy, so we allow this.
     if (balanceOf(policyholder) == 0) _mint(policyholder);
 
     // Lastly we update the total supply of the role. If the expiration is zero, it means the role

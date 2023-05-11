@@ -259,7 +259,7 @@ contract SetRoleHolder is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function test_NoOpIfNoChangesAreMade() public {
+  function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
     address policyholder = arbitraryPolicyholder;
     vm.startPrank(address(mpCore));
 
@@ -300,6 +300,51 @@ contract SetRoleHolder is LlamaPolicyTest {
     assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "1100");
+  }
+
+  function test_NoOpIfNoChangesAreMade_WhenUserDoesNotHaveRole() public {
+    address policyholder = arbitraryPolicyholder;
+    vm.startPrank(address(mpCore));
+
+    uint256 initRoleHolders = 7;
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
+
+    // Policyholder has no policy. We assign nothing, and things should not change except for them
+    // now holding a policy.
+    assertEq(mpPolicy.balanceOf(policyholder), 0, "1");
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
+
+    assertEq(mpPolicy.balanceOf(policyholder), 1, "2");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "10");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0, "20");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0, "30");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 0, "40");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 0, "50");
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "60");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "70");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "90");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "100");
+
+    // Now we assign them a role and then immediately revoke it, so their balance is still 1 but they
+    // hold no roles. Nothing should change.
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    assertEq(mpPolicy.balanceOf(policyholder), 1, "101");
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
+
+    assertEq(mpPolicy.balanceOf(policyholder), 1, "102");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "110");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0, "120");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0, "130");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 0, "140");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 0, "150");
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "160");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "170");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "200");
   }
 
   function test_SetsRoleHolder(address policyholder) public {
