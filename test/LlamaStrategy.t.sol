@@ -243,6 +243,18 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 }
 
+contract Constructor is LlamaStrategyTest {
+  function test_RevertIf_InitializeAbsoluteImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    absoluteStrategyLogic.initialize(bytes(""));
+  }
+
+  function test_RevertIf_InitializeRelativeImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    relativeStrategyLogic.initialize(bytes(""));
+  }
+}
+
 contract Initialize is LlamaStrategyTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(

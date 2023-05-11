@@ -95,7 +95,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======== Constructor ========
   // =============================
 
-  constructor() initializer {}
+  constructor() {
+    _disableInitializers();
+  }
 
   // ==========================================
   // ======== Interface Implementation ========

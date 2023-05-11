@@ -147,7 +147,9 @@ contract LlamaCore is Initializable {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  constructor() initializer {}
+  constructor() {
+    _disableInitializers();
+  }
 
   /// @notice Initializes a new LlamaCore clone.
   /// @param _name The name of the LlamaCore clone.

@@ -63,7 +63,9 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  constructor() initializer {}
+  constructor() {
+    _disableInitializers();
+  }
 
   /// @notice Initializes a new LlamaAccount clone.
   /// @param _name The name of the LlamaAccount clone.

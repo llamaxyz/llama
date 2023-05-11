@@ -66,6 +66,15 @@ contract NonTransferableToken is LlamaPolicyTest {
   }
 }
 
+contract Constructor is LlamaPolicyTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    policyLogic.initialize(
+      "Mock Protocol", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
+    );
+  }
+}
+
 contract Initialize is LlamaPolicyTest {
   uint8 constant INIT_TEST_ROLE = 1;
 
@@ -580,7 +589,6 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     }
 
     for (uint8 i; i < 254; i++) {
-      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
       emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }
@@ -603,7 +611,6 @@ contract RevokePolicyRolesOverload is LlamaPolicyTest {
     uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
     for (uint8 i; i < 254; i++) {
       roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
-      uint256 roleSupply = localPolicy.getRoleSupplyAsQuantitySum(i + 1);
       vm.expectEmit();
       emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
     }

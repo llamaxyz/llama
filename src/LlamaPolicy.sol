@@ -96,7 +96,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  constructor() initializer {}
+  constructor() {
+    _disableInitializers();
+  }
 
   function initialize(
     string calldata _name,
@@ -184,7 +186,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function revokePolicy(address policyholder) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
-    // that will get automatically when the token is burned. Similarly, use we `<=` to make sure
+    // that will get removed automatically when the token is burned. Similarly, use we `<=` to make sure
     // the last role is also revoked.
     for (uint256 i = 1; i <= numRoles; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(uint8(i), policyholder, 0, 0);
