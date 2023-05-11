@@ -554,77 +554,6 @@ contract RevokePolicy is LlamaPolicyTest {
   }
 }
 
-contract RevokePolicyRolesOverload is LlamaPolicyTest {
-  function setUpLocalPolicy() internal returns (LlamaPolicy localPolicy) {
-    localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
-    roleDescriptions[0] = RoleDescription.wrap(bytes32(bytes(string.concat("Role ", vm.toString(uint256(1))))));
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
-    roleHolders[0] = RoleHolderData(uint8(1), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    localPolicy.initialize("Test Policy", roleDescriptions, roleHolders, new RolePermissionData[](0));
-    localPolicy.finalizeInitialization(address(this), bytes32(0));
-
-    vm.startPrank(address(this));
-  }
-
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore) && caller != address(this));
-    LlamaPolicy localPolicy = setUpLocalPolicy();
-    uint8[] memory roles = new uint8[](254);
-    vm.stopPrank();
-
-    vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
-    vm.prank(caller);
-    localPolicy.revokePolicy(arbitraryAddress, roles);
-  }
-
-  function test_Revokes255RolesWithEnumeration() public {
-    LlamaPolicy localPolicy = setUpLocalPolicy();
-
-    for (uint8 i = 2; i < 255; i++) {
-      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
-      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    }
-
-    for (uint8 i; i < 254; i++) {
-      vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
-    }
-
-    localPolicy.revokePolicy(arbitraryAddress);
-
-    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
-    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(type(Roles).max) + 1), false);
-  }
-
-  function test_Revokes255RolesWithoutEnumeration() public {
-    LlamaPolicy localPolicy = setUpLocalPolicy();
-    for (uint8 i = 2; i < 255; i++) {
-      localPolicy.initializeRole(RoleDescription.wrap(bytes32(uint256(i))));
-      vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
-      localPolicy.setRoleHolder(i, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    }
-
-    uint8[] memory roles = new uint8[](254); // 254 instead of 255 since we don't want to include the all holders role
-    for (uint8 i; i < 254; i++) {
-      roles[i] = i + 1; // setting i to i + 1 so it doesn't try to remove the all holders role
-      vm.expectEmit();
-      emit RoleAssigned(arbitraryAddress, i + 1, 0, 0);
-    }
-
-    vm.expectEmit();
-    emit Transfer(arbitraryAddress, address(0), uint256(uint160(arbitraryAddress)));
-
-    localPolicy.revokePolicy(arbitraryAddress, roles);
-
-    assertEq(localPolicy.balanceOf(arbitraryAddress), 0);
-    assertEq(localPolicy.hasRole(arbitraryAddress, uint8(0)), false);
-  }
-}
-
 // =================================
 // ======== ERC-721 Methods ========
 // =================================
@@ -717,7 +646,7 @@ contract GetPastQuantity is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, 200);
 
     vm.warp(140);
-    mpPolicy.revokePolicy(arbitraryPolicyholder, Solarray.uint8s(uint8(Roles.TestRole1)));
+    mpPolicy.revokePolicy(arbitraryPolicyholder);
 
     vm.warp(150);
     vm.stopPrank();
@@ -787,7 +716,7 @@ contract GetSupply is LlamaPolicyTest {
 
     // Revoking all roles from the policyholder should only decrease supply by 1.
     vm.warp(140);
-    mpPolicy.revokePolicy(newRoleHolder, Solarray.uint8s(uint8(Roles.TestRole1), uint8(Roles.TestRole2)));
+    mpPolicy.revokePolicy(newRoleHolder);
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1);
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE), initPolicySupply + 1);
 
