@@ -860,6 +860,49 @@ contract QueueAction is LlamaCoreTest {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     mpCore.queueAction(actionInfo);
   }
+
+  function testFuzz_RevertIf_MinExecutionTimeIsInThePast(uint64 blockTimestamp, uint64 minExecutionTime) public {
+    blockTimestamp = toUint64(bound(blockTimestamp, block.timestamp, type(uint64).max / 2)); // Arbitrary bound that
+      // won't revert.
+    minExecutionTime = toUint64(bound(minExecutionTime, 0, blockTimestamp));
+    vm.warp(blockTimestamp);
+
+    // Approve an action.
+    ActionInfo memory actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+    vm.warp(block.timestamp + 6 days);
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+
+    // Queue reverts because minExecutionTime is in the past.
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Approved));
+    vm.mockCall(
+      address(actionInfo.strategy),
+      abi.encodeWithSelector(ILlamaStrategy.minExecutionTime.selector),
+      abi.encode(minExecutionTime)
+    );
+    vm.expectRevert(LlamaCore.MinExecutionTimeCannotBeInThePast.selector);
+    mpCore.queueAction(actionInfo);
+  }
+
+  function testFuzz_SuccessfullyQueuesAction(uint64 blockTimestamp, uint64 minExecutionTime) public {
+    blockTimestamp = toUint64(bound(blockTimestamp, block.timestamp, type(uint64).max / 2)); // Arbitrary bound that
+      // won't revert.
+    minExecutionTime = toUint64(bound(minExecutionTime, 0, blockTimestamp));
+    vm.warp(blockTimestamp);
+
+    // Approve an action.
+    ActionInfo memory actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+    vm.warp(block.timestamp + 6 days);
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+
+    // Queue it.
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Approved));
+    mpCore.queueAction(actionInfo);
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
+  }
 }
 
 contract ExecuteAction is LlamaCoreTest {
