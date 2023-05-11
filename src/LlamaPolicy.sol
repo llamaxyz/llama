@@ -337,35 +337,45 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     emit RoleInitialized(numRoles, description);
   }
 
+  function _assertValidRoleHolderUpdate(uint8 role, uint128 quantity, uint64 expiration) internal view {
+    // Ensure role is initialized.
+    if (role > numRoles) revert RoleNotInitialized(role);
+
+    // Cannot set the ALL_HOLDERS_ROLE because this is handled in the _mint / _burn methods and can
+    // create duplicate entries if set here.
+    if (role == ALL_HOLDERS_ROLE) revert AllHoldersRole();
+
+    // An expiration of zero is only allowed if the role is being removed. Roles are removed when
+    // the quantity is zero. In other words, the relationships that are required between the role
+    // quantity and expiration fields are:
+    //   - quantity > 0 && expiration > block.timestamp: This means you are adding a role
+    //   - quantity == 0 && expiration == 0: This means you are removing a role
+    bool case1 = quantity > 0 && expiration > block.timestamp;
+    bool case2 = quantity == 0 && expiration == 0;
+    if (!(case1 || case2)) revert InvalidRoleHolderInput();
+  }
+
   function _setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) internal {
-    // Scope to avoid stack too deep.
-    {
-      // Ensure role is initialized.
-      if (role > numRoles) revert RoleNotInitialized(role);
+    _assertValidRoleHolderUpdate(role, quantity, expiration);
 
-      if (role == ALL_HOLDERS_ROLE) revert AllHoldersRole(); // Cannot set the ALL_HOLDERS_ROLE because this is handled
-        // in
-        // the _mint / _burn methods and can create duplicate entries if set here.
-
-      // An expiration of zero is only allowed if the role is being removed. Roles are removed when
-      // the quantity is zero. In other words, the relationships that are required between the role
-      // quantity and expiration fields are:
-      //   - quantity > 0 && expiration > block.timestamp: This means you are adding a role
-      //   - quantity == 0 && expiration == 0: This means you are removing a role
-      bool case1 = quantity > 0 && expiration > block.timestamp;
-      bool case2 = quantity == 0 && expiration == 0;
-      if (!(case1 || case2)) revert InvalidRoleHolderInput();
-    }
-
-    // Save off whether or not the policyholder has a nonzero quantity of this role. This is used below when
-    // updating the total supply of the role.
+    // Save off whether or not the policyholder has a nonzero quantity of this role. This is used
+    // below when updating the total supply of the role. The policy contract has an invariant that
+    // even when a role is expired, i.e. `block.timestamp > expiration`, that role is still active
+    // until explicitly revoked with `revokeExpiredRole`. Based on the assertions above for
+    // determining valid inputs to this method, this means we know if a user had a role simply by
+    // checking if the quantity is nonzero, and we don't need to check the expiration when setting
+    // the `hadRole` and `willHaveRole` variables.
     uint256 tokenId = _tokenId(policyholder);
     uint128 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
-    bool hadRoleQuantity = initialQuantity > 0;
-    bool willHaveRole = quantity > 0 && expiration > block.timestamp;
+    bool hadRole = initialQuantity > 0;
+    bool willHaveRole = quantity > 0;
 
     // Now we update the policyholder's role balance checkpoint.
     roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
+
+    // If they don't hold a policy, we mint one for them. This means that even if you use 0 quantity
+    // and 0 expiration, a policy is still minted even though they hold no roles. This is because
+    // they do hold the ALL_HOLDERS_ROLE simply by having a policy, so we allow this.
     if (balanceOf(policyholder) == 0) _mint(policyholder);
 
     // Lastly we update the total supply of the role. If the expiration is zero, it means the role
@@ -378,15 +388,24 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint128 newNumberOfHolders;
     uint128 newTotalQuantity;
 
-    if (hadRoleQuantity && !willHaveRole) {
+    if (hadRole && !willHaveRole) {
       newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
       newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
-    } else if (!hadRoleQuantity && willHaveRole) {
+    } else if (!hadRole && willHaveRole) {
       newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
       newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
-    } else {
+    } else if (hadRole && willHaveRole && initialQuantity > quantity) {
+      newNumberOfHolders = currentRoleSupply.numberOfHolders;
+      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+    } else if (hadRole && willHaveRole && initialQuantity < quantity) {
       newNumberOfHolders = currentRoleSupply.numberOfHolders;
       newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+    } else {
+      // The only way to reach this branch is with `hadRole` and `willHaveRole` both being
+      // false. In that case, no changes are being made. We allow this no-op without reverting
+      // because `revokePolicy(address policyholder)` relies on this behavior.
+      newNumberOfHolders = currentRoleSupply.numberOfHolders;
+      newTotalQuantity = currentRoleSupply.totalQuantity;
     }
 
     currentRoleSupply.numberOfHolders = newNumberOfHolders;
