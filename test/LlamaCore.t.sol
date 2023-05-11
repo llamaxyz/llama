@@ -233,6 +233,13 @@ contract Setup is LlamaCoreTest {
   }
 }
 
+contract Constructor is LlamaCoreTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    coreLogic.initialize("NewProject", mpPolicy, relativeStrategyLogic, accountLogic, new bytes[](0), new string[](0));
+  }
+}
+
 contract Initialize is LlamaCoreTest {
   function deployWithoutInitialization()
     internal

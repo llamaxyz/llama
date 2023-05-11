@@ -66,6 +66,15 @@ contract NonTransferableToken is LlamaPolicyTest {
   }
 }
 
+contract Constructor is LlamaPolicyTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    policyLogic.initialize(
+      "Mock Protocol", new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0)
+    );
+  }
+}
+
 contract Initialize is LlamaPolicyTest {
   uint8 constant INIT_TEST_ROLE = 1;
 

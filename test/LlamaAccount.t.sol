@@ -179,6 +179,13 @@ contract LlamaAccountTest is LlamaTestSetup {
   }
 }
 
+contract Constructor is LlamaAccountTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    accountLogic.initialize("MP Treasury");
+  }
+}
+
 contract Initialize is LlamaAccountTest {
   function test_SetsLlamaCore() public {
     assertEq(mpAccount1.llamaCore(), address(mpCore));
