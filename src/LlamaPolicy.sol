@@ -382,9 +382,18 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     } else if (!hadRoleQuantity && willHaveRole) {
       newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
       newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
-    } else {
+    } else if (hadRoleQuantity && willHaveRole && initialQuantity > quantity) {
+      newNumberOfHolders = currentRoleSupply.numberOfHolders;
+      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+    } else if (hadRoleQuantity && willHaveRole && initialQuantity < quantity) {
       newNumberOfHolders = currentRoleSupply.numberOfHolders;
       newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+    } else {
+      // The only way to reach this branch is with `hadRoleQuantity` and `willHaveRole` both being
+      // false. In that case, no changes are being made. We allow this no-op without reverting
+      // because `revokePolicy(address policyholder)` relies on this behavior.
+      newNumberOfHolders = currentRoleSupply.numberOfHolders;
+      newTotalQuantity = currentRoleSupply.totalQuantity;
     }
 
     currentRoleSupply.numberOfHolders = newNumberOfHolders;

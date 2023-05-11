@@ -259,6 +259,49 @@ contract SetRoleHolder is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
+  function test_NoOpIfNoChangesAreMade() public {
+    address policyholder = arbitraryPolicyholder;
+    vm.startPrank(address(mpCore));
+
+    uint256 initRoleHolders = 7;
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
+
+    // Assign role to policyholder with quantity of 1.
+    vm.expectEmit();
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "10");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "20");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "30");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "40");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1, "50");
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "60");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "70");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "80");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "90");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "100");
+
+    // Reassign role to policyholder with quantity of 1, i.e. no changes. All code and assertions
+    // should be identical to the above set.
+    vm.expectEmit();
+    emit RoleAssigned(policyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true, "110");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY, "120");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "130");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "140");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 1, "150");
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "160");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "170");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "1100");
+  }
+
   function test_SetsRoleHolder(address policyholder) public {
     vm.assume(policyholder != address(0));
     if (mpPolicy.balanceOf(policyholder) > 0) policyholder = makeAddr("policyholderWithoutPolicy");
@@ -318,16 +361,33 @@ contract SetRoleHolder is LlamaPolicyTest {
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "290");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "300");
 
+    // Decrease the new policyholder's quantity to 2.
+    vm.expectEmit();
+    emit RoleAssigned(arbitraryPolicyholder, uint8(Roles.TestRole1), DEFAULT_ROLE_EXPIRATION, 2);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, 2, DEFAULT_ROLE_EXPIRATION);
+
+    assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.TestRole1)), true, "301");
+    assertEq(mpPolicy.getQuantity(arbitraryPolicyholder, uint8(Roles.TestRole1)), 2, "302");
+    assertEq(mpPolicy.roleExpiration(arbitraryPolicyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION, "303");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 2, "304");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 7, "305");
+
+    assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.AllHolders)), true, "306");
+    assertEq(mpPolicy.getQuantity(arbitraryPolicyholder, uint8(Roles.AllHolders)), 1, "307");
+    assertEq(mpPolicy.roleExpiration(arbitraryPolicyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "308");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 2, "309");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 2, "310");
+
     // Revoke the original policyholder's role. We did not revoke their policy so they still have the all holders role.
     vm.expectEmit();
     emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, 0);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
 
-    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "310");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "311");
     assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0, "320");
     assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0, "330");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 1, "340");
-    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 3, "350");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 2, "350");
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "360");
     assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "370");
