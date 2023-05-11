@@ -1020,7 +1020,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     // than
     // 0x0000000fffffffffffffffffffffffffffffffff
     // This guarantees that the fuzz output will result in an address with at least 7 leading zeroes
-    bound(tokenIdWithLeadingZeroes, 0, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
+    tokenIdWithLeadingZeroes = bound(tokenIdWithLeadingZeroes, 0, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
 
     setTokenURIMetadata();
     string memory uri = mpPolicy.tokenURI(tokenIdWithLeadingZeroes);
