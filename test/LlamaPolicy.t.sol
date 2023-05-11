@@ -345,6 +345,22 @@ contract SetRoleHolder is LlamaPolicyTest {
     assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "180");
     assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "190");
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "200");
+
+    // We again call `setRoleHolder` and nothing should change.
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, 0, 0);
+
+    assertEq(mpPolicy.balanceOf(policyholder), 1, "202");
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false, "210");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0, "220");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0, "230");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1)), 0, "240");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1)), 0, "250");
+
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true, "260");
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 1, "270");
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION, "280");
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.AllHolders)), initRoleHolders + 1, "290");
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders + 1, "300");
   }
 
   function test_SetsRoleHolder(address policyholder) public {
