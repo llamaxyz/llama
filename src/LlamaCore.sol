@@ -31,6 +31,7 @@ contract LlamaCore is Initializable {
   error InvalidPolicyholder();
   error InvalidSignature();
   error InvalidStrategy();
+  error MinExecutionTimeCannotBeInThePast();
   error OnlyLlama();
   error PolicyholderDoesNotHavePermission();
   error Slot0Changed();
@@ -278,6 +279,7 @@ contract LlamaCore is Initializable {
     if (getActionState(actionInfo) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
 
     uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
+    if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
     action.minExecutionTime = minExecutionTime;
     emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
