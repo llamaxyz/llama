@@ -363,26 +363,10 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
 
 contract RevokePolicies is GovernanceScriptTest {
   uint8[] public roles;
-  GovernanceScript.RevokePolicy[] public revokePolicies;
+  address[] public revokePolicies;
 
   function test_revokePolicies() public {
-    revokePolicies.push(GovernanceScript.RevokePolicy(address(disapproverDave), roles));
-    bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
-    vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
-    vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
-    mpCore.executeAction(actionInfo);
-  }
-
-  function test_revokePoliciesOverload() public {
-    roles.push(uint8(Roles.Disapprover));
-    revokePolicies.push(GovernanceScript.RevokePolicy(address(disapproverDave), roles));
+    revokePolicies.push(disapproverDave);
     bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);

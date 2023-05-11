@@ -25,11 +25,6 @@ contract GovernanceScript {
     RoleDescription description;
   }
 
-  struct RevokePolicy {
-    address policyholder;
-    uint8[] roles;
-  }
-
   struct RevokeExpiredRole {
     uint8 role;
     address policyholder;
@@ -156,7 +151,7 @@ contract GovernanceScript {
   }
 
   function revokePoliciesAndUpdateRoleDescriptions(
-    RevokePolicy[] calldata _revokePolicies,
+    address[] calldata _revokePolicies,
     UpdateRoleDescription[] calldata _updateRoleDescriptions
   ) external {
     revokePolicies(_revokePolicies);
@@ -164,7 +159,7 @@ contract GovernanceScript {
   }
 
   function revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders(
-    RevokePolicy[] calldata _revokePolicies,
+    address[] calldata _revokePolicies,
     UpdateRoleDescription[] calldata _updateRoleDescriptions,
     SetRoleHolder[] calldata _setRoleHolders
   ) external {
@@ -218,12 +213,10 @@ contract GovernanceScript {
 
   /// @notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
   /// if the policyholder has too many roles.
-  function revokePolicies(RevokePolicy[] calldata _revokePolicies) public {
+  function revokePolicies(address[] calldata _revokePolicies) public {
     (, LlamaPolicy policy) = _context();
     for (uint256 i = 0; i < _revokePolicies.length; i++) {
-      uint256 rolesLength = _revokePolicies[i].roles.length;
-      if (rolesLength == 0) policy.revokePolicy(_revokePolicies[i].policyholder);
-      else policy.revokePolicy(_revokePolicies[i].policyholder, _revokePolicies[i].roles);
+      policy.revokePolicy(_revokePolicies[i]);
     }
   }
 

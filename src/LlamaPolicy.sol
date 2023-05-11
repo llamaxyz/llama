@@ -194,18 +194,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _burn(_tokenId(policyholder));
   }
 
-  /// @notice Revokes all `roles` from the `policyholder` and burns their policy.
-  /// @dev This method only exists to ensure policies can still be revoked in the case where the
-  /// other `revokePolicy` method cannot be executed due to needed more gas than the block gas limit.
-  function revokePolicy(address policyholder, uint8[] calldata roles) external onlyLlama {
-    if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
-    for (uint256 i = 0; i < roles.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (roles[i] == 0) revert AllHoldersRole();
-      _setRoleHolder(roles[i], policyholder, 0, 0);
-    }
-    _burn(_tokenId(policyholder));
-  }
-
   /// @notice Updates the description of a role.
   /// @param role ID of the role to update.
   /// @param description New description of the role.
