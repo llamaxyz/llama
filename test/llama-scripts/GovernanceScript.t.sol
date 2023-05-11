@@ -353,8 +353,6 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
     for (uint256 i = 0; i < roles.length; i++) {
-      uint128 newHolderSupply = mpPolicy.getRoleSupplyAsNumberOfHolders(roles[i]) - rolesSeen[roles[i]] - 1;
-      uint128 newQuantitySupply = mpPolicy.getRoleSupplyAsQuantitySum(roles[i]) - rolesSeen[roles[i]] - 1;
       rolesSeen[roles[i]]++;
       vm.expectEmit();
       emit RoleAssigned(address(uint160(i + 101)), roles[i], 0, 0);
