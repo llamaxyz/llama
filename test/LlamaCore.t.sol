@@ -1988,7 +1988,6 @@ contract SetStrategyAuthorizations is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy2, false);
 
-
     mpCore.setStrategyAuthorizations(strategyAuthorizations);
 
     assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
@@ -1997,6 +1996,57 @@ contract SetStrategyAuthorizations is LlamaCoreTest {
 
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
+    mpCore.createAction(
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+    );
+  }
+
+  function test_ReauthorizeStrategies() public {
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+    assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
+
+    StrategyAuthorization[] memory strategyAuthorizations = new StrategyAuthorization[](2);
+    strategyAuthorizations[0].strategy = mpStrategy1;
+    strategyAuthorizations[0].isAuthorized = false;
+    strategyAuthorizations[1].strategy = mpStrategy2;
+    strategyAuthorizations[1].isAuthorized = false;
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, false);
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy2, false);
+
+    vm.prank(address(mpCore));
+    mpCore.setStrategyAuthorizations(strategyAuthorizations);
+
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
+    assertEq(mpCore.authorizedStrategies(mpStrategy2), false);
+
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
+    mpCore.createAction(
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+    );
+
+    strategyAuthorizations[0].isAuthorized = true;
+    strategyAuthorizations[1].isAuthorized = true;
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, true);
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy2, true);
+
+    vm.prank(address(mpCore));
+    mpCore.setStrategyAuthorizations(strategyAuthorizations);
+
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+    assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
+
+    vm.prank(actionCreatorAaron);
+    vm.expectEmit();
+    emit ActionCreated(
+      0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
+    );
     mpCore.createAction(
       uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );

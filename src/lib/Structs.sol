@@ -119,6 +119,6 @@ struct ERC1155OperatorData {
 }
 
 struct StrategyAuthorization {
-  ILlamaStrategy strategy; 
+  ILlamaStrategy strategy;
   bool isAuthorized;
 }

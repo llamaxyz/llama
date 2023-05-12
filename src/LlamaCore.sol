@@ -490,7 +490,8 @@ contract LlamaCore is Initializable {
 
   /// @notice Remove or reauthorize previously removed strategies from the mapping of authorized strategies.
   /// @dev DO NOT use this method to authorize new strategies, use `createAndAuthorizeStrategies` instead.
-  /// @param strategyAuthorizations list of Strategys and booleans to be removed or reauthorized from the mapping of authorized strategies.
+  /// @param strategyAuthorizations list of Strategys and booleans to be removed or reauthorized from the mapping of
+  /// authorized strategies.
   function setStrategyAuthorizations(StrategyAuthorization[] calldata strategyAuthorizations) external onlyLlama {
     uint256 strategiesLength = strategyAuthorizations.length;
     for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
