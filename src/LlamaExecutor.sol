@@ -8,7 +8,7 @@ contract LlamaExecutor {
   error OnlyLlamaCore();
 
   /// @notice The core contract for this llama instance.
-  address immutable LLAMA_CORE;
+  address public immutable LLAMA_CORE;
 
   constructor(address _llamaCore) {
     LLAMA_CORE = _llamaCore;
