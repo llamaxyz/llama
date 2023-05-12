@@ -200,7 +200,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootCore.executeAction(deployActionInfo);
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,uint256)");
+    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
     for (uint256 i; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == llamaInstanceCreatedSig) {
@@ -208,14 +208,16 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
         //   uint256 indexed id,
         //   string indexed name,
         //   address llamaCore,       <--- What we want.
+        //   address llamaExecutor,
         //   address llamaPolicy,
         //   uint256 chainId
         // )
-        (mpCore,,) = abi.decode(_event.data, (LlamaCore, address, uint256));
+        (mpCore,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
       }
     }
     mpPolicy = mpCore.policy();
-
+    mpExecutor = mpCore.executor();
+    console2.log(address(mpExecutor));
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
     rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
@@ -223,7 +225,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // Add approvers and disapprovers to the mock protocol's llama.
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), actionCreatorAaron, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAlicia, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -268,7 +270,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
     executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), failPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
@@ -303,6 +305,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     require(address(0) != address(mockProtocol), "mockProtocol not set");
     require(address(0) != address(mpCore), "mpCore not set");
+    require(address(0) != address(mpExecutor), "mpExecutor not set");
     require(address(0) != address(mpPolicy), "mpPolicy not set");
     require(address(0) != address(mpStrategy1), "mpStrategy1 not set");
     require(address(0) != address(mpStrategy2), "mpStrategy2 not set");
@@ -434,7 +437,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
 
     mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
