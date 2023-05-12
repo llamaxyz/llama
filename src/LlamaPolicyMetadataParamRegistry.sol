@@ -14,7 +14,9 @@ contract LlamaPolicyMetadataParamRegistry {
   error OnlyLlamaOrRootLlama();
 
   modifier onlyLlamaOrRootLlama(LlamaExecutor llamaExecutor) {
-    if ((msg.sender != address(ROOT_LLAMA)) && (msg.sender != address(llamaExecutor))) revert OnlyLlamaOrRootLlama();
+    if ((msg.sender != address(ROOT_LLAMA_EXECUTOR)) && (msg.sender != address(llamaExecutor))) {
+      revert OnlyLlamaOrRootLlama();
+    }
     _;
   }
 
@@ -30,7 +32,7 @@ contract LlamaPolicyMetadataParamRegistry {
   // =============================================================
 
   /// @notice The Root Llama Instance.
-  LlamaExecutor public immutable ROOT_LLAMA;
+  LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
 
   /// @notice Mapping of Llama Instance to color code for SVG.
   mapping(LlamaExecutor => string) public color;
@@ -43,7 +45,7 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======================================================
 
   constructor(LlamaExecutor rootLlamaExecutor) {
-    ROOT_LLAMA = rootLlamaExecutor;
+    ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
   }
 
   // ===========================================

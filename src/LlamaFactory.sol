@@ -30,7 +30,7 @@ contract LlamaFactory {
 
   /// @dev Checks that the caller is the Root Llama Executor and reverts if not.
   modifier onlyRootLlama() {
-    if (msg.sender != address(ROOT_LLAMA)) revert OnlyRootLlama();
+    if (msg.sender != address(ROOT_LLAMA_EXECUTOR)) revert OnlyRootLlama();
     _;
   }
 
@@ -76,8 +76,11 @@ contract LlamaFactory {
   /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
   LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
-  /// @notice The Llama instance responsible for deploying new Llama instances.
-  LlamaExecutor public immutable ROOT_LLAMA;
+  /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
+  LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
+
+  /// @notice The core of the Llama instance responsible for deploying new Llama instances.
+  LlamaCore public immutable ROOT_LLAMA_CORE;
 
   /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
@@ -113,7 +116,7 @@ contract LlamaFactory {
     _setPolicyTokenMetadata(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
 
-    ROOT_LLAMA = _deploy(
+    (ROOT_LLAMA_EXECUTOR, ROOT_LLAMA_CORE) = _deploy(
       name,
       initialLlamaStrategyLogic,
       initialStrategies,
@@ -123,7 +126,7 @@ contract LlamaFactory {
       initialRolePermissions
     );
 
-    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA);
+    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
   }
 
   // ===========================================
@@ -148,7 +151,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) external onlyRootLlama returns (LlamaExecutor) {
+  ) external onlyRootLlama returns (LlamaExecutor, LlamaCore) {
     return _deploy(
       name,
       strategyLogic,
@@ -208,7 +211,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) internal returns (LlamaExecutor llamaExecutor) {
+  ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -229,8 +232,7 @@ contract LlamaFactory {
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    LlamaCore llamaCore =
-      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
       llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
     llamaExecutor = llamaCore.executor();

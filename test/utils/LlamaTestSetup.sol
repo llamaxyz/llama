@@ -31,6 +31,7 @@ import {
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 // Used for readability of tests, so they can be accessed with e.g. `uint8(Roles.ActionCreator)`.
@@ -64,6 +65,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
   // Root Llama instance.
   LlamaCore rootCore;
+  LlamaExecutor rootExecutor;
   LlamaPolicy rootPolicy;
   ILlamaStrategy rootStrategy1;
   ILlamaStrategy rootStrategy2;
@@ -156,7 +158,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     DeployLlama.run();
 
-    rootCore = factory.ROOT_LLAMA();
+    rootCore = factory.ROOT_LLAMA_CORE();
+    rootExecutor = factory.ROOT_LLAMA_EXECUTOR();
     rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's llama, again with a single action creator role.

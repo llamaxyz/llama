@@ -94,8 +94,12 @@ contract Constructor is LlamaFactoryTest {
     deployLlamaFactory();
   }
 
-  function test_SetsRootLlamaAddress() public {
-    assertEq(address(factory.ROOT_LLAMA()), address(rootCore));
+  function test_SetsRootLlamaCore() public {
+    assertEq(address(factory.ROOT_LLAMA_CORE()), address(rootCore));
+  }
+
+  function test_SetsRootLlamaExecutor() public {
+    assertEq(address(factory.ROOT_LLAMA_EXECUTOR()), address(rootExecutor));
   }
 
   function test_DeploysRootLlamaViaInternalDeployMethod() public {

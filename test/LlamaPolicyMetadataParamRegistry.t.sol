@@ -15,7 +15,7 @@ contract LlamaPolicyMetadataParamRegistryTest is LlamaTestSetup {
 
 contract Constructor is LlamaPolicyMetadataParamRegistryTest {
   function test_SetRootLlama() public {
-    assertEq(address(policyMetadataParamRegistry.ROOT_LLAMA()), address(rootCore));
+    assertEq(address(policyMetadataParamRegistry.ROOT_LLAMA_EXECUTOR()), address(rootExecutor));
   }
 }
 

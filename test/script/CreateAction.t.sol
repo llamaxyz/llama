@@ -28,7 +28,7 @@ contract CreateActionTest is Test, DeployLlama, CreateAction {
   function setUp() public virtual {
     // Deploy the root llama infra.
     DeployLlama.run();
-    rootLlama = factory.ROOT_LLAMA();
+    rootLlama = factory.ROOT_LLAMA_CORE();
   }
 }
 
