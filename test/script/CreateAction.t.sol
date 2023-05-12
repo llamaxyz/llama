@@ -10,6 +10,7 @@ import {ActionState} from "src/lib/Enums.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -129,8 +130,9 @@ contract Run is CreateActionTest {
     bytes32 accountCreatedSig = keccak256("AccountCreated(address,string)");
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,uint256)");
+    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
     LlamaCore llamaInstance;
+    LlamaExecutor llamaInstanceExecutor;
 
     Vm.Log memory _event;
     for (uint256 i; i < emittedEvents.length; i++) {
@@ -141,10 +143,11 @@ contract Run is CreateActionTest {
         //   uint256 indexed id,
         //   string indexed name,
         //   address llamaCore,       <--- What we want.
+        //   address llamaExecutor,
         //   address llamaPolicy,
         //   uint256 chainId
         // )
-        (llamaInstance,,) = abi.decode(_event.data, (LlamaCore, address, uint256));
+        (llamaInstance, llamaInstanceExecutor,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
       }
       if (eventSig == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
@@ -209,14 +212,14 @@ contract Run is CreateActionTest {
     assertEq(thirdStrategy.forceDisapprovalRole(1), true);
 
     LlamaAccount firstAccount = accountsCreated[0];
-    assertEq(firstAccount.llamaCore(), address(llamaInstance));
+    assertEq(firstAccount.llamaExecutor(), address(llamaInstanceExecutor));
     assertEq(
       keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("MP Treasury")
     );
 
     LlamaAccount secondAccount = accountsCreated[1];
-    assertEq(secondAccount.llamaCore(), address(llamaInstance));
+    assertEq(secondAccount.llamaExecutor(), address(llamaInstanceExecutor));
     assertEq(
       keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("MP Grants")

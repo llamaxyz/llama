@@ -74,6 +74,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
   // Mock protocol's (mp) llama instance.
   LlamaCore mpCore;
+  LlamaExecutor mpExecutor;
   LlamaPolicy mpPolicy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
