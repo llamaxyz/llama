@@ -244,7 +244,12 @@ contract Constructor is LlamaCoreTest {
 contract Initialize is LlamaCoreTest {
   function deployWithoutInitialization()
     internal
-    returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy, LlamaExecutor executor)
+    returns (
+      LlamaFactoryWithoutInitialization modifiedFactory,
+      LlamaCore llama,
+      LlamaPolicy policy,
+      LlamaExecutor executor
+    )
   {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
@@ -438,8 +443,12 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_AccountsHaveLlamaExecutorAddressInStorage() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
-      deployWithoutInitialization();
+    (
+      LlamaFactoryWithoutInitialization modifiedFactory,
+      LlamaCore uninitializedLlama,
+      LlamaPolicy policy,
+      LlamaExecutor executor
+    ) = deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
@@ -1205,8 +1214,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a call because msg.sender is mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpCore)));
+    // Checking that the result is a call because msg.sender is mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpExecutor)));
     mpCore.executeAction(_actionInfo);
   }
 
@@ -1239,8 +1248,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a delegatecall because msg.sender is address(this) and not mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    // Checking that the result is a delegatecall because msg.sender is mpCore not mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpCore)));
     mpCore.executeAction(_actionInfo);
   }
 
@@ -2122,27 +2131,21 @@ contract SetGuard is LlamaCoreTest {
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotGuardTarget.selector, address(mpCore)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpCore));
     vm.expectRevert(expectedErr);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotGuardTarget.selector, address(mpPolicy)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpPolicy));
     vm.expectRevert(expectedErr);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 
-    function testFuzz_RevertIf_TargetIsExecutor(bytes4 selector, IActionGuard guard) public {
+  function testFuzz_RevertIf_TargetIsExecutor(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotGuardTarget.selector, address(mpExecutor)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpExecutor));
     vm.expectRevert(expectedErr);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
@@ -2169,27 +2172,21 @@ contract AuthorizeScript is LlamaCoreTest {
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotSetAsScript.selector, address(mpCore)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpCore));
     vm.expectRevert(expectedErr);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotSetAsScript.selector, address(mpPolicy)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpPolicy));
     vm.expectRevert(expectedErr);
     mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 
-    function testFuzz_RevertIf_ScriptIsExecutor(bool authorized) public {
+  function testFuzz_RevertIf_ScriptIsExecutor(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.CannotSetAsScript.selector, address(mpExecutor)
-    );
+    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpExecutor));
     vm.expectRevert(expectedErr);
     mpCore.authorizeScript(address(mpExecutor), authorized);
   }

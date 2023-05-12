@@ -10,8 +10,8 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 
 contract LlamaPolicyMetadataParamRegistryTest is LlamaTestSetup {
-  event ColorSet(LlamaCore indexed llamaCore, string color);
-  event LogoSet(LlamaCore indexed llamaCore, string logo);
+  event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+  event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 }
 
 contract Constructor is LlamaPolicyMetadataParamRegistryTest {
