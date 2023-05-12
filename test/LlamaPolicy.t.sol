@@ -881,27 +881,10 @@ contract PolicyMetadata is LlamaPolicyTest {
     return abi.decode(vm.ffi(inputs), (Metadata));
   }
 
-  function test_ReturnsCorrectTokenURI() public {
-    setTokenURIMetadata();
-
-    string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
-    Metadata memory metadata = parseMetadata(uri);
-    string memory policyholder = LibString.toHexString(uint256(uint160(address(this))));
-
-    string memory name = LibString.concat(mpPolicy.name(), " Member");
-    assertEq(metadata.name, name);
-
-    string memory description1 =
-      LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
-    string memory description = string.concat(
-      description1,
-      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
-      policyholder,
-      " to view their profile page."
-    );
-    assertEq(metadata.description, description);
-
+  function generateTokenUri(address policyholderAddress) internal view returns (string memory) {
+    string memory policyholder = LibString.toHexString(policyholderAddress);
     (string memory color, string memory logo) = policyMetadataParamRegistry.getMetadata(mpCore);
+
     string[21] memory parts;
 
     parts[0] =
@@ -958,9 +941,40 @@ contract PolicyMetadata is LlamaPolicyTest {
       string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]);
     string memory svg2 =
       string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17]);
-    string memory svg = string.concat(svg1, svg2, parts[18], parts[19], parts[20]);
+    return string.concat(svg1, svg2, parts[18], parts[19], parts[20]);
+  }
 
-    assertEq(metadata.image, svg);
+  function test_ReturnsCorrectTokenURIWhenAddressHasLeadingZeroes(uint256 tokenIdWithLeadingZeroes) public {
+    // Setting this number as the upper limit ensures when this `tokenId` is converted to an address it will be be less
+    // than `0x00000000000fffffffffffffffffffffffffffff`. This guarantees that the fuzz output will have at least 11
+    // leading zeroes
+    tokenIdWithLeadingZeroes = bound(tokenIdWithLeadingZeroes, 0, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
+
+    setTokenURIMetadata();
+    string memory uri = mpPolicy.tokenURI(tokenIdWithLeadingZeroes);
+    Metadata memory metadata = parseMetadata(uri);
+    assertEq(metadata.image, generateTokenUri(address(uint160(tokenIdWithLeadingZeroes))));
+  }
+
+  function test_ReturnsCorrectTokenURI() public {
+    setTokenURIMetadata();
+
+    string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
+    Metadata memory metadata = parseMetadata(uri);
+    string memory name = LibString.concat(mpPolicy.name(), " Member");
+    string memory policyholder = LibString.toHexString(address(this));
+    string memory description1 =
+      LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
+    string memory description = string.concat(
+      description1,
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      policyholder,
+      " to view their profile page."
+    );
+
+    assertEq(metadata.description, description);
+    assertEq(metadata.name, name);
+    assertEq(metadata.image, generateTokenUri(address(this)));
   }
 }
 
