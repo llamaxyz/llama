@@ -24,7 +24,8 @@ import {
   RelativeStrategyConfig,
   PermissionData,
   RoleHolderData,
-  RolePermissionData
+  RolePermissionData,
+  StrategyAuthorization
 } from "src/lib/Structs.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
@@ -53,7 +54,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
+  event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool indexed isAuthorized);
   event AccountCreated(LlamaAccount indexed account, string name);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
@@ -1960,14 +1961,15 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
   }
 }
 
-contract UnauthorizeStrategies is LlamaCoreTest {
+contract SetStrategyAuthorizations is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
-    vm.expectRevert(LlamaCore.OnlyLlama.selector);
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
+
+    StrategyAuthorization[] memory strategyAuthorizations = new StrategyAuthorization[](0);
 
     vm.prank(caller);
-    mpCore.unauthorizeStrategies(strategies);
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    mpCore.setStrategyAuthorizations(strategyAuthorizations);
   }
 
   function test_UnauthorizeStrategies() public {
@@ -1975,16 +1977,19 @@ contract UnauthorizeStrategies is LlamaCoreTest {
     assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
     assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
 
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy1);
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy2);
+    StrategyAuthorization[] memory strategyAuthorizations = new StrategyAuthorization[](2);
+    strategyAuthorizations[0].strategy = mpStrategy1;
+    strategyAuthorizations[0].isAuthorized = false;
+    strategyAuthorizations[1].strategy = mpStrategy2;
+    strategyAuthorizations[1].isAuthorized = false;
 
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
-    strategies[0] = mpStrategy1;
-    strategies[1] = mpStrategy2;
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, false);
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy2, false);
 
-    mpCore.unauthorizeStrategies(strategies);
+
+    mpCore.setStrategyAuthorizations(strategyAuthorizations);
 
     assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
     assertEq(mpCore.authorizedStrategies(mpStrategy2), false);

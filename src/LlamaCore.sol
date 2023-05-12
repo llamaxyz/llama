@@ -8,7 +8,7 @@ import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData, StrategyAuthorization} from "src/lib/Structs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -73,7 +73,7 @@ contract LlamaCore is Initializable {
   event StrategyAuthorized(
     ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
-  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
+  event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool indexed isAuthorized);
   event AccountCreated(LlamaAccount indexed account, string name);
   event ScriptAuthorized(address indexed script, bool authorized);
 
@@ -488,13 +488,19 @@ contract LlamaCore is Initializable {
     _deployStrategies(llamaStrategyLogic, strategies);
   }
 
-  /// @notice Remove strategies from the mapping of authorized strategies.
-  /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(ILlamaStrategy[] calldata strategies) external onlyLlama {
-    uint256 strategiesLength = strategies.length;
+  /// @notice Remove or reauthorize previously removed strategies from the mapping of authorized strategies.
+  /// @dev DO NOT use this method to authorize new strategies, use `createAndAuthorizeStrategies` instead.
+  /// @param strategyAuthorizations list of Strategys and booleans to be removed or reauthorized from the mapping of authorized strategies.
+  function setStrategyAuthorizations(StrategyAuthorization[] calldata strategyAuthorizations) external onlyLlama {
+    uint256 strategiesLength = strategyAuthorizations.length;
     for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      delete authorizedStrategies[strategies[i]];
-      emit StrategyUnauthorized(strategies[i]);
+      if (strategyAuthorizations[i].isAuthorized) {
+        authorizedStrategies[strategyAuthorizations[i].strategy] = true;
+        emit StrategyAuthorizationSet(strategyAuthorizations[i].strategy, true);
+      } else {
+        delete authorizedStrategies[strategyAuthorizations[i].strategy];
+        emit StrategyAuthorizationSet(strategyAuthorizations[i].strategy, false);
+      }
     }
   }
 

@@ -117,3 +117,8 @@ struct ERC1155OperatorData {
   address recipient; // The address to transfer the token to.
   bool approved; // Whether to approve or revoke allowance.
 }
+
+struct StrategyAuthorization {
+  ILlamaStrategy strategy; 
+  bool isAuthorized;
+}
