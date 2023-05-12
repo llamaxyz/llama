@@ -135,7 +135,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     RelativeStrategy additionalStrategyLogic = new RelativeStrategy();
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
   }
@@ -178,7 +178,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
 
     factory.authorizeStrategyLogic(mockStrategyLogic);
 
@@ -1717,7 +1717,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
 contract CreateAndAuthorizeStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
@@ -1963,7 +1963,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
 
 contract UnauthorizeStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
 
@@ -2001,7 +2001,7 @@ contract UnauthorizeStrategies is LlamaCoreTest {
 
 contract CreateAccounts is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
 
@@ -2105,7 +2105,7 @@ contract SetGuard is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, IActionGuard guard)
     public
   {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.setGuard(target, selector, guard);
@@ -2152,7 +2152,7 @@ contract AuthorizeScript is LlamaCoreTest {
   event ScriptAuthorized(address indexed script, bool authorized);
 
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address script, bool authorized) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.authorizeScript(script, authorized);

@@ -203,7 +203,7 @@ contract Initialize is LlamaAccountTest {
 
 contract TransferNativeToken is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -235,7 +235,7 @@ contract TransferNativeToken is LlamaAccountTest {
 
 contract BatchTransferNativeToken is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     LlamaAccount.NativeTokenData[] memory data = new LlamaAccount.NativeTokenData[](1);
@@ -281,7 +281,7 @@ contract BatchTransferNativeToken is LlamaAccountTest {
 
 contract TransferERC20 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -313,7 +313,7 @@ contract TransferERC20 is LlamaAccountTest {
 
 contract BatchTransferERC20 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
@@ -359,7 +359,7 @@ contract BatchTransferERC20 is LlamaAccountTest {
 
 contract ApproveERC20 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -397,7 +397,7 @@ contract ApproveERC20 is LlamaAccountTest {
 
 contract BatchApproveERC20 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
@@ -421,7 +421,7 @@ contract BatchApproveERC20 is LlamaAccountTest {
 
 contract TransferERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -454,7 +454,7 @@ contract TransferERC721 is LlamaAccountTest {
 
 contract BatchTransferERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
@@ -500,7 +500,7 @@ contract BatchTransferERC721 is LlamaAccountTest {
 
 contract ApproveERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -515,7 +515,7 @@ contract ApproveERC721 is LlamaAccountTest {
 
 contract BatchApproveERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
@@ -542,7 +542,7 @@ contract BatchApproveERC721 is LlamaAccountTest {
 
 contract ApproveOperatorERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -560,7 +560,7 @@ contract ApproveOperatorERC721 is LlamaAccountTest {
 
 contract BatchApproveOperatorERC721 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
@@ -584,7 +584,7 @@ contract BatchApproveOperatorERC721 is LlamaAccountTest {
 
 contract TransferERC1155 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -616,7 +616,7 @@ contract TransferERC1155 is LlamaAccountTest {
 
 contract BatchTransferSingleERC1155 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     uint256[] memory tokenIDs = new uint256[](2);
     tokenIDs[0] = RARI_ID_1;
@@ -677,7 +677,7 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
 
 contract BatchTransferMultipleERC1155 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
 
@@ -745,7 +745,7 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
 
 contract ApproveOperatorERC1155 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -763,7 +763,7 @@ contract ApproveOperatorERC1155 is LlamaAccountTest {
 
 contract BatchApproveOperatorERC1155 is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
 
@@ -786,7 +786,7 @@ contract BatchApproveOperatorERC1155 is LlamaAccountTest {
 
 contract Execute is LlamaAccountTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     MockExtension mockExtension = new MockExtension();
 
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);

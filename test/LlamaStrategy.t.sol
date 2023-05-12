@@ -106,7 +106,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
     {
-      vm.prank(address(rootCore));
+      vm.prank(address(rootExecutor));
       factory.authorizeStrategyLogic(absoluteStrategyLogic);
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
@@ -534,7 +534,7 @@ contract Initialize is LlamaStrategyTest {
     uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
     uint256 minApprovals = totalQuantity + _minApprovalIncrease;
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
@@ -553,7 +553,7 @@ contract Initialize is LlamaStrategyTest {
     AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
 
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
@@ -1086,7 +1086,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     generateAndSetRoleHolders(_otherRoleHolders);
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
     testStrategy = deployAbsoluteStrategy(

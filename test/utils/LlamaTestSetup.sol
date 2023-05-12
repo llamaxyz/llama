@@ -433,7 +433,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
 
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 

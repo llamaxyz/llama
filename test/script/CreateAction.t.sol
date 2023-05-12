@@ -147,7 +147,7 @@ contract Run is CreateActionTest {
         //   address llamaPolicy,
         //   uint256 chainId
         // )
-        (llamaInstance, llamaInstanceExecutor,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
+        (llamaInstance,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
       }
       if (eventSig == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
@@ -167,6 +167,8 @@ contract Run is CreateActionTest {
         accountsCreated[accountsCount++] = LlamaAccount(account);
       }
     }
+
+    llamaInstanceExecutor = llamaInstance.executor();
 
     // Confirm new llama instance has the desired properties.
     assertEq(address(llamaInstance.factory()), address(factory));
