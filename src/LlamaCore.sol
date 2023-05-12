@@ -480,7 +480,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
-  /// @param strategies list of new Strategys to be authorized.
+  /// @param strategies list of new Strategies to be authorized.
   function createAndAuthorizeStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
     external
     onlyLlama
@@ -490,7 +490,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Remove or reauthorize previously removed strategies from the mapping of authorized strategies.
   /// @dev DO NOT use this method to authorize new strategies, use `createAndAuthorizeStrategies` instead.
-  /// @param strategyAuthorizations list of Strategys and booleans to be removed or reauthorized from the mapping of
+  /// @param strategyAuthorizations list of Strategies and booleans to be removed or reauthorized from the mapping of
   /// authorized strategies.
   function setStrategyAuthorizations(StrategyAuthorization[] calldata strategyAuthorizations) external onlyLlama {
     uint256 strategiesLength = strategyAuthorizations.length;
