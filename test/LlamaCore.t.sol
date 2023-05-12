@@ -244,11 +244,7 @@ contract Constructor is LlamaCoreTest {
 contract Initialize is LlamaCoreTest {
   function deployWithoutInitialization()
     internal
-    returns (
-      LlamaFactoryWithoutInitialization modifiedFactory,
-      LlamaCore llama,
-      LlamaPolicy policy
-    )
+    returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy)
   {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
@@ -442,11 +438,8 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_AccountsHaveLlamaExecutorAddressInStorage() public {
-    (
-      LlamaFactoryWithoutInitialization modifiedFactory,
-      LlamaCore uninitializedLlama,
-      LlamaPolicy policy
-    ) = deployWithoutInitialization();
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+      deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
