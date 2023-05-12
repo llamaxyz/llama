@@ -10,8 +10,8 @@ contract LlamaExecutor {
   /// @notice The core contract for this llama instance.
   address public immutable LLAMA_CORE;
 
-  constructor(address _llamaCore) {
-    LLAMA_CORE = _llamaCore;
+  constructor() {
+    LLAMA_CORE = msg.sender;
   }
 
   function execute(address target, uint256 value, bytes calldata data, bool isScript)
