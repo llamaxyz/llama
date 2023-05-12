@@ -237,7 +237,7 @@ contract LlamaFactory {
       llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
     llamaExecutor = llamaCore.executor();
 
-    policy.finalizeInitialization(address(llamaCore), bootstrapPermissionId);
+    policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid

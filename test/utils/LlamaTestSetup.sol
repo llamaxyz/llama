@@ -217,7 +217,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
     mpPolicy = mpCore.policy();
     mpExecutor = mpCore.executor();
-    console2.log(address(mpExecutor));
+
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
     rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
