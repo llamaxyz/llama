@@ -124,6 +124,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
     // methods from the handler except for `llamaFactory_deploy`.
     excludeArtifact("LlamaAccount");
     excludeArtifact("LlamaCore");
+    excludeArtifact("LlamaExecutor");
     excludeArtifact("LlamaPolicy");
     excludeArtifact("RelativeStrategy");
 

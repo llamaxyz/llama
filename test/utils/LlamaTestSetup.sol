@@ -236,7 +236,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     vm.stopPrank();
 
     // With the mock protocol's llama instance deployed, we deploy the mock protocol.
-    mockProtocol = new MockProtocol(address(mpCore));
+    mockProtocol = new MockProtocol(address(mpExecutor));
 
     // Deploy the mock script
     mockScript = new MockScript();

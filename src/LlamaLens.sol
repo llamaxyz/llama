@@ -38,7 +38,7 @@ contract LlamaLens {
   /// @param llamaCore The address of the LlamaCore contract.
   /// @return the computed address of the LlamaExecutor contract.
   function computeLlamaExecutorAddress(address llamaCore) external pure returns (LlamaExecutor) {
-    return LlamaExecutor(_computeCreateAddress(llamaCore, 0));
+    return LlamaExecutor(_computeCreateAddress(llamaCore, 1));
   }
 
   /// @notice Computes the address of a llama executor from its core configuration.
@@ -52,7 +52,7 @@ contract LlamaLens {
     returns (LlamaExecutor)
   {
     LlamaCore llamaCore = _computeLlamaCoreAddress(name, llamaCoreLogic, factory);
-    return LlamaExecutor(_computeCreateAddress(address(llamaCore), 0));
+    return LlamaExecutor(_computeCreateAddress(address(llamaCore), 1));
   }
 
   /// @notice Computes the address of a llama policy with a name value.
