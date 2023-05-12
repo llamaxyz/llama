@@ -9,6 +9,7 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
@@ -27,7 +28,7 @@ contract LlamaFactory {
   /// @dev Thrown when a protected external function in the factory is not called by the Root Llama Core.
   error OnlyRootLlama();
 
-  /// @dev Checks that the caller is the Root Llama Core and reverts if not.
+  /// @dev Checks that the caller is the Root Llama Executor and reverts if not.
   modifier onlyRootLlama() {
     if (msg.sender != address(ROOT_LLAMA)) revert OnlyRootLlama();
     _;
@@ -39,7 +40,12 @@ contract LlamaFactory {
 
   /// @dev Emitted when a new Llama instance is created.
   event LlamaInstanceCreated(
-    uint256 indexed id, string indexed name, address llamaCore, address llamaPolicy, uint256 chainId
+    uint256 indexed id,
+    string indexed name,
+    address llamaCore,
+    address llamaExecutor,
+    address llamaPolicy,
+    uint256 chainId
   );
 
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
@@ -71,7 +77,7 @@ contract LlamaFactory {
   LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
 
   /// @notice The Llama instance responsible for deploying new Llama instances.
-  LlamaCore public immutable ROOT_LLAMA;
+  LlamaExecutor public immutable ROOT_LLAMA;
 
   /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
@@ -142,7 +148,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) external onlyRootLlama returns (LlamaCore) {
+  ) external onlyRootLlama returns (LlamaExecutor) {
     return _deploy(
       name,
       strategyLogic,
@@ -169,11 +175,16 @@ contract LlamaFactory {
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
+  /// @param llamaExecutor The instance's LlamaExecutor.
   /// @param name The name of the Llama system.
   /// @param tokenId The token ID of the Llama policyholder.
   /// @return The token URI for the given Llama policyholder.
-  function tokenURI(LlamaCore llamaCore, string memory name, uint256 tokenId) external view returns (string memory) {
-    (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaCore);
+  function tokenURI(LlamaExecutor llamaExecutor, string memory name, uint256 tokenId)
+    external
+    view
+    returns (string memory)
+  {
+    (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaExecutor);
     return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
@@ -197,7 +208,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) internal returns (LlamaCore llamaCore) {
+  ) internal returns (LlamaExecutor llamaExecutor) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -218,13 +229,17 @@ contract LlamaFactory {
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    LlamaCore llamaCore =
+      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
       llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
+    llamaExecutor = llamaCore.executor();
 
     policy.finalizeInitialization(address(llamaCore), bootstrapPermissionId);
 
-    emit LlamaInstanceCreated(llamaCount, name, address(llamaCore), address(policy), block.chainid);
+    emit LlamaInstanceCreated(
+      llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
+    );
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 

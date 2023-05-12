@@ -8,14 +8,14 @@ import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMi
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
 /// disapprove actions.
-/// @dev The roles determine how the token can interact with the  Core contract.
+/// @dev The roles and permissions determine how the token can interact with the Core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
 
@@ -32,7 +32,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   error AddressDoesNotHoldPolicy(address userAddress);
 
   modifier onlyLlama() {
-    if (msg.sender != llamaCore) revert OnlyLlama();
+    if (msg.sender != llamaExecutor) revert OnlyLlama();
     _;
   }
 
@@ -86,8 +86,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The highest role ID that has been initialized.
   uint8 public numRoles;
 
-  /// @notice The address of the `LlamaCore` instance that governs this contract.
-  address public llamaCore;
+  /// @notice The address of the `LlamaExecutor` of this instance.
+  address public llamaExecutor;
 
   /// @notice The address of the `LlamaFactory` contract.
   LlamaFactory public factory;
@@ -132,15 +132,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Sets the address of the `LlamaCore` contract and gives holders of role ID 1 permission
+  /// @notice Sets the address of the `LlamaExecutor` contract and gives holders of role ID 1 permission
   /// to change role permissions.
   /// @dev This method can only be called once.
-  /// @param _llamaCore The address of the `LlamaCore` contract.
+  /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
   /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
-  function finalizeInitialization(address _llamaCore, bytes32 bootstrapPermissionId) external {
-    if (llamaCore != address(0)) revert AlreadyInitialized();
+  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
+    if (llamaExecutor != address(0)) revert AlreadyInitialized();
 
-    llamaCore = _llamaCore;
+    llamaExecutor = _llamaExecutor;
     _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
   }
 
@@ -275,7 +275,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the location of the policy metadata.
   /// @param tokenId The ID of the policy token.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return factory.tokenURI(LlamaCore(llamaCore), name, tokenId);
+    return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
