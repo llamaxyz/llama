@@ -8,6 +8,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
@@ -55,16 +56,19 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  ) external returns (LlamaCore llama, LlamaPolicy policy) {
+  ) external returns (LlamaCore llama, LlamaPolicy policy, LlamaExecutor llamaExecutor) {
     // Deploy the system.
     policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
+    llamaExecutor = llama.executor();
     policy.finalizeInitialization(address(llama), bytes32(0));
 
     unchecked {
-      emit LlamaInstanceCreated(llamaCount++, name, address(llama), address(policy), block.chainid);
+      emit LlamaInstanceCreated(
+        llamaCount++, name, address(llama), address(llamaExecutor), address(policy), block.chainid
+      );
     }
   }
 

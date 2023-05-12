@@ -29,6 +29,7 @@ import {
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
@@ -243,7 +244,7 @@ contract Constructor is LlamaCoreTest {
 contract Initialize is LlamaCoreTest {
   function deployWithoutInitialization()
     internal
-    returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy)
+    returns (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore llama, LlamaPolicy policy, LlamaExecutor executor)
   {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
@@ -262,13 +263,13 @@ contract Initialize is LlamaCoreTest {
       new RolePermissionData[](0)
     );
 
-    (llama, policy) = modifiedFactory.deployWithoutInitialization(
+    (llama, policy, executor) = modifiedFactory.deployWithoutInitialization(
       "NewProject", rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0)
     );
   }
 
   function test_StrategiesAreDeployedAtExpectedAddress() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -291,7 +292,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_EmitsStrategyAuthorizedEventForEachStrategy() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -313,7 +314,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_StrategiesHaveLlamaCoreAddressInStorage() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -333,7 +334,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_StrategiesHavePolicyAddressInStorage() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -353,7 +354,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_StrategiesAreAuthorizedByLlamaCore() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -377,7 +378,7 @@ contract Initialize is LlamaCoreTest {
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
     vm.assume(notStrategyLogic != address(relativeStrategyLogic));
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -395,7 +396,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_AccountsAreDeployedAtExpectedAddress() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -417,7 +418,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_EmitsAccountCreatedEventForEachAccount() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -436,8 +437,8 @@ contract Initialize is LlamaCoreTest {
     );
   }
 
-  function test_AccountsHaveLlamaCoreAddressInStorage() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+  function test_AccountsHaveLlamaExecutorAddressInStorage() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -451,12 +452,12 @@ contract Initialize is LlamaCoreTest {
       uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(accountAddresses[0].llamaCore()), address(uninitializedLlama));
-    assertEq(address(accountAddresses[1].llamaCore()), address(uninitializedLlama));
+    assertEq(address(accountAddresses[0].llamaExecutor()), address(executor));
+    assertEq(address(accountAddresses[1].llamaExecutor()), address(executor));
   }
 
   function test_AccountsHaveNameInStorage() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy, LlamaExecutor executor) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
@@ -2120,14 +2121,29 @@ contract SetGuard is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotGuardTarget.selector, address(mpCore)
+    );
+    vm.expectRevert(expectedErr);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotGuardTarget.selector, address(mpPolicy)
+    );
+    vm.expectRevert(expectedErr);
+    mpCore.setGuard(address(mpPolicy), selector, guard);
+  }
+
+    function testFuzz_RevertIf_TargetIsExecutor(bytes4 selector, IActionGuard guard) public {
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotGuardTarget.selector, address(mpExecutor)
+    );
+    vm.expectRevert(expectedErr);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 }
@@ -2152,15 +2168,30 @@ contract AuthorizeScript is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotSetAsScript.selector, address(mpCore)
+    );
+    vm.expectRevert(expectedErr);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotSetAsScript.selector, address(mpPolicy)
+    );
+    vm.expectRevert(expectedErr);
     mpCore.authorizeScript(address(mpPolicy), authorized);
+  }
+
+    function testFuzz_RevertIf_ScriptIsExecutor(bool authorized) public {
+    vm.prank(address(mpExecutor));
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.CannotSetAsScript.selector, address(mpExecutor)
+    );
+    vm.expectRevert(expectedErr);
+    mpCore.authorizeScript(address(mpExecutor), authorized);
   }
 }
 
