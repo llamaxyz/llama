@@ -495,13 +495,10 @@ contract LlamaCore is Initializable {
   function setStrategyAuthorizations(StrategyAuthorization[] calldata strategyAuthorizations) external onlyLlama {
     uint256 strategiesLength = strategyAuthorizations.length;
     for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (strategyAuthorizations[i].isAuthorized) {
-        authorizedStrategies[strategyAuthorizations[i].strategy] = true;
-        emit StrategyAuthorizationSet(strategyAuthorizations[i].strategy, true);
-      } else {
-        delete authorizedStrategies[strategyAuthorizations[i].strategy];
-        emit StrategyAuthorizationSet(strategyAuthorizations[i].strategy, false);
-      }
+      bool isAuthorized = strategyAuthorizations[i].isAuthorized;
+      ILlamaStrategy strategy = strategyAuthorizations[i].strategy;
+      authorizedStrategies[strategy] = isAuthorized;
+      emit StrategyAuthorizationSet(strategy, isAuthorized);
     }
   }
 
