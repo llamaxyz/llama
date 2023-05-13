@@ -14,7 +14,7 @@ contract LlamaExecutor {
     LLAMA_CORE = msg.sender;
   }
 
-  function execute(address target, uint256 value, bytes calldata data, bool isScript)
+  function execute(address target, uint256 value, bool isScript, bytes calldata data)
     external
     returns (bool success, bytes memory result)
   {

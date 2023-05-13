@@ -2073,22 +2073,19 @@ contract SetGuard is LlamaCoreTest {
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpCore));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpPolicy));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsExecutor(bytes4 selector, IActionGuard guard) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotGuardTarget.selector, address(mpExecutor));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpExecutor), selector, guard);
   }
 }
@@ -2114,22 +2111,19 @@ contract AuthorizeScript is LlamaCoreTest {
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpCore));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpPolicy));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsExecutor(bool authorized) public {
     vm.prank(address(mpExecutor));
-    bytes memory expectedErr = abi.encodeWithSelector(LlamaCore.CannotSetAsScript.selector, address(mpExecutor));
-    vm.expectRevert(expectedErr);
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpExecutor), authorized);
   }
 }

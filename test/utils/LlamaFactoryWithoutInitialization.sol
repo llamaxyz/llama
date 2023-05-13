@@ -11,7 +11,6 @@ import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 

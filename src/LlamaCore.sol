@@ -23,8 +23,7 @@ contract LlamaCore is Initializable {
   // ======================================
 
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
-  error CannotGuardTarget(address target);
-  error CannotSetAsScript(address script);
+  error RestrictedAddress();
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
@@ -174,7 +173,7 @@ contract LlamaCore is Initializable {
   ) external initializer returns (bytes32 bootstrapPermissionId) {
     factory = LlamaFactory(msg.sender);
     name = _name;
-    executor = new LlamaExecutor(address(this));
+    executor = new LlamaExecutor();
     policy = _policy;
     llamaAccountLogic = _llamaAccountLogic;
 
@@ -310,10 +309,8 @@ contract LlamaCore is Initializable {
     if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
-    bool success;
-    bytes memory result;
-
-    (success, result) = executor.execute(actionInfo.target, actionInfo.value, actionInfo.data, action.isScript);
+    (bool success, bytes memory result) =
+      executor.execute(actionInfo.target, actionInfo.value, action.isScript, actionInfo.data);
 
     if (!success) revert FailedActionExecution(result);
 
@@ -483,9 +480,7 @@ contract LlamaCore is Initializable {
   /// @param selector The function selector where the `guard` will apply.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
-    if (target == address(this) || target == address(policy) || target == address(executor)) {
-      revert CannotGuardTarget(target);
-    }
+    if (target == address(this) || target == address(policy) || target == address(executor)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
   }
@@ -495,9 +490,7 @@ contract LlamaCore is Initializable {
   /// @param authorized The boolean that determines if the script is being authorized or unauthorized.
   /// @dev To remove a script, set `authorized` to false.
   function authorizeScript(address script, bool authorized) external onlyLlama {
-    if (script == address(this) || script == address(policy) || script == address(executor)) {
-      revert CannotSetAsScript(script);
-    }
+    if (script == address(this) || script == address(policy) || script == address(executor)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
   }

@@ -14,7 +14,7 @@ contract LlamaPolicyMetadataParamRegistry {
   error OnlyLlamaOrRootLlama();
 
   modifier onlyLlamaOrRootLlama(LlamaExecutor llamaExecutor) {
-    if ((msg.sender != address(ROOT_LLAMA_EXECUTOR)) && (msg.sender != address(llamaExecutor))) {
+    if (msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != address(llamaExecutor)) {
       revert OnlyLlamaOrRootLlama();
     }
     _;

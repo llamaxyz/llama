@@ -187,7 +187,7 @@ contract Constructor is LlamaAccountTest {
 }
 
 contract Initialize is LlamaAccountTest {
-  function test_SetsLlamaCore() public {
+  function test_SetsLlamaExecutor() public {
     assertEq(mpAccount1.llamaExecutor(), address(mpExecutor));
   }
 
