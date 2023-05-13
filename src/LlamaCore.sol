@@ -23,6 +23,7 @@ contract LlamaCore is Initializable {
   // ======================================
 
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
+  error CannotSetExecutorAsTarget();
   error RestrictedAddress();
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
@@ -480,7 +481,7 @@ contract LlamaCore is Initializable {
   /// @param selector The function selector where the `guard` will apply.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
-    if (target == address(this) || target == address(policy) || target == address(executor)) revert RestrictedAddress();
+    if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
   }
@@ -490,7 +491,7 @@ contract LlamaCore is Initializable {
   /// @param authorized The boolean that determines if the script is being authorized or unauthorized.
   /// @dev To remove a script, set `authorized` to false.
   function authorizeScript(address script, bool authorized) external onlyLlama {
-    if (script == address(this) || script == address(policy) || script == address(executor)) revert RestrictedAddress();
+    if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
   }
@@ -543,6 +544,7 @@ contract LlamaCore is Initializable {
     bytes calldata data,
     string memory description
   ) internal returns (uint256 actionId) {
+    if (target == address(executor)) revert CannotSetExecutorAsTarget();
     if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);

@@ -631,6 +631,12 @@ contract CreateAction is LlamaCoreTest {
 
     assertEq(action.isScript, false);
   }
+
+  function test_RevertIf_ActionTargetIsExecutor() public {
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(LlamaCore.CannotSetExecutorAsTarget.selector);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpExecutor), 0, abi.encodeWithSelector(""));
+  }
 }
 
 contract CreateActionBySig is LlamaCoreTest {
@@ -2082,12 +2088,6 @@ contract SetGuard is LlamaCoreTest {
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
-
-  function testFuzz_RevertIf_TargetIsExecutor(bytes4 selector, IActionGuard guard) public {
-    vm.prank(address(mpExecutor));
-    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
-    mpCore.setGuard(address(mpExecutor), selector, guard);
-  }
 }
 
 contract AuthorizeScript is LlamaCoreTest {
@@ -2119,12 +2119,6 @@ contract AuthorizeScript is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
-  }
-
-  function testFuzz_RevertIf_ScriptIsExecutor(bool authorized) public {
-    vm.prank(address(mpExecutor));
-    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
-    mpCore.authorizeScript(address(mpExecutor), authorized);
   }
 }
 
