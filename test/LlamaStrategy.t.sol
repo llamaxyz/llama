@@ -429,7 +429,7 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
-    for (uint i = 0; i < forceApprovalRoles.length; i++) {
+    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
       forceApprovalRoles[i] = uint8(bound(forceApprovalRoles[i], 1, type(uint8).max));
     }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
@@ -451,7 +451,7 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDisapprovalRoles) public {
-     for (uint i = 0; i < forceDisapprovalRoles.length; i++) {
+    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
       forceDisapprovalRoles[i] = uint8(bound(forceDisapprovalRoles[i], 1, type(uint8).max));
     }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
