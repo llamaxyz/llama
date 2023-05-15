@@ -1825,9 +1825,7 @@ contract CreateStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createStrategies(
-      ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies)
-    );
+    mpCore.createStrategies(ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.strategies(strategyAddresses[0]), true);
     assertEq(mpCore.strategies(strategyAddresses[1]), true);
@@ -1853,9 +1851,7 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createStrategies(
-      ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies)
-    );
+    mpCore.createStrategies(ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {

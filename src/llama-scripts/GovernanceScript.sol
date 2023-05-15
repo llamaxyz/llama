@@ -105,9 +105,7 @@ contract GovernanceScript {
     SetRoleHolder[] calldata _setRoleHolders
   ) external {
     (LlamaCore core,) = _context();
-    core.createStrategies(
-      _createStrategies.llamaStrategyLogic, _createStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRoleHolders(_setRoleHolders);
   }
 
@@ -117,9 +115,7 @@ contract GovernanceScript {
     SetRoleHolder[] calldata _setRoleHolders
   ) external {
     (LlamaCore core,) = _context();
-    core.createStrategies(
-      _createStrategies.llamaStrategyLogic, _createStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
   }
@@ -129,9 +125,7 @@ contract GovernanceScript {
     SetRolePermission[] calldata _setRolePermissions
   ) external {
     (LlamaCore core,) = _context();
-    core.createStrategies(
-      _createStrategies.llamaStrategyLogic, _createStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRolePermissions(_setRolePermissions);
   }
 
@@ -142,9 +136,7 @@ contract GovernanceScript {
     SetRolePermission[] calldata _setRolePermissions
   ) external {
     (LlamaCore core,) = _context();
-    core.createStrategies(
-      _createStrategies.llamaStrategyLogic, _createStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
     setRolePermissions(_setRolePermissions);
