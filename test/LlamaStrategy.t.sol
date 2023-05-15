@@ -570,6 +570,114 @@ contract Initialize is LlamaStrategyTest {
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidMinApprovals.selector, minApprovals));
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
+
+  function test_CannotSetAllHoldersRoleAsForceApprovalRoleAbsoluteStrategy() public {
+    uint8[] memory _forceApprovalRoles = new uint8[](1);
+    _forceApprovalRoles[0] = uint8(Roles.AllHolders);
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovals: 1,
+      minDisapprovals: 1,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+
+    vm.prank(address(mpCore));
+
+    vm.expectRevert(AbsoluteStrategy.AllHoldersRole.selector);
+    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function test_CannotSetAllHoldersRoleAsForceDisapprovalRoleAbsoluteStrategy() public {
+    uint8[] memory _forceDisapprovalRoles = new uint8[](1);
+    _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovals: 1,
+      minDisapprovals: 1,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootCore));
+
+    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+
+    vm.prank(address(mpCore));
+
+    vm.expectRevert(AbsoluteStrategy.AllHoldersRole.selector);
+    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function test_CannotSetAllHoldersRoleAsForceApprovalRoleRelativeStrategy() public {
+    uint8[] memory _forceApprovalRoles = new uint8[](1);
+    _forceApprovalRoles[0] = uint8(Roles.AllHolders);
+    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 5000,
+      minDisapprovalPct: 5000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpCore));
+
+    vm.expectRevert(RelativeStrategy.AllHoldersRole.selector);
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function test_CannotSetAllHoldersRoleAsForceDisapprovalRoleRelativeStrategy() public {
+    uint8[] memory _forceDisapprovalRoles = new uint8[](1);
+    _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
+    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 5000,
+      minDisapprovalPct: 5000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpCore));
+
+    vm.expectRevert(RelativeStrategy.AllHoldersRole.selector);
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
 }
 
 contract IsActionApproved is LlamaStrategyTest {
