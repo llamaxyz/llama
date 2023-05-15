@@ -133,6 +133,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
     for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
+      if (role == 0) revert AllHoldersRole();
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
@@ -140,6 +141,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
     for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
+      if (role == 0) revert AllHoldersRole();
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
@@ -281,6 +283,5 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
-    if (role == 0) revert AllHoldersRole();
   }
 }
