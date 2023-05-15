@@ -1960,44 +1960,6 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
   }
 }
 
-contract UnauthorizeStrategies is LlamaCoreTest {
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
-    vm.expectRevert(LlamaCore.OnlyLlama.selector);
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
-
-    vm.prank(caller);
-    mpCore.unauthorizeStrategies(strategies);
-  }
-
-  function test_UnauthorizeStrategies() public {
-    vm.startPrank(address(mpCore));
-    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
-    assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
-
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy1);
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy2);
-
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
-    strategies[0] = mpStrategy1;
-    strategies[1] = mpStrategy2;
-
-    mpCore.unauthorizeStrategies(strategies);
-
-    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
-    assertEq(mpCore.authorizedStrategies(mpStrategy2), false);
-    vm.stopPrank();
-
-    vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
-    );
-  }
-}
-
 contract CreateAccounts is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));

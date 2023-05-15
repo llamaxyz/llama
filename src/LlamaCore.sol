@@ -488,16 +488,6 @@ contract LlamaCore is Initializable {
     _deployStrategies(llamaStrategyLogic, strategies);
   }
 
-  /// @notice Remove strategies from the mapping of authorized strategies.
-  /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(ILlamaStrategy[] calldata strategies) external onlyLlama {
-    uint256 strategiesLength = strategies.length;
-    for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      delete authorizedStrategies[strategies[i]];
-      emit StrategyUnauthorized(strategies[i]);
-    }
-  }
-
   /// @notice Deploy new accounts.
   /// @param accounts List of names of new accounts to be created.
   function createAccounts(string[] calldata accounts) external onlyLlama {
