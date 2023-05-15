@@ -480,12 +480,12 @@ contract LlamaCore is Initializable {
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
-  /// @param strategies list of new Strategys to be authorized.
-  function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
+  /// @param strategyConfigs list of new Strategys to be authorized.
+  function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
     external
     onlyLlama
   {
-    _deployStrategies(llamaStrategyLogic, strategies);
+    _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
   /// @notice Deploy new accounts.
@@ -690,7 +690,7 @@ contract LlamaCore is Initializable {
   /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
   /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
   /// have permission to assign role permissions.
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata _strategies)
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfig)
     internal
     returns (ILlamaStrategy firstStrategy)
   {
@@ -700,13 +700,13 @@ contract LlamaCore is Initializable {
       revert UnauthorizedStrategyLogic();
     }
 
-    uint256 strategyLength = _strategies.length;
+    uint256 strategyLength = strategyConfig.length;
     for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(_strategies[i]));
+      bytes32 salt = bytes32(keccak256(strategyConfig[i]));
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
-      strategy.initialize(_strategies[i]);
+      strategy.initialize(strategyConfig[i]);
       strategies[strategy] = true;
-      emit StrategyAuthorized(strategy, llamaStrategyLogic, _strategies[i]);
+      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategyConfig[i]);
       if (i == 0) firstStrategy = strategy;
     }
   }
