@@ -114,7 +114,7 @@ contract LlamaCoreHandler is BaseHandler {
     console2.log("llamaCore_castDisapproval              ", calls["llamaCore_castDisapproval"]);
     console2.log("llamaCore_castDisapprovalWithReason    ", calls["llamaCore_castDisapprovalWithReason"]);
     console2.log("llamaCore_castDisapprovalBySig         ", calls["llamaCore_castDisapprovalBySig"]);
-    console2.log("llamaCore_createAndAuthorizeStrategies ", calls["llamaCore_createAndAuthorizeStrategies"]);
+    console2.log("llamaCore_createStrategies             ", calls["llamaCore_createStrategies"]);
     console2.log("llamaCore_createAndAuthorizeAccounts   ", calls["llamaCore_createAndAuthorizeAccounts"]);
     console2.log("-----------------------------------------------");
     console2.log("llamaCore_queueAction_queued           ", calls["llamaCore_queueAction_queued"]);
@@ -267,7 +267,7 @@ contract LlamaCoreHandler is BaseHandler {
 
   // These methods do not affect any of the invariants we're testing, so they're omitted from the
   // handler for simplicity/brevity.
-  //   llamaCore_createAndAuthorizeStrategies
+  //   llamaCore_createStrategies
   //   llamaCore_createAndAuthorizeAccounts
 }
 

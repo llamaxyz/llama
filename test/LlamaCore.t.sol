@@ -183,7 +183,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(mockStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
@@ -1714,14 +1714,14 @@ contract CastDisapprovalBySig is LlamaCoreTest {
   }
 }
 
-contract CreateAndAuthorizeStrategies is LlamaCoreTest {
+contract CreateStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1758,7 +1758,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       strategyAddresses[2], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[2])
     );
 
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1825,7 +1825,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(
+    mpCore.createStrategies(
       ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies)
     );
 
@@ -1853,7 +1853,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(
+    mpCore.createStrategies(
       ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies)
     );
   }
@@ -1880,7 +1880,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpCore));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1904,10 +1904,10 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpCore));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1936,7 +1936,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
-      LlamaCore.createAndAuthorizeStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
+      LlamaCore.createStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);

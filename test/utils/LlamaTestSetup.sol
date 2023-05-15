@@ -115,7 +115,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant RECEIVE_ETH_SELECTOR = 0x4185f8eb; // receiveEth()
   bytes4 public constant EXECUTE_ACTION_SELECTOR = LlamaCore.executeAction.selector;
   bytes4 public constant AUTHORIZE_SCRIPT_SELECTOR = LlamaCore.authorizeScript.selector;
-  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0xbd112734; // createAndAuthorizeStrategies(address,bytes[])
+  bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x0f47de5a; // createStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
 
@@ -432,7 +432,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     vm.prank(address(mpCore));
 
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
