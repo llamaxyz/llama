@@ -51,6 +51,8 @@ contract MockPolicy is LlamaPolicy {
 }
 
 contract OnlyLlama is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function test_RevertIf_CallerIsNotLlama() public {
     MockPolicy mockPolicy = new MockPolicy();
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
@@ -59,6 +61,8 @@ contract OnlyLlama is LlamaPolicyTest {
 }
 
 contract NonTransferableToken is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function test_RevertIf_CallerIsNotLlama() public {
     MockPolicy mockPolicy = new MockPolicy();
     vm.expectRevert(LlamaPolicy.NonTransferableToken.selector);
@@ -185,6 +189,8 @@ contract SetLlama is LlamaPolicyTest {
 // =======================================
 
 contract InitializeRole is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
@@ -230,6 +236,8 @@ contract InitializeRole is LlamaPolicyTest {
 }
 
 contract SetRoleHolder is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
@@ -468,6 +476,8 @@ contract SetRoleHolder is LlamaPolicyTest {
 }
 
 contract SetRolePermission is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
@@ -519,6 +529,8 @@ contract RevokeExpiredRole is LlamaPolicyTest {
 }
 
 contract RevokePolicy is LlamaPolicyTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
@@ -1070,6 +1082,8 @@ contract UpdateRoleDescription is LlamaPolicyTest {
     mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
   }
 
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function test_FailsForNonOwner() public {
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
     mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));

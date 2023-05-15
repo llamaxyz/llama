@@ -202,6 +202,8 @@ contract Initialize is LlamaAccountTest {
 }
 
 contract TransferNativeToken is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -234,6 +236,8 @@ contract TransferNativeToken is LlamaAccountTest {
 }
 
 contract BatchTransferNativeToken is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -280,6 +284,8 @@ contract BatchTransferNativeToken is LlamaAccountTest {
 }
 
 contract TransferERC20 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -312,6 +318,8 @@ contract TransferERC20 is LlamaAccountTest {
 }
 
 contract BatchTransferERC20 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -358,6 +366,8 @@ contract BatchTransferERC20 is LlamaAccountTest {
 }
 
 contract ApproveERC20 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -396,6 +406,8 @@ contract ApproveERC20 is LlamaAccountTest {
 }
 
 contract BatchApproveERC20 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -420,6 +432,8 @@ contract BatchApproveERC20 is LlamaAccountTest {
 }
 
 contract TransferERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -453,6 +467,8 @@ contract TransferERC721 is LlamaAccountTest {
 }
 
 contract BatchTransferERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -499,6 +515,8 @@ contract BatchTransferERC721 is LlamaAccountTest {
 }
 
 contract ApproveERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -514,6 +532,8 @@ contract ApproveERC721 is LlamaAccountTest {
 }
 
 contract BatchApproveERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -541,6 +561,8 @@ contract BatchApproveERC721 is LlamaAccountTest {
 }
 
 contract ApproveOperatorERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -559,6 +581,8 @@ contract ApproveOperatorERC721 is LlamaAccountTest {
 }
 
 contract BatchApproveOperatorERC721 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -583,6 +607,8 @@ contract BatchApproveOperatorERC721 is LlamaAccountTest {
 }
 
 contract TransferERC1155 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -615,6 +641,8 @@ contract TransferERC1155 is LlamaAccountTest {
 }
 
 contract BatchTransferSingleERC1155 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -676,6 +704,8 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
 }
 
 contract BatchTransferMultipleERC1155 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -744,6 +774,8 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
 }
 
 contract ApproveOperatorERC1155 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -762,6 +794,8 @@ contract ApproveOperatorERC1155 is LlamaAccountTest {
 }
 
 contract BatchApproveOperatorERC1155 is LlamaAccountTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
@@ -785,7 +819,9 @@ contract BatchApproveOperatorERC1155 is LlamaAccountTest {
 }
 
 contract Execute is LlamaAccountTest {
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
+  function test_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     MockExtension mockExtension = new MockExtension();
 

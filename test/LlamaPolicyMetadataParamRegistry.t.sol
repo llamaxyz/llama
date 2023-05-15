@@ -53,6 +53,8 @@ contract SetColor is LlamaPolicyMetadataParamRegistryTest {
     assertEq(policyMetadataParamRegistry.color(mpCore), color);
   }
 
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, LlamaCore llamaCore, string memory color) public {
     vm.assume(caller != address(rootCore) && caller != address(llamaCore));
     vm.expectRevert(LlamaPolicyMetadataParamRegistry.OnlyLlamaOrRootLlama.selector);
@@ -81,6 +83,8 @@ contract SetLogo is LlamaPolicyMetadataParamRegistryTest {
     policyMetadataParamRegistry.setLogo(mpCore, logo);
     assertEq(policyMetadataParamRegistry.logo(mpCore), logo);
   }
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
 
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, LlamaCore llamaCore, string memory logo) public {
     vm.assume(caller != address(rootCore) && caller != address(llamaCore));

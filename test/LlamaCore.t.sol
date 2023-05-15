@@ -1715,6 +1715,8 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 }
 
 contract CreateAndAuthorizeStrategies is LlamaCoreTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
@@ -1961,6 +1963,8 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
 }
 
 contract UnauthorizeStrategies is LlamaCoreTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
@@ -1999,6 +2003,8 @@ contract UnauthorizeStrategies is LlamaCoreTest {
 }
 
 contract CreateAccounts is LlamaCoreTest {
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
@@ -2101,6 +2107,8 @@ contract CreateAccounts is LlamaCoreTest {
 contract SetGuard is LlamaCoreTest {
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
 
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, IActionGuard guard)
     public
   {
@@ -2135,6 +2143,8 @@ contract SetGuard is LlamaCoreTest {
 contract AuthorizeScript is LlamaCoreTest {
   event ScriptAuthorized(address indexed script, bool authorized);
 
+  /// forge-config: default.fuzz.runs = 100
+  /// forge-config: ci.fuzz.runs = 1
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address script, bool authorized) public {
     vm.assume(caller != address(mpCore));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
