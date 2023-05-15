@@ -23,6 +23,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error AllHoldersRole();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InvalidMinApprovalPct(uint256 minApprovalPct);
@@ -278,5 +279,6 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
+    if (role == 0) revert AllHoldersRole();
   }
 }

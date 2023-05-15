@@ -429,6 +429,9 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
+    for (uint i = 0; i < forceApprovalRoles.length; i++) {
+      forceApprovalRoles[i] = uint8(bound(forceApprovalRoles[i], 1, type(uint8).max));
+    }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -448,6 +451,9 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDisapprovalRoles) public {
+     for (uint i = 0; i < forceDisapprovalRoles.length; i++) {
+      forceDisapprovalRoles[i] = uint8(bound(forceDisapprovalRoles[i], 1, type(uint8).max));
+    }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -467,6 +473,7 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_HandlesDuplicateApprovalRoles(uint8 _role) public {
+    _role = uint8(bound(_role, 1, type(uint8).max));
     uint8[] memory forceApprovalRoles = new uint8[](2);
     forceApprovalRoles[0] = _role;
     forceApprovalRoles[1] = _role;
@@ -487,6 +494,7 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_HandlesDuplicateDisapprovalRoles(uint8 _role) public {
+    _role = uint8(bound(_role, 1, type(uint8).max));
     uint8[] memory forceDisapprovalRoles = new uint8[](2);
     forceDisapprovalRoles[0] = _role;
     forceDisapprovalRoles[1] = _role;

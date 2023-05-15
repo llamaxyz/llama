@@ -24,6 +24,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======================================
 
   error ActionCreatorCannotCast();
+  error AllHoldersRole();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InsufficientApprovalQuantity();
@@ -280,5 +281,6 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {
     if (role > numRoles) revert RoleNotInitialized(role);
+    if (role == 0) revert AllHoldersRole();
   }
 }
