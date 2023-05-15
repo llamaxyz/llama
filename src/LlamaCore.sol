@@ -130,7 +130,7 @@ contract LlamaCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(ILlamaStrategy => bool) public authorizedStrategies;
+  mapping(ILlamaStrategy => bool) public strategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -329,7 +329,7 @@ contract LlamaCore is Initializable {
       // | actions              | mapping(uint256 => struct Action)                            | 5    | 0      | 32    |
       // | approvals            | mapping(uint256 => mapping(address => bool))                 | 6    | 0      | 32    |
       // | disapprovals         | mapping(uint256 => mapping(address => bool))                 | 7    | 0      | 32    |
-      // | authorizedStrategies | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
+      // | strategies           | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
       // | authorizedScripts    | mapping(address => bool)                                     | 9    | 0      | 32    |
       // | nonces               | mapping(address => mapping(bytes4 => uint256))               | 10   | 0      | 32    |
       // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
@@ -558,7 +558,7 @@ contract LlamaCore is Initializable {
     bytes calldata data,
     string memory description
   ) internal returns (uint256 actionId) {
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+    if (!strategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -690,7 +690,7 @@ contract LlamaCore is Initializable {
   /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
   /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
   /// have permission to assign role permissions.
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata _strategies)
     internal
     returns (ILlamaStrategy firstStrategy)
   {
@@ -700,13 +700,13 @@ contract LlamaCore is Initializable {
       revert UnauthorizedStrategyLogic();
     }
 
-    uint256 strategyLength = strategies.length;
+    uint256 strategyLength = _strategies.length;
     for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(strategies[i]));
+      bytes32 salt = bytes32(keccak256(_strategies[i]));
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
-      strategy.initialize(strategies[i]);
-      authorizedStrategies[strategy] = true;
-      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategies[i]);
+      strategy.initialize(_strategies[i]);
+      strategies[strategy] = true;
+      emit StrategyAuthorized(strategy, llamaStrategyLogic, _strategies[i]);
       if (i == 0) firstStrategy = strategy;
     }
   }
