@@ -198,7 +198,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param role ID of the role to update.
   /// @param description New description of the role.
   function updateRoleDescription(uint8 role, RoleDescription description) external onlyLlama {
-    if (role <= numRoles) emit RoleInitialized(role, description);
+    if (role > numRoles) revert RoleNotInitialized(role);
+    emit RoleInitialized(role, description);
   }
 
   // -------- Role and Permission Getters --------

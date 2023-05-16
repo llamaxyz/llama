@@ -487,7 +487,7 @@ contract SetRolePermission is LlamaPolicyTest {
 
   function test_RevertIf_RoleNotInitialized(uint8 role) public {
     role = uint8(bound(role, mpPolicy.numRoles() + 1, type(uint8).max));
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
     mpPolicy.setRolePermission(role, pausePermissionId, true);
   }
@@ -1077,13 +1077,13 @@ contract UpdateRoleDescription is LlamaPolicyTest {
     mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
   }
 
-  function testFail_IfRoleNotInitialized(uint8 role) public {
+  function test_RevertIf_RoleNotInitialized(uint8 role) public {
     // Bound role between first invalid role number and the uint8 max
     role = uint8(bound(role, mpPolicy.numRoles() + 1, uint8(255)));
-    vm.startPrank(address(mpCore));
-    vm.expectEmit();
-    emit RoleInitialized(role, RoleDescription.wrap("New Description"));
-
+    console2.log(address(mpPolicy.llamaExecutor()));
+    console2.log(address(mpExecutor));
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
     mpPolicy.updateRoleDescription(role, RoleDescription.wrap("New Description"));
   }
 
