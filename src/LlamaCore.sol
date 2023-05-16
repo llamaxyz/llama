@@ -71,8 +71,8 @@ contract LlamaCore is Initializable {
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyAuthorized(
     ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
@@ -554,12 +554,11 @@ contract LlamaCore is Initializable {
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
+    // Scope to avoid stack too deep
     {
       IActionGuard guard = actionGuard[target][bytes4(data)];
       if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
-    }
 
-    {
       // Save action.
       Action storage newAction = actions[actionId];
       newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);

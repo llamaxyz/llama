@@ -52,8 +52,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
   event AccountCreated(LlamaAccount indexed account, string name);
