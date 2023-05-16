@@ -456,7 +456,7 @@ contract Initialize is LlamaStrategyTest {
 
   function testFuzz_SetsForceDisapprovalRoles(uint8[] memory forceDisapprovalRoles) public {
     for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
-            // 0 = All Holders Role, which will revert if set as force role
+      // 0 = All Holders Role, which will revert if set as force role
       if (forceDisapprovalRoles[i] == 0) forceDisapprovalRoles[i] = 1;
     }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
@@ -535,7 +535,7 @@ contract Initialize is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_AbsoluteStrategy_RevertIf_InvalidMinApprovals(
+  function testFuzz_RevertIf_InvalidMinApprovalsAbsoluteStrategy(
     uint256 _numberOfPolicies,
     uint256 _minApprovalIncrease
   ) public {
@@ -574,7 +574,7 @@ contract Initialize is LlamaStrategyTest {
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_RevertIf_AbsoluteStrategy_AllHoldersRoleIsForceApprovalRole() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleAbsoluteStrategy() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
@@ -602,7 +602,7 @@ contract Initialize is LlamaStrategyTest {
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_CannotSetAllHoldersRoleAsForceDisapprovalRoleAbsoluteStrategy() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleAbsoluteStrategy() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
@@ -631,7 +631,7 @@ contract Initialize is LlamaStrategyTest {
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_CannotSetAllHoldersRoleAsForceApprovalRoleRelativeStrategy() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleRelativeStrategy() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
     RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
@@ -656,7 +656,7 @@ contract Initialize is LlamaStrategyTest {
     mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_CannotSetAllHoldersRoleAsForceDisapprovalRoleRelativeStrategy() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleRelativeStrategy() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
     RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
