@@ -596,8 +596,7 @@ contract Initialize is LlamaStrategyTest {
     factory.authorizeStrategyLogic(absoluteStrategyLogic);
 
     vm.prank(address(mpExecutor));
-
-    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector), uint8(Roles.AllHolders));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -626,7 +625,7 @@ contract Initialize is LlamaStrategyTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector), uint8(Roles.AllHolders));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -651,7 +650,7 @@ contract Initialize is LlamaStrategyTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectRevert(RelativeStrategy.abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector), uint8(Roles.AllHolders).selector);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -676,7 +675,7 @@ contract Initialize is LlamaStrategyTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectRevert(RelativeStrategy.abi.encodeWithSelector(AbsoluteStrategy.InvalidRole.selector), uint8(Roles.AllHolders).selector);
+    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
