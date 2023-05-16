@@ -404,7 +404,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   function _setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) internal {
     if (role > numRoles) revert RoleNotInitialized(role);
-
     canCreateAction[role][permissionId] = hasPermission;
     emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
