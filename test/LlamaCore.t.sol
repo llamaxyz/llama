@@ -526,7 +526,7 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
-    vm.assume(_target != address(mockProtocol));
+    vm.assume(_target != address(mockProtocol) && _target != address(mpExecutor));
 
     bytes memory dataTrue = abi.encodeCall(MockProtocol.pause, (true));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
@@ -574,7 +574,7 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_NoPermissionForTarget(address _incorrectTarget) public {
-    vm.assume(_incorrectTarget != address(mockProtocol));
+    vm.assume(_incorrectTarget != address(mockProtocol) && _incorrectTarget != address(mpExecutor));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, data);
@@ -609,6 +609,8 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
+    vm.assume(scriptAddress != address(mpExecutor));
+
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
     vm.assume(
       scriptAddress != address(mpExecutor) && scriptAddress != address(mpCore) && scriptAddress != address(mpPolicy)
@@ -628,6 +630,8 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_CreatesAnActionWithNonScriptAsTarget(address nonScriptAddress) public {
+    vm.assume(nonScriptAddress != address(mpExecutor));
+
     PermissionData memory permissionData = PermissionData(nonScriptAddress, bytes4(data), mpStrategy1);
 
     vm.prank(address(mpExecutor));
