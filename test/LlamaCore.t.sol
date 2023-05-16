@@ -614,7 +614,6 @@ contract CreateAction is LlamaCoreTest {
     );
 
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
-    
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(scriptAddress, true);
