@@ -85,6 +85,9 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpExecutor));
 
+    vm.expectEmit();
+    emit StrategyCreated(mpCore, mpPolicy);
+
     mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
@@ -515,8 +518,6 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
     deployRelativeStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
