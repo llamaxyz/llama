@@ -433,7 +433,8 @@ contract Initialize is LlamaStrategyTest {
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
     for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
-      forceApprovalRoles[i] = uint8(bound(forceApprovalRoles[i], 1, type(uint8).max));
+      // 0 = All Holders Role, which will revert if set as force role
+      if (forceApprovalRoles[i] == 0) forceApprovalRoles[i] = 1;
     }
     ILlamaStrategy newStrategy = deployRelativeStrategyAndSetRole(
       uint8(Roles.TestRole1),
