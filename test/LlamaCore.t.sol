@@ -38,6 +38,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
     uint256 id,
     address indexed creator,
+    uint8 role,
     ILlamaStrategy indexed strategy,
     address indexed target,
     uint256 value,
@@ -481,7 +482,9 @@ contract CreateAction is LlamaCoreTest {
 
   function test_CreatesAnAction() public {
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, ""
+    );
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
@@ -502,7 +505,9 @@ contract CreateAction is LlamaCoreTest {
     string memory description =
       "# Transfer USDC to service provider \n This action transfers 10,000 USDC to our trusted provider.";
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description
+    );
     vm.prank(actionCreatorAaron);
     uint256 actionId =
       mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description);
@@ -676,7 +681,9 @@ contract CreateActionBySig is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, ""
+    );
 
     uint256 actionId = createActionBySig(v, r, s);
     ActionInfo memory actionInfo =
@@ -699,7 +706,14 @@ contract CreateActionBySig is LlamaCoreTest {
 
     vm.expectEmit();
     emit ActionCreated(
-      0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action."
+      0,
+      actionCreatorAaron,
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      data,
+      "# Action 0 \n This is my action."
     );
 
     uint256 actionId = mpCore.createActionBySig(

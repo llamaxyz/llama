@@ -52,6 +52,7 @@ contract LlamaCore is Initializable {
   event ActionCreated(
     uint256 id,
     address indexed creator,
+    uint8 role,
     ILlamaStrategy indexed strategy,
     address indexed target,
     uint256 value,
@@ -553,17 +554,22 @@ contract LlamaCore is Initializable {
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
-    IActionGuard guard = actionGuard[target][bytes4(data)];
-    if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+    {
+      IActionGuard guard = actionGuard[target][bytes4(data)];
+      if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+    }
 
-    // Save action.
-    Action storage newAction = actions[actionId];
-    newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
-    newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
-    newAction.isScript = authorizedScripts[target];
+    {
+      // Save action.
+      Action storage newAction = actions[actionId];
+      newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
+      newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
+      newAction.isScript = authorizedScripts[target];
+    }
+
     actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
-    emit ActionCreated(actionId, policyholder, strategy, target, value, data, description);
+    emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
 
   function _createActionBySig(
