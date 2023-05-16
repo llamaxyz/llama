@@ -531,8 +531,8 @@ contract LlamaCore is Initializable {
     bytes calldata data,
     string memory description
   ) internal returns (uint256 actionId) {
-    if (!strategies[strategy]) revert InvalidStrategy();
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
+    if (!strategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
