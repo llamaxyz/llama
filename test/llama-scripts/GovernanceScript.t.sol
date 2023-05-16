@@ -335,7 +335,8 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
     vm.assume(roles.length > 0); // so we don't try to cast 0 to address
 
     for (uint256 i = 0; i < roles.length; i++) {
-      roles[i] = uint8(bound(roles[i], 1, mpPolicy.numRoles())); // number of exisitng roles (8) and cannot be
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      roles[i] = uint8(bound(roles[i], 1, mpPolicy.numRoles()));
       vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
       vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(roles[i], address(uint160(i + 101)), 1, uint64(block.timestamp + 1));
