@@ -605,7 +605,9 @@ contract CreateAction is LlamaCoreTest {
 
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
-    vm.assume(scriptAddress != address(mpExecutor) && scriptAddress != address(mpCore) && scriptAddress != address(mpPolicy));
+    vm.assume(
+      scriptAddress != address(mpExecutor) && scriptAddress != address(mpCore) && scriptAddress != address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(scriptAddress, true);
