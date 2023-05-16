@@ -24,7 +24,6 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======================================
 
   error ActionCreatorCannotCast();
-  error AllHoldersRole();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InsufficientApprovalQuantity();
@@ -133,7 +132,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
     for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
-      if (role == 0) revert AllHoldersRole();
+      if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
@@ -141,7 +140,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
     for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
-      if (role == 0) revert AllHoldersRole();
+      if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
