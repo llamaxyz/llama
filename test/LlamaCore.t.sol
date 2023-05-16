@@ -29,6 +29,7 @@ import {
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
@@ -134,7 +135,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
     RelativeStrategy additionalStrategyLogic = new RelativeStrategy();
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
   }
@@ -177,11 +178,11 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootCore));
+    vm.prank(address(rootExecutor));
 
     factory.authorizeStrategyLogic(mockStrategyLogic);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
 
     mpCore.createAndAuthorizeStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
@@ -190,7 +191,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     );
 
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, newStrategy));
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 
@@ -200,7 +201,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
 
     // Create the action.
@@ -436,7 +437,7 @@ contract Initialize is LlamaCoreTest {
     );
   }
 
-  function test_AccountsHaveLlamaCoreAddressInStorage() public {
+  function test_AccountsHaveLlamaExecutorAddressInStorage() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
@@ -447,12 +448,12 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
-    modifiedFactory.initialize(
+    LlamaExecutor executor = modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(address(accountAddresses[0].llamaCore()), address(uninitializedLlama));
-    assertEq(address(accountAddresses[1].llamaCore()), address(uninitializedLlama));
+    assertEq(address(accountAddresses[0].llamaExecutor()), address(executor));
+    assertEq(address(accountAddresses[1].llamaExecutor()), address(executor));
   }
 
   function test_AccountsHaveNameInStorage() public {
@@ -531,7 +532,7 @@ contract CreateAction is LlamaCoreTest {
   function test_RevertIf_ActionGuardProhibitsAction() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
     vm.prank(actionCreatorAaron);
@@ -587,7 +588,7 @@ contract CreateAction is LlamaCoreTest {
     vm.assume(_expirationTimestamp > block.timestamp + 1 && _expirationTimestamp < type(uint64).max - 1);
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), actionCreatorAustin, DEFAULT_ROLE_QTY, _expirationTimestamp);
     vm.stopPrank();
 
@@ -605,10 +606,10 @@ contract CreateAction is LlamaCoreTest {
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(scriptAddress, true);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
 
     vm.prank(actionCreatorAaron);
@@ -621,7 +622,7 @@ contract CreateAction is LlamaCoreTest {
   function testFuzz_CreatesAnActionWithNonScriptAsTarget(address nonScriptAddress) public {
     PermissionData memory permissionData = PermissionData(nonScriptAddress, bytes4(data), mpStrategy1);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
 
     vm.prank(actionCreatorAaron);
@@ -629,6 +630,12 @@ contract CreateAction is LlamaCoreTest {
     Action memory action = mpCore.getAction(actionId);
 
     assertEq(action.isScript, false);
+  }
+
+  function test_RevertIf_ActionTargetIsExecutor() public {
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(LlamaCore.CannotSetExecutorAsTarget.selector);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpExecutor), 0, abi.encodeWithSelector(""));
   }
 }
 
@@ -953,10 +960,10 @@ contract ExecuteAction is LlamaCoreTest {
   function test_ScriptsAlwaysUseDelegatecall() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(mockScript), true);
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
@@ -977,60 +984,9 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a delegatecall because msg.sender is this contract and not mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    // Checking that the result is a delegatecall because msg.sender is this mpCore and not mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpCore)));
     mpCore.executeAction(_actionInfo);
-  }
-
-  function test_RevertIf_Slot0Changes() public {
-    address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    MockMaliciousExtension mockMaliciousScript = new MockMaliciousExtension();
-
-    bytes32 permissionId1 =
-      keccak256(abi.encode(address(mockMaliciousScript), MockMaliciousExtension.attack1.selector, mpStrategy1));
-    bytes32 permissionId2 =
-      keccak256(abi.encode(address(mockMaliciousScript), MockMaliciousExtension.attack2.selector, mpStrategy1));
-
-    vm.startPrank(address(mpCore));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    mpCore.authorizeScript(address(mockMaliciousScript), true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), permissionId1, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), permissionId2, true);
-    vm.stopPrank();
-
-    bytes memory data1 = abi.encodeCall(MockMaliciousExtension.attack1, ());
-    bytes memory data2 = abi.encodeCall(MockMaliciousExtension.attack2, ());
-
-    vm.prank(actionCreatorAustin);
-    uint256 actionId1 = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data1);
-    ActionInfo memory _actionInfo1 = ActionInfo(
-      actionId1, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data1
-    );
-
-    vm.prank(actionCreatorAustin);
-    uint256 actionId2 = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data2);
-    ActionInfo memory _actionInfo2 = ActionInfo(
-      actionId2, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockMaliciousScript), 0, data2
-    );
-    vm.warp(block.timestamp + 1);
-
-    _approveAction(approverAdam, _actionInfo1);
-    _approveAction(approverAlicia, _actionInfo1);
-    _approveAction(approverAdam, _actionInfo2);
-    _approveAction(approverAlicia, _actionInfo2);
-
-    vm.warp(block.timestamp + 6 days);
-
-    mpCore.queueAction(_actionInfo1);
-    mpCore.queueAction(_actionInfo2);
-
-    vm.warp(block.timestamp + 5 days);
-
-    vm.expectRevert(LlamaCore.Slot0Changed.selector);
-    mpCore.executeAction(_actionInfo1);
-
-    vm.expectRevert(LlamaCore.Slot0Changed.selector);
-    mpCore.executeAction(_actionInfo2);
   }
 
   function test_RevertIf_NotQueued() public {
@@ -1044,7 +1000,7 @@ contract ExecuteAction is LlamaCoreTest {
   function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
     mpCore.queueAction(actionInfo);
@@ -1057,7 +1013,7 @@ contract ExecuteAction is LlamaCoreTest {
   function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
     IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
     mpCore.queueAction(actionInfo);
@@ -1150,7 +1106,7 @@ contract ExecuteAction is LlamaCoreTest {
       abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, (ActionState.Queued))
     );
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
@@ -1177,10 +1133,10 @@ contract ExecuteAction is LlamaCoreTest {
 
   function test_ScriptAuthorizationDoesNotAffectExecution() external {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(mockScript), false);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
@@ -1196,7 +1152,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(mockScript), true);
 
     mpCore.queueAction(_actionInfo);
@@ -1204,17 +1160,19 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a call because msg.sender is mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpCore)));
+    // Checking that the result is a call because msg.sender is mpExecutor
+    emit ActionExecuted(
+      _actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpExecutor))
+    );
     mpCore.executeAction(_actionInfo);
   }
 
   function test_ScriptUnauthorizationDoesNotAffectExecution() external {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(mockScript), true);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
@@ -1230,7 +1188,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(mockScript), false);
 
     mpCore.queueAction(_actionInfo);
@@ -1238,8 +1196,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a delegatecall because msg.sender is address(this) and not mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(this)));
+    // Checking that the result is a delegatecall because msg.sender is mpCore not mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAustin, abi.encode(address(mpCore)));
     mpCore.executeAction(_actionInfo);
   }
 
@@ -1265,8 +1223,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a call because msg.sender is mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(mpCore)));
+    // Checking that the result is a call because msg.sender is mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(mpExecutor)));
     mpCore.executeAction(_actionInfo);
   }
 
@@ -1292,8 +1250,8 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    // Checking that the result is a delegatecall because msg.sender is address(this) and not mpCore
-    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(this)));
+    // Checking that the result is a delegatecall because msg.sender is mpCore and not mpExecutor
+    emit ActionExecuted(_actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, abi.encode(address(mpCore)));
     mpCore.executeAction(_actionInfo);
   }
 }
@@ -1716,7 +1674,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
 contract CreateAndAuthorizeStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
@@ -1743,7 +1701,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       );
     }
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
     emit StrategyAuthorized(
@@ -1816,7 +1774,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       );
     }
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
@@ -1850,7 +1808,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
     mpCore.createAndAuthorizeStrategies(
@@ -1877,7 +1835,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     newStrategies[0] = duplicateStrategy;
     newStrategies[1] = duplicateStrategy;
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectRevert("ERC1167: create2 failed");
     mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
@@ -1903,7 +1861,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     newStrategies1[0] = duplicateStrategy;
     newStrategies2[0] = duplicateStrategy;
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
@@ -1932,7 +1890,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
@@ -1962,7 +1920,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
 
 contract UnauthorizeStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
 
@@ -1971,7 +1929,7 @@ contract UnauthorizeStrategies is LlamaCoreTest {
   }
 
   function test_UnauthorizeStrategies() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
     assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
 
@@ -2000,7 +1958,7 @@ contract UnauthorizeStrategies is LlamaCoreTest {
 
 contract CreateAccounts is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
 
@@ -2023,7 +1981,7 @@ contract CreateAccounts is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[2], newAccounts[2]);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpCore.createAccounts(newAccounts);
   }
 
@@ -2035,7 +1993,7 @@ contract CreateAccounts is LlamaCoreTest {
       accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpCore.createAccounts(newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
@@ -2050,7 +2008,7 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_RevertIf_AccountsAreIdentical() public {
     string[] memory newAccounts = Solarray.strings("LlamaAccount1", "LlamaAccount1");
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     vm.expectRevert("ERC1167: create2 failed");
     mpCore.createAccounts(newAccounts);
   }
@@ -2058,7 +2016,7 @@ contract CreateAccounts is LlamaCoreTest {
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     string[] memory newAccounts1 = Solarray.strings("LlamaAccount1");
     string[] memory newAccounts2 = Solarray.strings("LlamaAccount1");
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpCore.createAccounts(newAccounts1);
 
     vm.expectRevert("ERC1167: create2 failed");
@@ -2070,7 +2028,7 @@ contract CreateAccounts is LlamaCoreTest {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     string[] memory newAccounts = Solarray.strings(name);
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     LlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), name, address(mpCore));
@@ -2104,7 +2062,7 @@ contract SetGuard is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, IActionGuard guard)
     public
   {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.setGuard(target, selector, guard);
@@ -2112,7 +2070,7 @@ contract SetGuard is LlamaCoreTest {
 
   function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
     vm.assume(target != address(mpCore) && target != address(mpPolicy));
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit ActionGuardSet(target, selector, guard);
     mpCore.setGuard(target, selector, guard);
@@ -2120,14 +2078,14 @@ contract SetGuard is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
   function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
   }
 }
@@ -2136,15 +2094,15 @@ contract AuthorizeScript is LlamaCoreTest {
   event ScriptAuthorized(address indexed script, bool authorized);
 
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address script, bool authorized) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
     mpCore.authorizeScript(script, authorized);
   }
 
   function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
-    vm.assume(script != address(mpCore) && script != address(mpPolicy));
-    vm.prank(address(mpCore));
+    vm.assume(script != address(mpCore) && script != address(mpPolicy) && script != address(mpExecutor));
+    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit ScriptAuthorized(script, authorized);
     mpCore.authorizeScript(script, authorized);
@@ -2152,14 +2110,14 @@ contract AuthorizeScript is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
-    vm.prank(address(mpCore));
-    vm.expectRevert(LlamaCore.CannotUseCoreOrPolicy.selector);
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
   }
 }
@@ -2183,7 +2141,7 @@ contract GetActionState is LlamaCoreTest {
   function test_UnpassedActionsPriorToApprovalPeriodEndHaveStateActive() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
@@ -2222,7 +2180,7 @@ contract GetActionState is LlamaCoreTest {
   function test_PassedActionsPriorToApprovalPeriodEndHaveStateApproved() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 

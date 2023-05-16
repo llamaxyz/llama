@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @dev A script that allows users to aggregate common calls on the core and policy contracts.
@@ -228,7 +229,7 @@ contract GovernanceScript {
   }
 
   function _context() internal view returns (LlamaCore core, LlamaPolicy policy) {
-    core = LlamaCore(address(this));
+    core = LlamaCore(LlamaExecutor(address(this)).LLAMA_CORE());
     policy = LlamaPolicy(core.policy());
   }
 }
