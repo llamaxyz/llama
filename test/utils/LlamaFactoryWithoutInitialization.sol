@@ -3,11 +3,13 @@ pragma solidity ^0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
@@ -61,11 +63,10 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
+
     policy.finalizeInitialization(address(llama), bytes32(0));
 
-    unchecked {
-      emit LlamaInstanceCreated(llamaCount++, name, address(llama), address(policy), block.chainid);
-    }
+    llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
   function initialize(
@@ -76,7 +77,8 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccounts
-  ) external {
+  ) external returns (LlamaExecutor llamaExecutor) {
     llama.initialize(name, policy, relativeStrategyLogic, accountLogic, initialStrategies, initialAccounts);
+    llamaExecutor = llama.executor();
   }
 }

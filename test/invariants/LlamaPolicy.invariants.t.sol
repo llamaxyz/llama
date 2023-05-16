@@ -41,17 +41,17 @@ contract LlamaPolicyHandler is BaseHandler {
   // ====================================
 
   function llamaPolicyNFT_batchGrantPolicies() public recordCall("llamaPolicyNFT_batchGrantPolicies") {
-    vm.prank(address(POLICY.llamaCore()));
+    vm.prank(address(POLICY.llamaExecutor()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function llamaPolicyNFT_batchUpdatePermissions() public recordCall("llamaPolicyNFT_batchUpdatePermissions") {
-    vm.prank(address(POLICY.llamaCore()));
+    vm.prank(address(POLICY.llamaExecutor()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 
   function llamaPolicyNFT_batchRevokePolicies() public recordCall("llamaPolicyNFT_batchRevokePolicies") {
-    vm.prank(address(POLICY.llamaCore()));
+    vm.prank(address(POLICY.llamaExecutor()));
     // TODO Implement this call, record all permissionIds seen with `recordPermissionId(bytes8)`
   }
 }

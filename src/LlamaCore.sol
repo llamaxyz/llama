@@ -10,6 +10,7 @@ import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -22,7 +23,8 @@ contract LlamaCore is Initializable {
   // ======================================
 
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
-  error CannotUseCoreOrPolicy();
+  error CannotSetExecutorAsTarget();
+  error RestrictedAddress();
   error DuplicateCast();
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
@@ -39,7 +41,7 @@ contract LlamaCore is Initializable {
   error UnauthorizedStrategyLogic();
 
   modifier onlyLlama() {
-    if (msg.sender != address(this)) revert OnlyLlama();
+    if (msg.sender != address(executor)) revert OnlyLlama();
     _;
   }
 
@@ -99,6 +101,9 @@ contract LlamaCore is Initializable {
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
     "CastDisapproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
   );
+
+  /// @notice The contract that executes actions for this llama instance.
+  LlamaExecutor public executor;
 
   /// @notice The NFT contract that defines the policies for this llama instance.
   /// @dev We intentionally put this first so it's packed with the `Initializable` storage
@@ -169,6 +174,7 @@ contract LlamaCore is Initializable {
   ) external initializer returns (bytes32 bootstrapPermissionId) {
     factory = LlamaFactory(msg.sender);
     name = _name;
+    executor = new LlamaExecutor();
     policy = _policy;
     llamaAccountLogic = _llamaAccountLogic;
 
@@ -304,42 +310,8 @@ contract LlamaCore is Initializable {
     if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
-    bool success;
-    bytes memory result;
-
-    if (action.isScript) {
-      // Whenever we're executing arbitrary code in the context of LlamaCore, we want to ensure that
-      // none of the storage in this contract changes in unexpected ways, as this could let someone
-      // who sneaks in a malicious (or buggy) target to effectively take ownership of this contract.
-      // However, this contract has a lot of storage so it's not practical to check all slots,
-      // especially since some may be expected to change. Therefore we instead just check slot0,
-      // since that slot (1) contains core variables that should never be changed, and (2) is the
-      // first slot so it's the most likely to be accidentally overwritten with a bad script. The
-      // storage layout of this contract is below:
-      //
-      // | Variable Name        | Type                                                         | Slot | Offset | Bytes |
-      // |----------------------|--------------------------------------------------------------|------|--------|-------|
-      // | _initialized         | uint8                                                        | 0    | 0      | 1     |
-      // | _initializing        | bool                                                         | 0    | 1      | 1     |
-      // | policy               | contract LlamaPolicy                                         | 0    | 2      | 20    |
-      // | factory              | contract LlamaFactory                                        | 1    | 0      | 20    |
-      // | llamaAccountLogic    | contract LlamaAccount                                        | 2    | 0      | 20    |
-      // | name                 | string                                                       | 3    | 0      | 32    |
-      // | actionsCount         | uint256                                                      | 4    | 0      | 32    |
-      // | actions              | mapping(uint256 => struct Action)                            | 5    | 0      | 32    |
-      // | approvals            | mapping(uint256 => mapping(address => bool))                 | 6    | 0      | 32    |
-      // | disapprovals         | mapping(uint256 => mapping(address => bool))                 | 7    | 0      | 32    |
-      // | strategies           | mapping(contract ILlamaStrategy => bool)                     | 8    | 0      | 32    |
-      // | authorizedScripts    | mapping(address => bool)                                     | 9    | 0      | 32    |
-      // | nonces               | mapping(address => mapping(bytes4 => uint256))               | 10   | 0      | 32    |
-      // | actionGuard          | mapping(address => mapping(bytes4 => contract IActionGuard)) | 11   | 0      | 32    |
-
-      bytes32 originalStorage = _readSlot0();
-      (success, result) = actionInfo.target.delegatecall(actionInfo.data);
-      if (originalStorage != _readSlot0()) revert Slot0Changed();
-    } else {
-      (success, result) = actionInfo.target.call{value: actionInfo.value}(actionInfo.data);
-    }
+    (bool success, bytes memory result) =
+      executor.execute(actionInfo.target, actionInfo.value, action.isScript, actionInfo.data);
 
     if (!success) revert FailedActionExecution(result);
 
@@ -492,17 +464,21 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @param target The target contract where the `guard` will apply.
+  /// @param selector The function selector where the `guard` will apply.
   /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
-    if (target == address(this) || target == address(policy)) revert CannotUseCoreOrPolicy();
+    if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
   }
 
-  /// @notice Authorizes `script` as the action guard for the given `target` and `selector`.
+  /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
+  /// @param script The address of the script contract.
+  /// @param authorized The boolean that determines if the script is being authorized or unauthorized.
   /// @dev To remove a script, set `authorized` to false.
   function authorizeScript(address script, bool authorized) external onlyLlama {
-    if (script == address(this) || script == address(policy)) revert CannotUseCoreOrPolicy();
+    if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
   }
@@ -556,6 +532,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (!strategies[strategy]) revert InvalidStrategy();
+    if (target == address(executor)) revert CannotSetExecutorAsTarget();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -751,13 +728,6 @@ contract LlamaCore is Initializable {
     nonce = nonces[policyholder][selector];
     unchecked {
       nonces[policyholder][selector] = nonce + 1;
-    }
-  }
-
-  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
-  function _readSlot0() internal view returns (bytes32 slot0) {
-    assembly {
-      slot0 := sload(0)
     }
   }
 }

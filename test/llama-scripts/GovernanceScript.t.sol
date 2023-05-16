@@ -88,7 +88,7 @@ contract GovernanceScriptTest is LlamaTestSetup {
 
     governanceScript = new GovernanceScript();
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     mpCore.authorizeScript(address(governanceScript), true);
 
@@ -337,7 +337,7 @@ contract RevokeExpiredRoles is GovernanceScriptTest {
     for (uint256 i = 0; i < roles.length; i++) {
       roles[i] = uint8(bound(roles[i], 1, 8)); // number of exisitng roles (8) and cannot be
       vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
-      vm.prank(address(mpCore));
+      vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(roles[i], address(uint160(i + 101)), 1, uint64(block.timestamp + 1));
       expiredRoles.push(GovernanceScript.RevokeExpiredRole(roles[i], address(uint160(i + 101))));
     }

@@ -42,7 +42,7 @@ contract CreateAction is Script {
     );
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
-    LlamaCore rootCore = factory.ROOT_LLAMA();
+    LlamaCore rootCore = factory.ROOT_LLAMA_CORE();
 
     vm.broadcast(deployer);
     deployActionId = rootCore.createAction(

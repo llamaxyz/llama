@@ -81,3 +81,19 @@ contract ComputePermissionId is LlamaLensTestSetup {
     );
   }
 }
+
+contract ComputeLlamaExecutorAddress is LlamaLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    address expected = address(lens.computeLlamaExecutorAddress(address(rootCore)));
+    assertEq(expected, address(rootExecutor));
+
+    expected = address(lens.computeLlamaExecutorAddress("Root Llama", address(coreLogic), address(factory)));
+    assertEq(expected, address(rootExecutor));
+
+    expected = address(lens.computeLlamaExecutorAddress(address(mpCore)));
+    assertEq(expected, address(mpExecutor));
+
+    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama", address(coreLogic), address(factory)));
+    assertEq(expected, address(mpExecutor));
+  }
+}
