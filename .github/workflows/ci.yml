@@ -12,7 +12,8 @@ env:
 
 jobs:
   build:
-    runs-on: ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
@@ -38,8 +39,7 @@ jobs:
 
   coverage:
     runs-on:
-      group: ent/llama
-      labels: [ci]
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
@@ -82,8 +82,7 @@ jobs:
 
   lint:
     runs-on:
-      group: ent/llama-ci
-      labels: [ci, linux]
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
@@ -95,8 +94,7 @@ jobs:
 
   scopelint:
     runs-on:
-      group: ent/llama-ci
-      labels: [ci, linux]
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
