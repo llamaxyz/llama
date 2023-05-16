@@ -574,7 +574,7 @@ contract Initialize is LlamaStrategyTest {
     mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_CannotSetAllHoldersRoleAsForceApprovalRoleAbsoluteStrategy() public {
+  function test_RevertIf_AbsoluteStrategy_AllHoldersRoleIsForceApprovalRole() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
