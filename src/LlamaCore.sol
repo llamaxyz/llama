@@ -743,11 +743,4 @@ contract LlamaCore is Initializable {
       nonces[policyholder][selector] = nonce + 1;
     }
   }
-
-  /// @dev Reads slot 0 from storage, used to check that storage hasn't changed after delegatecall.
-  function _readSlot0() internal view returns (bytes32 slot0) {
-    assembly {
-      slot0 := sload(0)
-    }
-  }
 }
