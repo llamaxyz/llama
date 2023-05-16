@@ -70,8 +70,8 @@ contract LlamaCore is Initializable {
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
   event StrategyAuthorized(
     ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
@@ -612,7 +612,7 @@ contract LlamaCore is Initializable {
 
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
-    emit ApprovalCast(actionInfo.id, policyholder, quantity, reason);
+    emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
@@ -622,7 +622,7 @@ contract LlamaCore is Initializable {
 
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
-    emit DisapprovalCast(actionInfo.id, policyholder, quantity, reason);
+    emit DisapprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.

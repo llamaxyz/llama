@@ -51,8 +51,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 role, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
   event AccountCreated(LlamaAccount indexed account, string name);
@@ -89,14 +89,14 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _approveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, _policyholder, 1, "");
+    emit ApprovalCast(actionInfo.id, _policyholder, uint8(Roles.Approver), 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
   function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, _policyholder, 1, "");
+    emit DisapprovalCast(actionInfo.id, _policyholder, uint8(Roles.Disapprover), 1, "");
     vm.prank(_policyholder);
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
@@ -1275,7 +1275,7 @@ contract CastApproval is LlamaCoreTest {
 
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, approverAdam, 1, reason);
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, reason);
     vm.prank(approverAdam);
     mpCore.castApproval(actionInfo, uint8(Roles.Approver), reason);
   }
@@ -1358,7 +1358,7 @@ contract CastApprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
 
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, approverAdam, 1, "");
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, "");
 
     castApprovalBySig(actionInfo, v, r, s);
 
@@ -1447,7 +1447,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.prank(disapproverDrake);
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
 
@@ -1458,7 +1458,7 @@ contract CastDisapproval is LlamaCoreTest {
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, reason);
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, reason);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover), reason);
   }
@@ -1573,7 +1573,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
     castDisapprovalBySig(actionInfo, v, r, s);
 
@@ -1630,7 +1630,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     // First disapproval.
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
     castDisapprovalBySig(actionInfo, v, r, s);
     assertEq(mpCore.getAction(actionInfo.id).totalDisapprovals, 1);
 
