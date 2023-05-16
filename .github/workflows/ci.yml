@@ -13,7 +13,8 @@ env:
 jobs:
   build:
     runs-on:
-      group: llamas
+      group: ent/llama
+      labels: [ci, linux]
     steps:
       - uses: actions/checkout@v3
 
@@ -27,7 +28,8 @@ jobs:
 
   test:
     runs-on:
-      group: llamas
+      group: ent/llama
+      labels: [ci, linux]
     steps:
       - uses: actions/checkout@v3
 
@@ -39,7 +41,8 @@ jobs:
 
   coverage:
     runs-on:
-      group: llamas
+      group: ent/llama
+      labels: [ci, linux]
     steps:
       - uses: actions/checkout@v3
 
@@ -82,7 +85,8 @@ jobs:
 
   lint:
     runs-on:
-      group: llamas
+      group: ent/llama
+      labels: [ci, linux]
     steps:
       - uses: actions/checkout@v3
 
@@ -94,7 +98,8 @@ jobs:
 
   scopelint:
     runs-on:
-      group: llamas
+      group: ent/llama
+      labels: [ci, linux]
     steps:
       - uses: actions/checkout@v3
 
