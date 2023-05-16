@@ -186,7 +186,7 @@ contract SetLlama is LlamaPolicyTest {
 
 contract InitializeRole is LlamaPolicyTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -195,7 +195,7 @@ contract InitializeRole is LlamaPolicyTest {
 
   function test_IncrementsNumRoles() public {
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES);
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     mpPolicy.initializeRole(RoleDescription.wrap("TestRole1"));
     assertEq(mpPolicy.numRoles(), NUM_INIT_ROLES + 1);
@@ -205,7 +205,7 @@ contract InitializeRole is LlamaPolicyTest {
   }
 
   function test_RevertIf_OverflowOccurs() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     while (mpPolicy.numRoles() < type(uint8).max) mpPolicy.initializeRole(getRoleDescription("TestRole"));
 
     // Now the `numRoles` is at the max value, so the next call should revert.
@@ -216,13 +216,13 @@ contract InitializeRole is LlamaPolicyTest {
   function test_EmitsRoleInitializedEvent() public {
     vm.expectEmit();
     emit RoleInitialized(NUM_INIT_ROLES + 1, getRoleDescription("TestRole"));
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
 
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
   }
 
   function test_DoesNotGuardAgainstSameDescriptionUsedForMultipleRoles() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
     mpPolicy.initializeRole(getRoleDescription("TestRole"));
@@ -231,7 +231,7 @@ contract InitializeRole is LlamaPolicyTest {
 
 contract SetRoleHolder is LlamaPolicyTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -240,7 +240,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
   function test_RevertIf_NonExistentRole(uint8 role) public {
     role = uint8(bound(role, mpPolicy.numRoles() + 1, type(uint8).max));
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
     mpPolicy.setRoleHolder(role, arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
@@ -250,19 +250,19 @@ contract SetRoleHolder is LlamaPolicyTest {
     expiration = uint64(bound(expiration, 0, timestamp - 1));
     vm.warp(timestamp);
     vm.expectRevert(LlamaPolicy.AllHoldersRole.selector);
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, expiration);
   }
 
   function test_RevertIf_InvalidQuantity() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, 0, DEFAULT_ROLE_EXPIRATION);
   }
 
   function test_RevertIf_AllHoldersRole() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.expectRevert(LlamaPolicy.AllHoldersRole.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -270,7 +270,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
   function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
     address policyholder = arbitraryPolicyholder;
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     uint256 initRoleHolders = 7;
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
@@ -313,7 +313,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
   function test_NoOpIfNoChangesAreMade_WhenUserDoesNotHaveRole() public {
     address policyholder = arbitraryPolicyholder;
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     uint256 initRoleHolders = 7;
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
@@ -375,7 +375,7 @@ contract SetRoleHolder is LlamaPolicyTest {
   function test_SetsRoleHolder(address policyholder) public {
     vm.assume(policyholder != address(0));
     if (mpPolicy.balanceOf(policyholder) > 0) policyholder = makeAddr("policyholderWithoutPolicy");
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     uint256 initRoleHolders = 7;
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.AllHolders)), initRoleHolders, "0");
@@ -469,7 +469,7 @@ contract SetRoleHolder is LlamaPolicyTest {
 
 contract SetRolePermission is LlamaPolicyTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -479,7 +479,7 @@ contract SetRolePermission is LlamaPolicyTest {
   function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
     vm.expectEmit();
     emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
 
     assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
@@ -498,7 +498,7 @@ contract RevokeExpiredRole is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.warp(expiration + 1);
@@ -517,7 +517,7 @@ contract RevokeExpiredRole is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
@@ -527,7 +527,7 @@ contract RevokeExpiredRole is LlamaPolicyTest {
 
 contract RevokePolicy is LlamaPolicyTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpCore));
+    vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
@@ -538,7 +538,7 @@ contract RevokePolicy is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     vm.assume(mpPolicy.balanceOf(policyholder) == 0);
 
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
@@ -556,7 +556,7 @@ contract RevokePolicy is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     vm.assume(mpPolicy.balanceOf(policyholder) == 0);
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.AddressDoesNotHoldPolicy.selector, policyholder));
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.revokePolicy(policyholder);
   }
 }
@@ -616,7 +616,7 @@ contract GetQuantity is LlamaPolicyTest {
   }
 
   function test_ReturnsOneIfRoleHasExpiredButWasNotRevoked() public {
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, 100);
 
     vm.warp(100);
@@ -627,7 +627,7 @@ contract GetQuantity is LlamaPolicyTest {
   }
 
   function test_ReturnsOneIfRoleHasNotExpired() public {
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, 100);
 
     vm.warp(99);
@@ -638,7 +638,7 @@ contract GetQuantity is LlamaPolicyTest {
 contract GetPastQuantity is LlamaPolicyTest {
   function setUp() public override {
     LlamaPolicyTest.setUp();
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.warp(100);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, 105);
@@ -689,7 +689,7 @@ contract GetPastQuantity is LlamaPolicyTest {
 contract GetSupply is LlamaPolicyTest {
   function setUp() public override {
     LlamaPolicyTest.setUp();
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
   }
 
   function test_IncrementsWhenRolesAreAddedAndDecrementsWhenRolesAreRemoved() public {
@@ -738,7 +738,7 @@ contract GetSupply is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is LlamaPolicyTest {
   function test_ReturnsBalanceCheckpoint() public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.warp(100);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, 150);
@@ -792,7 +792,7 @@ contract RoleBalanceCheckpoints is LlamaPolicyTest {
 contract HasRole is LlamaPolicyTest {
   function test_ReturnsTrueIfHolderHasRole() public {
     vm.warp(100);
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasRole(arbitraryPolicyholder, uint8(Roles.TestRole1)), true);
@@ -805,7 +805,7 @@ contract HasRole is LlamaPolicyTest {
 
 contract HasRoleUint256Overload is LlamaPolicyTest {
   function test_ReturnsTrueIfHolderHasRole() public {
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.warp(100);
 
@@ -821,7 +821,7 @@ contract HasRoleUint256Overload is LlamaPolicyTest {
 
 contract HasPermissionId is LlamaPolicyTest {
   function testFuzz_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
 
     vm.warp(100);
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, true);
@@ -835,7 +835,7 @@ contract HasPermissionId is LlamaPolicyTest {
   }
 
   function testFuzz_ReturnsFalseIfHolderDoesNotHavePermission(bytes32 permissionId) public {
-    vm.startPrank(address(mpCore));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     assertEq(mpPolicy.hasPermissionId(arbitraryPolicyholder, uint8(Roles.TestRole1), permissionId), false);
   }
@@ -846,7 +846,7 @@ contract TotalSupply is LlamaPolicyTest {
     uint256 initPolicySupply = mpPolicy.getRoleSupplyAsQuantitySum(ALL_HOLDERS_ROLE);
     numberOfPolicies = bound(numberOfPolicies, 1, 10_000);
     for (uint256 i = 0; i < numberOfPolicies; i++) {
-      vm.prank(address(mpCore));
+      vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(
         uint8(Roles.TestRole1), address(uint160(i + 100)), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
       );
@@ -874,9 +874,9 @@ contract PolicyMetadata is LlamaPolicyTest {
     string memory color = "#FF0000";
     string memory logo =
       '<path fill="#fff" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
-    vm.startPrank(address(rootCore));
-    policyMetadataParamRegistry.setColor(mpCore, color);
-    policyMetadataParamRegistry.setLogo(mpCore, logo);
+    vm.startPrank(address(rootExecutor));
+    policyMetadataParamRegistry.setColor(mpExecutor, color);
+    policyMetadataParamRegistry.setLogo(mpExecutor, logo);
     vm.stopPrank();
   }
 
@@ -890,7 +890,7 @@ contract PolicyMetadata is LlamaPolicyTest {
 
   function generateTokenUri(address policyholderAddress) internal view returns (string memory) {
     string memory policyholder = LibString.toHexString(policyholderAddress);
-    (string memory color, string memory logo) = policyMetadataParamRegistry.getMetadata(mpCore);
+    (string memory color, string memory logo) = policyMetadataParamRegistry.getMetadata(mpExecutor);
 
     string[21] memory parts;
 
@@ -999,9 +999,9 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
     string memory color = "#FF0000";
     string memory logo =
       '<path fill="#fff" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
-    vm.startPrank(address(rootCore));
-    policyMetadataParamRegistry.setColor(mpCore, color);
-    policyMetadataParamRegistry.setLogo(mpCore, logo);
+    vm.startPrank(address(rootExecutor));
+    policyMetadataParamRegistry.setColor(mpExecutor, color);
+    policyMetadataParamRegistry.setLogo(mpExecutor, logo);
     vm.stopPrank();
   }
 
@@ -1043,7 +1043,7 @@ contract IsRoleExpired is LlamaPolicyTest {
   function testFuzz_ReturnsTrueForExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.warp(expiration + 1);
@@ -1054,7 +1054,7 @@ contract IsRoleExpired is LlamaPolicyTest {
   function testFuzz_ReturnsFalseForNonExpiredRole(uint64 expiration) public {
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, expiration);
 
     assertEq(mpPolicy.isRoleExpired(arbitraryPolicyholder, uint8(Roles.TestRole1)), false);
@@ -1070,7 +1070,7 @@ contract IsRoleExpired is LlamaPolicyTest {
 
 contract UpdateRoleDescription is LlamaPolicyTest {
   function test_UpdatesRoleDescription() public {
-    vm.prank(address(mpCore));
+    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit RoleInitialized(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
 

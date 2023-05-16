@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 
 /// @title Llama Policy Token Metadata Parameter Registry
 /// @author Llama (devsdosomething@llama.xyz)
@@ -13,8 +13,10 @@ contract LlamaPolicyMetadataParamRegistry {
 
   error OnlyLlamaOrRootLlama();
 
-  modifier onlyLlamaOrRootLlama(LlamaCore llamaCore) {
-    if ((msg.sender != address(ROOT_LLAMA)) && (msg.sender != address(llamaCore))) revert OnlyLlamaOrRootLlama();
+  modifier onlyLlamaOrRootLlama(LlamaExecutor llamaExecutor) {
+    if (msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != address(llamaExecutor)) {
+      revert OnlyLlamaOrRootLlama();
+    }
     _;
   }
 
@@ -22,52 +24,52 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Events ========
   // ========================
 
-  event ColorSet(LlamaCore indexed llamaCore, string color);
-  event LogoSet(LlamaCore indexed llamaCore, string logo);
+  event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+  event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
   /// @notice The Root Llama Instance.
-  LlamaCore public immutable ROOT_LLAMA;
+  LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
 
   /// @notice Mapping of Llama Instance to color code for SVG.
-  mapping(LlamaCore => string) public color;
+  mapping(LlamaExecutor => string) public color;
 
   /// @notice Mapping of Llama Instance to logo for SVG.
-  mapping(LlamaCore => string) public logo;
+  mapping(LlamaExecutor => string) public logo;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  constructor(LlamaCore rootLlamaCore) {
-    ROOT_LLAMA = rootLlamaCore;
+  constructor(LlamaExecutor rootLlamaExecutor) {
+    ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
   }
 
   // ===========================================
   // ======== External and Public Logic ========
   // ===========================================
 
-  function getMetadata(LlamaCore llamaCore) external view returns (string memory _color, string memory _logo) {
-    _color = color[llamaCore];
-    _logo = logo[llamaCore];
+  function getMetadata(LlamaExecutor llamaExecutor) external view returns (string memory _color, string memory _logo) {
+    _color = color[llamaExecutor];
+    _logo = logo[llamaExecutor];
   }
 
   /// @notice Sets the color code for SVG of a Llama Instance.
-  /// @param llamaCore The Llama Instance.
+  /// @param llamaExecutor The Llama Instance.
   /// @param _color The color code as a hex value (eg. #00FF00)
-  function setColor(LlamaCore llamaCore, string memory _color) external onlyLlamaOrRootLlama(llamaCore) {
-    color[llamaCore] = _color;
-    emit ColorSet(llamaCore, _color);
+  function setColor(LlamaExecutor llamaExecutor, string memory _color) external onlyLlamaOrRootLlama(llamaExecutor) {
+    color[llamaExecutor] = _color;
+    emit ColorSet(llamaExecutor, _color);
   }
 
   /// @notice Sets the logo for SVG of a Llama Instance.
-  /// @param llamaCore The Llama Instance.
+  /// @param llamaExecutor The Llama Instance.
   /// @param _logo The logo.
-  function setLogo(LlamaCore llamaCore, string memory _logo) external onlyLlamaOrRootLlama(llamaCore) {
-    logo[llamaCore] = _logo;
-    emit LogoSet(llamaCore, _logo);
+  function setLogo(LlamaExecutor llamaExecutor, string memory _logo) external onlyLlamaOrRootLlama(llamaExecutor) {
+    logo[llamaExecutor] = _logo;
+    emit LogoSet(llamaExecutor, _logo);
   }
 }

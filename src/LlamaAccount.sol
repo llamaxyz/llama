@@ -19,6 +19,7 @@ import {
   ERC1155BatchData,
   ERC1155OperatorData
 } from "src/lib/Structs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 
 /// @title Llama Account
 /// @author Llama (devsdosomething@llama.xyz)
@@ -43,7 +44,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   error Slot0Changed();
 
   modifier onlyLlama() {
-    if (msg.sender != llamaCore) revert OnlyLlama();
+    if (msg.sender != llamaExecutor) revert OnlyLlama();
     _;
   }
 
@@ -51,10 +52,10 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice Llama instance.
+  /// @notice Llama instance's executor.
   /// @dev We intentionally put this before the `name` so it's packed with the `Initializable`
   /// storage variables, that way we can only check one slot before and after a delegatecall.
-  address public llamaCore;
+  address public llamaExecutor;
 
   /// @notice Name of this Llama Account.
   string public name;
@@ -70,7 +71,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Initializes a new LlamaAccount clone.
   /// @param _name The name of the LlamaAccount clone.
   function initialize(string memory _name) external initializer {
-    llamaCore = msg.sender;
+    llamaExecutor = address(LlamaCore(msg.sender).executor());
     name = _name;
   }
 
@@ -258,7 +259,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
       // |---------------|---------|------|--------|-------|
       // | _initialized  | uint8   | 0    | 0      | 1     |
       // | _initializing | bool    | 0    | 1      | 1     |
-      // | llamaCore     | address | 0    | 2      | 20    |
+      // | llamaExecutor | address | 0    | 2      | 20    |
       // | name          | string  | 1    | 0      | 32    |
 
       bytes32 originalStorage = _readSlot0();
