@@ -184,7 +184,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createAndAuthorizeStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(mockStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
@@ -223,8 +223,8 @@ contract Setup is LlamaCoreTest {
     assertEq(address(mpCore.policy()), address(mpPolicy));
     assertEq(address(mpCore.llamaAccountLogic()), address(accountLogic));
 
-    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
-    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
+    assertTrue(mpCore.strategies(mpStrategy1));
+    assertTrue(mpCore.strategies(mpStrategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpAccount1.initialize("LlamaAccount0");
@@ -365,15 +365,15 @@ contract Initialize is LlamaCoreTest {
       );
     }
 
-    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), false);
-    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), false);
+    assertEq(uninitializedLlama.strategies(strategyAddresses[0]), false);
+    assertEq(uninitializedLlama.strategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(uninitializedLlama.strategies(strategyAddresses[0]), true);
+    assertEq(uninitializedLlama.strategies(strategyAddresses[1]), true);
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
@@ -605,6 +605,9 @@ contract CreateAction is LlamaCoreTest {
 
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
+    vm.assume(
+      scriptAddress != address(mpExecutor) && scriptAddress != address(mpCore) && scriptAddress != address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(scriptAddress, true);
@@ -1672,14 +1675,14 @@ contract CastDisapprovalBySig is LlamaCoreTest {
   }
 }
 
-contract CreateAndAuthorizeStrategies is LlamaCoreTest {
+contract CreateStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1716,11 +1719,11 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
       strategyAddresses[2], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[2])
     );
 
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
+    assertEq(mpCore.strategies(strategyAddresses[0]), true);
+    assertEq(mpCore.strategies(strategyAddresses[1]), true);
+    assertEq(mpCore.strategies(strategyAddresses[2]), true);
   }
 
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
@@ -1783,13 +1786,11 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createAndAuthorizeStrategies(
-      ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies)
-    );
+    mpCore.createStrategies(ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
-    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
+    assertEq(mpCore.strategies(strategyAddresses[0]), true);
+    assertEq(mpCore.strategies(strategyAddresses[1]), true);
+    assertEq(mpCore.strategies(strategyAddresses[2]), true);
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
@@ -1811,9 +1812,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createAndAuthorizeStrategies(
-      ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies)
-    );
+    mpCore.createStrategies(ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
@@ -1838,7 +1837,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1862,10 +1861,10 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpExecutor));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1894,7 +1893,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
-      LlamaCore.createAndAuthorizeStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
+      LlamaCore.createStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
@@ -1914,45 +1913,7 @@ contract CreateAndAuthorizeStrategies is LlamaCoreTest {
 
     mpCore.executeAction(actionInfo);
 
-    assertEq(mpCore.authorizedStrategies(strategyAddress), true);
-  }
-}
-
-contract UnauthorizeStrategies is LlamaCoreTest {
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    vm.assume(caller != address(mpExecutor));
-    vm.expectRevert(LlamaCore.OnlyLlama.selector);
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](0);
-
-    vm.prank(caller);
-    mpCore.unauthorizeStrategies(strategies);
-  }
-
-  function test_UnauthorizeStrategies() public {
-    vm.startPrank(address(mpExecutor));
-    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
-    assertEq(mpCore.authorizedStrategies(mpStrategy2), true);
-
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy1);
-    vm.expectEmit();
-    emit StrategyUnauthorized(mpStrategy2);
-
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
-    strategies[0] = mpStrategy1;
-    strategies[1] = mpStrategy2;
-
-    mpCore.unauthorizeStrategies(strategies);
-
-    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
-    assertEq(mpCore.authorizedStrategies(mpStrategy2), false);
-    vm.stopPrank();
-
-    vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
-    );
+    assertEq(mpCore.strategies(strategyAddress), true);
   }
 }
 
