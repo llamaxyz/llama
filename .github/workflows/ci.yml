@@ -12,12 +12,15 @@ env:
 
 jobs:
   build:
-    runs-on: llama-ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Build contracts
         run: |
@@ -25,23 +28,29 @@ jobs:
           FOUNDRY_PROFILE=ci forge build --sizes --skip test
 
   test:
-    runs-on: llama-ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Run tests
         run: forge test -vvv
 
   coverage:
-    runs-on: llama-ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Run coverage
         run: forge coverage --report summary --report lcov
@@ -78,23 +87,29 @@ jobs:
           minimum-coverage: 80 # Set coverage threshold.
 
   lint:
-    runs-on: llama-ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Check formatting
         run: forge fmt --check
 
   scopelint:
-    runs-on: llama-ci
+    runs-on:
+      group: llama-ci
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
       - name: Install scopelint
         uses: engineerd/configurator@v0.0.8
