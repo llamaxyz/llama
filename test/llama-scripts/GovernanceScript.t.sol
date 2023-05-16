@@ -277,9 +277,8 @@ contract SetRoleHolders is GovernanceScriptTest {
   function testFuzz_setRoleHolders(GovernanceScript.SetRoleHolder[] memory roleHolders) public {
     vm.assume(roleHolders.length < 500);
     for (uint256 i = 0; i < roleHolders.length; i++) {
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles())); // number of exisitng roles (8)
-        // and cannot be 0
-        // (all holders role)
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
       vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
       vm.assume(roleHolders[i].policyholder != address(0));
       roleHolders[i].quantity = uint128(bound(roleHolders[i].quantity, 1, 100));
@@ -307,8 +306,8 @@ contract SetRoleHolders is GovernanceScriptTest {
 contract SetRolePermissions is GovernanceScriptTest {
   function testFuzz_setRolePermissions(GovernanceScript.SetRolePermission[] memory rolePermissions) public {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
-      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles())); // number of existing
-        // roles (8) and cannot be 0 (all holders role)
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
     }
     bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
     vm.prank(actionCreatorAaron);
