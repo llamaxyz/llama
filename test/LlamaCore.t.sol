@@ -38,6 +38,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
     uint256 id,
     address indexed creator,
+    uint8 role,
     ILlamaStrategy indexed strategy,
     address indexed target,
     uint256 value,
@@ -51,8 +52,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+  event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
   event AccountCreated(LlamaAccount indexed account, string name);
@@ -89,14 +90,14 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _approveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, _policyholder, 1, "");
+    emit ApprovalCast(actionInfo.id, _policyholder, uint8(Roles.Approver), 1, "");
     vm.prank(_policyholder);
     mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
   function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, _policyholder, 1, "");
+    emit DisapprovalCast(actionInfo.id, _policyholder, uint8(Roles.Disapprover), 1, "");
     vm.prank(_policyholder);
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
@@ -481,7 +482,9 @@ contract CreateAction is LlamaCoreTest {
 
   function test_CreatesAnAction() public {
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, ""
+    );
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
@@ -502,7 +505,9 @@ contract CreateAction is LlamaCoreTest {
     string memory description =
       "# Transfer USDC to service provider \n This action transfers 10,000 USDC to our trusted provider.";
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, description);
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description
+    );
     vm.prank(actionCreatorAaron);
     uint256 actionId =
       mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, description);
@@ -521,7 +526,7 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
-    vm.assume(_target != address(mockProtocol));
+    vm.assume(_target != address(mockProtocol) && _target != address(mpExecutor));
 
     bytes memory dataTrue = abi.encodeCall(MockProtocol.pause, (true));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
@@ -569,7 +574,7 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_NoPermissionForTarget(address _incorrectTarget) public {
-    vm.assume(_incorrectTarget != address(mockProtocol));
+    vm.assume(_incorrectTarget != address(mockProtocol) && _incorrectTarget != address(mpExecutor));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, data);
@@ -604,10 +609,11 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
-    PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
     vm.assume(
       scriptAddress != address(mpExecutor) && scriptAddress != address(mpCore) && scriptAddress != address(mpPolicy)
     );
+
+    PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(scriptAddress, true);
@@ -623,6 +629,8 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function testFuzz_CreatesAnActionWithNonScriptAsTarget(address nonScriptAddress) public {
+    vm.assume(nonScriptAddress != address(mpExecutor));
+
     PermissionData memory permissionData = PermissionData(nonScriptAddress, bytes4(data), mpStrategy1);
 
     vm.prank(address(mpExecutor));
@@ -676,7 +684,9 @@ contract CreateActionBySig is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
-    emit ActionCreated(0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "");
+    emit ActionCreated(
+      0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, ""
+    );
 
     uint256 actionId = createActionBySig(v, r, s);
     ActionInfo memory actionInfo =
@@ -699,7 +709,14 @@ contract CreateActionBySig is LlamaCoreTest {
 
     vm.expectEmit();
     emit ActionCreated(
-      0, actionCreatorAaron, mpStrategy1, address(mockProtocol), 0, data, "# Action 0 \n This is my action."
+      0,
+      actionCreatorAaron,
+      uint8(Roles.ActionCreator),
+      mpStrategy1,
+      address(mockProtocol),
+      0,
+      data,
+      "# Action 0 \n This is my action."
     );
 
     uint256 actionId = mpCore.createActionBySig(
@@ -1275,7 +1292,7 @@ contract CastApproval is LlamaCoreTest {
 
   function test_SuccessfulApprovalWithReason(string calldata reason) public {
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, approverAdam, 1, reason);
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, reason);
     vm.prank(approverAdam);
     mpCore.castApproval(actionInfo, uint8(Roles.Approver), reason);
   }
@@ -1358,7 +1375,7 @@ contract CastApprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
 
     vm.expectEmit();
-    emit ApprovalCast(actionInfo.id, approverAdam, 1, "");
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, "");
 
     castApprovalBySig(actionInfo, v, r, s);
 
@@ -1447,7 +1464,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.prank(disapproverDrake);
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
 
@@ -1458,7 +1475,7 @@ contract CastDisapproval is LlamaCoreTest {
   function test_SuccessfulDisapprovalWithReason(string calldata reason) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, reason);
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, reason);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover), reason);
   }
@@ -1573,7 +1590,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
 
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
     castDisapprovalBySig(actionInfo, v, r, s);
 
@@ -1630,7 +1647,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     // First disapproval.
     vm.expectEmit();
-    emit DisapprovalCast(actionInfo.id, disapproverDrake, 1, "");
+    emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
     castDisapprovalBySig(actionInfo, v, r, s);
     assertEq(mpCore.getAction(actionInfo.id).totalDisapprovals, 1);
 
