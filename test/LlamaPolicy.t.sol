@@ -1080,8 +1080,6 @@ contract UpdateRoleDescription is LlamaPolicyTest {
   function test_RevertIf_RoleNotInitialized(uint8 role) public {
     // Bound role between first invalid role number and the uint8 max
     role = uint8(bound(role, mpPolicy.numRoles() + 1, uint8(255)));
-    console2.log(address(mpPolicy.llamaExecutor()));
-    console2.log(address(mpExecutor));
     vm.prank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
     mpPolicy.updateRoleDescription(role, RoleDescription.wrap("New Description"));
