@@ -44,7 +44,7 @@ contract GovernanceScript {
     uint64 expiration;
   }
 
-  struct CreateAndAuthorizeStrategies {
+  struct CreateStrategies {
     ILlamaStrategy llamaStrategyLogic;
     bytes[] strategies;
   }
@@ -102,50 +102,42 @@ contract GovernanceScript {
   }
 
   function createNewStrategiesAndSetRoleHolders(
-    CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
+    CreateStrategies calldata _createStrategies,
     SetRoleHolder[] calldata _setRoleHolders
   ) external {
     (LlamaCore core,) = _context();
-    core.createAndAuthorizeStrategies(
-      createAndAuthorizeStrategies.llamaStrategyLogic, createAndAuthorizeStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRoleHolders(_setRoleHolders);
   }
 
   function createNewStrategiesAndInitializeRolesAndSetRoleHolders(
-    CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
+    CreateStrategies calldata _createStrategies,
     RoleDescription[] calldata description,
     SetRoleHolder[] calldata _setRoleHolders
   ) external {
     (LlamaCore core,) = _context();
-    core.createAndAuthorizeStrategies(
-      createAndAuthorizeStrategies.llamaStrategyLogic, createAndAuthorizeStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
   }
 
   function createNewStrategiesAndSetRolePermissions(
-    CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
+    CreateStrategies calldata _createStrategies,
     SetRolePermission[] calldata _setRolePermissions
   ) external {
     (LlamaCore core,) = _context();
-    core.createAndAuthorizeStrategies(
-      createAndAuthorizeStrategies.llamaStrategyLogic, createAndAuthorizeStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRolePermissions(_setRolePermissions);
   }
 
   function createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissions(
-    CreateAndAuthorizeStrategies calldata createAndAuthorizeStrategies,
+    CreateStrategies calldata _createStrategies,
     RoleDescription[] calldata description,
     SetRoleHolder[] calldata _setRoleHolders,
     SetRolePermission[] calldata _setRolePermissions
   ) external {
     (LlamaCore core,) = _context();
-    core.createAndAuthorizeStrategies(
-      createAndAuthorizeStrategies.llamaStrategyLogic, createAndAuthorizeStrategies.strategies
-    );
+    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
     setRolePermissions(_setRolePermissions);

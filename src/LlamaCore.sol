@@ -135,7 +135,7 @@ contract LlamaCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(ILlamaStrategy => bool) public authorizedStrategies;
+  mapping(ILlamaStrategy => bool) public strategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -452,22 +452,9 @@ contract LlamaCore is Initializable {
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
-  /// @param strategies list of new Strategys to be authorized.
-  function createAndAuthorizeStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
-    external
-    onlyLlama
-  {
-    _deployStrategies(llamaStrategyLogic, strategies);
-  }
-
-  /// @notice Remove strategies from the mapping of authorized strategies.
-  /// @param strategies list of Strategys to be removed from the mapping of authorized strategies.
-  function unauthorizeStrategies(ILlamaStrategy[] calldata strategies) external onlyLlama {
-    uint256 strategiesLength = strategies.length;
-    for (uint256 i = 0; i < strategiesLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      delete authorizedStrategies[strategies[i]];
-      emit StrategyUnauthorized(strategies[i]);
-    }
+  /// @param strategyConfigs list of new Strategys to be authorized.
+  function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) external onlyLlama {
+    _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
   /// @notice Deploy new accounts.
@@ -545,7 +532,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+    if (!strategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -677,7 +664,7 @@ contract LlamaCore is Initializable {
   /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
   /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
   /// have permission to assign role permissions.
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategies)
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
     internal
     returns (ILlamaStrategy firstStrategy)
   {
@@ -687,13 +674,13 @@ contract LlamaCore is Initializable {
       revert UnauthorizedStrategyLogic();
     }
 
-    uint256 strategyLength = strategies.length;
+    uint256 strategyLength = strategyConfigs.length;
     for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(strategies[i]));
+      bytes32 salt = bytes32(keccak256(strategyConfigs[i]));
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
-      strategy.initialize(strategies[i]);
-      authorizedStrategies[strategy] = true;
-      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategies[i]);
+      strategy.initialize(strategyConfigs[i]);
+      strategies[strategy] = true;
+      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
   }

@@ -85,7 +85,10 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    vm.expectEmit();
+    emit StrategyCreated(mpCore, mpPolicy);
+
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(relativeStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
@@ -135,7 +138,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
@@ -161,7 +164,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
   function deployRelativeStrategyWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
@@ -193,7 +196,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createAndAuthorizeStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
@@ -507,8 +510,6 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
     deployRelativeStrategyAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
@@ -560,7 +561,7 @@ contract Initialize is LlamaStrategyTest {
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategy.InvalidMinApprovals.selector, minApprovals));
-    mpCore.createAndAuthorizeStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
 
