@@ -78,7 +78,7 @@ contract LlamaFactoryHandler is BaseHandler {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Action Creator");
 
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.deploy(
       name(),
       relativeStrategyLogic,
@@ -96,7 +96,7 @@ contract LlamaFactoryHandler is BaseHandler {
     recordCall("llamaFactory_authorizeStrategyLogic")
     useCurrentTimestamp
   {
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.authorizeStrategyLogic(newStrategyLogic);
   }
 
@@ -105,7 +105,7 @@ contract LlamaFactoryHandler is BaseHandler {
     recordCall("llamaFactory_setPolicyTokenMetadata")
     useCurrentTimestamp
   {
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA()));
+    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.setPolicyTokenMetadata(newPolicyTokenMetadata);
   }
 }
@@ -124,6 +124,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
     // methods from the handler except for `llamaFactory_deploy`.
     excludeArtifact("LlamaAccount");
     excludeArtifact("LlamaCore");
+    excludeArtifact("LlamaExecutor");
     excludeArtifact("LlamaPolicy");
     excludeArtifact("RelativeStrategy");
 

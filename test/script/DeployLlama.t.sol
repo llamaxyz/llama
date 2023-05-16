@@ -12,6 +12,7 @@ import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
@@ -44,8 +45,9 @@ contract Run is DeployLlamaTest {
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     assertEq(factory.llamaCount(), 1);
-    LlamaCore rootLlama = factory.ROOT_LLAMA();
-    assertEq(rootLlama.name(), "Root Llama");
+    LlamaCore rootLlamaCore = factory.ROOT_LLAMA_CORE();
+    LlamaExecutor rootLlamaExecutor = factory.ROOT_LLAMA_EXECUTOR();
+    assertEq(rootLlamaCore.name(), "Root Llama");
 
     // There are three strategies we expect to have been deployed.
     ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](3);
@@ -80,7 +82,7 @@ contract Run is DeployLlamaTest {
     }
 
     ILlamaStrategy firstStrategy = strategiesAuthorized[0];
-    assertEq(rootLlama.strategies(firstStrategy), true);
+    assertEq(rootLlamaCore.strategies(firstStrategy), true);
     assertEq(toRelativeStrategy(firstStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeStrategy(firstStrategy).approvalRole(), 1);
     assertEq(toRelativeStrategy(firstStrategy).disapprovalRole(), 3);
@@ -93,7 +95,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeStrategy(firstStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy secondStrategy = strategiesAuthorized[1];
-    assertEq(rootLlama.strategies(secondStrategy), true);
+    assertEq(rootLlamaCore.strategies(secondStrategy), true);
     assertEq(toRelativeStrategy(secondStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeStrategy(secondStrategy).approvalRole(), 2);
     assertEq(toRelativeStrategy(secondStrategy).disapprovalRole(), 3);
@@ -106,7 +108,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeStrategy(secondStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy thirdStrategy = strategiesAuthorized[2];
-    assertEq(rootLlama.strategies(thirdStrategy), true);
+    assertEq(rootLlamaCore.strategies(thirdStrategy), true);
     assertEq(toRelativeStrategy(thirdStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeStrategy(thirdStrategy).approvalRole(), 2);
     assertEq(toRelativeStrategy(thirdStrategy).disapprovalRole(), 3);
@@ -119,20 +121,20 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeStrategy(thirdStrategy).forceDisapprovalRole(1), true);
 
     LlamaAccount firstAccount = accountsAuthorized[0];
-    assertEq(firstAccount.llamaCore(), address(rootLlama));
+    assertEq(firstAccount.llamaExecutor(), address(rootLlamaExecutor));
     assertEq(
       keccak256(abi.encodePacked(firstAccount.name())), // Encode to compare.
       keccak256("Llama Treasury")
     );
 
     LlamaAccount secondAccount = accountsAuthorized[1];
-    assertEq(secondAccount.llamaCore(), address(rootLlama));
+    assertEq(secondAccount.llamaExecutor(), address(rootLlamaExecutor));
     assertEq(
       keccak256(abi.encodePacked(secondAccount.name())), // Encode to compare.
       keccak256("Llama Grants")
     );
 
-    LlamaPolicy rootPolicy = rootLlama.policy();
+    LlamaPolicy rootPolicy = rootLlamaCore.policy();
     assertEq(address(rootPolicy.factory()), address(factory));
     assertEq(rootPolicy.numRoles(), 8);
 
