@@ -8,6 +8,7 @@ import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMi
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 
@@ -23,13 +24,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  error ActionCreationAtSameTimestamp();
+  error AddressDoesNotHoldPolicy(address userAddress);
   error AllHoldersRole();
   error AlreadyInitialized();
   error InvalidRoleHolderInput();
   error NonTransferableToken();
   error OnlyLlama();
   error RoleNotInitialized(uint8 role);
-  error AddressDoesNotHoldPolicy(address userAddress);
 
   modifier onlyLlama() {
     if (msg.sender != llamaExecutor) revert OnlyLlama();
@@ -326,6 +328,19 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     emit RoleInitialized(numRoles, description);
   }
 
+  /// @dev Because role supplies are not checkpointed for simplicity, the following issue can occur
+  /// if each of the below is executed within the same timestamp:
+  //    1. An action is created that saves off the current role supply.
+  //    2. A policyholder is given a new role.
+  //    3. Now the total supply in that block is different than what it was at action creation.
+  // As a result, we disallow changes to roles if an action was created in the same block.
+  function _assertNoActionCreationsAtCurrentTimestamp() internal view {
+    if (llamaExecutor == address(0)) return; // Skip check during initialization.
+    address llamaCore = LlamaExecutor(llamaExecutor).LLAMA_CORE();
+    uint256 lastActionCreation = LlamaCore(llamaCore).getLastActionTimestamp();
+    if (lastActionCreation == block.timestamp) revert ActionCreationAtSameTimestamp();
+  }
+
   function _assertValidRoleHolderUpdate(uint8 role, uint128 quantity, uint64 expiration) internal view {
     // Ensure role is initialized.
     if (role > numRoles) revert RoleNotInitialized(role);
@@ -345,6 +360,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   function _setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) internal {
+    _assertNoActionCreationsAtCurrentTimestamp();
     _assertValidRoleHolderUpdate(role, quantity, expiration);
 
     // Save off whether or not the policyholder has a nonzero quantity of this role. This is used
