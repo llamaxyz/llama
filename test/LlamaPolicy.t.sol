@@ -16,6 +16,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaPolicyTest is LlamaTestSetup {
@@ -266,6 +267,18 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     vm.expectRevert(LlamaPolicy.AllHoldersRole.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+  }
+
+  function test_RevertIf_ActionWasCreatedAtSameTimestamp() public {
+    // First it should work, then we mock creating an action at the current timestamp, then it
+    // should revert.
+    vm.startPrank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    vm.mockCall(
+      address(mpCore), abi.encodeWithSelector(LlamaCore.getLastActionTimestamp.selector), abi.encode(block.timestamp)
+    );
+    vm.expectRevert(LlamaPolicy.ActionCreationAtSameTimestamp.selector);
+    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
