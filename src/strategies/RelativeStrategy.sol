@@ -16,7 +16,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the default llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
-///   - Action creators are allowed to vote on this strategy.
+///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
@@ -154,21 +154,17 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external {
-    bool _isDisapprovalEnabled = minDisapprovalPct > ONE_HUNDRED_IN_BPS ? false : true;
-    uint256 disapprovalPolicySupply;
-
     uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    // if (_isDisapprovalEnabled) {
-      disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
-      if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
-    }Z
+    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // Save off the supplies to use for checking quorum.
     actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
     actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
   }
+
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
