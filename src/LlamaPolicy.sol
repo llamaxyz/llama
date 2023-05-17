@@ -238,6 +238,32 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return roleBalanceCkpts[tokenId][role];
   }
 
+  /// @notice Returns all checkpoints for the given `policyholder` and `role` between `start` and
+  /// `end`, where `start` is inclusive and `end` is exclusive.
+  function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
+    external
+    view
+    returns (Checkpoints.History memory)
+  {
+    // We don't need to check that end > start, as the subtraction will revert on overflow. We also
+    // don't need to verify the `end` value is smaller than the length of the array, because if so
+    // array access will revert with an "index out of bounds" error.
+    uint256 tokenId = _tokenId(policyholder);
+    uint256 length = end - start;
+    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](length);
+    for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
+      checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
+    }
+    return Checkpoints.History(checkpoints);
+  }
+
+  /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.
+  /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleBalanceCheckpoints`.
+  function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
+    uint256 tokenId = _tokenId(policyholder);
+    return roleBalanceCkpts[tokenId][role]._checkpoints.length;
+  }
+
   /// @notice Returns true if the `policyholder` has the `role`, false otherwise.
   function hasRole(address policyholder, uint8 role) external view returns (bool) {
     (bool exists,,, uint128 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
