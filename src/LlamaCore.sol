@@ -492,8 +492,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Returns the timestamp of most recently created action.
-  /// @dev Used by `LlamaPolicy` to ensure policy management does not occur in the same timestamp as
-  /// immediately after action creation, as this could result in invalid role supply counts being used.
+  /// @dev Used by `LlamaPolicy` to ensure policy management does not occur immediately after action
+  /// creation in the same timestamp, as this could result in invalid role supply counts being used.
   function getLastActionTimestamp() external view returns (uint256 timestamp) {
     return actions[actionsCount].creationTime;
   }
