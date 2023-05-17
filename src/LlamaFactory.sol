@@ -215,15 +215,10 @@ contract LlamaFactory {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
-    // Role ID 1 is referred to as the bootstrap role.
-    bool foundBootstrapRole = false;
-    for (uint256 i = 0; i < initialRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (initialRoleHolders[i].role == BOOTSTRAP_ROLE) {
-        foundBootstrapRole = true;
-        break;
-      }
-    }
-    if (!foundBootstrapRole) revert InvalidDeployConfiguration();
+    // Role ID 1 is referred to as the bootstrap role. We require that the bootstrap role is the
+    // first role in the `initialRoleHolders` array, and that it never expires.
+    if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
+    if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
     // Now the configuration is likely valid (it's possible the configuration of the first strategy
     // will not actually be able to execute, but we leave that check off-chain / to the deploy
