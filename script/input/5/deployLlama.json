@@ -1,5 +1,5 @@
 {
-  "comment": "This data is currently just used for fork tests, please update before running the script on mainnet!",
+  "comment": "This data is used for Goerli test deploys.",
   "rootLlamaName": "Llama",
   "initialStrategies": [
     {
