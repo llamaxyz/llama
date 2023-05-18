@@ -29,7 +29,7 @@ contract LlamaCore is Initializable {
   error FailedActionExecution(bytes reason);
   error InfoHashMismatch();
   error IncorrectMsgValue();
-  error InvalidActionState(ActionState expected);
+  error InvalidActionState(ActionState current);
   error InvalidPolicyholder();
   error InvalidSignature();
   error InvalidStrategy();
@@ -163,7 +163,7 @@ contract LlamaCore is Initializable {
   /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
   /// @param initialStrategies The configuration of the initial strategies.
-  /// @param initialAccounts The configuration of the initial strategies.
+  /// @param initialAccountNames The configuration of the initial strategies.
   /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
   function initialize(
     string memory _name,
@@ -171,7 +171,7 @@ contract LlamaCore is Initializable {
     ILlamaStrategy _llamaStrategyLogic,
     LlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
-    string[] calldata initialAccounts
+    string[] calldata initialAccountNames
   ) external initializer returns (bytes32 bootstrapPermissionId) {
     factory = LlamaFactory(msg.sender);
     name = _name;
@@ -180,7 +180,7 @@ contract LlamaCore is Initializable {
     llamaAccountLogic = _llamaAccountLogic;
 
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
-    _deployAccounts(initialAccounts);
+    _deployAccounts(initialAccountNames);
 
     // Now we compute the permission ID used to set role permissions and return it.
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
@@ -285,7 +285,8 @@ contract LlamaCore is Initializable {
   function queueAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
-    if (getActionState(actionInfo) != ActionState.Approved) revert InvalidActionState(ActionState.Approved);
+    ActionState currentState = getActionState(actionInfo);
+    if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
     uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
     if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
@@ -300,7 +301,8 @@ contract LlamaCore is Initializable {
     _validateActionInfoHash(action.infoHash, actionInfo);
 
     // Initial checks that action is ready to execute.
-    if (getActionState(actionInfo) != ActionState.Queued) revert InvalidActionState(ActionState.Queued);
+    ActionState currentState = getActionState(actionInfo);
+    if (currentState != ActionState.Queued) revert InvalidActionState(currentState);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
     if (msg.value != actionInfo.value) revert IncorrectMsgValue();
 
@@ -646,8 +648,8 @@ contract LlamaCore is Initializable {
   ) internal returns (Action storage action, uint128 quantity) {
     action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
-
-    if (getActionState(actionInfo) != expectedState) revert InvalidActionState(expectedState);
+    ActionState currentState = getActionState(actionInfo);
+    if (currentState != expectedState) revert InvalidActionState(currentState);
 
     bool isApproval = expectedState == ActionState.Active;
     bool alreadyCast = isApproval ? approvals[actionInfo.id][policyholder] : disapprovals[actionInfo.id][policyholder];
