@@ -28,6 +28,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   error AddressDoesNotHoldPolicy(address userAddress);
   error AllHoldersRole();
   error AlreadyInitialized();
+  error InvalidIndices();
   error InvalidRoleHolderInput();
   error NonTransferableToken();
   error OnlyLlama();
@@ -240,17 +241,22 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role` between `start` and
   /// `end`, where `start` is inclusive and `end` is exclusive.
+  /// @param policyholder Policyholder to get the checkpoints for.
+  /// @param role Role held by `policyholder` to get the checkpoints for.
+  /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
+  /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
   function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
     external
     view
     returns (Checkpoints.History memory)
   {
-    // We don't need to check that end > start, as the subtraction will revert on overflow. We also
-    // don't need to verify the `end` value is smaller than the length of the array, because if so
-    // array access will revert with an "index out of bounds" error.
+    if (start > end) revert InvalidIndices();
+    uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
+    if (end > checkpointsLength) revert InvalidIndices();
+
     uint256 tokenId = _tokenId(policyholder);
-    uint256 length = end - start;
-    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](length);
+    uint256 sliceLength = end - start;
+    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
       checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }

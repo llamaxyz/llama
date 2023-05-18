@@ -825,14 +825,14 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_RevertIf_StartIsGreaterThanEnd() public {
-    vm.expectRevert(stdError.arithmeticError);
+    vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
     mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), 2, 1);
   }
 
   function test_RevertIf_EndIsGreaterThanArrayLength() public {
     uint256 length = mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1))._checkpoints.length;
     uint256 end = length + 1;
-    vm.expectRevert(stdError.indexOOBError);
+    vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
     mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), 2, end);
   }
 
