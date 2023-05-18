@@ -879,7 +879,7 @@ contract QueueAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 6 days);
 
-    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Approved)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Failed)));
     mpCore.queueAction(actionInfo);
   }
 
@@ -1010,7 +1010,7 @@ contract ExecuteAction is LlamaCoreTest {
   }
 
   function test_RevertIf_NotQueued() public {
-    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Approved)));
     mpCore.executeAction(actionInfo);
 
     // Check that it's in the Approved state
@@ -1123,7 +1123,7 @@ contract ExecuteAction is LlamaCoreTest {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     bytes memory expectedErr = abi.encodeWithSelector(
       LlamaCore.FailedActionExecution.selector,
-      abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, (ActionState.Queued))
+      abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, (ActionState.Approved))
     );
 
     vm.startPrank(address(mpExecutor));
@@ -1305,7 +1305,7 @@ contract CastApproval is LlamaCoreTest {
 
     mpCore.queueAction(actionInfo);
 
-    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
     mpCore.castApproval(actionInfo, uint8(Roles.Approver));
   }
 
@@ -1483,7 +1483,7 @@ contract CastDisapproval is LlamaCoreTest {
   function test_RevertIf_ActionNotQueued() public {
     ActionInfo memory actionInfo = _createAction();
 
-    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
     mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
   }
 
@@ -1520,7 +1520,7 @@ contract CastDisapproval is LlamaCoreTest {
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
 
-    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Failed));
     mpCore.executeAction(actionInfo);
   }
 
@@ -1659,7 +1659,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
 
-    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Queued));
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.InvalidActionState.selector, ActionState.Failed));
     mpCore.executeAction(actionInfo);
   }
 
