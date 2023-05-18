@@ -206,9 +206,8 @@ contract Deploy is LlamaFactoryTest {
       new RolePermissionData[](0)
     );
 
-    // Pass an empty array of role holders. This reverts with index out of bounds since we check
-    // index 0 explicitly, which is why there are no arguments to vm.expectRevert().
-    vm.expectRevert();
+    // Pass an empty array of role holders.
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
       relativeStrategyLogic,

@@ -217,6 +217,7 @@ contract LlamaFactory {
     // instance is deployed with an invalid configuration that results in the instance being unusable.
     // Role ID 1 is referred to as the bootstrap role. We require that the bootstrap role is the
     // first role in the `initialRoleHolders` array, and that it never expires.
+    if (initialRoleHolders.length == 0) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
