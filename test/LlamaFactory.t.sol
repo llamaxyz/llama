@@ -187,17 +187,14 @@ contract Deploy is LlamaFactoryTest {
     );
   }
 
-  function test_RevertIf_NoRoleHoldersHaveRoleId1() public {
+  function test_RevertIf_RoleId1IsNotFirst() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     vm.startPrank(address(rootExecutor));
 
-    // Overwrite all role IDs to 2.
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      roleHolders[i].role = 2;
-    }
-
+    // Overwrite role ID at index 1 to ensure it does not have role 1.
+    roleHolders[0].role = 2;
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
@@ -218,6 +215,52 @@ contract Deploy is LlamaFactoryTest {
       accounts,
       new RoleDescription[](0),
       new RoleHolderData[](0),
+      new RolePermissionData[](0)
+    );
+  }
+
+  function test_RevertIf_RoleId1IsFirstWithBadExpiration() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+    vm.startPrank(address(rootExecutor));
+
+    // Overwrite role ID at index 1 to have expiration just below `type(uint64).max`
+    roleHolders[0].expiration = type(uint64).max - 1;
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    factory.deploy(
+      "NewProject",
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+
+    // Overwrite role ID at index 1 to have expiration of `block.timestamp`
+    roleHolders[0].expiration = toUint64(block.timestamp);
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    factory.deploy(
+      "NewProject",
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      roleHolders,
+      new RolePermissionData[](0)
+    );
+
+    // Overwrite role ID at index 1 to have expiration of 0
+    roleHolders[0].expiration = 0;
+    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    factory.deploy(
+      "NewProject",
+      relativeStrategyLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      roleHolders,
       new RolePermissionData[](0)
     );
   }
