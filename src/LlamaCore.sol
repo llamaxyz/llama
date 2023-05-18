@@ -163,7 +163,7 @@ contract LlamaCore is Initializable {
   /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
   /// @param initialStrategies The configuration of the initial strategies.
-  /// @param initialAccounts The configuration of the initial strategies.
+  /// @param initialAccountNames The configuration of the initial strategies.
   /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
   function initialize(
     string memory _name,
@@ -171,7 +171,7 @@ contract LlamaCore is Initializable {
     ILlamaStrategy _llamaStrategyLogic,
     LlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
-    string[] calldata initialAccounts
+    string[] calldata initialAccountNames
   ) external initializer returns (bytes32 bootstrapPermissionId) {
     factory = LlamaFactory(msg.sender);
     name = _name;
@@ -180,7 +180,7 @@ contract LlamaCore is Initializable {
     llamaAccountLogic = _llamaAccountLogic;
 
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
-    _deployAccounts(initialAccounts);
+    _deployAccounts(initialAccountNames);
 
     // Now we compute the permission ID used to set role permissions and return it.
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
