@@ -26,11 +26,6 @@ contract GovernanceScript {
     RoleDescription description;
   }
 
-  struct RevokeExpiredRole {
-    uint8 role;
-    address policyholder;
-  }
-
   struct SetRolePermission {
     uint8 role;
     bytes32 permissionId;
