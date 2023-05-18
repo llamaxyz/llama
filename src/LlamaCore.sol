@@ -646,7 +646,7 @@ contract LlamaCore is Initializable {
   ) internal returns (Action storage action, uint128 quantity) {
     action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
-    
+
     if (getActionState(actionInfo) != expectedState) revert InvalidActionState(expectedState);
 
     bool isApproval = expectedState == ActionState.Active;
