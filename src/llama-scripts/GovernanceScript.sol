@@ -27,19 +27,6 @@ contract GovernanceScript {
     RoleDescription description;
   }
 
-  struct SetRolePermission {
-    uint8 role;
-    bytes32 permissionId;
-    bool hasPermission;
-  }
-
-  struct SetRoleHolder {
-    uint8 role;
-    address policyholder;
-    uint128 quantity;
-    uint64 expiration;
-  }
-
   struct CreateStrategies {
     ILlamaStrategy llamaStrategyLogic;
     bytes[] strategies;
