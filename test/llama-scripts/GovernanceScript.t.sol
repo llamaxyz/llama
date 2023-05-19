@@ -269,7 +269,7 @@ contract SetRoleHolders is GovernanceScriptTest {
   mapping(uint8 => uint128) public rolesHoldersSeen;
   mapping(uint8 => uint128) public rolesQuantitySeen;
 
-  function testFuzz_setRoleHolders(GovernanceScript.SetRoleHolder[] memory roleHolders) public {
+  function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
     vm.assume(roleHolders.length < 500);
     for (uint256 i = 0; i < roleHolders.length; i++) {
       // Cannot be 0 (all holders role) and cannot be greater than numRoles
@@ -299,7 +299,7 @@ contract SetRoleHolders is GovernanceScriptTest {
 }
 
 contract SetRolePermissions is GovernanceScriptTest {
-  function testFuzz_setRolePermissions(GovernanceScript.SetRolePermission[] memory rolePermissions) public {
+  function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       // Cannot be 0 (all holders role) and cannot be greater than numRoles
       rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
