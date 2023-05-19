@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
 
@@ -2143,27 +2143,18 @@ contract AuthorizeScript is LlamaCoreTest {
 }
 
 contract IncrementNonce is LlamaCoreTest {
-  function test_IncrementNonceForCreateActionBySig() public {
-    // We need to manually calculate the function selector because we are using function overloading with the
-    // createActionBySig function:
-    // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
-    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+  using stdStorage for StdStorage;
 
-    assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 0);
-    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
-    assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 1);
-  }
+  function testFuzz_IncrementsNonceForAllCallersAndSelectors(address caller, bytes4 selector, uint256 initialNonce) public {
+    initialNonce = bound(initialNonce, 0, type(uint256).max - 1);
+    stdstore.target(address(mpCore)).sig(mpCore.nonces.selector).with_key(caller).with_key(selector).checked_write(
+      initialNonce
+    );
 
-  function test_IncrementNonceForCastApprovalBySig() public {
-    assertEq(mpCore.nonces(address(this), LlamaCore.castApprovalBySig.selector), 0);
-    mpCore.incrementNonce(LlamaCore.castApprovalBySig.selector);
-    assertEq(mpCore.nonces(address(this), LlamaCore.castApprovalBySig.selector), 1);
-  }
-
-  function test_IncrementNonceForCastDisapprovalBySig() public {
-    assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 0);
-    mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
-    assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 1);
+    assertEq(mpCore.nonces(caller, selector), initialNonce);
+    vm.prank(caller);
+    mpCore.incrementNonce(selector);
+    assertEq(mpCore.nonces(caller, selector), initialNonce + 1);
   }
 }
 
