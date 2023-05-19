@@ -2100,6 +2100,30 @@ contract AuthorizeScript is LlamaCoreTest {
   }
 }
 
+contract IncrementNonce is LlamaCoreTest {
+  function test_IncrementNonceForCreateActionBySig() public {
+    // We need to manually calculate the function selector because we are using function overloading with the
+    // createActionBySig function
+    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+
+    assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 0);
+    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
+    assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 1);
+  }
+
+  function test_IncrementNonceForCastApprovalBySig() public {
+    assertEq(mpCore.nonces(address(this), LlamaCore.castApprovalBySig.selector), 0);
+    mpCore.incrementNonce(LlamaCore.castApprovalBySig.selector);
+    assertEq(mpCore.nonces(address(this), LlamaCore.castApprovalBySig.selector), 1);
+  }
+
+  function test_IncrementNonceForCastDisapprovalBySig() public {
+    assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 0);
+    mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
+    assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 1);
+  }
+}
+
 contract GetActionState is LlamaCoreTest {
   function testFuzz_RevertsOnInvalidAction(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
