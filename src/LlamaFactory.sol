@@ -104,7 +104,7 @@ contract LlamaFactory {
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
-    string[] memory initialAccounts,
+    string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -120,7 +120,7 @@ contract LlamaFactory {
       name,
       initialLlamaStrategyLogic,
       initialStrategies,
-      initialAccounts,
+      initialAccountNames,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -138,7 +138,7 @@ contract LlamaFactory {
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The ILlamaStrategy implementation (logic) contract to use for this Llama instance.
   /// @param initialStrategies The list of initial strategies.
-  /// @param initialAccounts The list of initial accounts.
+  /// @param initialAccountNames The list of initial accounts.
   /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions The list of initial permissions given to roles.
@@ -147,7 +147,7 @@ contract LlamaFactory {
     string memory name,
     ILlamaStrategy strategyLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccounts,
+    string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -156,7 +156,7 @@ contract LlamaFactory {
       name,
       strategyLogic,
       initialStrategies,
-      initialAccounts,
+      initialAccountNames,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -207,7 +207,7 @@ contract LlamaFactory {
     string memory name,
     ILlamaStrategy strategyLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccounts,
+    string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -215,15 +215,11 @@ contract LlamaFactory {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
-    // Role ID 1 is referred to as the bootstrap role.
-    bool foundBootstrapRole = false;
-    for (uint256 i = 0; i < initialRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (initialRoleHolders[i].role == BOOTSTRAP_ROLE) {
-        foundBootstrapRole = true;
-        break;
-      }
-    }
-    if (!foundBootstrapRole) revert InvalidDeployConfiguration();
+    // Role ID 1 is referred to as the bootstrap role. We require that the bootstrap role is the
+    // first role in the `initialRoleHolders` array, and that it never expires.
+    if (initialRoleHolders.length == 0) revert InvalidDeployConfiguration();
+    if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
+    if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
     // Now the configuration is likely valid (it's possible the configuration of the first strategy
     // will not actually be able to execute, but we leave that check off-chain / to the deploy
@@ -234,7 +230,7 @@ contract LlamaFactory {
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccounts);
+      llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccountNames);
     llamaExecutor = llamaCore.executor();
 
     policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);

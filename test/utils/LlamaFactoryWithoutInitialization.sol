@@ -26,7 +26,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
-    string[] memory initialAccounts,
+    string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -39,7 +39,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
       _llamaPolicyMetadata,
       name,
       initialStrategies,
-      initialAccounts,
+      initialAccountNames,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -76,9 +76,9 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     ILlamaStrategy relativeStrategyLogic,
     LlamaAccount accountLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccounts
+    string[] memory initialAccountNames
   ) external returns (LlamaExecutor llamaExecutor) {
-    llama.initialize(name, policy, relativeStrategyLogic, accountLogic, initialStrategies, initialAccounts);
+    llama.initialize(name, policy, relativeStrategyLogic, accountLogic, initialStrategies, initialAccountNames);
     llamaExecutor = llama.executor();
   }
 }

@@ -52,6 +52,13 @@
   ],
   "initialRoleHolders": [
     {
+      "comment": "This will assign the ActionCreator role (role 1) to the address we will use with the CreateAction script to automate deployment of new Llama instance. The role assignment is set to never expire (type(uint64).max) because this is the default. The quantity is likewise the default.",
+      "expiration": 18446744073709551615,
+      "policyholder": "0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a",
+      "quantity": 1,
+      "role": 1
+    },
+    {
       "comment": "This will assign the Approver role (role 2) to the address derived from `makeAddr('randomLogicAddress')`. The role assignment never expires: expiration == type(uint64).max.",
       "expiration": 18446744073709551615,
       "policyholder": "0xBA89c38B04131048af01c44d8dd06e51725Dd66e",
@@ -64,13 +71,6 @@
       "policyholder": "0xBABE",
       "quantity": 1,
       "role": 3
-    },
-    {
-      "comment": "This will assign the ActionCreator role (role 1) to the address we will use with the CreateAction script to automate deployment of new Llama instance. The role assignment is set to never expire (type(uint64).max) because this is the default. The quantity is likewise the default.",
-      "expiration": 18446744073709551615,
-      "policyholder": "0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a",
-      "quantity": 1,
-      "role": 1
     }
   ],
   "initialRolePermissions": [

@@ -28,6 +28,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   error AddressDoesNotHoldPolicy(address userAddress);
   error AllHoldersRole();
   error AlreadyInitialized();
+  error InvalidIndices();
   error InvalidRoleHolderInput();
   error NonTransferableToken();
   error OnlyLlama();
@@ -236,6 +237,37 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpoints(address policyholder, uint8 role) external view returns (Checkpoints.History memory) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role];
+  }
+
+  /// @notice Returns all checkpoints for the given `policyholder` and `role` between `start` and
+  /// `end`, where `start` is inclusive and `end` is exclusive.
+  /// @param policyholder Policyholder to get the checkpoints for.
+  /// @param role Role held by `policyholder` to get the checkpoints for.
+  /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
+  /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
+  function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
+    external
+    view
+    returns (Checkpoints.History memory)
+  {
+    if (start > end) revert InvalidIndices();
+    uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
+    if (end > checkpointsLength) revert InvalidIndices();
+
+    uint256 tokenId = _tokenId(policyholder);
+    uint256 sliceLength = end - start;
+    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](sliceLength);
+    for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
+      checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
+    }
+    return Checkpoints.History(checkpoints);
+  }
+
+  /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.
+  /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleBalanceCheckpoints`.
+  function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
+    uint256 tokenId = _tokenId(policyholder);
+    return roleBalanceCkpts[tokenId][role]._checkpoints.length;
   }
 
   /// @notice Returns true if the `policyholder` has the `role`, false otherwise.

@@ -61,7 +61,6 @@ contract GovernanceScriptTest is LlamaTestSetup {
   bytes4 public constant INITIALIZE_ROLES_SELECTOR = GovernanceScript.initializeRoles.selector;
   bytes4 public constant SET_ROLE_HOLDERS_SELECTOR = GovernanceScript.setRoleHolders.selector;
   bytes4 public constant SET_ROLE_PERMISSIONS_SELECTOR = GovernanceScript.setRolePermissions.selector;
-  bytes4 public constant REVOKE_EXPIRED_ROLES_SELECTOR = GovernanceScript.revokeExpiredRoles.selector;
   bytes4 public constant REVOKE_POLICIES_SELECTOR = GovernanceScript.revokePolicies.selector;
   bytes4 public constant UPDATE_ROLE_DESCRIPTIONS_SELECTOR = GovernanceScript.updateRoleDescriptions.selector;
 
@@ -79,7 +78,6 @@ contract GovernanceScriptTest is LlamaTestSetup {
   bytes32 public initializeRolesPermissionId;
   bytes32 public setRoleHoldersPermissionId;
   bytes32 public setRolePermissionsPermissionId;
-  bytes32 public revokeExpiredRolesPermissionId;
   bytes32 public revokePoliciesPermissionId;
   bytes32 public updateRoleDescriptionPerimssionId;
 
@@ -136,8 +134,6 @@ contract GovernanceScriptTest is LlamaTestSetup {
       keccak256(abi.encode(address(governanceScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2));
     setRolePermissionsPermissionId =
       keccak256(abi.encode(address(governanceScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2));
-    revokeExpiredRolesPermissionId =
-      keccak256(abi.encode(address(governanceScript), REVOKE_EXPIRED_ROLES_SELECTOR, mpStrategy2));
     revokePoliciesPermissionId = keccak256(abi.encode(address(governanceScript), REVOKE_POLICIES_SELECTOR, mpStrategy2));
     updateRoleDescriptionPerimssionId =
       keccak256(abi.encode(address(governanceScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2));
@@ -164,7 +160,6 @@ contract GovernanceScriptTest is LlamaTestSetup {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRoleHoldersPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRolePermissionsPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokeExpiredRolesPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionPerimssionId, true);
 
@@ -322,41 +317,6 @@ contract SetRolePermissions is GovernanceScriptTest {
       emit RolePermissionAssigned(
         rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission
       );
-    }
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract RevokeExpiredRoles is GovernanceScriptTest {
-  GovernanceScript.RevokeExpiredRole[] public expiredRoles;
-  mapping(uint8 => uint128) public rolesSeen;
-
-  function testFuzz_revokeExpiredRoles(uint8[] memory roles) public {
-    vm.assume(roles.length > 0); // so we don't try to cast 0 to address
-
-    for (uint256 i = 0; i < roles.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roles[i] = uint8(bound(roles[i], 1, mpPolicy.numRoles()));
-      vm.assume(roles[i] != uint8(Roles.Approver)); //otherwise this scews the quroum percentages
-      vm.prank(address(mpExecutor));
-      mpPolicy.setRoleHolder(roles[i], address(uint160(i + 101)), 1, uint64(block.timestamp + 1));
-      expiredRoles.push(GovernanceScript.RevokeExpiredRole(roles[i], address(uint160(i + 101))));
-    }
-
-    vm.warp(block.timestamp + 1 days);
-
-    bytes memory data = abi.encodeWithSelector(REVOKE_EXPIRED_ROLES_SELECTOR, expiredRoles);
-    vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data);
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
-    for (uint256 i = 0; i < roles.length; i++) {
-      rolesSeen[roles[i]]++;
-      vm.expectEmit();
-      emit RoleAssigned(address(uint160(i + 101)), roles[i], 0, 0);
     }
     mpCore.executeAction(actionInfo);
   }
