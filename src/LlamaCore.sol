@@ -296,10 +296,10 @@ contract LlamaCore is Initializable {
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
-    Action storage action = actions[actionInfo.id];
-
     // Initial checks that action is ready to execute.
+    Action storage action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
+
     if (currentState != ActionState.Queued) revert InvalidActionState(currentState);
     if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
     if (msg.value != actionInfo.value) revert IncorrectMsgValue();
