@@ -14,20 +14,20 @@ contract LlamaLensTestSetup is LlamaTestSetup {}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaCoreAddress("Root Llama", address(coreLogic), address(factory)));
+    address expected = address(lens.computeLlamaCoreAddress("Root Llama"));
     assertEq(expected, address(rootCore));
 
-    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", address(coreLogic), address(factory)));
+    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama"));
     assertEq(expected, address(mpCore));
   }
 }
 
 contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaPolicyAddress("Root Llama", address(policyLogic), address(factory)));
+    address expected = address(lens.computeLlamaPolicyAddress("Root Llama"));
     assertEq(expected, address(rootPolicy));
 
-    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama", address(policyLogic), address(factory)));
+    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama"));
     assertEq(expected, address(mpPolicy));
   }
 }
@@ -55,17 +55,16 @@ contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaAccountAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected =
-      address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Treasury", address(rootCore)));
+    address expected = address(lens.computeLlamaAccountAddress("Llama Treasury", address(rootCore)));
     assertEq(expected, address(rootAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Grants", address(rootCore)));
+    expected = address(lens.computeLlamaAccountAddress("Llama Grants", address(rootCore)));
     assertEq(expected, address(rootAccount2));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Treasury", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress("MP Treasury", address(mpCore)));
     assertEq(expected, address(mpAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Grants", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress("MP Grants", address(mpCore)));
     assertEq(expected, address(mpAccount2));
   }
 }
@@ -87,13 +86,13 @@ contract ComputeLlamaExecutorAddress is LlamaLensTestSetup {
     address expected = address(lens.computeLlamaExecutorAddress(address(rootCore)));
     assertEq(expected, address(rootExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Root Llama", address(coreLogic), address(factory)));
+    expected = address(lens.computeLlamaExecutorAddress("Root Llama"));
     assertEq(expected, address(rootExecutor));
 
     expected = address(lens.computeLlamaExecutorAddress(address(mpCore)));
     assertEq(expected, address(mpExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama", address(coreLogic), address(factory)));
+    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama"));
     assertEq(expected, address(mpExecutor));
   }
 }

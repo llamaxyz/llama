@@ -402,9 +402,8 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
-    for (uint256 i = 0; i < accounts.length; i++) {
-      accountAddresses[i] =
-        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
+    for (uint256 i; i < accounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
     }
 
     assertEq(address(accountAddresses[0]).code.length, 0);
@@ -424,9 +423,8 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
-    for (uint256 i = 0; i < accounts.length; i++) {
-      accountAddresses[i] =
-        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
+    for (uint256 i; i < accounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
     }
 
     vm.expectEmit();
@@ -444,9 +442,8 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
-    for (uint256 i = 0; i < accounts.length; i++) {
-      accountAddresses[i] =
-        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
+    for (uint256 i; i < accounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
     }
 
     LlamaExecutor executor = modifiedFactory.initialize(
@@ -463,9 +460,8 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
-    for (uint256 i = 0; i < accounts.length; i++) {
-      accountAddresses[i] =
-        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
+    for (uint256 i; i < accounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
@@ -1990,8 +1986,8 @@ contract CreateAccounts is LlamaCoreTest {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
 
-    for (uint256 i = 0; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(newAccounts[i], address(mpCore));
     }
 
     vm.expectEmit();
@@ -2009,8 +2005,8 @@ contract CreateAccounts is LlamaCoreTest {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
     LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
 
-    for (uint256 i = 0; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(newAccounts[i], address(mpCore));
     }
 
     vm.startPrank(address(mpExecutor));
@@ -2051,7 +2047,7 @@ contract CreateAccounts is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    LlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), name, address(mpCore));
+    LlamaAccount accountAddress = lens.computeLlamaAccountAddress(name, address(mpCore));
 
     bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (newAccounts));
     vm.prank(actionCreatorAustin);
