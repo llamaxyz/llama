@@ -748,8 +748,6 @@ contract LlamaCore is Initializable {
 
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];
-    unchecked {
-      nonces[policyholder][selector] = nonce + 1;
-    }
+    nonces[policyholder][selector] = LlamaUtils.uncheckedIncrement(nonce);
   }
 }
