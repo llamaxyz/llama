@@ -423,6 +423,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     unchecked {
       // Saftey: Can never underflow due to ternary operator check.
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    }
 
       RoleSupply storage currentRoleSupply = roleSupply[role];
 
@@ -443,7 +444,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
         // false. In that case, no changes are being made. We allow this no-op without reverting so you can give someone
         // a policy with only the ALL_HOLDERS_ROLE
       }
-    }
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
 
