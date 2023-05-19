@@ -651,6 +651,10 @@ contract CreateAction is LlamaCoreTest {
 }
 
 contract CreateActionBySig is LlamaCoreTest {
+  // We need to manually calculate the function selector because we are using function overloading with the
+  // createActionBySig function
+  bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
@@ -746,9 +750,6 @@ contract CreateActionBySig is LlamaCoreTest {
   }
 
   function test_CheckNonceIncrements() public {
-    // We need to manually calculate the function selector because we are using function overloading with the
-    // createActionBySig function
-    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
     createActionBySig(v, r, s);
@@ -779,6 +780,18 @@ contract CreateActionBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig((v + 1), r, s);
+  }
+
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    
+    vm.prank(actionCreatorAaron);
+    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    createActionBySig(v, r, s);
   }
 }
 
@@ -2101,39 +2114,11 @@ contract AuthorizeScript is LlamaCoreTest {
 }
 
 contract IncrementNonce is LlamaCoreTest {
-  // We need to manually calculate the function selector because we are using function overloading with the
-  // createActionBySig function
-  bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
-
-  function createOffchainSignatureForCreateActionBySig(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
-    LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
-      role: uint8(Roles.ActionCreator),
-      strategy: address(mpStrategy1),
-      target: address(mockProtocol),
-      value: 0,
-      data: abi.encodeCall(MockProtocol.pause, (true)),
-      policyholder: actionCreatorAaron,
-      nonce: 0
-    });
-    bytes32 digest = getCreateActionTypedDataHash(createAction);
-    (v, r, s) = vm.sign(privateKey, digest);
-  }
-
-  function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
-    actionId = mpCore.createActionBySig(
-      uint8(Roles.ActionCreator),
-      mpStrategy1,
-      address(mockProtocol),
-      0,
-      abi.encodeCall(MockProtocol.pause, (true)),
-      actionCreatorAaron,
-      v,
-      r,
-      s
-    );
-  }
-
   function test_IncrementNonceForCreateActionBySig() public {
+    // We need to manually calculate the function selector because we are using function overloading with the
+    // createActionBySig function
+    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+
     assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 0);
     mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
     assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 1);
@@ -2149,18 +2134,6 @@ contract IncrementNonce is LlamaCoreTest {
     assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 0);
     mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
     assertEq(mpCore.nonces(address(this), LlamaCore.castDisapprovalBySig.selector), 1);
-  }
-
-  function test_CreateActionBySigCannotBeExecutedIfNonceIncremented() public {
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignatureForCreateActionBySig(actionCreatorAaronPrivateKey);
-    
-    vm.prank(actionCreatorAaron);
-    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
-
-    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
-    // since nonce has increased.
-    vm.expectRevert(LlamaCore.InvalidSignature.selector);
-    createActionBySig(v, r, s);
   }
 }
 
