@@ -422,31 +422,24 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint128 quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
 
     RoleSupply storage currentRoleSupply = roleSupply[role];
-    uint128 newNumberOfHolders;
-    uint128 newTotalQuantity;
 
     if (hadRole && !willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      currentRoleSupply.numberOfHolders -= 1;
+      currentRoleSupply.totalQuantity -= quantityDiff;
     } else if (!hadRole && willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      currentRoleSupply.numberOfHolders += 1;
+      currentRoleSupply.totalQuantity += quantityDiff;
     } else if (hadRole && willHaveRole && initialQuantity > quantity) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      // currentRoleSupply.numberOfHolders is unchanged
+      currentRoleSupply.totalQuantity -= quantityDiff;
     } else if (hadRole && willHaveRole && initialQuantity < quantity) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      //  currentRoleSupply.numberOfHolders is unchanged
+      currentRoleSupply.totalQuantity += quantityDiff;
     } else {
       // The only way to reach this branch is with `hadRole` and `willHaveRole` both being
-      // false. In that case, no changes are being made. We allow this no-op without reverting
-      // because `revokePolicy(address policyholder)` relies on this behavior.
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity;
+      // false. In that case, no changes are being made. We allow this no-op without reverting so you can give someone a
+      // policy with only the ALL_HOLDERS_ROLE
     }
-
-    currentRoleSupply.numberOfHolders = newNumberOfHolders;
-    currentRoleSupply.totalQuantity = newTotalQuantity;
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
 
