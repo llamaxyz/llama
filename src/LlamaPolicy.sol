@@ -440,8 +440,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       } else {
         // The only way to reach this branch is with `hadRole` and `willHaveRole` both being
         // false. In that case, no changes are being made. We allow this no-op without reverting so you can give someone
-        // a
-        // policy with only the ALL_HOLDERS_ROLE
+        // a policy with only the ALL_HOLDERS_ROLE
       }
     }
     emit RoleAssigned(policyholder, role, expiration, quantity);
