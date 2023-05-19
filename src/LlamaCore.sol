@@ -90,17 +90,20 @@ contract LlamaCore is Initializable {
 
   /// @notice EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
-    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes data,address policyholder,uint256 nonce)"
+    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes data,string description,address policyholder,uint256 nonce)"
   );
 
   /// @notice EIP-712 castApproval typehash.
-  bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
-    "CastApproval((uint256 id,address creator,address strategy,address target,uint256 value,bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
-  );
+  bytes32 internal constant CAST_APPROVAL_TYPEHASH =
+    keccak256("CastApproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)");
 
   /// @notice EIP-712 castDisapproval typehash.
-  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
-    "CastDisapproval((uint256 id,address creator,address strategy,address target,uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
+    keccak256("CastDisapproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)");
+
+  /// @notice EIP-712 actionInfo typehash.
+  bytes32 internal constant ACTION_INFO_TYPEHASH = keccak256(
+    "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice The contract that executes actions for this llama instance.
@@ -371,26 +374,7 @@ contract LlamaCore is Initializable {
     bytes32 r,
     bytes32 s
   ) external {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CAST_APPROVAL_TYPEHASH,
-            actionInfo,
-            role,
-            keccak256(bytes(reason)),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCastApprovalTypedDataHash(actionInfo, role, reason, policyholder);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castApproval(signer, role, actionInfo, reason);
@@ -428,26 +412,7 @@ contract LlamaCore is Initializable {
     bytes32 r,
     bytes32 s
   ) external {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CAST_DISAPPROVAL_TYPEHASH,
-            actionInfo,
-            role,
-            keccak256(bytes(reason)),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCastDisapprovalTypedDataHash(actionInfo, role, reason, policyholder);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castDisapproval(signer, role, actionInfo, reason);
@@ -600,28 +565,7 @@ contract LlamaCore is Initializable {
     bytes32 s,
     string memory description
   ) internal returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCreateActionTypedDataHash(role, strategy, target, value, data, description, policyholder);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     actionId = _createAction(signer, role, strategy, target, value, data, description);
@@ -749,5 +693,94 @@ contract LlamaCore is Initializable {
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];
     nonces[policyholder][selector] = LlamaUtils.uncheckedIncrement(nonce);
+  }
+
+  // -------- EIP-712 Getters --------
+
+  function _getDomainHash() internal view returns (bytes32) {
+    return keccak256(
+      abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
+    );
+  }
+
+  function _getCreateActionTypedDataHash(
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    string memory description,
+    address policyholder
+  ) internal returns (bytes32) {
+    bytes32 createActionHash = keccak256(
+      abi.encode(
+        CREATE_ACTION_TYPEHASH,
+        role,
+        address(strategy),
+        target,
+        value,
+        keccak256(data),
+        keccak256(bytes(description)),
+        policyholder,
+        _useNonce(policyholder, msg.sig)
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), createActionHash));
+  }
+
+  function _getCastApprovalTypedDataHash(
+    ActionInfo calldata actionInfo,
+    uint8 role,
+    string calldata reason,
+    address policyholder
+  ) internal returns (bytes32) {
+    bytes32 castApprovalHash = keccak256(
+      abi.encode(
+        CAST_APPROVAL_TYPEHASH,
+        _getActionInfoHash(actionInfo),
+        role,
+        keccak256(bytes(reason)),
+        policyholder,
+        _useNonce(policyholder, msg.sig)
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castApprovalHash));
+  }
+
+  function _getCastDisapprovalTypedDataHash(
+    ActionInfo calldata actionInfo,
+    uint8 role,
+    string calldata reason,
+    address policyholder
+  ) internal returns (bytes32) {
+    bytes32 castDisapprovalHash = keccak256(
+      abi.encode(
+        CAST_DISAPPROVAL_TYPEHASH,
+        _getActionInfoHash(actionInfo),
+        role,
+        keccak256(bytes(reason)),
+        policyholder,
+        _useNonce(policyholder, msg.sig)
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castDisapprovalHash));
+  }
+
+  function _getActionInfoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encode(
+        ACTION_INFO_TYPEHASH,
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        address(actionInfo.strategy),
+        actionInfo.target,
+        actionInfo.value,
+        keccak256(actionInfo.data)
+      )
+    );
   }
 }

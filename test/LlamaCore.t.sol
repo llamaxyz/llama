@@ -663,6 +663,7 @@ contract CreateActionBySig is LlamaCoreTest {
       target: address(mockProtocol),
       value: 0,
       data: abi.encodeCall(MockProtocol.pause, (true)),
+      description: "",
       policyholder: actionCreatorAaron,
       nonce: 0
     });
