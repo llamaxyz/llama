@@ -91,7 +91,7 @@ contract DeployLlama is Script {
     );
 
     vm.broadcast();
-    lens = new LlamaLens();
+    lens = new LlamaLens(address(factory));
     DeployUtils.print(string.concat("  LlamaLens:", vm.toString(address(lens))));
   }
 }

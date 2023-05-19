@@ -135,7 +135,7 @@ contract Run is CreateActionTest {
     LlamaExecutor llamaInstanceExecutor;
 
     Vm.Log memory _event;
-    for (uint256 i; i < emittedEvents.length; i++) {
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       bytes32 eventSig = _event.topics[0];
       if (eventSig == llamaInstanceCreatedSig) {
