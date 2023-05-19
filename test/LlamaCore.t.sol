@@ -657,13 +657,21 @@ contract CreateActionBySig is LlamaCoreTest {
   bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
 
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+    (v, r, s) = createOffchainSignatureWithDescription(privateKey, "");
+  }
+
+  function createOffchainSignatureWithDescription(uint256 privateKey, string memory description)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
     LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
       strategy: address(mpStrategy1),
       target: address(mockProtocol),
       value: 0,
       data: abi.encodeCall(MockProtocol.pause, (true)),
-      description: "",
+      description: description,
       policyholder: actionCreatorAaron,
       nonce: 0
     });
@@ -710,7 +718,8 @@ contract CreateActionBySig is LlamaCoreTest {
   }
 
   function test_CreatesActionBySigWithDescription() public {
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) =
+      createOffchainSignatureWithDescription(actionCreatorAaronPrivateKey, "# Action 0 \n This is my action.");
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();

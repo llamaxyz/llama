@@ -697,12 +697,15 @@ contract LlamaCore is Initializable {
 
   // -------- EIP-712 Getters --------
 
+  /// @notice Gets the EIP-712 domain separator.
   function _getDomainHash() internal view returns (bytes32) {
     return keccak256(
       abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
     );
   }
 
+  /// @notice Returns the hash of the fully encoded EIP-712 message for the CreateAction domain, which can be used to
+  /// recover the signer.
   function _getCreateActionTypedDataHash(
     uint8 role,
     ILlamaStrategy strategy,
@@ -729,6 +732,8 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), createActionHash));
   }
 
+  /// @notice Returns the hash of the fully encoded EIP-712 message for the CastApproval domain, which can be used to
+  /// recover the signer.
   function _getCastApprovalTypedDataHash(
     ActionInfo calldata actionInfo,
     uint8 role,
@@ -749,6 +754,8 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castApprovalHash));
   }
 
+  /// @notice Returns the hash of the fully encoded EIP-712 message for the CastDisapproval domain, which can be used to
+  /// recover the signer.
   function _getCastDisapprovalTypedDataHash(
     ActionInfo calldata actionInfo,
     uint8 role,
@@ -769,6 +776,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castDisapprovalHash));
   }
 
+  /// @notice Returns the hash of ActionInfo.
   function _getActionInfoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return keccak256(
       abi.encode(
