@@ -27,9 +27,17 @@ contract GovernanceScript {
     RoleDescription description;
   }
 
-  struct RevokeExpiredRole {
+  struct SetRolePermission {
+    uint8 role;
+    bytes32 permissionId;
+    bool hasPermission;
+  }
+
+  struct SetRoleHolder {
     uint8 role;
     address policyholder;
+    uint128 quantity;
+    uint64 expiration;
   }
 
   struct CreateStrategies {
@@ -181,14 +189,6 @@ contract GovernanceScript {
       policy.setRolePermission(
         _setRolePermissions[i].role, _setRolePermissions[i].permissionId, _setRolePermissions[i].hasPermission
       );
-    }
-  }
-
-  function revokeExpiredRoles(RevokeExpiredRole[] calldata _revokeExpiredRoles) public {
-    (, LlamaPolicy policy) = _context();
-    uint256 length = _revokeExpiredRoles.length;
-    for (uint256 i = 0; i < length; i++) {
-      policy.revokeExpiredRole(_revokeExpiredRoles[i].role, _revokeExpiredRoles[i].policyholder);
     }
   }
 

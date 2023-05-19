@@ -486,6 +486,14 @@ contract LlamaCore is Initializable {
     emit ScriptAuthorized(script, authorized);
   }
 
+  /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
+  /// signatures that have not been used yet.
+  /// @param selector The function selector to increment the nonce for.
+  function incrementNonce(bytes4 selector) external {
+    // Safety: Can never overflow a uint256 by incrementing.
+    nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
+  }
+
   /// @notice Get an Action struct by actionId.
   /// @param actionId id of the action.
   /// @return The Action struct.
