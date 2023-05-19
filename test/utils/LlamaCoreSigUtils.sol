@@ -53,7 +53,7 @@ contract LlamaCoreSigUtils {
 
   /// @notice EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
-    "CastDisapproval(uint256 id,address creator,address strategy,address target,uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+    "CastDisapproval((uint256 id,address creator,address strategy,address target,uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
   );
 
   bytes32 internal DOMAIN_SEPARATOR;
