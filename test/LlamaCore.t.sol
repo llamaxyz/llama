@@ -1438,6 +1438,20 @@ contract CastApprovalBySig is LlamaCoreTest {
     castApprovalBySig(actionInfo, (v + 1), r, s);
   }
 
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    
+    vm.prank(approverAdam);
+    mpCore.incrementNonce(LlamaCore.castApprovalBySig.selector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    castApprovalBySig(actionInfo, v, r, s);
+  }
+
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
