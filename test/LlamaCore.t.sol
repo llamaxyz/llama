@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
 
@@ -651,6 +651,11 @@ contract CreateAction is LlamaCoreTest {
 }
 
 contract CreateActionBySig is LlamaCoreTest {
+  // We need to manually calculate the function selector because we are using function overloading with the
+  // createActionBySig function:
+  // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
+  bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
@@ -746,9 +751,6 @@ contract CreateActionBySig is LlamaCoreTest {
   }
 
   function test_CheckNonceIncrements() public {
-    // We need to manually calculate the function selector because we are using function overloading with the
-    // createActionBySig function
-    bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
     assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
     createActionBySig(v, r, s);
@@ -779,6 +781,18 @@ contract CreateActionBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig((v + 1), r, s);
+  }
+
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    createActionBySig(v, r, s);
   }
 }
 
@@ -1425,6 +1439,20 @@ contract CastApprovalBySig is LlamaCoreTest {
     castApprovalBySig(actionInfo, (v + 1), r, s);
   }
 
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+
+    vm.prank(approverAdam);
+    mpCore.incrementNonce(LlamaCore.castApprovalBySig.selector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    castApprovalBySig(actionInfo, v, r, s);
+  }
+
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
     ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
@@ -1638,6 +1666,20 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     // (v,r,s).
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     castDisapprovalBySig(actionInfo, (v + 1), r, s);
+  }
+
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+
+    vm.prank(disapproverDrake);
+    mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
+
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    castDisapprovalBySig(actionInfo, v, r, s);
   }
 
   function test_FailsIfDisapproved() public {
@@ -2097,6 +2139,24 @@ contract AuthorizeScript is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.authorizeScript(address(mpPolicy), authorized);
+  }
+}
+
+contract IncrementNonce is LlamaCoreTest {
+  using stdStorage for StdStorage;
+
+  function testFuzz_IncrementsNonceForAllCallersAndSelectors(address caller, bytes4 selector, uint256 initialNonce)
+    public
+  {
+    initialNonce = bound(initialNonce, 0, type(uint256).max - 1);
+    stdstore.target(address(mpCore)).sig(mpCore.nonces.selector).with_key(caller).with_key(selector).checked_write(
+      initialNonce
+    );
+
+    assertEq(mpCore.nonces(caller, selector), initialNonce);
+    vm.prank(caller);
+    mpCore.incrementNonce(selector);
+    assertEq(mpCore.nonces(caller, selector), initialNonce + 1);
   }
 }
 
