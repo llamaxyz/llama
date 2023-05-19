@@ -652,7 +652,8 @@ contract CreateAction is LlamaCoreTest {
 
 contract CreateActionBySig is LlamaCoreTest {
   // We need to manually calculate the function selector because we are using function overloading with the
-  // createActionBySig function: `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
+  // createActionBySig function:
+  // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
   bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
 
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
@@ -2144,7 +2145,8 @@ contract AuthorizeScript is LlamaCoreTest {
 contract IncrementNonce is LlamaCoreTest {
   function test_IncrementNonceForCreateActionBySig() public {
     // We need to manually calculate the function selector because we are using function overloading with the
-    // createActionBySig function: `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
+    // createActionBySig function:
+    // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
     bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
 
     assertEq(mpCore.nonces(address(this), createActionBySigWithoutDescriptionSelector), 0);
