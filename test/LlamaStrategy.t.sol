@@ -220,7 +220,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 
   function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i; i < numberOfApprovals; i++) {
+    for (uint256 i = 0; i < numberOfApprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
       mpCore.castApproval(actionInfo, uint8(Roles.TestRole1));
@@ -228,7 +228,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 
   function disapproveAction(uint256 numberOfDisapprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i; i < numberOfDisapprovals; i++) {
+    for (uint256 i = 0; i < numberOfDisapprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
       mpCore.castDisapproval(actionInfo, uint8(Roles.TestRole1));

@@ -128,14 +128,14 @@ contract MockPoorlyImplementedAbsoluteStrategy is ILlamaStrategy, Initializable 
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
