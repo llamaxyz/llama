@@ -272,7 +272,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `policyholder` has the `role`, false otherwise.
   function hasRole(address policyholder, uint8 role) public view returns (bool) {
-    (,,, uint128 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
+    uint128 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0;
   }
 
