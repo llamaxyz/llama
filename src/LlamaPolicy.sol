@@ -421,6 +421,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // expiration because this is used to determine whether or not to update the total supply.
     uint128 quantityDiff;
     unchecked {
+      // Saftey: Can never underflow due to ternary operator check.
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
 
       RoleSupply storage currentRoleSupply = roleSupply[role];
@@ -463,8 +464,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _mint(policyholder, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders += 1;
-    allHoldersRoleSupply.totalQuantity += 1;
+    unchecked {
+      // Saftey: Can never overflow a uint256 by incrementing.
+      allHoldersRoleSupply.numberOfHolders += 1;
+      allHoldersRoleSupply.totalQuantity += 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
@@ -474,6 +478,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
     unchecked {
+      // Saftey: Can never underflow, since we only burn tokens that currently exist.
       allHoldersRoleSupply.numberOfHolders -= 1;
       allHoldersRoleSupply.totalQuantity -= 1;
     }
