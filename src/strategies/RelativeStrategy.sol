@@ -154,10 +154,11 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external {
-    uint256 approvalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(approvalRole);
+    LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
+    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // Save off the supplies to use for checking quorum.
