@@ -1667,6 +1667,20 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     castDisapprovalBySig(actionInfo, (v + 1), r, s);
   }
 
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    
+    vm.prank(disapproverDrake);
+    mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
+    
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    castDisapprovalBySig(actionInfo, v, r, s);
+  }
+
   function test_FailsIfDisapproved() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
