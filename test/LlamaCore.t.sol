@@ -784,7 +784,7 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function test_RevertIf_PolicyholderIncrementsNonce() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    
+
     vm.prank(actionCreatorAaron);
     mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
 
@@ -1442,7 +1442,7 @@ contract CastApprovalBySig is LlamaCoreTest {
     ActionInfo memory actionInfo = _createAction();
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
-    
+
     vm.prank(approverAdam);
     mpCore.incrementNonce(LlamaCore.castApprovalBySig.selector);
 
@@ -1671,10 +1671,10 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
-    
+
     vm.prank(disapproverDrake);
     mpCore.incrementNonce(LlamaCore.castDisapprovalBySig.selector);
-    
+
     // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
     // since nonce has increased.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
