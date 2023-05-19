@@ -2145,7 +2145,9 @@ contract AuthorizeScript is LlamaCoreTest {
 contract IncrementNonce is LlamaCoreTest {
   using stdStorage for StdStorage;
 
-  function testFuzz_IncrementsNonceForAllCallersAndSelectors(address caller, bytes4 selector, uint256 initialNonce) public {
+  function testFuzz_IncrementsNonceForAllCallersAndSelectors(address caller, bytes4 selector, uint256 initialNonce)
+    public
+  {
     initialNonce = bound(initialNonce, 0, type(uint256).max - 1);
     stdstore.target(address(mpCore)).sig(mpCore.nonces.selector).with_key(caller).with_key(selector).checked_write(
       initialNonce
