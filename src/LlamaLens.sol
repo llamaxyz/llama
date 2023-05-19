@@ -6,14 +6,36 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
+import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Lens
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama contract addresses.
 contract LlamaLens {
+  /// @notice The factory contract on this chain.
+  address public immutable LLAMA_FACTORY;
+
+  /// @notice The Llama Core implementation (logic) contract.
+  address public immutable LLAMA_CORE_LOGIC;
+
+  /// @notice The Llama Policy implementation (logic) contract.
+  address public immutable LLAMA_POLICY_LOGIC;
+
+  /// @notice The Llama Account implementation (logic) contract.
+  address public immutable LLAMA_ACCOUNT_LOGIC;
+
+  /// @notice Sets the factory address.
+  /// @param _llamaFactory the llama factory contract on this chain.
+  constructor(address _llamaFactory) {
+    LLAMA_FACTORY = _llamaFactory;
+    LLAMA_CORE_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_CORE_LOGIC());
+    LLAMA_POLICY_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_POLICY_LOGIC());
+    LLAMA_ACCOUNT_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_ACCOUNT_LOGIC());
+  }
+
   /// @notice Hashes a permission.
   /// @param permission the permission to hash.
   /// @return the hash of the permission.
@@ -21,17 +43,11 @@ contract LlamaLens {
     return keccak256(abi.encode(permission));
   }
 
-  /// @notice Computes the address of a llama core with a name value.
+  /// @notice Computes the address of a llama core from the name of the llama instance.
   /// @param name The name of this llama instance.
-  /// @param llamaCoreLogic The LlamaCore logic contract.
-  /// @param factory The factory address.
   /// @return the computed address of the LlamaCore contract.
-  function computeLlamaCoreAddress(string memory name, address llamaCoreLogic, address factory)
-    external
-    pure
-    returns (LlamaCore)
-  {
-    return _computeLlamaCoreAddress(name, llamaCoreLogic, factory);
+  function computeLlamaCoreAddress(string memory name) external view returns (LlamaCore) {
+    return _computeLlamaCoreAddress(name);
   }
 
   /// @notice Computes the address of a llama executor from its core address.
@@ -41,34 +57,22 @@ contract LlamaLens {
     return LlamaExecutor(_computeCreateAddress(llamaCore, 1));
   }
 
-  /// @notice Computes the address of a llama executor from its core configuration.
+  /// @notice Computes the address of a llama executor from the name of the llama instance.
   /// @param name The name of this llama instance.
-  /// @param llamaCoreLogic The LlamaCore logic contract.
-  /// @param factory The factory address.
   /// @return the computed address of the LlamaExecutor contract.
-  function computeLlamaExecutorAddress(string memory name, address llamaCoreLogic, address factory)
-    external
-    pure
-    returns (LlamaExecutor)
-  {
-    LlamaCore llamaCore = _computeLlamaCoreAddress(name, llamaCoreLogic, factory);
+  function computeLlamaExecutorAddress(string memory name) external view returns (LlamaExecutor) {
+    LlamaCore llamaCore = _computeLlamaCoreAddress(name);
     return LlamaExecutor(_computeCreateAddress(address(llamaCore), 1));
   }
 
   /// @notice Computes the address of a llama policy with a name value.
   /// @param name The name of this llama instance.
-  /// @param llamaPolicyLogic The LlamaPolicy logic contract.
-  /// @param factory The factory address.
   /// @return the computed address of the LlamaPolicy contract.
-  function computeLlamaPolicyAddress(string memory name, address llamaPolicyLogic, address factory)
-    external
-    pure
-    returns (LlamaPolicy)
-  {
+  function computeLlamaPolicyAddress(string memory name) external view returns (LlamaPolicy) {
     address _computedAddress = Clones.predictDeterministicAddress(
-      llamaPolicyLogic,
+      LLAMA_POLICY_LOGIC,
       keccak256(abi.encodePacked(name)), // salt
-      factory // deployer
+      LLAMA_FACTORY // deployer
     );
     return LlamaPolicy(_computedAddress);
   }
@@ -92,32 +96,23 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a llama account with a name (account) value.
-  /// @param llamaAccountLogic The Llama Account logic contract.
   /// @param account The account to be set.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the LlamaAccount contract.
-  function computeLlamaAccountAddress(address llamaAccountLogic, string calldata account, address llamaCore)
-    external
-    pure
-    returns (LlamaAccount)
-  {
+  function computeLlamaAccountAddress(string calldata account, address llamaCore) external view returns (LlamaAccount) {
     address _computedAddress = Clones.predictDeterministicAddress(
-      llamaAccountLogic,
+      LLAMA_ACCOUNT_LOGIC,
       keccak256(abi.encodePacked(account)), // salt
       llamaCore // deployer
     );
     return LlamaAccount(payable(_computedAddress));
   }
 
-  function _computeLlamaCoreAddress(string memory name, address llamaCoreLogic, address factory)
-    internal
-    pure
-    returns (LlamaCore)
-  {
+  function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {
     address _computedAddress = Clones.predictDeterministicAddress(
-      llamaCoreLogic,
+      LLAMA_CORE_LOGIC,
       keccak256(abi.encodePacked(name)), // salt
-      factory // deployer
+      LLAMA_FACTORY // deployer
     );
     return LlamaCore(_computedAddress);
   }
