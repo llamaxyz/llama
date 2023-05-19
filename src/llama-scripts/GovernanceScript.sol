@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -44,7 +45,7 @@ contract GovernanceScript {
     (LlamaCore core, LlamaPolicy policy) = _context();
     uint256 length = data.length;
     returnData = new bytes[](length);
-    for (uint256 i = 0; i < length; i++) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       bool addressIsCore = targets[i] == address(core);
       bool addressIsPolicy = targets[i] == address(policy);
       if (!addressIsCore && !addressIsPolicy) revert UnauthorizedTarget(targets[i]);
@@ -151,7 +152,7 @@ contract GovernanceScript {
   function initializeRoles(RoleDescription[] calldata description) public {
     (, LlamaPolicy policy) = _context();
     uint256 length = description.length;
-    for (uint256 i = 0; i < length; i++) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.initializeRole(description[i]);
     }
   }
@@ -159,7 +160,7 @@ contract GovernanceScript {
   function setRoleHolders(RoleHolderData[] calldata _setRoleHolders) public {
     (, LlamaPolicy policy) = _context();
     uint256 length = _setRoleHolders.length;
-    for (uint256 i = 0; i < length; i++) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.setRoleHolder(
         _setRoleHolders[i].role,
         _setRoleHolders[i].policyholder,
@@ -172,7 +173,7 @@ contract GovernanceScript {
   function setRolePermissions(RolePermissionData[] calldata _setRolePermissions) public {
     (, LlamaPolicy policy) = _context();
     uint256 length = _setRolePermissions.length;
-    for (uint256 i = 0; i < length; i++) {
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.setRolePermission(
         _setRolePermissions[i].role, _setRolePermissions[i].permissionId, _setRolePermissions[i].hasPermission
       );
@@ -183,14 +184,14 @@ contract GovernanceScript {
   /// if the policyholder has too many roles.
   function revokePolicies(address[] calldata _revokePolicies) public {
     (, LlamaPolicy policy) = _context();
-    for (uint256 i = 0; i < _revokePolicies.length; i++) {
+    for (uint256 i = 0; i < _revokePolicies.length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.revokePolicy(_revokePolicies[i]);
     }
   }
 
   function updateRoleDescriptions(UpdateRoleDescription[] calldata roleDescriptions) public {
     (, LlamaPolicy policy) = _context();
-    for (uint256 i = 0; i < roleDescriptions.length; i++) {
+    for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.updateRoleDescription(roleDescriptions[i].role, roleDescriptions[i].description);
     }
   }
