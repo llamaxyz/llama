@@ -41,9 +41,24 @@ jobs:
       - name: Run tests
         run: forge test -vvv
 
+  report:
+    runs-on:
+      group: llama-ci
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+
+      - name: Run tests
+        run: forge clean && FOUNDRY_PROFILE=ci forge test --gas-report --fuzz-seed 1
+
   coverage:
     runs-on:
       group: llama-ci
+      labels: fatman
     steps:
       - uses: actions/checkout@v3
 
