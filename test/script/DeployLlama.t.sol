@@ -60,7 +60,7 @@ contract Run is DeployLlamaTest {
     bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,string)");
 
     Vm.Log memory _event;
-    for (uint256 i; i < emittedEvents.length; i++) {
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(

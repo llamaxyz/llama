@@ -201,7 +201,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
-    for (uint256 i; i < emittedEvents.length; i++) {
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == llamaInstanceCreatedSig) {
         // event LlamaInstanceCreated(

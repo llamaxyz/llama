@@ -130,7 +130,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     disapprovalRole = strategyConfig.disapprovalRole;
     _assertValidRole(disapprovalRole, numRoles);
 
-    for (uint256 i; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
       if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
@@ -138,7 +138,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
       emit ForceApprovalRoleAdded(role);
     }
 
-    for (uint256 i; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
       if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
@@ -153,10 +153,11 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external view {
-    uint256 approvalPolicySupply = policy.getRoleSupplyAsQuantitySum(approvalRole);
+    LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
+    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsQuantitySum(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
@@ -165,10 +166,10 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
       // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
-      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(actionInfo.creator, approvalRole);
+      uint256 actionCreatorApprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, approvalRole);
       if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
 
-      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
+      uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
       if (
         minDisapprovals != type(uint128).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
