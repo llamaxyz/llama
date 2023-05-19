@@ -284,7 +284,6 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function queueAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
@@ -298,7 +297,6 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
     Action storage action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
 
     // Initial checks that action is ready to execute.
     ActionState currentState = getActionState(actionInfo);
@@ -655,7 +653,6 @@ contract LlamaCore is Initializable {
     ActionState expectedState
   ) internal returns (Action storage action, uint128 quantity) {
     action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);
 
