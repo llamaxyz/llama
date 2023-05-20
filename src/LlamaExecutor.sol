@@ -5,6 +5,8 @@ contract LlamaExecutor {
   // ======================================
   // ============= Errors =================
   // ======================================
+
+  /// @notice Only callable by a Llama instance's core contract.
   error OnlyLlamaCore();
 
   /// @notice The core contract for this llama instance.

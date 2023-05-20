@@ -22,22 +22,56 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @notice Policyholder cannot cast if it has 0 quantity of role.
+  /// @param policyholder Address of policyholder.
+  /// @param role The role being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
+
+  /// @notice An action's target contract cannot be the executor.
   error CannotSetExecutorAsTarget();
+
+  /// @notice Address cannot be used for an argument.
   error RestrictedAddress();
+
+  /// @notice Policyholders can only cast once.
   error DuplicateCast();
+
+  /// @notice Action execution failed.
+  /// @param reason Data returned by the function called by the action.
   error FailedActionExecution(bytes reason);
+
+  /// @notice `ActionInfo` does not hash to the correct value.
   error InfoHashMismatch();
+
+  /// @notice `msg.value` does not equal the action's `value`.
   error IncorrectMsgValue();
+
+  /// @notice The action is not in the expected state .
+  /// @param current The current state of the action.
   error InvalidActionState(ActionState current);
+
+  /// @notice The policyholder does not have the role at action creation time.
   error InvalidPolicyholder();
+
+  /// @notice The message was not signed by the policyholder.
   error InvalidSignature();
+
+  /// @notice The provided address does not map to a deployed strategy.
   error InvalidStrategy();
+
+  /// @notice An action cannot queue successfully if it's `minExecutionTime` is less than `block.timestamp`.
   error MinExecutionTimeCannotBeInThePast();
+
+  /// @notice Only callable by a Llama instance's executor.
   error OnlyLlama();
+
+  /// @notice Policyholder does not have the permission ID to create the action.
   error PolicyholderDoesNotHavePermission();
-  error Slot0Changed();
-  error TimelockNotFinished();
+
+  /// @notice If `block.timestamp` is less than `minExecutionTime`, the action cannot be executed.
+  error MinExecutionTimeNotReached();
+
+  /// @notice Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
 
   modifier onlyLlama() {
@@ -303,7 +337,7 @@ contract LlamaCore is Initializable {
     // Initial checks that action is ready to execute.
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Queued) revert InvalidActionState(currentState);
-    if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
+    if (block.timestamp < action.minExecutionTime) revert MinExecutionTimeNotReached();
     if (msg.value != actionInfo.value) revert IncorrectMsgValue();
 
     action.executed = true;

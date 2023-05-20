@@ -23,15 +23,38 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @notice The action creator cannot approve or disapprove an action.
   error ActionCreatorCannotCast();
+
+  /// @notice The action cannot be canceled if it's already in a terminal state.
+  /// @param state The current state of the action.
   error CannotCancelInState(ActionState state);
+
+  /// @notice The strategy has disabled disapprovals.
   error DisapprovalDisabled();
+
+  /// @notice The action cannot be created because approval quorum is not possible.
   error InsufficientApprovalQuantity();
+
+  /// @notice The action cannot be created because disapproval quorum is not possible.
   error InsufficientDisapprovalQuantity();
+
+  /// @notice The quantity of approvals required are greater than the role supply.
   error InvalidMinApprovals(uint256 minApprovals);
+
+  /// @notice The role is not eligible to participate in this strategy in the specified way.
+  /// @param role The role being used.
   error InvalidRole(uint8 role);
+
+  /// @notice Only the action creator can cancel an action.
   error OnlyActionCreator();
+
+  /// @notice The action cannot be created if the approval or disapproval supply is 0.
+  /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
+
+  /// @notice The provided `role` is not initialized by the `LlamaPolicy`.
+  /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
   // ========================

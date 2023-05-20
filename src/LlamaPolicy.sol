@@ -24,14 +24,32 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @notice Roleholder cannot be set at the same timestamp as an action creation.
   error ActionCreationAtSameTimestamp();
+
+  /// @notice Only callable by a Llama instance's executor.
+  /// @param userAddress The address of the possible policyholder.
   error AddressDoesNotHoldPolicy(address userAddress);
+
+  /// @notice Cannot set "all holders" role.
   error AllHoldersRole();
+
+  /// @notice Policy can only be initialized once.
   error AlreadyInitialized();
+
+  /// @notice The indices would result in `Panic: Index Out of Bounds`.
   error InvalidIndices();
+
+  /// @notice Thrown when the provided policyholder and role are not in the expected state for the function.
   error InvalidRoleHolderInput();
+
+  /// @notice Policy tokens cannot be transfered.
   error NonTransferableToken();
+
+  /// @notice Only callable by a Llama instance's executor.
   error OnlyLlama();
+
+  /// @notice Operations can only occur on initialized roles.
   error RoleNotInitialized(uint8 role);
 
   modifier onlyLlama() {

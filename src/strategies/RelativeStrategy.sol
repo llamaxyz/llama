@@ -22,12 +22,30 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @notice The action cannot be canceled if it's already in a terminal state.
+  /// @param state The current state of the action.
   error CannotCancelInState(ActionState state);
+
+  /// @notice The strategy has disabled disapprovals.
   error DisapprovalDisabled();
+
+  /// @notice The minimum approval percentage cannot be greater than 100%.
+  /// @param minApprovalPct The provided `minApprovalPct`.
   error InvalidMinApprovalPct(uint256 minApprovalPct);
+
+  /// @notice The role is not eligible to participate in this strategy in the specified way.
+  /// @param role The role being used.
   error InvalidRole(uint8 role);
+
+  /// @notice Only the action creator can cancel an action.
   error OnlyActionCreator();
+
+  /// @notice The action cannot be created if the approval or disapproval supply is 0.
+  /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
+
+  /// @notice The provided `role` is not initialized by the `LlamaPolicy`.
+  /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
   // ========================
