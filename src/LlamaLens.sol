@@ -13,7 +13,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Lens
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Utility contract to compute Llama contract addresses.
+/// @notice Utility contract to compute Llama contract addresses and permission IDs.
 contract LlamaLens {
   /// @notice The factory contract on this chain.
   address public immutable LLAMA_FACTORY;

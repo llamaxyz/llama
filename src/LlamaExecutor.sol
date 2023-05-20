@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/// @title Llama Executor
+/// @author Llama (devsdosomething@llama.xyz)
+/// @notice Makes the call to the target contract governed by a Llama instance.
 contract LlamaExecutor {
   // ======================================
   // ============= Errors =================
