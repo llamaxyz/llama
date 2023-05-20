@@ -9,7 +9,9 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @dev A script that allows users to aggregate common calls on the core and policy contracts.
+/// @title Governance Script
+/// @author Llama (devsdosomething@llama.xyz)
+/// @notice A script that allows users to aggregate common calls on the core and policy contracts.
 contract GovernanceScript {
   // =============================
   // ========= Errors ============
