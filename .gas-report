@@ -39,33 +39,33 @@
 | approvals                                                                                            | 926             | 926                 | 926     | 926                 | 2       |
 | authorizeScript                                                                                      | 2408            | 17321               | 23909   | 28909               | 20      |
 | authorizedScripts                                                                                    | 685             | 685                 | 685     | 685                 | 1       |
-| cancelAction                                                                                         | 3914            | 20809               | 19226   | 32870               | 12      |
-| castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                            | 4051            | 69013               | 72811   | 291578              | 548     |
+| cancelAction                                                                                         | 3887            | 20807               | 19226   | 32870               | 12      |
+| castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                            | 4051            | 63252               | 72811   | 129624              | 691     |
 | castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8,string)                     | 95304           | 95304               | 95304   | 95304               | 1       |
 | castApprovalBySig                                                                                    | 7721            | 62163               | 67388   | 105156              | 8       |
-| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                         | 3983            | 61381               | 63947   | 85847               | 58      |
-| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8,string)                  | 67839           | 67839               | 67839   | 67839               | 1       |
+| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                         | 3992            | 62110               | 64941   | 85847               | 74      |
+| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8,string)                  | 68166           | 68166               | 68166   | 68166               | 1       |
 | castDisapprovalBySig                                                                                 | 7528            | 63033               | 96022   | 98022               | 9       |
 | createAccounts                                                                                       | 2823            | 2199436671924133232 | 194776  | 8797746687696142856 | 8       |
-| createAction(uint8,address,address,uint256,bytes)(uint256)                                           | 3052            | 152572              | 158220  | 1428633             | 499     |
+| createAction(uint8,address,address,uint256,bytes)(uint256)                                           | 3052            | 151038              | 158220  | 577695              | 499     |
 | createAction(uint8,address,address,uint256,bytes,string)(uint256)                                    | 162261          | 162261              | 162261  | 162261              | 1       |
 | createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)(uint256)        | 7359            | 92923               | 31259   | 191088              | 7       |
 | createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32,string)(uint256) | 191559          | 191559              | 191559  | 191559              | 1       |
-| createStrategies                                                                                     | 2598            | 288450711072236287  | 167659  | 8797746687696136340 | 61      |
+| createStrategies                                                                                     | 2598            | 288450711072275045  | 167659  | 8797746687696136360 | 61      |
 | disapprovals                                                                                         | 735             | 735                 | 735     | 735                 | 2       |
-| executeAction                                                                                        | 3528            | 1465846             | 1465516 | 41681914            | 405     |
+| executeAction                                                                                        | 3528            | 1403462             | 1465436 | 15058665            | 405     |
 | executor                                                                                             | 903             | 903                 | 903     | 903                 | 2767    |
 | factory                                                                                              | 922             | 1922                | 1922    | 2922                | 2       |
-| getAction                                                                                            | 1811            | 2002                | 1811    | 3811                | 5019    |
+| getAction                                                                                            | 1811            | 1994                | 1811    | 3811                | 5242    |
 | getActionState                                                                                       | 2324            | 16289               | 15751   | 45829               | 48      |
-| getLastActionTimestamp                                                                               | 617             | 839                 | 617     | 4617                | 7968    |
+| getLastActionTimestamp                                                                               | 617             | 744                 | 617     | 4617                | 13873   |
 | incrementNonce                                                                                       | 770             | 17195               | 22670   | 22670               | 4       |
 | initialize                                                                                           | 1733            | 973253              | 975398  | 1073030             | 793     |
 | llamaAccountLogic                                                                                    | 768             | 1768                | 1768    | 2768                | 2       |
 | name                                                                                                 | 938             | 970                 | 938     | 2938                | 125     |
 | nonces                                                                                               | 1129            | 1929                | 1129    | 3129                | 10      |
 | policy                                                                                               | 280             | 316                 | 280     | 2280                | 3197    |
-| queueAction                                                                                          | 3630            | 25649               | 25648   | 282355              | 429     |
+| queueAction                                                                                          | 3606            | 25224               | 25648   | 86611               | 429     |
 | setGuard                                                                                             | 3049            | 18346               | 29259   | 29259               | 7       |
 | strategies                                                                                           | 597             | 977                 | 597     | 2597                | 21      |
 
@@ -73,65 +73,65 @@
 | src/LlamaFactory.sol:LlamaFactory contract |                 |         |         |         |         |
 |--------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                            | Deployment Size |         |         |         |         |
-| 3673480                                    | 15659           |         |         |         |         |
+| 3673240                                    | 15659           |         |         |         |         |
 | Function Name                              | min             | avg     | median  | max     | # calls |
-| LLAMA_ACCOUNT_LOGIC                        | 164             | 164     | 164     | 164     | 2       |
-| LLAMA_CORE_LOGIC                           | 386             | 386     | 386     | 386     | 2       |
-| LLAMA_POLICY_LOGIC                         | 298             | 298     | 298     | 298     | 2       |
+| LLAMA_ACCOUNT_LOGIC                        | 164             | 164     | 164     | 164     | 385     |
+| LLAMA_CORE_LOGIC                           | 386             | 386     | 386     | 386     | 385     |
+| LLAMA_POLICY_LOGIC                         | 298             | 298     | 298     | 298     | 385     |
 | LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 452             | 452     | 452     | 452     | 383     |
 | ROOT_LLAMA_CORE                            | 342             | 342     | 342     | 342     | 752     |
 | ROOT_LLAMA_EXECUTOR                        | 408             | 408     | 408     | 408     | 375     |
 | authorizeStrategyLogic                     | 409             | 19944   | 23708   | 23708   | 30      |
 | authorizedStrategyLogics                   | 600             | 826     | 600     | 2600    | 450     |
 | contractURI                                | 44070           | 44070   | 44070   | 44070   | 1       |
-| deploy                                     | 5205            | 1401284 | 1425250 | 1654160 | 393     |
+| deploy                                     | 5205            | 1400836 | 1425170 | 1652591 | 393     |
 | llamaCount                                 | 285             | 1035    | 285     | 2285    | 8       |
 | llamaPolicyMetadata                        | 533             | 1533    | 1533    | 2533    | 2       |
-| setPolicyTokenMetadata                     | 6421            | 6421    | 6421    | 6421    | 2       |
+| setPolicyTokenMetadata                     | 291             | 3356    | 3356    | 6421    | 2       |
 | tokenURI                                   | 1690056         | 1690056 | 1690056 | 1690056 | 4       |
 
 
-| src/LlamaLens.sol:LlamaLens contract                         |                 |      |        |      |         |
-|--------------------------------------------------------------|-----------------|------|--------|------|---------|
-| Deployment Cost                                              | Deployment Size |      |        |      |         |
-| 392837                                                       | 1990            |      |        |      |         |
-| Function Name                                                | min             | avg  | median | max  | # calls |
-| computeLlamaAccountAddress                                   | 935             | 935  | 935    | 935  | 3003    |
-| computeLlamaCoreAddress                                      | 1329            | 1329 | 1329   | 1329 | 6       |
-| computeLlamaExecutorAddress(address)(address)                | 528             | 528  | 528    | 528  | 4       |
-| computeLlamaExecutorAddress(string,address,address)(address) | 1603            | 1603 | 1603   | 1603 | 2       |
-| computeLlamaPolicyAddress                                    | 1309            | 1309 | 1309   | 1309 | 6       |
-| computeLlamaStrategyAddress                                  | 1105            | 1118 | 1105   | 3216 | 1566    |
-| computePermissionId                                          | 476             | 476  | 476    | 476  | 3       |
+| src/LlamaLens.sol:LlamaLens contract          |                 |      |        |      |         |
+|-----------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                               | Deployment Size |      |        |      |         |
+| 543560                                        | 3316            |      |        |      |         |
+| Function Name                                 | min             | avg  | median | max  | # calls |
+| computeLlamaAccountAddress                    | 993             | 993  | 993    | 993  | 3003    |
+| computeLlamaCoreAddress                       | 1150            | 1150 | 1150   | 1150 | 6       |
+| computeLlamaExecutorAddress(address)(address) | 586             | 586  | 586    | 586  | 4       |
+| computeLlamaExecutorAddress(string)(address)  | 1533            | 1533 | 1533   | 1533 | 2       |
+| computeLlamaPolicyAddress                     | 1290            | 1290 | 1290   | 1290 | 6       |
+| computeLlamaStrategyAddress                   | 1142            | 1156 | 1142   | 3483 | 1566    |
+| computePermissionId                           | 495             | 495  | 495    | 495  | 3       |
 
 
 | src/LlamaPolicy.sol:LlamaPolicy contract                                           |                 |         |         |         |         |
 |------------------------------------------------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                                                                    | Deployment Size |         |         |         |         |
-| 3464491                                                                            | 17391           |         |         |         |         |
+| 3468491                                                                            | 17411           |         |         |         |         |
 | Function Name                                                                      | min             | avg     | median  | max     | # calls |
 | ALL_HOLDERS_ROLE                                                                   | 244             | 244     | 244     | 244     | 1       |
 | approve                                                                            | 289             | 289     | 289     | 289     | 1       |
-| balanceOf                                                                          | 781             | 2714    | 2781    | 2781    | 603     |
+| balanceOf                                                                          | 781             | 2734    | 2781    | 2781    | 1113    |
 | canCreateAction                                                                    | 1187            | 1687    | 1187    | 3187    | 4       |
 | contractURI                                                                        | 55323           | 55323   | 55323   | 55323   | 1       |
 | factory                                                                            | 903             | 903     | 903     | 903     | 2       |
 | finalizeInitialization                                                             | 2581            | 24725   | 24753   | 24753   | 792     |
-| getPastQuantity                                                                    | 1342            | 2245    | 2211    | 10506   | 628     |
+| getPastQuantity                                                                    | 1342            | 2238    | 2211    | 10506   | 787     |
 | getQuantity                                                                        | 1178            | 2157    | 1364    | 3178    | 58      |
 | getRoleSupplyAsNumberOfHolders                                                     | 1005            | 1256    | 1005    | 3005    | 977     |
 | getRoleSupplyAsQuantitySum                                                         | 1288            | 1948    | 1288    | 3288    | 100     |
 | hasPermissionId                                                                    | 1632            | 2752    | 1898    | 7898    | 504     |
-| hasRole(address,uint8)(bool)                                                       | 1552            | 1610    | 1552    | 3132    | 27      |
-| hasRole(address,uint8,uint256)(bool)                                               | 1956            | 2986    | 2283    | 6283    | 614     |
-| initialize                                                                         | 1994            | 502017  | 322244  | 770597  | 800     |
-| initializeRole                                                                     | 705             | 2243    | 2221    | 7021    | 1910    |
+| hasRole(address,uint8)(bool)                                                       | 1299            | 1366    | 1299    | 3113    | 27      |
+| hasRole(address,uint8,uint256)(bool)                                               | 1956            | 2841    | 2283    | 6283    | 773     |
+| initialize                                                                         | 1994            | 502365  | 322164  | 770517  | 799     |
+| initializeRole                                                                     | 705             | 2247    | 2221    | 7021    | 1608    |
 | isRoleExpired                                                                      | 827             | 1117    | 1262    | 1262    | 3       |
 | llamaExecutor                                                                      | 447             | 447     | 447     | 447     | 2       |
 | name                                                                               | 918             | 1584    | 918     | 2918    | 6       |
-| numRoles                                                                           | 683             | 710     | 683     | 2683    | 4107    |
+| numRoles                                                                           | 683             | 710     | 683     | 2683    | 4113    |
 | revokeExpiredRole                                                                  | 1441            | 23171   | 25200   | 30700   | 9       |
-| revokePolicy                                                                       | 2863            | 55637   | 64203   | 105453  | 11      |
+| revokePolicy                                                                       | 2863            | 55360   | 63894   | 105067  | 11      |
 | roleBalanceCheckpoints(address,uint8)(((uint64,uint64,uint128)[]))                 | 2598            | 8262    | 11661   | 11661   | 8       |
 | roleBalanceCheckpoints(address,uint8,uint256,uint256)(((uint64,uint64,uint128)[])) | 568             | 2518    | 2229    | 5480    | 12      |
 | roleBalanceCheckpointsLength                                                       | 1243            | 1243    | 1243    | 1243    | 1       |
@@ -139,8 +139,8 @@
 | safeTransferFrom(address,address,uint256)                                          | 542             | 542     | 542     | 542     | 1       |
 | safeTransferFrom(address,address,uint256,bytes)                                    | 1047            | 1047    | 1047    | 1047    | 1       |
 | setApprovalForAll                                                                  | 806             | 806     | 806     | 806     | 1       |
-| setRoleHolder                                                                      | 2055            | 141364  | 145181  | 182881  | 7952    |
-| setRolePermission                                                                  | 1084            | 24792   | 25098   | 27098   | 4004    |
+| setRoleHolder                                                                      | 2055            | 142601  | 145101  | 182801  | 13857   |
+| setRolePermission                                                                  | 1084            | 24561   | 25098   | 27098   | 4100    |
 | symbol                                                                             | 3358            | 3358    | 3358    | 3358    | 1       |
 | tokenURI                                                                           | 1765690         | 1765690 | 1765690 | 1765690 | 3       |
 | totalSupply                                                                        | 485             | 485     | 485     | 485     | 1       |
