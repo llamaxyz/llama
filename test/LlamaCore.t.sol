@@ -34,6 +34,12 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
+contract MyTest is LlamaTestSetup {
+  function test_1plus1() external {
+    assertEq(true, true);
+  }
+}
+
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event ActionCreated(
     uint256 id,
