@@ -11,12 +11,12 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error OnlyLlamaOrRootLlama();
+  error OnlyLlamaOrRootLlamaOrFactory();
 
-  modifier onlyLlamaOrRootLlama(LlamaExecutor llamaExecutor) {
-    if (msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != address(llamaExecutor)) {
-      revert OnlyLlamaOrRootLlama();
-    }
+  modifier onlyLlamaOrRootLlamaOrFactory(LlamaExecutor llamaExecutor) {
+    if (
+      msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != address(llamaExecutor) && msg.sender != LLAMA_FACTORY
+    ) revert OnlyLlamaOrRootLlamaOrFactory();
     _;
   }
 
@@ -34,6 +34,9 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice The Root Llama Instance.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
 
+  /// @notice The Root Llama Instance.
+  address public immutable LLAMA_FACTORY;
+
   /// @notice Mapping of Llama Instance to color code for SVG.
   mapping(LlamaExecutor => string) public color;
 
@@ -46,6 +49,7 @@ contract LlamaPolicyMetadataParamRegistry {
 
   constructor(LlamaExecutor rootLlamaExecutor) {
     ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
+    LLAMA_FACTORY = msg.sender;
   }
 
   // ===========================================
@@ -60,7 +64,10 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the color code for SVG of a Llama Instance.
   /// @param llamaExecutor The Llama Instance.
   /// @param _color The color code as a hex value (eg. #00FF00)
-  function setColor(LlamaExecutor llamaExecutor, string memory _color) external onlyLlamaOrRootLlama(llamaExecutor) {
+  function setColor(LlamaExecutor llamaExecutor, string memory _color)
+    external
+    onlyLlamaOrRootLlamaOrFactory(llamaExecutor)
+  {
     color[llamaExecutor] = _color;
     emit ColorSet(llamaExecutor, _color);
   }
@@ -68,7 +75,10 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the logo for SVG of a Llama Instance.
   /// @param llamaExecutor The Llama Instance.
   /// @param _logo The logo.
-  function setLogo(LlamaExecutor llamaExecutor, string memory _logo) external onlyLlamaOrRootLlama(llamaExecutor) {
+  function setLogo(LlamaExecutor llamaExecutor, string memory _logo)
+    external
+    onlyLlamaOrRootLlamaOrFactory(llamaExecutor)
+  {
     logo[llamaExecutor] = _logo;
     emit LogoSet(llamaExecutor, _logo);
   }

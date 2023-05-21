@@ -56,7 +56,7 @@ contract SetColor is LlamaPolicyMetadataParamRegistryTest {
 
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, LlamaExecutor llamaExecutor, string memory color) public {
     vm.assume(caller != address(rootExecutor) && caller != address(llamaExecutor));
-    vm.expectRevert(LlamaPolicyMetadataParamRegistry.OnlyLlamaOrRootLlama.selector);
+    vm.expectRevert(LlamaPolicyMetadataParamRegistry.OnlyLlamaOrRootLlamaOrFactory.selector);
     vm.prank(caller);
     policyMetadataParamRegistry.setColor(llamaExecutor, color);
   }
@@ -85,7 +85,7 @@ contract SetLogo is LlamaPolicyMetadataParamRegistryTest {
 
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, LlamaExecutor llamaExecutor, string memory logo) public {
     vm.assume(caller != address(rootExecutor) && caller != address(llamaExecutor));
-    vm.expectRevert(LlamaPolicyMetadataParamRegistry.OnlyLlamaOrRootLlama.selector);
+    vm.expectRevert(LlamaPolicyMetadataParamRegistry.OnlyLlamaOrRootLlamaOrFactory.selector);
     vm.prank(caller);
     policyMetadataParamRegistry.setLogo(llamaExecutor, logo);
   }
