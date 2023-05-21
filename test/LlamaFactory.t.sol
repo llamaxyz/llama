@@ -374,6 +374,14 @@ contract Deploy is LlamaFactoryTest {
     assertEq(address(newLlamaExecutor), address(computedExecutor));
     assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
   }
+
+  function test_SetsColorAndLogoForMpExecutor() public {
+    (LlamaExecutor llamaExecutor,) = deployLlama();
+    (string memory setColor, string memory setLogo) =
+      factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY().getMetadata(llamaExecutor);
+    assertEq(setColor, color);
+    assertEq(setLogo, logo);
+  }
 }
 
 contract AuthorizeStrategyLogic is LlamaFactoryTest {
