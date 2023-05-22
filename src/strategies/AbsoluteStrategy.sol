@@ -27,8 +27,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   error ActionCreatorCannotCast();
 
   /// @dev The action cannot be canceled if it's already in a terminal state.
-  /// @param state The current state of the action.
-  error CannotCancelInState(ActionState state);
+  /// @param currentState The current state of the action.
+  error CannotCancelInState(ActionState currentState);
 
   /// @dev The strategy has disabled disapprovals.
   error DisapprovalDisabled();
