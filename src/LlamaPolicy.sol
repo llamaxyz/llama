@@ -467,7 +467,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
     unchecked {
-      // Safety: Can never overflow a uint256 by incrementing.
+      // Safety: Can never overflow a uint128 by incrementing.
       allHoldersRoleSupply.numberOfHolders += 1;
       allHoldersRoleSupply.totalQuantity += 1;
     }
