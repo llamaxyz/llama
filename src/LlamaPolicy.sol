@@ -445,8 +445,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       //   2. `hadRole` and `willHaveRole` are both true, and `initialQuantity == quantity`.
       // We allow these no-ops without reverting so you can give someone a policy with only the
       // `ALL_HOLDERS_ROLE`.
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity;
     }
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
