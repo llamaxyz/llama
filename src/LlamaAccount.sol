@@ -38,17 +38,17 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @notice Only callable by a Llama instance's executor.
+  /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
 
-  /// @notice Recipient cannot be the 0 address.
+  /// @dev Recipient cannot be the 0 address.
   error Invalid0xRecipient();
 
-  /// @notice External call failed.
+  /// @dev External call failed.
   /// @param result Data returned by the called function.
   error FailedExecution(bytes result);
 
-  /// @notice Slot 0 cannot be changed as a result of `delegatecall`s.
+  /// @dev Slot 0 cannot be changed as a result of `delegatecall`s.
   error Slot0Changed();
 
   modifier onlyLlama() {

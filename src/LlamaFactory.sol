@@ -22,13 +22,13 @@ contract LlamaFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @notice The initial set of role holders has to have at least one role holder with role ID 1.
+  /// @dev The initial set of role holders has to have at least one role holder with role ID 1.
   error InvalidDeployConfiguration();
 
-  /// @notice A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
+  /// @dev A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
   error OnlyRootLlama();
 
-  /// @notice Checks that the caller is the Root Llama Executor and reverts if not.
+  /// @dev Checks that the caller is the Root Llama Executor and reverts if not.
   modifier onlyRootLlama() {
     if (msg.sender != address(ROOT_LLAMA_EXECUTOR)) revert OnlyRootLlama();
     _;
