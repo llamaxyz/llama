@@ -125,10 +125,10 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     uint8 numRoles = policy.numRoles();
 
     approvalRole = strategyConfig.approvalRole;
-    _assertValidRole(approvalRole, numRoles);
+    _assertValidRole(strategyConfig.approvalRole, numRoles);
 
     disapprovalRole = strategyConfig.disapprovalRole;
-    _assertValidRole(disapprovalRole, numRoles);
+    _assertValidRole(strategyConfig.disapprovalRole, numRoles);
 
     for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
