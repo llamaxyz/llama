@@ -16,7 +16,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice An ERC721 contract where each token is non-transferable and has roles assigned to create, approve and
 /// disapprove actions.
-/// @dev The roles and permissions determine how the token can interact with the Core contract.
+/// @dev The roles and permissions determine how the token can interact with the Llama Core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
 

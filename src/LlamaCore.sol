@@ -14,9 +14,9 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Core of a llama instance
+/// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Main point of interaction of a llama instance (i.e. entry into and exit from).
+/// @notice Manages the action process from creation to execution.
 contract LlamaCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
