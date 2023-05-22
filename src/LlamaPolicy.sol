@@ -38,12 +38,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   error AlreadyInitialized();
 
   /// @dev The indices would result in `Panic: Index Out of Bounds`.
+  /// @dev Thrown when the `end` index is greater than array length or when the `start` index is greater than the `end`
+  /// index.
   error InvalidIndices();
 
   /// @dev Thrown when the provided policyholder and role are not in the expected state for the function.
   error InvalidRoleHolderInput();
 
-  /// @dev Policy tokens cannot be transfered.
+  /// @dev Policy tokens cannot be transferred.
   error NonTransferableToken();
 
   /// @dev Only callable by a Llama instance's executor.

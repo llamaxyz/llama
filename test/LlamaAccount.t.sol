@@ -227,7 +227,7 @@ contract TransferNativeToken is LlamaAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
     vm.stopPrank();
   }
@@ -273,7 +273,7 @@ contract BatchTransferNativeToken is LlamaAccountTest {
     data[0] = LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT);
 
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.batchTransferNativeToken(data);
     vm.stopPrank();
   }
@@ -305,7 +305,7 @@ contract TransferERC20 is LlamaAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
@@ -351,7 +351,7 @@ contract BatchTransferERC20 is LlamaAccountTest {
     erc20Data[0] = ERC20Data(USDC, address(0), USDC_AMOUNT);
 
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
@@ -446,7 +446,7 @@ contract TransferERC721 is LlamaAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
@@ -492,7 +492,7 @@ contract BatchTransferERC721 is LlamaAccountTest {
     erc721Data[0] = ERC721Data(BAYC, address(0), BAYC_ID);
 
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
@@ -608,7 +608,7 @@ contract TransferERC1155 is LlamaAccountTest {
 
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
@@ -669,7 +669,7 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
     amounts[1] = RARI_ID_2_AMOUNT;
 
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
     vm.stopPrank();
   }
@@ -737,7 +737,7 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
     erc1155BatchData[0] = ERC1155BatchData(RARI, address(0), tokenIDs, amounts, "");
 
     vm.startPrank(address(mpExecutor));
-    vm.expectRevert(LlamaAccount.Invalid0xRecipient.selector);
+    vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
     mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
     vm.stopPrank();
   }

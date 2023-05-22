@@ -39,7 +39,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @dev The action cannot be created because disapproval quorum is not possible.
   error InsufficientDisapprovalQuantity();
 
-  /// @dev The quantity of approvals required are greater than the role supply.
+  /// @dev The action cannot be created because the quantity of approvals required are greater than the role supply.
   error InvalidMinApprovals(uint256 minApprovals);
 
   /// @dev The role is not eligible to participate in this strategy in the specified way.

@@ -29,7 +29,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
   /// @notice The strategy has disabled disapprovals.
   error DisapprovalDisabled();
 
-  /// @notice The minimum approval percentage cannot be greater than 100%.
+  /// @notice The action cannot be created because the minimum approval percentage cannot be greater than 100%.
   /// @param minApprovalPct The provided `minApprovalPct`.
   error InvalidMinApprovalPct(uint256 minApprovalPct);
 
