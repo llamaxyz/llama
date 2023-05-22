@@ -5,7 +5,7 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 
 /// @title Llama Policy Token Metadata Parameter Registry
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Parameter Registry contract for onchain image formats.
+/// @notice Parameter Registry contract for onchain SVG colors and logos.
 contract LlamaPolicyMetadataParamRegistry {
   // ======================================
   // ======== Errors and Modifiers ========
