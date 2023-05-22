@@ -30,7 +30,7 @@ contract LlamaCore is Initializable {
   /// @notice An action's target contract cannot be the executor.
   error CannotSetExecutorAsTarget();
 
-  /// @notice Address cannot be used for an argument.
+  /// @notice Address cannot be used.
   error RestrictedAddress();
 
   /// @notice Policyholders can only cast once.
