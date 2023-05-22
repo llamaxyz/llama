@@ -46,7 +46,7 @@ contract LlamaCore is Initializable {
   /// @notice `msg.value` does not equal the action's `value`.
   error IncorrectMsgValue();
 
-  /// @notice The action is not in the expected state .
+  /// @notice The action is not in the expected state.
   /// @param current The current state of the action.
   error InvalidActionState(ActionState current);
 
