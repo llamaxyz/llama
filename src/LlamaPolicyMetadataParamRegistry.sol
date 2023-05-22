@@ -11,12 +11,14 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error OnlyLlamaRootOrFactory();
+  error UnauthorizedCaller();
 
-  modifier onlyLlamaRootOrFactory(LlamaExecutor llamaExecutor) {
+  /// @dev Only the Llama instance, the root Llama instance, or the Llama factory can update an instance's color and
+  /// logo.
+  modifier onlyAuthorized(LlamaExecutor llamaExecutor) {
     if (
-      msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != address(llamaExecutor) && msg.sender != LLAMA_FACTORY
-    ) revert OnlyLlamaRootOrFactory();
+      msg.sender != address(llamaExecutor) && msg.sender != address(ROOT_LLAMA_EXECUTOR) && msg.sender != LLAMA_FACTORY
+    ) revert UnauthorizedCaller();
     _;
   }
 
@@ -64,7 +66,7 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the color code for SVG of a Llama Instance.
   /// @param llamaExecutor The Llama Instance.
   /// @param _color The color code as a hex value (eg. #00FF00)
-  function setColor(LlamaExecutor llamaExecutor, string memory _color) external onlyLlamaRootOrFactory(llamaExecutor) {
+  function setColor(LlamaExecutor llamaExecutor, string memory _color) external onlyAuthorized(llamaExecutor) {
     color[llamaExecutor] = _color;
     emit ColorSet(llamaExecutor, _color);
   }
@@ -72,7 +74,7 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @notice Sets the logo for SVG of a Llama Instance.
   /// @param llamaExecutor The Llama Instance.
   /// @param _logo The logo.
-  function setLogo(LlamaExecutor llamaExecutor, string memory _logo) external onlyLlamaRootOrFactory(llamaExecutor) {
+  function setLogo(LlamaExecutor llamaExecutor, string memory _logo) external onlyAuthorized(llamaExecutor) {
     logo[llamaExecutor] = _logo;
     emit LogoSet(llamaExecutor, _logo);
   }
