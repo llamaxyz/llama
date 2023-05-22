@@ -22,7 +22,7 @@ contract LlamaFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @notice Thrown if the initial set of role holders has no one with role ID 1.
+  /// @notice The initial set of role holders has to have at least one role holder with role ID 1.
   error InvalidDeployConfiguration();
 
   /// @notice A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
