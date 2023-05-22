@@ -25,7 +25,7 @@ contract GovernanceScript {
   /// @notice The provided arrays do not have the same length.
   error MismatchedArrayLengths();
 
-  /// @notice The target address is neither the `LlamaCore` or `LlamaPolicy`.
+  /// @notice The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
