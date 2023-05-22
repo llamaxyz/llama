@@ -11,9 +11,9 @@ import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
-import {PeerStrategy} from "src/strategies/PeerStrategy.sol";
+import {PeerReview} from "src/strategies/PeerReview.sol";
 import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
-import {PeerStrategyConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PeerReviewConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -23,7 +23,7 @@ contract DeployLlama is Script {
   // Logic contracts.
   LlamaCore coreLogic;
   PercentageQuorum percentageQuorumLogic;
-  PeerStrategy peerStrategyLogic;
+  PeerReview peerReviewLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
 
@@ -45,8 +45,8 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaPercentageQuorumLogic:", vm.toString(address(percentageQuorumLogic))));
 
     vm.broadcast();
-    peerStrategyLogic = new PeerStrategy();
-    DeployUtils.print(string.concat("  LlamaPeerStrategyLogic:", vm.toString(address(peerStrategyLogic))));
+    peerReviewLogic = new PeerReview();
+    DeployUtils.print(string.concat("  LlamaPeerReviewLogic:", vm.toString(address(peerReviewLogic))));
 
     vm.broadcast();
     accountLogic = new LlamaAccount();

@@ -41,7 +41,7 @@
     {
       "hash": "0x2d15d66269dfb09f8063c8ba792596ce47ab268f7142e415c2228dea831c8ba2",
       "transactionType": "CREATE",
-      "contractName": "PeerStrategy",
+      "contractName": "PeerReview",
       "contractAddress": "0x205411Bb210Dbda13480b18437ab0B0cf0DF17a8",
       "function": null,
       "arguments": null,

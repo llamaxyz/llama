@@ -17,12 +17,12 @@ import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
-import {PeerStrategy} from "src/strategies/PeerStrategy.sol";
+import {PeerReview} from "src/strategies/PeerReview.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
   ActionInfo,
-  PeerStrategyConfig,
+  PeerReviewConfig,
   PercentageQuorumConfig,
   PermissionData,
   RoleHolderData,
@@ -367,7 +367,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toPeerStrategy(ILlamaStrategy strategy) internal pure returns (PeerStrategy converted) {
+  function toPeerReview(ILlamaStrategy strategy) internal pure returns (PeerReview converted) {
     assembly {
       converted := strategy
     }
@@ -405,7 +405,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return uint16(n);
   }
 
-  function deployPeerStrategy(
+  function deployPeerReview(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
@@ -417,7 +417,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    PeerStrategyConfig memory strategyConfig = PeerStrategyConfig({
+    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -430,19 +430,19 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    PeerStrategyConfig[] memory strategyConfigs = new PeerStrategyConfig[](1);
+    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerStrategyLogic);
+    factory.authorizeStrategyLogic(peerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(peerStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(peerStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(peerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }

@@ -8,15 +8,15 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, PeerStrategyConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PeerReviewConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title MockPoorlyImplementedPeerStrategy
+/// @title MockPoorlyImplementedPeerReview
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the absolute strategy copy and pasted with lines 178 & 194 commented out so we can reach the
 /// ApprovalQuantityZero error
-contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
+contract MockPoorlyImplementedPeerReview is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -105,7 +105,7 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    PeerStrategyConfig memory strategyConfig = abi.decode(config, (PeerStrategyConfig));
+    PeerReviewConfig memory strategyConfig = abi.decode(config, (PeerReviewConfig));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

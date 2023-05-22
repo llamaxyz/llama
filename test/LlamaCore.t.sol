@@ -7,7 +7,7 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {MockPoorlyImplementedPeerStrategy} from "test/mock/MockPoorlyImplementedStrategy.sol";
+import {MockPoorlyImplementedPeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -18,7 +18,7 @@ import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {
-  PeerStrategyConfig,
+  PeerReviewConfig,
   Action,
   ActionInfo,
   PercentageQuorumConfig,
@@ -161,9 +161,9 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   }
 
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
-    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedPeerStrategy();
+    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedPeerReview();
 
-    PeerStrategyConfig memory strategyConfig = PeerStrategyConfig({
+    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -176,7 +176,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    PeerStrategyConfig[] memory strategyConfigs = new PeerStrategyConfig[](1);
+    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -196,7 +196,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 
-  function createActionUsingPeerStrategy(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
+  function createActionUsingPeerReview(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpExecutor));
@@ -1448,7 +1448,7 @@ contract CastApprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy peerStrategy = deployPeerStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1460,7 +1460,7 @@ contract CastApprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingPeerStrategy(peerStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
     vm.prank(actionCreatorAaron);
@@ -1558,7 +1558,7 @@ contract CastDisapproval is LlamaCoreTest {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
-    uint256 executionTime = block.timestamp + toPeerStrategy(newStrategy).queuingPeriod();
+    uint256 executionTime = block.timestamp + toPeerReview(newStrategy).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
     mpCore.queueAction(actionInfo);
@@ -1700,7 +1700,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy peerStrategy = deployPeerStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1712,7 +1712,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingPeerStrategy(peerStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);

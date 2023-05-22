@@ -64,7 +64,7 @@ struct PercentageQuorumConfig {
   uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }
 
-struct PeerStrategyConfig {
+struct PeerReviewConfig {
   uint64 approvalPeriod; // The length of time of the approval period.
   uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.

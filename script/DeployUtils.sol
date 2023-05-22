@@ -6,7 +6,7 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {PeerStrategyConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PeerReviewConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 library DeployUtils {
@@ -126,7 +126,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(PeerStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(PeerReviewConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
@@ -141,7 +141,7 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategyConfigs(PeerStrategyConfig[] memory strategies) internal pure returns (bytes[] memory encoded) {
+  function encodeStrategyConfigs(PeerReviewConfig[] memory strategies) internal pure returns (bytes[] memory encoded) {
     encoded = new bytes[](strategies.length);
     for (uint256 i = 0; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
