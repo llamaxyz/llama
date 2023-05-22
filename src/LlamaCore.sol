@@ -53,7 +53,7 @@ contract LlamaCore is Initializable {
   /// @notice The policyholder does not have the role at action creation time.
   error InvalidPolicyholder();
 
-  /// @notice The message was not signed by the policyholder.
+  /// @notice The recovered signer does not match the expected policyholder.
   error InvalidSignature();
 
   /// @notice The provided address does not map to a deployed strategy.
