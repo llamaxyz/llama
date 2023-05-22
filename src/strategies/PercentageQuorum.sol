@@ -8,7 +8,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PercentageQuorumConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -17,7 +17,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-contract RelativeStrategy is ILlamaStrategy, Initializable {
+contract PercentageQuorum is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -111,7 +111,7 @@ contract RelativeStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    RelativeStrategyConfig memory strategyConfig = abi.decode(config, (RelativeStrategyConfig));
+    PercentageQuorumConfig memory strategyConfig = abi.decode(config, (PercentageQuorumConfig));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

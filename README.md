@@ -53,8 +53,8 @@ To confirm the deploy was successful, re-run your test suite but use the newly c
 | Name                             | Address                                    | Verified                                                                           |
 | -------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
 | LlamaCoreLogic                   | [0xa897FCE700D9AFe42431E9b096c785f1bcE6aD06](https://goerli.etherscan.io/address/0xa897FCE700D9AFe42431E9b096c785f1bcE6aD06) |    ✅    |
-| LlamaRelativeStrategyLogic       | [0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD](https://goerli.etherscan.io/address/0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD) |    ✅    |
-| LlamaAbsoluteStrategyLogic       | [0x9839ea98F18fd06f2e9be19B6A2E00dc11654755](https://goerli.etherscan.io/address/0x9839ea98F18fd06f2e9be19B6A2E00dc11654755) |    ✅    |
+| LlamaPercentageQuorumLogic       | [0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD](https://goerli.etherscan.io/address/0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD) |    ✅    |
+| LlamaPeerStrategyLogic       | [0x9839ea98F18fd06f2e9be19B6A2E00dc11654755](https://goerli.etherscan.io/address/0x9839ea98F18fd06f2e9be19B6A2E00dc11654755) |    ✅    |
 | LlamaAccountLogic                | [0x6428F81B3c72449b6e4F94C6f40cAbC349B90b73](https://goerli.etherscan.io/address/0x6428F81B3c72449b6e4F94C6f40cAbC349B90b73) |    ✅    |
 | LlamaPolicyLogic                 | [0x956b02429CB68FFa10B571D10A7cC8A92DbCefde](https://goerli.etherscan.io/address/0x956b02429CB68FFa10B571D10A7cC8A92DbCefde) |    ❌    |
 | LlamaPolicyMetadata              | [0x760A113aca237bb7646B9Cc91A8223E522517344](https://goerli.etherscan.io/address/0x760A113aca237bb7646B9Cc91A8223E522517344) |    ❌    |

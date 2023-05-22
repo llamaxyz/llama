@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
 
 contract DeployLlamaTest is Test, DeployLlama {
   function setUp() public virtual {}
@@ -36,7 +36,7 @@ contract Run is DeployLlamaTest {
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
     assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
-    assertEq(factory.authorizedStrategyLogics(relativeStrategyLogic), true);
+    assertEq(factory.authorizedStrategyLogics(percentageQuorumLogic), true);
   }
 
   function test_DeploysRootLlama() public {
@@ -65,7 +65,7 @@ contract Run is DeployLlamaTest {
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
         //   ILlamaStrategy indexed strategy,  <-- The topic we want.
-        //   address indexed relativeStrategyLogic,
+        //   address indexed percentageQuorumLogic,
         //   Strategy strategyData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
@@ -83,42 +83,42 @@ contract Run is DeployLlamaTest {
 
     ILlamaStrategy firstStrategy = strategiesAuthorized[0];
     assertEq(rootLlamaCore.strategies(firstStrategy), true);
-    assertEq(toRelativeStrategy(firstStrategy).approvalPeriod(), 172_800);
-    assertEq(toRelativeStrategy(firstStrategy).approvalRole(), 1);
-    assertEq(toRelativeStrategy(firstStrategy).disapprovalRole(), 3);
-    assertEq(toRelativeStrategy(firstStrategy).expirationPeriod(), 691_200);
-    assertEq(toRelativeStrategy(firstStrategy).isFixedLengthApprovalPeriod(), true);
-    assertEq(toRelativeStrategy(firstStrategy).minApprovalPct(), 4000);
-    assertEq(toRelativeStrategy(firstStrategy).minDisapprovalPct(), 5100);
-    assertEq(toRelativeStrategy(firstStrategy).queuingPeriod(), 345_600);
-    assertEq(toRelativeStrategy(firstStrategy).forceApprovalRole(1), false);
-    assertEq(toRelativeStrategy(firstStrategy).forceDisapprovalRole(1), false);
+    assertEq(toPercentageQuorum(firstStrategy).approvalPeriod(), 172_800);
+    assertEq(toPercentageQuorum(firstStrategy).approvalRole(), 1);
+    assertEq(toPercentageQuorum(firstStrategy).disapprovalRole(), 3);
+    assertEq(toPercentageQuorum(firstStrategy).expirationPeriod(), 691_200);
+    assertEq(toPercentageQuorum(firstStrategy).isFixedLengthApprovalPeriod(), true);
+    assertEq(toPercentageQuorum(firstStrategy).minApprovalPct(), 4000);
+    assertEq(toPercentageQuorum(firstStrategy).minDisapprovalPct(), 5100);
+    assertEq(toPercentageQuorum(firstStrategy).queuingPeriod(), 345_600);
+    assertEq(toPercentageQuorum(firstStrategy).forceApprovalRole(1), false);
+    assertEq(toPercentageQuorum(firstStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy secondStrategy = strategiesAuthorized[1];
     assertEq(rootLlamaCore.strategies(secondStrategy), true);
-    assertEq(toRelativeStrategy(secondStrategy).approvalPeriod(), 172_800);
-    assertEq(toRelativeStrategy(secondStrategy).approvalRole(), 2);
-    assertEq(toRelativeStrategy(secondStrategy).disapprovalRole(), 3);
-    assertEq(toRelativeStrategy(secondStrategy).expirationPeriod(), 691_200);
-    assertEq(toRelativeStrategy(secondStrategy).isFixedLengthApprovalPeriod(), true);
-    assertEq(toRelativeStrategy(secondStrategy).minApprovalPct(), 4000);
-    assertEq(toRelativeStrategy(secondStrategy).minDisapprovalPct(), 5100);
-    assertEq(toRelativeStrategy(secondStrategy).queuingPeriod(), 345_600);
-    assertEq(toRelativeStrategy(secondStrategy).forceApprovalRole(1), false);
-    assertEq(toRelativeStrategy(secondStrategy).forceDisapprovalRole(1), false);
+    assertEq(toPercentageQuorum(secondStrategy).approvalPeriod(), 172_800);
+    assertEq(toPercentageQuorum(secondStrategy).approvalRole(), 2);
+    assertEq(toPercentageQuorum(secondStrategy).disapprovalRole(), 3);
+    assertEq(toPercentageQuorum(secondStrategy).expirationPeriod(), 691_200);
+    assertEq(toPercentageQuorum(secondStrategy).isFixedLengthApprovalPeriod(), true);
+    assertEq(toPercentageQuorum(secondStrategy).minApprovalPct(), 4000);
+    assertEq(toPercentageQuorum(secondStrategy).minDisapprovalPct(), 5100);
+    assertEq(toPercentageQuorum(secondStrategy).queuingPeriod(), 345_600);
+    assertEq(toPercentageQuorum(secondStrategy).forceApprovalRole(1), false);
+    assertEq(toPercentageQuorum(secondStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy thirdStrategy = strategiesAuthorized[2];
     assertEq(rootLlamaCore.strategies(thirdStrategy), true);
-    assertEq(toRelativeStrategy(thirdStrategy).approvalPeriod(), 172_800);
-    assertEq(toRelativeStrategy(thirdStrategy).approvalRole(), 2);
-    assertEq(toRelativeStrategy(thirdStrategy).disapprovalRole(), 3);
-    assertEq(toRelativeStrategy(thirdStrategy).expirationPeriod(), 86_400);
-    assertEq(toRelativeStrategy(thirdStrategy).isFixedLengthApprovalPeriod(), false);
-    assertEq(toRelativeStrategy(thirdStrategy).minApprovalPct(), 8000);
-    assertEq(toRelativeStrategy(thirdStrategy).minDisapprovalPct(), 10_001);
-    assertEq(toRelativeStrategy(thirdStrategy).queuingPeriod(), 0);
-    assertEq(toRelativeStrategy(thirdStrategy).forceApprovalRole(1), true);
-    assertEq(toRelativeStrategy(thirdStrategy).forceDisapprovalRole(1), true);
+    assertEq(toPercentageQuorum(thirdStrategy).approvalPeriod(), 172_800);
+    assertEq(toPercentageQuorum(thirdStrategy).approvalRole(), 2);
+    assertEq(toPercentageQuorum(thirdStrategy).disapprovalRole(), 3);
+    assertEq(toPercentageQuorum(thirdStrategy).expirationPeriod(), 86_400);
+    assertEq(toPercentageQuorum(thirdStrategy).isFixedLengthApprovalPeriod(), false);
+    assertEq(toPercentageQuorum(thirdStrategy).minApprovalPct(), 8000);
+    assertEq(toPercentageQuorum(thirdStrategy).minDisapprovalPct(), 10_001);
+    assertEq(toPercentageQuorum(thirdStrategy).queuingPeriod(), 0);
+    assertEq(toPercentageQuorum(thirdStrategy).forceApprovalRole(1), true);
+    assertEq(toPercentageQuorum(thirdStrategy).forceDisapprovalRole(1), true);
 
     LlamaAccount firstAccount = accountsAuthorized[0];
     assertEq(firstAccount.llamaExecutor(), address(rootLlamaExecutor));
@@ -172,11 +172,11 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    assertEq(address(relativeStrategyLogic), address(0));
+    assertEq(address(percentageQuorumLogic), address(0));
 
     DeployLlama.run();
 
-    assertNotEq(address(relativeStrategyLogic), address(0));
+    assertNotEq(address(percentageQuorumLogic), address(0));
   }
 
   function test_DeploysAccountLogic() public {
@@ -222,7 +222,7 @@ contract Run is DeployLlamaTest {
     );
   }
 
-  function toRelativeStrategy(ILlamaStrategy strategy) internal pure returns (RelativeStrategy converted) {
+  function toPercentageQuorum(ILlamaStrategy strategy) internal pure returns (PercentageQuorum converted) {
     assembly {
       converted := strategy
     }

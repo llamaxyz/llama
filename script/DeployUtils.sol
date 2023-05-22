@@ -6,7 +6,7 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PeerStrategyConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 library DeployUtils {
@@ -18,7 +18,7 @@ library DeployUtils {
   uint8 public constant BOOTSTRAP_ROLE = 1;
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  struct RelativeStrategyJsonInputs {
+  struct PercentageQuorumJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 approvalPeriod;
     uint8 approvalRole;
@@ -63,11 +63,11 @@ library DeployUtils {
 
   function readRelativeStrategies(string memory jsonInput) internal pure returns (bytes[] memory) {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RelativeStrategyJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeStrategyJsonInputs[]));
+    PercentageQuorumJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (PercentageQuorumJsonInputs[]));
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
+    PercentageQuorumConfig[] memory strategyConfigs = new PercentageQuorumConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
-      RelativeStrategyJsonInputs memory rawStrategy = rawStrategyConfigs[i];
+      PercentageQuorumJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
       strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
       strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
@@ -122,15 +122,15 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategy(RelativeStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(PercentageQuorumConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(AbsoluteStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(PeerStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
+  function encodeStrategyConfigs(PercentageQuorumConfig[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)
@@ -141,11 +141,7 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategyConfigs(AbsoluteStrategyConfig[] memory strategies)
-    internal
-    pure
-    returns (bytes[] memory encoded)
-  {
+  function encodeStrategyConfigs(PeerStrategyConfig[] memory strategies) internal pure returns (bytes[] memory encoded) {
     encoded = new bytes[](strategies.length);
     for (uint256 i = 0; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
@@ -164,10 +160,10 @@ library DeployUtils {
 
     // Get the bootstrap strategy, which is the first strategy in the list.
     bytes memory encodedStrategyConfigs = jsonInput.parseRaw(".initialStrategies");
-    RelativeStrategyJsonInputs[] memory relativeStrategyConfigs =
-      abi.decode(encodedStrategyConfigs, (RelativeStrategyJsonInputs[]));
+    PercentageQuorumJsonInputs[] memory percentageQuorumConfigs =
+      abi.decode(encodedStrategyConfigs, (PercentageQuorumJsonInputs[]));
 
-    RelativeStrategyJsonInputs memory bootstrapStrategy = relativeStrategyConfigs[0];
+    PercentageQuorumJsonInputs memory bootstrapStrategy = percentageQuorumConfigs[0];
 
     // -------- Validate data --------
     // For a bootstrap strategy to passable, we need at least one of the following to be true:
@@ -190,7 +186,7 @@ library DeployUtils {
     if (bootstrapStrategy.approvalRole == BOOTSTRAP_ROLE) {
       // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
       // minimum number of role holders to pass a vote. The calculation here MUST match the one
-      // in the RelativeStrategy's `_getMinimumAmountNeeded` method. This check should never fail
+      // in the PercentageQuorum's `_getMinimumAmountNeeded` method. This check should never fail
       // for relative strategies, but it's left in as a reminder that it needs to be checked for
       // absolute strategies.
       uint256 minPct = bootstrapStrategy.minApprovalPct;

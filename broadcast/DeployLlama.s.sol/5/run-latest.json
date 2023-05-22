@@ -22,7 +22,7 @@
     {
       "hash": "0xd763792d000c2f8bfea26e27b5e90e3bf863935c7260a256a7064b760de68cde",
       "transactionType": "CREATE",
-      "contractName": "RelativeStrategy",
+      "contractName": "PercentageQuorum",
       "contractAddress": "0xff91C9Dc1A88A9C8C33eD097Dd1D389D605a20fF",
       "function": null,
       "arguments": null,
@@ -41,7 +41,7 @@
     {
       "hash": "0x2d15d66269dfb09f8063c8ba792596ce47ab268f7142e415c2228dea831c8ba2",
       "transactionType": "CREATE",
-      "contractName": "AbsoluteStrategy",
+      "contractName": "PeerStrategy",
       "contractAddress": "0x205411Bb210Dbda13480b18437ab0B0cf0DF17a8",
       "function": null,
       "arguments": null,

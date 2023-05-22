@@ -11,9 +11,9 @@ import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
-import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PeerStrategy} from "src/strategies/PeerStrategy.sol";
+import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
+import {PeerStrategyConfig, PercentageQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -22,8 +22,8 @@ contract DeployLlama is Script {
 
   // Logic contracts.
   LlamaCore coreLogic;
-  RelativeStrategy relativeStrategyLogic;
-  AbsoluteStrategy absoluteStrategyLogic;
+  PercentageQuorum percentageQuorumLogic;
+  PeerStrategy peerStrategyLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
 
@@ -41,12 +41,12 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    relativeStrategyLogic = new RelativeStrategy();
-    DeployUtils.print(string.concat("  LlamaRelativeStrategyLogic:", vm.toString(address(relativeStrategyLogic))));
+    percentageQuorumLogic = new PercentageQuorum();
+    DeployUtils.print(string.concat("  LlamaPercentageQuorumLogic:", vm.toString(address(percentageQuorumLogic))));
 
     vm.broadcast();
-    absoluteStrategyLogic = new AbsoluteStrategy();
-    DeployUtils.print(string.concat("  LlamaAbsoluteStrategyLogic:", vm.toString(address(absoluteStrategyLogic))));
+    peerStrategyLogic = new PeerStrategy();
+    DeployUtils.print(string.concat("  LlamaPeerStrategyLogic:", vm.toString(address(peerStrategyLogic))));
 
     vm.broadcast();
     accountLogic = new LlamaAccount();
@@ -72,7 +72,7 @@ contract DeployLlama is Script {
     vm.broadcast();
     factory = new LlamaFactory(
       coreLogic,
-      relativeStrategyLogic,
+      percentageQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,

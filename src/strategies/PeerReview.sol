@@ -12,11 +12,13 @@ import {Action, ActionInfo, PeerStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title MockPoorlyImplementedPeerStrategy
+/// @title Peer Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is the absolute strategy copy and pasted with lines 178 & 194 commented out so we can reach the
-/// ApprovalQuantityZero error
-contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
+/// @notice This is a llama strategy which has the following properties:
+///   - Approval/disapproval thresholds are specified as absolute numbers.
+///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
+///     regardless of the roles they hold.
+contract PeerReview is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -123,13 +125,14 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
     uint8 numRoles = policy.numRoles();
 
     approvalRole = strategyConfig.approvalRole;
-    _assertValidRole(approvalRole, numRoles);
+    _assertValidRole(strategyConfig.approvalRole, numRoles);
 
     disapprovalRole = strategyConfig.disapprovalRole;
-    _assertValidRole(disapprovalRole, numRoles);
+    _assertValidRole(strategyConfig.disapprovalRole, numRoles);
 
     for (uint256 i = 0; i < strategyConfig.forceApprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceApprovalRoles[i];
+      if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
       emit ForceApprovalRoleAdded(role);
@@ -137,6 +140,7 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
 
     for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
       uint8 role = strategyConfig.forceDisapprovalRoles[i];
+      if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
       emit ForceDisapprovalRoleAdded(role);
@@ -149,10 +153,11 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external view {
-    uint256 approvalPolicySupply = policy.getRoleSupplyAsQuantitySum(approvalRole);
+    LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
+    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = policy.getRoleSupplyAsQuantitySum(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // If the action creator has the approval or disapproval role, reduce the total supply by 1.
@@ -161,10 +166,10 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
       // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
-      uint256 actionCreatorApprovalRoleQty = policy.getQuantity(actionInfo.creator, approvalRole);
+      uint256 actionCreatorApprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, approvalRole);
       if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
 
-      uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
+      uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
       if (
         minDisapprovals != type(uint128).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
@@ -175,9 +180,9 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
-    // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    // if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -191,9 +196,9 @@ contract MockPoorlyImplementedPeerStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    // if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
-    // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
-    // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
+    if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+    if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 
   /// @inheritdoc ILlamaStrategy

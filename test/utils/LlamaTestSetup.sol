@@ -16,14 +16,14 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
+import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
+import {PeerStrategy} from "src/strategies/PeerStrategy.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
   ActionInfo,
-  AbsoluteStrategyConfig,
-  RelativeStrategyConfig,
+  PeerStrategyConfig,
+  PercentageQuorumConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -245,13 +245,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
@@ -289,7 +289,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(relativeStrategyLogic), "relativeStrategyLogic not set");
+    require(address(0) != address(percentageQuorumLogic), "percentageQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -341,7 +341,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
+  function toILlamaStrategy(PercentageQuorumConfig[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -351,7 +351,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig memory strategy)
+  function toILlamaStrategy(PercentageQuorumConfig memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -361,13 +361,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toRelativeStrategy(ILlamaStrategy strategy) internal pure returns (RelativeStrategy converted) {
+  function toPercentageQuorum(ILlamaStrategy strategy) internal pure returns (PercentageQuorum converted) {
     assembly {
       converted := strategy
     }
   }
 
-  function toAbsoluteStrategy(ILlamaStrategy strategy) internal pure returns (AbsoluteStrategy converted) {
+  function toPeerStrategy(ILlamaStrategy strategy) internal pure returns (PeerStrategy converted) {
     assembly {
       converted := strategy
     }
@@ -405,7 +405,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return uint16(n);
   }
 
-  function deployAbsoluteStrategy(
+  function deployPeerStrategy(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
@@ -417,7 +417,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    PeerStrategyConfig memory strategyConfig = PeerStrategyConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -430,19 +430,19 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    PeerStrategyConfig[] memory strategyConfigs = new PeerStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+    factory.authorizeStrategyLogic(peerStrategyLogic);
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(peerStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(peerStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }

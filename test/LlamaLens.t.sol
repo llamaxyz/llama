@@ -36,19 +36,19 @@ contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     address expected =
-      address(lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(rootCore)));
+      address(lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), strategyConfigs[1], address(rootCore)));
     assertEq(expected, address(rootStrategy1));
 
     expected =
-      address(lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[2], address(rootCore)));
+      address(lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), strategyConfigs[2], address(rootCore)));
     assertEq(expected, address(rootStrategy2));
 
     expected =
-      address(lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[1], address(mpCore)));
+      address(lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), strategyConfigs[1], address(mpCore)));
     assertEq(expected, address(mpStrategy1));
 
     expected =
-      address(lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), strategyConfigs[2], address(mpCore)));
+      address(lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), strategyConfigs[2], address(mpCore)));
     assertEq(expected, address(mpStrategy2));
   }
 }

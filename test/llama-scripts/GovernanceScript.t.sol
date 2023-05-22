@@ -18,14 +18,14 @@ import {ActionState} from "src/lib/Enums.sol";
 import {
   Action,
   ActionInfo,
-  RelativeStrategyConfig,
+  PercentageQuorumConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
