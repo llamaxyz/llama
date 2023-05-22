@@ -272,8 +272,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `policyholder` has the `role`, false otherwise.
   function hasRole(address policyholder, uint8 role) public view returns (bool) {
-    (bool exists,,, uint128 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
-    return exists && quantity > 0;
+    uint128 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
+    return quantity > 0;
   }
 
   /// @notice Returns true if the `policyholder` has the `role` at `timestamp`, false otherwise.
@@ -419,36 +419,33 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // was removed. Determining how to update total supply requires knowing if the policyholder currently
     // has a nonzero quantity of this role. This is strictly a quantity check and ignores the
     // expiration because this is used to determine whether or not to update the total supply.
-    uint128 quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    uint128 quantityDiff;
+    unchecked {
+      // Safety: Can never underflow due to ternary operator check.
+      quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
+    }
 
     RoleSupply storage currentRoleSupply = roleSupply[role];
-    uint128 newNumberOfHolders;
-    uint128 newTotalQuantity;
 
     if (hadRole && !willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders - 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      currentRoleSupply.numberOfHolders -= 1;
+      currentRoleSupply.totalQuantity -= quantityDiff;
     } else if (!hadRole && willHaveRole) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders + 1;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      currentRoleSupply.numberOfHolders += 1;
+      currentRoleSupply.totalQuantity += quantityDiff;
     } else if (hadRole && willHaveRole && initialQuantity > quantity) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity - quantityDiff;
+      // currentRoleSupply.numberOfHolders is unchanged
+      currentRoleSupply.totalQuantity -= quantityDiff;
     } else if (hadRole && willHaveRole && initialQuantity < quantity) {
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity + quantityDiff;
+      // currentRoleSupply.numberOfHolders is unchanged
+      currentRoleSupply.totalQuantity += quantityDiff;
     } else {
       // There are two ways to reach this branch, both of which are nop-ops:
       //   1. `hadRole` and `willHaveRole` are both false.
       //   2. `hadRole` and `willHaveRole` are both true, and `initialQuantity == quantity`.
       // We allow these no-ops without reverting so you can give someone a policy with only the
       // `ALL_HOLDERS_ROLE`.
-      newNumberOfHolders = currentRoleSupply.numberOfHolders;
-      newTotalQuantity = currentRoleSupply.totalQuantity;
     }
-
-    currentRoleSupply.numberOfHolders = newNumberOfHolders;
-    currentRoleSupply.totalQuantity = newTotalQuantity;
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
 
@@ -469,8 +466,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _mint(policyholder, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders += 1;
-    allHoldersRoleSupply.totalQuantity += 1;
+    unchecked {
+      // Safety: Can never overflow a uint128 by incrementing.
+      allHoldersRoleSupply.numberOfHolders += 1;
+      allHoldersRoleSupply.totalQuantity += 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
@@ -479,8 +479,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
-    allHoldersRoleSupply.numberOfHolders -= 1;
-    allHoldersRoleSupply.totalQuantity -= 1;
+    unchecked {
+      // Safety: Can never underflow, since we only burn tokens that currently exist.
+      allHoldersRoleSupply.numberOfHolders -= 1;
+      allHoldersRoleSupply.totalQuantity -= 1;
+    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
