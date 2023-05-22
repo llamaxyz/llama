@@ -380,7 +380,7 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
 
 contract SetPolicyTokenMetadata is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller, address _policyMetadata) public {
-    vm.assume(_caller != address(rootCore));
+    vm.assume(_caller != address(rootExecutor));
     vm.prank(address(_caller));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyMetadata));
