@@ -2156,6 +2156,18 @@ contract IncrementNonce is LlamaCoreTest {
   }
 }
 
+contract GetLastActionTimestamp is LlamaCoreTest {
+  function test_ReturnsCorrectTimestamp() public {
+    uint256 t0 = mpCore.getLastActionTimestamp();
+    assertEq(t0, 0); // Starts at 0.
+
+    _createAction();
+
+    uint256 t1 = mpCore.getLastActionTimestamp();
+    assertEq(t1, 4); // Gets bumped after creating an action.
+  }
+}
+
 contract GetActionState is LlamaCoreTest {
   function testFuzz_RevertsOnInvalidAction(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
