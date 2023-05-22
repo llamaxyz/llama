@@ -27,7 +27,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Roleholder cannot be set at the same timestamp as an action creation.
   error ActionCreationAtSameTimestamp();
 
-  /// @notice Only callable by a Llama instance's executor.
+  /// @notice Thrown when revoking a policy from an address without one
   /// @param userAddress The address of the possible policyholder.
   error AddressDoesNotHoldPolicy(address userAddress);
 
