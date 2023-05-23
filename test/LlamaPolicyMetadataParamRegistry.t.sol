@@ -63,7 +63,9 @@ contract SetColor is LlamaPolicyMetadataParamRegistryTest {
     assertEq(policyMetadataParamRegistry.color(mpExecutor), color);
   }
 
-  function testFuzz_RevertIf_CallerIsUnauthorized(address caller, LlamaExecutor llamaExecutor, string memory color) public {
+  function testFuzz_RevertIf_CallerIsUnauthorized(address caller, LlamaExecutor llamaExecutor, string memory color)
+    public
+  {
     vm.assume(caller != address(rootExecutor) && caller != address(llamaExecutor) && caller != address(factory));
     vm.expectRevert(LlamaPolicyMetadataParamRegistry.UnauthorizedCaller.selector);
     vm.prank(caller);
