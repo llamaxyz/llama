@@ -38,9 +38,17 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
-  error Invalid0xRecipient();
+
+  /// @dev Recipient cannot be the 0 address.
+  error ZeroAddressNotAllowed();
+
+  /// @dev External call failed.
+  /// @param result Data returned by the called function.
   error FailedExecution(bytes result);
+
+  /// @dev Slot 0 cannot be changed as a result of `delegatecall`s.
   error Slot0Changed();
 
   modifier onlyLlama() {
@@ -87,7 +95,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Transfer native tokens to a recipient.
   /// @param nativeTokenData The amount and recipient of the native token transfer.
   function transferNativeToken(NativeTokenData calldata nativeTokenData) public onlyLlama {
-    if (nativeTokenData.recipient == address(0)) revert Invalid0xRecipient();
+    if (nativeTokenData.recipient == address(0)) revert ZeroAddressNotAllowed();
     nativeTokenData.recipient.sendValue(nativeTokenData.amount);
   }
 
@@ -105,7 +113,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Transfer ERC20 tokens to a recipient.
   /// @param erc20Data The token, recipient, and amount for the ERC20 transfer.
   function transferERC20(ERC20Data calldata erc20Data) public onlyLlama {
-    if (erc20Data.recipient == address(0)) revert Invalid0xRecipient();
+    if (erc20Data.recipient == address(0)) revert ZeroAddressNotAllowed();
     erc20Data.token.safeTransfer(erc20Data.recipient, erc20Data.amount);
   }
 
@@ -138,7 +146,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Transfer an ERC721 token to a recipient.
   /// @param erc721Data The token, recipient, and tokenId of the ERC721 transfer.
   function transferERC721(ERC721Data calldata erc721Data) public onlyLlama {
-    if (erc721Data.recipient == address(0)) revert Invalid0xRecipient();
+    if (erc721Data.recipient == address(0)) revert ZeroAddressNotAllowed();
     erc721Data.token.transferFrom(address(this), erc721Data.recipient, erc721Data.tokenId);
   }
 
@@ -186,7 +194,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Transfer ERC1155 tokens to a recipient.
   /// @param erc1155Data The data of the ERC1155 transfer.
   function transferERC1155(ERC1155Data calldata erc1155Data) external onlyLlama {
-    if (erc1155Data.recipient == address(0)) revert Invalid0xRecipient();
+    if (erc1155Data.recipient == address(0)) revert ZeroAddressNotAllowed();
     erc1155Data.token.safeTransferFrom(
       address(this), erc1155Data.recipient, erc1155Data.tokenId, erc1155Data.amount, erc1155Data.data
     );
@@ -195,7 +203,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @notice Batch transfer ERC1155 tokens of a single ERC1155 collection to recipients.
   /// @param erc1155BatchData The data of the ERC1155 batch transfer.
   function batchTransferSingleERC1155(ERC1155BatchData calldata erc1155BatchData) public onlyLlama {
-    if (erc1155BatchData.recipient == address(0)) revert Invalid0xRecipient();
+    if (erc1155BatchData.recipient == address(0)) revert ZeroAddressNotAllowed();
     erc1155BatchData.token.safeBatchTransferFrom(
       address(this),
       erc1155BatchData.recipient,
