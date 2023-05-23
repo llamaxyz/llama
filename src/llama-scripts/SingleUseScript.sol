@@ -11,11 +11,12 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 abstract contract SingleUseScript is BaseScript {
   LlamaExecutor immutable EXECUTOR;
 
-  constructor(address executor) {
-    EXECUTOR = LlamaExecutor(executor);
+  constructor(LlamaExecutor executor) {
+    EXECUTOR = executor;
   }
-  /// @dev Add this to your script's methods to unauthorize the script after it has been run once.
 
+  /// @dev Add this to your script's methods to unauthorize itself after it has been run once. Any subsequent calls will
+  /// fail unless the script is reauthorized. Best if used in tandem with the `onlyDelegateCall` from `BaseScript.sol`.
   modifier unauthorizeAfterRun() {
     _;
     LlamaCore core = LlamaCore(EXECUTOR.LLAMA_CORE());

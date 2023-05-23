@@ -2,37 +2,38 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
+import {MockSingleUseScript} from "test/mock/MockSingleUseScript.sol";
 
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
-
-import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 import {BaseScript} from "src/llama-scripts/BaseScript.sol";
-import {MockBaseScript} from "test/mock/MockBaseScript.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
+import {SingleUseScript} from "src/llama-scripts/SingleUseScript.sol";
 
-contract BaseScriptTest is LlamaTestSetup {
+contract SingleUseScriptTest is LlamaTestSetup {
   event SuccessfulCall();
 
-  MockBaseScript baseScript;
+  SingleUseScript singleUseScript;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
-    baseScript = new MockBaseScript();
+    singleUseScript = new MockSingleUseScript(mpExecutor);
   }
 
   function createPermissionAndActionAndApproveAndQueue() internal returns (ActionInfo memory actionInfo) {
     bytes32 permissionId =
-      lens.computePermissionId(PermissionData(address(baseScript), MockBaseScript.run.selector, mpStrategy1));
-    bytes memory data = abi.encodeCall(MockBaseScript.run, ());
+      lens.computePermissionId(PermissionData(address(singleUseScript), MockSingleUseScript.run.selector, mpStrategy1));
+    bytes memory data = abi.encodeCall(MockSingleUseScript.run, ());
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionId, true);
     vm.warp(block.timestamp + 1);
 
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(baseScript), 0, data);
-    actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(baseScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(singleUseScript), 0, data);
+    actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(singleUseScript), 0, data
+    );
     vm.warp(block.timestamp + 1);
 
     vm.prank(approverAdam);
@@ -48,26 +49,21 @@ contract BaseScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1 weeks);
   }
 
-  function test_canDelegateCallBaseScript() public {
+  function test_CanOnlyBeCalledOnce() public {
+    // First call should succeed, and any subsequent calls should fail (unless the script is reauthorized)
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(baseScript), true);
+    mpCore.authorizeScript(address(singleUseScript), true);
     ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectEmit();
     emit SuccessfulCall();
     mpCore.executeAction(actionInfo);
-  }
 
-  function test_revertIf_notDelegateCalled() public {
-    vm.prank(address(mpExecutor));
-    vm.expectRevert(BaseScript.OnlyDelegateCall.selector);
-    baseScript.run();
-
-    ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
+    ActionInfo memory newActionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectRevert(
       abi.encodeWithSelector(
         LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(BaseScript.OnlyDelegateCall.selector)
       )
     );
-    mpCore.executeAction(actionInfo);
+    mpCore.executeAction(newActionInfo);
   }
 }
