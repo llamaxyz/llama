@@ -11,6 +11,7 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Only callable by a Llama instance's executor or the root Llama instance's executor.
   error OnlyLlamaOrRootLlama();
 
   modifier onlyLlamaOrRootLlama(LlamaExecutor llamaExecutor) {
