@@ -5,13 +5,15 @@ pragma solidity ^0.8.19;
 abstract contract BaseScript {
   address public immutable SELF;
 
+  error OnlyDelegateCall();
+
   constructor() {
     SELF = address(this);
   }
 
   /// @dev Add this to your script's methods to only allow access to the llama executor via delegate call.
   modifier onlyDelegateCall() {
-    require(address(this) != SELF);
+    if(address(this) == SELF) revert OnlyDelegateCall();
     _;
   }
 }

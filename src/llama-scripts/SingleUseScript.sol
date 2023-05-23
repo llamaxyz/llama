@@ -15,9 +15,10 @@ abstract contract SingleUseScript is BaseScript {
     EXECUTOR = LlamaExecutor(executor);
   }
   /// @dev Add this to your script's methods to unauthorize the script after it has been run once.
+
   modifier unauthorizeAfterRun() {
     _;
-   LlamaCore core = LlamaCore(EXECUTOR.LLAMA_CORE());
+    LlamaCore core = LlamaCore(EXECUTOR.LLAMA_CORE());
     core.authorizeScript(SELF, false);
   }
 }
