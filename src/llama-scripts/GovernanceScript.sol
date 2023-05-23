@@ -17,8 +17,16 @@ contract GovernanceScript {
   // ========= Errors ============
   // =============================
 
+  /// @dev The call did not succeed.
+  /// @param index Index of the arbitrary function being called.
+  /// @param revertData Data returned by the called function.
   error CallReverted(uint256 index, bytes revertData);
+
+  /// @dev The provided arrays do not have the same length.
   error MismatchedArrayLengths();
+
+  /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
+  /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
   // ==============================

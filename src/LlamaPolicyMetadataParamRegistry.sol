@@ -11,6 +11,7 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Only callable by a Llama instance's executor, the root Llama instance's executor or the Llama factory.
   error UnauthorizedCaller();
 
   /// @dev Only the Llama instance, the root Llama instance, or the Llama factory can update an instance's color and
