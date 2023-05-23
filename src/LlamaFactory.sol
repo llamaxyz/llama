@@ -142,7 +142,7 @@ contract LlamaFactory {
   /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions The list of initial permissions given to roles.
-  /// @param color The background color as any valid SVG color (eg. #00FF00) for the deployed Llama instance's NFT.
+  /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
   /// @return executor The address of the LlamaExecutor of the newly created instance.
   /// @return core The address of the LlamaCore of the newly created instance.
