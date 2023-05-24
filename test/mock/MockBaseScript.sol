@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 
-/// @notice This is a mock contract that inherits from the base script for testing purposes
+/// @dev This is a mock contract that inherits from the base script for testing purposes
 contract MockBaseScript is BaseScript {
   event SuccessfulCall();
 
