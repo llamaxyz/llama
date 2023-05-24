@@ -22,8 +22,8 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
   ActionInfo,
-  PeerReviewConfig,
-  RelativeQuorumConfig,
+  AbsoluteStrategyConfig,
+  RelativeStrategyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -245,13 +245,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
@@ -289,7 +289,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(RelativeQuorumLogic), "RelativeQuorumLogic not set");
+    require(address(0) != address(relativeQuorumLogic), "relativeQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -341,7 +341,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(RelativeQuorumConfig[] memory strategies)
+  function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -351,7 +351,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(RelativeQuorumConfig memory strategy)
+  function toILlamaStrategy(RelativeStrategyConfig memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -417,7 +417,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -430,7 +430,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));

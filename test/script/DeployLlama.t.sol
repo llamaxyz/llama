@@ -36,7 +36,7 @@ contract Run is DeployLlamaTest {
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
     assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
-    assertEq(factory.authorizedStrategyLogics(RelativeQuorumLogic), true);
+    assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
   }
 
   function test_DeploysRootLlama() public {
@@ -65,7 +65,7 @@ contract Run is DeployLlamaTest {
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
         //   ILlamaStrategy indexed strategy,  <-- The topic we want.
-        //   address indexed RelativeQuorumLogic,
+        //   address indexed relativeQuorumLogic,
         //   Strategy strategyData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
@@ -172,11 +172,11 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    assertEq(address(RelativeQuorumLogic), address(0));
+    assertEq(address(relativeQuorumLogic), address(0));
 
     DeployLlama.run();
 
-    assertNotEq(address(RelativeQuorumLogic), address(0));
+    assertNotEq(address(relativeQuorumLogic), address(0));
   }
 
   function test_DeploysAccountLogic() public {

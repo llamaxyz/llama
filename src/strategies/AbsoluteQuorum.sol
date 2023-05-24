@@ -8,7 +8,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, PeerReviewConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -17,7 +17,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-contract AbsoluteStrategy is ILlamaStrategy, Initializable {
+contract AbsoluteQuorum is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -105,7 +105,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    PeerReviewConfig memory strategyConfig = abi.decode(config, (PeerReviewConfig));
+    AbsoluteStrategyConfig memory strategyConfig = abi.decode(config, (AbsoluteStrategyConfig));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

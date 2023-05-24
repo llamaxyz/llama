@@ -9,7 +9,7 @@ import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Action, RoleHolderData, RolePermissionData, RelativeQuorumConfig, PermissionData} from "src/lib/Structs.sol";
+import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -38,9 +38,9 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategiesAuthorized(RelativeQuorumConfig[] strategies);
+  event StrategiesAuthorized(RelativeStrategyConfig[] strategies);
   event StrategiesUnauthorized(ILlamaStrategy[] strategies);
-  event StrategyLogicAuthorized(ILlamaStrategy indexed RelativeQuorumLogic);
+  event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event AccountLogicAuthorized(LlamaAccount indexed accountLogic);
 }
 
@@ -55,7 +55,7 @@ contract Constructor is LlamaFactoryTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new LlamaFactory(
       coreLogic,
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,
@@ -91,12 +91,12 @@ contract Constructor is LlamaFactoryTest {
   }
 
   function test_SetsLlamaStrategyLogicAddress() public {
-    assertTrue(factory.authorizedStrategyLogics(RelativeQuorumLogic));
+    assertTrue(factory.authorizedStrategyLogics(relativeQuorumLogic));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
-    emit StrategyLogicAuthorized(RelativeQuorumLogic);
+    emit StrategyLogicAuthorized(relativeQuorumLogic);
     deployLlamaFactory();
   }
 
@@ -128,7 +128,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(address(rootExecutor));
     return factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -147,7 +147,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -167,7 +167,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(address(rootExecutor));
     factory.deploy(
       name,
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -178,7 +178,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert();
     factory.deploy(
       name,
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -198,7 +198,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -210,7 +210,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -230,7 +230,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -243,7 +243,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -256,7 +256,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -308,7 +308,7 @@ contract Deploy is LlamaFactoryTest {
 
     LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _llama.initialize("NewProject", _policy, RelativeQuorumLogic, accountLogic, strategyConfigs, accounts);
+    _llama.initialize("NewProject", _policy, relativeQuorumLogic, accountLogic, strategyConfigs, accounts);
   }
 
   function test_SetsLlamaExecutorOnThePolicy() public {

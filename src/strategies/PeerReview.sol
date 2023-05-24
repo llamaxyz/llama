@@ -8,11 +8,11 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, PeerReviewConfig} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Peer Llama Strategy
+/// @title Peer Review Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
@@ -130,7 +130,7 @@ contract PeerReview is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    PeerReviewConfig memory strategyConfig = abi.decode(config, (PeerReviewConfig));
+    AbsoluteStrategyConfig memory strategyConfig = abi.decode(config, (AbsoluteStrategyConfig));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

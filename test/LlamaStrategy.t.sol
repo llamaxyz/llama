@@ -10,7 +10,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo, PeerReviewConfig, RelativeQuorumConfig} from "src/lib/Structs.sol";
+import {ActionInfo, AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {PeerReview} from "src/strategies/PeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
@@ -67,7 +67,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       mpPolicy.setRolePermission(_role, _permission, true);
     }
 
-    RelativeQuorumConfig memory strategyConfig = RelativeQuorumConfig({
+    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -80,7 +80,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeQuorumConfig[] memory strategyConfigs = new RelativeQuorumConfig[](1);
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -88,10 +88,10 @@ contract LlamaStrategyTest is LlamaTestSetup {
     vm.expectEmit();
     emit StrategyCreated(mpCore, mpPolicy);
 
-    mpCore.createStrategies(RelativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(RelativeQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(relativeQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 
@@ -120,7 +120,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       vm.stopPrank();
     }
 
-    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -133,7 +133,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -146,7 +146,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
-    RelativeQuorumConfig memory testStrategyData = RelativeQuorumConfig({
+    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -159,12 +159,12 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: new uint8[](0)
     });
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(RelativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
-    RelativeQuorumConfig[] memory testStrategies = new RelativeQuorumConfig[](1);
+    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(RelativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
   function deployRelativeQuorumWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
@@ -174,7 +174,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     uint8[] memory forceDisapproveRoles = new uint8[](1);
     forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
 
-    RelativeQuorumConfig memory testStrategyData = RelativeQuorumConfig({
+    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -189,14 +189,14 @@ contract LlamaStrategyTest is LlamaTestSetup {
 
     // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(RelativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
 
     // Create and authorize the strategy.
-    RelativeQuorumConfig[] memory testStrategies = new RelativeQuorumConfig[](1);
+    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(RelativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
@@ -254,7 +254,7 @@ contract Constructor is LlamaStrategyTest {
 
   function test_RevertIf_InitializeRelativeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    RelativeQuorumLogic.initialize(bytes(""));
+    relativeQuorumLogic.initialize(bytes(""));
   }
 }
 
@@ -547,7 +547,7 @@ contract Initialize is LlamaStrategyTest {
     vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(peerReviewLogic);
 
-    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -560,7 +560,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -576,7 +576,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceApprovalRolePeerReview() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -589,7 +589,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -604,7 +604,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRolePeerReview() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    PeerReviewConfig memory strategyConfig = PeerReviewConfig({
+    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -617,7 +617,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    PeerReviewConfig[] memory strategyConfigs = new PeerReviewConfig[](1);
+    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -633,7 +633,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleRelativeQuorum() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeQuorumConfig memory strategyConfig = RelativeQuorumConfig({
+    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -646,19 +646,19 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    RelativeQuorumConfig[] memory strategyConfigs = new RelativeQuorumConfig[](1);
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(RelativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleRelativeQuorum() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeQuorumConfig memory strategyConfig = RelativeQuorumConfig({
+    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -671,13 +671,13 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeQuorumConfig[] memory strategyConfigs = new RelativeQuorumConfig[](1);
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(RelativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
 

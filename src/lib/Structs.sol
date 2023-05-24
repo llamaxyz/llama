@@ -50,7 +50,7 @@ struct Action {
   uint128 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
-struct RelativeQuorumConfig {
+struct RelativeStrategyConfig {
   uint64 approvalPeriod; // The length of time of the approval period.
   uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.
@@ -64,7 +64,7 @@ struct RelativeQuorumConfig {
   uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
 }
 
-struct PeerReviewConfig {
+struct AbsoluteStrategyConfig {
   uint64 approvalPeriod; // The length of time of the approval period.
   uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.

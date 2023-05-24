@@ -18,7 +18,7 @@ import {ActionState} from "src/lib/Enums.sol";
 import {
   Action,
   ActionInfo,
-  RelativeQuorumConfig,
+  RelativeStrategyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData

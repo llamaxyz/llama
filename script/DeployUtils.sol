@@ -6,7 +6,7 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {PeerReviewConfig, RelativeQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 library DeployUtils {
@@ -65,7 +65,7 @@ library DeployUtils {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
     RelativeQuorumJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeQuorumJsonInputs[]));
 
-    RelativeQuorumConfig[] memory strategyConfigs = new RelativeQuorumConfig[](rawStrategyConfigs.length);
+    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
       RelativeQuorumJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
@@ -122,15 +122,15 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategy(RelativeQuorumConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(RelativeStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(PeerReviewConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(AbsoluteStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategyConfigs(RelativeQuorumConfig[] memory strategies)
+  function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)
@@ -141,7 +141,11 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategyConfigs(PeerReviewConfig[] memory strategies) internal pure returns (bytes[] memory encoded) {
+  function encodeStrategyConfigs(AbsoluteStrategyConfig[] memory strategies)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
     encoded = new bytes[](strategies.length);
     for (uint256 i = 0; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
@@ -160,10 +164,10 @@ library DeployUtils {
 
     // Get the bootstrap strategy, which is the first strategy in the list.
     bytes memory encodedStrategyConfigs = jsonInput.parseRaw(".initialStrategies");
-    RelativeQuorumJsonInputs[] memory RelativeQuorumConfigs =
+    RelativeQuorumJsonInputs[] memory relativeQuorumConfigs =
       abi.decode(encodedStrategyConfigs, (RelativeQuorumJsonInputs[]));
 
-    RelativeQuorumJsonInputs memory bootstrapStrategy = RelativeQuorumConfigs[0];
+    RelativeQuorumJsonInputs memory bootstrapStrategy = relativeQuorumConfigs[0];
 
     // -------- Validate data --------
     // For a bootstrap strategy to passable, we need at least one of the following to be true:

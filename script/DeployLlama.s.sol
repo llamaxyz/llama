@@ -11,9 +11,10 @@ import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
+import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
 import {PeerReview} from "src/strategies/PeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {PeerReviewConfig, RelativeQuorumConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -22,7 +23,8 @@ contract DeployLlama is Script {
 
   // Logic contracts.
   LlamaCore coreLogic;
-  RelativeQuorum RelativeQuorumLogic;
+  AbsoluteQuorum absoluteQuorumLogic;
+  RelativeQuorum relativeQuorumLogic;
   PeerReview peerReviewLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
@@ -41,8 +43,12 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    RelativeQuorumLogic = new RelativeQuorum();
-    DeployUtils.print(string.concat("  LlamaRelativeQuorumLogic:", vm.toString(address(RelativeQuorumLogic))));
+    absoluteQuorumLogic = new AbsoluteQuorum();
+    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
+
+    vm.broadcast();
+    relativeQuorumLogic = new RelativeQuorum();
+    DeployUtils.print(string.concat("  LlamaRelativeQuorumLogic:", vm.toString(address(relativeQuorumLogic))));
 
     vm.broadcast();
     peerReviewLogic = new PeerReview();
@@ -72,7 +78,7 @@ contract DeployLlama is Script {
     vm.broadcast();
     factory = new LlamaFactory(
       coreLogic,
-      RelativeQuorumLogic,
+      relativeQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,
