@@ -504,7 +504,7 @@ contract LlamaCore is Initializable {
   /// @dev Used by `LlamaPolicy` to ensure policy management does not occur immediately after action
   /// creation in the same timestamp, as this could result in invalid role supply counts being used.
   function getLastActionTimestamp() external view returns (uint256 timestamp) {
-    return actions[actionsCount].creationTime;
+    return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
   }
 
   /// @notice Get the current ActionState of an action by its actionId.
