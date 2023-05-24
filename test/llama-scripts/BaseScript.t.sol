@@ -48,7 +48,10 @@ contract BaseScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1 weeks);
   }
 
-  function test_canDelegateCallBaseScript() public {
+}
+
+contract OnlyDelegateCall is BaseScriptTest {
+  function test_CanDelegateCallBaseScript() public {
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(baseScript), true);
     ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
