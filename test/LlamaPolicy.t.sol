@@ -386,7 +386,7 @@ contract SetRoleHolder is LlamaPolicyTest {
   }
 
   function test_SetsRoleHolder(address policyholder) public {
-    vm.assume(policyholder != address(0));
+    vm.assume(policyholder != address(0) && policyholder != arbitraryPolicyholder);
     if (mpPolicy.balanceOf(policyholder) > 0) policyholder = makeAddr("policyholderWithoutPolicy");
     vm.startPrank(address(mpExecutor));
 
