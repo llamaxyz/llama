@@ -6,6 +6,7 @@ abstract contract BaseScript {
   /// @dev Address of the script contract. We save it off because during a delegatecall `address(this)` refers to the caller's address, not this script's address.
   address internal immutable SELF;
 
+  /// @dev Thrown if you try to CALL a function that has the `onlyDelegatecall` modifier.
   error OnlyDelegateCall();
 
   constructor() {
