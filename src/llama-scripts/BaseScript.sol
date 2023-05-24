@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @notice This script is a template for creating new scripts, and should not be used directly.
+/// @dev This script is a template for creating new scripts, and should not be used directly.
 abstract contract BaseScript {
   address public immutable SELF;
 
