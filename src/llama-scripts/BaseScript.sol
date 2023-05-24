@@ -3,7 +3,8 @@ pragma solidity ^0.8.19;
 
 /// @dev This script is a template for creating new scripts, and should not be used directly.
 abstract contract BaseScript {
-  address public immutable SELF;
+  /// @dev Address of the script contract. We save it off because during a delegatecall `address(this)` refers to the caller's address, not this script's address.
+  address internal immutable SELF;
 
   error OnlyDelegateCall();
 
