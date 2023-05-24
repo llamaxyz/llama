@@ -14,30 +14,64 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Core of a llama instance
+/// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice Main point of interaction of a llama instance (i.e. entry into and exit from).
+/// @notice Manages the action process from creation to execution.
 contract LlamaCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
 
+  /// @dev Policyholder cannot cast if it has 0 quantity of role.
+  /// @param policyholder Address of policyholder.
+  /// @param role The role being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
+
+  /// @dev An action's target contract cannot be the executor.
   error CannotSetExecutorAsTarget();
+
+  /// @dev Address cannot be used.
   error RestrictedAddress();
+
+  /// @dev Policyholders can only cast once.
   error DuplicateCast();
+
+  /// @dev Action execution failed.
+  /// @param reason Data returned by the function called by the action.
   error FailedActionExecution(bytes reason);
+
+  /// @dev `ActionInfo` does not hash to the correct value.
   error InfoHashMismatch();
+
+  /// @dev `msg.value` does not equal the action's `value`.
   error IncorrectMsgValue();
+
+  /// @dev The action is not in the expected state.
+  /// @param current The current state of the action.
   error InvalidActionState(ActionState current);
+
+  /// @dev The policyholder does not have the role at action creation time.
   error InvalidPolicyholder();
+
+  /// @dev The recovered signer does not match the expected policyholder.
   error InvalidSignature();
+
+  /// @dev The provided address does not map to a deployed strategy.
   error InvalidStrategy();
+
+  /// @dev An action cannot queue successfully if it's `minExecutionTime` is less than `block.timestamp`.
   error MinExecutionTimeCannotBeInThePast();
+
+  /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
+
+  /// @dev Policyholder does not have the permission ID to create the action.
   error PolicyholderDoesNotHavePermission();
-  error Slot0Changed();
-  error TimelockNotFinished();
+
+  /// @dev If `block.timestamp` is less than `minExecutionTime`, the action cannot be executed.
+  error MinExecutionTimeNotReached();
+
+  /// @dev Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
 
   modifier onlyLlama() {
@@ -287,7 +321,6 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function queueAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
@@ -300,13 +333,12 @@ contract LlamaCore is Initializable {
   /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
-    Action storage action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
-
     // Initial checks that action is ready to execute.
+    Action storage action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
+
     if (currentState != ActionState.Queued) revert InvalidActionState(currentState);
-    if (block.timestamp < action.minExecutionTime) revert TimelockNotFinished();
+    if (block.timestamp < action.minExecutionTime) revert MinExecutionTimeNotReached();
     if (msg.value != actionInfo.value) revert IncorrectMsgValue();
 
     action.executed = true;
@@ -599,7 +631,6 @@ contract LlamaCore is Initializable {
     ActionState expectedState
   ) internal returns (Action storage action, uint128 quantity) {
     action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);
 

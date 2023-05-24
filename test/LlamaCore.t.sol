@@ -1068,7 +1068,7 @@ contract ExecuteAction is LlamaCoreTest {
     mpCore.executeAction(_actionInfo);
   }
 
-  function testFuzz_RevertIf_TimelockNotFinished(uint256 timeElapsed) public {
+  function testFuzz_RevertIf_MinExecutionTimeNotReached(uint256 timeElapsed) public {
     // Using a reasonable upper limit for elapsedTime
     vm.assume(timeElapsed < 10_000 days);
     mpCore.queueAction(actionInfo);
@@ -1077,7 +1077,7 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + timeElapsed);
 
     if (executionTime > block.timestamp) {
-      vm.expectRevert(LlamaCore.TimelockNotFinished.selector);
+      vm.expectRevert(LlamaCore.MinExecutionTimeNotReached.selector);
       mpCore.executeAction(actionInfo);
     }
   }

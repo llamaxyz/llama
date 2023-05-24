@@ -9,14 +9,24 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @dev A script that allows users to aggregate common calls on the core and policy contracts.
+/// @title Governance Script
+/// @author Llama (devsdosomething@llama.xyz)
+/// @notice A script that allows users to aggregate common calls on the core and policy contracts.
 contract GovernanceScript {
   // =============================
   // ========= Errors ============
   // =============================
 
+  /// @dev The call did not succeed.
+  /// @param index Index of the arbitrary function being called.
+  /// @param revertData Data returned by the called function.
   error CallReverted(uint256 index, bytes revertData);
+
+  /// @dev The provided arrays do not have the same length.
   error MismatchedArrayLengths();
+
+  /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
+  /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
   // ==============================
