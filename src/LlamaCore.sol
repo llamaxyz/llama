@@ -128,12 +128,14 @@ contract LlamaCore is Initializable {
   );
 
   /// @notice EIP-712 castApproval typehash.
-  bytes32 internal constant CAST_APPROVAL_TYPEHASH =
-    keccak256("CastApproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)");
+  bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
+    "CastApproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+  );
 
   /// @notice EIP-712 castDisapproval typehash.
-  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH =
-    keccak256("CastDisapproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)");
+  bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
+    "CastDisapproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+  );
 
   /// @notice EIP-712 actionInfo typehash.
   bytes32 internal constant ACTION_INFO_TYPEHASH = keccak256(
