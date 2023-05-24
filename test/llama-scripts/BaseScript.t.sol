@@ -60,7 +60,7 @@ contract OnlyDelegateCall is BaseScriptTest {
     mpCore.executeAction(actionInfo);
   }
 
-  function test_revertIf_notDelegateCalled() public {
+  function test_RevertIf_NotDelegateCalled() public {
     vm.prank(address(mpExecutor));
     vm.expectRevert(BaseScript.OnlyDelegateCall.selector);
     baseScript.run();
