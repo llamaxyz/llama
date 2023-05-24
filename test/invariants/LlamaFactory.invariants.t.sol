@@ -23,7 +23,7 @@ contract LlamaFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  ILlamaStrategy public percentageQuorumLogic;
+  ILlamaStrategy public RelativeQuorumLogic;
   LlamaAccount public accountLogic;
 
   // Used to track the last seen `llamaCount` value.
@@ -36,11 +36,11 @@ contract LlamaFactoryHandler is BaseHandler {
   constructor(
     LlamaFactory _llamaFactory,
     LlamaCore _llamaCore,
-    ILlamaStrategy _percentageQuorumLogic,
+    ILlamaStrategy _RelativeQuorumLogic,
     LlamaAccount _accountLogic
   ) BaseHandler(_llamaFactory, _llamaCore) {
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
-    percentageQuorumLogic = _percentageQuorumLogic;
+    RelativeQuorumLogic = _RelativeQuorumLogic;
     accountLogic = _accountLogic;
   }
 
@@ -81,7 +81,7 @@ contract LlamaFactoryHandler is BaseHandler {
     vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.deploy(
       name(),
-      percentageQuorumLogic,
+      RelativeQuorumLogic,
       new bytes[](0),
       new string[](0),
       roleDescriptions,
@@ -115,7 +115,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
 
   function setUp() public override {
     LlamaTestSetup.setUp();
-    handler = new LlamaFactoryHandler(factory, mpCore, percentageQuorumLogic, accountLogic);
+    handler = new LlamaFactoryHandler(factory, mpCore, RelativeQuorumLogic, accountLogic);
 
     // Target the handler contract and only call it's `llamaFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
@@ -126,7 +126,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
     excludeArtifact("LlamaCore");
     excludeArtifact("LlamaExecutor");
     excludeArtifact("LlamaPolicy");
-    excludeArtifact("PercentageQuorum");
+    excludeArtifact("RelativeQuorum");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.llamaFactory_deploy.selector;

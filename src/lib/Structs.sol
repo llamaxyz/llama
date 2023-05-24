@@ -50,7 +50,7 @@ struct Action {
   uint128 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
-struct PercentageQuorumConfig {
+struct RelativeQuorumConfig {
   uint64 approvalPeriod; // The length of time of the approval period.
   uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
     // enabled.

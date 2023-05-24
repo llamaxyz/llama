@@ -12,18 +12,16 @@ import {Action, ActionInfo, PeerReviewConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Absolute Llama Strategy
+/// @title Absolute Quorum Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
-///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
-///     regardless of the roles they hold.
+///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
 
-  error ActionCreatorCannotCast();
   error CannotCancelInState(ActionState state);
   error DisapprovalDisabled();
   error InsufficientApprovalQuantity();
@@ -152,7 +150,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external view {
+  function validateActionCreation(ActionInfo calldata /* actionInfo */ ) external view {
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
     uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
@@ -160,28 +158,19 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
-    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    unchecked {
-      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
-      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
-      // the action creator without overflow, since a policyholder can never have a quantity greater than
-      // the total supply.
-      uint256 actionCreatorApprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, approvalRole);
-      if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
-
-      uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
-      if (
-        minDisapprovals != type(uint128).max
-          && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
-      ) revert InsufficientDisapprovalQuantity();
+    if (minApprovals > approvalPolicySupply) revert InsufficientApprovalQuantity();
+    if (minDisapprovals != type(uint128).max && minDisapprovals > disapprovalPolicySupply) {
+      revert InsufficientDisapprovalQuantity();
     }
   }
 
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+  function isApprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
+    external
+    view
+  {
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
@@ -195,9 +184,11 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
+  function isDisapprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
+    external
+    view
+  {
     if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 

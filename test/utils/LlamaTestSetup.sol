@@ -16,14 +16,14 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-import {PercentageQuorum} from "src/strategies/PercentageQuorum.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {PeerReview} from "src/strategies/PeerReview.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
   ActionInfo,
   PeerReviewConfig,
-  PercentageQuorumConfig,
+  RelativeQuorumConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -245,13 +245,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(percentageQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(RelativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
@@ -289,7 +289,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(percentageQuorumLogic), "percentageQuorumLogic not set");
+    require(address(0) != address(RelativeQuorumLogic), "RelativeQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -341,7 +341,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(PercentageQuorumConfig[] memory strategies)
+  function toILlamaStrategy(RelativeQuorumConfig[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -351,7 +351,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(PercentageQuorumConfig memory strategy)
+  function toILlamaStrategy(RelativeQuorumConfig memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -361,7 +361,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toPercentageQuorum(ILlamaStrategy strategy) internal pure returns (PercentageQuorum converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (RelativeQuorum converted) {
     assembly {
       converted := strategy
     }
