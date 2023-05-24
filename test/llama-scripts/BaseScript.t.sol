@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 import {Test, console2} from "forge-std/Test.sol";
 
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
-
-import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 import {MockBaseScript} from "test/mock/MockBaseScript.sol";
 
 contract BaseScriptTest is LlamaTestSetup {
@@ -47,7 +46,6 @@ contract BaseScriptTest is LlamaTestSetup {
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 1 weeks);
   }
-
 }
 
 contract OnlyDelegateCall is BaseScriptTest {
