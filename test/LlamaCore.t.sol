@@ -7,7 +7,7 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {MockPoorlyImplementedAbsoluteStrategy} from "test/mock/MockPoorlyImplementedStrategy.sol";
+import {MockPoorlyImplementedPeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -161,7 +161,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   }
 
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
-    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedAbsoluteStrategy();
+    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedPeerReview();
 
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: 1 days,
@@ -196,10 +196,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 
-  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy)
-    internal
-    returns (ActionInfo memory actionInfo)
-  {
+  function createActionUsingPeerReview(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpExecutor));
@@ -1451,7 +1448,7 @@ contract CastApprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1463,7 +1460,7 @@ contract CastApprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
     vm.prank(actionCreatorAaron);
@@ -1561,7 +1558,7 @@ contract CastDisapproval is LlamaCoreTest {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
-    uint256 executionTime = block.timestamp + toAbsoluteStrategy(newStrategy).queuingPeriod();
+    uint256 executionTime = block.timestamp + toPeerReview(newStrategy).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
     mpCore.queueAction(actionInfo);
@@ -1703,7 +1700,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1715,7 +1712,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
