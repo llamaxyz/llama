@@ -648,11 +648,6 @@ contract CreateAction is LlamaCoreTest {
 }
 
 contract CreateActionBySig is LlamaCoreTest {
-  // We need to manually calculate the function selector because we are using function overloading with the
-  // createActionBySig function:
-  // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
-  bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
-
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
@@ -750,9 +745,9 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function test_CheckNonceIncrements() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -785,7 +780,7 @@ contract CreateActionBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
 
     vm.prank(actionCreatorAaron);
-    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
+    mpCore.incrementNonce(LlamaCore.createActionBySig.selector);
 
     // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
     // since nonce has increased.
