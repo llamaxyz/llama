@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
@@ -120,7 +120,7 @@ contract Run is CreateActionTest {
     assertEq(factory.llamaCount(), 2);
 
     // There are three strategies we expect to have been deployed.
-    RelativeStrategy[] memory strategiesAuthorized = new RelativeStrategy[](3);
+    RelativeQuorum[] memory strategiesAuthorized = new RelativeQuorum[](3);
     uint8 strategiesCount;
     bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
 
@@ -156,7 +156,7 @@ contract Run is CreateActionTest {
         //   bytes initializationData
         // );
         address strategy = address(uint160(uint256(_event.topics[1])));
-        strategiesAuthorized[strategiesCount++] = RelativeStrategy(strategy);
+        strategiesAuthorized[strategiesCount++] = RelativeQuorum(strategy);
       }
       if (eventSig == accountCreatedSig) {
         // event AccountCreated(
@@ -174,7 +174,7 @@ contract Run is CreateActionTest {
     assertEq(address(llamaInstance.factory()), address(factory));
     assertNotEq(address(llamaInstance), address(rootLlama));
 
-    RelativeStrategy firstStrategy = strategiesAuthorized[0];
+    RelativeQuorum firstStrategy = strategiesAuthorized[0];
     assertEq(llamaInstance.strategies(firstStrategy), true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
@@ -187,7 +187,7 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceApprovalRole(1), false);
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
-    RelativeStrategy secondStrategy = strategiesAuthorized[1];
+    RelativeQuorum secondStrategy = strategiesAuthorized[1];
     assertEq(llamaInstance.strategies(secondStrategy), true);
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
@@ -200,7 +200,7 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceApprovalRole(1), false);
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
-    RelativeStrategy thirdStrategy = strategiesAuthorized[2];
+    RelativeQuorum thirdStrategy = strategiesAuthorized[2];
     assertEq(llamaInstance.strategies(thirdStrategy), true);
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);

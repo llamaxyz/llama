@@ -22,7 +22,7 @@
     {
       "hash": "0xd763792d000c2f8bfea26e27b5e90e3bf863935c7260a256a7064b760de68cde",
       "transactionType": "CREATE",
-      "contractName": "RelativeStrategy",
+      "contractName": "RelativeQuorum",
       "contractAddress": "0xff91C9Dc1A88A9C8C33eD097Dd1D389D605a20fF",
       "function": null,
       "arguments": null,

@@ -12,12 +12,12 @@ import {Action, ActionInfo, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Relative Llama Strategy
+/// @title Relative Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-contract RelativeStrategy is ILlamaStrategy, Initializable {
+contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
