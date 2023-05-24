@@ -211,7 +211,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
 
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
@@ -1237,7 +1237,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     vm.expectRevert(AbsoluteStrategy.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
   }
 
@@ -1253,7 +1253,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     vm.expectRevert(AbsoluteStrategy.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
   }
 
@@ -1262,7 +1262,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
       createAbsoluteStrategyWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
 
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
     ActionInfo memory actionInfo = ActionInfo(
       actionId,

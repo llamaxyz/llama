@@ -50,7 +50,8 @@ contract CreateAction is Script {
       ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
       jsonInput.readAddress(".factory"),
       0, // No ETH needs to be sent to deploy a new core instance.
-      createActionCallData
+      createActionCallData,
+      ""
     );
 
     DeployUtils.print(string.concat("Created action ID", vm.toString(deployActionId)));

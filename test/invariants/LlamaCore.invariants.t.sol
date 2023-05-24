@@ -156,7 +156,7 @@ contract LlamaCoreHandler is BaseHandler {
 
     // We can now execute the action.
     vm.prank(actionCreatorAaron);
-    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, data);
+    uint256 actionId = LLAMA_CORE.createAction(uint8(Roles.ActionCreator), strategy, target, value, data, "");
     actionsCounts.push(actionId);
     actionInfos[actionId] =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), strategy, target, value, data);
@@ -342,7 +342,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
   function createAction() internal returns (ActionInfo memory actionInfo) {
     bytes memory data = abi.encodeWithSelector(PAUSE_SELECTOR, true);
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
