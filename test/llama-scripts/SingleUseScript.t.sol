@@ -10,7 +10,7 @@ import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {SingleUseScript} from "src/llama-scripts/SingleUseScript.sol";
 
-contract SingleUseScriptTest is LlamaTestSetup {
+contract UnauthorizeAfterRun is LlamaTestSetup {
   event SuccessfulCall();
 
   SingleUseScript singleUseScript;
