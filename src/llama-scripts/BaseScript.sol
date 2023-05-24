@@ -13,7 +13,7 @@ abstract contract BaseScript {
     SELF = address(this);
   }
 
-  /// @dev Add this to your script's methods to only allow access to the llama executor via delegate call.
+  /// @dev Add this to your script's methods to ensure the script can only be used via delegatecall, and not a regular call.
   modifier onlyDelegateCall() {
     if (address(this) == SELF) revert OnlyDelegateCall();
     _;
