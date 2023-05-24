@@ -5,7 +5,7 @@ import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 
-/// @notice This script is a template for creating new scripts, and should not be used directly.
+/// @dev This script is a template for creating new scripts, and should not be used directly.
 /// @dev This script is meant to be delegatecalled by the core contract, which informs our use of `SELF` and
 /// `address(this)`.
 abstract contract SingleUseScript is BaseScript {
