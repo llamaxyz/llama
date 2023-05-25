@@ -30,7 +30,8 @@ contract SingleUseScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1);
 
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(singleUseScript), 0, data);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(singleUseScript), 0, data, "");
     actionInfo = ActionInfo(
       actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(singleUseScript), 0, data
     );
