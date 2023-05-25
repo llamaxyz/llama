@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
+import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Governance Script
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A script that allows users to aggregate common calls on the core and policy contracts.
-contract GovernanceScript {
+contract GovernanceScript is BaseScript {
   // =============================
   // ========= Errors ============
   // =============================
@@ -50,7 +51,11 @@ contract GovernanceScript {
   /// context
   /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
   /// needed than to permission the aggregate function itself
-  function aggregate(address[] calldata targets, bytes[] calldata data) external returns (bytes[] memory returnData) {
+  function aggregate(address[] calldata targets, bytes[] calldata data)
+    external
+    onlyDelegateCall
+    returns (bytes[] memory returnData)
+  {
     if (targets.length != data.length) revert MismatchedArrayLengths();
     (LlamaCore core, LlamaPolicy policy) = _context();
     uint256 length = data.length;
@@ -72,7 +77,7 @@ contract GovernanceScript {
   function initializeRolesAndSetRoleHolders(
     RoleDescription[] calldata description,
     RoleHolderData[] calldata _setRoleHolders
-  ) external {
+  ) external onlyDelegateCall {
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
   }
@@ -80,7 +85,7 @@ contract GovernanceScript {
   function initializeRolesAndSetRolePermissions(
     RoleDescription[] calldata description,
     RolePermissionData[] calldata _setRolePermissions
-  ) external {
+  ) external onlyDelegateCall {
     initializeRoles(description);
     setRolePermissions(_setRolePermissions);
   }
@@ -89,7 +94,7 @@ contract GovernanceScript {
     RoleDescription[] calldata description,
     RoleHolderData[] calldata _setRoleHolders,
     RolePermissionData[] calldata _setRolePermissions
-  ) external {
+  ) external onlyDelegateCall {
     initializeRoles(description);
     setRoleHolders(_setRoleHolders);
     setRolePermissions(_setRolePermissions);
@@ -98,7 +103,7 @@ contract GovernanceScript {
   function createNewStrategiesAndSetRoleHolders(
     CreateStrategies calldata _createStrategies,
     RoleHolderData[] calldata _setRoleHolders
-  ) external {
+  ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRoleHolders(_setRoleHolders);
@@ -108,7 +113,7 @@ contract GovernanceScript {
     CreateStrategies calldata _createStrategies,
     RoleDescription[] calldata description,
     RoleHolderData[] calldata _setRoleHolders
-  ) external {
+  ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
@@ -118,7 +123,7 @@ contract GovernanceScript {
   function createNewStrategiesAndSetRolePermissions(
     CreateStrategies calldata _createStrategies,
     RolePermissionData[] calldata _setRolePermissions
-  ) external {
+  ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRolePermissions(_setRolePermissions);
@@ -129,7 +134,7 @@ contract GovernanceScript {
     RoleDescription[] calldata description,
     RoleHolderData[] calldata _setRoleHolders,
     RolePermissionData[] calldata _setRolePermissions
-  ) external {
+  ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     initializeRoles(description);
@@ -140,7 +145,7 @@ contract GovernanceScript {
   function revokePoliciesAndUpdateRoleDescriptions(
     address[] calldata _revokePolicies,
     UpdateRoleDescription[] calldata _updateRoleDescriptions
-  ) external {
+  ) external onlyDelegateCall {
     revokePolicies(_revokePolicies);
     updateRoleDescriptions(_updateRoleDescriptions);
   }
@@ -149,7 +154,7 @@ contract GovernanceScript {
     address[] calldata _revokePolicies,
     UpdateRoleDescription[] calldata _updateRoleDescriptions,
     RoleHolderData[] calldata _setRoleHolders
-  ) external {
+  ) external onlyDelegateCall {
     revokePolicies(_revokePolicies);
     updateRoleDescriptions(_updateRoleDescriptions);
     setRoleHolders(_setRoleHolders);
@@ -159,7 +164,7 @@ contract GovernanceScript {
   // ======== Batch Policy Functions ========
   // ========================================
 
-  function initializeRoles(RoleDescription[] calldata description) public {
+  function initializeRoles(RoleDescription[] calldata description) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     uint256 length = description.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -167,7 +172,7 @@ contract GovernanceScript {
     }
   }
 
-  function setRoleHolders(RoleHolderData[] calldata _setRoleHolders) public {
+  function setRoleHolders(RoleHolderData[] calldata _setRoleHolders) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     uint256 length = _setRoleHolders.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -180,7 +185,7 @@ contract GovernanceScript {
     }
   }
 
-  function setRolePermissions(RolePermissionData[] calldata _setRolePermissions) public {
+  function setRolePermissions(RolePermissionData[] calldata _setRolePermissions) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     uint256 length = _setRolePermissions.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -192,14 +197,14 @@ contract GovernanceScript {
 
   /// @notice if the roles array is empty, it will revoke all roles iteratively. Pass all roles in as an array otherwise
   /// if the policyholder has too many roles.
-  function revokePolicies(address[] calldata _revokePolicies) public {
+  function revokePolicies(address[] calldata _revokePolicies) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     for (uint256 i = 0; i < _revokePolicies.length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.revokePolicy(_revokePolicies[i]);
     }
   }
 
-  function updateRoleDescriptions(UpdateRoleDescription[] calldata roleDescriptions) public {
+  function updateRoleDescriptions(UpdateRoleDescription[] calldata roleDescriptions) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.updateRoleDescription(roleDescriptions[i].role, roleDescriptions[i].description);
