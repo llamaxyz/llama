@@ -15,7 +15,8 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 /// @notice A script that allows users to aggregate common calls on the core and policy contracts.
 /// @notice How to use this script:
 ///         The Common Aggregate Calls section is external methods for common batch actions
-///         The Batch Policy Functions section is public methods that (1) can be called directly as part of an action, and (2) are also used by Common Aggregate Calls methods
+///         The Batch Policy Functions section is public methods that (1) can be called directly as part of an action,
+/// and (2) are also used by Common Aggregate Calls methods
 ///         The aggregate method is for ignoring all the functions in the contract and crafting your own payload
 contract GovernanceScript is BaseScript {
   // =============================
