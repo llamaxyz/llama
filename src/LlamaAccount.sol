@@ -10,6 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   ERC20Data,
@@ -24,7 +25,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 /// @title Llama Account
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This contract can be used to hold assets for a Llama instance.
-contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
+contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializable {
   using SafeERC20 for IERC20;
   using Address for address payable;
 
