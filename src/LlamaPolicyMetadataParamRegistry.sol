@@ -48,7 +48,7 @@ contract LlamaPolicyMetadataParamRegistry {
   constructor(LlamaExecutor rootLlamaExecutor) {
     ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
 
-    string memory rootColor = "";
+    string memory rootColor = "#6A45EC";
     string memory rootLogo = "";
     setColor(ROOT_LLAMA_EXECUTOR, rootColor);
     setLogo(ROOT_LLAMA_EXECUTOR, rootLogo);
