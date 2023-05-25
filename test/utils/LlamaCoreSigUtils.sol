@@ -23,18 +23,18 @@ contract LlamaCoreSigUtils {
   }
 
   struct CastApproval {
-    ActionInfo actionInfo;
-    uint8 role;
-    string reason;
     address policyholder;
+    uint8 role;
+    ActionInfo actionInfo;
+    string reason;
     uint256 nonce;
   }
 
   struct CastDisapproval {
-    ActionInfo actionInfo;
-    uint8 role;
-    string reason;
     address policyholder;
+    uint8 role;
+    ActionInfo actionInfo;
+    string reason;
     uint256 nonce;
   }
 
@@ -49,12 +49,12 @@ contract LlamaCoreSigUtils {
 
   /// @notice EIP-712 castApproval typehash.
   bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
-    "CastApproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+    "CastApproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
-    "CastDisapproval(ActionInfo actionInfo,uint8 role,string reason,address policyholder,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+    "CastDisapproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice EIP-712 actionInfo typehash.
@@ -105,10 +105,10 @@ contract LlamaCoreSigUtils {
     return keccak256(
       abi.encode(
         CAST_APPROVAL_TYPEHASH,
-        getActionInfoHash(castApproval.actionInfo),
-        castApproval.role,
-        keccak256(bytes(castApproval.reason)),
         castApproval.policyholder,
+        castApproval.role,
+        getActionInfoHash(castApproval.actionInfo),
+        keccak256(bytes(castApproval.reason)),
         castApproval.nonce
       )
     );
@@ -125,10 +125,10 @@ contract LlamaCoreSigUtils {
     return keccak256(
       abi.encode(
         CAST_DISAPPROVAL_TYPEHASH,
-        getActionInfoHash(castDisapproval.actionInfo),
-        castDisapproval.role,
-        keccak256(bytes(castDisapproval.reason)),
         castDisapproval.policyholder,
+        castDisapproval.role,
+        getActionInfoHash(castDisapproval.actionInfo),
+        keccak256(bytes(castDisapproval.reason)),
         castDisapproval.nonce
       )
     );
