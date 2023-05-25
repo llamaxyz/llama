@@ -124,17 +124,22 @@ contract LlamaCore is Initializable {
 
   /// @notice EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
-    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes data,address policyholder,uint256 nonce)"
+    "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
   );
 
   /// @notice EIP-712 castApproval typehash.
   bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
-    "CastApproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+    "CastApproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
-    "CastDisapproval((uint256 id, address creator, ILlamaStrategy strategy, address target, uint256 value, bytes data),uint8 role,string reason,address policyholder,uint256 nonce)"
+    "CastDisapproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+  );
+
+  /// @notice EIP-712 actionInfo typehash.
+  bytes32 internal constant ACTION_INFO_TYPEHASH = keccak256(
+    "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice The contract that executes actions for this llama instance.
@@ -262,56 +267,56 @@ contract LlamaCore is Initializable {
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
   /// the provided {target, selector, strategy}.
+  /// @param policyholder The policyholder that signed the message.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
   /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param data Data to be called on the `target` when the action is executed.
-  /// @param policyholder The policyholder that signed the message.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   /// @return actionId actionId of the newly created action.
   function createActionBySig(
+    address policyholder,
     uint8 role,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data,
-    address policyholder,
     uint8 v,
     bytes32 r,
     bytes32 s
   ) external returns (uint256) {
-    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, "");
+    return _createActionBySig(policyholder, role, strategy, target, value, data, "", v, r, s);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
   /// the provided {target, selector, strategy}.
+  /// @param policyholder The policyholder that signed the message.
   /// @param role The role that will be used to determine the permissionId of the policy holder.
   /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param data Data to be called on the `target` when the action is executed.
-  /// @param policyholder The policyholder that signed the message.
   /// @param description A human readable description of the action and the changes it will enact.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   /// @return actionId actionId of the newly created action.
   function createActionBySig(
+    address policyholder,
     uint8 role,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data,
-    address policyholder,
+    string memory description,
     uint8 v,
     bytes32 r,
-    bytes32 s,
-    string memory description
+    bytes32 s
   ) external returns (uint256 actionId) {
-    return _createActionBySig(role, strategy, target, value, data, policyholder, v, r, s, description);
+    return _createActionBySig(policyholder, role, strategy, target, value, data, description, v, r, s);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -372,114 +377,76 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the approval of an action.
-  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their approval.
-  function castApproval(ActionInfo calldata actionInfo, uint8 role) external {
+  /// @param actionInfo Data required to create an action.
+  function castApproval(uint8 role, ActionInfo calldata actionInfo) external {
     return _castApproval(msg.sender, role, actionInfo, "");
   }
 
   /// @notice How policyholders add their support of the approval of an action with a reason.
-  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their approval.
+  /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the approval by the policyholder.
-  function castApproval(ActionInfo calldata actionInfo, uint8 role, string calldata reason) external {
+  function castApproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
     return _castApproval(msg.sender, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
-  /// @param actionInfo Data required to create an action.
-  /// @param role The role the policyholder uses to cast their approval.
-  /// @param reason The reason given for the approval by the policyholder.
   /// @param policyholder The policyholder that signed the message.
+  /// @param role The role the policyholder uses to cast their approval.
+  /// @param actionInfo Data required to create an action.
+  /// @param reason The reason given for the approval by the policyholder.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   function castApprovalBySig(
-    ActionInfo calldata actionInfo,
-    uint8 role,
-    string calldata reason,
     address policyholder,
+    uint8 role,
+    ActionInfo calldata actionInfo,
+    string calldata reason,
     uint8 v,
     bytes32 r,
     bytes32 s
   ) external {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CAST_APPROVAL_TYPEHASH,
-            actionInfo,
-            role,
-            keccak256(bytes(reason)),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCastApprovalTypedDataHash(policyholder, role, actionInfo, reason);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castApproval(signer, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action.
-  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their disapproval.
-  function castDisapproval(ActionInfo calldata actionInfo, uint8 role) external {
+  /// @param actionInfo Data required to create an action.
+  function castDisapproval(uint8 role, ActionInfo calldata actionInfo) external {
     return _castDisapproval(msg.sender, role, actionInfo, "");
   }
 
   /// @notice How policyholders add their support of the disapproval of an action with a reason.
-  /// @param actionInfo Data required to create an action.
   /// @param role The role the policyholder uses to cast their disapproval.
+  /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the disapproval by the policyholder.
-  function castDisapproval(ActionInfo calldata actionInfo, uint8 role, string calldata reason) external {
+  function castDisapproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
     return _castDisapproval(msg.sender, role, actionInfo, reason);
   }
 
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
-  /// @param actionInfo Data required to create an action.
-  /// @param role The role the policyholder uses to cast their disapproval.
-  /// @param reason The reason given for the approval by the policyholder.
   /// @param policyholder The policyholder that signed the message.
+  /// @param role The role the policyholder uses to cast their disapproval.
+  /// @param actionInfo Data required to create an action.
+  /// @param reason The reason given for the approval by the policyholder.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
   function castDisapprovalBySig(
-    ActionInfo calldata actionInfo,
-    uint8 role,
-    string calldata reason,
     address policyholder,
+    uint8 role,
+    ActionInfo calldata actionInfo,
+    string calldata reason,
     uint8 v,
     bytes32 r,
     bytes32 s
   ) external {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CAST_DISAPPROVAL_TYPEHASH,
-            actionInfo,
-            role,
-            keccak256(bytes(reason)),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCastDisapprovalTypedDataHash(policyholder, role, actionInfo, reason);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castDisapproval(signer, role, actionInfo, reason);
@@ -621,39 +588,18 @@ contract LlamaCore is Initializable {
   }
 
   function _createActionBySig(
+    address policyholder,
     uint8 role,
     ILlamaStrategy strategy,
     address target,
     uint256 value,
     bytes calldata data,
-    address policyholder,
+    string memory description,
     uint8 v,
     bytes32 r,
-    bytes32 s,
-    string memory description
+    bytes32 s
   ) internal returns (uint256 actionId) {
-    bytes32 digest = keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        keccak256(
-          abi.encode(
-            EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this)
-          )
-        ),
-        keccak256(
-          abi.encode(
-            CREATE_ACTION_TYPEHASH,
-            role,
-            address(strategy),
-            target,
-            value,
-            keccak256(data),
-            policyholder,
-            _useNonce(policyholder, msg.sig)
-          )
-        )
-      )
-    );
+    bytes32 digest = _getCreateActionTypedDataHash(policyholder, role, strategy, target, value, data, description);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     actionId = _createAction(signer, role, strategy, target, value, data, description);
@@ -780,5 +726,106 @@ contract LlamaCore is Initializable {
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];
     nonces[policyholder][selector] = LlamaUtils.uncheckedIncrement(nonce);
+  }
+
+  // -------- EIP-712 Getters --------
+
+  /// @dev Returns the EIP-712 domain separator.
+  function _getDomainHash() internal view returns (bytes32) {
+    return keccak256(
+      abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
+    );
+  }
+
+  /// @dev Returns the hash of the ABI-encoded EIP-712 message for the `CreateAction` domain, which can be used to
+  /// recover the signer.
+  function _getCreateActionTypedDataHash(
+    address policyholder,
+    uint8 role,
+    ILlamaStrategy strategy,
+    address target,
+    uint256 value,
+    bytes calldata data,
+    string memory description
+  ) internal returns (bytes32) {
+    // Calculating and storing nonce in memory and using that below, instead of calculating in place to prevent stack
+    // too deep error.
+    uint256 nonce = _useNonce(policyholder, msg.sig);
+
+    bytes32 createActionHash = keccak256(
+      abi.encode(
+        CREATE_ACTION_TYPEHASH,
+        policyholder,
+        role,
+        address(strategy),
+        target,
+        value,
+        keccak256(data),
+        keccak256(bytes(description)),
+        nonce
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), createActionHash));
+  }
+
+  /// @dev Returns the hash of the ABI-encoded EIP-712 message for the `CastApproval` domain, which can be used to
+  /// recover the signer.
+  function _getCastApprovalTypedDataHash(
+    address policyholder,
+    uint8 role,
+    ActionInfo calldata actionInfo,
+    string calldata reason
+  ) internal returns (bytes32) {
+    bytes32 castApprovalHash = keccak256(
+      abi.encode(
+        CAST_APPROVAL_TYPEHASH,
+        policyholder,
+        role,
+        _getActionInfoHash(actionInfo),
+        keccak256(bytes(reason)),
+        _useNonce(policyholder, msg.sig)
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castApprovalHash));
+  }
+
+  /// @dev Returns the hash of the ABI-encoded EIP-712 message for the `CastDisapproval` domain, which can be used to
+  /// recover the signer.
+  function _getCastDisapprovalTypedDataHash(
+    address policyholder,
+    uint8 role,
+    ActionInfo calldata actionInfo,
+    string calldata reason
+  ) internal returns (bytes32) {
+    bytes32 castDisapprovalHash = keccak256(
+      abi.encode(
+        CAST_DISAPPROVAL_TYPEHASH,
+        policyholder,
+        role,
+        _getActionInfoHash(actionInfo),
+        keccak256(bytes(reason)),
+        _useNonce(policyholder, msg.sig)
+      )
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castDisapprovalHash));
+  }
+
+  /// @dev Returns the hash of `ActionInfo`.
+  function _getActionInfoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encode(
+        ACTION_INFO_TYPEHASH,
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        address(actionInfo.strategy),
+        actionInfo.target,
+        actionInfo.value,
+        keccak256(actionInfo.data)
+      )
+    );
   }
 }
