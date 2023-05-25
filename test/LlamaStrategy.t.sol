@@ -9,6 +9,7 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo, AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -569,7 +570,7 @@ contract Initialize is LlamaStrategyTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectRevert(abi.encodeWithSelector(AbsolutePeerReview.InvalidMinApprovals.selector, minApprovals));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidMinApprovals.selector, minApprovals));
     mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -597,7 +598,7 @@ contract Initialize is LlamaStrategyTest {
     factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
-    vm.expectRevert(abi.encodeWithSelector(AbsolutePeerReview.InvalidRole.selector, uint8(Roles.AllHolders)));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -626,7 +627,7 @@ contract Initialize is LlamaStrategyTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectRevert(abi.encodeWithSelector(AbsolutePeerReview.InvalidRole.selector, uint8(Roles.AllHolders)));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
@@ -1229,7 +1230,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     ILlamaStrategy testStrategy =
       createPeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity, _otherRoleHolders);
 
-    vm.expectRevert(AbsolutePeerReview.InsufficientApprovalQuantity.selector);
+    vm.expectRevert(AbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
@@ -1244,7 +1245,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     ILlamaStrategy testStrategy =
       createPeerReviewWithDisproportionateQuantity(false, toUint128(threshold), _roleQuantity, _otherRoleHolders);
 
-    vm.expectRevert(AbsolutePeerReview.InsufficientDisapprovalQuantity.selector);
+    vm.expectRevert(AbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
     );
@@ -1271,7 +1272,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     mpCore.queueAction(actionInfo);
 
-    vm.expectRevert(AbsolutePeerReview.DisapprovalDisabled.selector);
+    vm.expectRevert(AbsoluteStrategyBase.DisapprovalDisabled.selector);
 
     mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo);
   }
@@ -1370,7 +1371,7 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(peerReview);
-    vm.expectRevert(abi.encodeWithSelector(AbsolutePeerReview.InvalidRole.selector, uint8(Roles.Approver)));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Approver)));
     peerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
@@ -1425,7 +1426,7 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(peerReview);
-    vm.expectRevert(abi.encodeWithSelector(AbsolutePeerReview.InvalidRole.selector, uint8(Roles.Disapprover)));
+    vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Disapprover)));
     peerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
