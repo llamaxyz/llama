@@ -127,7 +127,7 @@ contract Run is CreateActionTest {
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsCreated = new LlamaAccount[](2);
     uint8 accountsCount;
-    bytes32 accountCreatedSig = keccak256("AccountCreated(address,string)");
+    bytes32 accountCreatedSig = keccak256("AccountCreated(address,address,string)");
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");

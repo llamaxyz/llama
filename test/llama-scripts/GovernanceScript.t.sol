@@ -13,6 +13,7 @@ import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutI
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {
@@ -26,7 +27,6 @@ import {
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -35,7 +35,7 @@ contract GovernanceScriptTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
-  event AccountCreated(LlamaAccount indexed account, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
 
   GovernanceScript governanceScript;
 
@@ -201,7 +201,7 @@ contract Aggregate is GovernanceScriptTest {
     newAccounts[0] = "new treasury";
 
     targets.push(address(mpCore));
-    calls.push(abi.encodeWithSelector(0x9c8b12f1, newAccounts));
+    calls.push(abi.encodeWithSelector(0x53af82ca, accountLogic, newAccounts));
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
@@ -221,7 +221,7 @@ contract Aggregate is GovernanceScriptTest {
       emit RoleAssigned(address(uint160(i + 101)), uint8(i + 9), type(uint64).max, 1);
     }
     vm.expectEmit();
-    emit AccountCreated(LlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), "new treasury");
+    emit AccountCreated(ILlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), accountLogic,  "new treasury");
     mpCore.executeAction(actionInfo);
   }
 }
