@@ -13,11 +13,11 @@ import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title MockPoorlyImplementedPeerReview
+/// @title MockPoorlyImplementedAbsolutePeerReview
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the absolute strategy copy and pasted with lines 178 & 194 commented out so we can reach the
 /// ApprovalQuantityZero error
-contract MockPoorlyImplementedPeerReview is ILlamaStrategy, Initializable {
+contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================

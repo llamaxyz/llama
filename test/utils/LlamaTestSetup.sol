@@ -360,7 +360,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toPeerReview(ILlamaStrategy strategy) internal pure returns (AbsolutePeerReview converted) {
+  function toAbsolutePeerReview(ILlamaStrategy strategy) internal pure returns (AbsolutePeerReview converted) {
     assembly {
       converted := strategy
     }
@@ -398,7 +398,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return uint16(n);
   }
 
-  function deployPeerReview(
+  function deployAbsolutePeerReview(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
