@@ -6,10 +6,10 @@ import {console2} from "forge-std/Test.sol";
 import {BaseHandler} from "test/invariants/BaseHandler.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
@@ -24,7 +24,7 @@ contract LlamaFactoryHandler is BaseHandler {
 
   // The default strategy and account logic contracts.
   ILlamaStrategy public relativeQuorumLogic;
-  LlamaAccount public accountLogic;
+  ILlamaAccount public accountLogic;
 
   // Used to track the last seen `llamaCount` value.
   uint256[] public llamaCounts;
@@ -37,7 +37,7 @@ contract LlamaFactoryHandler is BaseHandler {
     LlamaFactory _llamaFactory,
     LlamaCore _llamaCore,
     ILlamaStrategy _relativeQuorumLogic,
-    LlamaAccount _accountLogic
+    ILlamaAccount _accountLogic
   ) BaseHandler(_llamaFactory, _llamaCore) {
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
     relativeQuorumLogic = _relativeQuorumLogic;
@@ -82,6 +82,7 @@ contract LlamaFactoryHandler is BaseHandler {
     LLAMA_FACTORY.deploy(
       name(),
       relativeQuorumLogic,
+      accountLogic,
       new bytes[](0),
       new string[](0),
       roleDescriptions,

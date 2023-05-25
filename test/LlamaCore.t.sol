@@ -15,6 +15,7 @@ import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutI
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {
@@ -27,7 +28,6 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -56,7 +56,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
-  event AccountCreated(LlamaAccount indexed account, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -219,7 +219,6 @@ contract Setup is LlamaCoreTest {
     assertEq(address(mpCore.factory()), address(factory));
     assertEq(mpCore.name(), "Mock Protocol Llama");
     assertEq(address(mpCore.policy()), address(mpPolicy));
-    assertEq(address(mpCore.llamaAccountLogic()), address(accountLogic));
 
     assertTrue(mpCore.strategies(mpStrategy1));
     assertTrue(mpCore.strategies(mpStrategy1));
@@ -382,7 +381,7 @@ contract Initialize is LlamaCoreTest {
       policy,
       "NewProject",
       ILlamaStrategy(notStrategyLogic),
-      LlamaAccount(accountLogic),
+      ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
     );
@@ -393,9 +392,10 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     assertEq(address(accountAddresses[0]).code.length, 0);
@@ -414,15 +414,16 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[0], accounts[0]);
+    emit AccountCreated(accountAddresses[0], accountLogic, accounts[0]);
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[1], accounts[1]);
+    emit AccountCreated(accountAddresses[1], accountLogic, accounts[1]);
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
@@ -433,9 +434,10 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     LlamaExecutor executor = modifiedFactory.initialize(
@@ -451,9 +453,10 @@ contract Initialize is LlamaCoreTest {
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     string[] memory accounts = Solarray.strings("Account1", "Account2");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](2);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](2);
     for (uint256 i; i < accounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(accounts[i], address(uninitializedLlama));
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
@@ -1981,38 +1984,38 @@ contract CreateAccounts is LlamaCoreTest {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
 
     vm.prank(caller);
-    mpCore.createAccounts(newAccounts);
+    mpCore.createAccounts(accountLogic, newAccounts);
   }
 
   function test_CreateNewAccounts() public {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(newAccounts[i], address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[0], newAccounts[0]);
+    emit AccountCreated(accountAddresses[0], accountLogic, newAccounts[0]);
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[1], newAccounts[1]);
+    emit AccountCreated(accountAddresses[1], accountLogic, newAccounts[1]);
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[2], newAccounts[2]);
+    emit AccountCreated(accountAddresses[2], accountLogic, newAccounts[2]);
 
     vm.prank(address(mpExecutor));
-    mpCore.createAccounts(newAccounts);
+    mpCore.createAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_Reinitialized() public {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
-    LlamaAccount[] memory accountAddresses = new LlamaAccount[](3);
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(newAccounts[i], address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), newAccounts[i], address(mpCore));
     }
 
     vm.startPrank(address(mpExecutor));
-    mpCore.createAccounts(newAccounts);
+    mpCore.createAccounts(accountLogic, newAccounts);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     accountAddresses[0].initialize(newAccounts[0]);
@@ -2028,17 +2031,17 @@ contract CreateAccounts is LlamaCoreTest {
     string[] memory newAccounts = Solarray.strings("LlamaAccount1", "LlamaAccount1");
     vm.prank(address(mpExecutor));
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAccounts(newAccounts);
+    mpCore.createAccounts(accountLogic, newAccounts);
   }
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     string[] memory newAccounts1 = Solarray.strings("LlamaAccount1");
     string[] memory newAccounts2 = Solarray.strings("LlamaAccount1");
     vm.startPrank(address(mpExecutor));
-    mpCore.createAccounts(newAccounts1);
+    mpCore.createAccounts(accountLogic, newAccounts1);
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createAccounts(newAccounts2);
+    mpCore.createAccounts(accountLogic, newAccounts2);
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -2049,9 +2052,9 @@ contract CreateAccounts is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    LlamaAccount accountAddress = lens.computeLlamaAccountAddress(name, address(mpCore));
+    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), name, address(mpCore));
 
-    bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (newAccounts));
+    bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (accountLogic, newAccounts));
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
     ActionInfo memory actionInfo =
@@ -2069,7 +2072,7 @@ contract CreateAccounts is LlamaCoreTest {
     vm.warp(block.timestamp + 5 days);
 
     vm.expectEmit();
-    emit AccountCreated(accountAddress, name);
+    emit AccountCreated(accountAddress, accountLogic, name);
     mpCore.executeAction(actionInfo);
   }
 }

@@ -5,7 +5,6 @@ import {Test, console2} from "forge-std/Test.sol";
 
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
@@ -55,16 +54,17 @@ contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaAccountAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaAccountAddress("Llama Treasury", address(rootCore)));
+    address expected =
+      address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Treasury", address(rootCore)));
     assertEq(expected, address(rootAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress("Llama Grants", address(rootCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Grants", address(rootCore)));
     assertEq(expected, address(rootAccount2));
 
-    expected = address(lens.computeLlamaAccountAddress("MP Treasury", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Treasury", address(mpCore)));
     assertEq(expected, address(mpAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress("MP Grants", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Grants", address(mpCore)));
     assertEq(expected, address(mpAccount2));
   }
 }

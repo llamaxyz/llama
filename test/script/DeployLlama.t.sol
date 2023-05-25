@@ -35,8 +35,8 @@ contract Run is DeployLlamaTest {
     assertNotEq(address(factory), address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
-    assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
     assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
+    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootLlama() public {

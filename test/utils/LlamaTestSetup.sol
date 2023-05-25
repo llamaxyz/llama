@@ -69,8 +69,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaPolicy rootPolicy;
   ILlamaStrategy rootStrategy1;
   ILlamaStrategy rootStrategy2;
-  LlamaAccount rootAccount1;
-  LlamaAccount rootAccount2;
+  ILlamaAccount rootAccount1;
+  ILlamaAccount rootAccount2;
 
   // Mock protocol's (mp) llama instance.
   LlamaCore mpCore;
@@ -78,8 +78,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaPolicy mpPolicy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
-  LlamaAccount mpAccount1;
-  LlamaAccount mpAccount2;
+  ILlamaAccount mpAccount1;
+  ILlamaAccount mpAccount2;
 
   // Mock protocol for action targets.
   MockProtocol public mockProtocol;
@@ -219,10 +219,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpExecutor = mpCore.executor();
 
     // Set llama account addresses.
-    rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeLlamaAccountAddress(rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeLlamaAccountAddress(mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeLlamaAccountAddress(mpAccounts[1], address(mpCore));
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // Add approvers and disapprovers to the mock protocol's llama.
     vm.startPrank(address(mpExecutor));
@@ -254,10 +254,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
-    rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeLlamaAccountAddress(rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeLlamaAccountAddress(mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeLlamaAccountAddress(mpAccounts[1], address(mpCore));
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // With the protocol deployed, we can set special permissions.
     pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));

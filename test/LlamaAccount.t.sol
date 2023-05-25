@@ -79,11 +79,13 @@ contract LlamaAccountTest is LlamaTestSetup {
   uint256 public constant OPENSTORE_ID_2_AMOUNT = 1;
 
   address mpAccount1Addr;
+  LlamaAccount mpAccount1LlamaAccount;
 
   function setUp() public override {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 16_573_464);
     LlamaTestSetup.setUp();
     mpAccount1Addr = address(mpAccount1); // For convenience, to avoid tons of casting to address.
+    mpAccount1LlamaAccount = LlamaAccount(payable(mpAccount1Addr)); // Casting to LlamaAccount to access functions
   }
 
   // =========================
@@ -100,13 +102,13 @@ contract LlamaAccountTest is LlamaTestSetup {
 
   function approveUSDCToRecipient(uint256 amount) internal {
     vm.prank(address(mpExecutor));
-    mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
+    mpAccount1LlamaAccount.approveERC20(ERC20Data(USDC, USDC_WHALE, amount));
     assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), amount);
   }
 
   function approveUSDTToRecipient(uint256 amount) internal {
     vm.prank(address(mpExecutor));
-    mpAccount1.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
+    mpAccount1LlamaAccount.approveERC20(ERC20Data(USDT, USDT_WHALE, amount));
     assertEq(USDT.allowance(mpAccount1Addr, USDT_WHALE), amount);
   }
 
@@ -126,13 +128,13 @@ contract LlamaAccountTest is LlamaTestSetup {
 
   function approveBAYCToRecipient(uint256 id) internal {
     vm.prank(address(mpExecutor));
-    mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
+    mpAccount1LlamaAccount.approveERC721(ERC721Data(BAYC, BAYC_WHALE, id));
     assertEq(BAYC.getApproved(id), BAYC_WHALE);
   }
 
   function approveOperatorBAYCToRecipient(bool approved) internal {
     vm.prank(address(mpExecutor));
-    mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
+    mpAccount1LlamaAccount.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, approved));
     assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), approved);
   }
 
@@ -174,7 +176,7 @@ contract LlamaAccountTest is LlamaTestSetup {
 
   function approveRARIToRecipient(bool approved) internal {
     vm.prank(address(mpExecutor));
-    mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
+    mpAccount1LlamaAccount.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, approved));
     assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), approved);
   }
 }
@@ -188,16 +190,16 @@ contract Constructor is LlamaAccountTest {
 
 contract Initialize is LlamaAccountTest {
   function test_SetsLlamaExecutor() public {
-    assertEq(mpAccount1.llamaExecutor(), address(mpExecutor));
+    assertEq(mpAccount1LlamaAccount.llamaExecutor(), address(mpExecutor));
   }
 
   function test_SetsAccountName() public {
-    assertEq(mpAccount1.name(), "MP Treasury");
+    assertEq(mpAccount1LlamaAccount.name(), "MP Treasury");
   }
 
   function test_RevertIf_AlreadyInitialized() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    mpAccount1.initialize("MP Treasury");
+    mpAccount1LlamaAccount.initialize("MP Treasury");
   }
 }
 
@@ -207,7 +209,7 @@ contract TransferNativeToken is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
+    mpAccount1LlamaAccount.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
   }
 
   function test_TransferETH() public {
@@ -218,7 +220,7 @@ contract TransferNativeToken is LlamaAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
+    mpAccount1LlamaAccount.transferNativeToken(LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT));
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + ETH_AMOUNT);
@@ -228,7 +230,7 @@ contract TransferNativeToken is LlamaAccountTest {
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.transferNativeToken(LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
+    mpAccount1LlamaAccount.transferNativeToken(LlamaAccount.NativeTokenData(payable(address(0)), ETH_AMOUNT));
     vm.stopPrank();
   }
 }
@@ -242,7 +244,7 @@ contract BatchTransferNativeToken is LlamaAccountTest {
     data[0] = LlamaAccount.NativeTokenData(payable(ETH_WHALE), ETH_AMOUNT);
 
     vm.prank(caller);
-    mpAccount1.batchTransferNativeToken(data);
+    mpAccount1LlamaAccount.batchTransferNativeToken(data);
   }
 
   function test_BatchTransferETH() public {
@@ -260,7 +262,7 @@ contract BatchTransferNativeToken is LlamaAccountTest {
 
     // Transfer ETH from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchTransferNativeToken(data);
+    mpAccount1LlamaAccount.batchTransferNativeToken(data);
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(ETH_WHALE.balance, whaleETHBalance + 0.1 ether);
@@ -274,7 +276,7 @@ contract BatchTransferNativeToken is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.batchTransferNativeToken(data);
+    mpAccount1LlamaAccount.batchTransferNativeToken(data);
     vm.stopPrank();
   }
 }
@@ -285,7 +287,7 @@ contract TransferERC20 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
+    mpAccount1LlamaAccount.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
   function test_TransferUSDC() public {
@@ -296,7 +298,7 @@ contract TransferERC20 is LlamaAccountTest {
 
     // Transfer USDC from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
+    mpAccount1LlamaAccount.transferERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
     assertEq(USDC.balanceOf(mpAccount1Addr), 0);
     assertEq(USDC.balanceOf(mpAccount1Addr), accountUSDCBalance - USDC_AMOUNT);
     assertEq(USDC.balanceOf(USDC_WHALE), whaleUSDCBalance + USDC_AMOUNT);
@@ -306,7 +308,7 @@ contract TransferERC20 is LlamaAccountTest {
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
+    mpAccount1LlamaAccount.transferERC20(ERC20Data(USDC, address(0), USDC_AMOUNT));
     vm.stopPrank();
   }
 }
@@ -318,7 +320,7 @@ contract BatchTransferERC20 is LlamaAccountTest {
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
     vm.prank(caller);
-    mpAccount1.batchTransferERC20(erc20Data);
+    mpAccount1LlamaAccount.batchTransferERC20(erc20Data);
   }
 
   function test_TransferUSDCAndUNI() public {
@@ -336,7 +338,7 @@ contract BatchTransferERC20 is LlamaAccountTest {
 
     // Transfer USDC and USDT from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchTransferERC20(erc20Data);
+    mpAccount1LlamaAccount.batchTransferERC20(erc20Data);
     assertEq(USDC.balanceOf(mpAccount1Addr), 0);
     assertEq(UNI.balanceOf(mpAccount1Addr), 0);
     assertEq(USDC.balanceOf(mpAccount1Addr), accountUSDCBalance - USDC_AMOUNT);
@@ -352,7 +354,7 @@ contract BatchTransferERC20 is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.batchTransferERC20(erc20Data);
+    mpAccount1LlamaAccount.batchTransferERC20(erc20Data);
     vm.stopPrank();
   }
 }
@@ -363,7 +365,7 @@ contract ApproveERC20 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
+    mpAccount1LlamaAccount.approveERC20(ERC20Data(USDC, USDC_WHALE, USDC_AMOUNT));
   }
 
   function test_ApproveUSDC() public {
@@ -402,7 +404,7 @@ contract BatchApproveERC20 is LlamaAccountTest {
     ERC20Data[] memory erc20Data = new ERC20Data[](1);
 
     vm.prank(caller);
-    mpAccount1.batchApproveERC20(erc20Data);
+    mpAccount1LlamaAccount.batchApproveERC20(erc20Data);
   }
 
   function test_ApproveUSDCAndUNI() public {
@@ -412,7 +414,7 @@ contract BatchApproveERC20 is LlamaAccountTest {
 
     // Approve USDC and UNI to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchApproveERC20(erc20Data);
+    mpAccount1LlamaAccount.batchApproveERC20(erc20Data);
     assertEq(USDC.allowance(mpAccount1Addr, USDC_WHALE), USDC_AMOUNT);
     assertEq(UNI.allowance(mpAccount1Addr, UNI_WHALE), UNI_AMOUNT);
     vm.stopPrank();
@@ -425,7 +427,7 @@ contract TransferERC721 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
+    mpAccount1LlamaAccount.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
   function test_TransferBAYC() public {
@@ -436,7 +438,7 @@ contract TransferERC721 is LlamaAccountTest {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
+    mpAccount1LlamaAccount.transferERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
     assertEq(BAYC.balanceOf(mpAccount1Addr), 0);
     assertEq(BAYC.balanceOf(mpAccount1Addr), accountNFTBalance - 1);
     assertEq(BAYC.balanceOf(BAYC_WHALE), whaleNFTBalance + 1);
@@ -447,7 +449,7 @@ contract TransferERC721 is LlamaAccountTest {
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
+    mpAccount1LlamaAccount.transferERC721(ERC721Data(BAYC, address(0), BAYC_ID));
     vm.stopPrank();
   }
 }
@@ -459,7 +461,7 @@ contract BatchTransferERC721 is LlamaAccountTest {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.prank(caller);
-    mpAccount1.batchTransferERC721(erc721Data);
+    mpAccount1LlamaAccount.batchTransferERC721(erc721Data);
   }
 
   function test_TransferBAYCAndNOUNS() public {
@@ -477,7 +479,7 @@ contract BatchTransferERC721 is LlamaAccountTest {
 
     // Transfer NFTs from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchTransferERC721(erc721Data);
+    mpAccount1LlamaAccount.batchTransferERC721(erc721Data);
     assertEq(BAYC.balanceOf(mpAccount1Addr), accountBAYCBalance - 1);
     assertEq(BAYC.balanceOf(BAYC_WHALE), whaleBAYCBalance + 1);
     assertEq(BAYC.ownerOf(BAYC_ID), BAYC_WHALE);
@@ -493,7 +495,7 @@ contract BatchTransferERC721 is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.batchTransferERC721(erc721Data);
+    mpAccount1LlamaAccount.batchTransferERC721(erc721Data);
     vm.stopPrank();
   }
 }
@@ -504,7 +506,7 @@ contract ApproveERC721 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
+    mpAccount1LlamaAccount.approveERC721(ERC721Data(BAYC, BAYC_WHALE, BAYC_ID));
   }
 
   function test_ApproveBAYC() public {
@@ -520,7 +522,7 @@ contract BatchApproveERC721 is LlamaAccountTest {
     ERC721Data[] memory erc721Data = new ERC721Data[](2);
 
     vm.prank(caller);
-    mpAccount1.batchApproveERC721(erc721Data);
+    mpAccount1LlamaAccount.batchApproveERC721(erc721Data);
   }
 
   function test_ApproveBAYCAndNOUNS() public {
@@ -533,7 +535,7 @@ contract BatchApproveERC721 is LlamaAccountTest {
 
     // Approve NFTs from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchApproveERC721(erc721Data);
+    mpAccount1LlamaAccount.batchApproveERC721(erc721Data);
     assertEq(BAYC.getApproved(BAYC_ID), BAYC_WHALE);
     assertEq(NOUNS.getApproved(NOUNS_ID), NOUNS_WHALE);
     vm.stopPrank();
@@ -546,7 +548,7 @@ contract ApproveOperatorERC721 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
+    mpAccount1LlamaAccount.approveOperatorERC721(ERC721OperatorData(BAYC, BAYC_WHALE, true));
   }
 
   function test_ApproveBAYC() public {
@@ -565,7 +567,7 @@ contract BatchApproveOperatorERC721 is LlamaAccountTest {
     ERC721OperatorData[] memory erc721OperatorData = new ERC721OperatorData[](2);
 
     vm.prank(caller);
-    mpAccount1.batchApproveOperatorERC721(erc721OperatorData);
+    mpAccount1LlamaAccount.batchApproveOperatorERC721(erc721OperatorData);
   }
 
   function test_ApproveBAYCAndNOUNS() public {
@@ -575,7 +577,7 @@ contract BatchApproveOperatorERC721 is LlamaAccountTest {
 
     // Approve NFTs from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchApproveOperatorERC721(erc721OperatorData);
+    mpAccount1LlamaAccount.batchApproveOperatorERC721(erc721OperatorData);
     assertEq(BAYC.isApprovedForAll(mpAccount1Addr, BAYC_WHALE), true);
     assertEq(NOUNS.isApprovedForAll(mpAccount1Addr, NOUNS_WHALE), true);
     vm.stopPrank();
@@ -588,7 +590,7 @@ contract TransferERC1155 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
+    mpAccount1LlamaAccount.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
   }
 
   function test_TransferRARI() public {
@@ -599,7 +601,7 @@ contract TransferERC1155 is LlamaAccountTest {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
+    mpAccount1LlamaAccount.transferERC1155(ERC1155Data(RARI, RARI_WHALE, RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_1), 0);
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_1), accountNFTBalance - RARI_ID_1_AMOUNT);
     assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance + RARI_ID_1_AMOUNT);
@@ -609,7 +611,7 @@ contract TransferERC1155 is LlamaAccountTest {
   function test_RevertIf_ToZeroAddress() public {
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
+    mpAccount1LlamaAccount.transferERC1155(ERC1155Data(RARI, address(0), RARI_ID_1, RARI_ID_1_AMOUNT, ""));
     vm.stopPrank();
   }
 }
@@ -627,7 +629,7 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
     amounts[1] = RARI_ID_2_AMOUNT;
 
     vm.prank(caller);
-    mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
+    mpAccount1LlamaAccount.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
   }
 
   function test_TransferRARI() public {
@@ -649,7 +651,7 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
+    mpAccount1LlamaAccount.batchTransferSingleERC1155(ERC1155BatchData(RARI, RARI_WHALE, tokenIDs, amounts, ""));
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_1), 0);
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_1), accountNFTBalance1 - RARI_ID_1_AMOUNT);
     assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleNFTBalance1 + RARI_ID_1_AMOUNT);
@@ -670,7 +672,7 @@ contract BatchTransferSingleERC1155 is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
+    mpAccount1LlamaAccount.batchTransferSingleERC1155(ERC1155BatchData(RARI, address(0), tokenIDs, amounts, ""));
     vm.stopPrank();
   }
 }
@@ -682,7 +684,7 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
     ERC1155BatchData[] memory erc1155BatchData = new ERC1155BatchData[](2);
 
     vm.prank(caller);
-    mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
+    mpAccount1LlamaAccount.batchTransferMultipleERC1155(erc1155BatchData);
   }
 
   function test_TransferRARIAndOPENSTORE() public {
@@ -718,7 +720,7 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
 
     // Transfer NFT from account to whale
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
+    mpAccount1LlamaAccount.batchTransferMultipleERC1155(erc1155BatchData);
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_1), 0);
     assertEq(RARI.balanceOf(RARI_WHALE, RARI_ID_1), whaleRARIBalance1 + RARI_ID_1_AMOUNT);
     assertEq(RARI.balanceOf(mpAccount1Addr, RARI_ID_2), 0);
@@ -738,7 +740,7 @@ contract BatchTransferMultipleERC1155 is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.ZeroAddressNotAllowed.selector);
-    mpAccount1.batchTransferMultipleERC1155(erc1155BatchData);
+    mpAccount1LlamaAccount.batchTransferMultipleERC1155(erc1155BatchData);
     vm.stopPrank();
   }
 }
@@ -749,7 +751,7 @@ contract ApproveOperatorERC1155 is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpAccount1.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
+    mpAccount1LlamaAccount.approveOperatorERC1155(ERC1155OperatorData(RARI, RARI_WHALE, true));
   }
 
   function test_ApproveRARI() public {
@@ -768,7 +770,7 @@ contract BatchApproveOperatorERC1155 is LlamaAccountTest {
     ERC1155OperatorData[] memory erc1155OperatorData = new ERC1155OperatorData[](2);
 
     vm.prank(caller);
-    mpAccount1.batchApproveOperatorERC1155(erc1155OperatorData);
+    mpAccount1LlamaAccount.batchApproveOperatorERC1155(erc1155OperatorData);
   }
 
   function test_ApproveRARIAndOPENSTORE() public {
@@ -777,7 +779,7 @@ contract BatchApproveOperatorERC1155 is LlamaAccountTest {
     erc1155OperatorData[1] = ERC1155OperatorData(OPENSTORE, OPENSTORE_WHALE, true);
 
     vm.startPrank(address(mpExecutor));
-    mpAccount1.batchApproveOperatorERC1155(erc1155OperatorData);
+    mpAccount1LlamaAccount.batchApproveOperatorERC1155(erc1155OperatorData);
     assertEq(RARI.isApprovedForAll(mpAccount1Addr, RARI_WHALE), true);
     assertEq(OPENSTORE.isApprovedForAll(mpAccount1Addr, OPENSTORE_WHALE), true);
     vm.stopPrank();
@@ -791,7 +793,9 @@ contract Execute is LlamaAccountTest {
 
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     vm.prank(caller);
-    mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
+    mpAccount1LlamaAccount.execute(
+      address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true
+    );
   }
 
   function test_CallCryptoPunk() public {
@@ -803,7 +807,7 @@ contract Execute is LlamaAccountTest {
 
     // Rescue Punk by calling execute call
     vm.startPrank(address(mpExecutor));
-    mpAccount1.execute(
+    mpAccount1LlamaAccount.execute(
       address(PUNK), abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID), false
     );
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
@@ -817,8 +821,9 @@ contract Execute is LlamaAccountTest {
     MockExtension mockExtension = new MockExtension();
 
     vm.startPrank(address(mpExecutor));
-    bytes memory result =
-      mpAccount1.execute(address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true);
+    bytes memory result = mpAccount1LlamaAccount.execute(
+      address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true
+    );
     assertEq(10, uint256(bytes32(result)));
     vm.stopPrank();
   }
@@ -828,7 +833,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
-    mpAccount1.execute(address(mockExtension), abi.encodePacked("", ""), true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), abi.encodePacked("", ""), true);
     vm.stopPrank();
   }
 
@@ -838,12 +843,12 @@ contract Execute is LlamaAccountTest {
     bytes memory data = abi.encodeCall(MockMaliciousExtension.attack1, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1.execute(address(mockExtension), data, true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), data, true);
 
     data = abi.encodeCall(MockMaliciousExtension.attack2, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1.execute(address(mockExtension), data, true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), data, true);
   }
 }
 

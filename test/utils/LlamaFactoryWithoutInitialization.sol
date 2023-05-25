@@ -6,8 +6,8 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -21,7 +21,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   constructor(
     LlamaCore _llamaCoreLogic,
     ILlamaStrategy initialLlamaStrategyLogic,
-    LlamaAccount initialLlamaAccountLogic,
+    ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy _llamaPolicyLogic,
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
@@ -74,7 +74,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaPolicy policy,
     string memory name,
     ILlamaStrategy relativeQuorumLogic,
-    LlamaAccount accountLogic,
+    ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccountNames
   ) external returns (LlamaExecutor llamaExecutor) {

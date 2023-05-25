@@ -8,10 +8,10 @@ import {Solarray} from "@solarray/Solarray.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -33,7 +33,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
     uint256 chainId
   );
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event AccountAuthorized(LlamaAccount indexed account, address indexed accountLogic, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
   event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
   event ActionCanceled(uint256 id);
   event ActionQueued(
@@ -44,7 +44,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   event StrategiesAuthorized(RelativeStrategyConfig[] strategies);
   event StrategiesUnauthorized(ILlamaStrategy[] strategies);
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
-  event AccountLogicAuthorized(LlamaAccount indexed accountLogic);
+  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -79,10 +79,6 @@ contract Constructor is LlamaFactoryTest {
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
   }
 
-  function test_SetsLlamaAccountLogicAddress() public {
-    assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
-  }
-
   function test_SetsLlamaPolicyMetadataAddress() public {
     assertEq(address(factory.llamaPolicyMetadata()), address(policyMetadata));
   }
@@ -100,6 +96,16 @@ contract Constructor is LlamaFactoryTest {
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
     emit StrategyLogicAuthorized(relativeQuorumLogic);
+    deployLlamaFactory();
+  }
+
+  function test_SetsLlamaAccountLogicAddress() public {
+    assertTrue(factory.authorizedAccountLogics(accountLogic));
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.expectEmit();
+    emit AccountLogicAuthorized(accountLogic);
     deployLlamaFactory();
   }
 
@@ -132,6 +138,7 @@ contract Deploy is LlamaFactoryTest {
     return factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -153,6 +160,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -175,6 +183,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       name,
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       roleDescriptionStrings,
@@ -188,6 +197,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       name,
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -210,6 +220,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -224,6 +235,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -246,6 +258,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -261,6 +274,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -276,6 +290,7 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(
       "NewProject",
       relativeQuorumLogic,
+      accountLogic,
       strategyConfigs,
       accounts,
       new RoleDescription[](0),
@@ -343,11 +358,6 @@ contract Deploy is LlamaFactoryTest {
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
     (, LlamaCore _llama) = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
-  }
-
-  function test_SetsAccountLogicAddressOnLlamaCore() public {
-    (, LlamaCore _llama) = deployLlama();
-    assertEq(address(_llama.llamaAccountLogic()), address(accountLogic));
   }
 
   function test_EmitsLlamaInstanceCreatedEvent() public {
