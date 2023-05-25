@@ -12,13 +12,13 @@ contract LlamaCoreSigUtils {
   }
 
   struct CreateAction {
+    address policyholder;
     uint8 role;
     address strategy;
     address target;
     uint256 value;
     bytes data;
     string description;
-    address policyholder;
     uint256 nonce;
   }
 
@@ -44,7 +44,7 @@ contract LlamaCoreSigUtils {
 
   /// @notice EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
-    "CreateAction(uint8 role,address strategy,address target,uint256 value,bytes data,string description,address policyholder,uint256 nonce)"
+    "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
   );
 
   /// @notice EIP-712 castApproval typehash.
@@ -82,13 +82,13 @@ contract LlamaCoreSigUtils {
     return keccak256(
       abi.encode(
         CREATE_ACTION_TYPEHASH,
+        createAction.policyholder,
         createAction.role,
         createAction.strategy,
         createAction.target,
         createAction.value,
         keccak256(createAction.data),
         keccak256(bytes(createAction.description)),
-        createAction.policyholder,
         createAction.nonce
       )
     );

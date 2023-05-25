@@ -649,8 +649,8 @@ contract CreateAction is LlamaCoreTest {
 contract CreateActionBySig is LlamaCoreTest {
   // We need to manually calculate the function selector because we are using function overloading with the
   // createActionBySig function:
-  // `bytes4(keccak256(createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)))`
-  bytes4 createActionBySigWithoutDescriptionSelector = 0xfb99e5a3;
+  // `bytes4(keccak256(createActionBySig(address,uint8,address,address,uint256,bytes,uint8,bytes32,bytes32)))`
+  bytes4 createActionBySigWithoutDescriptionSelector = 0xa1e81f3e;
 
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     (v, r, s) = createOffchainSignatureWithDescription(privateKey, "");
@@ -677,12 +677,12 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
     actionId = mpCore.createActionBySig(
+      actionCreatorAaron,
       uint8(Roles.ActionCreator),
       mpStrategy1,
       address(mockProtocol),
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
-      actionCreatorAaron,
       v,
       r,
       s
@@ -731,16 +731,16 @@ contract CreateActionBySig is LlamaCoreTest {
     );
 
     uint256 actionId = mpCore.createActionBySig(
+      actionCreatorAaron,
       uint8(Roles.ActionCreator),
       mpStrategy1,
       address(mockProtocol),
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
-      actionCreatorAaron,
+      "# Action 0 \n This is my action.",
       v,
       r,
-      s,
-      "# Action 0 \n This is my action."
+      s
     );
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
