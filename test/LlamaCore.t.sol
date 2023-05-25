@@ -7,7 +7,7 @@ import {Solarray} from "@solarray/Solarray.sol";
 
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {MockPoorlyImplementedAbsoluteStrategy} from "test/mock/MockPoorlyImplementedStrategy.sol";
+import {MockPoorlyImplementedPeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -26,7 +26,7 @@ import {
   RoleHolderData,
   RolePermissionData
 } from "src/lib/Structs.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -92,18 +92,18 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.expectEmit();
     emit ApprovalCast(actionInfo.id, _policyholder, uint8(Roles.Approver), 1, "");
     vm.prank(_policyholder);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
   }
 
   function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, _policyholder, uint8(Roles.Disapprover), 1, "");
     vm.prank(_policyholder);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
   }
 
   function _queueAction(ActionInfo memory actionInfo) public {
-    uint256 executionTime = block.timestamp + toRelativeStrategy(mpStrategy1).queuingPeriod();
+    uint256 executionTime = block.timestamp + toRelativeQuorum(mpStrategy1).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(actionInfo.id, address(this), mpStrategy1, actionCreatorAaron, executionTime);
     mpCore.queueAction(actionInfo);
@@ -135,7 +135,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   }
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
-    RelativeStrategy additionalStrategyLogic = new RelativeStrategy();
+    RelativeQuorum additionalStrategyLogic = new RelativeQuorum();
     vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
@@ -161,7 +161,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   }
 
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
-    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedAbsoluteStrategy();
+    ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedPeerReview();
 
     AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
       approvalPeriod: 1 days,
@@ -196,10 +196,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 
-  function createActionUsingAbsoluteStrategy(ILlamaStrategy testStrategy)
-    internal
-    returns (ActionInfo memory actionInfo)
-  {
+  function createActionUsingPeerReview(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpExecutor));
@@ -238,7 +235,7 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    coreLogic.initialize("NewProject", mpPolicy, relativeStrategyLogic, accountLogic, new bytes[](0), new string[](0));
+    coreLogic.initialize("NewProject", mpPolicy, relativeQuorumLogic, accountLogic, new bytes[](0), new string[](0));
   }
 }
 
@@ -252,7 +249,7 @@ contract Initialize is LlamaCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new LlamaFactoryWithoutInitialization(
       coreLogic,
-      relativeStrategyLogic,
+      relativeQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,
@@ -276,16 +273,15 @@ contract Initialize is LlamaCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
-      );
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
     assertEq(address(strategyAddresses[0]).code.length, 0);
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -299,18 +295,17 @@ contract Initialize is LlamaCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
-      );
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], address(relativeStrategyLogic), strategyConfigs[0]);
+    emit StrategyAuthorized(strategyAddresses[0], address(relativeQuorumLogic), strategyConfigs[0]);
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], address(relativeStrategyLogic), strategyConfigs[1]);
+    emit StrategyAuthorized(strategyAddresses[1], address(relativeQuorumLogic), strategyConfigs[1]);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -321,13 +316,12 @@ contract Initialize is LlamaCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
-      );
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].llamaCore()), address(uninitializedLlama));
@@ -341,13 +335,12 @@ contract Initialize is LlamaCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
-      );
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
@@ -361,16 +354,15 @@ contract Initialize is LlamaCoreTest {
     string[] memory accounts = Solarray.strings("Account1", "Account2");
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), strategyConfigs[i], address(uninitializedLlama)
-      );
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
     assertEq(uninitializedLlama.strategies(strategyAddresses[0]), false);
     assertEq(uninitializedLlama.strategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(uninitializedLlama.strategies(strategyAddresses[0]), true);
@@ -378,7 +370,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
-    vm.assume(notStrategyLogic != address(relativeStrategyLogic));
+    vm.assume(notStrategyLogic != address(relativeQuorumLogic));
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
@@ -410,7 +402,7 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -432,7 +424,7 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accounts[1]);
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -447,7 +439,7 @@ contract Initialize is LlamaCoreTest {
     }
 
     LlamaExecutor executor = modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(accountAddresses[0].llamaExecutor()), address(executor));
@@ -465,7 +457,7 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeStrategyLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(accountAddresses[0].name(), "Account1");
@@ -487,14 +479,14 @@ contract CreateAction is LlamaCoreTest {
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionInfo.id);
-    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+    uint256 approvalPeriodEnd = toRelativeQuorum(actionInfo.strategy).approvalEndTime(actionInfo);
 
     assertEq(actionInfo.id, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
   }
 
   function test_CreatesAnActionWithDescription() public {
@@ -511,14 +503,14 @@ contract CreateAction is LlamaCoreTest {
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionInfo.id);
-    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+    uint256 approvalPeriodEnd = toRelativeQuorum(actionInfo.strategy).approvalEndTime(actionInfo);
 
     assertEq(actionInfo.id, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
   }
 
   function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
@@ -649,12 +641,21 @@ contract CreateAction is LlamaCoreTest {
 
 contract CreateActionBySig is LlamaCoreTest {
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+    (v, r, s) = createOffchainSignatureWithDescription(privateKey, "");
+  }
+
+  function createOffchainSignatureWithDescription(uint256 privateKey, string memory description)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
     LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
       role: uint8(Roles.ActionCreator),
       strategy: address(mpStrategy1),
       target: address(mockProtocol),
       value: 0,
       data: abi.encodeCall(MockProtocol.pause, (true)),
+      description: description,
       policyholder: actionCreatorAaron,
       nonce: 0
     });
@@ -664,12 +665,12 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
     actionId = mpCore.createActionBySig(
+      actionCreatorAaron,
       uint8(Roles.ActionCreator),
       mpStrategy1,
       address(mockProtocol),
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
-      actionCreatorAaron,
       v,
       r,
       s,
@@ -691,18 +692,19 @@ contract CreateActionBySig is LlamaCoreTest {
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionId);
 
-    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+    uint256 approvalPeriodEnd = toRelativeQuorum(actionInfo.strategy).approvalEndTime(actionInfo);
 
     assertEq(actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionId), 3);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
   }
 
   function test_CreatesActionBySigWithDescription() public {
-    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
+    (uint8 v, bytes32 r, bytes32 s) =
+      createOffchainSignatureWithDescription(actionCreatorAaronPrivateKey, "# Action 0 \n This is my action.");
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.expectEmit();
@@ -718,29 +720,29 @@ contract CreateActionBySig is LlamaCoreTest {
     );
 
     uint256 actionId = mpCore.createActionBySig(
+      actionCreatorAaron,
       uint8(Roles.ActionCreator),
       mpStrategy1,
       address(mockProtocol),
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
-      actionCreatorAaron,
+      "# Action 0 \n This is my action.",
       v,
       r,
-      s,
-      "# Action 0 \n This is my action."
+      s
     );
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     Action memory action = mpCore.getAction(actionId);
 
-    uint256 approvalPeriodEnd = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
+    uint256 approvalPeriodEnd = toRelativeQuorum(actionInfo.strategy).approvalEndTime(actionInfo);
 
     assertEq(actionId, 0);
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionApprovalSupply(actionId), 3);
-    assertEq(toRelativeStrategy(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
   }
 
   function test_CheckNonceIncrements() public {
@@ -811,7 +813,7 @@ contract CancelAction is LlamaCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(RelativeStrategy.OnlyActionCreator.selector);
+    vm.expectRevert(RelativeQuorum.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 
@@ -824,7 +826,7 @@ contract CancelAction is LlamaCoreTest {
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
-    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Canceled));
+    vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.CannotCancelInState.selector, ActionState.Canceled));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -832,7 +834,7 @@ contract CancelAction is LlamaCoreTest {
     ActionInfo memory _actionInfo = _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Executed));
+    vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.CannotCancelInState.selector, ActionState.Executed));
     mpCore.cancelAction(_actionInfo);
   }
 
@@ -850,7 +852,7 @@ contract CancelAction is LlamaCoreTest {
     vm.warp(block.timestamp + 15 days);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Expired));
+    vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.CannotCancelInState.selector, ActionState.Expired));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -861,7 +863,7 @@ contract CancelAction is LlamaCoreTest {
 
     assertEq(mpStrategy1.isActionApproved(actionInfo), false);
 
-    vm.expectRevert(abi.encodeWithSelector(RelativeStrategy.CannotCancelInState.selector, ActionState.Failed));
+    vm.expectRevert(abi.encodeWithSelector(RelativeQuorum.CannotCancelInState.selector, ActionState.Failed));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -874,7 +876,7 @@ contract CancelAction is LlamaCoreTest {
     assertEq(mpStrategy1.isActionApproved(actionInfo), true);
     _queueAction(actionInfo);
 
-    vm.expectRevert(RelativeStrategy.OnlyActionCreator.selector);
+    vm.expectRevert(RelativeQuorum.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 }
@@ -1301,7 +1303,7 @@ contract CastApproval is LlamaCoreTest {
     vm.expectEmit();
     emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, reason);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver), reason);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, reason);
   }
 
   function test_RevertIf_ActionNotActive() public {
@@ -1313,7 +1315,7 @@ contract CastApproval is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
   }
 
   function test_RevertIf_DuplicateApproval() public {
@@ -1321,7 +1323,7 @@ contract CastApproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(approverAdam);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1329,10 +1331,10 @@ contract CastApproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
 
     vm.prank(approverAdam);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
   }
 
   function test_RevertIf_NoQuantity() public {
@@ -1351,7 +1353,7 @@ contract CastApproval is LlamaCoreTest {
         LlamaCore.CannotCastWithZeroQuantity.selector, actionCreatorAaron, uint8(Roles.ActionCreator)
       )
     );
-    mpCore.castApproval(actionInfo, uint8(Roles.ActionCreator));
+    mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo);
   }
 }
 
@@ -1373,7 +1375,7 @@ contract CastApprovalBySig is LlamaCoreTest {
   }
 
   function castApprovalBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
-    mpCore.castApprovalBySig(actionInfo, uint8(Roles.Approver), "", approverAdam, v, r, s);
+    mpCore.castApprovalBySig(approverAdam, uint8(Roles.Approver), actionInfo, "", v, r, s);
   }
 
   function test_CastsApprovalBySig() public {
@@ -1448,7 +1450,7 @@ contract CastApprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1460,7 +1462,7 @@ contract CastApprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
     vm.prank(actionCreatorAaron);
@@ -1487,7 +1489,7 @@ contract CastDisapproval is LlamaCoreTest {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
@@ -1498,14 +1500,14 @@ contract CastDisapproval is LlamaCoreTest {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, reason);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover), reason);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, reason);
   }
 
   function test_RevertIf_ActionNotQueued() public {
     ActionInfo memory actionInfo = _createAction();
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
   }
 
   function test_RevertIf_DuplicateDisapproval() public {
@@ -1515,7 +1517,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1524,19 +1526,19 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
 
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
   }
 
   function test_FailsIfDisapproved() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
 
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
@@ -1558,7 +1560,7 @@ contract CastDisapproval is LlamaCoreTest {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
-    uint256 executionTime = block.timestamp + toAbsoluteStrategy(newStrategy).queuingPeriod();
+    uint256 executionTime = block.timestamp + toPeerReview(newStrategy).queuingPeriod();
     vm.expectEmit();
     emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
     mpCore.queueAction(actionInfo);
@@ -1569,7 +1571,7 @@ contract CastDisapproval is LlamaCoreTest {
       )
     );
     vm.prank(actionCreatorAaron);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.ActionCreator));
+    mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo);
   }
 }
 
@@ -1591,7 +1593,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
   }
 
   function castDisapprovalBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
-    mpCore.castDisapprovalBySig(actionInfo, uint8(Roles.Disapprover), "", disapproverDrake, v, r, s);
+    mpCore.castDisapprovalBySig(disapproverDrake, uint8(Roles.Disapprover), actionInfo, "", v, r, s);
   }
 
   function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
@@ -1688,7 +1690,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     // Second disapproval.
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(actionInfo, uint8(Roles.Disapprover));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
 
     // Assertions.
     ActionState state = mpCore.getActionState(actionInfo);
@@ -1700,7 +1702,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
   function test_ActionCreatorCanRelayMessage() public {
     // Testing that ActionCreatorCannotCast() error is not hit
-    ILlamaStrategy absoluteStrategy = deployAbsoluteStrategy(
+    ILlamaStrategy peerReview = deployPeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1712,7 +1714,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createActionUsingAbsoluteStrategy(absoluteStrategy);
+    ActionInfo memory actionInfo = createActionUsingPeerReview(peerReview);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
@@ -1734,7 +1736,7 @@ contract CreateStrategies is LlamaCoreTest {
     RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
 
     vm.prank(caller);
-    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1752,7 +1754,7 @@ contract CreateStrategies is LlamaCoreTest {
 
     for (uint256 i = 0; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
+        address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
       );
     }
 
@@ -1760,18 +1762,18 @@ contract CreateStrategies is LlamaCoreTest {
 
     vm.expectEmit();
     emit StrategyAuthorized(
-      strategyAddresses[0], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[0])
+      strategyAddresses[0], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0])
     );
     vm.expectEmit();
     emit StrategyAuthorized(
-      strategyAddresses[1], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[1])
+      strategyAddresses[1], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[1])
     );
     vm.expectEmit();
     emit StrategyAuthorized(
-      strategyAddresses[2], address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[2])
+      strategyAddresses[2], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[2])
     );
 
-    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.strategies(strategyAddresses[0]), true);
     assertEq(mpCore.strategies(strategyAddresses[1]), true);
@@ -1889,7 +1891,7 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -1913,10 +1915,10 @@ contract CreateStrategies is LlamaCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpExecutor));
-    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createStrategies(relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -1938,14 +1940,14 @@ contract CreateStrategies is LlamaCoreTest {
     });
 
     ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
-      address(relativeStrategyLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+      address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
-      LlamaCore.createStrategies, (relativeStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
+      LlamaCore.createStrategies, (relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
@@ -2265,8 +2267,8 @@ contract GetActionState is LlamaCoreTest {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
-    uint256 approvalEndTime = toRelativeStrategy(actionInfo.strategy).approvalEndTime(actionInfo);
-    vm.assume(_timeSinceCreation < toRelativeStrategy(mpStrategy1).approvalPeriod() * 2);
+    uint256 approvalEndTime = toRelativeQuorum(actionInfo.strategy).approvalEndTime(actionInfo);
+    vm.assume(_timeSinceCreation < toRelativeQuorum(mpStrategy1).approvalPeriod() * 2);
     vm.warp(block.timestamp + _timeSinceCreation);
 
     uint256 currentState = uint256(mpCore.getActionState(actionInfo));

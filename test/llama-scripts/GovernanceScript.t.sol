@@ -25,7 +25,7 @@ import {
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -170,11 +170,11 @@ contract GovernanceScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1);
 
     vm.prank(approverAdam);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
     vm.prank(approverAlicia);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
     vm.prank(approverAndy);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
     mpCore.queueAction(actionInfo);
   }
 }
