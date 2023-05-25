@@ -9,7 +9,7 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 /// @dev This script is meant to be delegatecalled by the core contract, which informs our use of `SELF` and
 /// `address(this)`.
 abstract contract SingleUseScript is BaseScript {
-  /// @dev Address of the executor contract. We save it off in order to access the LlamaCore::authorizeScript method.
+  /// @dev Address of the executor contract. We save it off in order to access the authorizeScript method in LlamaCore.
   LlamaExecutor internal immutable EXECUTOR;
 
   constructor(LlamaExecutor executor) {
