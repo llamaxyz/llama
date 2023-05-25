@@ -9,7 +9,6 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -21,6 +20,24 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     implementing contract to determine the rest of the behavior.
 ///   - All methods are marked virtual in case future strategies need to override them.
 abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
+  // ==========================================
+  // ================ Structs =================
+  // ==========================================
+
+  struct Config {
+    uint64 approvalPeriod; // The length of time of the approval period.
+    uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
+      // enabled.
+    uint64 expirationPeriod; // The length of time an action can be executed before it expires.
+    uint128 minApprovals; // Minimum number of total approval quantity.
+    uint128 minDisapprovals; // Minimum number of total disapproval quantity.
+    bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
+    uint8 approvalRole; // Anyone with this role can cast approval of an action.
+    uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
+    uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
+    uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
+  }
+
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -129,7 +146,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external virtual initializer {
-    PeerReview.Config memory strategyConfig = abi.decode(config, (PeerReview.Config));
+    Config memory strategyConfig = abi.decode(config, (Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

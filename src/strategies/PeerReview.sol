@@ -25,24 +25,6 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
 contract PeerReview is AbsoluteStrategyBase {
-  // ==========================================
-  // ================ Structs =================
-  // ==========================================
-
-  struct Config {
-    uint64 approvalPeriod; // The length of time of the approval period.
-    uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
-      // enabled.
-    uint64 expirationPeriod; // The length of time an action can be executed before it expires.
-    uint128 minApprovals; // Minimum number of total approval quantity.
-    uint128 minDisapprovals; // Minimum number of total disapproval quantity.
-    bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
-    uint8 approvalRole; // Anyone with this role can cast approval of an action.
-    uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
-    uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
-    uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
-  }
-
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
