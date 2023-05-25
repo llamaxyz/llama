@@ -18,6 +18,11 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
 ///     regardless of the roles they hold.
+///   - By not allowing action creators to cast approvals or disapprovals on their own actions,
+///     this strategy is useful for when a group of policyholders have permission to both create
+///     and approve an action. You can design a strategy where anyone in this group can propose
+///     but they need N number of approvals from their peers in this group for the action to be
+///     approved.
 contract PeerReview is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
