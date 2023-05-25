@@ -221,7 +221,9 @@ contract Aggregate is GovernanceScriptTest {
       emit RoleAssigned(address(uint160(i + 101)), uint8(i + 9), type(uint64).max, 1);
     }
     vm.expectEmit();
-    emit AccountCreated(ILlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), accountLogic,  "new treasury");
+    emit AccountCreated(
+      ILlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), accountLogic, "new treasury"
+    );
     mpCore.executeAction(actionInfo);
   }
 }
