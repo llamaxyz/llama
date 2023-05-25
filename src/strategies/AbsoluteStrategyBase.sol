@@ -19,7 +19,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - The `validateActionCreation`, `isApprovalEnabled`, and `isDisapprovalEnabled` methods are left up to the
 ///     implementing contract to determine the rest of the behavior.
-///   - All methods are marked virtual incase future strategies need to override them.
+///   - All methods are marked virtual in case future strategies need to override them.
 abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
