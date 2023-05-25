@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
+import {MockBaseScript} from "test/mock/MockBaseScript.sol";
 import {Test, console2} from "forge-std/Test.sol";
 
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {MockBaseScript} from "test/mock/MockBaseScript.sol";
 
 contract BaseScriptTest is LlamaTestSetup {
   event SuccessfulCall();
