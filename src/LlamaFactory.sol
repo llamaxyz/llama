@@ -74,7 +74,7 @@ contract LlamaFactory {
   LlamaAccount public immutable LLAMA_ACCOUNT_LOGIC;
 
   /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
-  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY;
+  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
 
   /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
@@ -126,7 +126,7 @@ contract LlamaFactory {
       initialRolePermissions
     );
 
-    LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
   }
 
   // ===========================================
@@ -142,7 +142,10 @@ contract LlamaFactory {
   /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions The list of initial permissions given to roles.
-  /// @return The address of the Llama Core of the newly created instances.
+  /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
+  /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
+  /// @return executor The address of the LlamaExecutor of the newly created instance.
+  /// @return core The address of the LlamaCore of the newly created instance.
   function deploy(
     string memory name,
     ILlamaStrategy strategyLogic,
@@ -150,9 +153,11 @@ contract LlamaFactory {
     string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions
-  ) external onlyRootLlama returns (LlamaExecutor, LlamaCore) {
-    return _deploy(
+    RolePermissionData[] memory initialRolePermissions,
+    string memory color,
+    string memory logo
+  ) external onlyRootLlama returns (LlamaExecutor executor, LlamaCore core) {
+    (executor, core) = _deploy(
       name,
       strategyLogic,
       initialStrategies,
@@ -161,6 +166,8 @@ contract LlamaFactory {
       initialRoleHolders,
       initialRolePermissions
     );
+
+    _setDeploymentMetadata(executor, color, logo);
   }
 
   /// @notice Authorizes a strategy implementation (logic) contract.
@@ -187,7 +194,7 @@ contract LlamaFactory {
     view
     returns (string memory)
   {
-    (string memory color, string memory logo) = LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY.getMetadata(llamaExecutor);
+    (string memory color, string memory logo) = LLAMA_POLICY_METADATA_PARAM_REGISTRY.getMetadata(llamaExecutor);
     return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
@@ -251,5 +258,11 @@ contract LlamaFactory {
   function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
+  }
+
+  /// @dev Sets the color and logo of a Llama Instance.
+  function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);
   }
 }

@@ -85,7 +85,7 @@ contract DeployLlama is Script {
     );
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
-    policyMetadataParamRegistry = factory.LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY();
+    policyMetadataParamRegistry = factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY();
     DeployUtils.print(
       string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyMetadataParamRegistry)))
     );
