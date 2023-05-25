@@ -17,7 +17,7 @@ import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
@@ -367,7 +367,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toPeerReview(ILlamaStrategy strategy) internal pure returns (PeerReview converted) {
+  function toPeerReview(ILlamaStrategy strategy) internal pure returns (AbsolutePeerReview converted) {
     assembly {
       converted := strategy
     }
@@ -435,14 +435,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(peerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }
