@@ -62,8 +62,6 @@ contract PeerReview is AbsoluteStrategyBase {
 
     uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
-
-    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
     unchecked {
       // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
