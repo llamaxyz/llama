@@ -5,11 +5,11 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -74,6 +74,9 @@ contract LlamaCore is Initializable {
   /// @dev Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
 
+  /// @dev Accounts can only be created with valid logic contracts.
+  error UnauthorizedAccountLogic();
+
   modifier onlyLlama() {
     if (msg.sender != address(executor)) revert OnlyLlama();
     _;
@@ -111,7 +114,7 @@ contract LlamaCore is Initializable {
     ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
-  event AccountCreated(LlamaAccount indexed account, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
   event ScriptAuthorized(address indexed script, bool authorized);
 
   // =============================================================
@@ -152,9 +155,6 @@ contract LlamaCore is Initializable {
 
   /// @notice The LlamaFactory contract that deployed this llama instance.
   LlamaFactory public factory;
-
-  /// @notice The Llama Account implementation (logic) contract.
-  LlamaAccount public llamaAccountLogic;
 
   /// @notice Name of this llama instance.
   string public name;
@@ -208,7 +208,7 @@ contract LlamaCore is Initializable {
     string memory _name,
     LlamaPolicy _policy,
     ILlamaStrategy _llamaStrategyLogic,
-    LlamaAccount _llamaAccountLogic,
+    ILlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
     string[] calldata initialAccountNames
   ) external initializer returns (bytes32 bootstrapPermissionId) {
@@ -216,10 +216,9 @@ contract LlamaCore is Initializable {
     name = _name;
     executor = new LlamaExecutor();
     policy = _policy;
-    llamaAccountLogic = _llamaAccountLogic;
 
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
-    _deployAccounts(initialAccountNames);
+    _deployAccounts(_llamaAccountLogic, initialAccountNames);
 
     // Now we compute the permission ID used to set role permissions and return it.
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
@@ -460,9 +459,10 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Deploy new accounts.
+  /// @param llamaAccountLogic address of the Llama Account logic contract.
   /// @param accounts List of names of new accounts to be created.
-  function createAccounts(string[] calldata accounts) external onlyLlama {
-    _deployAccounts(accounts);
+  function createAccounts(ILlamaAccount llamaAccountLogic, string[] calldata accounts) external onlyLlama {
+    _deployAccounts(llamaAccountLogic, accounts);
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
@@ -684,13 +684,20 @@ contract LlamaCore is Initializable {
     }
   }
 
-  function _deployAccounts(string[] calldata accounts) internal {
+  /// @dev Deploys accounts.
+  function _deployAccounts(ILlamaAccount llamaAccountLogic, string[] calldata accounts) internal {
+    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
+      // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
+      // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
+      revert UnauthorizedAccountLogic();
+    }
+
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encodePacked(accounts[i])));
-      LlamaAccount account = LlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
+      ILlamaAccount account = ILlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
       account.initialize(accounts[i]);
-      emit AccountCreated(account, accounts[i]);
+      emit AccountCreated(account, llamaAccountLogic, accounts[i]);
     }
   }
 

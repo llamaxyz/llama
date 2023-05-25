@@ -3,11 +3,11 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -51,6 +51,9 @@ contract LlamaFactory {
   /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
   event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
+  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Llama instances.
+  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
+
   /// @dev Emitted when a new Llama Policy Token Metadata is set.
   event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
@@ -70,9 +73,6 @@ contract LlamaFactory {
   /// @notice The Llama Policy implementation (logic) contract.
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama Account implementation (logic) contract.
-  LlamaAccount public immutable LLAMA_ACCOUNT_LOGIC;
-
   /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
   LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
 
@@ -84,6 +84,9 @@ contract LlamaFactory {
 
   /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
+
+  /// @notice Mapping of all authorized Llama Account implementation (logic) contracts.
+  mapping(ILlamaAccount => bool) public authorizedAccountLogics;
 
   /// @notice The Llama Policy Token Metadata contract.
   LlamaPolicyMetadata public llamaPolicyMetadata;
@@ -99,7 +102,7 @@ contract LlamaFactory {
   constructor(
     LlamaCore llamaCoreLogic,
     ILlamaStrategy initialLlamaStrategyLogic,
-    LlamaAccount llamaAccountLogic,
+    ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
@@ -111,14 +114,15 @@ contract LlamaFactory {
   ) {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
-    LLAMA_ACCOUNT_LOGIC = llamaAccountLogic;
 
     _setPolicyTokenMetadata(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
+    _authorizeAccountLogic(initialLlamaAccountLogic);
 
     (ROOT_LLAMA_EXECUTOR, ROOT_LLAMA_CORE) = _deploy(
       name,
       initialLlamaStrategyLogic,
+      initialLlamaAccountLogic,
       initialStrategies,
       initialAccountNames,
       initialRoleDescriptions,
@@ -137,6 +141,7 @@ contract LlamaFactory {
   /// @dev This function can only be called by the root Llama instance.
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The ILlamaStrategy implementation (logic) contract to use for this Llama instance.
+  /// @param accountLogic The ILlamaAccount implementation (logic) contract to use for this Llama instance.
   /// @param initialStrategies The list of initial strategies.
   /// @param initialAccountNames The list of initial accounts.
   /// @param initialRoleDescriptions The list of initial role descriptions.
@@ -149,6 +154,7 @@ contract LlamaFactory {
   function deploy(
     string memory name,
     ILlamaStrategy strategyLogic,
+    ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
@@ -160,6 +166,7 @@ contract LlamaFactory {
     (executor, core) = _deploy(
       name,
       strategyLogic,
+      accountLogic,
       initialStrategies,
       initialAccountNames,
       initialRoleDescriptions,
@@ -175,6 +182,13 @@ contract LlamaFactory {
   /// @param strategyLogic The strategy logic contract to authorize.
   function authorizeStrategyLogic(ILlamaStrategy strategyLogic) external onlyRootLlama {
     _authorizeStrategyLogic(strategyLogic);
+  }
+
+  /// @notice Authorizes an account implementation (logic) contract.
+  /// @dev This function can only be called by the root Llama instance.
+  /// @param accountLogic The account logic contract to authorize.
+  function authorizeAccountLogic(ILlamaAccount accountLogic) external onlyRootLlama {
+    _authorizeAccountLogic(accountLogic);
   }
 
   /// @notice Sets the Llama Policy Token Metadata contract.
@@ -213,6 +227,7 @@ contract LlamaFactory {
   function _deploy(
     string memory name,
     ILlamaStrategy strategyLogic,
+    ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccountNames,
     RoleDescription[] memory initialRoleDescriptions,
@@ -237,7 +252,7 @@ contract LlamaFactory {
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, LLAMA_ACCOUNT_LOGIC, initialStrategies, initialAccountNames);
+      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccountNames);
     llamaExecutor = llamaCore.executor();
 
     policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
@@ -252,6 +267,12 @@ contract LlamaFactory {
   function _authorizeStrategyLogic(ILlamaStrategy strategyLogic) internal {
     authorizedStrategyLogics[strategyLogic] = true;
     emit StrategyLogicAuthorized(strategyLogic);
+  }
+
+  /// @dev Authorizes an account implementation (logic) contract.
+  function _authorizeAccountLogic(ILlamaAccount accountLogic) internal {
+    authorizedAccountLogics[accountLogic] = true;
+    emit AccountLogicAuthorized(accountLogic);
   }
 
   /// @dev Sets the Llama Policy Token Metadata contract.

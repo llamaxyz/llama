@@ -21,4 +21,9 @@ interface ILlamaAccount is IERC721Receiver, IERC1155Receiver {
   /// @notice Initializes a new clone of the account.
   /// @param name The name of the `LlamaAccount` clone.
   function initialize(string memory name) external;
+
+  // -------- Native Token --------
+
+  /// @notice Function for Vertex Account to receive native token
+  receive() external payable;
 }

@@ -18,6 +18,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {PeerReview} from "src/strategies/PeerReview.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
@@ -29,7 +30,6 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
