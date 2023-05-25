@@ -21,7 +21,6 @@ import {
   AbsoluteStrategyConfig,
   Action,
   ActionInfo,
-  RelativeStrategyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -144,9 +143,9 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
     internal
     pure
-    returns (RelativeStrategyConfig memory)
+    returns (RelativeQuorum.Config memory)
   {
-    return RelativeStrategyConfig({
+    return RelativeQuorum.Config({
       approvalPeriod: toUint64(salt % 1000 days),
       queuingPeriod: toUint64(salt % 1001 days),
       expirationPeriod: toUint64(salt % 1002 days),
@@ -1736,7 +1735,7 @@ contract CreateStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](3);
 
     vm.prank(caller);
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
@@ -1745,7 +1744,7 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
     public
   {
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     vm.assume(salt1 != salt2);
     vm.assume(salt1 != salt3);
@@ -1786,10 +1785,10 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
     address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
 
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](3);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
 
-    newStrategies[0] = RelativeStrategyConfig({
+    newStrategies[0] = RelativeQuorum.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1802,7 +1801,7 @@ contract CreateStrategies is LlamaCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    newStrategies[1] = RelativeStrategyConfig({
+    newStrategies[1] = RelativeQuorum.Config({
       approvalPeriod: 5 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1815,7 +1814,7 @@ contract CreateStrategies is LlamaCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    newStrategies[2] = RelativeStrategyConfig({
+    newStrategies[2] = RelativeQuorum.Config({
       approvalPeriod: 6 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1851,9 +1850,9 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](1);
 
-    newStrategies[0] = RelativeStrategyConfig({
+    newStrategies[0] = RelativeQuorum.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1873,9 +1872,9 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](2);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](2);
 
-    RelativeStrategyConfig memory duplicateStrategy = RelativeStrategyConfig({
+    RelativeQuorum.Config memory duplicateStrategy = RelativeQuorum.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1898,10 +1897,10 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
-    RelativeStrategyConfig[] memory newStrategies1 = new RelativeStrategyConfig[](1);
-    RelativeStrategyConfig[] memory newStrategies2 = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory newStrategies1 = new RelativeQuorum.Config[](1);
+    RelativeQuorum.Config[] memory newStrategies2 = new RelativeQuorum.Config[](1);
 
-    RelativeStrategyConfig memory duplicateStrategy = RelativeStrategyConfig({
+    RelativeQuorum.Config memory duplicateStrategy = RelativeQuorum.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1927,9 +1926,9 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CanBeCalledByASuccessfulAction() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    RelativeStrategyConfig[] memory newStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](1);
 
-    newStrategies[0] = RelativeStrategyConfig({
+    newStrategies[0] = RelativeQuorum.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,

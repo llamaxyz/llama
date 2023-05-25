@@ -15,14 +15,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {
-  Action,
-  ActionInfo,
-  RelativeStrategyConfig,
-  PermissionData,
-  RoleHolderData,
-  RolePermissionData
-} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";

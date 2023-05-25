@@ -19,12 +19,11 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 contract AbsoluteQuorum is AbsoluteStrategyBase {
-
   // ==========================================
   // ======== Interface Implementation ========
   // ==========================================
 
-    /// @inheritdoc ILlamaStrategy
+  /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata /* actionInfo */ ) external view override {
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
     uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);

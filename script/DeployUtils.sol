@@ -6,8 +6,9 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {AbsoluteStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 library DeployUtils {
   using stdJson for string;
@@ -65,7 +66,7 @@ library DeployUtils {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
     RelativeQuorumJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeQuorumJsonInputs[]));
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
       RelativeQuorumJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
@@ -122,7 +123,7 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategy(RelativeStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(RelativeQuorum.Config memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
@@ -130,7 +131,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
+  function encodeStrategyConfigs(RelativeQuorum.Config[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)

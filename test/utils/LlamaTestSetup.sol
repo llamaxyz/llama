@@ -23,7 +23,6 @@ import {
   Action,
   ActionInfo,
   AbsoluteStrategyConfig,
-  RelativeStrategyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -341,7 +340,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
+  function toILlamaStrategy(RelativeQuorum.Config[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -351,7 +350,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig memory strategy)
+  function toILlamaStrategy(RelativeQuorum.Config memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)

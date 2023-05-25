@@ -11,7 +11,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo, AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
+import {ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
@@ -68,7 +68,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       mpPolicy.setRolePermission(_role, _permission, true);
     }
 
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -81,7 +81,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -147,7 +147,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
-    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
+    RelativeQuorum.Config memory testStrategyData = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -162,7 +162,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     testStrategy = lens.computeLlamaStrategyAddress(
       address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
-    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory testStrategies = new RelativeQuorum.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
@@ -175,7 +175,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     uint8[] memory forceDisapproveRoles = new uint8[](1);
     forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
 
-    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
+    RelativeQuorum.Config memory testStrategyData = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -194,7 +194,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     );
 
     // Create and authorize the strategy.
-    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory testStrategies = new RelativeQuorum.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
@@ -634,7 +634,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleRelativeQuorum() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -647,7 +647,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -659,7 +659,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleRelativeQuorum() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -672,7 +672,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
