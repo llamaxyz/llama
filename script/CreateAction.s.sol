@@ -45,6 +45,9 @@ contract CreateAction is Script {
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
     LlamaCore rootCore = factory.ROOT_LLAMA_CORE();
+    string memory llamaName = jsonInput.readString(".newLlamaName");
+    string memory description =
+      string.concat("# New Llama Deployment\n\n", "Deploy a Llama instance for ", llamaName, ".");
 
     vm.broadcast(deployer);
     deployActionId = rootCore.createAction(
@@ -53,7 +56,7 @@ contract CreateAction is Script {
       jsonInput.readAddress(".factory"),
       0, // No ETH needs to be sent to deploy a new core instance.
       createActionCallData,
-      ""
+      description
     );
 
     DeployUtils.print(string.concat("Created action ID", vm.toString(deployActionId)));
