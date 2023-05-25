@@ -125,7 +125,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- At Strategy Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function initialize(bytes memory config) external initializer {
+  function initialize(bytes memory config) external virtual initializer {
     PeerReview.Config memory strategyConfig = abi.decode(config, (PeerReview.Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
@@ -179,7 +179,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view virtual;
 
   /// @inheritdoc ILlamaStrategy
-  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view virtual returns (uint128) {
     if (role != approvalRole && !forceApprovalRole[role]) return 0;
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
@@ -194,6 +194,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
+    virtual
     returns (uint128)
   {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
@@ -204,14 +205,14 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Queueing --------
 
   /// @inheritdoc ILlamaStrategy
-  function minExecutionTime(ActionInfo calldata) external view returns (uint64) {
+  function minExecutionTime(ActionInfo calldata) external view virtual returns (uint64) {
     return LlamaUtils.toUint64(block.timestamp + queuingPeriod);
   }
 
   // -------- When Canceling --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view {
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view virtual {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled,
     //      Expired, Failed.
@@ -232,25 +233,25 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActive(ActionInfo calldata actionInfo) external view virtual returns (bool) {
     return
       block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionApproved(ActionInfo calldata actionInfo) public view returns (bool) {
+  function isActionApproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.totalApprovals >= minApprovals;
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionDisapproved(ActionInfo calldata actionInfo) public view returns (bool) {
+  function isActionDisapproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.totalDisapprovals >= minDisapprovals;
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionExpired(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActionExpired(ActionInfo calldata actionInfo) external view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
@@ -260,7 +261,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ========================================
 
   /// @notice Returns the timestamp at which the approval period ends.
-  function approvalEndTime(ActionInfo calldata actionInfo) public view returns (uint256) {
+  function approvalEndTime(ActionInfo calldata actionInfo) public view virtual returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;
   }
