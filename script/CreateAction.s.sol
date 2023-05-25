@@ -37,7 +37,9 @@ contract CreateAction is Script {
         jsonInput.readStringArray(".newAccountNames"),
         DeployUtils.readRoleDescriptions(jsonInput),
         DeployUtils.readRoleHolders(jsonInput),
-        DeployUtils.readRolePermissions(jsonInput)
+        DeployUtils.readRolePermissions(jsonInput),
+        jsonInput.readString(".newLlamaColor"),
+        jsonInput.readString(".newLlamaLogo")
       )
     );
 
