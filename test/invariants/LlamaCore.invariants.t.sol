@@ -232,7 +232,7 @@ contract LlamaCoreHandler is BaseHandler {
     }
 
     vm.prank(approver);
-    LLAMA_CORE.castApproval(actionInfos[actionId], uint8(Roles.Approver));
+    LLAMA_CORE.castApproval(uint8(Roles.Approver), actionInfos[actionId]);
     recordMetric("llamaCore_castApproval_approved");
   }
 
@@ -254,7 +254,7 @@ contract LlamaCoreHandler is BaseHandler {
     }
 
     vm.prank(disapprover);
-    LLAMA_CORE.castDisapproval(actionInfos[actionId], uint8(Roles.Disapprover));
+    LLAMA_CORE.castDisapproval(uint8(Roles.Disapprover), actionInfos[actionId]);
     recordMetric("llamaCore_castDisapproval_disapproved");
   }
 
@@ -350,7 +350,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
 
   function approveAction(address policyholder, ActionInfo memory actionInfo) public {
     vm.prank(policyholder);
-    mpCore.castApproval(actionInfo, uint8(Roles.Approver));
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
   }
 
   // ======================================
