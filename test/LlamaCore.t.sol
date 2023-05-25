@@ -82,7 +82,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function _createAction() public returns (ActionInfo memory actionInfo) {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
@@ -205,7 +205,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
 
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
@@ -474,7 +474,7 @@ contract CreateAction is LlamaCoreTest {
       0, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, ""
     );
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
 
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
@@ -519,7 +519,7 @@ contract CreateAction is LlamaCoreTest {
     bytes memory dataTrue = abi.encodeCall(MockProtocol.pause, (true));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     vm.prank(actionCreatorAaron);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, dataTrue);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(_target), _value, dataTrue, "");
   }
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
@@ -530,21 +530,21 @@ contract CreateAction is LlamaCoreTest {
 
     vm.prank(actionCreatorAaron);
     vm.expectRevert("no action creation");
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
   }
 
   function test_RevertIf_StrategyUnauthorized() public {
     ILlamaStrategy unauthorizedStrategy = ILlamaStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data, "");
   }
 
   function test_RevertIf_StrategyIsFromAnotherLlama() public {
     ILlamaStrategy unauthorizedStrategy = rootStrategy1;
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.InvalidStrategy.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data, "");
   }
 
   function testFuzz_RevertIf_PolicyholderNotMinted(address policyholder) public {
@@ -552,20 +552,20 @@ contract CreateAction is LlamaCoreTest {
     vm.assume(mpPolicy.balanceOf(policyholder) == 0);
     vm.prank(policyholder);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
   }
 
   function test_RevertIf_NoPermissionForStrategy() public {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(mockProtocol), 0, data, "");
   }
 
   function testFuzz_RevertIf_NoPermissionForTarget(address _incorrectTarget) public {
     vm.assume(_incorrectTarget != address(mockProtocol) && _incorrectTarget != address(mpExecutor));
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, _incorrectTarget, 0, data, "");
   }
 
   function testFuzz_RevertIf_BadPermissionForSelector(bytes4 _badSelector) public {
@@ -573,7 +573,7 @@ contract CreateAction is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
     mpCore.createAction(
-      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeWithSelector(_badSelector)
+      uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, abi.encodeWithSelector(_badSelector), ""
     );
   }
 
@@ -586,14 +586,14 @@ contract CreateAction is LlamaCoreTest {
     vm.stopPrank();
 
     vm.prank(address(actionCreatorAustin));
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
 
     vm.warp(_expirationTimestamp + 1);
     mpPolicy.revokeExpiredRole(uint8(Roles.ActionCreator), actionCreatorAustin);
 
     vm.startPrank(address(actionCreatorAustin));
     vm.expectRevert(LlamaCore.PolicyholderDoesNotHavePermission.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
   }
 
   function testFuzz_CreatesAnActionWithScriptAsTarget(address scriptAddress) public {
@@ -610,7 +610,7 @@ contract CreateAction is LlamaCoreTest {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
 
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(scriptAddress), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(scriptAddress), 0, data, "");
     Action memory action = mpCore.getAction(actionId);
 
     assertEq(action.isScript, true);
@@ -625,7 +625,8 @@ contract CreateAction is LlamaCoreTest {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
 
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(nonScriptAddress), 0, data);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(nonScriptAddress), 0, data, "");
     Action memory action = mpCore.getAction(actionId);
 
     assertEq(action.isScript, false);
@@ -634,16 +635,11 @@ contract CreateAction is LlamaCoreTest {
   function test_RevertIf_ActionTargetIsExecutor() public {
     vm.prank(actionCreatorAaron);
     vm.expectRevert(LlamaCore.CannotSetExecutorAsTarget.selector);
-    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpExecutor), 0, abi.encodeWithSelector(""));
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpExecutor), 0, abi.encodeWithSelector(""), "");
   }
 }
 
 contract CreateActionBySig is LlamaCoreTest {
-  // We need to manually calculate the function selector because we are using function overloading with the
-  // createActionBySig function:
-  // `bytes4(keccak256(createActionBySig(address,uint8,address,address,uint256,bytes,uint8,bytes32,bytes32)))`
-  bytes4 createActionBySigWithoutDescriptionSelector = 0xa1e81f3e;
-
   function createOffchainSignature(uint256 privateKey) internal view returns (uint8 v, bytes32 r, bytes32 s) {
     (v, r, s) = createOffchainSignatureWithDescription(privateKey, "");
   }
@@ -675,6 +671,7 @@ contract CreateActionBySig is LlamaCoreTest {
       address(mockProtocol),
       0,
       abi.encodeCall(MockProtocol.pause, (true)),
+      "",
       v,
       r,
       s
@@ -750,9 +747,9 @@ contract CreateActionBySig is LlamaCoreTest {
 
   function test_CheckNonceIncrements() public {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
-    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 0);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 0);
     createActionBySig(v, r, s);
-    assertEq(mpCore.nonces(actionCreatorAaron, createActionBySigWithoutDescriptionSelector), 1);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.createActionBySig.selector), 1);
   }
 
   function test_OperationCannotBeReplayed() public {
@@ -785,7 +782,7 @@ contract CreateActionBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionCreatorAaronPrivateKey);
 
     vm.prank(actionCreatorAaron);
-    mpCore.incrementNonce(createActionBySigWithoutDescriptionSelector);
+    mpCore.incrementNonce(LlamaCore.createActionBySig.selector);
 
     // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
     // since nonce has increased.
@@ -950,7 +947,7 @@ contract ExecuteAction is LlamaCoreTest {
   function _executeScriptAuthorizationActionFlow(bool authorize) internal {
     bytes memory data = abi.encodeCall(mpCore.authorizeScript, (address(mockScript), authorize));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data, "");
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data);
     vm.warp(block.timestamp + 1);
@@ -1000,7 +997,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data, "");
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
 
@@ -1079,7 +1076,7 @@ contract ExecuteAction is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
     uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data);
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data, "");
     ActionInfo memory _actionInfo = ActionInfo(
       actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
     );
@@ -1107,7 +1104,7 @@ contract ExecuteAction is LlamaCoreTest {
   function test_RevertIf_FailedActionExecution() public {
     bytes memory data = abi.encodeCall(MockProtocol.fail, ());
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
 
@@ -1144,7 +1141,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeCall(LlamaCore.executeAction, (actionInfo));
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
 
@@ -1173,7 +1170,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data, "");
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
 
@@ -1209,7 +1206,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data, "");
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), 0, data);
 
@@ -1238,7 +1235,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data, "");
 
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
@@ -1265,7 +1262,7 @@ contract ExecuteAction is LlamaCoreTest {
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data, "");
 
     ActionInfo memory _actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockScript), 0, data);
@@ -1345,7 +1342,7 @@ contract CastApproval is LlamaCoreTest {
 
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
@@ -1555,7 +1552,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
     vm.warp(block.timestamp + 1);
@@ -1953,7 +1950,7 @@ contract CreateStrategies is LlamaCoreTest {
       LlamaCore.createStrategies, (relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
 
@@ -2053,7 +2050,7 @@ contract CreateAccounts is LlamaCoreTest {
 
     bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (newAccounts));
     vm.prank(actionCreatorAustin);
-    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data);
 
@@ -2199,7 +2196,7 @@ contract GetActionState is LlamaCoreTest {
 
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
 
     ActionInfo memory actionInfo = ActionInfo(
@@ -2238,7 +2235,7 @@ contract GetActionState is LlamaCoreTest {
 
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole2), mpStrategy2, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
     vm.warp(block.timestamp + 1);
 
