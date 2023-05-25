@@ -13,7 +13,7 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {AbsoluteStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 

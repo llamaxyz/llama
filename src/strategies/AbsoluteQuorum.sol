@@ -9,7 +9,8 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo} from "src/lib/Structs.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -19,6 +20,24 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 contract AbsoluteQuorum is AbsoluteStrategyBase {
+  // ==========================================
+  // ================ Structs =================
+  // ==========================================
+
+  struct Config {
+    uint64 approvalPeriod; // The length of time of the approval period.
+    uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
+      // enabled.
+    uint64 expirationPeriod; // The length of time an action can be executed before it expires.
+    uint128 minApprovals; // Minimum number of total approval quantity.
+    uint128 minDisapprovals; // Minimum number of total disapproval quantity.
+    bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
+    uint8 approvalRole; // Anyone with this role can cast approval of an action.
+    uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
+    uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
+    uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
+  }
+
   // ==========================================
   // ======== Interface Implementation ========
   // ==========================================

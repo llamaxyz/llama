@@ -17,20 +17,14 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {
-  AbsoluteStrategyConfig,
-  Action,
-  ActionInfo,
-  PermissionData,
-  RoleHolderData,
-  RolePermissionData
-} from "src/lib/Structs.sol";
-import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
@@ -162,7 +156,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
     ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedPeerReview();
 
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -175,7 +169,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));

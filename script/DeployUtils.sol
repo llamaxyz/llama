@@ -6,8 +6,9 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
-import {AbsoluteStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 library DeployUtils {
@@ -127,7 +128,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(AbsoluteStrategyConfig memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(AbsolutePeerReview.Config memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
@@ -142,7 +143,7 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategyConfigs(AbsoluteStrategyConfig[] memory strategies)
+  function encodeStrategyConfigs(AbsolutePeerReview.Config[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)

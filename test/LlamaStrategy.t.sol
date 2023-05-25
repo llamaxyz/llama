@@ -11,7 +11,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
+import {ActionInfo} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
@@ -121,7 +121,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       vm.stopPrank();
     }
 
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -134,7 +134,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -548,7 +548,7 @@ contract Initialize is LlamaStrategyTest {
     vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -561,7 +561,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -577,7 +577,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceApprovalRolePeerReview() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -590,7 +590,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
@@ -605,7 +605,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRolePeerReview() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -618,7 +618,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
