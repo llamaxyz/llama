@@ -18,7 +18,7 @@
     "MadeUpRole"
   ],
   "strategyLogic": "0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496",
-  "accountLogic": "0xA8452Ec99ce0C64f20701dB7dD3abDb607c00496",
+  "accountLogic": "0xDB8cFf278adCCF9E9b5da745B44E754fC4EE3C76",
   "initialStrategies": [
     {
       "approvalPeriod": 172800,
