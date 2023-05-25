@@ -27,11 +27,12 @@ contract CreateAction is Script {
     // ======== END SAFETY CHECK ========
 
     string memory jsonInput = DeployUtils.readScriptInput(filename);
+    string memory llamaInstanceName = jsonInput.readString(".newLlamaName");
 
     createActionCallData = abi.encodeCall(
       LlamaFactory.deploy,
       (
-        jsonInput.readString(".newLlamaName"),
+        llamaInstanceName,
         ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
         DeployUtils.readRelativeStrategies(jsonInput),
         jsonInput.readStringArray(".newAccountNames"),
@@ -45,9 +46,8 @@ contract CreateAction is Script {
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
     LlamaCore rootCore = factory.ROOT_LLAMA_CORE();
-    string memory llamaName = jsonInput.readString(".newLlamaName");
     string memory description =
-      string.concat("# New Llama Deployment\n\n", "Deploy a Llama instance for ", llamaName, ".");
+      string.concat("# New Llama Deployment\n\n", "Deploy a Llama instance for ", llamaInstanceName, ".");
 
     vm.broadcast(deployer);
     deployActionId = rootCore.createAction(
