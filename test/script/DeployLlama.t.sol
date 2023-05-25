@@ -57,7 +57,7 @@ contract Run is DeployLlamaTest {
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsAuthorized = new LlamaAccount[](2);
     uint8 accountsCount;
-    bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,string)");
+    bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,address,string)");
 
     Vm.Log memory _event;
     for (uint256 i = 0; i < emittedEvents.length; i++) {
