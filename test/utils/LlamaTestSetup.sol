@@ -16,8 +16,8 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-import {RelativeStrategy} from "src/strategies/RelativeStrategy.sol";
-import {AbsoluteStrategy} from "src/strategies/AbsoluteStrategy.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {PeerReview} from "src/strategies/PeerReview.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
@@ -245,13 +245,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeStrategyLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
@@ -289,7 +289,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(relativeStrategyLogic), "relativeStrategyLogic not set");
+    require(address(0) != address(relativeQuorumLogic), "relativeQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -361,13 +361,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toRelativeStrategy(ILlamaStrategy strategy) internal pure returns (RelativeStrategy converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (RelativeQuorum converted) {
     assembly {
       converted := strategy
     }
   }
 
-  function toAbsoluteStrategy(ILlamaStrategy strategy) internal pure returns (AbsoluteStrategy converted) {
+  function toPeerReview(ILlamaStrategy strategy) internal pure returns (PeerReview converted) {
     assembly {
       converted := strategy
     }
@@ -405,7 +405,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return uint16(n);
   }
 
-  function deployAbsoluteStrategy(
+  function deployPeerReview(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
@@ -435,14 +435,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(absoluteStrategyLogic);
+    factory.authorizeStrategyLogic(peerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(absoluteStrategyLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(absoluteStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(peerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }

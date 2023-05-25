@@ -18,7 +18,7 @@ library DeployUtils {
   uint8 public constant BOOTSTRAP_ROLE = 1;
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  struct RelativeStrategyJsonInputs {
+  struct RelativeQuorumJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 approvalPeriod;
     uint8 approvalRole;
@@ -63,11 +63,11 @@ library DeployUtils {
 
   function readRelativeStrategies(string memory jsonInput) internal pure returns (bytes[] memory) {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    RelativeStrategyJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeStrategyJsonInputs[]));
+    RelativeQuorumJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeQuorumJsonInputs[]));
 
     RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
-      RelativeStrategyJsonInputs memory rawStrategy = rawStrategyConfigs[i];
+      RelativeQuorumJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
       strategyConfigs[i].queuingPeriod = rawStrategy.queuingPeriod;
       strategyConfigs[i].expirationPeriod = rawStrategy.expirationPeriod;
@@ -164,10 +164,10 @@ library DeployUtils {
 
     // Get the bootstrap strategy, which is the first strategy in the list.
     bytes memory encodedStrategyConfigs = jsonInput.parseRaw(".initialStrategies");
-    RelativeStrategyJsonInputs[] memory relativeStrategyConfigs =
-      abi.decode(encodedStrategyConfigs, (RelativeStrategyJsonInputs[]));
+    RelativeQuorumJsonInputs[] memory relativeStrategyConfigs =
+      abi.decode(encodedStrategyConfigs, (RelativeQuorumJsonInputs[]));
 
-    RelativeStrategyJsonInputs memory bootstrapStrategy = relativeStrategyConfigs[0];
+    RelativeQuorumJsonInputs memory bootstrapStrategy = relativeStrategyConfigs[0];
 
     // -------- Validate data --------
     // For a bootstrap strategy to passable, we need at least one of the following to be true:
@@ -190,7 +190,7 @@ library DeployUtils {
     if (bootstrapStrategy.approvalRole == BOOTSTRAP_ROLE) {
       // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
       // minimum number of role holders to pass a vote. The calculation here MUST match the one
-      // in the RelativeStrategy's `_getMinimumAmountNeeded` method. This check should never fail
+      // in the RelativeQuorum's `_getMinimumAmountNeeded` method. This check should never fail
       // for relative strategies, but it's left in as a reminder that it needs to be checked for
       // absolute strategies.
       uint256 minPct = bootstrapStrategy.minApprovalPct;
