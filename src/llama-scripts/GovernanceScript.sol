@@ -17,7 +17,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///         The aggregate method is for ignoring all the functions in the contract and crafting your own payload. This
 ///         method only allows LlamaCore and LlamaExecutor as targets
 ///         The Batch Policy Functions section is public methods that (1) can be called directly as part of an action,
-/// and (2) are also used by Common Aggregate Calls methods
+///         and (2) are also used by Common Aggregate Calls methods
 ///         The aggregate method is for ignoring all the functions in the contract and crafting your own payload
 contract GovernanceScript is BaseScript {
   // =============================

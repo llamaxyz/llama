@@ -10,7 +10,7 @@ import {BaseScript} from "src/llama-scripts/BaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {SingleUseScript} from "src/llama-scripts/SingleUseScript.sol";
 
-contract UnauthorizeAfterRun is LlamaTestSetup {
+contract SingleUseScriptTest is LlamaTestSetup {
   event SuccessfulCall();
 
   SingleUseScript singleUseScript;
@@ -48,7 +48,9 @@ contract UnauthorizeAfterRun is LlamaTestSetup {
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 1 weeks);
   }
+}
 
+contract UnauthorizeAfterRun is SingleUseScriptTest {
   function test_CanOnlyBeCalledOnce() public {
     // First call should succeed, and any subsequent calls should fail (unless the script is reauthorized)
     vm.prank(address(mpExecutor));
