@@ -51,7 +51,7 @@ contract GovernanceScript is BaseScript {
   }
 
   // =======================================
-  // ======== Arbitrary Aggregation =========
+  // ======== Arbitrary Aggregation ========
   // =======================================
   /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the
   /// context
