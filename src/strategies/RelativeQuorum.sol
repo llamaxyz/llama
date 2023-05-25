@@ -8,52 +8,43 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, AbsoluteStrategyConfig} from "src/lib/Structs.sol";
+import {Action, ActionInfo, RelativeStrategyConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Absolute Llama Strategy
+/// @title Relative Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
-///   - Approval/disapproval thresholds are specified as absolute numbers.
-///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
-///     regardless of the roles they hold.
-contract AbsoluteStrategy is ILlamaStrategy, Initializable {
+///   - Approval/disapproval thresholds are specified as percentages of total supply.
+///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
+contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @dev The action creator cannot approve or disapprove an action.
-  error ActionCreatorCannotCast();
-
-  /// @dev The action cannot be canceled if it's already in a terminal state.
+  /// @notice The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
   error CannotCancelInState(ActionState currentState);
 
-  /// @dev The strategy has disabled disapprovals.
+  /// @notice The strategy has disabled disapprovals.
   error DisapprovalDisabled();
 
-  /// @dev The action cannot be created because approval quorum is not possible.
-  error InsufficientApprovalQuantity();
+  /// @notice The action cannot be created because the minimum approval percentage cannot be greater than 100%.
+  /// @param minApprovalPct The provided `minApprovalPct`.
+  error InvalidMinApprovalPct(uint256 minApprovalPct);
 
-  /// @dev The action cannot be created because disapproval quorum is not possible.
-  error InsufficientDisapprovalQuantity();
-
-  /// @dev The action cannot be created because the quantity of approvals required are greater than the role supply.
-  error InvalidMinApprovals(uint256 minApprovals);
-
-  /// @dev The role is not eligible to participate in this strategy in the specified way.
+  /// @notice The role is not eligible to participate in this strategy in the specified way.
   /// @param role The role being used.
   error InvalidRole(uint8 role);
 
-  /// @dev Only the action creator can cancel an action.
+  /// @notice Only the action creator can cancel an action.
   error OnlyActionCreator();
 
-  /// @dev The action cannot be created if the approval or disapproval supply is 0.
+  /// @notice The action cannot be created if the approval or disapproval supply is 0.
   /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
 
-  /// @dev The provided `role` is not initialized by the `LlamaPolicy`.
+  /// @notice The provided `role` is not initialized by the `LlamaPolicy`.
   /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
@@ -79,40 +70,48 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   // -------- Strategy Configuration --------
 
-  /// @notice Equivalent to 100%, but in basis points.
+  /// @dev Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice If false, action be queued before approvalEndTime.
+  /// @dev If false, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
-  /// @notice Length of approval period in seconds.
+  /// @dev Length of approval period in seconds.
   uint64 public approvalPeriod;
 
-  /// @notice Minimum time, in seconds, between queueing and execution of action.
+  /// @dev Minimum time, in seconds, between queueing and execution of action.
   uint64 public queuingPeriod;
 
-  /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
+  /// @dev Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint64 public expirationPeriod;
 
-  /// @notice Minimum total quantity of approvals for the action to be queued.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minApprovals;
+  /// @dev Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
+  /// action to be queued. In bps, where 10,000 == 100%.
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minApprovalPct;
 
-  /// @notice Minimum total quantity of disapprovals for the action to be canceled.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minDisapprovals;
+  /// @dev Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
+  /// action for it to be canceled. In bps, 10,000 == 100%.
+  /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
+  uint16 public minDisapprovalPct;
 
-  /// @notice The role that can approve an action.
+  /// @dev The role that can approve an action.
   uint8 public approvalRole;
 
-  /// @notice The role that can disapprove an action.
+  /// @dev The role that can disapprove an action.
   uint8 public disapprovalRole;
 
-  /// @notice Mapping of roles that can force an action to be approved.
+  /// @dev Mapping of roles that can force an action to be approved.
   mapping(uint8 => bool) public forceApprovalRole;
 
-  /// @notice Mapping of roles that can force an action to be disapproved.
+  /// @dev Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
+
+  /// @dev Mapping of action ID to the supply of the approval role at the time the action was created.
+  mapping(uint256 => uint256) public actionApprovalSupply;
+
+  /// @dev Mapping of action ID to the supply of the disapproval role at the time the action was created.
+  mapping(uint256 => uint256) public actionDisapprovalSupply;
 
   // =============================
   // ======== Constructor ========
@@ -130,7 +129,7 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    AbsoluteStrategyConfig memory strategyConfig = abi.decode(config, (AbsoluteStrategyConfig));
+    RelativeStrategyConfig memory strategyConfig = abi.decode(config, (RelativeStrategyConfig));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
@@ -138,12 +137,9 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) {
-      revert InvalidMinApprovals(strategyConfig.minApprovals);
-    }
-
-    minApprovals = strategyConfig.minApprovals;
-    minDisapprovals = strategyConfig.minDisapprovals;
+    if (strategyConfig.minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(minApprovalPct);
+    minApprovalPct = strategyConfig.minApprovalPct;
+    minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
     uint8 numRoles = policy.numRoles();
 
@@ -175,36 +171,23 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external view {
+  function validateActionCreation(ActionInfo calldata actionInfo) external {
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
+    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
-    // If the action creator has the approval or disapproval role, reduce the total supply by 1.
-    unchecked {
-      // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
-      // held by the action creator. Therefore we can reduce the total supply by the quantity held by
-      // the action creator without overflow, since a policyholder can never have a quantity greater than
-      // the total supply.
-      uint256 actionCreatorApprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, approvalRole);
-      if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
-
-      uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
-      if (
-        minDisapprovals != type(uint128).max
-          && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
-      ) revert InsufficientDisapprovalQuantity();
-    }
+    // Save off the supplies to use for checking quorum.
+    actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
+    actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
   }
 
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+  function isApprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
@@ -218,9 +201,8 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
-    if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
+  function isDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+    if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 
@@ -274,13 +256,14 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isActionApproved(ActionInfo calldata actionInfo) public view returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
-    return action.totalApprovals >= minApprovals;
+    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionInfo.id], minApprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
   function isActionDisapproved(ActionInfo calldata actionInfo) public view returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
-    return action.totalDisapprovals >= minDisapprovals;
+    return
+      action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -302,6 +285,15 @@ contract AbsoluteStrategy is ILlamaStrategy, Initializable {
   // ================================
   // ======== Internal Logic ========
   // ================================
+
+  /// @dev Determine the minimum quantity needed for an action to reach quorum.
+  /// @param supply Total number of policyholders eligible for participation.
+  /// @param minPct Minimum percentage needed to reach quorum.
+  /// @return The total quantity needed to reach quorum.
+  function _getMinimumAmountNeeded(uint256 supply, uint256 minPct) internal pure returns (uint256) {
+    // Rounding Up
+    return FixedPointMathLib.mulDivUp(supply, minPct, ONE_HUNDRED_IN_BPS);
+  }
 
   /// @dev Reverts if the given `role` is greater than `numRoles`.
   function _assertValidRole(uint8 role, uint8 numRoles) internal pure {

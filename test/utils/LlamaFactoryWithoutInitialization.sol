@@ -73,12 +73,12 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaCore llama,
     LlamaPolicy policy,
     string memory name,
-    ILlamaStrategy relativeStrategyLogic,
+    ILlamaStrategy relativeQuorumLogic,
     LlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     string[] memory initialAccountNames
   ) external returns (LlamaExecutor llamaExecutor) {
-    llama.initialize(name, policy, relativeStrategyLogic, accountLogic, initialStrategies, initialAccountNames);
+    llama.initialize(name, policy, relativeQuorumLogic, accountLogic, initialStrategies, initialAccountNames);
     llamaExecutor = llama.executor();
   }
 }
