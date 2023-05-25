@@ -119,7 +119,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant EXECUTE_ACTION_SELECTOR = LlamaCore.executeAction.selector;
   bytes4 public constant AUTHORIZE_SCRIPT_SELECTOR = LlamaCore.authorizeScript.selector;
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x0f47de5a; // createStrategies(address,bytes[])
-  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
+  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x53af82ca; // createAccounts(address,string[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
 
   // Permission IDs for those selectors.
