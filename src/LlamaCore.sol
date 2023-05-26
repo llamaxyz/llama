@@ -236,21 +236,6 @@ contract LlamaCore is Initializable {
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
   /// @param data Data to be called on the `target` when the action is executed.
-  /// @return actionId actionId of the newly created action.
-  function createAction(uint8 role, ILlamaStrategy strategy, address target, uint256 value, bytes calldata data)
-    external
-    returns (uint256 actionId)
-  {
-    actionId = _createAction(msg.sender, role, strategy, target, value, data, "");
-  }
-
-  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
-  /// {target, selector, strategy}.
-  /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
-  /// @param target The contract called when the action is executed.
-  /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
   /// @param description A human readable description of the action and the changes it will enact.
   /// @return actionId actionId of the newly created action.
   function createAction(
@@ -262,32 +247,6 @@ contract LlamaCore is Initializable {
     string memory description
   ) external returns (uint256 actionId) {
     actionId = _createAction(msg.sender, role, strategy, target, value, data, description);
-  }
-
-  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
-  /// the provided {target, selector, strategy}.
-  /// @param policyholder The policyholder that signed the message.
-  /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
-  /// @param target The contract called when the action is executed.
-  /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
-  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
-  /// @param r ECDSA signature component: x-coordinate of `R`
-  /// @param s ECDSA signature component: `s` value of the signature
-  /// @return actionId actionId of the newly created action.
-  function createActionBySig(
-    address policyholder,
-    uint8 role,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external returns (uint256) {
-    return _createActionBySig(policyholder, role, strategy, target, value, data, "", v, r, s);
   }
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
@@ -315,7 +274,10 @@ contract LlamaCore is Initializable {
     bytes32 r,
     bytes32 s
   ) external returns (uint256 actionId) {
-    return _createActionBySig(policyholder, role, strategy, target, value, data, description, v, r, s);
+    bytes32 digest = _getCreateActionTypedDataHash(policyholder, role, strategy, target, value, data, description);
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
+    actionId = _createAction(signer, role, strategy, target, value, data, description);
   }
 
   /// @notice Queue an action by actionId if it's in Approved state.
@@ -585,24 +547,6 @@ contract LlamaCore is Initializable {
     actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
-  }
-
-  function _createActionBySig(
-    address policyholder,
-    uint8 role,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data,
-    string memory description,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) internal returns (uint256 actionId) {
-    bytes32 digest = _getCreateActionTypedDataHash(policyholder, role, strategy, target, value, data, description);
-    address signer = ecrecover(digest, v, r, s);
-    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
-    actionId = _createAction(signer, role, strategy, target, value, data, description);
   }
 
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
