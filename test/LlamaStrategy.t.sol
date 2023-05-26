@@ -162,6 +162,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
+      AbsoluteQuorum absoluteQuorumLogic = new AbsoluteQuorum();
     {
       vm.prank(address(rootExecutor));
       factory.authorizeStrategyLogic(absoluteQuorumLogic);
