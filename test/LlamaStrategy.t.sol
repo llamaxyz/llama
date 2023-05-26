@@ -19,6 +19,8 @@ import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
+import {PeerReview} from "src/strategies/PeerReview.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 contract LlamaStrategyTest is LlamaTestSetup {
   event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
@@ -189,7 +191,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-// left off here
+    // left off here
     mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
@@ -263,7 +265,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
 
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
@@ -752,7 +754,9 @@ contract IsActionApproved is LlamaStrategyTest {
     assertEq(_isActionApproved, true);
   }
 
-  function testFuzz_AbsolutePeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+  function testFuzz_AbsolutePeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
@@ -799,7 +803,9 @@ contract IsActionApproved is LlamaStrategyTest {
     assertEq(_isActionApproved, false);
   }
 
-  function testFuzz_AbsolutePeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+  function testFuzz_AbsolutePeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
     uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
@@ -1273,9 +1279,10 @@ contract ValidateActionCreation is LlamaStrategyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
   }
 
-  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughApprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders)
-    external
-  {
+  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughApprovalQuantity(
+    uint256 _roleQuantity,
+    uint256 _otherRoleHolders
+  ) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
     ILlamaStrategy testStrategy =
@@ -1283,22 +1290,24 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     vm.expectRevert(AbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
   }
 
-  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughDisapprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders)
-    external
-  {
+  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughDisapprovalQuantity(
+    uint256 _roleQuantity,
+    uint256 _otherRoleHolders
+  ) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
 
-    ILlamaStrategy testStrategy =
-      createAbsolutePeerReviewWithDisproportionateQuantity(false, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+    ILlamaStrategy testStrategy = createAbsolutePeerReviewWithDisproportionateQuantity(
+      false, toUint128(threshold), _roleQuantity, _otherRoleHolders
+    );
 
     vm.expectRevert(AbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
   }
 
@@ -1307,7 +1316,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
       createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
 
     uint256 actionId = mpCore.createAction(
-      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true))
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
     ActionInfo memory actionInfo = ActionInfo(
       actionId,
