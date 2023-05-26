@@ -2032,6 +2032,14 @@ contract CreateAccounts is LlamaCoreTest {
     mpCore.createAccounts(additionalAccountLogic, newAccounts);
   }
 
+  function test_RevertIf_AccountLogicNotAuthorized() public {
+    string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
+
+    vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(ILlamaAccount(randomLogicAddress), newAccounts);
+  }
+
   function test_RevertIf_Reinitialized() public {
     string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
