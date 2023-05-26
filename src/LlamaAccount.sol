@@ -29,6 +29,11 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   using SafeERC20 for IERC20;
   using Address for address payable;
 
+  /// @dev Llama Account initialization configuration.
+  struct AccountConfig {
+    string name;
+  }
+
   /// @dev Data for sending native tokens to recipients.
   struct NativeTokenData {
     address payable recipient;
@@ -78,10 +83,11 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Initializes a new `LlamaAccount` clone.
-  /// @param _name The name of the `LlamaAccount` clone.
-  function initialize(string memory _name) external initializer {
+  /// @param config Llama Account initialization configuration.
+  function initialize(bytes memory config) external initializer {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
-    name = _name;
+    AccountConfig memory accountConfig = abi.decode(config, (AccountConfig));
+    name = accountConfig.name;
   }
 
   // ===========================================

@@ -57,7 +57,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
   event StrategyUnauthorized(ILlamaStrategy indexed strategy);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;

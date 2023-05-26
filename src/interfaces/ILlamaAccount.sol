@@ -10,12 +10,10 @@ interface ILlamaAccount {
   /// @notice Returns the address of the Llama instance's executor.
   function llamaExecutor() external view returns (address);
 
-  /// @notice Returns the name of the Llama account.
-  function name() external view returns (string memory);
-
   // -------- At Account Creation --------
 
   /// @notice Initializes a new clone of the account.
-  /// @param name The name of the `LlamaAccount` clone.
-  function initialize(string memory name) external;
+  /// @param config The account configuration, encoded as bytes to support differing constructor arguments in
+  /// different account logic contracts.
+  function initialize(bytes memory config) external;
 }

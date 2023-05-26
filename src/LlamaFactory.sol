@@ -107,7 +107,7 @@ contract LlamaFactory {
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
-    string[] memory initialAccountNames,
+    bytes[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -124,7 +124,7 @@ contract LlamaFactory {
       initialLlamaStrategyLogic,
       initialLlamaAccountLogic,
       initialStrategies,
-      initialAccountNames,
+      initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -143,7 +143,7 @@ contract LlamaFactory {
   /// @param strategyLogic The ILlamaStrategy implementation (logic) contract to use for this Llama instance.
   /// @param accountLogic The ILlamaAccount implementation (logic) contract to use for this Llama instance.
   /// @param initialStrategies The list of initial strategies.
-  /// @param initialAccountNames The list of initial accounts.
+  /// @param initialAccounts The list of initial accounts.
   /// @param initialRoleDescriptions The list of initial role descriptions.
   /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions The list of initial permissions given to roles.
@@ -156,7 +156,7 @@ contract LlamaFactory {
     ILlamaStrategy strategyLogic,
     ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccountNames,
+    bytes[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions,
@@ -168,7 +168,7 @@ contract LlamaFactory {
       strategyLogic,
       accountLogic,
       initialStrategies,
-      initialAccountNames,
+      initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -229,7 +229,7 @@ contract LlamaFactory {
     ILlamaStrategy strategyLogic,
     ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccountNames,
+    bytes[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -252,7 +252,7 @@ contract LlamaFactory {
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccountNames);
+      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
     llamaExecutor = llamaCore.executor();
 
     policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);

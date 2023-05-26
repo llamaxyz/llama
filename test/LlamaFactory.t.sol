@@ -33,7 +33,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
     uint256 chainId
   );
   event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
   event ActionCanceled(uint256 id);
   event ActionQueued(
