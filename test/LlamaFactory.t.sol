@@ -417,6 +417,29 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
   }
 }
 
+contract AuthorizeAccountLogic is LlamaFactoryTest {
+  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
+    vm.assume(_caller != address(rootCore));
+    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
+    vm.prank(_caller);
+    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
+    vm.prank(address(rootExecutor));
+    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
+    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.prank(address(rootExecutor));
+    vm.expectEmit();
+    emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress));
+    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
+  }
+}
+
 contract SetPolicyTokenMetadata is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller, address _policyMetadata) public {
     vm.assume(_caller != address(rootExecutor));
