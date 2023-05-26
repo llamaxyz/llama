@@ -24,7 +24,6 @@ contract DeployLlama is Script {
   LlamaCore coreLogic;
   RelativeQuorum relativeQuorumLogic;
   AbsolutePeerReview absolutePeerReviewLogic;
-  AbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
 
