@@ -474,6 +474,26 @@ contract Initialize is LlamaCoreTest {
     assertEq(accountAddresses[0].name(), "Account1");
     assertEq(accountAddresses[1].name(), "Account2");
   }
+
+  function testFuzz_RevertIf_AccountLogicIsNotAuthorized(address notAccountLogic) public {
+    vm.assume(notAccountLogic != address(accountLogic));
+    address payable payableNotAccountLogic = payable(notAccountLogic);
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+      deployWithoutInitialization();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    string[] memory accounts = Solarray.strings("Account1", "Account2");
+
+    vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
+    modifiedFactory.initialize(
+      uninitializedLlama,
+      policy,
+      "NewProject",
+      relativeQuorumLogic,
+      ILlamaAccount(payableNotAccountLogic),
+      strategyConfigs,
+      accounts
+    );
+  }
 }
 
 contract CreateAction is LlamaCoreTest {
@@ -2018,7 +2038,8 @@ contract CreateAccounts is LlamaCoreTest {
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(address(additionalAccountLogic), newAccounts[i], address(mpCore));
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(additionalAccountLogic), newAccounts[i], address(mpCore));
     }
 
     vm.expectEmit();
