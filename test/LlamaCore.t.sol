@@ -2007,15 +2007,9 @@ contract CreateAccounts is LlamaCoreTest {
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
 
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount2"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount3"
-    });
-    newAccounts[2] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount4"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
 
     vm.prank(caller);
     mpCore.createAccounts(accountLogic, DeployUtils.encodeAccountConfigs(newAccounts));
@@ -2023,20 +2017,16 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_CreateNewAccounts() public {
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount2"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount3"
-    });
-    newAccounts[2] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount4"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic),  DeployUtils.encodeAccount(newAccounts[i]), address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(
+        address(accountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore)
+      );
     }
 
     vm.expectEmit();
@@ -2054,21 +2044,16 @@ contract CreateAccounts is LlamaCoreTest {
     ILlamaAccount additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
 
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount2"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount3"
-    });
-    newAccounts[2] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount4"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] =
-        lens.computeLlamaAccountAddress(address(additionalAccountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(
+        address(additionalAccountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore)
+      );
     }
 
     vm.expectEmit();
@@ -2084,15 +2069,9 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount2"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount3"
-    });
-    newAccounts[2] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount4"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
 
     vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpExecutor));
@@ -2101,20 +2080,16 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_RevertIf_Reinitialized() public {
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount2"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount3"
-    });
-    newAccounts[2] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount4"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
     for (uint256 i; i < newAccounts.length; i++) {
-      accountAddresses[i] = lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore));
+      accountAddresses[i] = lens.computeLlamaAccountAddress(
+        address(accountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore)
+      );
     }
 
     vm.startPrank(address(mpExecutor));
@@ -2132,12 +2107,8 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_RevertIf_AccountsAreIdentical() public {
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](2);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount1"
-    });
-    newAccounts[1] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount1"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
+    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
 
     vm.prank(address(mpExecutor));
     vm.expectRevert("ERC1167: create2 failed");
@@ -2146,13 +2117,9 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
     LlamaAccount.AccountConfig[] memory newAccounts1 = new LlamaAccount.AccountConfig[](1);
-    newAccounts1[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount1"
-    });
+    newAccounts1[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
     LlamaAccount.AccountConfig[] memory newAccounts2 = new LlamaAccount.AccountConfig[](1);
-    newAccounts2[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount1"
-    });
+    newAccounts2[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
 
     vm.startPrank(address(mpExecutor));
     mpCore.createAccounts(accountLogic, DeployUtils.encodeAccountConfigs(newAccounts1));
@@ -2163,17 +2130,17 @@ contract CreateAccounts is LlamaCoreTest {
 
   function test_CanBeCalledByASuccessfulAction() public {
     LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](1);
-    newAccounts[0] = LlamaAccount.AccountConfig({
-      name: "LlamaAccount1"
-    });
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[0]), address(mpCore));
+    ILlamaAccount accountAddress =
+      lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[0]), address(mpCore));
 
-    bytes memory data = abi.encodeCall(LlamaCore.createAccounts, (accountLogic, DeployUtils.encodeAccountConfigs(newAccounts)));
+    bytes memory data =
+      abi.encodeCall(LlamaCore.createAccounts, (accountLogic, DeployUtils.encodeAccountConfigs(newAccounts)));
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
     ActionInfo memory actionInfo =

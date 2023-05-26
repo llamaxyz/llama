@@ -50,7 +50,7 @@ library DeployUtils {
   }
 
   struct AccountJsonInputs {
-    // Attributes need to be in alphabetical order so JSON decodes properly.  
+    // Attributes need to be in alphabetical order so JSON decodes properly.
     string name;
   }
 
@@ -175,7 +175,11 @@ library DeployUtils {
     }
   }
 
-  function encodeAccountConfigs(LlamaAccount.AccountConfig[] memory accounts) internal pure returns (bytes[] memory encoded) {
+  function encodeAccountConfigs(LlamaAccount.AccountConfig[] memory accounts)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
     encoded = new bytes[](accounts.length);
     for (uint256 i = 0; i < accounts.length; i++) {
       encoded[i] = encodeAccount(accounts[i]);
