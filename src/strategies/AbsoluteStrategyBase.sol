@@ -143,7 +143,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    AbsoluteStrategyBase.Config memory strategyConfig = abi.decode(config, (AbsoluteStrategyBase.Config));
+    Config memory strategyConfig = abi.decode(config, (Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
