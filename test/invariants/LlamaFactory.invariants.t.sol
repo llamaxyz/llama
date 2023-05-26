@@ -84,7 +84,7 @@ contract LlamaFactoryHandler is BaseHandler {
       relativeQuorumLogic,
       accountLogic,
       new bytes[](0),
-      new string[](0),
+      new bytes[](0),
       roleDescriptions,
       roleHolders,
       new RolePermissionData[](0),

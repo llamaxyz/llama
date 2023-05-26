@@ -50,7 +50,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
 contract Constructor is LlamaFactoryTest {
   function deployLlamaFactory() internal returns (LlamaFactory) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account 1", "Account 2", "Account 3");
+    bytes[] memory accounts = accountConfigsRootLlama();
 
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
@@ -128,7 +128,7 @@ contract Constructor is LlamaFactoryTest {
 contract Deploy is LlamaFactoryTest {
   function deployLlama() internal returns (LlamaExecutor, LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
@@ -152,7 +152,7 @@ contract Deploy is LlamaFactoryTest {
   function test_RevertIf_CallerIsNotRootLlama(address caller) public {
     vm.assume(caller != address(rootCore));
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(address(caller));
@@ -173,7 +173,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
       "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
     );
@@ -210,7 +210,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_RevertIf_RoleId1IsNotFirst() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     vm.startPrank(address(rootExecutor));
 
@@ -248,7 +248,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_RevertIf_RoleId1IsFirstWithBadExpiration() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     vm.startPrank(address(rootExecutor));
 
@@ -340,7 +340,7 @@ contract Deploy is LlamaFactoryTest {
     assertEq(_llama.name(), "NewProject");
 
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    string[] memory accounts = Solarray.strings("Account1", "Account2");
+    bytes[] memory accounts = accountConfigsRootLlama();
 
     LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");

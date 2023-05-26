@@ -164,10 +164,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's llama, again with a single action creator role.
-    string[] memory mpAccounts = createActionScriptInput.readStringArray(".newAccountNames");
+    bytes[] memory mpAccounts = accountConfigsLlamaInstance();
     bytes[] memory rootStrategyConfigs = strategyConfigsRootLlama();
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
-    string[] memory rootAccounts = deployScriptInput.readStringArray(".initialAccountNames");
+    bytes[] memory rootAccounts = accountConfigsRootLlama();
 
     // First we create an action to deploy a new llamaCore instance.
     CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
@@ -335,6 +335,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
   function strategyConfigsLlamaInstance() internal view returns (bytes[] memory) {
     return DeployUtils.readRelativeStrategies(createActionScriptInput);
+  }
+
+  function accountConfigsRootLlama() internal view returns (bytes[] memory) {
+    return DeployUtils.readAccounts(deployScriptInput);
+  }
+
+  function accountConfigsLlamaInstance() internal view returns (bytes[] memory) {
+    return DeployUtils.readAccounts(createActionScriptInput);
   }
 
   function rootLlamaRoleDescriptions() internal returns (RoleDescription[] memory) {

@@ -96,14 +96,14 @@ contract LlamaLens {
   /// @param account The account to be set.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the LlamaAccount contract.
-  function computeLlamaAccountAddress(address llamaAccountLogic, string calldata account, address llamaCore)
+  function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory account, address llamaCore)
     external
     pure
     returns (ILlamaAccount)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaAccountLogic,
-      keccak256(abi.encodePacked(account)), // salt
+      keccak256(account), // salt
       llamaCore // deployer
     );
     return ILlamaAccount(_computedAddress);
