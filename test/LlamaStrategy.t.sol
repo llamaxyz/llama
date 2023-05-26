@@ -19,7 +19,7 @@ import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 contract LlamaStrategyTest is LlamaTestSetup {
