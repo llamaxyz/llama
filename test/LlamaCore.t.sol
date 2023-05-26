@@ -28,6 +28,7 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -139,6 +140,13 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
     return address(additionalStrategyLogic);
+  }
+
+  function _deployAndAuthorizeAdditionalAccountLogic() internal returns (ILlamaAccount) {
+    LlamaAccount additionalAccountLogic = new LlamaAccount();
+    vm.prank(address(rootExecutor));
+    factory.authorizeAccountLogic(additionalAccountLogic);
+    return additionalAccountLogic;
   }
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
@@ -2001,6 +2009,27 @@ contract CreateAccounts is LlamaCoreTest {
 
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(accountLogic, newAccounts);
+  }
+
+  function test_CreateNewAccountsWithAdditionalAccountLogic() public {
+    ILlamaAccount additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
+
+    string[] memory newAccounts = Solarray.strings("LlamaAccount2", "LlamaAccount3", "LlamaAccount4");
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
+
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(address(additionalAccountLogic), newAccounts[i], address(mpCore));
+    }
+
+    vm.expectEmit();
+    emit AccountCreated(accountAddresses[0], additionalAccountLogic, newAccounts[0]);
+    vm.expectEmit();
+    emit AccountCreated(accountAddresses[1], additionalAccountLogic, newAccounts[1]);
+    vm.expectEmit();
+    emit AccountCreated(accountAddresses[2], additionalAccountLogic, newAccounts[2]);
+
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(additionalAccountLogic, newAccounts);
   }
 
   function test_RevertIf_Reinitialized() public {
