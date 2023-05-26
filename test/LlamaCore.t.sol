@@ -477,7 +477,6 @@ contract Initialize is LlamaCoreTest {
 
   function testFuzz_RevertIf_AccountLogicIsNotAuthorized(address notAccountLogic) public {
     vm.assume(notAccountLogic != address(accountLogic));
-    address payable payableNotAccountLogic = payable(notAccountLogic);
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
@@ -489,7 +488,7 @@ contract Initialize is LlamaCoreTest {
       policy,
       "NewProject",
       relativeQuorumLogic,
-      ILlamaAccount(payableNotAccountLogic),
+      ILlamaAccount(notAccountLogic),
       strategyConfigs,
       accounts
     );

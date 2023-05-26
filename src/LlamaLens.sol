@@ -106,7 +106,7 @@ contract LlamaLens {
       keccak256(abi.encodePacked(account)), // salt
       llamaCore // deployer
     );
-    return ILlamaAccount(payable(_computedAddress));
+    return ILlamaAccount(_computedAddress);
   }
 
   function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {

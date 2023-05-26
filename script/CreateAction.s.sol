@@ -35,7 +35,7 @@ contract CreateAction is Script {
       (
         llamaInstanceName,
         ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
-        ILlamaAccount(payable(jsonInput.readAddress(".accountLogic"))),
+        ILlamaAccount(jsonInput.readAddress(".accountLogic")),
         DeployUtils.readRelativeStrategies(jsonInput),
         jsonInput.readStringArray(".newAccountNames"),
         DeployUtils.readRoleDescriptions(jsonInput),

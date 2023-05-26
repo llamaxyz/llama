@@ -223,7 +223,7 @@ contract Aggregate is GovernanceScriptTest {
     }
     vm.expectEmit();
     emit AccountCreated(
-      ILlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), accountLogic, "new treasury"
+      ILlamaAccount(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99), accountLogic, "new treasury"
     );
     mpCore.executeAction(actionInfo);
   }

@@ -639,7 +639,7 @@ contract LlamaCore is Initializable {
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
       bytes32 salt = bytes32(keccak256(abi.encodePacked(accounts[i])));
-      ILlamaAccount account = ILlamaAccount(payable(Clones.cloneDeterministic(address(llamaAccountLogic), salt)));
+      ILlamaAccount account = ILlamaAccount(Clones.cloneDeterministic(address(llamaAccountLogic), salt));
       account.initialize(accounts[i]);
       emit AccountCreated(account, llamaAccountLogic, accounts[i]);
     }
