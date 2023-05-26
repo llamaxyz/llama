@@ -39,7 +39,14 @@
       "queuingPeriod": 0
     }
   ],
-  "initialAccountNames": ["Llama Treasury", "Llama Grants"],
+  "initialAccounts": [
+    {
+      "name": "Llama Treasury"
+    },
+    {
+      "name": "Llama Grants"
+    }
+  ],
   "initialRoleDescriptions": [
     "ActionCreator",
     "Approver",

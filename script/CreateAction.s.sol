@@ -37,7 +37,7 @@ contract CreateAction is Script {
         ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
         ILlamaAccount(jsonInput.readAddress(".accountLogic")),
         DeployUtils.readRelativeStrategies(jsonInput),
-        jsonInput.readStringArray(".newAccountNames"),
+        DeployUtils.readAccounts(jsonInput),
         DeployUtils.readRoleDescriptions(jsonInput),
         DeployUtils.readRoleHolders(jsonInput),
         DeployUtils.readRolePermissions(jsonInput),

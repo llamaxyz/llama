@@ -8,6 +8,7 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
 
 library DeployUtils {
   using stdJson for string;
@@ -48,6 +49,11 @@ library DeployUtils {
     uint8 role;
   }
 
+  struct AccountJsonInputs {
+    // Attributes need to be in alphabetical order so JSON decodes properly.  
+    string name;
+  }
+
   function print(string memory message) internal view {
     // Avoid getting flooded with logs during tests. Note that fork tests will show logs with this
     // approach, because there's currently no way to tell which environment we're in, e.g. script
@@ -81,6 +87,19 @@ library DeployUtils {
     }
 
     return encodeStrategyConfigs(strategyConfigs);
+  }
+
+  function readAccounts(string memory jsonInput) internal pure returns (bytes[] memory) {
+    bytes memory accountData = jsonInput.parseRaw(".initialAccounts");
+    AccountJsonInputs[] memory rawAccountsConfigs = abi.decode(accountData, (AccountJsonInputs[]));
+
+    LlamaAccount.AccountConfig[] memory accountConfigs = new LlamaAccount.AccountConfig[](rawAccountsConfigs.length);
+    for (uint256 i = 0; i < rawAccountsConfigs.length; i++) {
+      AccountJsonInputs memory rawAccount = rawAccountsConfigs[i];
+      accountConfigs[i].name = rawAccount.name;
+    }
+
+    return encodeAccountConfigs(accountConfigs);
   }
 
   function readRoleDescriptions(string memory jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
@@ -130,6 +149,10 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
+  function encodeAccount(LlamaAccount.AccountConfig memory account) internal pure returns (bytes memory encoded) {
+    encoded = abi.encode(account);
+  }
+
   function encodeStrategyConfigs(RelativeStrategyConfig[] memory strategies)
     internal
     pure
@@ -149,6 +172,13 @@ library DeployUtils {
     encoded = new bytes[](strategies.length);
     for (uint256 i = 0; i < strategies.length; i++) {
       encoded[i] = encodeStrategy(strategies[i]);
+    }
+  }
+
+  function encodeAccountConfigs(LlamaAccount.AccountConfig[] memory accounts) internal pure returns (bytes[] memory encoded) {
+    encoded = new bytes[](accounts.length);
+    for (uint256 i = 0; i < accounts.length; i++) {
+      encoded[i] = encodeAccount(accounts[i]);
     }
   }
 

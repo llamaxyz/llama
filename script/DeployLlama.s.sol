@@ -78,7 +78,7 @@ contract DeployLlama is Script {
       policyMetadata,
       jsonInput.readString(".rootLlamaName"),
       DeployUtils.readRelativeStrategies(jsonInput),
-      jsonInput.readStringArray(".initialAccountNames"),
+      DeployUtils.readAccounts(jsonInput),
       DeployUtils.readRoleDescriptions(jsonInput),
       DeployUtils.readRoleHolders(jsonInput),
       DeployUtils.readRolePermissions(jsonInput)
