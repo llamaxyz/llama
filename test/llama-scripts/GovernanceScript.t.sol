@@ -27,15 +27,17 @@ import {
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {DeployUtils} from "script/DeployUtils.sol";
 
 contract GovernanceScriptTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, string name);
+  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   GovernanceScript governanceScript;
 
@@ -197,11 +199,18 @@ contract Aggregate is GovernanceScriptTest {
       );
     }
 
-    string[] memory newAccounts = new string[](1);
-    newAccounts[0] = "new treasury";
+    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](1);
+    newAccounts[0] = LlamaAccount.AccountConfig({name: "new treasury"});
+
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](1);
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(
+        address(accountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore)
+      );
+    }
 
     targets.push(address(mpCore));
-    calls.push(abi.encodeWithSelector(0x53af82ca, accountLogic, newAccounts));
+    calls.push(abi.encodeWithSelector(0x90010bb0, accountLogic, DeployUtils.encodeAccountConfigs(newAccounts)));
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
@@ -222,7 +231,7 @@ contract Aggregate is GovernanceScriptTest {
       emit RoleAssigned(address(uint160(i + 101)), uint8(i + 9), type(uint64).max, 1);
     }
     vm.expectEmit();
-    emit AccountCreated(ILlamaAccount(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99), accountLogic, "new treasury");
+    emit AccountCreated(accountAddresses[0], accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
     mpCore.executeAction(actionInfo);
   }
 }

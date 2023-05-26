@@ -2057,11 +2057,11 @@ contract CreateAccounts is LlamaCoreTest {
     }
 
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[0], accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
+    emit AccountCreated(accountAddresses[0], additionalAccountLogic, DeployUtils.encodeAccount(newAccounts[0]));
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[1], accountLogic, DeployUtils.encodeAccount(newAccounts[1]));
+    emit AccountCreated(accountAddresses[1], additionalAccountLogic, DeployUtils.encodeAccount(newAccounts[1]));
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[2], accountLogic, DeployUtils.encodeAccount(newAccounts[2]));
+    emit AccountCreated(accountAddresses[2], additionalAccountLogic, DeployUtils.encodeAccount(newAccounts[2]));
 
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(additionalAccountLogic, DeployUtils.encodeAccountConfigs(newAccounts));

@@ -54,17 +54,19 @@ contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaAccountAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
+    bytes[] memory rootAccounts = accountConfigsRootLlama();
+    bytes[] memory mpAccounts = accountConfigsLlamaInstance();
     address expected =
-      address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Treasury", address(rootCore)));
+      address(lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore)));
     assertEq(expected, address(rootAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "Llama Grants", address(rootCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore)));
     assertEq(expected, address(rootAccount2));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Treasury", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore)));
     assertEq(expected, address(mpAccount1));
 
-    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), "MP Grants", address(mpCore)));
+    expected = address(lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore)));
     assertEq(expected, address(mpAccount2));
   }
 }
