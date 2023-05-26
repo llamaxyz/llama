@@ -19,6 +19,7 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
+import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -156,7 +157,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
     ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedAbsolutePeerReview();
 
-    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
+      AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,

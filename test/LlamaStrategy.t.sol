@@ -175,7 +175,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       vm.stopPrank();
     }
 
-    AbsoluteQuorum.Config memory strategyConfig = AbsoluteQuorum.Config({
+    AbsoluteQuorum.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,

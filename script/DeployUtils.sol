@@ -133,10 +133,6 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(AbsoluteQuorum.Config memory strategy) internal pure returns (bytes memory encoded) {
-    encoded = abi.encode(strategy);
-  }
-
   function encodeStrategyConfigs(RelativeQuorum.Config[] memory strategies)
     internal
     pure
@@ -149,16 +145,6 @@ library DeployUtils {
   }
 
   function encodeStrategyConfigs(AbsoluteStrategyBase.Config[] memory strategies)
-    internal
-    pure
-    returns (bytes[] memory encoded)
-  {
-    encoded = new bytes[](strategies.length);
-    for (uint256 i = 0; i < strategies.length; i++) {
-      encoded[i] = encodeStrategy(strategies[i]);
-    }
-  }
-  function encodeStrategyConfigs(AbsoluteQuorum.Config[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)

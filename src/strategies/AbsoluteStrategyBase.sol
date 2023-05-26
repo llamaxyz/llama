@@ -9,7 +9,6 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
-import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
