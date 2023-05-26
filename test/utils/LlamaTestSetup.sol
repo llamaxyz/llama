@@ -430,24 +430,12 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
-    vm.prank(address(rootExecutor));
-
-    factory.authorizeStrategyLogic(absoluteQuorumLogic);
-
     vm.prank(address(mpExecutor));
 
     mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
-    );
-
-    vm.prank(address(mpExecutor));
-
-    mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
-
-    newStrategy = lens.computeLlamaStrategyAddress(
-      address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }
