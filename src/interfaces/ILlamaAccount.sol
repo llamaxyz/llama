@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IERC721Receiver} from "@openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "@openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-/// @title Llama Account Interface
+/// @title Llama Account Logic Interface
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Llama accounts which can be used to hold assets for a Llama instance.
 interface ILlamaAccount is IERC721Receiver, IERC1155Receiver {
