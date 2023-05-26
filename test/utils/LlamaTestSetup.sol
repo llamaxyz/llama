@@ -18,6 +18,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
+import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -409,7 +410,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    AbsolutePeerReview.Config memory strategyConfig = AbsolutePeerReview.Config({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -422,7 +423,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsolutePeerReview.Config[] memory strategyConfigs = new AbsolutePeerReview.Config[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));

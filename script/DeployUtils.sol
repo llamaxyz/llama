@@ -8,8 +8,8 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
+import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 library DeployUtils {
@@ -129,7 +129,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeStrategy(AbsolutePeerReview.Config memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(AbsoluteStrategyBase.Config memory strategy) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(strategy);
   }
 
@@ -148,7 +148,7 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategyConfigs(AbsolutePeerReview.Config[] memory strategies)
+  function encodeStrategyConfigs(AbsoluteStrategyBase.Config[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)
