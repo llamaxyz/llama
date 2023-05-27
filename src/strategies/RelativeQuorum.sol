@@ -16,6 +16,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
+
 contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======================================
   // ============== Structs ===============
@@ -145,7 +146,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    RelativeQuorum.Config memory strategyConfig = abi.decode(config, (RelativeQuorum.Config));
+    Config memory strategyConfig = abi.decode(config, (RelativeQuorum.Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
