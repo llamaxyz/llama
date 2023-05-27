@@ -440,7 +440,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     );
   }
 
-    function deployAbsoluteQuorum(
+  function deployAbsoluteQuorum(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
@@ -452,7 +452,6 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-
     AbsoluteQuorum absoluteQuorumLogic = new AbsoluteQuorum();
 
     AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({

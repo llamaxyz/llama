@@ -157,7 +157,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function deployMockPoorStrategyAndCreatePermission() internal returns (ILlamaStrategy newStrategy) {
     ILlamaStrategy mockStrategyLogic = new MockPoorlyImplementedAbsolutePeerReview();
 
-      AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -190,7 +190,10 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
   }
 
-  function createActionUsingAbsolutePeerReview(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
+  function createActionUsingAbsolutePeerReview(ILlamaStrategy testStrategy)
+    internal
+    returns (ActionInfo memory actionInfo)
+  {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpExecutor));
