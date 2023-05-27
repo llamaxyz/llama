@@ -149,57 +149,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
     );
   }
 
-  function deployAbsoluteQuorumAndSetRole(
-    uint8 _role,
-    bytes32 _permission,
-    address _policyHolder,
-    uint64 _queuingDuration,
-    uint64 _expirationDelay,
-    uint64 _approvalPeriod,
-    bool _isFixedLengthApprovalPeriod,
-    uint128 _minApprovals,
-    uint128 _minDisapprovals,
-    uint8[] memory _forceApprovalRoles,
-    uint8[] memory _forceDisapprovalRoles
-  ) internal returns (ILlamaStrategy newStrategy) {
-      AbsoluteQuorum absoluteQuorumLogic = new AbsoluteQuorum();
-    {
-      vm.prank(address(rootExecutor));
-      factory.authorizeStrategyLogic(absoluteQuorumLogic);
-      // Initialize roles if required.
-      initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
-
-      vm.startPrank(address(mpExecutor));
-      mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
-      mpPolicy.setRolePermission(_role, _permission, true);
-      vm.stopPrank();
-    }
-
-    AbsoluteQuorum.Config memory strategyConfig = AbsoluteStrategyBase.Config({
-      approvalPeriod: _approvalPeriod,
-      queuingPeriod: _queuingDuration,
-      expirationPeriod: _expirationDelay,
-      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
-      minApprovals: _minApprovals,
-      minDisapprovals: _minDisapprovals,
-      approvalRole: _role,
-      disapprovalRole: _role,
-      forceApprovalRoles: _forceApprovalRoles,
-      forceDisapprovalRoles: _forceDisapprovalRoles
-    });
-
-    AbsoluteQuorum.Config[] memory strategyConfigs = new AbsoluteQuorum.Config[](1);
-    strategyConfigs[0] = strategyConfig;
-
-    vm.prank(address(mpExecutor));
-    // left off here
-    mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
-
-    newStrategy = lens.computeLlamaStrategyAddress(
-      address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
-    );
-  }
-
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
     RelativeQuorum.Config memory testStrategyData = RelativeQuorum.Config({
       approvalPeriod: 1 days,
@@ -1453,6 +1402,24 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
     vm.expectRevert(AbsolutePeerReview.ActionCreatorCannotCast.selector);
     absolutePeerReview.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
   }
+
+  function test_AbsoluteQuorum_ActionCreatorCanApprove() public {
+    ILlamaStrategy absoluteQuorum = deployAbsoluteQuorum(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createAction(absoluteQuorum);
+    // function reverts if approval disabled, so it not reverting is behavior we are testing
+    absoluteQuorum.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+  }
 }
 
 contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
@@ -1506,6 +1473,24 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(AbsolutePeerReview.ActionCreatorCannotCast.selector);
-    absolutePeerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+    absolutePeerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
+  }
+
+  function test_AbsoluteQuorum_ActionCreatorCanDisapprove() public {
+    ILlamaStrategy absoluteQuorum = deployAbsoluteQuorum(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createAction(absoluteQuorum);
+    // function reverts if disapproval is disabled, so it not reverting is behavior we are testing
+    absoluteQuorum.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
   }
 }

@@ -133,6 +133,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
+
   function encodeStrategyConfigs(RelativeQuorum.Config[] memory strategies)
     internal
     pure

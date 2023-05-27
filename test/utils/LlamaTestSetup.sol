@@ -18,6 +18,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
+import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -436,6 +437,50 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+    function deployAbsoluteQuorum(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint128 _minApprovals,
+    uint128 _minDisapprovals,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+
+    AbsoluteQuorum absoluteQuorumLogic = new AbsoluteQuorum();
+
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovals: _minApprovals,
+      minDisapprovals: _minDisapprovals,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootExecutor));
+
+    factory.authorizeStrategyLogic(absoluteQuorumLogic);
+
+    vm.prank(address(mpExecutor));
+
+    mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }
