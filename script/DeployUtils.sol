@@ -8,7 +8,6 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
