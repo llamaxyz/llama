@@ -20,9 +20,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     implementing contract to determine the rest of the behavior.
 ///   - All methods are marked virtual in case future strategies need to override them.
 abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
-  // ======================================
-  // ============== Structs ===============
-  // ======================================
+  // =========================
+  // ======== Structs ========
+  // =========================
 
   struct Config {
     uint64 approvalPeriod; // The length of time of the approval period.
