@@ -108,6 +108,7 @@ contract LlamaLens {
     return LlamaAccount(payable(_computedAddress));
   }
 
+  /// @dev Computes the address of a llama core from the name of the llama instance.
   function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_CORE_LOGIC,
