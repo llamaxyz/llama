@@ -2006,20 +2006,20 @@ contract CreateAccounts is LlamaCoreTest {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
 
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
-    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     vm.prank(caller);
     mpCore.createAccounts(accountLogic, DeployUtils.encodeAccountConfigs(newAccounts));
   }
 
   function test_CreateNewAccounts() public {
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
-    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
@@ -2043,10 +2043,10 @@ contract CreateAccounts is LlamaCoreTest {
   function test_CreateNewAccountsWithAdditionalAccountLogic() public {
     ILlamaAccount additionalAccountLogic = _deployAndAuthorizeAdditionalAccountLogic();
 
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
-    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
@@ -2068,10 +2068,10 @@ contract CreateAccounts is LlamaCoreTest {
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
-    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpExecutor));
@@ -2079,10 +2079,10 @@ contract CreateAccounts is LlamaCoreTest {
   }
 
   function test_RevertIf_Reinitialized() public {
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](3);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount2"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount3"});
-    newAccounts[2] = LlamaAccount.AccountConfig({name: "LlamaAccount4"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](3);
 
@@ -2106,9 +2106,9 @@ contract CreateAccounts is LlamaCoreTest {
   }
 
   function test_RevertIf_AccountsAreIdentical() public {
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](2);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
-    newAccounts[1] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](2);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount1"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount1"});
 
     vm.prank(address(mpExecutor));
     vm.expectRevert("ERC1167: create2 failed");
@@ -2116,10 +2116,10 @@ contract CreateAccounts is LlamaCoreTest {
   }
 
   function test_RevertIf_IdenticalAccountIsAlreadyDeployed() public {
-    LlamaAccount.AccountConfig[] memory newAccounts1 = new LlamaAccount.AccountConfig[](1);
-    newAccounts1[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
-    LlamaAccount.AccountConfig[] memory newAccounts2 = new LlamaAccount.AccountConfig[](1);
-    newAccounts2[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
+    LlamaAccount.Config[] memory newAccounts1 = new LlamaAccount.Config[](1);
+    newAccounts1[0] = LlamaAccount.Config({name: "LlamaAccount1"});
+    LlamaAccount.Config[] memory newAccounts2 = new LlamaAccount.Config[](1);
+    newAccounts2[0] = LlamaAccount.Config({name: "LlamaAccount1"});
 
     vm.startPrank(address(mpExecutor));
     mpCore.createAccounts(accountLogic, DeployUtils.encodeAccountConfigs(newAccounts1));
@@ -2129,8 +2129,8 @@ contract CreateAccounts is LlamaCoreTest {
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](1);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "LlamaAccount1"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount1"});
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
     vm.prank(address(mpExecutor));

@@ -30,7 +30,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   using Address for address payable;
 
   /// @dev Llama Account initialization configuration.
-  struct AccountConfig {
+  struct Config {
     string name;
   }
 
@@ -86,7 +86,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   /// @param config Llama Account initialization configuration.
   function initialize(bytes memory config) external initializer {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
-    AccountConfig memory accountConfig = abi.decode(config, (AccountConfig));
+    Config memory accountConfig = abi.decode(config, (Config));
     name = accountConfig.name;
   }
 

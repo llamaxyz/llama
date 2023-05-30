@@ -199,8 +199,8 @@ contract Aggregate is GovernanceScriptTest {
       );
     }
 
-    LlamaAccount.AccountConfig[] memory newAccounts = new LlamaAccount.AccountConfig[](1);
-    newAccounts[0] = LlamaAccount.AccountConfig({name: "new treasury"});
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "new treasury"});
 
     ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](1);
     for (uint256 i; i < newAccounts.length; i++) {

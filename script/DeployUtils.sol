@@ -93,7 +93,7 @@ library DeployUtils {
     bytes memory accountData = jsonInput.parseRaw(".initialAccounts");
     AccountJsonInputs[] memory rawAccountsConfigs = abi.decode(accountData, (AccountJsonInputs[]));
 
-    LlamaAccount.AccountConfig[] memory accountConfigs = new LlamaAccount.AccountConfig[](rawAccountsConfigs.length);
+    LlamaAccount.Config[] memory accountConfigs = new LlamaAccount.Config[](rawAccountsConfigs.length);
     for (uint256 i = 0; i < rawAccountsConfigs.length; i++) {
       AccountJsonInputs memory rawAccount = rawAccountsConfigs[i];
       accountConfigs[i].name = rawAccount.name;
@@ -149,7 +149,7 @@ library DeployUtils {
     encoded = abi.encode(strategy);
   }
 
-  function encodeAccount(LlamaAccount.AccountConfig memory account) internal pure returns (bytes memory encoded) {
+  function encodeAccount(LlamaAccount.Config memory account) internal pure returns (bytes memory encoded) {
     encoded = abi.encode(account);
   }
 
@@ -175,11 +175,7 @@ library DeployUtils {
     }
   }
 
-  function encodeAccountConfigs(LlamaAccount.AccountConfig[] memory accounts)
-    internal
-    pure
-    returns (bytes[] memory encoded)
-  {
+  function encodeAccountConfigs(LlamaAccount.Config[] memory accounts) internal pure returns (bytes[] memory encoded) {
     encoded = new bytes[](accounts.length);
     for (uint256 i = 0; i < accounts.length; i++) {
       encoded[i] = encodeAccount(accounts[i]);
