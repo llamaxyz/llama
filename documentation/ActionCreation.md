@@ -1,6 +1,6 @@
 # Action Creation
 
-After your Llama instance is deployed, it's time to start creating actions. Actions are onchain transactions that serve as the exit point for your llama instance to interact with external contracts. that consist of the following elements:
+After your Llama instance is deployed, it's time to start creating actions. Actions are onchain transactions that serve as the exit point for your llama instance to interact with external contracts. Here is the anatomy of an action:
 
     Action Elements:
     - Target Contract (the contract to be called by the Llama executor)
@@ -39,15 +39,17 @@ enum ActionState {
 }
 ```
 
-enum ActionState {
-  Active, // Action created and approval period begins.
-  Canceled, // Action canceled by creator or disapproved.
-  Failed, // Action approval failed.
-  Approved, // Action approval succeeded and ready to be queued.
-  Queued, // Action queued for queueing duration and disapproval period begins.
-  Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
-  Executed // Action has executed successfully.
-}
+Lets dive into each state and what they mean.
+  - Active: The action has been created and policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
+  - Canceled: The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by sucessfully calling `cancelAction`.
+  - Failed: An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
+  - Approved: The action has reached been approval and is ready to be queued.
+  - Queued: The action is in the Queued period for the queueing duration and policyholders are able to disapprove the action. If the action is disaproved it will fail, otherwise it will be able to be executed after the queuing period ends. Reached by sucessfully calling `queueAction`.
+  - Expired: The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if block.timestamp is greater than Action's executionTime + expirationDelay.
+  - Executed: This state signifies that the action has been executed successfully. Reached by sucessfully calling `executeAction`.
+
+
+We can call the `getActionState` method on `LlamaCore` to get the current state of a given action
 
 ## Permissioning Action Creation
 
