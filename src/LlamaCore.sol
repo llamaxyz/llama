@@ -416,7 +416,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
-  /// @param strategyConfigs list of new Strategys to be authorized.
+  /// @param strategyConfigs List of initialization configuration for new strategies to be created.
   function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) external onlyLlama {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }

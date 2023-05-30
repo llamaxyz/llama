@@ -5,7 +5,7 @@ import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Llama Strategy Interface
+/// @title Llama Strategy Logic Interface
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Llama strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
@@ -15,7 +15,7 @@ interface ILlamaStrategy {
   // -------- For Inspection --------
   // These are not strictly required by the core, but are useful for inspecting a strategy contract.
 
-  /// @notice Returns the address of the Ll contract that this strategy is registered to.
+  /// @notice Returns the address of the llama core contract that this strategy is registered to.
   function llamaCore() external view returns (LlamaCore);
 
   /// @notice Returns the name of the policy contract that this strategy is registered to.
@@ -24,7 +24,6 @@ interface ILlamaStrategy {
   // -------- At Strategy Creation --------
 
   /// @notice Initializes a new clone of the strategy.
-  /// @dev Order is of QuantityByPermissions is critical. Quantity is determined by the first specific permission match.
   /// @param config The strategy configuration, encoded as bytes to support differing constructor arguments in
   /// different strategies.
   function initialize(bytes memory config) external;

@@ -15,7 +15,6 @@ import {ActionInfo} from "src/lib/Structs.sol";
 ///     and save off the current USD value of an account.
 ///   - Verify the USD value of an account has not decreased by more than a certain amount during
 ///     execution, i.e. between `validatePreActionExecution` and `validatePostActionExecution`.
-/// than a certain amount.
 interface IActionGuard {
   /// @notice Reverts if action creation is not allowed.
   function validateActionCreation(ActionInfo calldata actionInfo) external;
