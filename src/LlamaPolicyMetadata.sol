@@ -103,6 +103,8 @@ contract LlamaPolicyMetadata {
     return output;
   }
 
+  /// @notice Returns the contract URI for a given llama policy.
+  /// @param name The name of the llama instance.
   function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
