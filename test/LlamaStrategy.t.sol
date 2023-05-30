@@ -1229,7 +1229,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
   }
 
-  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughApprovalQuantity(
+  function testFuzz_RevertIf_AbsolutePeerReview_NotEnoughApprovalQuantity(
     uint256 _roleQuantity,
     uint256 _otherRoleHolders
   ) external {
