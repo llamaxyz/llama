@@ -37,6 +37,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
     uint8[] forceApprovalRoles; // Anyone with this role can single-handedly approve an action.
     uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
   }
+  
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
