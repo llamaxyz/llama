@@ -24,6 +24,31 @@ After your Llama instance is deployed, it's time to start creating actions. Acti
 
 ## Action State
 
+![Action State Diagram](../diagrams/llama-action-state-machine.png)
+
+Action state consists of seven unique states and is represented by the following enum:
+```
+enum ActionState {
+  Active,
+  Canceled,
+  Failed,
+  Approved,
+  Queued,
+  Expired,
+  Executed
+}
+```
+
+enum ActionState {
+  Active, // Action created and approval period begins.
+  Canceled, // Action canceled by creator or disapproved.
+  Failed, // Action approval failed.
+  Approved, // Action approval succeeded and ready to be queued.
+  Queued, // Action queued for queueing duration and disapproval period begins.
+  Expired, // block.timestamp is greater than Action's executionTime + expirationDelay.
+  Executed // Action has executed successfully.
+}
+
 ## Permissioning Action Creation
 
 Actions are permissioned through Llama policies. Policyholders with the corresponding permissions are able to create actions. policy holders with the correct approval/disapproval roles are able to cast their (dis)approvals on the action, which determines whether or not the action passes or fails. If an action passes, it is able to be executed, otherwise it fails and cannot be executed.
