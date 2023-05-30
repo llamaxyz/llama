@@ -22,29 +22,29 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @notice The action cannot be canceled if it's already in a terminal state.
+  /// @dev The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
   error CannotCancelInState(ActionState currentState);
 
-  /// @notice The strategy has disabled disapprovals.
+  /// @dev The strategy has disabled disapprovals.
   error DisapprovalDisabled();
 
-  /// @notice The action cannot be created because the minimum approval percentage cannot be greater than 100%.
+  /// @dev The action cannot be created because the minimum approval percentage cannot be greater than 100%.
   /// @param minApprovalPct The provided `minApprovalPct`.
   error InvalidMinApprovalPct(uint256 minApprovalPct);
 
-  /// @notice The role is not eligible to participate in this strategy in the specified way.
+  /// @dev The role is not eligible to participate in this strategy in the specified way.
   /// @param role The role being used.
   error InvalidRole(uint8 role);
 
-  /// @notice Only the action creator can cancel an action.
+  /// @dev Only the action creator can cancel an action.
   error OnlyActionCreator();
 
-  /// @notice The action cannot be created if the approval or disapproval supply is 0.
+  /// @dev The action cannot be created if the approval or disapproval supply is 0.
   /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
 
-  /// @notice The provided `role` is not initialized by the `LlamaPolicy`.
+  /// @dev The provided `role` is not initialized by the `LlamaPolicy`.
   /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
@@ -52,8 +52,13 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when a Force Approval role is added to the strategy.
   event ForceApprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a Force Disapproval role is added to the strategy.
   event ForceDisapprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a Strategy is created referencing the core and policy.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
   // =============================================================
@@ -70,47 +75,47 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
 
   // -------- Strategy Configuration --------
 
-  /// @dev Equivalent to 100%, but in basis points.
+  /// @notice Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @dev If false, action be queued before approvalEndTime.
+  /// @notice If false, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
-  /// @dev Length of approval period in seconds.
+  /// @notice Length of approval period in seconds.
   uint64 public approvalPeriod;
 
-  /// @dev Minimum time, in seconds, between queueing and execution of action.
+  /// @notice Minimum time, in seconds, between queueing and execution of action.
   uint64 public queuingPeriod;
 
-  /// @dev Time, in seconds, after executionTime that action can be executed before permanently expiring.
+  /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
   uint64 public expirationPeriod;
 
-  /// @dev Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
+  /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
   /// action to be queued. In bps, where 10,000 == 100%.
   /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
   uint16 public minApprovalPct;
 
-  /// @dev Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
+  /// @notice Minimum percentage of `totalDisapprovalQuantity / totalDisapprovalSupplyAtCreationTime` required of the
   /// action for it to be canceled. In bps, 10,000 == 100%.
   /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
   uint16 public minDisapprovalPct;
 
-  /// @dev The role that can approve an action.
+  /// @notice The role that can approve an action.
   uint8 public approvalRole;
 
-  /// @dev The role that can disapprove an action.
+  /// @notice The role that can disapprove an action.
   uint8 public disapprovalRole;
 
-  /// @dev Mapping of roles that can force an action to be approved.
+  /// @notice Mapping of roles that can force an action to be approved.
   mapping(uint8 => bool) public forceApprovalRole;
 
-  /// @dev Mapping of roles that can force an action to be disapproved.
+  /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
-  /// @dev Mapping of action ID to the supply of the approval role at the time the action was created.
+  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
   mapping(uint256 => uint256) public actionApprovalSupply;
 
-  /// @dev Mapping of action ID to the supply of the disapproval role at the time the action was created.
+  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
   mapping(uint256 => uint256) public actionDisapprovalSupply;
 
   // =============================

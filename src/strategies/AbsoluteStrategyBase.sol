@@ -77,8 +77,13 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when a Force Approval role is added to the strategy.
   event ForceApprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a Force Disapproval role is added to the strategy.
   event ForceDisapprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a Strategy is created referencing the core and policy.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
   // =============================================================
