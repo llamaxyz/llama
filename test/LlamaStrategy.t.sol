@@ -1244,7 +1244,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_AbsolutePeerReview_RevertIf_NotEnoughDisapprovalQuantity(
+  function testFuzz_RevertIf_AbsolutePeerReview_NotEnoughDisapprovalQuantity(
     uint256 _roleQuantity,
     uint256 _otherRoleHolders
   ) external {
@@ -1367,7 +1367,7 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
     absolutePeerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
-  function test_AbsolutePeerReview_RevertIf_WrongRoleIsPassed() public {
+  function test_RevertIf_AbsolutePeerReview_WrongRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
@@ -1440,7 +1440,7 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
     absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
-  function test_AbsolutePeerReview_RevertIf_WrongRoleIsPassed() public {
+  function test_RevertIf_AbsolutePeerReview_WrongRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
