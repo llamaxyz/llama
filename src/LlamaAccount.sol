@@ -29,6 +29,10 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   using SafeERC20 for IERC20;
   using Address for address payable;
 
+  // =========================
+  // ======== Structs ========
+  // =========================
+
   /// @dev Llama Account initialization configuration.
   struct Config {
     string name;
