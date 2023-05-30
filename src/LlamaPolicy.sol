@@ -20,6 +20,16 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   using Checkpoints for Checkpoints.History;
 
+  // =========================
+  // ======== Structs ========
+  // =========================
+
+  /// @dev Stores the two different supply values for a role.
+  struct RoleSupply {
+    uint128 numberOfHolders;
+    uint128 totalQuantity;
+  }
+
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -54,11 +64,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Operations can only occur on initialized roles.
   error RoleNotInitialized(uint8 role);
 
+  /// @dev Checks that the caller is the Llama Executor and reverts if not.
   modifier onlyLlama() {
     if (msg.sender != llamaExecutor) revert OnlyLlama();
     _;
   }
 
+  /// @dev Ensures that none of the ERC721 transfer and approval functions can be called so that the policies are
+  /// soulbound.
   modifier nonTransferableToken() {
     _; // We put this ahead of the revert so we don't get an unreachable code warning.
     revert NonTransferableToken();
@@ -68,8 +81,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when a policyholder is assigned a role.
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
+
+  /// @dev Emitted when a role is initialized with a description.
   event RoleInitialized(uint8 indexed role, RoleDescription description);
+
+  /// @dev Emitted when a permission is assigned to a role.
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   // =============================================================
@@ -95,12 +113,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// strategy).
   mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
 
-  /// @dev Stores the two different supply values for a role.
-  struct RoleSupply {
-    uint128 numberOfHolders;
-    uint128 totalQuantity;
-  }
-
   /// @notice Checkpoints the total supply of a given role.
   /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of
   /// the role for each token ID that holds the role.
@@ -123,6 +135,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _disableInitializers();
   }
 
+  /// @notice Initializes a new LlamaPolicy clone.
+  /// @param _name The name of the policy.
+  /// @param roleDescriptions The role descriptions.
+  /// @param roleHolders The role, policyholder, quantity and expiration of the role holders.
+  /// @param rolePermissions The role, permission ID and whether the role has the permission of the role permissions.
   function initialize(
     string calldata _name,
     RoleDescription[] calldata roleDescriptions,
@@ -191,16 +208,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _setRolePermission(role, permissionId, hasPermission);
   }
 
-  /// @notice Revokes an expired role.
+  /// @notice Revokes a policyholder's expired role.
   /// @param role Role that has expired.
   /// @param policyholder Policyholder that held the role.
-  /// @dev WARNING: The contract cannot enumerate all expired roles for a policyholder, so the caller MUST
-  /// provide the full list of expired roles to revoke. Not properly providing this data can result
-  /// in an inconsistent internal state. It is expected that roles are revoked as needed before
-  /// creating an action that uses that role as the `approvalRole` or `disapprovalRole`. Not doing
-  /// so would mean the total supply is higher than expected. Depending on the strategy
-  /// configuration this may not be a big deal, or it may mean it's impossible to reach quorum. It's
-  /// not a big issue if quorum cannot be reached, because a new action can be created.
+  /// @dev WARNING: This function needs to be explicitly called to revoke expired roles by monitoring through offchain
+  /// infrastructure, otherwise expired roles can continue to create actions (if they have the right permissions) and
+  /// take part in the approval/disapproval process if the strategy allows it.
   function revokeExpiredRole(uint8 role, address policyholder) external {
     _revokeExpiredRole(role, policyholder);
   }
@@ -309,11 +322,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
+  /// @notice Returns true if the `role` held by `policyholder` is expired, false otherwise.
   function isRoleExpired(address policyholder, uint8 role) public view returns (bool) {
     (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return quantity > 0 && block.timestamp > expiration;
   }
 
+  /// @notice Returns the `expiration` timestamp of the `role` held by `policyholder`.
   function roleExpiration(address policyholder, uint8 role) external view returns (uint64) {
     (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return expiration;
@@ -375,6 +390,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Initializes a new role with the given `role` ID and `description`
   function _initializeRole(RoleDescription description) internal {
     numRoles += 1;
     emit RoleInitialized(numRoles, description);
@@ -393,6 +409,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     if (lastActionCreation == block.timestamp) revert ActionCreationAtSameTimestamp();
   }
 
+  /// @dev Checks if the conditions are met for a role to be updated.
   function _assertValidRoleHolderUpdate(uint8 role, uint128 quantity, uint64 expiration) internal view {
     // Ensure role is initialized.
     if (role > numRoles) revert RoleNotInitialized(role);
@@ -411,6 +428,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     if (!(case1 || case2)) revert InvalidRoleHolderInput();
   }
 
+  /// @dev Sets the role for the given `policyholder` to the given `quantity` and `expiration`.
   function _setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) internal {
     _assertNoActionCreationsAtCurrentTimestamp();
     _assertValidRoleHolderUpdate(role, quantity, expiration);
@@ -469,18 +487,21 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
 
+  /// @dev Sets a role's permission along with whether that permission is valid or not.
   function _setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) internal {
     if (role > numRoles) revert RoleNotInitialized(role);
     canCreateAction[role][permissionId] = hasPermission;
     emit RolePermissionAssigned(role, permissionId, hasPermission);
   }
 
+  /// @dev Revokes a policyholder's expired role.
   function _revokeExpiredRole(uint8 role, address policyholder) internal {
     // Read the most recent checkpoint for the policyholder's role balance.
     if (!isRoleExpired(policyholder, role)) revert InvalidRoleHolderInput();
     _setRoleHolder(role, policyholder, 0, 0);
   }
 
+  /// @dev Mints a policyholder's policy.
   function _mint(address policyholder) internal {
     uint256 tokenId = _tokenId(policyholder);
     _mint(policyholder, tokenId);
@@ -495,6 +516,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
   }
 
+  /// @dev Burns a policyholder's policy.
   function _burn(uint256 tokenId) internal override {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
@@ -508,6 +530,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
   }
 
+  /// @dev Returns the token ID for a policyholder.
   function _tokenId(address policyholder) internal pure returns (uint256) {
     return uint256(uint160(policyholder));
   }
