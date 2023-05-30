@@ -51,6 +51,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @dev Slot 0 cannot be changed as a result of `delegatecall`s.
   error Slot0Changed();
 
+  /// @dev Checks that the caller is the Llama Executor and reverts if not.
   modifier onlyLlama() {
     if (msg.sender != llamaExecutor) revert OnlyLlama();
     _;
@@ -243,6 +244,7 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   /// @param target The address of the contract to call.
   /// @param callData The calldata to pass to the contract.
   /// @param withDelegatecall Whether to use delegatecall or call.
+  /// @return The result of the call.
   function execute(address target, bytes calldata callData, bool withDelegatecall)
     external
     payable
