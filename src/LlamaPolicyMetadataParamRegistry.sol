@@ -27,7 +27,10 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when the color code for SVG of a Llama Instance is set.
   event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+
+  /// @dev Emitted when the logo for SVG of a Llama Instance is set.
   event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 
   // =============================================================
@@ -50,6 +53,7 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @notice This contract is deployed in the factory's constructor
   constructor(LlamaExecutor rootLlamaExecutor) {
     ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
     LLAMA_FACTORY = msg.sender;
@@ -65,6 +69,8 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== External and Public Logic ========
   // ===========================================
 
+  /// @notice Gets the color code and logo for SVG of a Llama Instance.
+  /// @param llamaExecutor The Llama Instance.
   function getMetadata(LlamaExecutor llamaExecutor) external view returns (string memory _color, string memory _logo) {
     _color = color[llamaExecutor];
     _logo = logo[llamaExecutor];
