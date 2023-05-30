@@ -11,6 +11,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+
 /// @title Relative Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
@@ -18,9 +19,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 
 contract RelativeQuorum is ILlamaStrategy, Initializable {
-  // ======================================
-  // ============== Structs ===============
-  // ======================================
+  // =========================
+  // ======== Structs ========
+  // =========================
 
   struct Config {
     uint64 approvalPeriod; // The length of time of the approval period.
