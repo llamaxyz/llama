@@ -75,7 +75,7 @@ contract LlamaLens {
 
   /// @notice Computes the address of a llama strategy with a strategy value.
   /// @param llamaStrategyLogic The Llama Strategy logic contract.
-  /// @param strategy The strategy to be set.
+  /// @param strategy The initialization configuration for the new strategy to be created.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the strategy contract.
   function computeLlamaStrategyAddress(address llamaStrategyLogic, bytes memory strategy, address llamaCore)
@@ -93,7 +93,7 @@ contract LlamaLens {
 
   /// @notice Computes the address of a llama account with a name (account) value.
   /// @param llamaAccountLogic The Llama Account logic contract.
-  /// @param account The account to be set.
+  /// @param account The initialization configuration for the new account to be created.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the LlamaAccount contract.
   function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory account, address llamaCore)
