@@ -74,6 +74,7 @@ contract LlamaCore is Initializable {
   /// @dev Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
 
+  /// @dev Checks that the caller is the Llama Executor and reverts if not.
   modifier onlyLlama() {
     if (msg.sender != address(executor)) revert OnlyLlama();
     _;
@@ -83,6 +84,7 @@ contract LlamaCore is Initializable {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when an action is created.
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -93,8 +95,14 @@ contract LlamaCore is Initializable {
     bytes data,
     string description
   );
+
+  /// @dev Emitted when an action is canceled.
   event ActionCanceled(uint256 id);
+
+  /// @dev Emitted when an Action Guard is set.
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
+
+  /// @dev Emitted when an action is queued.
   event ActionQueued(
     uint256 id,
     address indexed caller,
@@ -102,16 +110,27 @@ contract LlamaCore is Initializable {
     address indexed creator,
     uint256 minExecutionTime
   );
+
+  /// @dev Emitted when an action is executed.
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
+
+  /// @dev Emitted when an approval is cast.
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+
+  /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+
+  /// @dev Emitted when a Strategy contract is created and authorized.
   event StrategyAuthorized(
     ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
   );
-  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
+
+  /// @dev Emitted when an Account contract is created.
   event AccountCreated(LlamaAccount indexed account, string name);
+
+  /// @dev Emitted when a Script is authorized.
   event ScriptAuthorized(address indexed script, bool authorized);
 
   // =============================================================
@@ -501,6 +520,8 @@ contract LlamaCore is Initializable {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Creates an action. The creator needs to hold a policy with the permissionId of the provided
+  /// {target, selector, strategy}.
   function _createAction(
     address policyholder,
     uint8 role,
@@ -549,6 +570,7 @@ contract LlamaCore is Initializable {
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
 
+  /// @dev How policyholders having the right role add their support of the approval of an action with a reason.
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -559,6 +581,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
+  /// @dev How policyholders having the right role add their support of the disapproval of an action with a reason.
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -628,6 +651,7 @@ contract LlamaCore is Initializable {
     }
   }
 
+  /// @dev Deploys accounts.
   function _deployAccounts(string[] calldata accounts) internal {
     uint256 accountLength = accounts.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -638,6 +662,7 @@ contract LlamaCore is Initializable {
     }
   }
 
+  /// @dev Returns the hash of the action info struct.
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
       actionInfo.id,
@@ -650,6 +675,7 @@ contract LlamaCore is Initializable {
     );
   }
 
+  /// @dev Returns the hash of the create action parameters.
   function _infoHash(
     uint256 id,
     address creator,
@@ -662,11 +688,14 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
+  /// @dev Validates that the hash of the action info struct matches the provided hash.
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
     bytes32 expectedHash = _infoHash(actionInfo);
     if (actualHash != expectedHash) revert InfoHashMismatch();
   }
 
+  /// @dev Returns the current nonce for a given policyholder and selector, and increments it. Used to prevent replay
+  /// attacks.
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];
     nonces[policyholder][selector] = LlamaUtils.uncheckedIncrement(nonce);
