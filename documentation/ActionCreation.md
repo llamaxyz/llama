@@ -78,3 +78,17 @@ policy holders with the correct approval/disapproval roles are able to cast thei
 ### Force Approval/Disapproval Roles
 
 Strategies have a concept of force approval/disapproval roles in addition to the normal approval/disapproval roles. A strategy can have many force approval/disapproval roles, unlike the normal approval/disapproval roles which are limited to one. Like the name suggests, if a policyholder with a force role casts their approval/disapproval the strategy will immediately reach the respective quorum.
+
+## Scripts
+
+Scripts are external contracts that uses the `DELEGATECALL` opcode instead of the normal `CALL`. The main use-case for scripts is to batch multiple calls together into one action. In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks. 
+
+`DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use. To authorize a script, a policyholder must create an action that calls the `authorizeScript` function on `LlamaCore`. Scripts may also be unauthorized using the same function.
+
+## Guards
+
+Guards are optional pre and post execution hooks that can be set on any pair of target address and function selector. The main use-case for guards is to extend the Llama permissioning system. Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is the expected in `validatePostActionExecution`.
+
+Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
+
+Llama recommends using guards to implement adhoc and protocol specific safety checks.
