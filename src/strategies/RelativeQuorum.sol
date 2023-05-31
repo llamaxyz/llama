@@ -71,10 +71,12 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======== Events ========
   // ========================
 
-  /// @dev Emitted when a Force Approval role is added to the strategy.
+  /// @dev Emitted when a Force Approval role is added to the strategy. This can only happen at strategy deployment time
+  /// during initialization.
   event ForceApprovalRoleAdded(uint8 role);
 
-  /// @dev Emitted when a Force Disapproval role is added to the strategy.
+  /// @dev Emitted when a Force Disapproval role is added to the strategy. This can only happen at strategy deployment
+  /// time during initialization.
   event ForceDisapprovalRoleAdded(uint8 role);
 
   /// @dev Emitted when a Strategy is created referencing the core and policy.

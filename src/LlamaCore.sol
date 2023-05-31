@@ -570,7 +570,7 @@ contract LlamaCore is Initializable {
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
 
-  /// @dev How policyholders having the right role add their support of the approval of an action with a reason.
+  /// @dev How policyholders that have the right role contribute towards the approval of an action with a reason.
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -581,7 +581,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
-  /// @dev How policyholders having the right role add their support of the disapproval of an action with a reason.
+  /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
