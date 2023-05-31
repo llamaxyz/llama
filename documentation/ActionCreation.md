@@ -7,7 +7,7 @@ Actions are how your Llama instance interacts with external contracts.
 Here is the anatomy of an action:
 
     Action Elements:
-    - Target Contract (the contract to be called by the Llama executor)
+    - Target Contract: Contract to be called by the Llama executor
     - Strategy (the Llama strategy that determines the action state)
     - Calldata (function selector and parameters)
     - Role (role used to create the action)
