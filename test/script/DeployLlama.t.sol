@@ -6,10 +6,10 @@ import {Vm} from "forge-std/Vm.sol";
 
 import {DeployLlama} from "script/DeployLlama.s.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";

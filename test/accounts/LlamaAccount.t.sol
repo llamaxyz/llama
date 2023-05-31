@@ -13,6 +13,7 @@ import {MockExtension} from "test/mock/MockExtension.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {
   ERC20Data,
   ERC721Data,
@@ -21,7 +22,6 @@ import {
   ERC1155BatchData,
   ERC1155OperatorData
 } from "src/lib/Structs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";

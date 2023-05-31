@@ -5,10 +5,10 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";

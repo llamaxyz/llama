@@ -12,6 +12,7 @@ import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutInitialization.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -20,7 +21,6 @@ import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} 
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";

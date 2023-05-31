@@ -6,9 +6,9 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
