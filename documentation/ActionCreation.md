@@ -1,6 +1,8 @@
 # Action Creation
 
-After your Llama instance is deployed, it's time to start creating actions. Actions are onchain transactions that serve as the exit point for your llama instance to interact with external contracts. Here is the anatomy of an action:
+After your Llama instance is deployed, it's time to start creating actions
+Actions are onchain transactions that serve as the exit point for your llama instance to interact with external contracts. 
+Here is the anatomy of an action:
 
     Action Elements:
     - Target Contract (the contract to be called by the Llama executor)
@@ -53,7 +55,9 @@ We can call the `getActionState` method on `LlamaCore` to get the current state 
 
 ## Permissioning Action Creation
 
-Permissions are the atomic unit for action creation access control and are managed through the through `LlamaPolicy` contract. Permissions can be assigned to roles, and roles are assigned to policies. Policies can have many roles, and roles can have many permissions. When creating an action, a validation check is done to make sure that the policyholder has a role with the correct permission.
+Permissions are the atomic unit for action creation access control and are managed through the through `LlamaPolicy` contract. 
+Permissions can be assigned to roles, and roles are assigned to policies. 
+Policies can have many roles, and roles can have many permissions. When creating an action, a validation check is done to make sure that the policyholder has a role with the correct permission.
 
 Permissions are calculated by hashing the `PermissionData` struct, which looks like this:
 ```
@@ -64,30 +68,41 @@ struct PermissionData {
 }
 ```
 
-When creating an action, the permission required to create said action can be calculated on the fly, since the action creator must pass in the `target`, `selector` & `strategy`. We can calculate the permission id on the spot and check the `canCreateAction` mapping on the LlamaPolicy contract to verify that the action creation role has the corresponding permission.
+When creating an action, the permission required to create said action can be calculated on the fly, since the action creator must pass in the `target`, `selector` & `strategy`. 
+We can calculate the permission id on the spot and check the `canCreateAction` mapping on the LlamaPolicy contract to verify that the action creation role has the corresponding permission.
 
 To add and remove permissions, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-Permissions are what enable strategy contracts, since without the right permission, a policyholder would not be able to create an action that uses a different strategy than their permission allows. This is important because strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permissions that use that strategy rendering it useless.
+Permissions are what enable strategy contracts, since without the right permission, a policyholder would not be able to create an action that uses a different strategy than their permission allows. 
+This is important because strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permissions that use that strategy rendering it useless.
 
 ## Approvals and Disapprovals
 
-Approval and disapproval access is controlled by roles on the `LlamaPolicy` contract, and are set explicitly on the strategy contract at deployment. Each strategy can have exactly one approval role and one disapproval role.
-policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails. Policyholders without the correct approval/disapproval role are not able to cast.
+Approval and disapproval access is controlled by roles on the `LlamaPolicy` contract, and are set explicitly on the strategy contract at deployment. 
+Each strategy can have exactly one approval role and one disapproval role.
+policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
+Policyholders without the correct approval/disapproval role are not able to cast.
 
 ### Force Approval/Disapproval Roles
 
-Strategies have a concept of force approval/disapproval roles in addition to the normal approval/disapproval roles. A strategy can have many force approval/disapproval roles, unlike the normal approval/disapproval roles which are limited to one. Like the name suggests, if a policyholder with a force role casts their approval/disapproval the strategy will immediately reach the respective quorum.
+Strategies have a concept of force approval/disapproval roles in addition to the normal approval/disapproval roles. 
+A strategy can have many force approval/disapproval roles, unlike the normal approval/disapproval roles which are limited to one. 
+Like the name suggests, if a policyholder with a force role casts their approval/disapproval the strategy will immediately reach the respective quorum.
 
 ## Scripts
 
-Scripts are external contracts that uses the `DELEGATECALL` opcode instead of the normal `CALL`. The main use-case for scripts is to batch multiple calls together into one action. In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks. 
+Scripts are external contracts that uses the `DELEGATECALL` opcode instead of the normal `CALL`. The main use-case for scripts is to batch multiple calls together into one action. 
+In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks. 
 
-`DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use. To authorize a script, a policyholder must create an action that calls the `authorizeScript` function on `LlamaCore`. Scripts may also be unauthorized using the same function.
+`DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use. 
+To authorize a script, a policyholder must create an action that calls the `authorizeScript` function on `LlamaCore`. 
+Scripts may also be unauthorized using the same function.
 
 ## Guards
 
-Guards are optional pre and post execution hooks that can be set on any pair of target address and function selector. The main use-case for guards is to extend the Llama permissioning system. Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is the expected in `validatePostActionExecution`.
+Guards are optional pre and post execution hooks that can be set on any pair of target address and function selector. 
+The main use-case for guards is to extend the Llama permissioning system. 
+Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is the expected in `validatePostActionExecution`.
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
