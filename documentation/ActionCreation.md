@@ -53,7 +53,7 @@ Lets dive into each state and what they mean.
   - **Executed**: This state signifies that the action has been executed successfully. Reached by sucessfully calling `executeAction`.
 
 
-We can call the `getActionState` method on `LlamaCore` to get the current state of a given action
+We can call the `getActionState` method on `LlamaCore` to get the current state of a given action.
 
 ## Permissioning Action Creation
 
