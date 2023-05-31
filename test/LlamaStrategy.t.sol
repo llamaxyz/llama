@@ -9,14 +9,17 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo, AbsoluteStrategyConfig, RelativeStrategyConfig} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
+import {ActionState} from "src/lib/Enums.sol";
+import {ActionInfo} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
+import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 contract LlamaStrategyTest is LlamaTestSetup {
@@ -68,7 +71,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       mpPolicy.setRolePermission(_role, _permission, true);
     }
 
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -81,7 +84,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -96,7 +99,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     );
   }
 
-  function deployPeerReviewAndSetRole(
+  function deployAbsolutePeerReviewAndSetRole(
     uint8 _role,
     bytes32 _permission,
     address _policyHolder,
@@ -111,7 +114,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   ) internal returns (ILlamaStrategy newStrategy) {
     {
       vm.prank(address(rootExecutor));
-      factory.authorizeStrategyLogic(peerReviewLogic);
+      factory.authorizeStrategyLogic(absolutePeerReviewLogic);
       // Initialize roles if required.
       initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
@@ -121,7 +124,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
       vm.stopPrank();
     }
 
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -134,20 +137,20 @@ contract LlamaStrategyTest is LlamaTestSetup {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(peerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
-    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
+    RelativeQuorum.Config memory testStrategyData = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -162,7 +165,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     testStrategy = lens.computeLlamaStrategyAddress(
       address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
-    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory testStrategies = new RelativeQuorum.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
@@ -175,7 +178,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     uint8[] memory forceDisapproveRoles = new uint8[](1);
     forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
 
-    RelativeStrategyConfig memory testStrategyData = RelativeStrategyConfig({
+    RelativeQuorum.Config memory testStrategyData = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -194,7 +197,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     );
 
     // Create and authorize the strategy.
-    RelativeStrategyConfig[] memory testStrategies = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory testStrategies = new RelativeQuorum.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
@@ -250,7 +253,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
 contract Constructor is LlamaStrategyTest {
   function test_RevertIf_InitializeAbsoluteImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    peerReviewLogic.initialize(bytes(""));
+    absolutePeerReviewLogic.initialize(bytes(""));
   }
 
   function test_RevertIf_InitializeRelativeImplementationContract() public {
@@ -382,7 +385,7 @@ contract Initialize is LlamaStrategyTest {
 
   function testFuzz_SetsStrategyStorageMinApprovals(uint128 _approvals) public {
     _approvals = toUint128(bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1))));
-    ILlamaStrategy newStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy newStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -395,7 +398,7 @@ contract Initialize is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toPeerReview(newStrategy).minApprovals(), _approvals);
+    assertEq(toAbsolutePeerReview(newStrategy).minApprovals(), _approvals);
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint16 _percent) public {
@@ -416,7 +419,7 @@ contract Initialize is LlamaStrategyTest {
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovals(uint128 _disapprovals) public {
-    ILlamaStrategy newStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy newStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -429,7 +432,7 @@ contract Initialize is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toPeerReview(newStrategy).minDisapprovals(), _disapprovals);
+    assertEq(toAbsolutePeerReview(newStrategy).minDisapprovals(), _disapprovals);
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
@@ -546,9 +549,9 @@ contract Initialize is LlamaStrategyTest {
     uint256 minApprovals = totalQuantity + _minApprovalIncrease;
 
     vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -561,23 +564,23 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidMinApprovals.selector, minApprovals));
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_RevertIf_SetAllHoldersRoleAsForceApprovalRolePeerReview() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleAbsolutePeerReview() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -590,22 +593,22 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRolePeerReview() public {
+  function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleAbsolutePeerReview() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -618,23 +621,23 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
   function test_RevertIf_SetAllHoldersRoleAsForceApprovalRoleRelativeQuorum() public {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -647,7 +650,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -659,7 +662,7 @@ contract Initialize is LlamaStrategyTest {
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRoleRelativeQuorum() public {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
-    RelativeStrategyConfig memory strategyConfig = RelativeStrategyConfig({
+    RelativeQuorum.Config memory strategyConfig = RelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
       expirationPeriod: 1 days,
@@ -672,7 +675,7 @@ contract Initialize is LlamaStrategyTest {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    RelativeStrategyConfig[] memory strategyConfigs = new RelativeStrategyConfig[](1);
+    RelativeQuorum.Config[] memory strategyConfigs = new RelativeQuorum.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
@@ -701,14 +704,16 @@ contract IsActionApproved is LlamaStrategyTest {
     assertEq(_isActionApproved, true);
   }
 
-  function testFuzz_PeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+  function testFuzz_AbsolutePeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    ILlamaStrategy testStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -748,14 +753,16 @@ contract IsActionApproved is LlamaStrategyTest {
     assertEq(_isActionApproved, false);
   }
 
-  function testFuzz_PeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+  function testFuzz_AbsolutePeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+    public
+  {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
     uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
-    ILlamaStrategy testStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -835,7 +842,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     testStrategy.validateActionCancelation(actionInfo, actionInfo.creator); // This should not revert.
   }
 
-  function testFuzz_RevertIf_PeerReview_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+  function testFuzz_RevertIf_AbsolutePeerReview_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
   ) public {
@@ -843,7 +850,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
     uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
 
-    ILlamaStrategy testStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -870,7 +877,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     testStrategy.validateActionCancelation(actionInfo, address(this));
   }
 
-  function testFuzz_NoRevertIf_PeerReview_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+  function testFuzz_NoRevertIf_AbsolutePeerReview_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
   ) public {
@@ -878,7 +885,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
     uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
 
-    ILlamaStrategy testStrategy = deployPeerReviewAndSetRole(
+    ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -1186,7 +1193,7 @@ contract GetMinimumAmountNeeded is LlamaStrategyTest {
 }
 
 contract ValidateActionCreation is LlamaStrategyTest {
-  function createPeerReviewWithDisproportionateQuantity(
+  function createAbsolutePeerReviewWithDisproportionateQuantity(
     bool isApproval,
     uint128 threshold,
     uint256 _roleQuantity,
@@ -1201,9 +1208,9 @@ contract ValidateActionCreation is LlamaStrategyTest {
     generateAndSetRoleHolders(_otherRoleHolders);
 
     vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
-    testStrategy = deployPeerReview(
+    testStrategy = deployAbsolutePeerReview(
       uint8(Roles.TestRole1),
       uint8(Roles.Disapprover),
       1 days,
@@ -1222,13 +1229,14 @@ contract ValidateActionCreation is LlamaStrategyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
   }
 
-  function testFuzz_PeerReview_RevertIf_NotEnoughApprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders)
-    external
-  {
+  function testFuzz_RevertIf_AbsolutePeerReview_NotEnoughApprovalQuantity(
+    uint256 _roleQuantity,
+    uint256 _otherRoleHolders
+  ) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
     ILlamaStrategy testStrategy =
-      createPeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+      createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity, _otherRoleHolders);
 
     vm.expectRevert(AbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
@@ -1236,14 +1244,16 @@ contract ValidateActionCreation is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_PeerReview_RevertIf_NotEnoughDisapprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders)
-    external
-  {
+  function testFuzz_RevertIf_AbsolutePeerReview_NotEnoughDisapprovalQuantity(
+    uint256 _roleQuantity,
+    uint256 _otherRoleHolders
+  ) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
 
-    ILlamaStrategy testStrategy =
-      createPeerReviewWithDisproportionateQuantity(false, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+    ILlamaStrategy testStrategy = createAbsolutePeerReviewWithDisproportionateQuantity(
+      false, toUint128(threshold), _roleQuantity, _otherRoleHolders
+    );
 
     vm.expectRevert(AbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
@@ -1251,9 +1261,9 @@ contract ValidateActionCreation is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_PeerReview_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
+  function testFuzz_AbsolutePeerReview_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     ILlamaStrategy testStrategy =
-      createPeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
+      createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
 
     uint256 actionId = mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
@@ -1340,8 +1350,8 @@ contract IsDisapprovalEnabledRelative is LlamaStrategyTest {
 }
 
 contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
-  function test_PassesWhenCorrectRoleIsPassed() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_AbsolutePeerReview_PassesWhenCorrectRoleIsPassed() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1353,12 +1363,12 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
-    peerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
+    absolutePeerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
-  function test_RevertIf_WrongRoleIsPassed() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_RevertIf_AbsolutePeerReview_WrongRoleIsPassed() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1370,13 +1380,13 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Approver)));
-    peerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    absolutePeerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
-  function test_ActionCreatorCannotApprove() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_AbsolutePeerReview_ActionCreatorCannotApprove() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1388,15 +1398,33 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
-    vm.expectRevert(PeerReview.ActionCreatorCannotCast.selector);
-    peerReview.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
+    vm.expectRevert(AbsolutePeerReview.ActionCreatorCannotCast.selector);
+    absolutePeerReview.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+  }
+
+  function test_AbsoluteQuorum_ActionCreatorCanApprove() public {
+    ILlamaStrategy absoluteQuorum = deployAbsoluteQuorum(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createAction(absoluteQuorum);
+    // function reverts if approval disabled, so it not reverting is behavior we are testing
+    absoluteQuorum.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
   }
 }
 
 contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
-  function test_PassesWhenCorrectRoleIsPassed() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_AbsolutePeerReview_PassesWhenCorrectRoleIsPassed() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1408,12 +1436,12 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
-    peerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
+    absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
-  function test_RevertIf_WrongRoleIsPassed() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_RevertIf_AbsolutePeerReview_WrongRoleIsPassed() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1425,13 +1453,13 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(abi.encodeWithSelector(AbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Disapprover)));
-    peerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
-  function test_ActionCreatorCannotDisapprove() public {
-    ILlamaStrategy peerReview = deployPeerReview(
+  function test_AbsolutePeerReview_ActionCreatorCannotDisapprove() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
       uint8(Roles.Disapprover),
       1 days,
@@ -1443,8 +1471,26 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0),
       new uint8[](0)
     );
-    ActionInfo memory actionInfo = createAction(peerReview);
-    vm.expectRevert(PeerReview.ActionCreatorCannotCast.selector);
-    peerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+    ActionInfo memory actionInfo = createAction(absolutePeerReview);
+    vm.expectRevert(AbsolutePeerReview.ActionCreatorCannotCast.selector);
+    absolutePeerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
+  }
+
+  function test_AbsoluteQuorum_ActionCreatorCanDisapprove() public {
+    ILlamaStrategy absoluteQuorum = deployAbsoluteQuorum(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      2,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createAction(absoluteQuorum);
+    // function reverts if disapproval is disabled, so it not reverting is behavior we are testing
+    absoluteQuorum.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
   }
 }

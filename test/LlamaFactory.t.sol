@@ -10,13 +10,14 @@ import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Action, RoleHolderData, RolePermissionData, RelativeStrategyConfig, PermissionData} from "src/lib/Structs.sol";
+import {Action, RoleHolderData, RolePermissionData, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 contract LlamaFactoryTest is LlamaTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;
@@ -41,7 +42,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategiesAuthorized(RelativeStrategyConfig[] strategies);
+  event StrategiesAuthorized(RelativeQuorum.Config[] strategies);
   event StrategiesUnauthorized(ILlamaStrategy[] strategies);
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
