@@ -10,6 +10,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/utils/Address.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   ERC20Data,
@@ -24,9 +25,18 @@ import {LlamaCore} from "src/LlamaCore.sol";
 /// @title Llama Account
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This contract can be used to hold assets for a Llama instance.
-contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
+contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializable {
   using SafeERC20 for IERC20;
   using Address for address payable;
+
+  // =========================
+  // ======== Structs ========
+  // =========================
+
+  /// @dev Llama Account initialization configuration.
+  struct Config {
+    string name;
+  }
 
   /// @dev Data for sending native tokens to recipients.
   struct NativeTokenData {
@@ -78,10 +88,11 @@ contract LlamaAccount is ERC721Holder, ERC1155Holder, Initializable {
   }
 
   /// @notice Initializes a new `LlamaAccount` clone.
-  /// @param _name The name of the `LlamaAccount` clone.
-  function initialize(string memory _name) external initializer {
+  /// @param config Llama Account initialization configuration.
+  function initialize(bytes memory config) external initializer {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
-    name = _name;
+    Config memory accountConfig = abi.decode(config, (Config));
+    name = accountConfig.name;
   }
 
   // ===========================================

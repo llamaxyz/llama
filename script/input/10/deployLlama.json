@@ -39,7 +39,14 @@
       "queuingPeriod": 0
     }
   ],
-  "initialAccountNames": ["Llama Treasury", "Llama Grants"],
+  "initialAccounts": [
+    {
+      "name": "Llama Treasury"
+    },
+    {
+      "name": "Llama Grants"
+    }
+  ],
   "initialRoleDescriptions": [
     "ActionCreator",
     "Approver",
@@ -76,12 +83,12 @@
   "initialRolePermissions": [
     {
       "comment": "This gives the ActionCreator permission to call LlamaFactory.deploy which creates new Llama instances. The permissionId was derived by encoding and hashing (a) the LlamaFactory address that this script deploys, (b) LlamaFactory.deploy.selector, and (c) the address of the second Strategy specified above -- the one without a fixed voting period.",
-      "permissionId": "0x153f553bc71865b2c5b51e40779c5b3d32dcd95d93ee5269ea4a7af93b5166d7",
+      "permissionId": "0xf7fce42649ce60f427d3642660084fb5d0f59bdfd05ce4a210c94f22c1765cae",
       "role": 1
     },
     {
       "comment": "This is just used for the DeployLlama test file. It also gives the ActionCreator permission to call LlamaFactory.deploy which creates new Llama instances.",
-      "permissionId": "0xc72aa8d99de0e66f871275b77c58d249c5553b3bb20016509c34e7abea9f478b",
+      "permissionId": "0xd2ce6f06ddfa9777f558134e96584a3415bc7500f3438bb177fbb1e1758a3dcf",
       "role": 1
     }
   ]

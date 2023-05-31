@@ -5,10 +5,10 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -127,7 +127,7 @@ contract Run is CreateActionTest {
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsCreated = new LlamaAccount[](2);
     uint8 accountsCount;
-    bytes32 accountCreatedSig = keccak256("AccountCreated(address,string)");
+    bytes32 accountCreatedSig = keccak256("AccountCreated(address,address,bytes)");
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
@@ -151,20 +151,21 @@ contract Run is CreateActionTest {
       }
       if (eventSig == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   ILlamaStrategy indexed strategy,  <-- The topic we want.
+        //   ILlamaStrategy strategy,  <-- The field we want.
         //   ILlamaStrategy indexed strategyLogic,
         //   bytes initializationData
         // );
-        address strategy = address(uint160(uint256(_event.topics[1])));
+        (address strategy,) = abi.decode(_event.data, (address, bytes));
         strategiesAuthorized[strategiesCount++] = RelativeQuorum(strategy);
       }
       if (eventSig == accountCreatedSig) {
         // event AccountCreated(
-        //   LlamaAccount indexed account, <-- The topic we want.
-        //   string name
+        //   ILlamaAccount account,  <-- The topic we want.
+        //   ILlamaAccount indexed accountLogic,
+        //   bytes initializationData
         // );
-        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
-        accountsCreated[accountsCount++] = LlamaAccount(account);
+        (address account,) = abi.decode(_event.data, (address, bytes));
+        accountsCreated[accountsCount++] = LlamaAccount(payable(account));
       }
     }
 

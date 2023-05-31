@@ -3,10 +3,10 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -24,16 +24,12 @@ contract LlamaLens {
   /// @notice The Llama Policy implementation (logic) contract.
   address public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama Account implementation (logic) contract.
-  address public immutable LLAMA_ACCOUNT_LOGIC;
-
   /// @notice Sets the factory address.
   /// @param _llamaFactory the llama factory contract on this chain.
   constructor(address _llamaFactory) {
     LLAMA_FACTORY = _llamaFactory;
     LLAMA_CORE_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_CORE_LOGIC());
     LLAMA_POLICY_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_POLICY_LOGIC());
-    LLAMA_ACCOUNT_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_ACCOUNT_LOGIC());
   }
 
   /// @notice Hashes a permission.
@@ -79,7 +75,7 @@ contract LlamaLens {
 
   /// @notice Computes the address of a llama strategy with a strategy value.
   /// @param llamaStrategyLogic The Llama Strategy logic contract.
-  /// @param strategy The strategy to be set.
+  /// @param strategy The initialization configuration for the new strategy to be created.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the strategy contract.
   function computeLlamaStrategyAddress(address llamaStrategyLogic, bytes memory strategy, address llamaCore)
@@ -96,16 +92,21 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a llama account with a name (account) value.
-  /// @param account The account to be set.
+  /// @param llamaAccountLogic The Llama Account logic contract.
+  /// @param account The initialization configuration for the new account to be created.
   /// @param llamaCore The llama core to be set.
   /// @return the computed address of the LlamaAccount contract.
-  function computeLlamaAccountAddress(string calldata account, address llamaCore) external view returns (LlamaAccount) {
+  function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory account, address llamaCore)
+    external
+    pure
+    returns (ILlamaAccount)
+  {
     address _computedAddress = Clones.predictDeterministicAddress(
-      LLAMA_ACCOUNT_LOGIC,
-      keccak256(abi.encodePacked(account)), // salt
+      llamaAccountLogic,
+      keccak256(account), // salt
       llamaCore // deployer
     );
-    return LlamaAccount(payable(_computedAddress));
+    return ILlamaAccount(_computedAddress);
   }
 
   /// @dev Computes the address of a llama core from the name of the llama instance.
