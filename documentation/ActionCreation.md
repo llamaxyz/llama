@@ -11,7 +11,7 @@ Here is the anatomy of an action:
     - Strategy: Llama strategy that determines the action state
     - Calldata: Function selector and its parameters
     - Role: Role used to create the action
-    - Value (amount of ether sent with the call)
+    - Value: Amount of ether sent with the call
     - Description: Plaintext explaining the purpose of the action
 
 
