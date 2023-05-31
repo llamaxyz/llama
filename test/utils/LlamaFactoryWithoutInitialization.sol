@@ -6,8 +6,8 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -21,12 +21,12 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   constructor(
     LlamaCore _llamaCoreLogic,
     ILlamaStrategy initialLlamaStrategyLogic,
-    LlamaAccount initialLlamaAccountLogic,
+    ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy _llamaPolicyLogic,
     LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
-    string[] memory initialAccountNames,
+    bytes[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
@@ -39,7 +39,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
       _llamaPolicyMetadata,
       name,
       initialStrategies,
-      initialAccountNames,
+      initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions
@@ -74,11 +74,11 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaPolicy policy,
     string memory name,
     ILlamaStrategy relativeQuorumLogic,
-    LlamaAccount accountLogic,
+    ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
-    string[] memory initialAccountNames
+    bytes[] memory initialAccounts
   ) external returns (LlamaExecutor llamaExecutor) {
-    llama.initialize(name, policy, relativeQuorumLogic, accountLogic, initialStrategies, initialAccountNames);
+    llama.initialize(name, policy, relativeQuorumLogic, accountLogic, initialStrategies, initialAccounts);
     llamaExecutor = llama.executor();
   }
 }

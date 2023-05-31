@@ -12,23 +12,25 @@ import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutInitialization.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {DeployUtils} from "script/DeployUtils.sol";
 
 contract GovernanceScriptTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
-  event AccountCreated(LlamaAccount indexed account, string name);
+  event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   GovernanceScript governanceScript;
 
@@ -190,11 +192,18 @@ contract Aggregate is GovernanceScriptTest {
       );
     }
 
-    string[] memory newAccounts = new string[](1);
-    newAccounts[0] = "new treasury";
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "new treasury"});
+
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](1);
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] = lens.computeLlamaAccountAddress(
+        address(accountLogic), DeployUtils.encodeAccount(newAccounts[i]), address(mpCore)
+      );
+    }
 
     targets.push(address(mpCore));
-    calls.push(abi.encodeWithSelector(0x9c8b12f1, newAccounts));
+    calls.push(abi.encodeWithSelector(0x90010bb0, accountLogic, DeployUtils.encodeAccountConfigs(newAccounts)));
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
@@ -215,7 +224,7 @@ contract Aggregate is GovernanceScriptTest {
       emit RoleAssigned(address(uint160(i + 101)), uint8(i + 9), type(uint64).max, 1);
     }
     vm.expectEmit();
-    emit AccountCreated(LlamaAccount(payable(0xe2cCe2902b33aC1DDc65C583Aa43EAdE9cBaFe99)), "new treasury");
+    emit AccountCreated(accountAddresses[0], accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
     mpCore.executeAction(actionInfo);
   }
 }

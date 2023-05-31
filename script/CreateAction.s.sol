@@ -5,6 +5,7 @@ import {Script, stdJson, console2} from "forge-std/Script.sol";
 
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -34,8 +35,9 @@ contract CreateAction is Script {
       (
         llamaInstanceName,
         ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
+        ILlamaAccount(jsonInput.readAddress(".accountLogic")),
         DeployUtils.readRelativeStrategies(jsonInput),
-        jsonInput.readStringArray(".newAccountNames"),
+        DeployUtils.readAccounts(jsonInput),
         DeployUtils.readRoleDescriptions(jsonInput),
         DeployUtils.readRoleHolders(jsonInput),
         DeployUtils.readRolePermissions(jsonInput),

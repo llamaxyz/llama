@@ -6,10 +6,10 @@ import {Vm} from "forge-std/Vm.sol";
 
 import {DeployLlama} from "script/DeployLlama.s.sol";
 
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -35,8 +35,8 @@ contract Run is DeployLlamaTest {
     assertNotEq(address(factory), address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
-    assertEq(address(factory.LLAMA_ACCOUNT_LOGIC()), address(accountLogic));
     assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
+    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootLlama() public {
@@ -57,27 +57,28 @@ contract Run is DeployLlamaTest {
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsAuthorized = new LlamaAccount[](2);
     uint8 accountsCount;
-    bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,string)");
+    bytes32 accountAuthorizedSig = keccak256("AccountCreated(address,address,bytes)");
 
     Vm.Log memory _event;
     for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   ILlamaStrategy indexed strategy,  <-- The topic we want.
-        //   address indexed relativeQuorumLogic,
-        //   Strategy strategyData
+        //   ILlamaStrategy strategy,  <-- The field we want.
+        //   ILlamaStrategy indexed strategyLogic,
+        //   bytes initializationData
         // );
-        address strategy = address(uint160(uint256(_event.topics[1])));
+        (address strategy,) = abi.decode(_event.data, (address, bytes));
         strategiesAuthorized[strategiesCount++] = ILlamaStrategy(strategy);
       }
       if (_event.topics[0] == accountAuthorizedSig) {
-        // event AccountAuthorized(
-        //   LlamaAccount indexed account,  <-- The topic we want.
-        //   string name
+        // event AccountCreated(
+        //   ILlamaAccount account,  <-- The topic we want.
+        //   ILlamaAccount indexed accountLogic,
+        //   bytes initializationData
         // );
-        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
-        accountsAuthorized[accountsCount++] = LlamaAccount(account);
+        (address account,) = abi.decode(_event.data, (address, bytes));
+        accountsAuthorized[accountsCount++] = LlamaAccount(payable(account));
       }
     }
 
