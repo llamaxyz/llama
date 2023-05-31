@@ -18,7 +18,7 @@ Here is the anatomy of an action:
 ## Key Concepts
 
     - Actions: Proposals made by policyholders to execute a transaction(s) onchain .
-    - Policies: Non-transferable NFTs encoded with roles and permissions for an individual llama instance.
+    - Policies: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
     - Roles: A signifier given to one or more policyholders. Roles can be used to permission action approvals/disapprovals.
     - Permissions: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
     - Strategies: A contract that holds all of the logic to determine action state. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed.
@@ -106,6 +106,6 @@ Guards are optional pre and post execution hooks that can be set on any pair of 
 The main use-case for guards is to extend the Llama permissioning system. 
 Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is the expected in `validatePostActionExecution`.
 
-Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
+Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
 Llama recommends using guards to implement adhoc and protocol specific safety checks.
