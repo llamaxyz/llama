@@ -49,9 +49,9 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
-  event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
+  event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+  event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
+  event ScriptAuthorized(address script, bool authorized);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -129,11 +129,11 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     _executeAction(actionInfo);
   }
 
-  function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (address) {
+  function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (ILlamaStrategy) {
     RelativeQuorum additionalStrategyLogic = new RelativeQuorum();
     vm.prank(address(rootExecutor));
     factory.authorizeStrategyLogic(additionalStrategyLogic);
-    return address(additionalStrategyLogic);
+    return additionalStrategyLogic;
   }
 
   function _deployAndAuthorizeAdditionalAccountLogic() internal returns (ILlamaAccount) {
@@ -304,9 +304,9 @@ contract Initialize is LlamaCoreTest {
     }
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], address(relativeQuorumLogic), strategyConfigs[0]);
+    emit StrategyAuthorized(strategyAddresses[0], relativeQuorumLogic, strategyConfigs[0]);
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], address(relativeQuorumLogic), strategyConfigs[1]);
+    emit StrategyAuthorized(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
 
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
@@ -1788,17 +1788,11 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
-    emit StrategyAuthorized(
-      strategyAddresses[0], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0])
-    );
+    emit StrategyAuthorized(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
     vm.expectEmit();
-    emit StrategyAuthorized(
-      strategyAddresses[1], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[1])
-    );
+    emit StrategyAuthorized(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
     vm.expectEmit();
-    emit StrategyAuthorized(
-      strategyAddresses[2], address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[2])
-    );
+    emit StrategyAuthorized(strategyAddresses[2], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
@@ -1808,7 +1802,7 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
-    address additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
+    ILlamaStrategy additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
 
     RelativeQuorum.Config[] memory newStrategies = new RelativeQuorum.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
@@ -1854,7 +1848,7 @@ contract CreateStrategies is LlamaCoreTest {
 
     for (uint256 i = 0; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
+        address(additionalStrategyLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
       );
     }
 
@@ -1867,7 +1861,7 @@ contract CreateStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createStrategies(ILlamaStrategy(additionalStrategyLogic), DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.strategies(strategyAddresses[0]), true);
     assertEq(mpCore.strategies(strategyAddresses[1]), true);
@@ -2195,8 +2189,6 @@ contract SetGuard is LlamaCoreTest {
 }
 
 contract AuthorizeScript is LlamaCoreTest {
-  event ScriptAuthorized(address indexed script, bool authorized);
-
   function testFuzz_RevertIf_CallerIsNotLlama(address caller, address script, bool authorized) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);

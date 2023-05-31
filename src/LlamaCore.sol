@@ -110,12 +110,9 @@ contract LlamaCore is Initializable {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
-  event StrategyAuthorized(
-    ILlamaStrategy indexed strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData
-  );
-  event StrategyUnauthorized(ILlamaStrategy indexed strategy);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
-  event ScriptAuthorized(address indexed script, bool authorized);
+  event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+  event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
+  event ScriptAuthorized(address script, bool authorized);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========

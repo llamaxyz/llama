@@ -64,20 +64,21 @@ contract Run is DeployLlamaTest {
       _event = emittedEvents[i];
       if (_event.topics[0] == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   ILlamaStrategy indexed strategy,  <-- The topic we want.
-        //   address indexed relativeQuorumLogic,
-        //   Strategy strategyData
+        //   ILlamaStrategy strategy,  <-- The field we want.
+        //   ILlamaStrategy indexed strategyLogic,
+        //   bytes initializationData
         // );
-        address strategy = address(uint160(uint256(_event.topics[1])));
+        (address strategy,) = abi.decode(_event.data, (address, bytes));
         strategiesAuthorized[strategiesCount++] = ILlamaStrategy(strategy);
       }
       if (_event.topics[0] == accountAuthorizedSig) {
-        // event AccountAuthorized(
-        //   LlamaAccount indexed account,  <-- The topic we want.
-        //   string name
+        // event AccountCreated(
+        //   ILlamaAccount account,  <-- The topic we want.
+        //   ILlamaAccount indexed accountLogic,
+        //   bytes initializationData
         // );
-        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
-        accountsAuthorized[accountsCount++] = LlamaAccount(account);
+        (address account,) = abi.decode(_event.data, (address, bytes));
+        accountsAuthorized[accountsCount++] = LlamaAccount(payable(account));
       }
     }
 

@@ -151,20 +151,21 @@ contract Run is CreateActionTest {
       }
       if (eventSig == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
-        //   ILlamaStrategy indexed strategy,  <-- The topic we want.
+        //   ILlamaStrategy strategy,  <-- The field we want.
         //   ILlamaStrategy indexed strategyLogic,
         //   bytes initializationData
         // );
-        address strategy = address(uint160(uint256(_event.topics[1])));
+        (address strategy,) = abi.decode(_event.data, (address, bytes));
         strategiesAuthorized[strategiesCount++] = RelativeQuorum(strategy);
       }
       if (eventSig == accountCreatedSig) {
         // event AccountCreated(
-        //   LlamaAccount indexed account, <-- The topic we want.
-        //   string name
+        //   ILlamaAccount account,  <-- The topic we want.
+        //   ILlamaAccount indexed accountLogic,
+        //   bytes initializationData
         // );
-        address payable account = payable(address(uint160(uint256(_event.topics[1]))));
-        accountsCreated[accountsCount++] = LlamaAccount(account);
+        (address account,) = abi.decode(_event.data, (address, bytes));
+        accountsCreated[accountsCount++] = LlamaAccount(payable(account));
       }
     }
 
