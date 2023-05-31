@@ -3,8 +3,7 @@ pragma solidity 0.8.19;
 
 import {Script, stdJson, console2} from "forge-std/Script.sol";
 
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
@@ -78,7 +77,7 @@ contract DeployLlama is Script {
       policyMetadata,
       jsonInput.readString(".rootLlamaName"),
       DeployUtils.readRelativeStrategies(jsonInput),
-      jsonInput.readStringArray(".initialAccountNames"),
+      DeployUtils.readAccounts(jsonInput),
       DeployUtils.readRoleDescriptions(jsonInput),
       DeployUtils.readRoleHolders(jsonInput),
       DeployUtils.readRolePermissions(jsonInput)

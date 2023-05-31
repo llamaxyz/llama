@@ -16,14 +16,14 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
 import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -63,8 +63,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaPolicy rootPolicy;
   ILlamaStrategy rootStrategy1;
   ILlamaStrategy rootStrategy2;
-  LlamaAccount rootAccount1;
-  LlamaAccount rootAccount2;
+  ILlamaAccount rootAccount1;
+  ILlamaAccount rootAccount2;
 
   // Mock protocol's (mp) llama instance.
   LlamaCore mpCore;
@@ -72,8 +72,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaPolicy mpPolicy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
-  LlamaAccount mpAccount1;
-  LlamaAccount mpAccount2;
+  ILlamaAccount mpAccount1;
+  ILlamaAccount mpAccount2;
 
   // Mock protocol for action targets.
   MockProtocol public mockProtocol;
@@ -113,7 +113,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant EXECUTE_ACTION_SELECTOR = LlamaCore.executeAction.selector;
   bytes4 public constant AUTHORIZE_SCRIPT_SELECTOR = LlamaCore.authorizeScript.selector;
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x0f47de5a; // createStrategies(address,bytes[])
-  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x9c8b12f1; // createAccounts(string[])
+  bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x90010bb0; // createAccounts(address,bytes[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
 
   // Permission IDs for those selectors.
@@ -158,10 +158,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootPolicy = rootCore.policy();
 
     // Now we deploy a mock protocol's llama, again with a single action creator role.
-    string[] memory mpAccounts = createActionScriptInput.readStringArray(".newAccountNames");
+    bytes[] memory mpAccounts = accountConfigsLlamaInstance();
     bytes[] memory rootStrategyConfigs = strategyConfigsRootLlama();
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
-    string[] memory rootAccounts = deployScriptInput.readStringArray(".initialAccountNames");
+    bytes[] memory rootAccounts = accountConfigsRootLlama();
 
     // First we create an action to deploy a new llamaCore instance.
     CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
@@ -213,10 +213,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpExecutor = mpCore.executor();
 
     // Set llama account addresses.
-    rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeLlamaAccountAddress(rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeLlamaAccountAddress(mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeLlamaAccountAddress(mpAccounts[1], address(mpCore));
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // Add approvers and disapprovers to the mock protocol's llama.
     vm.startPrank(address(mpExecutor));
@@ -248,10 +248,10 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
-    rootAccount1 = lens.computeLlamaAccountAddress(rootAccounts[0], address(rootCore));
-    rootAccount2 = lens.computeLlamaAccountAddress(rootAccounts[1], address(rootCore));
-    mpAccount1 = lens.computeLlamaAccountAddress(mpAccounts[0], address(mpCore));
-    mpAccount2 = lens.computeLlamaAccountAddress(mpAccounts[1], address(mpCore));
+    rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
+    rootAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
+    mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
     // With the protocol deployed, we can set special permissions.
     pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
@@ -329,6 +329,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
   function strategyConfigsLlamaInstance() internal view returns (bytes[] memory) {
     return DeployUtils.readRelativeStrategies(createActionScriptInput);
+  }
+
+  function accountConfigsRootLlama() internal view returns (bytes[] memory) {
+    return DeployUtils.readAccounts(deployScriptInput);
+  }
+
+  function accountConfigsLlamaInstance() internal view returns (bytes[] memory) {
+    return DeployUtils.readAccounts(createActionScriptInput);
   }
 
   function rootLlamaRoleDescriptions() internal returns (RoleDescription[] memory) {
