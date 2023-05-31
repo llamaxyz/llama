@@ -1,7 +1,9 @@
 # Action Creation
 
 After your Llama instance is deployed, it's time to start creating actions
-Actions are onchain transactions that serve as the exit point for your llama instance to interact with external contracts. 
+Actions are proposed operations initiated by policyholders to execute transactions onchain. 
+They include changing protocol parameters, transferring funds from a treasury, activating an emergency pause, etc. 
+Actions are how your Llama instance interacts with external contracts.
 Here is the anatomy of an action:
 
     Action Elements:
