@@ -17,9 +17,9 @@ After your Llama instance is deployed, it's time to start creating actions. Acti
     - Policies: Non-transferable NFTs encoded with roles and permissions for an individual llama instance.
     - Roles: A signifier given to one or more policyholders. Roles can be used to permission action approvals/disapprovals.
     - Permissions: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
-    - Strategies: A contract that holds all of the logic to determine action state. For example, strategies determine wheter or not an action is approved/disapproved, canceled, or able to be executed.
+    - Strategies: A contract that holds all of the logic to determine action state. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed.
     - Executor: The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor.
-    - Guards: Guards enable pre and post action execution saftey checks. Guards can be used to add arbitrary logic checks before and after action execution such as spending limits or calldata permissioning
+    - Guards: Guards enable pre and post action execution safety checks. Guards can be used to add arbitrary logic checks before and after action execution such as spending limits or calldata permissioning
     - Scripts: Contracts that are delegate called instead of called. Scripts can be used to batch calls together for extended functionality.
 
 ## Action State
@@ -40,17 +40,41 @@ enum ActionState {
 ```
 
 Lets dive into each state and what they mean.
-  - Active: The action has been created and policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
-  - Canceled: The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by sucessfully calling `cancelAction`.
-  - Failed: An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
-  - Approved: The action has reached been approval and is ready to be queued.
-  - Queued: The action is in the Queued period for the queueing duration and policyholders are able to disapprove the action. If the action is disaproved it will fail, otherwise it will be able to be executed after the queuing period ends. Reached by sucessfully calling `queueAction`.
-  - Expired: The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if block.timestamp is greater than Action's executionTime + expirationDelay.
-  - Executed: This state signifies that the action has been executed successfully. Reached by sucessfully calling `executeAction`.
+  - **Active**: The default state after an action has been created. This is when policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
+  - **Canceled**: The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by successfully calling `cancelAction`.
+  - **Failed**: An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
+  - **Approved**: The action has reached been approval and is ready to be queued.
+  - **Queued**: The action is in the Queued period for the queueing duration and policyholders are able to disapprove the action. If the action is disapproved it will fail, otherwise it will be able to be executed after the queuing period ends. Reached by successfully calling `queueAction`.
+  - **Expired**: The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if block.timestamp is greater than Action's executionTime + expirationDelay.
+  - **Executed**: This state signifies that the action has been executed successfully. Reached by sucessfully calling `executeAction`.
 
 
 We can call the `getActionState` method on `LlamaCore` to get the current state of a given action
 
 ## Permissioning Action Creation
 
-Actions are permissioned through Llama policies. Policyholders with the corresponding permissions are able to create actions. policy holders with the correct approval/disapproval roles are able to cast their (dis)approvals on the action, which determines whether or not the action passes or fails. If an action passes, it is able to be executed, otherwise it fails and cannot be executed.
+Permissions are the atomic unit for action creation access control and are managed through the through `LlamaPolicy` contract. Permissions can be assigned to roles, and roles are assigned to policies. Policies can have many roles, and roles can have many permissions. When creating an action, a validation check is done to make sure that the policyholder has a role with the correct permission.
+
+Permissions are calculated by hashing the `PermissionData` struct, which looks like this:
+```
+struct PermissionData {
+  address target; // Contract being called by an action.
+  bytes4 selector; // Selector of the function being called by an action.
+  ILlamaStrategy strategy; // Strategy used to govern the action.
+}
+```
+
+When creating an action, the permission required to create said action can be calculated on the fly, since the action creator must pass in the `target`, `selector` & `strategy`. We can calculate the permission id on the spot and check the `canCreateAction` mapping on the LlamaPolicy contract to verify that the action creation role has the corresponding permission.
+
+To add and remove permissions, we use the `setRolePermission` function on the `LlamaPolicy` contract.
+
+Permissions are what enable strategy contracts, since without the right permission, a policyholder would not be able to create an action that uses a different strategy than their permission allows. This is important because strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permissions that use that strategy rendering it useless.
+
+## Approvals and Disapprovals
+
+Approval and disapproval access is controlled by roles on the `LlamaPolicy` contract, and are set explicitly on the strategy contract at deployment. Each strategy can have exactly one approval role and one disapproval role.
+policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails. Policyholders without the correct approval/disapproval role are not able to cast.
+
+### Force Approval/Disapproval Roles
+
+Strategies have a concept of force approval/disapproval roles in addition to the normal approval/disapproval roles. A strategy can have many force approval/disapproval roles, unlike the normal approval/disapproval roles which are limited to one. Like the name suggests, if a policyholder with a force role casts their approval/disapproval the strategy will immediately reach the respective quorum.
