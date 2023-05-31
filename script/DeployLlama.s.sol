@@ -11,9 +11,9 @@ import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {AbsoluteStrategyConfig, RelativeStrategyConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -23,7 +23,7 @@ contract DeployLlama is Script {
   // Logic contracts.
   LlamaCore coreLogic;
   RelativeQuorum relativeQuorumLogic;
-  PeerReview peerReviewLogic;
+  AbsolutePeerReview absolutePeerReviewLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
 
@@ -45,8 +45,8 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaRelativeQuorumLogic:", vm.toString(address(relativeQuorumLogic))));
 
     vm.broadcast();
-    peerReviewLogic = new PeerReview();
-    DeployUtils.print(string.concat("  LlamaPeerReviewLogic:", vm.toString(address(peerReviewLogic))));
+    absolutePeerReviewLogic = new AbsolutePeerReview();
+    DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
 
     vm.broadcast();
     accountLogic = new LlamaAccount();

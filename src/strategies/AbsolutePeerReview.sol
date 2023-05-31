@@ -24,7 +24,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     and approve an action. You can design a strategy where anyone in this group can propose
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
-contract PeerReview is AbsoluteStrategyBase {
+contract AbsolutePeerReview is AbsoluteStrategyBase {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================

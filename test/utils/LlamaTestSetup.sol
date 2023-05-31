@@ -17,17 +17,11 @@ import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
-import {PeerReview} from "src/strategies/PeerReview.sol";
+import {AbsolutePeerReview} from "src/strategies/AbsolutePeerReview.sol";
+import {AbsoluteQuorum} from "src/strategies/AbsoluteQuorum.sol";
+import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {
-  Action,
-  ActionInfo,
-  AbsoluteStrategyConfig,
-  RelativeStrategyConfig,
-  PermissionData,
-  RoleHolderData,
-  RolePermissionData
-} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAccount} from "src/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -341,7 +335,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig[] memory strategies)
+  function toILlamaStrategy(RelativeQuorum.Config[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -351,7 +345,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(RelativeStrategyConfig memory strategy)
+  function toILlamaStrategy(RelativeQuorum.Config memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -367,7 +361,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toPeerReview(ILlamaStrategy strategy) internal pure returns (PeerReview converted) {
+  function toAbsolutePeerReview(ILlamaStrategy strategy) internal pure returns (AbsolutePeerReview converted) {
     assembly {
       converted := strategy
     }
@@ -405,7 +399,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return uint16(n);
   }
 
-  function deployPeerReview(
+  function deployAbsolutePeerReview(
     uint8 _approvalRole,
     uint8 _disapprovalRole,
     uint64 _queuingDuration,
@@ -417,7 +411,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    AbsoluteStrategyConfig memory strategyConfig = AbsoluteStrategyConfig({
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
       expirationPeriod: _expirationDelay,
@@ -430,19 +424,62 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
-    AbsoluteStrategyConfig[] memory strategyConfigs = new AbsoluteStrategyConfig[](1);
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(rootExecutor));
 
-    factory.authorizeStrategyLogic(peerReviewLogic);
+    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
 
     vm.prank(address(mpExecutor));
 
-    mpCore.createStrategies(peerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(peerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+  function deployAbsoluteQuorum(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint128 _minApprovals,
+    uint128 _minDisapprovals,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+    AbsoluteQuorum absoluteQuorumLogic = new AbsoluteQuorum();
+
+    AbsoluteStrategyBase.Config memory strategyConfig = AbsoluteStrategyBase.Config({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovals: _minApprovals,
+      minDisapprovals: _minDisapprovals,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    AbsoluteStrategyBase.Config[] memory strategyConfigs = new AbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(rootExecutor));
+
+    factory.authorizeStrategyLogic(absoluteQuorumLogic);
+
+    vm.prank(address(mpExecutor));
+
+    mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 }
