@@ -12,7 +12,7 @@ Here is the anatomy of an action:
     - Calldata: Function selector and its parameters
     - Role: Role used to create the action
     - Value (amount of ether sent with the call)
-    - Description (plaintext explaining the purpose of the action)
+    - Description: Plaintext explaining the purpose of the action
 
 
 ## Key Concepts
