@@ -82,7 +82,7 @@ This is important because strategies cannot be explicitly deleted or unauthorize
 
 Approval and disapproval access is controlled by roles on the `LlamaPolicy` contract, and are set explicitly on the strategy contract at deployment. 
 Each strategy can have exactly one approval role and one disapproval role.
-policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
+Policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
 Policyholders without the correct approval/disapproval role are not able to cast.
 
 ### Force Approval/Disapproval Roles
