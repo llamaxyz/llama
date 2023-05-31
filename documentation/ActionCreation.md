@@ -10,7 +10,7 @@ Here is the anatomy of an action:
     - Target Contract: Contract to be called by the Llama executor
     - Strategy: Llama strategy that determines the action state
     - Calldata: Function selector and its parameters
-    - Role (role used to create the action)
+    - Role: Role used to create the action
     - Value (amount of ether sent with the call)
     - Description (plaintext explaining the purpose of the action)
 
