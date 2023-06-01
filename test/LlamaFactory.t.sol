@@ -397,7 +397,7 @@ contract Deploy is LlamaFactoryTest {
 
 contract AuthorizeStrategyLogic is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootCore));
+    vm.assume(_caller != address(rootExecutor));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     vm.prank(_caller);
     factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
@@ -420,7 +420,7 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
 
 contract AuthorizeAccountLogic is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootCore));
+    vm.assume(_caller != address(rootExecutor));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     vm.prank(_caller);
     factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
