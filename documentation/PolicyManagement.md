@@ -11,6 +11,7 @@ Let's dive into the best practices surrounding policy management.
 ## Key Concepts
 
 - **Policies**: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
+- **Token Ids**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyHolderAddress))`
 - **Roles**: A signifier given to one or more policyholders. Roles can be used to permission action approvals/disapprovals.
 - **Permissions**: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
 - **Checkpoints**: Llama stores checkpointed policy data to storage over time so that we can search historical policy data .
@@ -68,6 +69,9 @@ It is for this reason that the `updateRoleDescription` method exists.
 Note that this method only changes the semantic meaning of a role, not the actual power that role holds within the Llama instance; be sure that the updated role has the correct permissions and approval/disapproval powers when updating a role.
 
 ### Granting Roles
+
+To grant a role to a policyholder, we use the `setRoleHolder` method.
+Pass in a role that the policyholder does not hold, the policyholder's address, quantity, and expiration,
 
 ### Revoking Roles
 
