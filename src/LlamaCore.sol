@@ -102,7 +102,7 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when an action is canceled.
   event ActionCanceled(uint256 id);
 
-  /// @dev Emitted when an Action Guard is set.
+  /// @dev Emitted when an action guard is set.
   event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
 
   /// @dev Emitted when an action is queued.
@@ -125,13 +125,13 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
-  /// @dev Emitted when a Strategy contract is created and authorized.
+  /// @dev Emitted when a strategy is created and authorized.
   event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
 
-  /// @dev Emitted when an Account contract is created.
+  /// @dev Emitted when an account is created.
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
-  /// @dev Emitted when a Script is authorized.
+  /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
 
   // =============================================================
@@ -486,9 +486,9 @@ contract LlamaCore is Initializable {
     return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
   }
 
-  /// @notice Get the current ActionState of an action by its actionId.
+  /// @notice Get the current `ActionState` of an action by its `ActionInfo` struct.
   /// @param actionInfo Data required to create an action.
-  /// @return The current ActionState of the action.
+  /// @return The current `ActionState` of the action.
   function getActionState(ActionInfo calldata actionInfo) public view returns (ActionState) {
     // We don't need an explicit check on the action ID to make sure it exists, because if the
     // action does not exist, the expected payload hash from storage will be `bytes32(0)`, so
@@ -668,7 +668,7 @@ contract LlamaCore is Initializable {
     }
   }
 
-  /// @dev Returns the hash of the action info struct.
+  /// @dev Returns the hash of the `createAction` parameters using the `ActionInfo` struct.
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
       actionInfo.id,
@@ -681,7 +681,7 @@ contract LlamaCore is Initializable {
     );
   }
 
-  /// @dev Returns the hash of the create action parameters.
+  /// @dev Returns the hash of the `createAction` parameters.
   function _infoHash(
     uint256 id,
     address creator,

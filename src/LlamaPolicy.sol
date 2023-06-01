@@ -390,7 +390,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Initializes a new role with the given `role` ID and `description`
+  /// @dev Initializes the next unassigned `role` with the given `description`.
   function _initializeRole(RoleDescription description) internal {
     numRoles += 1;
     emit RoleInitialized(numRoles, description);
