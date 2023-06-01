@@ -118,6 +118,19 @@ When revoking permissions, `hasPermission` will always be set to false.
 
 ## Batching Policy Management Methods Using the Governance Script
 
+All of the base methods to manage Llama policies are singular, meaning new actions must be created for every singular policy, role, and permission users might want to adjust.
+Batching these methods together is an expected usecase, for example granting policies to a group of new users, or removing all permissions related to a specific strategy that is being deprecated.
+This is the problem that the `GovernanceScript` aims to solve, by providing an interface that allows users to batch common policy management calls together to provide a substantially better UX.
+The `GovernanceScript` must be permissioned seperately from the base policy management functions, as it has an inherently different target address and function selector.
+
+### Aggregate Method
+
+Mirrors of the base policy management functions exist as batch methods on the `GovernanceScript` contract, and even some common combinations of these methods.
+Not all possible combinations can be predicted and therfore do not exist on the script's interface.
+This is where the `aggregate` method becomes useful.
+`aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
+Since `aggregate` is a very powerful method, we reccomend permissioning other methods on the `GovernanceSript` contract unless the use of `aggregate` is deemed necessary.
+
 ## Checkpoints
 
 
