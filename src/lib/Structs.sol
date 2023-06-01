@@ -36,10 +36,10 @@ struct ActionInfo {
   bytes data; // Data to be called on the `target` when the action is executed.
 }
 
+/// @dev Instead of storing all data required to execute an action in storage, we only save the hash to
+// make action creation cheaper. The hash is computed by taking the keccak256 hash of the concatenation of each
+// field in the `ActionInfo` struct.
 struct Action {
-  // Instead of storing all data required to execute an action in storage, we only save the hash to
-  // make action creation cheaper. The hash is computed by taking the keccak256 hash of the
-  // concatenation of the each field in the `ActionInfo` struct.
   bytes32 infoHash;
   bool executed; // Has action executed.
   bool canceled; // Is action canceled.

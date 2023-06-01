@@ -14,7 +14,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Absolute Strategy Base Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a base contract for llama strategies to inherit which has the following properties:
+/// @notice This is a base contract for Llama strategies to inherit which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - The `validateActionCreation`, `isApprovalEnabled`, and `isDisapprovalEnabled` methods are left up to the
 ///     implementing contract to determine the rest of the behavior.
@@ -46,7 +46,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @param currentState The current state of the action.
   error CannotCancelInState(ActionState currentState);
 
-  /// @dev The strategy has disabled disapprovals.
+  /// @dev The `strategy` has disabled disapprovals.
   error DisapprovalDisabled();
 
   /// @dev The action cannot be created because approval quorum is not possible.
@@ -55,37 +55,37 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @dev The action cannot be created because disapproval quorum is not possible.
   error InsufficientDisapprovalQuantity();
 
-  /// @dev The action cannot be created because the quantity of approvals required are greater than the role supply.
+  /// @dev The action cannot be created because the `quantity` of approvals required are greater than the role supply.
   error InvalidMinApprovals(uint256 minApprovals);
 
-  /// @dev The role is not eligible to participate in this strategy in the specified way.
-  /// @param role The role being used.
+  /// @dev The `role` is not eligible to participate in this strategy in the specified way.
+  /// @param role The `role` being used.
   error InvalidRole(uint8 role);
 
   /// @dev Only the action creator can cancel an action.
   error OnlyActionCreator();
 
   /// @dev The action cannot be created if the approval or disapproval supply is 0.
-  /// @param role The role being used.
+  /// @param role The `role` being used.
   error RoleHasZeroSupply(uint8 role);
 
   /// @dev The provided `role` is not initialized by the `LlamaPolicy`.
-  /// @param role The role being used.
+  /// @param role The `role` being used.
   error RoleNotInitialized(uint8 role);
 
   // ========================
   // ======== Events ========
   // ========================
 
-  /// @dev Emitted when a Force Approval role is added to the strategy. This can only happen at strategy deployment time
-  /// during initialization.
+  /// @dev Emitted when a force approval `role` is added to the strategy. This can only happen at strategy deployment
+  /// time during initialization.
   event ForceApprovalRoleAdded(uint8 role);
 
-  /// @dev Emitted when a Force Disapproval role is added to the strategy. This can only happen at strategy deployment
+  /// @dev Emitted when a force disapproval `role` is added to the strategy. This can only happen at strategy deployment
   /// time during initialization.
   event ForceDisapprovalRoleAdded(uint8 role);
 
-  /// @dev Emitted when a Strategy is created referencing the core and policy.
+  /// @dev Emitted when a `strategy` is created referencing the `core` and `policy`.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
   // =============================================================
@@ -114,27 +114,27 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @notice Minimum time, in seconds, between queueing and execution of action.
   uint64 public queuingPeriod;
 
-  /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
+  /// @notice Time, in seconds, after `executionTime` that action can be executed before permanently expiring.
   uint64 public expirationPeriod;
 
-  /// @notice Minimum total quantity of approvals for the action to be queued.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
+  /// @notice Minimum total `quantity` of approvals for the action to be queued.
+  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the `policy`.
   uint128 public minApprovals;
 
-  /// @notice Minimum total quantity of disapprovals for the action to be canceled.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
+  /// @notice Minimum total `quantity` of disapprovals for the action to be canceled.
+  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the `policy`.
   uint128 public minDisapprovals;
 
-  /// @notice The role that can approve an action.
+  /// @notice The `role` that can approve an action.
   uint8 public approvalRole;
 
-  /// @notice The role that can disapprove an action.
+  /// @notice The `role` that can disapprove an action.
   uint8 public disapprovalRole;
 
-  /// @notice Mapping of roles that can force an action to be approved.
+  /// @notice Mapping of `roles` that can force an action to be approved.
   mapping(uint8 => bool) public forceApprovalRole;
 
-  /// @notice Mapping of roles that can force an action to be disapproved.
+  /// @notice Mapping of `roles` that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
   // =============================
@@ -292,7 +292,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======== Other Public Functions ========
   // ========================================
 
-  /// @notice Returns the timestamp at which the approval period ends.
+  /// @notice Returns the `timestamp` at which the approval period ends.
   function approvalEndTime(ActionInfo calldata actionInfo) public view virtual returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;

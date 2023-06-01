@@ -25,13 +25,13 @@ contract GovernanceScript is BaseScript {
   // ==============================
 
   struct UpdateRoleDescription {
-    uint8 role;
-    RoleDescription description;
+    uint8 role; // Role to update.
+    RoleDescription description; // New role description.
   }
 
   struct CreateStrategies {
-    ILlamaStrategy llamaStrategyLogic;
-    bytes[] strategies;
+    ILlamaStrategy llamaStrategyLogic; // Logic contract for the strategies.
+    bytes[] strategies; // Array of configurations to initialize new strategies with.
   }
 
   // ======================================
@@ -53,10 +53,10 @@ contract GovernanceScript is BaseScript {
   // =======================================
   // ======== Arbitrary Aggregation ========
   // =======================================
+
   /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the
-  /// context
-  /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
-  /// needed than to permission the aggregate function itself
+  /// context of `LlamaCore` since this script will be delegatecalled. It is safer to permission out the functions below
+  /// as needed than to permission the aggregate function itself.
   function aggregate(address[] calldata targets, bytes[] calldata data)
     external
     onlyDelegateCall

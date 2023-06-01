@@ -25,7 +25,8 @@ abstract contract SingleUseScript is BaseScript {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @dev Address of the executor contract. We save it off in order to access the authorizeScript method in LlamaCore.
+  /// @dev Address of the executor contract. We save it off in order to access the authorizeScript method in
+  /// `LlamaCore`.
   LlamaExecutor internal immutable EXECUTOR;
 
   // ======================================================

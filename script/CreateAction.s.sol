@@ -12,7 +12,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 contract CreateAction is Script {
   using stdJson for string;
 
-  // The ID of the action created on the root vertex.
+  // The ID of the action created on the root Llama.
   uint256 deployActionId;
 
   // The data needed to for the Factory.deploy call

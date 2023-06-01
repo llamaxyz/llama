@@ -22,10 +22,10 @@ contract LlamaLens {
   /// @notice The factory contract on this chain.
   address public immutable LLAMA_FACTORY;
 
-  /// @notice The Llama Core implementation (logic) contract.
+  /// @notice The Llama core implementation (logic) contract.
   address public immutable LLAMA_CORE_LOGIC;
 
-  /// @notice The Llama Policy implementation (logic) contract.
+  /// @notice The Llama policy implementation (logic) contract.
   address public immutable LLAMA_POLICY_LOGIC;
 
   // ======================================================
@@ -33,7 +33,7 @@ contract LlamaLens {
   // ======================================================
 
   /// @notice Sets the factory address.
-  /// @param _llamaFactory the llama factory contract on this chain.
+  /// @param _llamaFactory the Llama factory contract on this chain.
   constructor(address _llamaFactory) {
     LLAMA_FACTORY = _llamaFactory;
     LLAMA_CORE_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_CORE_LOGIC());
@@ -45,37 +45,37 @@ contract LlamaLens {
   // ===========================================
 
   /// @notice Hashes a permission.
-  /// @param permission the permission to hash.
-  /// @return the hash of the permission.
+  /// @param permission The permission to hash.
+  /// @return The hash of the permission.
   function computePermissionId(PermissionData calldata permission) external pure returns (bytes32) {
     return keccak256(abi.encode(permission));
   }
 
-  /// @notice Computes the address of a llama core from the name of the llama instance.
-  /// @param name The name of this llama instance.
-  /// @return the computed address of the LlamaCore contract.
+  /// @notice Computes the address of a Llama core from the name of the Llama instance.
+  /// @param name The `name` of this Llama instance.
+  /// @return The computed address of the `LlamaCore` contract.
   function computeLlamaCoreAddress(string memory name) external view returns (LlamaCore) {
     return _computeLlamaCoreAddress(name);
   }
 
-  /// @notice Computes the address of a llama executor from its core address.
-  /// @param llamaCore The address of the LlamaCore contract.
-  /// @return the computed address of the LlamaExecutor contract.
+  /// @notice Computes the address of a Llama executor from its core address.
+  /// @param llamaCore The address of the `LlamaCore` contract.
+  /// @return The computed address of the `LlamaExecutor` contract.
   function computeLlamaExecutorAddress(address llamaCore) external pure returns (LlamaExecutor) {
     return LlamaExecutor(_computeCreateAddress(llamaCore, 1));
   }
 
-  /// @notice Computes the address of a llama executor from the name of the llama instance.
-  /// @param name The name of this llama instance.
-  /// @return the computed address of the LlamaExecutor contract.
+  /// @notice Computes the address of a Llama executor from the name of the Llama instance.
+  /// @param name The `name` of this Llama instance.
+  /// @return The computed address of the `LlamaExecutor` contract.
   function computeLlamaExecutorAddress(string memory name) external view returns (LlamaExecutor) {
     LlamaCore llamaCore = _computeLlamaCoreAddress(name);
     return LlamaExecutor(_computeCreateAddress(address(llamaCore), 1));
   }
 
-  /// @notice Computes the address of a llama policy with a name value.
-  /// @param name The name of this llama instance.
-  /// @return the computed address of the LlamaPolicy contract.
+  /// @notice Computes the address of a Llama policy with a name value.
+  /// @param name The `name` of this Llama instance.
+  /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name) external view returns (LlamaPolicy) {
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_POLICY_LOGIC,
@@ -85,11 +85,11 @@ contract LlamaLens {
     return LlamaPolicy(_computedAddress);
   }
 
-  /// @notice Computes the address of a llama strategy with a strategy value.
-  /// @param llamaStrategyLogic The Llama Strategy logic contract.
+  /// @notice Computes the address of a Llama strategy with the strategy configuration value.
+  /// @param llamaStrategyLogic The Llama strategy logic contract.
   /// @param strategy The initialization configuration for the new strategy to be created.
-  /// @param llamaCore The llama core to be set.
-  /// @return the computed address of the strategy contract.
+  /// @param llamaCore The Llama core to be set.
+  /// @return The computed address of the strategy contract.
   function computeLlamaStrategyAddress(address llamaStrategyLogic, bytes memory strategy, address llamaCore)
     external
     pure
@@ -103,11 +103,11 @@ contract LlamaLens {
     return ILlamaStrategy(_computedAddress);
   }
 
-  /// @notice Computes the address of a llama account with a name (account) value.
-  /// @param llamaAccountLogic The Llama Account logic contract.
+  /// @notice Computes the address of a Llama account with the account configuration value.
+  /// @param llamaAccountLogic The Llama account logic contract.
   /// @param account The initialization configuration for the new account to be created.
-  /// @param llamaCore The llama core to be set.
-  /// @return the computed address of the LlamaAccount contract.
+  /// @param llamaCore The Llama core to be set.
+  /// @return The computed address of the account contract.
   function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory account, address llamaCore)
     external
     pure
@@ -125,7 +125,7 @@ contract LlamaLens {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Computes the address of a llama core from the name of the llama instance.
+  /// @dev Computes the address of a Llama core from the name of the Llama instance.
   function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_CORE_LOGIC,
@@ -141,7 +141,7 @@ contract LlamaLens {
     return address(uint160(uint256(bytesValue)));
   }
 
-  /// @dev Compute the address a contract will be deployed at for a given deployer address and nonce.
+  /// @dev Compute the address a contract will be deployed at for a given deployer address and `nonce`.
   /// Adapted from the Forge Standard Library
   /// (https://github.com/foundry-rs/forge-std/blob/9b49a72cfdb36bcf195eb863f868f01a6d6d3186/src/StdUtils.sol#L93)
   function _computeCreateAddress(address deployer, uint256 nonce) internal pure virtual returns (address) {

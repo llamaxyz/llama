@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 
-/// @title Llama Policy Token Metadata Parameter Registry
+/// @title Llama Policy Metadata Parameter Registry
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Parameter Registry contract for onchain SVG colors and logos.
 contract LlamaPolicyMetadataParamRegistry {
@@ -27,33 +27,33 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== Events ========
   // ========================
 
-  /// @dev Emitted when the color code for SVG of a Llama Instance is set.
+  /// @dev Emitted when the `color` code for SVG of a Llama instance is set.
   event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
 
-  /// @dev Emitted when the logo for SVG of a Llama Instance is set.
+  /// @dev Emitted when the `logo` for SVG of a Llama instance is set.
   event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice The Root Llama Instance.
+  /// @notice The Root Llama instance's executor.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
 
-  /// @notice The Root Llama Instance.
+  /// @notice The Llama factory.
   address public immutable LLAMA_FACTORY;
 
-  /// @notice Mapping of Llama Instance to color code for SVG.
+  /// @notice Mapping of Llama instance to `color` code for SVG.
   mapping(LlamaExecutor => string) public color;
 
-  /// @notice Mapping of Llama Instance to logo for SVG.
+  /// @notice Mapping of Llama instance to `logo` for SVG.
   mapping(LlamaExecutor => string) public logo;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  /// @notice This contract is deployed in the factory's constructor
+  /// @notice This contract is deployed in the Llama factory's constructor.
   constructor(LlamaExecutor rootLlamaExecutor) {
     ROOT_LLAMA_EXECUTOR = rootLlamaExecutor;
     LLAMA_FACTORY = msg.sender;
@@ -69,24 +69,24 @@ contract LlamaPolicyMetadataParamRegistry {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Gets the color code and logo for SVG of a Llama Instance.
-  /// @param llamaExecutor The Llama Instance.
+  /// @notice Gets the `color` code and `logo` for SVG of a Llama instance.
+  /// @param llamaExecutor The Llama instance's executor.
   function getMetadata(LlamaExecutor llamaExecutor) external view returns (string memory _color, string memory _logo) {
     _color = color[llamaExecutor];
     _logo = logo[llamaExecutor];
   }
 
-  /// @notice Sets the color code for SVG of a Llama Instance.
-  /// @param llamaExecutor The Llama Instance.
-  /// @param _color The color code as a hex value (eg. #00FF00)
+  /// @notice Sets the `color` code for SVG of a Llama instance.
+  /// @param llamaExecutor The Llama instance's executor.
+  /// @param _color The `color` code as a hex value (eg. #00FF00)
   function setColor(LlamaExecutor llamaExecutor, string memory _color) public onlyAuthorized(llamaExecutor) {
     color[llamaExecutor] = _color;
     emit ColorSet(llamaExecutor, _color);
   }
 
-  /// @notice Sets the logo for SVG of a Llama Instance.
-  /// @param llamaExecutor The Llama Instance.
-  /// @param _logo The logo.
+  /// @notice Sets the `logo` for SVG of a Llama instance.
+  /// @param llamaExecutor The Llama instance's executor.
+  /// @param _logo The `logo`.
   function setLogo(LlamaExecutor llamaExecutor, string memory _logo) public onlyAuthorized(llamaExecutor) {
     logo[llamaExecutor] = _logo;
     emit LogoSet(llamaExecutor, _logo);
