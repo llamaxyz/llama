@@ -14,9 +14,9 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaPeerReview} from "src/strategies/LlamaPeerReview.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -1398,7 +1398,7 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
-    vm.expectRevert(LlamaPeerReview.ActionCreatorCannotCast.selector);
+    vm.expectRevert(LlamaAbsolutePeerReview.ActionCreatorCannotCast.selector);
     absolutePeerReview.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
   }
 
@@ -1471,7 +1471,7 @@ contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
-    vm.expectRevert(LlamaPeerReview.ActionCreatorCannotCast.selector);
+    vm.expectRevert(LlamaAbsolutePeerReview.ActionCreatorCannotCast.selector);
     absolutePeerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
   }
 

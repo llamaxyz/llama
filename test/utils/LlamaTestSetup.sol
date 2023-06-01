@@ -19,9 +19,9 @@ import {DeployUtils} from "script/DeployUtils.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaPeerReview} from "src/strategies/LlamaPeerReview.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -369,7 +369,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toAbsolutePeerReview(ILlamaStrategy strategy) internal pure returns (LlamaPeerReview converted) {
+  function toAbsolutePeerReview(ILlamaStrategy strategy) internal pure returns (LlamaAbsolutePeerReview converted) {
     assembly {
       converted := strategy
     }

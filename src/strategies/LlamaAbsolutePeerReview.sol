@@ -13,7 +13,7 @@ import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Llama Peer Review Strategy
+/// @title Llama Absolute Peer Review Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
@@ -24,7 +24,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     and approve an action. You can design a strategy where anyone in this group can propose
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
-contract LlamaPeerReview is LlamaAbsoluteStrategyBase {
+contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
