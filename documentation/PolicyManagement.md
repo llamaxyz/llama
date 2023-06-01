@@ -17,9 +17,9 @@ Let's dive into the best practices surrounding policy management.
 
 ## Managing Policies
 
-Narrowing in on the Llama policy NFT itself, there are two actions we can take to manage the policy supply: minting and burning policies.
-Since policies are non-transferable, there is no way someone can hold a policy unless one has been explicitly granted to them at deployment or through governance.
-Conversely, there is no way for someone to burn their own policy, they may only be revoked through governance.
+Users can perform two actions to manage the policy supply: minting and burning policies. 
+Since policies cannot be transferred, users can only hold a policy if it has been explicitly granted to them during deployment or through governance. 
+Similarly, policyholders cannot burn their own policy; policies can only be revoked through governance.
 
 ### Granting Policies
 
@@ -71,12 +71,13 @@ Note that this method only changes the semantic meaning of a role, not the actua
 
 To grant a role to a policyholder, we use the `setRoleHolder` method.
 In order to grant a role, this method requires us to pass in a role that the policyholder does not hold, the policyholder's address, the quantity of this role they should hold, and expiration timestamp.
-After granting the role, the total supply of the role will increment by 1, and the total quantity of the role will increase by the quantity passed in.
+After granting the role, the total supply of the role will increment by one, and the total quantity of the role will increase by the quantity passed in.
 
 ### Revoking Roles
 
-To revoke a role, we use the `setRoleHolder` method again
+To revoke a role, we use the `setRoleHolder` method again.
 Simply pass in the role, the policyholder to revoke it from, and set the quantity and expiration to 0.
+Revoking a role will decrement the total supply of the role by one, and decrement the total quantity of the role by the quantity the policyholder previously held.
 
 ### Updating Role Quantity / Expiration
 
