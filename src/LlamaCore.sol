@@ -625,9 +625,10 @@ contract LlamaCore is Initializable {
     return currentCount + quantity;
   }
 
-  /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
-  /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
-  /// have permission to assign role permissions.
+  /// @dev Deploys strategies. Takes in the strategy logic contract to be used and an array of configurations to
+  /// initialize the new strategies with. Returns the address of the first strategy, which is only used during the
+  /// `LlamaCore` initialization so that we can ensure someone (specifically, policyholders with role ID 1) has the
+  /// permission to assign role permissions.
   function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
     internal
     returns (ILlamaStrategy firstStrategy)
@@ -649,7 +650,8 @@ contract LlamaCore is Initializable {
     }
   }
 
-  /// @dev Deploys accounts.
+  /// @dev Deploys accounts. Takes in the account logic contract to be used and an array of configurations to initialize
+  /// the new accounts with.
   function _deployAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) internal {
     if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
       // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
