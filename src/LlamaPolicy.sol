@@ -24,10 +24,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Structs ========
   // =========================
 
-  /// @dev Stores the two different supply values for a role.
+  /// @dev Stores the two different supply values for a `role`.
   struct RoleSupply {
-    uint128 numberOfHolders;
-    uint128 totalQuantity;
+    uint128 numberOfHolders; // The total number of unique `policyholders` holding a `role`.
+    uint128 totalQuantity; // The sum of the `quantity` field for all unique `policyholders` holding a `role`.
   }
 
   // ======================================

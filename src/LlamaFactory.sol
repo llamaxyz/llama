@@ -142,11 +142,11 @@ contract LlamaFactory {
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The ILlamaStrategy implementation (logic) contract to use for this Llama instance.
   /// @param accountLogic The ILlamaAccount implementation (logic) contract to use for this Llama instance.
-  /// @param initialStrategies The list of initial strategies.
-  /// @param initialAccounts The list of initial accounts.
-  /// @param initialRoleDescriptions The list of initial role descriptions.
-  /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
-  /// @param initialRolePermissions The list of initial permissions given to roles.
+  /// @param initialStrategies Array of configurations to initialize initial strategies with.
+  /// @param initialAccounts Array of configurations to initialize initial accounts with.
+  /// @param initialRoleDescriptions Array of initial role descriptions.
+  /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
+  /// @param initialRolePermissions Array of initial permissions given to roles.
   /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
   /// @return executor The address of the LlamaExecutor of the newly created instance.
