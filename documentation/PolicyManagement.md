@@ -10,7 +10,7 @@ Let's dive into the best practices surrounding policy management.
 ## Key Concepts
 
 - **Policies**: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
-- **Token Ids**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyHolderAddress))`
+- **Token Ids**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyHolderAddress))`.
 - **Roles**: A signifier given to one or more policyholders. Roles can be used to permission action approvals/disapprovals.
 - **Permissions**: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
 - **Checkpoints**: Llama stores checkpointed policy data to storage over time so that we can search historical policy data.
