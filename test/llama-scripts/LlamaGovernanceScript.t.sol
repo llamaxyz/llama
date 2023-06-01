@@ -19,45 +19,45 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {GovernanceScript} from "src/llama-scripts/GovernanceScript.sol";
+import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-contract GovernanceScriptTest is LlamaTestSetup {
+contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
-  GovernanceScript governanceScript;
+  LlamaGovernanceScript governanceScript;
 
-  bytes4 public constant AGGREGATE_SELECTOR = GovernanceScript.aggregate.selector;
+  bytes4 public constant AGGREGATE_SELECTOR = LlamaGovernanceScript.aggregate.selector;
   bytes4 public constant INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR =
-    GovernanceScript.initializeRolesAndSetRoleHolders.selector;
+    LlamaGovernanceScript.initializeRolesAndSetRoleHolders.selector;
   bytes4 public constant INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    GovernanceScript.initializeRolesAndSetRolePermissions.selector;
+    LlamaGovernanceScript.initializeRolesAndSetRolePermissions.selector;
   bytes4 public constant INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    GovernanceScript.initializeRolesAndSetRoleHoldersAndSetRolePermissions.selector;
+    LlamaGovernanceScript.initializeRolesAndSetRoleHoldersAndSetRolePermissions.selector;
   bytes4 public constant CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR =
-    GovernanceScript.createNewStrategiesAndSetRoleHolders.selector;
+    LlamaGovernanceScript.createNewStrategiesAndSetRoleHolders.selector;
   bytes4 public constant CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR =
-    GovernanceScript.createNewStrategiesAndInitializeRolesAndSetRoleHolders.selector;
+    LlamaGovernanceScript.createNewStrategiesAndInitializeRolesAndSetRoleHolders.selector;
   bytes4 public constant CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    GovernanceScript.createNewStrategiesAndSetRolePermissions.selector;
+    LlamaGovernanceScript.createNewStrategiesAndSetRolePermissions.selector;
   bytes4 public constant CREATE_NEW_STRATEGIES_AND_NEW_ROLES_AND_SET_ROLE_HOLDERS_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    GovernanceScript.createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissions.selector;
+    LlamaGovernanceScript.createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissions.selector;
   bytes4 public constant REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR =
-    GovernanceScript.revokePoliciesAndUpdateRoleDescriptions.selector;
+    LlamaGovernanceScript.revokePoliciesAndUpdateRoleDescriptions.selector;
   bytes4 public constant REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_AND_SET_ROLE_HOLDERS_SELECTOR =
-    GovernanceScript.revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders.selector;
-  bytes4 public constant INITIALIZE_ROLES_SELECTOR = GovernanceScript.initializeRoles.selector;
-  bytes4 public constant SET_ROLE_HOLDERS_SELECTOR = GovernanceScript.setRoleHolders.selector;
-  bytes4 public constant SET_ROLE_PERMISSIONS_SELECTOR = GovernanceScript.setRolePermissions.selector;
-  bytes4 public constant REVOKE_POLICIES_SELECTOR = GovernanceScript.revokePolicies.selector;
-  bytes4 public constant UPDATE_ROLE_DESCRIPTIONS_SELECTOR = GovernanceScript.updateRoleDescriptions.selector;
+    LlamaGovernanceScript.revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders.selector;
+  bytes4 public constant INITIALIZE_ROLES_SELECTOR = LlamaGovernanceScript.initializeRoles.selector;
+  bytes4 public constant SET_ROLE_HOLDERS_SELECTOR = LlamaGovernanceScript.setRoleHolders.selector;
+  bytes4 public constant SET_ROLE_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setRolePermissions.selector;
+  bytes4 public constant REVOKE_POLICIES_SELECTOR = LlamaGovernanceScript.revokePolicies.selector;
+  bytes4 public constant UPDATE_ROLE_DESCRIPTIONS_SELECTOR = LlamaGovernanceScript.updateRoleDescriptions.selector;
 
   bytes32 public executeActionPermission;
   bytes32 public aggregatePermission;
@@ -79,7 +79,7 @@ contract GovernanceScriptTest is LlamaTestSetup {
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
 
-    governanceScript = new GovernanceScript();
+    governanceScript = new LlamaGovernanceScript();
 
     vm.startPrank(address(mpExecutor));
 
@@ -174,7 +174,7 @@ contract GovernanceScriptTest is LlamaTestSetup {
   }
 }
 
-contract Aggregate is GovernanceScriptTest {
+contract Aggregate is LlamaGovernanceScriptTest {
   address[] public targets;
   bytes[] public calls;
 
@@ -231,25 +231,25 @@ contract Aggregate is GovernanceScriptTest {
 
 // TODO: write tests for all of the functions below
 
-contract InitializeRolesAndSetRoleHolders is GovernanceScriptTest {}
+contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {}
 
-contract InitializeRolesAndSetRolePermissions is GovernanceScriptTest {}
+contract InitializeRolesAndSetRolePermissions is LlamaGovernanceScriptTest {}
 
-contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is GovernanceScriptTest {}
+contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanceScriptTest {}
 
-contract CreateNewStrategiesAndSetRoleHolders is GovernanceScriptTest {}
+contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {}
 
-contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is GovernanceScriptTest {}
+contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {}
 
-contract CreateNewStrategiesAndSetRolePermissions is GovernanceScriptTest {}
+contract CreateNewStrategiesAndSetRolePermissions is LlamaGovernanceScriptTest {}
 
-contract CreateNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolesPermissions is GovernanceScriptTest {}
+contract CreateNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolesPermissions is LlamaGovernanceScriptTest {}
 
-contract RevokePoliciesAndUpdateRoleDescriptions is GovernanceScriptTest {}
+contract RevokePoliciesAndUpdateRoleDescriptions is LlamaGovernanceScriptTest {}
 
-contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is GovernanceScriptTest {}
+contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is LlamaGovernanceScriptTest {}
 
-contract InitializeRoles is GovernanceScriptTest {
+contract InitializeRoles is LlamaGovernanceScriptTest {
   function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
     vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
@@ -269,7 +269,7 @@ contract InitializeRoles is GovernanceScriptTest {
   }
 }
 
-contract SetRoleHolders is GovernanceScriptTest {
+contract SetRoleHolders is LlamaGovernanceScriptTest {
   mapping(uint8 => uint128) public rolesHoldersSeen;
   mapping(uint8 => uint128) public rolesQuantitySeen;
 
@@ -303,7 +303,7 @@ contract SetRoleHolders is GovernanceScriptTest {
   }
 }
 
-contract SetRolePermissions is GovernanceScriptTest {
+contract SetRolePermissions is LlamaGovernanceScriptTest {
   function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       // Cannot be 0 (all holders role) and cannot be greater than numRoles
@@ -328,7 +328,7 @@ contract SetRolePermissions is GovernanceScriptTest {
   }
 }
 
-contract RevokePolicies is GovernanceScriptTest {
+contract RevokePolicies is LlamaGovernanceScriptTest {
   uint8[] public roles;
   address[] public revokePolicies;
 
@@ -349,8 +349,10 @@ contract RevokePolicies is GovernanceScriptTest {
   }
 }
 
-contract UpdateRoleDescriptions is GovernanceScriptTest {
-  function testFuzz_updateRoleDescriptions(GovernanceScript.UpdateRoleDescription[] memory roleDescriptions) public {
+contract UpdateRoleDescriptions is LlamaGovernanceScriptTest {
+  function testFuzz_updateRoleDescriptions(LlamaGovernanceScript.UpdateRoleDescription[] memory roleDescriptions)
+    public
+  {
     vm.assume(roleDescriptions.length <= 9); //number of roles in the Roles enum
     for (uint256 i = 0; i < roleDescriptions.length; i++) {
       roleDescriptions[i].role = uint8(i);
