@@ -96,9 +96,25 @@ Once revoked, the role can no longer be used by the policyholder.
 
 ## Managing Permissions
 
+Permissions are units of access control that can be assigned to roles to allow for action creation.
+Policyholders are not allowed to create actions unless they have the corresponding permission.
+
+## Permission Ids
+Permission ids are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
+The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission Ids.
+This is helpful because all of the functions required to manage permissions expect users to pass in pre-computed permission ids.
+
 ### Granting Permissions
 
+To grant a permission, the `setRolePermission` function is used.
+This function accepts three parameters: The role being granted a permission, the permission id being granted, and a boolean `hasPermission`.
+When granting permissions, `hasPermission` will always be set to true.
+
 ### Revoking Permissions
+
+To revoke a permission, the `setRolePermission` function is used.
+This function accepts three parameters: The role being revoked from, the permission id being revoked, and a boolean `hasPermission`.
+When revoking permissions, `hasPermission` will always be set to false.
 
 ## Batching Policy Management Methods Using the Governance Script
 
