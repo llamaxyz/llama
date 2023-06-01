@@ -16,7 +16,7 @@ Here is the anatomy of an action:
 
 ## Key Concepts
 
-  - Actions: Proposals made by policyholders to execute onchain transactions.
+- Actions: Proposals made by policyholders to execute onchain transactions.
   - Policies: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
   - Permissions: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
