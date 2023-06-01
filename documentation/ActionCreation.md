@@ -6,13 +6,12 @@ This may include changing protocol parameters, transferring funds from a treasur
 Actions are how your Llama instance interacts with external contracts.
 Here is the anatomy of an action:
 
-    Action Elements:
-  - Target Contract: Contract to be called by the Llama executor
-  - Strategy: Llama strategy that determines the action state
-  - Calldata: Function selector and its parameters
-  - Role: Role used to create the action
-  - Value: Amount of ether sent with the call
-  - Description: Plaintext explaining the purpose of the action
+- Target Contract: Contract to be called by the Llama executor.
+- Strategy: Contract that determines the rules the action must follow.
+- Calldata: Function selector and its parameters.
+- Role: Role used to create the action.
+- Value: Amount of Ether sent with the call.
+- Description: Markdown text explaining the purpose of the action.
 
 
 ## Key Concepts
