@@ -67,9 +67,9 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     _;
   }
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ===================================
+  // ======== Storage Variables ========
+  // ===================================
 
   /// @notice The Llama instance's executor.
   /// @dev We intentionally put this before the `name` so it's packed with the `Initializable`

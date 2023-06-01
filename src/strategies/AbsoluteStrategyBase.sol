@@ -38,9 +38,9 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
     uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
   }
 
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
@@ -88,9 +88,9 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @dev Emitted when a `strategy` is created referencing the `core` and `policy`.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
 
   // -------- Interface Requirements --------
 

@@ -33,9 +33,9 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @dev Emitted when the `logo` for SVG of a Llama instance is set.
   event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ==================================================
+  // ======== Immutables and Storage Variables ========
+  // ==================================================
 
   /// @notice The Root Llama instance's executor.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;

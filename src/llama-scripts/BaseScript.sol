@@ -17,9 +17,9 @@ abstract contract BaseScript {
     _;
   }
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ============================
+  // ======== Immutables ========
+  // ============================
 
   /// @dev Address of the script contract. We save it off because during a delegatecall `address(this)` refers to the
   /// caller's address, not this script's address.

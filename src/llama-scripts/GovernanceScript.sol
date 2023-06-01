@@ -34,9 +34,9 @@ contract GovernanceScript is BaseScript {
     bytes[] strategies; // Array of configurations to initialize new strategies with.
   }
 
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The call did not succeed.
   /// @param index Index of the arbitrary function being called.

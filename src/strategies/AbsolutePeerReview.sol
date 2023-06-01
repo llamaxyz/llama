@@ -25,9 +25,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
 contract AbsolutePeerReview is AbsoluteStrategyBase {
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The action creator cannot approve or disapprove an action.
   error ActionCreatorCannotCast();

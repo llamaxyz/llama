@@ -9,9 +9,9 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 /// @dev This script is meant to be delegatecalled by the executor contract, with the script leveraging the
 /// `unauthorizeAfterRun` modifier to ensure it can only be used once.
 abstract contract SingleUseScript is BaseScript {
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ===========================
+  // ======== Modifiers ========
+  // ===========================
 
   /// @dev Add this to your script's methods to unauthorize itself after it has been run once. Any subsequent calls will
   /// fail unless the script is reauthorized. Best if used in tandem with the `onlyDelegateCall` from `BaseScript.sol`.
@@ -21,9 +21,9 @@ abstract contract SingleUseScript is BaseScript {
     core.authorizeScript(SELF, false);
   }
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ============================
+  // ======== Immutables ========
+  // ============================
 
   /// @dev Address of the executor contract. We save it off in order to access the authorizeScript method in
   /// `LlamaCore`.

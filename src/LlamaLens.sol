@@ -15,9 +15,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama contract addresses and permission IDs.
 contract LlamaLens {
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ============================
+  // ======== Immutables ========
+  // ============================
 
   /// @notice The Llama factory contract on this chain.
   address public immutable LLAMA_FACTORY;

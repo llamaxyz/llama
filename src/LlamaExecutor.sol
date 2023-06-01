@@ -5,16 +5,16 @@ pragma solidity 0.8.19;
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice The exit point of a Llama instance. It calls the target contract during action execution.
 contract LlamaExecutor {
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev Only callable by a Llama instance's core contract.
   error OnlyLlamaCore();
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // ============================
+  // ======== Immutables ========
+  // ============================
 
   /// @notice The core contract for this Llama instance.
   address public immutable LLAMA_CORE;

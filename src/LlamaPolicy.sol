@@ -90,9 +90,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Emitted when a `permission` is assigned to a `role`.
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
 
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The `quantity` of the
   /// `role` is how much quantity the role-holder gets when approving/disapproving (regardless of

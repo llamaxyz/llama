@@ -134,9 +134,9 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
 
   /// @dev EIP-712 base typehash.
   bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
