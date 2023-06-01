@@ -487,7 +487,7 @@ contract LlamaCore is Initializable {
     return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
   }
 
-  /// @notice Get the current `ActionState` of an action by its `ActionInfo` struct.
+  /// @notice Get the current `ActionState` of an action by its `actionInfo` struct.
   /// @param actionInfo Data required to create an action.
   /// @return The current `ActionState` of the action.
   function getActionState(ActionInfo calldata actionInfo) public view returns (ActionState) {
@@ -669,7 +669,7 @@ contract LlamaCore is Initializable {
     }
   }
 
-  /// @dev Returns the hash of the `createAction` parameters using the `ActionInfo` struct.
+  /// @dev Returns the hash of the `createAction` parameters using the `actionInfo` struct.
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
       actionInfo.id,
@@ -695,7 +695,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
-  /// @dev Validates that the hash of the `ActionInfo` struct matches the provided hash.
+  /// @dev Validates that the hash of the `actionInfo` struct matches the provided hash.
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
     bytes32 expectedHash = _infoHash(actionInfo);
     if (actualHash != expectedHash) revert InfoHashMismatch();
@@ -793,7 +793,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castDisapprovalHash));
   }
 
-  /// @dev Returns the hash of `ActionInfo`.
+  /// @dev Returns the hash of `actionInfo`.
   function _getActionInfoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return keccak256(
       abi.encode(
