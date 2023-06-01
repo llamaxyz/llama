@@ -80,7 +80,7 @@ interface ILlamaStrategy {
 
   /// @notice Reverts if the action cannot be canceled.
   /// @param actionInfo Data required to create an action.
-  /// @param caller `Policyholder` initiating the cancelation.
+  /// @param caller Policyholder initiating the cancelation.
   function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external;
 
   // -------- When Determining Action State --------

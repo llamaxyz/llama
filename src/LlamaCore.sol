@@ -22,7 +22,7 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @dev `Policyholder` cannot cast if it has 0 `quantity` of `role`.
+  /// @dev Policyholder cannot cast if it has 0 `quantity` of `role`.
   /// @param policyholder Address of `policyholder`.
   /// @param role The `role` being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
@@ -65,7 +65,7 @@ contract LlamaCore is Initializable {
   /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
 
-  /// @dev `Policyholder` does not have the permission ID to create the action.
+  /// @dev Policyholder does not have the permission ID to create the action.
   error PolicyholderDoesNotHavePermission();
 
   /// @dev If `block.timestamp` is less than `minExecutionTime`, the action cannot be executed.

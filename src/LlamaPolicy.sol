@@ -193,7 +193,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Assigns a `role` to a `policyholder`.
   /// @param role ID of the `role` to set (uint8 ensures on-chain enumerability when burning policies).
-  /// @param policyholder `Policyholder` to assign the `role` to.
+  /// @param policyholder Policyholder to assign the `role` to.
   /// @param quantity `Quantity` of the `role` to assign to the `policyholder`, i.e. their (dis)approval quantity.
   /// @param expiration When the `role` expires.
   function setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) external onlyLlama {
@@ -210,7 +210,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Revokes a policyholder's expired `role`.
   /// @param role `Role` that has expired.
-  /// @param policyholder `Policyholder` that held the `role`.
+  /// @param policyholder Policyholder that held the `role`.
   /// @dev WARNING: This function needs to be explicitly called to revoke expired roles by monitoring through offchain
   /// infrastructure, otherwise expired roles can continue to create actions (if they have the right permissions) and
   /// take part in the approval/disapproval process if the strategy allows it.
@@ -274,7 +274,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role` between `start` and
   /// `end`, where `start` is inclusive and `end` is exclusive.
-  /// @param policyholder `Policyholder` to get the checkpoints for.
+  /// @param policyholder Policyholder to get the checkpoints for.
   /// @param role `Role` held by `policyholder` to get the checkpoints for.
   /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
   /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
