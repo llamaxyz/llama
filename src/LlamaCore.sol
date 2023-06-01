@@ -126,7 +126,7 @@ contract LlamaCore is Initializable {
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
   /// @dev Emitted when a strategy is created and authorized.
-  event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+  event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
 
   /// @dev Emitted when an account is created.
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
@@ -645,7 +645,7 @@ contract LlamaCore is Initializable {
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy] = true;
-      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategyConfigs[i]);
+      emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
   }

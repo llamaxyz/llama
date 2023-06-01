@@ -52,7 +52,7 @@ contract Run is DeployLlamaTest {
     // There are three strategies we expect to have been deployed.
     ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](3);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
+    bytes32 strategiesAuthorizedSig = keccak256("StrategyCreated(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsAuthorized = new LlamaAccount[](2);

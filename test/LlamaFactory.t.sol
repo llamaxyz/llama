@@ -33,19 +33,9 @@ contract LlamaFactoryTest is LlamaTestSetup {
     address llamaPolicy,
     uint256 chainId
   );
-  event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
-  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
-  event ActionCanceled(uint256 id);
-  event ActionQueued(
-    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
-  );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategiesAuthorized(RelativeQuorum.Config[] strategies);
-  event StrategiesUnauthorized(ILlamaStrategy[] strategies);
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
+  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
 contract Constructor is LlamaFactoryTest {
