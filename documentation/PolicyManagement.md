@@ -81,7 +81,18 @@ Revoking a role will decrement the total supply of the role by one, and decremen
 
 ### Updating Role Quantity / Expiration
 
+Using the `setRoleHolder` method, the quantity or expiry of a role can be updated.
+To update a role, pass in a role and a policyholder who currently has a non-zero quantity.
+The quantity and expiration can be set to higher or lower values depending on the situation; if altering the quantity of a role, the total quantity will increment or decrement accordingly, but the total supply of the role will not change.
+
 ### Role Expiration
+
+If a role has expired, it can be revoked by anyone using the `revokeExpiredRole` function.
+The `revokeExpiredRole` does not have the `onlyLlama` modifier, and does not need to go through the normal action creation process as a result.
+When an expired role is revoked, the quantity and total supply will be decremented accordingly.
+
+**Note**: A policyholder can still utilize a role to approve/disapprove, and create actions after the expiry timestamp if it has not been revoked.
+Once revoked, the role can no longer be used by the policyholder.
 
 ## Managing Permissions
 
