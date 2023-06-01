@@ -19,7 +19,7 @@ contract LlamaLens {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice The factory contract on this chain.
+  /// @notice The Llama factory contract on this chain.
   address public immutable LLAMA_FACTORY;
 
   /// @notice The Llama core implementation (logic) contract.
@@ -32,7 +32,7 @@ contract LlamaLens {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  /// @notice Sets the factory address.
+  /// @notice Sets the Llama factory address, Llama core logic address and Llama policy logic address.
   /// @param _llamaFactory the Llama factory contract on this chain.
   constructor(address _llamaFactory) {
     LLAMA_FACTORY = _llamaFactory;
@@ -51,21 +51,21 @@ contract LlamaLens {
     return keccak256(abi.encode(permission));
   }
 
-  /// @notice Computes the address of a Llama core from the name of the Llama instance.
+  /// @notice Computes the address of a Llama core contract from the name of the Llama instance.
   /// @param name The `name` of this Llama instance.
   /// @return The computed address of the `LlamaCore` contract.
   function computeLlamaCoreAddress(string memory name) external view returns (LlamaCore) {
     return _computeLlamaCoreAddress(name);
   }
 
-  /// @notice Computes the address of a Llama executor from its core address.
+  /// @notice Computes the address of a Llama executor contract from its core address.
   /// @param llamaCore The address of the `LlamaCore` contract.
   /// @return The computed address of the `LlamaExecutor` contract.
   function computeLlamaExecutorAddress(address llamaCore) external pure returns (LlamaExecutor) {
     return LlamaExecutor(_computeCreateAddress(llamaCore, 1));
   }
 
-  /// @notice Computes the address of a Llama executor from the name of the Llama instance.
+  /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
   /// @param name The `name` of this Llama instance.
   /// @return The computed address of the `LlamaExecutor` contract.
   function computeLlamaExecutorAddress(string memory name) external view returns (LlamaExecutor) {
@@ -73,7 +73,7 @@ contract LlamaLens {
     return LlamaExecutor(_computeCreateAddress(address(llamaCore), 1));
   }
 
-  /// @notice Computes the address of a Llama policy with a name value.
+  /// @notice Computes the address of a Llama policy contract with a name value.
   /// @param name The `name` of this Llama instance.
   /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name) external view returns (LlamaPolicy) {
@@ -85,7 +85,7 @@ contract LlamaLens {
     return LlamaPolicy(_computedAddress);
   }
 
-  /// @notice Computes the address of a Llama strategy with the strategy configuration value.
+  /// @notice Computes the address of a Llama strategy contract with the strategy configuration value.
   /// @param llamaStrategyLogic The Llama strategy logic contract.
   /// @param strategy The initialization configuration for the new strategy to be created.
   /// @param llamaCore The Llama core to be set.
@@ -103,7 +103,7 @@ contract LlamaLens {
     return ILlamaStrategy(_computedAddress);
   }
 
-  /// @notice Computes the address of a Llama account with the account configuration value.
+  /// @notice Computes the address of a Llama account contract with the account configuration value.
   /// @param llamaAccountLogic The Llama account logic contract.
   /// @param account The initialization configuration for the new account to be created.
   /// @param llamaCore The Llama core to be set.
@@ -125,7 +125,7 @@ contract LlamaLens {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Computes the address of a Llama core from the name of the Llama instance.
+  /// @dev Computes the address of a Llama core contract from the name of the Llama instance.
   function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_CORE_LOGIC,

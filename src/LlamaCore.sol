@@ -626,7 +626,7 @@ contract LlamaCore is Initializable {
     return currentCount + quantity;
   }
 
-  /// @dev Deploys strategies. Takes in the strategy logic contract to be used and an array of configurations to
+  /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to
   /// initialize the new strategies with. Returns the address of the first strategy, which is only used during the
   /// `LlamaCore` initialization so that we can ensure someone (specifically, policyholders with role ID 1) has the
   /// permission to assign role permissions.
@@ -651,8 +651,8 @@ contract LlamaCore is Initializable {
     }
   }
 
-  /// @dev Deploys accounts. Takes in the account logic contract to be used and an array of configurations to initialize
-  /// the new accounts with.
+  /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to
+  /// initialize the new accounts with.
   function _deployAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) internal {
     if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
       // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
@@ -695,7 +695,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
-  /// @dev Validates that the hash of the action info struct matches the provided hash.
+  /// @dev Validates that the hash of the `ActionInfo` struct matches the provided hash.
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
     bytes32 expectedHash = _infoHash(actionInfo);
     if (actualHash != expectedHash) revert InfoHashMismatch();

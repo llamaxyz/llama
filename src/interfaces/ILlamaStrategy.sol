@@ -5,7 +5,7 @@ import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Llama Strategy Logic Interface
+/// @title Llama Strategy Interface
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Llama strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
