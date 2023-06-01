@@ -24,11 +24,13 @@ contract GovernanceScript is BaseScript {
   // ========= Structs ============
   // ==============================
 
+  /// @dev Struct for holding data for the `updateRoleDescription` method in `LlamaPolicy`.
   struct UpdateRoleDescription {
     uint8 role; // Role to update.
     RoleDescription description; // New role description.
   }
 
+  /// @dev Struct for holding data for the `createStrategies` method in `LlamaCore`.
   struct CreateStrategies {
     ILlamaStrategy llamaStrategyLogic; // Logic contract for the strategies.
     bytes[] strategies; // Array of configurations to initialize new strategies with.
