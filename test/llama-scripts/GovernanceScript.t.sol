@@ -13,8 +13,8 @@ import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutI
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";

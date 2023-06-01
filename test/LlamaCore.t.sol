@@ -15,8 +15,8 @@ import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutI
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -550,7 +550,7 @@ contract CreateAction is LlamaCoreTest {
   }
 
   function test_RevertIf_ActionGuardProhibitsAction() public {
-    IActionGuard guard = IActionGuard(new MockActionGuard(false, true, true, "no action creation"));
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(false, true, true, "no action creation"));
 
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -1054,7 +1054,7 @@ contract ExecuteAction is LlamaCoreTest {
   }
 
   function test_RevertIf_ActionGuardProhibitsActionPreExecution() public {
-    IActionGuard guard = IActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
 
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -1067,7 +1067,7 @@ contract ExecuteAction is LlamaCoreTest {
   }
 
   function test_RevertIf_ActionGuardProhibitsActionPostExecution() public {
-    IActionGuard guard = IActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
 
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
@@ -2155,9 +2155,9 @@ contract CreateAccounts is LlamaCoreTest {
 }
 
 contract SetGuard is LlamaCoreTest {
-  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, ILlamaActionGuard actionGuard);
 
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, IActionGuard guard)
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller, address target, bytes4 selector, ILlamaActionGuard guard)
     public
   {
     vm.assume(caller != address(mpExecutor));
@@ -2166,7 +2166,9 @@ contract SetGuard is LlamaCoreTest {
     mpCore.setGuard(target, selector, guard);
   }
 
-  function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, IActionGuard guard) public {
+  function testFuzz_UpdatesGuardAndEmitsActionGuardSetEvent(address target, bytes4 selector, ILlamaActionGuard guard)
+    public
+  {
     vm.assume(target != address(mpCore) && target != address(mpPolicy));
     vm.prank(address(mpExecutor));
     vm.expectEmit();
@@ -2175,13 +2177,13 @@ contract SetGuard is LlamaCoreTest {
     assertEq(address(mpCore.actionGuard(target, selector)), address(guard));
   }
 
-  function testFuzz_RevertIf_TargetIsCore(bytes4 selector, IActionGuard guard) public {
+  function testFuzz_RevertIf_TargetIsCore(bytes4 selector, ILlamaActionGuard guard) public {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpCore), selector, guard);
   }
 
-  function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, IActionGuard guard) public {
+  function testFuzz_RevertIf_TargetIsPolicy(bytes4 selector, ILlamaActionGuard guard) public {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
