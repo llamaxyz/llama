@@ -9,10 +9,6 @@ import {LibString} from "@solady/utils/LibString.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata {
-  // ===========================================
-  // ======== External and Public Logic ========
-  // ===========================================
-
   /// @notice Returns the token URI for a given Llama `policyholder`.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama `policyholder`.
