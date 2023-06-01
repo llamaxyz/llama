@@ -92,7 +92,8 @@ Like the name suggests, if a policyholder with a force role casts their approval
 
 ## Scripts
 
-Scripts are external contracts that use the `DELEGATECALL` opcode instead of the normal `CALL`. The main use-case for scripts is to batch multiple calls together into one action. 
+Scripts are the term used to refer to target contracts that are called via `DELEGATECALL` instead of a normal `CALL`.
+The main use-case for scripts is to batch multiple calls together into one action. 
 In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks. 
 
 `DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use. 
