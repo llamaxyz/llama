@@ -15,6 +15,10 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama contract addresses and permission IDs.
 contract LlamaLens {
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
+
   /// @notice The factory contract on this chain.
   address public immutable LLAMA_FACTORY;
 
@@ -24,6 +28,10 @@ contract LlamaLens {
   /// @notice The Llama Policy implementation (logic) contract.
   address public immutable LLAMA_POLICY_LOGIC;
 
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
+
   /// @notice Sets the factory address.
   /// @param _llamaFactory the llama factory contract on this chain.
   constructor(address _llamaFactory) {
@@ -31,6 +39,10 @@ contract LlamaLens {
     LLAMA_CORE_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_CORE_LOGIC());
     LLAMA_POLICY_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_POLICY_LOGIC());
   }
+
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Hashes a permission.
   /// @param permission the permission to hash.
@@ -108,6 +120,10 @@ contract LlamaLens {
     );
     return ILlamaAccount(_computedAddress);
   }
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
 
   /// @dev Computes the address of a llama core from the name of the llama instance.
   function _computeLlamaCoreAddress(string memory name) internal view returns (LlamaCore) {

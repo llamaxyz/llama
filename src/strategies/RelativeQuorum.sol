@@ -96,7 +96,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
 
   // -------- Strategy Configuration --------
 
-  /// @notice Equivalent to 100%, but in basis points.
+  /// @dev Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice If false, action be queued before approvalEndTime.

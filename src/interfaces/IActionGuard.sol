@@ -17,13 +17,16 @@ import {ActionInfo} from "src/lib/Structs.sol";
 ///     execution, i.e. between `validatePreActionExecution` and `validatePostActionExecution`.
 interface IActionGuard {
   /// @notice Reverts if action creation is not allowed.
+  /// @param actionInfo Data required to create an action.
   function validateActionCreation(ActionInfo calldata actionInfo) external;
 
   /// @notice Called immediately before action execution, and reverts if the action is not allowed
   /// to be executed.
+  /// @param actionInfo Data required to create an action.
   function validatePreActionExecution(ActionInfo calldata actionInfo) external;
 
   /// @notice Called immediately after action execution, and reverts if the just-executed
   /// action should not have been allowed to execute.
+  /// @param actionInfo Data required to create an action.
   function validatePostActionExecution(ActionInfo calldata actionInfo) external;
 }

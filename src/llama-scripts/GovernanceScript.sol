@@ -20,22 +20,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///     and (2) are also used by methods in the "Common Aggregate Calls" section.
 ///   - The "Common Aggregate Calls" section has external methods for common batch actions.
 contract GovernanceScript is BaseScript {
-  // =============================
-  // ========= Errors ============
-  // =============================
-
-  /// @dev The call did not succeed.
-  /// @param index Index of the arbitrary function being called.
-  /// @param revertData Data returned by the called function.
-  error CallReverted(uint256 index, bytes revertData);
-
-  /// @dev The provided arrays do not have the same length.
-  error MismatchedArrayLengths();
-
-  /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
-  /// @param target The target address provided.
-  error UnauthorizedTarget(address target);
-
   // ==============================
   // ========= Structs ============
   // ==============================
@@ -49,6 +33,22 @@ contract GovernanceScript is BaseScript {
     ILlamaStrategy llamaStrategyLogic;
     bytes[] strategies;
   }
+
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
+
+  /// @dev The call did not succeed.
+  /// @param index Index of the arbitrary function being called.
+  /// @param revertData Data returned by the called function.
+  error CallReverted(uint256 index, bytes revertData);
+
+  /// @dev The provided arrays do not have the same length.
+  error MismatchedArrayLengths();
+
+  /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
+  /// @param target The target address provided.
+  error UnauthorizedTarget(address target);
 
   // =======================================
   // ======== Arbitrary Aggregation ========

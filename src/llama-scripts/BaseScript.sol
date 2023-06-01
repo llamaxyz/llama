@@ -3,21 +3,33 @@ pragma solidity ^0.8.19;
 
 /// @dev This script is a template for creating new scripts, and should not be used directly.
 abstract contract BaseScript {
-  /// @dev Address of the script contract. We save it off because during a delegatecall `address(this)` refers to the
-  /// caller's address, not this script's address.
-  address internal immutable SELF;
+  // ======================================
+  // ======== Errors and Modifiers ========
+  // ======================================
 
   /// @dev Thrown if you try to CALL a function that has the `onlyDelegatecall` modifier.
   error OnlyDelegateCall();
-
-  constructor() {
-    SELF = address(this);
-  }
 
   /// @dev Add this to your script's methods to ensure the script can only be used via delegatecall, and not a regular
   /// call.
   modifier onlyDelegateCall() {
     if (address(this) == SELF) revert OnlyDelegateCall();
     _;
+  }
+
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
+
+  /// @dev Address of the script contract. We save it off because during a delegatecall `address(this)` refers to the
+  /// caller's address, not this script's address.
+  address internal immutable SELF;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
+
+  constructor() {
+    SELF = address(this);
   }
 }

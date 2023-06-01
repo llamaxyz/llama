@@ -6,19 +6,31 @@ pragma solidity 0.8.19;
 /// @notice The exit point of a Llama instance. It calls the target contract during action execution.
 contract LlamaExecutor {
   // ======================================
-  // ============= Errors =================
+  // ======== Errors and Modifiers ========
   // ======================================
 
   /// @dev Only callable by a Llama instance's core contract.
   error OnlyLlamaCore();
 
+  // =============================================================
+  // ======== Constants, Immutables and Storage Variables ========
+  // =============================================================
+
   /// @notice The core contract for this llama instance.
   address public immutable LLAMA_CORE;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
 
   /// @notice This contract is deployed in the core's `initialize` function.
   constructor() {
     LLAMA_CORE = msg.sender;
   }
+
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   /// @notice Called by `executeAction` in the core contract to make the call described by the action.
   /// @dev Using a separate executor contract ensures `target`s being delegatecalled cannot write to `LlamaCore`'s

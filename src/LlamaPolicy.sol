@@ -94,6 +94,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
+  /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
+  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
+  /// strategy).
+  mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
+
   /// @notice A special role used to reference all policy holders.
   /// @dev DO NOT assign policyholders this role directly. Doing so can result in the wrong total supply
   /// values for this role.
@@ -107,11 +112,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns true if the `role` can create actions with the given `permissionId`.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
-
-  /// @notice Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
-  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
-  /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Checkpoints the total supply of a given role.
   /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of

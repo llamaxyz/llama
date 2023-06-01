@@ -138,29 +138,35 @@ contract LlamaCore is Initializable {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice EIP-712 base typehash.
+  /// @dev EIP-712 base typehash.
   bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-  /// @notice EIP-712 createAction typehash.
+  /// @dev EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
     "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
   );
 
-  /// @notice EIP-712 castApproval typehash.
+  /// @dev EIP-712 castApproval typehash.
   bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
     "CastApproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @notice EIP-712 castDisapproval typehash.
+  /// @dev EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
     "CastDisapproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @notice EIP-712 actionInfo typehash.
+  /// @dev EIP-712 actionInfo typehash.
   bytes32 internal constant ACTION_INFO_TYPEHASH = keccak256(
     "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
+
+  /// @dev Mapping of actionIds to Actions.
+  /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
+  /// accessed with the `getAction` function so this is ok. We want the contracts to compile
+  /// without the optimizer so `forge coverage` can be used.
+  mapping(uint256 => Action) internal actions;
 
   /// @notice The contract that executes actions for this llama instance.
   LlamaExecutor public executor;
@@ -178,12 +184,6 @@ contract LlamaCore is Initializable {
 
   /// @notice The current number of actions created.
   uint256 public actionsCount;
-
-  /// @notice Mapping of actionIds to Actions.
-  /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
-  /// accessed with the `getAction` function so this is ok. We want the contracts to compile
-  /// without the optimizer so `forge coverage` can be used.
-  mapping(uint256 => Action) internal actions;
 
   /// @notice Mapping of actionIds to policyholders to approvals.
   mapping(uint256 => mapping(address => bool)) public approvals;
@@ -518,8 +518,8 @@ contract LlamaCore is Initializable {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Creates an action. The creator needs to hold a policy with the permissionId of the provided
-  /// {target, selector, strategy}.
+  /// @dev Creates an action. The creator needs to hold a policy with the `permissionId` of the provided
+  /// `(target, selector, strategy)`.
   function _createAction(
     address policyholder,
     uint8 role,
