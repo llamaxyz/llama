@@ -1,9 +1,8 @@
 # Policy Management
 
-Policies are the core building block of the Llama permissioning system.
-Without policies, there is no way to create actions, assign new roles, etc.
-Essentially, without policies a Llama instance will be bricked.
-This why policy management is so important, as new policyholders are granted policies and old policies are removed we must be able to assign and revoke policies, roles, and permissions accordingly.
+Policies are the building blocks of the Llama permissioning system. 
+They allow users to create actions, assign roles, authorize strategies, and more. 
+Without policies, a Llama instance will be bricked.
 Policies, roles, and permissions can be granted on instance deployment, but we are going to focus on policy management for active Llama instances in this section.  
 
 Let's dive into the best practices surrounding policy management.
@@ -71,9 +70,15 @@ Note that this method only changes the semantic meaning of a role, not the actua
 ### Granting Roles
 
 To grant a role to a policyholder, we use the `setRoleHolder` method.
-Pass in a role that the policyholder does not hold, the policyholder's address, quantity, and expiration,
+In order to grant a role, this method requires us to pass in a role that the policyholder does not hold, the policyholder's address, the quantity of this role they should hold, and expiration timestamp.
+After granting the role, the total supply of the role will increment by 1, and the total quantity of the role will increase by the quantity passed in.
 
 ### Revoking Roles
+
+To revoke a role, we use the `setRoleHolder` method again
+Simply pass in the role, the policyholder to revoke it from, and set the quantity and expiration to 0.
+
+### Updating Role Quantity / Expiration
 
 ### Role Expiration
 
