@@ -41,7 +41,31 @@ There are a few additional concepts to keep in mind to understand granting polic
 
 ### Revoking Policies
 
+The `revokePolicy` method on the `LlamaPolicy` contract is used to revoke a policy.
+This method burns the policy NFT and revokes all roles from the former policyholder.
+
 ## Managing Roles
+
+Role management involves creating, editing, granting, and revoking roles from Llama policy NFTs.
+Roles are of type `uint8`, meaning roles are denominated as unsigned integers and the maximum number of roles a Llama instance can have is 255.
+Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
+Every role has two supplies that are checkpointed in storage: 
+1. Number of holders: The number of unique policy NFTs that hold the given role
+2. Total quantity: The sum of all the quantities that each role holding policy possesses. 
+
+### Creating New Roles
+
+When roles are created, a description is provided.
+This description serves as the plaintext mapping from description => role id, and provides semantic meaning to an otherwise meaningless unsigned integer.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a bytes32 value. 
+
+### Editing Existing Roles
+
+Once roles are created, they can't be deleted.
+Since Llama instances only have space for 255 roles total, the need to repurpose old and unused roles may surface over time.
+It is for this reason that the `updateRoleDescription` method exists.
+`updateRoleDescription` takes two arguments: role and description.
+Note that this method only changes the semantic meaning of a role, not the actual power that role holds within the Llama instance; be sure that the updated role has the correct permissions and approval/disapproval powers when updating a role.
 
 ### Granting Roles
 
@@ -54,6 +78,8 @@ There are a few additional concepts to keep in mind to understand granting polic
 ### Granting Permissions
 
 ### Revoking Permissions
+
+## Batching Policy Management Methods Using the Governance Script
 
 ## Checkpoints
 
