@@ -10,7 +10,7 @@ Here is the anatomy of an action:
 - Strategy: Contract that determines the rules the action must follow.
 - Calldata: Function selector and its parameters.
 - Role: Role used to create the action.
-- Value: Amount of Ether sent with the call.
+- Value: Amount of Ether (in wei) sent with the call.
 - Description: Markdown text explaining the purpose of the action.
 
 
