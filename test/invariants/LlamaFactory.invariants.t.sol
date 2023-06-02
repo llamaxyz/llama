@@ -103,13 +103,13 @@ contract LlamaFactoryHandler is BaseHandler {
     LLAMA_FACTORY.authorizeStrategyLogic(newStrategyLogic);
   }
 
-  function llamaFactory_setPolicyTokenMetadata(LlamaPolicyMetadata newPolicyTokenMetadata)
+  function llamaFactory_setPolicyTokenMetadata(LlamaPolicyMetadata newPolicyMetadata)
     public
-    recordCall("llamaFactory_setPolicyTokenMetadata")
+    recordCall("llamaFactory_setPolicyMetadata")
     useCurrentTimestamp
   {
     vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
-    LLAMA_FACTORY.setPolicyTokenMetadata(newPolicyTokenMetadata);
+    LLAMA_FACTORY.setPolicyMetadata(newPolicyMetadata);
   }
 }
 

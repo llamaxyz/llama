@@ -15,7 +15,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Absolute Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a llama strategy which has the following properties:
+/// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {

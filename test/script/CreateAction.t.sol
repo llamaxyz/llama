@@ -122,7 +122,7 @@ contract Run is CreateActionTest {
     // There are three strategies we expect to have been deployed.
     LlamaRelativeQuorum[] memory strategiesAuthorized = new LlamaRelativeQuorum[](3);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
+    bytes32 strategiesAuthorizedSig = keccak256("StrategyCreated(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsCreated = new LlamaAccount[](2);
