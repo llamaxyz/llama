@@ -29,7 +29,7 @@ When invoking the `setRoleHolder` the caller must pass in the following argument
 
 Lets look at each argument individually:
 - **role**: The role being granted to the policyholder.
-- **policyholder**: The policyholder's address
+- **policyholder**: The policyholder's address.
 - **quantity**: The quantity of approval/disapproval power the policyholder has for the given role.
 - **expiration**: The expiration date of the role (not the policy)
 
