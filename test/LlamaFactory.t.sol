@@ -35,7 +35,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
-  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -76,7 +76,7 @@ contract Constructor is LlamaFactoryTest {
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyTokenMetadataSet(policyMetadata);
+    emit PolicyMetadataSet(policyMetadata);
     deployLlamaFactory();
   }
 
@@ -436,14 +436,14 @@ contract SetPolicyTokenMetadata is LlamaFactoryTest {
     vm.assume(_caller != address(rootExecutor));
     vm.prank(address(_caller));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyMetadata));
+    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
   }
 
   function testFuzz_WritesMetadataAddressToStorage(address _policyMetadata) public {
     vm.prank(address(rootExecutor));
     vm.expectEmit();
-    emit PolicyTokenMetadataSet(LlamaPolicyMetadata(_policyMetadata));
-    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyMetadata));
+    emit PolicyMetadataSet(LlamaPolicyMetadata(_policyMetadata));
+    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
     assertEq(address(factory.llamaPolicyMetadata()), _policyMetadata);
   }
 }
