@@ -792,7 +792,7 @@ contract Execute is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     vm.prank(caller);
     mpAccount1LlamaAccount.execute(
-      address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true
+      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
   }
 
@@ -806,7 +806,7 @@ contract Execute is LlamaAccountTest {
     // Rescue Punk by calling execute call
     vm.startPrank(address(mpExecutor));
     mpAccount1LlamaAccount.execute(
-      address(PUNK), abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID), false
+      address(PUNK), false, abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID)
     );
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
     assertEq(PUNK.balanceOf(mpAccount1Addr), accountNFTBalance - 1);
@@ -820,7 +820,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     bytes memory result = mpAccount1LlamaAccount.execute(
-      address(mockExtension), abi.encodePacked(MockExtension.testFunction.selector, ""), true
+      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
     assertEq(10, uint256(bytes32(result)));
     vm.stopPrank();
@@ -831,7 +831,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
-    mpAccount1LlamaAccount.execute(address(mockExtension), abi.encodePacked("", ""), true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, abi.encodePacked("", ""));
     vm.stopPrank();
   }
 
@@ -841,12 +841,12 @@ contract Execute is LlamaAccountTest {
     bytes memory data = abi.encodeCall(MockMaliciousExtension.attack1, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), data, true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
 
     data = abi.encodeCall(MockMaliciousExtension.attack2, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), data, true);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
   }
 }
 
