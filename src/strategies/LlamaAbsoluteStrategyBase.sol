@@ -12,14 +12,14 @@ import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Absolute Strategy Base Llama Strategy
+/// @title Llama Absolute Strategy Base
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a base contract for Llama strategies to inherit which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - The `validateActionCreation`, `isApprovalEnabled`, and `isDisapprovalEnabled` methods are left up to the
 ///     implementing contract to determine the rest of the behavior.
 ///   - All methods are marked virtual in case future strategies need to override them.
-abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
+abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // =========================
   // ======== Structs ========
   // =========================

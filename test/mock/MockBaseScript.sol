@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 
 /// @dev This is a mock contract that inherits from the base script for testing purposes
-contract MockBaseScript is BaseScript {
+contract MockBaseScript is LlamaBaseScript {
   event SuccessfulCall();
 
   function run() external onlyDelegateCall {
