@@ -17,7 +17,6 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
-import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
 
 contract LlamaFactoryTest is LlamaTestSetup {
   uint128 constant DEFAULT_QUANTITY = 1;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -10,7 +10,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-/// @title Governance Script
+/// @title Llama Governance Script
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A script that allows users to aggregate common calls on the core and policy contracts.
 /// @notice How to use this script:
@@ -19,7 +19,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///   - The "Batch Policy Functions" section has public methods that (1) can be called directly as part of an action,
 ///     and (2) are also used by methods in the "Common Aggregate Calls" section.
 ///   - The "Common Aggregate Calls" section has external methods for common batch actions.
-contract GovernanceScript is BaseScript {
+contract LlamaGovernanceScript is LlamaBaseScript {
   // ==========================
   // ========= Structs ========
   // ==========================

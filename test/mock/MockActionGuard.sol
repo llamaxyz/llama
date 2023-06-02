@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 
 /// @dev A mock action guard that can be configured for testing. We set the return value of each
 /// guard method in the constructor, and set the reason string to use for all cases. Tests will only
 /// test one case at a time, so this is sufficient.
-contract MockActionGuard is IActionGuard {
+contract MockActionGuard is ILlamaActionGuard {
   bool creationAllowed;
   bool preExecutionAllowed;
   bool postExecutionAllowed;

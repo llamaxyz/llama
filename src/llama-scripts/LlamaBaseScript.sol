@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 /// @dev This script is a template for creating new scripts, and should not be used directly.
-abstract contract BaseScript {
+abstract contract LlamaBaseScript {
   /// @dev Thrown if you try to CALL a function that has the `onlyDelegatecall` modifier.
   error OnlyDelegateCall();
 
