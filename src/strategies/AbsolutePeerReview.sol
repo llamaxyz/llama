@@ -15,7 +15,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Peer Review Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a llama strategy which has the following properties:
+/// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are not allowed to cast approvals or disapprovals on their own actions,
 ///     regardless of the roles they hold.
@@ -25,9 +25,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
 contract AbsolutePeerReview is AbsoluteStrategyBase {
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The action creator cannot approve or disapprove an action.
   error ActionCreatorCannotCast();
