@@ -70,7 +70,7 @@ To confirm the deploy was successful, re-run your test suite but use the newly c
 
 ## Documentation
 
-The generate documentation from NatSpec comments for the project and serve those static files locally, run the following command:
+Run the following command to generate smart contract reference documentation from this project's NatSpec comments and serve those static files locally:
 
 ```sh
 $ forge doc -o reference/ -b -s
