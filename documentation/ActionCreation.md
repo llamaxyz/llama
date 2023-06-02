@@ -49,7 +49,7 @@ Lets dive into each state and what they mean.
   - **Approved**: The action has been approved and is ready to be queued.
   - **Queued**: The action is in the Queued period for the queueing duration and policyholders are able to disapprove the action. If the action is disapproved it will fail, otherwise it will be able to be executed after the queuing period ends. Reached by successfully calling `queueAction`.
   - **Expired**: The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if block.timestamp is greater than Action's executionTime + expirationDelay.
-  - **Executed**: This state signifies that the action has been executed successfully. Reached by sucessfully calling `executeAction`.
+  - **Executed**: This state signifies that the action has been executed successfully. Reached by successfully calling `executeAction`.
 
 
 We can call the `getActionState` method on `LlamaCore` to get the current state of a given action.
