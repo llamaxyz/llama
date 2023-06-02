@@ -62,7 +62,7 @@ Policies can have zero or many roles, and roles can have zero or many permission
 When creating an action, LlamaCore performs a validation check is done to make sure that the policyholder has a role with the correct permission.
 Additional checks may be run by the strategy or a guard.
 
-Permissions are calculated by hashing the `PermissionData` struct, which looks like this:
+Permissions are calculated by taking the `keccak256` hash of the ABI-encoded `PermissionData` struct, which looks like this:
 ```solidity
 struct PermissionData {
   address target; // Contract being called by an action.
