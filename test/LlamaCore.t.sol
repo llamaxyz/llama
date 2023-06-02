@@ -5,6 +5,7 @@ import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
 
+import {MockAccountLogicContract} from "test/mock/MockAccountLogicContract.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {MockPoorlyImplementedAbsolutePeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
@@ -141,6 +142,13 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(rootExecutor));
     factory.authorizeAccountLogic(additionalAccountLogic);
     return additionalAccountLogic;
+  }
+
+  function _deployAndAuthorizeMockAccountLogic() internal returns (ILlamaAccount) {
+    MockAccountLogicContract mockAccountLogic = new MockAccountLogicContract();
+    vm.prank(address(rootExecutor));
+    factory.authorizeAccountLogic(mockAccountLogic);
+    return mockAccountLogic;
   }
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
@@ -1993,6 +2001,25 @@ contract CreateStrategies is LlamaCoreTest {
 }
 
 contract CreateAccounts is LlamaCoreTest {
+  function encodeMockAccount(MockAccountLogicContract.Config memory account)
+    internal
+    pure
+    returns (bytes memory encoded)
+  {
+    encoded = abi.encode(account);
+  }
+
+  function encodeMockAccountConfigs(MockAccountLogicContract.Config[] memory accounts)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
+    encoded = new bytes[](accounts.length);
+    for (uint256 i = 0; i < accounts.length; i++) {
+      encoded[i] = encodeMockAccount(accounts[i]);
+    }
+  }
+
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
@@ -2056,6 +2083,28 @@ contract CreateAccounts is LlamaCoreTest {
 
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(additionalAccountLogic, DeployUtils.encodeAccountConfigs(newAccounts));
+  }
+
+  function test_CreateNewAccountsWithMockAccountLogic() public {
+    ILlamaAccount mockAccountLogic = _deployAndAuthorizeMockAccountLogic();
+
+    MockAccountLogicContract.Config[] memory newAccounts = new MockAccountLogicContract.Config[](1);
+    newAccounts[0] = MockAccountLogicContract.Config({creationTime: block.timestamp});
+
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](1);
+
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(mockAccountLogic), encodeMockAccount(newAccounts[i]), address(mpCore));
+    }
+
+    vm.expectEmit();
+    emit AccountCreated(accountAddresses[0], mockAccountLogic, encodeMockAccount(newAccounts[0]));
+
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(mockAccountLogic, encodeMockAccountConfigs(newAccounts));
+
+    assertEq(MockAccountLogicContract(address(accountAddresses[0])).creationTime(), block.timestamp);
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {
