@@ -28,7 +28,7 @@ To grant a policy to a new policyholder, a policyholder with the correct permiss
 When invoking the `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint128 quantity, uint64 expiration)`.
 
 Lets look at each argument individually:
-- **role**: The role being granted to the policyholder
+- **role**: The role being granted to the policyholder.
 - **policyholder**: The policyholder's address
 - **quantity**: The quantity of approval/disapproval power the policyholder has for the given role.
 - **expiration**: The expiration date of the role (not the policy)
