@@ -5,6 +5,7 @@ import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {Solarray} from "@solarray/Solarray.sol";
 
+import {MockAccountLogicContract} from "test/mock/MockAccountLogicContract.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {MockPoorlyImplementedAbsolutePeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
@@ -88,14 +89,14 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.expectEmit();
     emit ApprovalCast(actionInfo.id, _policyholder, uint8(Roles.Approver), 1, "");
     vm.prank(_policyholder);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, _policyholder, uint8(Roles.Disapprover), 1, "");
     vm.prank(_policyholder);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function _queueAction(ActionInfo memory actionInfo) public {
@@ -142,6 +143,13 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.prank(address(rootExecutor));
     factory.authorizeAccountLogic(additionalAccountLogic);
     return additionalAccountLogic;
+  }
+
+  function _deployAndAuthorizeMockAccountLogic() internal returns (ILlamaAccount) {
+    MockAccountLogicContract mockAccountLogic = new MockAccountLogicContract();
+    vm.prank(address(rootExecutor));
+    factory.authorizeAccountLogic(mockAccountLogic);
+    return mockAccountLogic;
   }
 
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
@@ -1343,7 +1351,7 @@ contract CastApproval is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_DuplicateApproval() public {
@@ -1351,7 +1359,7 @@ contract CastApproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1359,10 +1367,10 @@ contract CastApproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
 
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_NoQuantity() public {
@@ -1381,7 +1389,7 @@ contract CastApproval is LlamaCoreTest {
         LlamaCore.CannotCastWithZeroQuantity.selector, actionCreatorAaron, uint8(Roles.ActionCreator)
       )
     );
-    mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo);
+    mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
 }
 
@@ -1517,7 +1525,7 @@ contract CastDisapproval is LlamaCoreTest {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
@@ -1535,7 +1543,7 @@ contract CastDisapproval is LlamaCoreTest {
     ActionInfo memory actionInfo = _createAction();
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_RevertIf_DuplicateDisapproval() public {
@@ -1545,7 +1553,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1554,19 +1562,19 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_FailsIfDisapproved() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
@@ -1599,7 +1607,7 @@ contract CastDisapproval is LlamaCoreTest {
       )
     );
     vm.prank(actionCreatorAaron);
-    mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
 }
 
@@ -1718,7 +1726,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     // Second disapproval.
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     // Assertions.
     ActionState state = mpCore.getActionState(actionInfo);
@@ -1994,6 +2002,25 @@ contract CreateStrategies is LlamaCoreTest {
 }
 
 contract CreateAccounts is LlamaCoreTest {
+  function encodeMockAccount(MockAccountLogicContract.Config memory account)
+    internal
+    pure
+    returns (bytes memory encoded)
+  {
+    encoded = abi.encode(account);
+  }
+
+  function encodeMockAccountConfigs(MockAccountLogicContract.Config[] memory accounts)
+    internal
+    pure
+    returns (bytes[] memory encoded)
+  {
+    encoded = new bytes[](accounts.length);
+    for (uint256 i = 0; i < accounts.length; i++) {
+      encoded[i] = encodeMockAccount(accounts[i]);
+    }
+  }
+
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
@@ -2057,6 +2084,28 @@ contract CreateAccounts is LlamaCoreTest {
 
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(additionalAccountLogic, DeployUtils.encodeAccountConfigs(newAccounts));
+  }
+
+  function test_CreateNewAccountsWithMockAccountLogic() public {
+    ILlamaAccount mockAccountLogic = _deployAndAuthorizeMockAccountLogic();
+
+    MockAccountLogicContract.Config[] memory newAccounts = new MockAccountLogicContract.Config[](1);
+    newAccounts[0] = MockAccountLogicContract.Config({creationTime: block.timestamp});
+
+    ILlamaAccount[] memory accountAddresses = new ILlamaAccount[](1);
+
+    for (uint256 i; i < newAccounts.length; i++) {
+      accountAddresses[i] =
+        lens.computeLlamaAccountAddress(address(mockAccountLogic), encodeMockAccount(newAccounts[i]), address(mpCore));
+    }
+
+    vm.expectEmit();
+    emit AccountCreated(accountAddresses[0], mockAccountLogic, encodeMockAccount(newAccounts[0]));
+
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(mockAccountLogic, encodeMockAccountConfigs(newAccounts));
+
+    assertEq(MockAccountLogicContract(address(accountAddresses[0])).creationTime(), block.timestamp);
   }
 
   function test_RevertIf_AccountLogicNotAuthorized() public {

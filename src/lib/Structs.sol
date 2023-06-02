@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
-import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
-import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
-
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 
 /// @dev Data required to create an action.
@@ -55,50 +51,4 @@ struct RolePermissionData {
   // each field in the `PermissionData` struct.
   bytes32 permissionId;
   bool hasPermission; // Whether to assign the permission or remove the permission.
-}
-
-/// @dev Data for sending ERC20 tokens to recipients.
-struct ERC20Data {
-  IERC20 token; // The ERC20 token to transfer.
-  address recipient; // The address to transfer the token to.
-  uint256 amount; // The amount of tokens to transfer.
-}
-
-/// @dev Data for sending ERC721 tokens to recipients.
-struct ERC721Data {
-  IERC721 token; // The ERC721 token to transfer.
-  address recipient; // The address to transfer the token to.
-  uint256 tokenId; // The tokenId of the token to transfer.
-}
-
-/// @dev Data for operator allowance for ERC721 transfers.
-struct ERC721OperatorData {
-  IERC721 token; // The ERC721 token to transfer.
-  address recipient; // The address to transfer the token to.
-  bool approved; // Whether to approve or revoke allowance.
-}
-
-/// @dev Data for sending ERC1155 tokens to recipients.
-struct ERC1155Data {
-  IERC1155 token; // The ERC1155 token to transfer.
-  address recipient; // The address to transfer the token to.
-  uint256 tokenId; // The tokenId of the token to transfer.
-  uint256 amount; // The amount of tokens to transfer.
-  bytes data; // The data to pass to the ERC1155 token.
-}
-
-/// @dev Data for batch sending ERC1155 tokens to recipients.
-struct ERC1155BatchData {
-  IERC1155 token; // The ERC1155 token to transfer.
-  address recipient; // The address to transfer the token to.
-  uint256[] tokenIds; // The tokenId of the token to transfer.
-  uint256[] amounts; // The amount of tokens to transfer.
-  bytes data; // The data to pass to the ERC1155 token.
-}
-
-/// @dev Data for operator allowance for ERC1155 transfers.
-struct ERC1155OperatorData {
-  IERC1155 token; // The ERC1155 token to transfer.
-  address recipient; // The address to transfer the token to.
-  bool approved; // Whether to approve or revoke allowance.
 }
