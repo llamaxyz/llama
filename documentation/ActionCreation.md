@@ -30,7 +30,7 @@ Here is the anatomy of an action:
 ![Action State Diagram](../diagrams/llama-action-state-machine.png)
 
 Action state consists of seven unique states and is represented by the following enum:
-```
+```solidity
 enum ActionState {
   Active,
   Canceled,
