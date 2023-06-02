@@ -20,7 +20,7 @@ Here is the anatomy of an action:
   - Policies: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
   - Permissions: A unique identifier that can be assigned to roles to enable action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
-  - Strategies: A contract that holds all of the logic to determine action state. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed.
+  - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.
   - Executor: The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor.
   - Guards: Guards enable pre and post action execution safety checks. Guards can be used to add arbitrary logic checks before and after action execution such as spending limits or calldata permissioning.
   - Scripts: Contracts that are delegate called instead of called. Scripts can be used to batch calls together for extended functionality.
