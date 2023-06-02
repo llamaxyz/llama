@@ -31,7 +31,7 @@ Lets look at each argument individually:
 - **role**: The role being granted to the policyholder.
 - **policyholder**: The policyholder's address.
 - **quantity**: The quantity of approval/disapproval power the policyholder has for the given role.
-- **expiration**: The expiration date of the role (not the policy)
+- **expiration**: The expiration date of the role (not the policy).
 
 There are a few additional concepts to keep in mind to understand granting policies:
 - The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies
