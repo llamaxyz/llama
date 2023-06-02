@@ -248,6 +248,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
+  /// @dev Use `""` for `description` if there is no description.
   /// @param role The role that will be used to determine the permission ID of the policyholder.
   /// @param strategy The strategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
@@ -268,6 +269,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permission ID
   /// of the provided `(target, selector, strategy)`.
+  /// @dev Use `""` for `description` if there is no description.
   /// @param policyholder The policyholder that signed the message.
   /// @param role The role that will be used to determine the permission ID of the policyholder.
   /// @param strategy The strategy contract that will determine how the action is executed.
@@ -356,6 +358,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the approval of an action with a reason.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the approval by the policyholder.
@@ -364,6 +367,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param policyholder The policyholder that signed the message.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
@@ -387,6 +391,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the disapproval of an action with a reason.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the disapproval by the policyholder.
@@ -395,6 +400,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param policyholder The policyholder that signed the message.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
