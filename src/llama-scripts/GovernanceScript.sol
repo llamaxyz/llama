@@ -20,9 +20,9 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///     and (2) are also used by methods in the "Common Aggregate Calls" section.
 ///   - The "Common Aggregate Calls" section has external methods for common batch actions.
 contract GovernanceScript is BaseScript {
-  // ==============================
-  // ========= Structs ============
-  // ==============================
+  // ==========================
+  // ========= Structs ========
+  // ==========================
 
   /// @dev Struct for holding data for the `updateRoleDescription` method in `LlamaPolicy`.
   struct UpdateRoleDescription {

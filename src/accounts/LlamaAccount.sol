@@ -144,7 +144,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     erc20Data.token.safeApprove(erc20Data.recipient, erc20Data.amount);
   }
 
-  /// @notice Approve an ERC20 allowance for recipients.
+  /// @notice Batch approve ERC20 allowances for recipients.
   /// @param erc20Data The `tokens`, `recipients`, and `amounts` for the ERC20 approvals.
   function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyLlama {
     uint256 length = erc20Data.length;
@@ -171,13 +171,13 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     }
   }
 
-  /// @notice Approve a receipient to transfer an ERC721.
+  /// @notice Approve a recipient to transfer an ERC721.
   /// @param erc721Data The `token`, `recipient`, and `tokenId` of the ERC721 approval.
   function approveERC721(ERC721Data calldata erc721Data) public onlyLlama {
     erc721Data.token.approve(erc721Data.recipient, erc721Data.tokenId);
   }
 
-  /// @notice Approve receipients to transfer an ERC721s.
+  /// @notice Batch approve recipients to transfer ERC721s.
   /// @param erc721Data The `tokens`, `recipients`, and `tokenIds` for the ERC721 approvals.
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyLlama {
     uint256 length = erc721Data.length;
@@ -240,7 +240,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     erc1155OperatorData.token.setApprovalForAll(erc1155OperatorData.recipient, erc1155OperatorData.approved);
   }
 
-  /// @notice Batch approve an ERC1155 operator allowance to recipients.
+  /// @notice Batch approve ERC1155 operator allowances to recipients.
   /// @param erc1155OperatorData The data of the ERC1155 operator allowances.
   function batchApproveOperatorERC1155(ERC1155OperatorData[] calldata erc1155OperatorData) external onlyLlama {
     uint256 length = erc1155OperatorData.length;

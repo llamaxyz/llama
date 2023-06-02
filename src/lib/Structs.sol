@@ -7,8 +7,7 @@ import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 
-/// @dev Data required to create an action. `infoHash` is computed by taking the keccak256 hash of the concatenation of
-/// each field in the `ActionInfo` struct.
+/// @dev Data required to create an action.
 struct ActionInfo {
   uint256 id; // ID of the action.
   address creator; // Address that created the action.
@@ -34,8 +33,7 @@ struct Action {
   uint128 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
-/// @dev Data that represents a permission. `permissionId` is computed by taking the keccak256 hash of the concatenation
-/// of each field in the `PermissionData` struct.
+/// @dev Data that represents a permission.
 struct PermissionData {
   address target; // Contract being called by an action.
   bytes4 selector; // Selector of the function being called by an action.
@@ -53,7 +51,7 @@ struct RoleHolderData {
 /// @dev Data required to assign/revoke a `permission` to/from a `role`.
 struct RolePermissionData {
   uint8 role; // ID of the `role` to set (uint8 ensures on-chain enumerability when burning policies).
-  // Permission ID to assign to the `role`. The hash is computed by taking the keccak256 hash of the concatenation of
+  // Permission ID to assign to the `role`. It's a hash computed by taking the keccak256 hash of the concatenation of
   // each field in the `PermissionData` struct.
   bytes32 permissionId;
   bool hasPermission; // Whether to assign the permission or remove the permission.
