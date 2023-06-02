@@ -57,7 +57,7 @@ We can call the `getActionState` method on `LlamaCore` to get the current state 
 ## Permissioning Action Creation
 
 Permissions are the atomic unit for action creation access control and are managed through the `LlamaPolicy` contract. 
-Permissions can be assigned to roles, and roles are assigned to policies. 
+Permissions can be assigned to roles, roles are assigned to policies, and accounts (users) hold policies. 
 Policies can have many roles, and roles can have many permissions. When creating an action, a validation check is done to make sure that the policyholder has a role with the correct permission.
 
 Permissions are calculated by hashing the `PermissionData` struct, which looks like this:
