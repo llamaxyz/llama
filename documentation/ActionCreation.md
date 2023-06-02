@@ -72,7 +72,8 @@ struct PermissionData {
 ```
 
 When creating an action, the permission required to create said action can be calculated on the fly, since the action creator must pass in the `target`, `selector` & `strategy`. 
-We can calculate the permission id on the spot and check the `canCreateAction` mapping on the LlamaPolicy contract to verify that the action creation role has the corresponding permission.
+`LlamaCore` calculates the permission ID at action creation.
+It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contract to verify that the action creation role has the corresponding permission.
 
 To add and remove permissions, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
