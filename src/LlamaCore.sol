@@ -334,13 +334,6 @@ contract LlamaCore is Initializable {
     emit ActionCanceled(actionInfo.id);
   }
 
-  /// @notice How policyholders add their support of the approval of an action.
-  /// @param role The role the policyholder uses to cast their approval.
-  /// @param actionInfo Data required to create an action.
-  function castApproval(uint8 role, ActionInfo calldata actionInfo) external {
-    return _castApproval(msg.sender, role, actionInfo, "");
-  }
-
   /// @notice How policyholders add their support of the approval of an action with a reason.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
@@ -370,13 +363,6 @@ contract LlamaCore is Initializable {
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
     return _castApproval(signer, role, actionInfo, reason);
-  }
-
-  /// @notice How policyholders add their support of the disapproval of an action.
-  /// @param role The role the policyholder uses to cast their disapproval.
-  /// @param actionInfo Data required to create an action.
-  function castDisapproval(uint8 role, ActionInfo calldata actionInfo) external {
-    return _castDisapproval(msg.sender, role, actionInfo, "");
   }
 
   /// @notice How policyholders add their support of the disapproval of an action with a reason.

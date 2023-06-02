@@ -87,14 +87,14 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     vm.expectEmit();
     emit ApprovalCast(actionInfo.id, _policyholder, uint8(Roles.Approver), 1, "");
     vm.prank(_policyholder);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function _disapproveAction(address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, _policyholder, uint8(Roles.Disapprover), 1, "");
     vm.prank(_policyholder);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function _queueAction(ActionInfo memory actionInfo) public {
@@ -1342,7 +1342,7 @@ contract CastApproval is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_DuplicateApproval() public {
@@ -1350,7 +1350,7 @@ contract CastApproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1358,10 +1358,10 @@ contract CastApproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
 
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 
   function test_RevertIf_NoQuantity() public {
@@ -1380,7 +1380,7 @@ contract CastApproval is LlamaCoreTest {
         LlamaCore.CannotCastWithZeroQuantity.selector, actionCreatorAaron, uint8(Roles.ActionCreator)
       )
     );
-    mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo);
+    mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
 }
 
@@ -1516,7 +1516,7 @@ contract CastDisapproval is LlamaCoreTest {
     vm.expectEmit();
     emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, "");
 
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     assertEq(mpCore.getAction(0).totalDisapprovals, 1);
     assertEq(mpCore.disapprovals(0, disapproverDrake), true);
@@ -1534,7 +1534,7 @@ contract CastDisapproval is LlamaCoreTest {
     ActionInfo memory actionInfo = _createAction();
 
     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Active)));
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_RevertIf_DuplicateDisapproval() public {
@@ -1544,7 +1544,7 @@ contract CastDisapproval is LlamaCoreTest {
 
     vm.expectRevert(LlamaCore.DuplicateCast.selector);
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_RevertIf_InvalidPolicyholder() public {
@@ -1553,19 +1553,19 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(notPolicyholder);
 
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 
   function test_FailsIfDisapproved() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
     vm.prank(disapproverDrake);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Failed));
@@ -1598,7 +1598,7 @@ contract CastDisapproval is LlamaCoreTest {
       )
     );
     vm.prank(actionCreatorAaron);
-    mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
 }
 
@@ -1717,7 +1717,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
     // Second disapproval.
     vm.prank(disapproverDave);
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     // Assertions.
     ActionState state = mpCore.getActionState(actionInfo);

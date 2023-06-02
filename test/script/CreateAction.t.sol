@@ -101,7 +101,7 @@ contract Run is CreateActionTest {
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
 
     vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
-    rootLlama.castApproval(ACTION_CREATOR_ROLE_ID, actionInfo);
+    rootLlama.castApproval(ACTION_CREATOR_ROLE_ID, actionInfo, "");
 
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Approved));
 

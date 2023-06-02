@@ -165,11 +165,11 @@ contract GovernanceScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1);
 
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.prank(approverAlicia);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.prank(approverAndy);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     mpCore.queueAction(actionInfo);
   }
 }
