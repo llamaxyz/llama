@@ -63,7 +63,7 @@ When creating an action, LlamaCore performs a validation check is done to make s
 Additional checks may be run by the strategy or a guard.
 
 Permissions are calculated by hashing the `PermissionData` struct, which looks like this:
-```
+```solidity
 struct PermissionData {
   address target; // Contract being called by an action.
   bytes4 selector; // Selector of the function being called by an action.
