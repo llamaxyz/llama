@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script filters all results from the test and script directories
+# This script prevents slither from analyzing the test and script directories
 
 mv test _test
 mv script _script

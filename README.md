@@ -70,9 +70,17 @@ To confirm the deploy was successful, re-run your test suite but use the newly c
 
 ## Documentation
 
-The generate documentation for the project and serve those static files locally, run the following commands:
+The generate documentation from NatSpec comments for the project and serve those static files locally, run the following command:
 
 ```sh
-$ forge doc -b
-$ forge doc -s
+$ forge doc -o reference/ -b -s
+```
+
+## Slither
+
+When running Slither, use our bash script to prevent slither from analyzing the test and script directories. Running `slither .` directly results in the error described here: [\[Bug\]: AssertionError post solc compilation](https://github.com/crytic/slither/issues/1932).
+
+```sh
+$ chmod +x slither.sh
+$ ./slither.sh
 ```
