@@ -38,13 +38,13 @@ contract LlamaSingleUseScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1);
 
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 1);
     vm.prank(approverAlicia);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 1);
     vm.prank(approverAndy);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 2 days);
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 1 weeks);

@@ -12,14 +12,6 @@ import {Address} from "@openzeppelin/utils/Address.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {
-  ERC20Data,
-  ERC721Data,
-  ERC721OperatorData,
-  ERC1155Data,
-  ERC1155BatchData,
-  ERC1155OperatorData
-} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
 /// @title Llama Account
@@ -42,6 +34,52 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   struct NativeTokenData {
     address payable recipient; // Recipient of the native tokens.
     uint256 amount; // Amount of native tokens to send.
+  }
+
+  /// @dev Data for sending ERC20 tokens to recipients.
+  struct ERC20Data {
+    IERC20 token; // The ERC20 token to transfer.
+    address recipient; // The address to transfer the token to.
+    uint256 amount; // The amount of tokens to transfer.
+  }
+
+  /// @dev Data for sending ERC721 tokens to recipients.
+  struct ERC721Data {
+    IERC721 token; // The ERC721 token to transfer.
+    address recipient; // The address to transfer the token to.
+    uint256 tokenId; // The tokenId of the token to transfer.
+  }
+
+  /// @dev Data for operator allowance for ERC721 transfers.
+  struct ERC721OperatorData {
+    IERC721 token; // The ERC721 token to transfer.
+    address recipient; // The address to transfer the token to.
+    bool approved; // Whether to approve or revoke allowance.
+  }
+
+  /// @dev Data for sending ERC1155 tokens to recipients.
+  struct ERC1155Data {
+    IERC1155 token; // The ERC1155 token to transfer.
+    address recipient; // The address to transfer the token to.
+    uint256 tokenId; // The tokenId of the token to transfer.
+    uint256 amount; // The amount of tokens to transfer.
+    bytes data; // The data to pass to the ERC1155 token.
+  }
+
+  /// @dev Data for batch sending ERC1155 tokens to recipients.
+  struct ERC1155BatchData {
+    IERC1155 token; // The ERC1155 token to transfer.
+    address recipient; // The address to transfer the token to.
+    uint256[] tokenIds; // The tokenId of the token to transfer.
+    uint256[] amounts; // The amount of tokens to transfer.
+    bytes data; // The data to pass to the ERC1155 token.
+  }
+
+  /// @dev Data for operator allowance for ERC1155 transfers.
+  struct ERC1155OperatorData {
+    IERC1155 token; // The ERC1155 token to transfer.
+    address recipient; // The address to transfer the token to.
+    bool approved; // Whether to approve or revoke allowance.
   }
 
   // ======================================
@@ -253,10 +291,10 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
 
   /// @notice Execute arbitrary calls from the Llama Account.
   /// @param target The address of the contract to call.
-  /// @param callData The calldata to pass to the contract.
   /// @param withDelegatecall Whether to use delegatecall or call.
+  /// @param callData The calldata to pass to the contract.
   /// @return The result of the call.
-  function execute(address target, bytes calldata callData, bool withDelegatecall)
+  function execute(address target, bool withDelegatecall, bytes calldata callData)
     external
     payable
     onlyLlama

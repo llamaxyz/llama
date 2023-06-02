@@ -226,7 +226,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     for (uint256 i = 0; i < numberOfApprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
-      mpCore.castApproval(uint8(Roles.TestRole1), actionInfo);
+      mpCore.castApproval(uint8(Roles.TestRole1), actionInfo, "");
     }
   }
 
@@ -234,7 +234,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
     for (uint256 i = 0; i < numberOfDisapprovals; i++) {
       address _policyholder = address(uint160(i + 100));
       vm.prank(_policyholder);
-      mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo);
+      mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
     }
   }
 
@@ -787,7 +787,7 @@ contract IsActionApproved is LlamaStrategyTest {
   function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
   }
 }
 
@@ -806,7 +806,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
 
     mpCore.queueAction(actionInfo);
 
@@ -831,7 +831,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
 
     mpCore.queueAction(actionInfo);
 
@@ -913,7 +913,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
   function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(disapproverDave));
-    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 }
 
@@ -1283,7 +1283,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
 
     vm.expectRevert(LlamaAbsoluteStrategyBase.DisapprovalDisabled.selector);
 
-    mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo);
+    mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
   }
 
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
