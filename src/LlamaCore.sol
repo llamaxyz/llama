@@ -22,9 +22,9 @@ contract LlamaCore is Initializable {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @dev Policyholder cannot cast if it has 0 `quantity` of `role`.
-  /// @param policyholder Address of `policyholder`.
-  /// @param role The `role` being used in the cast.
+  /// @dev Policyholder cannot cast if it has 0 quantity of role.
+  /// @param policyholder Address of policyholder.
+  /// @param role The role being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
 
   /// @dev An action's target contract cannot be the executor.
@@ -33,7 +33,7 @@ contract LlamaCore is Initializable {
   /// @dev Address cannot be used.
   error RestrictedAddress();
 
-  /// @dev `Policyholders` can only cast once.
+  /// @dev Policyholders can only cast once.
   error DuplicateCast();
 
   /// @dev Action execution failed.
@@ -43,17 +43,17 @@ contract LlamaCore is Initializable {
   /// @dev `ActionInfo` does not hash to the correct value.
   error InfoHashMismatch();
 
-  /// @dev `msg.value` does not equal the action's `value`.
+  /// @dev `msg.value` does not equal the action's value.
   error IncorrectMsgValue();
 
   /// @dev The action is not in the expected state.
   /// @param current The current state of the action.
   error InvalidActionState(ActionState current);
 
-  /// @dev The `policyholder` does not have the `role` at action creation time.
+  /// @dev The policyholder does not have the role at action creation time.
   error InvalidPolicyholder();
 
-  /// @dev The recovered signer does not match the expected `policyholder`.
+  /// @dev The recovered signer does not match the expected policyholder.
   error InvalidSignature();
 
   /// @dev The provided address does not map to a deployed strategy.
@@ -162,7 +162,7 @@ contract LlamaCore is Initializable {
     "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @dev Mapping of `actionIds` to Actions.
+  /// @dev Mapping of actionIds to Actions.
   /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
   /// accessed with the `getAction` function so this is ok. We want the contracts to compile
   /// without the optimizer so `forge coverage` can be used.
@@ -185,10 +185,10 @@ contract LlamaCore is Initializable {
   /// @notice The current number of actions created.
   uint256 public actionsCount;
 
-  /// @notice Mapping of `actionIds` to `policyholders` to `approvals`.
+  /// @notice Mapping of actionIds to policyholders to approvals.
   mapping(uint256 => mapping(address => bool)) public approvals;
 
-  /// @notice Mapping of `actionIds` to `policyholders` to `disapprovals`.
+  /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
@@ -197,12 +197,12 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
 
-  /// @notice Mapping of `policyholders` to function selectors to current nonces for EIP-712 signatures.
+  /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (`createAction`,
-  /// `castApproval` and `castDisapproval`) signed by the `policyholder`.
+  /// `castApproval` and `castDisapproval`) signed by the policyholder.
   mapping(address => mapping(bytes4 => uint256)) public nonces;
 
-  /// @notice Mapping of `target` to `selector` to `actionGuard` address.
+  /// @notice Mapping of target to selector to actionGuard address.
   mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
 
   // ======================================================
@@ -246,15 +246,15 @@ contract LlamaCore is Initializable {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Creates an action. The creator needs to hold a `policy` with the `permissionId` of the provided
+  /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
-  /// @param role The `role` that will be used to determine the `permissionId` of the `policyholder`.
+  /// @param role The role that will be used to determine the permission ID of the policyholder.
   /// @param strategy The strategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param data Data to be called on the target when the action is executed.
   /// @param description A human readable description of the action and the changes it will enact.
-  /// @return actionId `actionId` of the newly created action.
+  /// @return actionId Action ID of the newly created action.
   function createAction(
     uint8 role,
     ILlamaStrategy strategy,
@@ -266,19 +266,19 @@ contract LlamaCore is Initializable {
     actionId = _createAction(msg.sender, role, strategy, target, value, data, description);
   }
 
-  /// @notice Creates an action via an off-chain signature. The creator needs to hold a `policy` with the `permissionId`
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permission ID
   /// of the provided `(target, selector, strategy)`.
-  /// @param policyholder The `policyholder` that signed the message.
-  /// @param role The `role` that will be used to determine the `permissionId` of the `policyholder`.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param role The role that will be used to determine the permission ID of the policyholder.
   /// @param strategy The strategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param data Data to be called on the target when the action is executed.
   /// @param description A human readable description of the action and the changes it will enact.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  /// @return actionId `actionId` of the newly created action.
+  /// @return actionId Action ID of the newly created action.
   function createActionBySig(
     address policyholder,
     uint8 role,
@@ -310,7 +310,7 @@ contract LlamaCore is Initializable {
     emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
-  /// @notice Execute an action by its `actionInfo` struct if it's in Queued state and `executionTime` has passed.
+  /// @notice Execute an action by its `actionInfo` struct if it's in Queued state and `minExecutionTime` has passed.
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
     // Initial checks that action is ready to execute.
@@ -341,7 +341,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Cancels an action by its `actionInfo` struct.
-  /// @dev Rules for cancelation are defined by the `strategy`.
+  /// @dev Rules for cancelation are defined by the strategy.
   /// @param actionInfo Data required to create an action.
   function cancelAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
@@ -355,26 +355,26 @@ contract LlamaCore is Initializable {
     emit ActionCanceled(actionInfo.id);
   }
 
-  /// @notice How `policyholders` add their support of the approval of an action.
-  /// @param role The `role` the `policyholder` uses to cast their approval.
+  /// @notice How policyholders add their support of the approval of an action.
+  /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
   function castApproval(uint8 role, ActionInfo calldata actionInfo) external {
     return _castApproval(msg.sender, role, actionInfo, "");
   }
 
-  /// @notice How `policyholders` add their support of the approval of an action with a reason.
-  /// @param role The `role` the `policyholder` uses to cast their approval.
+  /// @notice How policyholders add their support of the approval of an action with a reason.
+  /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
-  /// @param reason The `reason` given for the approval by the `policyholder`.
+  /// @param reason The reason given for the approval by the policyholder.
   function castApproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
     return _castApproval(msg.sender, role, actionInfo, reason);
   }
 
-  /// @notice How `policyholders` add their support of the approval of an action via an off-chain signature.
-  /// @param policyholder The `policyholder` that signed the message.
-  /// @param role The `role` the `policyholder` uses to cast their approval.
+  /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
-  /// @param reason The `reason` given for the approval by the `policyholder`.
+  /// @param reason The reason given for the approval by the policyholder.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
@@ -393,26 +393,26 @@ contract LlamaCore is Initializable {
     return _castApproval(signer, role, actionInfo, reason);
   }
 
-  /// @notice How `policyholders` add their support of the disapproval of an action.
-  /// @param role The `role` the `policyholder` uses to cast their disapproval.
+  /// @notice How policyholders add their support of the disapproval of an action.
+  /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
   function castDisapproval(uint8 role, ActionInfo calldata actionInfo) external {
     return _castDisapproval(msg.sender, role, actionInfo, "");
   }
 
-  /// @notice How `policyholders` add their support of the disapproval of an action with a reason.
-  /// @param role The `role` the `policyholder` uses to cast their disapproval.
+  /// @notice How policyholders add their support of the disapproval of an action with a reason.
+  /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
-  /// @param reason The `reason` given for the disapproval by the `policyholder`.
+  /// @param reason The reason given for the disapproval by the policyholder.
   function castDisapproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
     return _castDisapproval(msg.sender, role, actionInfo, reason);
   }
 
-  /// @notice How `policyholders` add their support of the disapproval of an action via an off-chain signature.
-  /// @param policyholder The `policyholder` that signed the message.
-  /// @param role The `role` the `policyholder` uses to cast their disapproval.
+  /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
-  /// @param reason The `reason` given for the approval by the `policyholder`.
+  /// @param reason The reason given for the approval by the policyholder.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
@@ -458,38 +458,38 @@ contract LlamaCore is Initializable {
   /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
   /// @param script The address of the script contract.
   /// @param authorized The boolean that determines if the `script` is being authorized or unauthorized.
-  /// @dev To remove a `script`, set `authorized` to false.
+  /// @dev To remove a `script`, set `authorized` to `false`.
   function authorizeScript(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
     emit ScriptAuthorized(script, authorized);
   }
 
-  /// @notice Increments the caller's `nonce` for the given `selector`. This is useful for revoking
+  /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
   /// signatures that have not been used yet.
-  /// @param selector The function selector to increment the `nonce` for.
+  /// @param selector The function selector to increment the nonce for.
   function incrementNonce(bytes4 selector) external {
     // Safety: Can never overflow a uint256 by incrementing.
     nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
   }
 
   /// @notice Get an Action struct by `actionId`.
-  /// @param actionId id of the action.
+  /// @param actionId ID of the action.
   /// @return The Action struct.
   function getAction(uint256 actionId) external view returns (Action memory) {
     return actions[actionId];
   }
 
-  /// @notice Returns the `timestamp` of most recently created action.
+  /// @notice Returns the timestamp of most recently created action.
   /// @dev Used by `LlamaPolicy` to ensure policy management does not occur immediately after action
   /// creation in the same timestamp, as this could result in invalid role supply counts being used.
   function getLastActionTimestamp() external view returns (uint256 timestamp) {
     return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
   }
 
-  /// @notice Get the current `ActionState` of an action by its `actionInfo` struct.
+  /// @notice Get the current action state of an action by its `actionInfo` struct.
   /// @param actionInfo Data required to create an action.
-  /// @return The current `ActionState` of the action.
+  /// @return The current action state of the action.
   function getActionState(ActionInfo calldata actionInfo) public view returns (ActionState) {
     // We don't need an explicit check on the action ID to make sure it exists, because if the
     // action does not exist, the expected payload hash from storage will be `bytes32(0)`, so
@@ -519,7 +519,7 @@ contract LlamaCore is Initializable {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Creates an action. The creator needs to hold a policy with the `permissionId` of the provided
+  /// @dev Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
   function _createAction(
     address policyholder,
@@ -569,7 +569,7 @@ contract LlamaCore is Initializable {
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
 
-  /// @dev How `policyholders` that have the right `role` contribute towards the approval of an action with a reason.
+  /// @dev How policyholders that have the right role contribute towards the approval of an action with a reason.
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -580,7 +580,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
-  /// @dev How `policyholders` that have the right `role` contribute towards the disapproval of an action with a reason.
+  /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -701,7 +701,7 @@ contract LlamaCore is Initializable {
     if (actualHash != expectedHash) revert InfoHashMismatch();
   }
 
-  /// @dev Returns the current `nonce` for a given `policyholder` and `selector`, and increments it. Used to prevent
+  /// @dev Returns the current nonce for a given policyholder and selector, and increments it. Used to prevent
   /// replay attacks.
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];

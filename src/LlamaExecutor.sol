@@ -17,8 +17,8 @@ contract LlamaExecutor {
   }
 
   /// @notice Called by `executeAction` in the core contract to make the call described by the action.
-  /// @dev Using a separate executor contract ensures `target`s being delegatecalled cannot write to `LlamaCore`'s
-  /// storage. By using a sole executor for `call`s and `delegatecall`s,
+  /// @dev Using a separate executor contract ensures `target` being delegatecalled cannot write to `LlamaCore`'s
+  /// storage. By using a sole executor for calls and delegatecalls,
   /// a Llama instance is represented by one contract address.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.

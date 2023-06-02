@@ -36,34 +36,34 @@ interface ILlamaStrategy {
 
   // -------- When Casting Approval --------
 
-  /// @notice Reverts if approvals are not allowed with this `strategy` for the given `policyholder` when approving with
-  /// `role`.
+  /// @notice Reverts if approvals are not allowed with this strategy for the given policyholder when approving with
+  /// role.
   /// @param actionInfo Data required to create an action.
-  /// @param policyholder Address of the `policyholder`.
-  /// @param role The `role` of the `policyholder` being used to cast approval.
+  /// @param policyholder Address of the policyholder.
+  /// @param role The role of the policyholder being used to cast approval.
   function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
 
-  /// @notice Get the `quantity` of an approval of a `policyholder` at a specific `timestamp`.
-  /// @param policyholder Address of the `policyholder`.
-  /// @param role The `role` to check `quantity` for.
-  /// @param timestamp The `timestamp` at which to get the approval `quantity`.
-  /// @return The `quantity` of the policyholder's approval.
+  /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
+  /// @param policyholder Address of the policyholder.
+  /// @param role The role to check quantity for.
+  /// @param timestamp The timestamp at which to get the approval quantity.
+  /// @return The quantity of the policyholder's approval.
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128);
 
   // -------- When Casting Disapproval --------
 
-  /// @notice Reverts if disapprovals are not allowed with this strategy for the given `policyholder` when disapproving
-  /// with `role`.
+  /// @notice Reverts if disapprovals are not allowed with this strategy for the given policyholder when disapproving
+  /// with role.
   /// @param actionInfo Data required to create an action.
-  /// @param policyholder Address of the `policyholder`.
-  /// @param role The `role` of the `policyholder` being used to cast disapproval.
+  /// @param policyholder Address of the policyholder.
+  /// @param role The role of the policyholder being used to cast disapproval.
   function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
 
-  /// @notice Get the `quantity` of a disapproval of a `policyholder` at a specific `timestamp`.
-  /// @param policyholder Address of the `policyholder`.
-  /// @param role The `role` to check `quantity` for.
-  /// @param timestamp The `timestamp` at which to get the disapproval `quantity`.
-  /// @return The `quantity` of the policyholder's disapproval.
+  /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
+  /// @param policyholder Address of the policyholder.
+  /// @param role The role to check quantity for.
+  /// @param timestamp The timestamp at which to get the disapproval quantity.
+  /// @return The quantity of the policyholder's disapproval.
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
@@ -71,9 +71,9 @@ interface ILlamaStrategy {
 
   // -------- When Queueing --------
 
-  /// @notice Returns the earliest `timestamp`, in seconds, at which an action can be executed.
+  /// @notice Returns the earliest timestamp, in seconds, at which an action can be executed.
   /// @param actionInfo Data required to create an action.
-  /// @return The earliest `timestamp` at which an action can be executed.
+  /// @return The earliest timestamp at which an action can be executed.
   function minExecutionTime(ActionInfo calldata actionInfo) external view returns (uint64);
 
   // -------- When Canceling --------
@@ -101,7 +101,7 @@ interface ILlamaStrategy {
   /// @return Boolean value that is `true` if the action has been vetoed during the disapproval process.
   function isActionDisapproved(ActionInfo calldata actionInfo) external view returns (bool);
 
-  /// @notice Returns `true` if the action is expired, false otherwise.
+  /// @notice Returns `true` if the action is expired, `false` otherwise.
   /// @param actionInfo Data required to create an action.
   /// @return Boolean value that is `true` if the action is expired.
   function isActionExpired(ActionInfo calldata actionInfo) external view returns (bool);

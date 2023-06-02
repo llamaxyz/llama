@@ -130,7 +130,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Batch transfer ERC20 tokens to recipients.
-  /// @param erc20Data The `tokens`, `recipients`, and `amounts` for the ERC20 transfers.
+  /// @param erc20Data The `token`, `recipient`, and `amount` for the ERC20 transfers.
   function batchTransferERC20(ERC20Data[] calldata erc20Data) external onlyLlama {
     uint256 length = erc20Data.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -145,7 +145,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Batch approve ERC20 allowances for recipients.
-  /// @param erc20Data The `tokens`, `recipients`, and `amounts` for the ERC20 approvals.
+  /// @param erc20Data The `token`, `recipient`, and `amount` for the ERC20 approvals.
   function batchApproveERC20(ERC20Data[] calldata erc20Data) external onlyLlama {
     uint256 length = erc20Data.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -163,7 +163,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Batch transfer ERC721 tokens to recipients.
-  /// @param erc721Data The `tokens`, `recipients`, and `tokenIds` of the ERC721 transfers.
+  /// @param erc721Data The `token`, `recipient`, and `tokenId` of the ERC721 transfers.
   function batchTransferERC721(ERC721Data[] calldata erc721Data) external onlyLlama {
     uint256 length = erc721Data.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -178,7 +178,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Batch approve recipients to transfer ERC721s.
-  /// @param erc721Data The `tokens`, `recipients`, and `tokenIds` for the ERC721 approvals.
+  /// @param erc721Data The `token`, `recipient`, and `tokenId` for the ERC721 approvals.
   function batchApproveERC721(ERC721Data[] calldata erc721Data) external onlyLlama {
     uint256 length = erc721Data.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -193,7 +193,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   }
 
   /// @notice Batch approve operators for ERC721 transfers.
-  /// @param erc721OperatorData The `tokens`, `recipients`, and `approved` booleans for the ERC721 operator approvals.
+  /// @param erc721OperatorData The `token`, `recipient`, and `approved` booleans for the ERC721 operator approvals.
   function batchApproveOperatorERC721(ERC721OperatorData[] calldata erc721OperatorData) external onlyLlama {
     uint256 length = erc721OperatorData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {

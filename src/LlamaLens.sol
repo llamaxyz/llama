@@ -52,7 +52,7 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a Llama core contract from the name of the Llama instance.
-  /// @param name The `name` of this Llama instance.
+  /// @param name The name of this Llama instance.
   /// @return The computed address of the `LlamaCore` contract.
   function computeLlamaCoreAddress(string memory name) external view returns (LlamaCore) {
     return _computeLlamaCoreAddress(name);
@@ -66,7 +66,7 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
-  /// @param name The `name` of this Llama instance.
+  /// @param name The name of this Llama instance.
   /// @return The computed address of the `LlamaExecutor` contract.
   function computeLlamaExecutorAddress(string memory name) external view returns (LlamaExecutor) {
     LlamaCore llamaCore = _computeLlamaCoreAddress(name);
@@ -74,7 +74,7 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a Llama policy contract with a name value.
-  /// @param name The `name` of this Llama instance.
+  /// @param name The name of this Llama instance.
   /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name) external view returns (LlamaPolicy) {
     address _computedAddress = Clones.predictDeterministicAddress(

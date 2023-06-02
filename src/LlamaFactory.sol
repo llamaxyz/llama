@@ -22,7 +22,7 @@ contract LlamaFactory {
   // ======== Errors and Modifiers ========
   // ======================================
 
-  /// @dev The initial set of `role` holders has to have at least one `role` holder with role ID 1.
+  /// @dev The initial set of role holders has to have at least one role holder with role ID 1.
   error InvalidDeployConfiguration();
 
   /// @dev A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
@@ -198,11 +198,11 @@ contract LlamaFactory {
     _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
-  /// @notice Returns the token URI for a given Llama `policyholder`.
+  /// @notice Returns the token URI for a given Llama policyholder.
   /// @param llamaExecutor The instance's `LlamaExecutor`.
   /// @param name The name of the Llama system.
-  /// @param tokenId The token ID of the Llama `policyholder`.
-  /// @return The token URI for the given Llama `policyholder`.
+  /// @param tokenId The token ID of the Llama policyholder.
+  /// @return The token URI for the given Llama policyholder.
   function tokenURI(LlamaExecutor llamaExecutor, string memory name, uint256 tokenId)
     external
     view
@@ -212,7 +212,7 @@ contract LlamaFactory {
     return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
-  /// @notice Returns the contract URI for a given Llama `policyholder`.
+  /// @notice Returns the contract URI for a given Llama policyholder.
   /// @param name The name of the Llama system.
   /// @return The contract URI for the given Llama instance.
   function contractURI(string memory name) external view returns (string memory) {

@@ -9,11 +9,11 @@ import {LibString} from "@solady/utils/LibString.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata {
-  /// @notice Returns the token URI for a given Llama `policyholder`.
+  /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama instance.
-  /// @param tokenId The token ID of the Llama `policyholder`.
-  /// @param color The `color` of the Llama instance.
-  /// @param logo The `logo` of the Llama instance.
+  /// @param tokenId The token ID of the Llama policyholder.
+  /// @param color The color of the Llama instance.
+  /// @param logo The logo of the Llama instance.
   function tokenURI(string memory name, uint256 tokenId, string memory color, string memory logo)
     external
     pure
@@ -100,7 +100,7 @@ contract LlamaPolicyMetadata {
   }
 
   /// @notice Returns the contract URI for a given Llama policy.
-  /// @param name The `name` of the Llama instance.
+  /// @param name The name of the Llama instance.
   function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';

@@ -48,37 +48,37 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   error DisapprovalDisabled();
 
   /// @dev The action cannot be created because the minimum approval percentage cannot be greater than 100%.
-  /// @param minApprovalPct The provided `minApprovalPct`.
+  /// @param minApprovalPct The provided minApprovalPct.
   error InvalidMinApprovalPct(uint256 minApprovalPct);
 
-  /// @dev The `role` is not eligible to participate in this strategy in the specified way.
-  /// @param role The `role` being used.
+  /// @dev The role is not eligible to participate in this strategy in the specified way.
+  /// @param role The role being used.
   error InvalidRole(uint8 role);
 
   /// @dev Only the action creator can cancel an action.
   error OnlyActionCreator();
 
   /// @dev The action cannot be created if the approval or disapproval supply is 0.
-  /// @param role The `role` being used.
+  /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
 
-  /// @dev The provided `role` is not initialized by the `LlamaPolicy`.
-  /// @param role The `role` being used.
+  /// @dev The provided role is not initialized by the `LlamaPolicy`.
+  /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
   // ========================
   // ======== Events ========
   // ========================
 
-  /// @dev Emitted when a force approval `role` is added to the strategy. This can only happen at strategy deployment
+  /// @dev Emitted when a force approval role is added to the strategy. This can only happen at strategy deployment
   /// time during initialization.
   event ForceApprovalRoleAdded(uint8 role);
 
-  /// @dev Emitted when a force disapproval `role` is added to the strategy. This can only happen at strategy deployment
+  /// @dev Emitted when a force disapproval role is added to the strategy. This can only happen at strategy deployment
   /// time during initialization.
   event ForceDisapprovalRoleAdded(uint8 role);
 
-  /// @dev Emitted when a `strategy` is created referencing the `core` and `policy`.
+  /// @dev Emitted when a strategy is created referencing the core and policy.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
   // =================================================
@@ -98,7 +98,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   /// @dev Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice If false, action be queued before approvalEndTime.
+  /// @notice If `false`, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
@@ -107,7 +107,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   /// @notice Minimum time, in seconds, between queueing and execution of action.
   uint64 public queuingPeriod;
 
-  /// @notice Time, in seconds, after `executionTime` that action can be executed before permanently expiring.
+  /// @notice Time, in seconds, after `minExecutionTime` that action can be executed before permanently expiring.
   uint64 public expirationPeriod;
 
   /// @notice Minimum percentage of `totalApprovalQuantity / totalApprovalSupplyAtCreationTime` required for the
@@ -120,22 +120,22 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   /// @dev We use `uint16` because it's the smallest integer type that can hold 10,000.
   uint16 public minDisapprovalPct;
 
-  /// @notice The `role` that can approve an action.
+  /// @notice The role that can approve an action.
   uint8 public approvalRole;
 
-  /// @notice The `role` that can disapprove an action.
+  /// @notice The role that can disapprove an action.
   uint8 public disapprovalRole;
 
-  /// @notice Mapping of `roles` that can force an action to be approved.
+  /// @notice Mapping of roles that can force an action to be approved.
   mapping(uint8 => bool) public forceApprovalRole;
 
-  /// @notice Mapping of `roles` that can force an action to be disapproved.
+  /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 => bool) public forceDisapprovalRole;
 
-  /// @notice Mapping of action ID to the supply of the approval `role` at the time the action was created.
+  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
   mapping(uint256 => uint256) public actionApprovalSupply;
 
-  /// @notice Mapping of action ID to the supply of the disapproval `role` at the time the action was created.
+  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
   mapping(uint256 => uint256) public actionDisapprovalSupply;
 
   // =============================
@@ -301,7 +301,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
   // ======== Other Public Functions ========
   // ========================================
 
-  /// @notice Returns the `timestamp` at which the approval period ends.
+  /// @notice Returns the timestamp at which the approval period ends.
   function approvalEndTime(ActionInfo calldata actionInfo) public view returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;
