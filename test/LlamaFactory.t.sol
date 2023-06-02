@@ -33,19 +33,9 @@ contract LlamaFactoryTest is LlamaTestSetup {
     address llamaPolicy,
     uint256 chainId
   );
-  event StrategyAuthorized(ILlamaStrategy indexed strategy, address indexed strategyLogic, bytes initializationData);
-  event AccountCreated(ILlamaAccount indexed account, ILlamaAccount indexed accountLogic, bytes initializationData);
-  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
-  event ActionCanceled(uint256 id);
-  event ActionQueued(
-    uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
-  );
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event StrategiesAuthorized(RelativeQuorum.Config[] strategies);
-  event StrategiesUnauthorized(ILlamaStrategy[] strategies);
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -86,7 +76,7 @@ contract Constructor is LlamaFactoryTest {
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyTokenMetadataSet(policyMetadata);
+    emit PolicyMetadataSet(policyMetadata);
     deployLlamaFactory();
   }
 
@@ -397,7 +387,7 @@ contract Deploy is LlamaFactoryTest {
 
 contract AuthorizeStrategyLogic is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootCore));
+    vm.assume(_caller != address(rootExecutor));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     vm.prank(_caller);
     factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
@@ -420,7 +410,7 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
 
 contract AuthorizeAccountLogic is LlamaFactoryTest {
   function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootCore));
+    vm.assume(_caller != address(rootExecutor));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
     vm.prank(_caller);
     factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
@@ -446,14 +436,14 @@ contract SetPolicyTokenMetadata is LlamaFactoryTest {
     vm.assume(_caller != address(rootExecutor));
     vm.prank(address(_caller));
     vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyMetadata));
+    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
   }
 
   function testFuzz_WritesMetadataAddressToStorage(address _policyMetadata) public {
     vm.prank(address(rootExecutor));
     vm.expectEmit();
-    emit PolicyTokenMetadataSet(LlamaPolicyMetadata(_policyMetadata));
-    factory.setPolicyTokenMetadata(LlamaPolicyMetadata(_policyMetadata));
+    emit PolicyMetadataSet(LlamaPolicyMetadata(_policyMetadata));
+    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
     assertEq(address(factory.llamaPolicyMetadata()), _policyMetadata);
   }
 }

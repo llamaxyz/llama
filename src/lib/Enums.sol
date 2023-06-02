@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 enum ActionState {
   Active, // Action created and approval period begins.
-  Canceled, // Action canceled by creator or disapproved.
+  Canceled, // Action canceled by creator.
   Failed, // Action approval failed.
   Approved, // Action approval succeeded and ready to be queued.
   Queued, // Action queued for queueing duration and disapproval period begins.

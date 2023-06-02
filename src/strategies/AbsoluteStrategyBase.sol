@@ -14,7 +14,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Absolute Strategy Base Llama Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a base contract for llama strategies to inherit which has the following properties:
+/// @notice This is a base contract for Llama strategies to inherit which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - The `validateActionCreation`, `isApprovalEnabled`, and `isDisapprovalEnabled` methods are left up to the
 ///     implementing contract to determine the rest of the behavior.
@@ -38,9 +38,9 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
     uint8[] forceDisapprovalRoles; // Anyone with this role can single-handedly disapprove an action.
   }
 
-  // ======================================
-  // ======== Errors and Modifiers ========
-  // ======================================
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
@@ -56,6 +56,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   error InsufficientDisapprovalQuantity();
 
   /// @dev The action cannot be created because the quantity of approvals required are greater than the role supply.
+  /// @param minApprovals The provided minApprovals.
   error InvalidMinApprovals(uint256 minApprovals);
 
   /// @dev The role is not eligible to participate in this strategy in the specified way.
@@ -69,7 +70,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @param role The role being used.
   error RoleHasZeroSupply(uint8 role);
 
-  /// @dev The provided `role` is not initialized by the `LlamaPolicy`.
+  /// @dev The provided role is not initialized by the `LlamaPolicy`.
   /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
@@ -77,13 +78,20 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when a force approval role is added to the strategy. This can only happen at strategy deployment
+  /// time during initialization.
   event ForceApprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a force disapproval role is added to the strategy. This can only happen at strategy deployment
+  /// time during initialization.
   event ForceDisapprovalRoleAdded(uint8 role);
+
+  /// @dev Emitted when a strategy is created referencing the core and policy.
   event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
 
   // -------- Interface Requirements --------
 
@@ -95,10 +103,10 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
 
   // -------- Strategy Configuration --------
 
-  /// @notice Equivalent to 100%, but in basis points.
+  /// @dev Equivalent to 100%, but in basis points.
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
-  /// @notice If false, action be queued before approvalEndTime.
+  /// @notice If `false`, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
 
   /// @notice Length of approval period in seconds.
@@ -107,7 +115,7 @@ abstract contract AbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @notice Minimum time, in seconds, between queueing and execution of action.
   uint64 public queuingPeriod;
 
-  /// @notice Time, in seconds, after executionTime that action can be executed before permanently expiring.
+  /// @notice Time, in seconds, after `minExecutionTime` that action can be executed before permanently expiring.
   uint64 public expirationPeriod;
 
   /// @notice Minimum total quantity of approvals for the action to be queued.

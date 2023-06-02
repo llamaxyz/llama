@@ -50,7 +50,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   );
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
-  event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+  event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event ScriptAuthorized(address script, bool authorized);
 
@@ -312,9 +312,9 @@ contract Initialize is LlamaCoreTest {
     }
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], relativeQuorumLogic, strategyConfigs[0]);
+    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, strategyConfigs[0]);
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
+    emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
 
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
@@ -1796,11 +1796,11 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+    emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[2], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    emit StrategyCreated(strategyAddresses[2], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
@@ -1863,11 +1863,11 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    emit StrategyCreated(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[1], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+    emit StrategyCreated(strategyAddresses[1], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[1]));
     vm.expectEmit();
-    emit StrategyAuthorized(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    emit StrategyCreated(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
     mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 

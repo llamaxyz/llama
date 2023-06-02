@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {ActionInfo} from "src/lib/Structs.sol";
 
-/// @title Action Guard
+/// @title Llama Action Guard Interface
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Executes checks on action creation and execution to verify that the action is allowed.
 /// @dev Methods are not `view` because (1) an action guard may write to it's own storage, and (2)
@@ -15,16 +15,18 @@ import {ActionInfo} from "src/lib/Structs.sol";
 ///     and save off the current USD value of an account.
 ///   - Verify the USD value of an account has not decreased by more than a certain amount during
 ///     execution, i.e. between `validatePreActionExecution` and `validatePostActionExecution`.
-/// than a certain amount.
 interface IActionGuard {
   /// @notice Reverts if action creation is not allowed.
+  /// @param actionInfo Data required to create an action.
   function validateActionCreation(ActionInfo calldata actionInfo) external;
 
   /// @notice Called immediately before action execution, and reverts if the action is not allowed
   /// to be executed.
+  /// @param actionInfo Data required to create an action.
   function validatePreActionExecution(ActionInfo calldata actionInfo) external;
 
   /// @notice Called immediately after action execution, and reverts if the just-executed
   /// action should not have been allowed to execute.
+  /// @param actionInfo Data required to create an action.
   function validatePostActionExecution(ActionInfo calldata actionInfo) external;
 }
