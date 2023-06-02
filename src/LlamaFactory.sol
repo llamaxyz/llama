@@ -142,8 +142,8 @@ contract LlamaFactory {
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The strategy implementation (logic) contract to use for this Llama instance.
   /// @param accountLogic The account implementation (logic) contract to use for this Llama instance.
-  /// @param initialStrategies Array of configurations to initialize initial strategies with.
-  /// @param initialAccounts Array of configurations to initialize initial accounts with.
+  /// @param initialStrategies Array of initial strategy configurations.
+  /// @param initialAccounts Array of initial account configurations.
   /// @param initialRoleDescriptions Array of initial role descriptions.
   /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions Array of initial permissions given to roles.

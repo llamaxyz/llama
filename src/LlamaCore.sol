@@ -218,8 +218,8 @@ contract LlamaCore is Initializable {
   /// @param _policy This Llama instance's policy contract.
   /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
-  /// @param initialStrategies Array of configurations to initialize initial strategies with.
-  /// @param initialAccounts Array of configurations to initialize initial accounts with.
+  /// @param initialStrategies Array of initial strategy configurations.
+  /// @param initialAccounts Array of initial account configurations.
   /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
   function initialize(
     string memory _name,
@@ -433,14 +433,14 @@ contract LlamaCore is Initializable {
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
   /// @param llamaStrategyLogic address of the Llama strategy logic contract.
-  /// @param strategyConfigs Array of configurations to initialize new strategies with.
+  /// @param strategyConfigs Array of new strategy configurations.
   function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) external onlyLlama {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
   /// @notice Deploy new accounts.
   /// @param llamaAccountLogic address of the Llama account logic contract.
-  /// @param accountConfigs Array of configurations to initialize new accounts with.
+  /// @param accountConfigs Array of new account configurations.
   function createAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) external onlyLlama {
     _deployAccounts(llamaAccountLogic, accountConfigs);
   }
