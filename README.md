@@ -78,7 +78,7 @@ $ forge doc -o reference/ -b -s
 
 ## Slither
 
-When running Slither, use our bash script to prevent slither from analyzing the test and script directories. Running `slither .` directly results in the error described here: [\[Bug\]: AssertionError post solc compilation](https://github.com/crytic/slither/issues/1932).
+Use our bash script to prevent slither from analyzing the test and script directories. Running `slither .` directly will result in an `AssertionError`.
 
 ```sh
 $ chmod +x slither.sh
