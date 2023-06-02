@@ -12,12 +12,12 @@ import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Relative Quorum Strategy
+/// @title Llama Relative Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-contract RelativeQuorum is ILlamaStrategy, Initializable {
+contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // =========================
   // ======== Structs ========
   // =========================
@@ -154,7 +154,7 @@ contract RelativeQuorum is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    Config memory strategyConfig = abi.decode(config, (RelativeQuorum.Config));
+    Config memory strategyConfig = abi.decode(config, (Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;

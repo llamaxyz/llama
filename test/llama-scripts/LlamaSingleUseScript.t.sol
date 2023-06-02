@@ -6,14 +6,14 @@ import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 import {MockSingleUseScript} from "test/mock/MockSingleUseScript.sol";
 
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {SingleUseScript} from "src/llama-scripts/SingleUseScript.sol";
+import {LlamaSingleUseScript} from "src/llama-scripts/LlamaSingleUseScript.sol";
 
-contract SingleUseScriptTest is LlamaTestSetup {
+contract LlamaSingleUseScriptTest is LlamaTestSetup {
   event SuccessfulCall();
 
-  SingleUseScript singleUseScript;
+  LlamaSingleUseScript singleUseScript;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -51,7 +51,7 @@ contract SingleUseScriptTest is LlamaTestSetup {
   }
 }
 
-contract UnauthorizeAfterRun is SingleUseScriptTest {
+contract UnauthorizeAfterRun is LlamaSingleUseScriptTest {
   function test_CanOnlyBeCalledOnce() public {
     // First call should succeed, and any subsequent calls should fail (unless the script is reauthorized)
     vm.prank(address(mpExecutor));
@@ -64,7 +64,7 @@ contract UnauthorizeAfterRun is SingleUseScriptTest {
     ActionInfo memory newActionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectRevert(
       abi.encodeWithSelector(
-        LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(BaseScript.OnlyDelegateCall.selector)
+        LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(LlamaBaseScript.OnlyDelegateCall.selector)
       )
     );
     mpCore.executeAction(newActionInfo);

@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -103,7 +103,7 @@ contract LlamaCore is Initializable {
   event ActionCanceled(uint256 id);
 
   /// @dev Emitted when an action guard is set.
-  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, ILlamaActionGuard actionGuard);
 
   /// @dev Emitted when an action is queued.
   event ActionQueued(
@@ -203,7 +203,7 @@ contract LlamaCore is Initializable {
   mapping(address => mapping(bytes4 => uint256)) public nonces;
 
   /// @notice Mapping of target to selector to actionGuard address.
-  mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
+  mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -326,8 +326,8 @@ contract LlamaCore is Initializable {
     action.executed = true;
 
     // Check pre-execution action guard.
-    IActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
-    if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
+    ILlamaActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
+    if (guard != ILlamaActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
     (bool success, bytes memory result) =
@@ -336,7 +336,7 @@ contract LlamaCore is Initializable {
     if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
-    if (guard != IActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
+    if (guard != ILlamaActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
 
     // Action successfully executed.
     emit ActionExecuted(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, result);
@@ -441,7 +441,7 @@ contract LlamaCore is Initializable {
   /// @param target The target contract where the `guard` will apply.
   /// @param selector The function selector where the `guard` will apply.
   /// @dev To remove a guard, set `guard` to the zero address.
-  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
+  function setGuard(address target, bytes4 selector, ILlamaActionGuard guard) external onlyLlama {
     if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
@@ -546,8 +546,8 @@ contract LlamaCore is Initializable {
 
     // Scope to avoid stack too deep
     {
-      IActionGuard guard = actionGuard[target][bytes4(data)];
-      if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+      ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
+      if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
 
       // Save action.
       Action storage newAction = actions[actionId];
