@@ -203,7 +203,11 @@ contract Run is DeployLlamaTest {
     DeployLlama.run();
 
     assertEq(address(policyMetadata) == address(0), false);
-    assertEq(keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com"))) == keccak256(abi.encode("")), false);
+    assertEq(
+      keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com")))
+        == keccak256(abi.encode("")),
+      false
+    );
   }
 
   function test_DeploysLens() public {
