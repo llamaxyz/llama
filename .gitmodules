@@ -1,18 +1,20 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-	branch = v1
+	commit = fc560fa34fa12a335a50c35d92e55a6628ca467c
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
-	branch = v4.8.0
+	commit = 49c0e4370d0cc50ea6090709e3835a3091e33ee2
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
+	commit = 564e9f1606c699296420500547c47685818bcccf
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
-	branch = v0.0.84
+	commit = 3d57528984275d1746ee6597acd36277f51c091d
 [submodule "lib/solarray"]
 	path = lib/solarray
 	url = https://github.com/emo-eth/solarray
+	commit = 4c3b8ff8e90c8cd11d30e02c1b6b2fcf9bc0f3db
