@@ -50,10 +50,6 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
 
     vm.broadcast();
-    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
-    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
-
-    vm.broadcast();
     accountLogic = new LlamaAccount();
     DeployUtils.print(string.concat("  LlamaAccountLogic:", vm.toString(address(accountLogic))));
 
@@ -98,5 +94,9 @@ contract DeployLlama is Script {
     vm.broadcast();
     lens = new LlamaLens(address(factory));
     DeployUtils.print(string.concat("  LlamaLens:", vm.toString(address(lens))));
+
+    vm.broadcast();
+    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
+    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
   }
 }
