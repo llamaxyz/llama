@@ -13,7 +13,7 @@ Let's dive into the best practices surrounding policy management.
 - **Token IDs**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyholderAddress))`.
 - **Roles**: A signifier given to one or more policyholders. Roles can be used to permission action creation, action approvals, and action disapprovals.
 - **Permission IDs**: A unique identifier that can be assigned to roles to permission action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission ID.
-- **Checkpoints**: Llama stores checkpointed role balances over time to enable querying historical role balances during the action approval and disapproval process.
+- **Checkpoints**: Llama stores checkpointed role balances over time to enable querying historical role quantities during the action approval and disapproval process.
 
 ## Managing Policies
 
