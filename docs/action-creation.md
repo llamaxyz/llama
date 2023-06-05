@@ -86,7 +86,7 @@ Strategies cannot be explicitly deleted or unauthorized in the Llama system; in 
 
 The ability to cast approvals and disapprovals will typically be controlled by roles defined in a `ILlamaStrategy` contract, and are set explicitly on the strategy contract at deployment.
 Each strategy can have exactly one approval role and one disapproval role.
-Policy holders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
+Policyholders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
 Policyholders without the correct approval/disapproval role are not able to cast.
 
 **Note**: The strategy behavior defined in this section is true for the existing strategy implementation but does not have to be true for future implementations.
