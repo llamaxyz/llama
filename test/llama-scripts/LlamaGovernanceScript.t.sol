@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {Solarray} from "@solarray/Solarray.sol";
-
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
