@@ -3,16 +3,16 @@
 Policies are the building blocks of the Llama permissioning system. 
 They allow users to create actions, assign roles, authorize strategies, and more. 
 Without policies, a Llama instance will be unusable.
-Policies, roles, and permissions can be granted on instance deployment, but we are going to focus on policy management for active Llama instances in this section.  
+Policies, roles, and permission IDs can be granted on instance deployment, but we are going to focus on policy management for active Llama instances in this section.  
 
 Let's dive into the best practices surrounding policy management.
 
 ## Key Concepts
 
-- **Policies**: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
+- **Policies**: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
 - **Token Ids**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyHolderAddress))`.
 - **Roles**: A signifier given to one or more policyholders. Roles can be used to permission action approvals/disapprovals.
-- **Permissions**: A unique identifier that can be assigned to roles to permission action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
+- **Permission IDs**: A unique identifier that can be assigned to roles to permission action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
 - **Checkpoints**: Llama stores checkpointed policy data to storage over time so that we can search historical policy data.
 
 ## Managing Policies
@@ -65,7 +65,7 @@ Once roles are created, they can't be deleted.
 Since Llama instances only have space for 255 roles total, the need to repurpose old and unused roles may surface over time.
 It is for this reason that the `updateRoleDescription` method exists.
 `updateRoleDescription` takes two arguments: role and description.
-Note that this method only changes the semantic meaning of a role, not the actual power that role holds within the Llama instance; be sure that the updated role has the correct permissions and approval/disapproval powers when updating a role.
+Note that this method only changes the semantic meaning of a role, not the actual power that role holds within the Llama instance; be sure that the updated role has the correct permission IDs and approval/disapproval powers when updating a role.
 
 ### Granting Roles
 
@@ -94,32 +94,32 @@ When an expired role is revoked, the quantity and total supply will be decrement
 **Note**: A policyholder can still utilize a role to approve/disapprove, and create actions after the expiry timestamp if it has not been revoked.
 Once revoked, the role can no longer be used by the policyholder.
 
-## Managing Permissions
+## Managing Permission IDs
 
-Permissions are units of access control that can be assigned to roles to allow for action creation.
+Permission IDs are units of access control that can be assigned to roles to allow for action creation.
 Policyholders are not allowed to create actions unless they have the corresponding permission.
 
 ## Permission Ids
 Permission ids are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
 The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission Ids.
-This is helpful because all of the functions required to manage permissions expect users to pass in pre-computed permission ids.
+This is helpful because all of the functions required to manage permission IDs expect users to pass in pre-computed permission ids.
 
-### Granting Permissions
+### Granting Permission IDs
 
 To grant a permission, the `setRolePermission` function is used.
 This function accepts three parameters: The role being granted a permission, the permission id being granted, and a boolean `hasPermission`.
-When granting permissions, `hasPermission` will always be set to true.
+When granting permission IDs, `hasPermission` will always be set to true.
 
-### Revoking Permissions
+### Revoking Permission IDs
 
 To revoke a permission, the `setRolePermission` function is used.
 This function accepts three parameters: The role being revoked from, the permission id being revoked, and a boolean `hasPermission`.
-When revoking permissions, `hasPermission` will always be set to false.
+When revoking permission IDs, `hasPermission` will always be set to false.
 
 ## Batching Policy Management Methods Using the Governance Script
 
 All of the base methods to manage Llama policies are singular, meaning new actions must be created for every singular policy, role, and permission users might want to adjust.
-Batching these methods together is an expected usecase, for example granting policies to a group of new users, or removing all permissions related to a specific strategy that is being deprecated.
+Batching these methods together is an expected usecase, for example granting policies to a group of new users, or removing all permission IDs related to a specific strategy that is being deprecated.
 This is the problem that the `GovernanceScript` aims to solve, by providing an interface that allows users to batch common policy management calls together to provide a substantially better UX.
 The `GovernanceScript` must be permissioned seperately from the base policy management functions, as it has an inherently different target address and function selector.
 

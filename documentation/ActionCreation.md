@@ -17,9 +17,9 @@ Here is the anatomy of an action:
 ## Key Concepts
 
 - Actions: Proposals made by policyholders to execute onchain transactions.
-  - Policies: Non-transferable NFTs encoded with roles and permissions for an individual Llama instance.
+  - Policies: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
-  - Permissions: A unique identifier that can be assigned to roles to enable action creation. Permissions are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
+  - Permission IDs: A unique identifier that can be assigned to roles to enable action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
   - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.
   - Executor: The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
   - Guards: Guards enable custom safety checks and logic to run at action creation, and pre and post action execution. Guards can also be used to add arbitrary logic such as spending limits or calldata permissioning.
@@ -56,13 +56,13 @@ We can call the `getActionState` method on `LlamaCore` to get the current state 
 
 ## Permissioning Action Creation
 
-Permissions are the atomic unit for action creation access control and are managed through the `LlamaPolicy` contract. 
-Permissions can be assigned to roles, roles are assigned to policies, and accounts (users) hold policies. 
-Policies can have zero or many roles, and roles can have zero or many permissions.
+Permission IDs are the atomic unit for action creation access control and are managed through the `LlamaPolicy` contract. 
+Permission IDs can be assigned to roles, roles are assigned to policies, and accounts (users) hold policies. 
+Policies can have zero or many roles, and roles can have zero or many permission IDs.
 When creating an action, LlamaCore performs a validation check is done to make sure that the policyholder has a role with the correct permission.
 Additional checks may be run by the strategy or a guard.
 
-Permissions are calculated by taking the `keccak256` hash of the ABI-encoded `PermissionData` struct, which looks like this:
+Permission IDs are calculated by taking the `keccak256` hash of the ABI-encoded `PermissionData` struct, which looks like this:
 ```solidity
 struct PermissionData {
   address target; // Contract being called by an action.
@@ -75,10 +75,9 @@ When creating an action, the permission required to create said action can be ca
 `LlamaCore` calculates the permission ID at action creation.
 It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contract to verify that the action creation role has the corresponding permission.
 
-To add and remove permissions, we use the `setRolePermission` function on the `LlamaPolicy` contract.
+To add and remove Permission IDs, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-Permissions are what enable strategy contracts, since without the right permission, a policyholder would not be able to create an action that uses a different strategy than their permission allows. 
-This is important because strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permissions that use that strategy rendering it useless.
+Strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permission IDs that use that strategy rendering it useless.
 
 ## Approvals and Disapprovals
 
