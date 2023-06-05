@@ -173,7 +173,7 @@ contract Run is CreateActionTest {
 
     // Confirm new llama instance has the desired properties.
     assertEq(address(llamaInstance.factory()), address(factory));
-    assertEq(address(llamaInstance) == address(rootLlama), false);
+    assertFalse(address(llamaInstance) == address(rootLlama));
 
     LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
     assertEq(llamaInstance.strategies(firstStrategy), true);

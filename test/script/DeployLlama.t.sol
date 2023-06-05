@@ -32,7 +32,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(factory) == address(0), false);
+=======
+    assertFalse(address(factory) == address(0));
+>>>>>>> f802217 (assertFalse)
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
     assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
@@ -169,7 +173,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(coreLogic) == address(0), false);
+=======
+    assertFalse(address(coreLogic) == address(0));
+>>>>>>> f802217 (assertFalse)
   }
 
   function test_DeploysStrategyLogic() public {
@@ -177,7 +185,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(relativeQuorumLogic) == address(0), false);
+=======
+    assertFalse(address(relativeQuorumLogic) == address(0));
+>>>>>>> f802217 (assertFalse)
   }
 
   function test_DeploysAccountLogic() public {
@@ -185,7 +197,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(accountLogic) == address(0), false);
+=======
+    assertFalse(address(accountLogic) == address(0));
+>>>>>>> f802217 (assertFalse)
   }
 
   function test_DeploysPolicyLogic() public {
@@ -193,7 +209,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(policyLogic) == address(0), false);
+=======
+    assertFalse(address(policyLogic) == address(0));
+>>>>>>> f802217 (assertFalse)
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
@@ -202,12 +222,17 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(policyMetadata) == address(0), false);
     assertEq(
       keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com")))
         == keccak256(abi.encode("")),
       false
     );
+=======
+    assertFalse(address(policyMetadata) == address(0));
+    assertFalse(keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com"))) == keccak256(abi.encode("")));
+>>>>>>> f802217 (assertFalse)
   }
 
   function test_DeploysLens() public {
@@ -215,7 +240,11 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
+<<<<<<< HEAD
     assertEq(address(lens) == address(0), false);
+=======
+    assertFalse(address(lens) == address(0));
+>>>>>>> f802217 (assertFalse)
     PermissionData memory permissionData = PermissionData(
       makeAddr("target"), // Could be any address, choosing a random one.
       bytes4(bytes32("transfer(address,uint256)")),
