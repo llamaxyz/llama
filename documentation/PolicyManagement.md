@@ -101,7 +101,7 @@ Policyholders are not allowed to create actions unless they have the correspondi
 
 ## Permission Ids
 Permission ids are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
-The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission Ids.
+The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission IDs.
 This is helpful because all of the functions required to manage permission IDs expect users to pass in pre-computed permission ids.
 
 ### Granting Permission IDs
