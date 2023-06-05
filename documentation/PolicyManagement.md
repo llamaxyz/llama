@@ -126,10 +126,10 @@ The `GovernanceScript` must be permissioned separately from the base policy mana
 ### Aggregate Method
 
 Mirrors of the base policy management functions exist as batch methods on the `GovernanceScript` contract, and even some common combinations of these methods.
-Not all possible combinations can be predicted and therfore do not exist on the script's interface.
+Not all possible combinations can be predicted and therefore do not exist on the script's interface.
 This is where the `aggregate` method becomes useful.
 `aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
-Since `aggregate` is a very powerful method, we reccomend permissioning other methods on the `GovernanceSript` contract unless the use of `aggregate` is deemed necessary.
+Since `aggregate` is a very powerful method, we recommend permissioning other methods on the `GovernanceSript` contract unless the use of `aggregate` is deemed necessary.
 
 ## Checkpoints
 
