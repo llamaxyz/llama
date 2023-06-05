@@ -6,10 +6,10 @@ import {MockBaseScript} from "test/mock/MockBaseScript.sol";
 import {Test, console2} from "forge-std/Test.sol";
 
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
-contract BaseScriptTest is LlamaTestSetup {
+contract LlamaBaseScriptTest is LlamaTestSetup {
   event SuccessfulCall();
 
   MockBaseScript baseScript;
@@ -35,20 +35,20 @@ contract BaseScriptTest is LlamaTestSetup {
     vm.warp(block.timestamp + 1);
 
     vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 1);
     vm.prank(approverAlicia);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 1);
     vm.prank(approverAndy);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.warp(block.timestamp + 2 days);
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 1 weeks);
   }
 }
 
-contract OnlyDelegateCall is BaseScriptTest {
+contract OnlyDelegateCall is LlamaBaseScriptTest {
   function test_CanDelegateCallBaseScript() public {
     vm.prank(address(mpExecutor));
     mpCore.authorizeScript(address(baseScript), true);
@@ -60,13 +60,13 @@ contract OnlyDelegateCall is BaseScriptTest {
 
   function test_RevertIf_NotDelegateCalled() public {
     vm.prank(address(mpExecutor));
-    vm.expectRevert(BaseScript.OnlyDelegateCall.selector);
+    vm.expectRevert(LlamaBaseScript.OnlyDelegateCall.selector);
     baseScript.run();
 
     ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectRevert(
       abi.encodeWithSelector(
-        LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(BaseScript.OnlyDelegateCall.selector)
+        LlamaCore.FailedActionExecution.selector, abi.encodeWithSelector(LlamaBaseScript.OnlyDelegateCall.selector)
       )
     );
     mpCore.executeAction(actionInfo);

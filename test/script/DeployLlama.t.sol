@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 
 contract DeployLlamaTest is Test, DeployLlama {
   function setUp() public virtual {}
@@ -52,7 +52,7 @@ contract Run is DeployLlamaTest {
     // There are three strategies we expect to have been deployed.
     ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](3);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
+    bytes32 strategiesAuthorizedSig = keccak256("StrategyCreated(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsAuthorized = new LlamaAccount[](2);
@@ -223,7 +223,7 @@ contract Run is DeployLlamaTest {
     );
   }
 
-  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (RelativeQuorum converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeQuorum converted) {
     assembly {
       converted := strategy
     }

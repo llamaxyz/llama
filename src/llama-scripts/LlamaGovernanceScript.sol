@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {BaseScript} from "src/llama-scripts/BaseScript.sol";
+import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -10,7 +10,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-/// @title Governance Script
+/// @title Llama Governance Script
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A script that allows users to aggregate common calls on the core and policy contracts.
 /// @notice How to use this script:
@@ -19,10 +19,26 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///   - The "Batch Policy Functions" section has public methods that (1) can be called directly as part of an action,
 ///     and (2) are also used by methods in the "Common Aggregate Calls" section.
 ///   - The "Common Aggregate Calls" section has external methods for common batch actions.
-contract GovernanceScript is BaseScript {
-  // =============================
-  // ========= Errors ============
-  // =============================
+contract LlamaGovernanceScript is LlamaBaseScript {
+  // ==========================
+  // ========= Structs ========
+  // ==========================
+
+  /// @dev Struct for holding data for the `updateRoleDescription` method in `LlamaPolicy`.
+  struct UpdateRoleDescription {
+    uint8 role; // Role to update.
+    RoleDescription description; // New role description.
+  }
+
+  /// @dev Struct for holding data for the `createStrategies` method in `LlamaCore`.
+  struct CreateStrategies {
+    ILlamaStrategy llamaStrategyLogic; // Logic contract for the strategies.
+    bytes[] strategies; // Array of configurations to initialize new strategies with.
+  }
+
+  // ========================
+  // ======== Errors ========
+  // ========================
 
   /// @dev The call did not succeed.
   /// @param index Index of the arbitrary function being called.
@@ -36,27 +52,13 @@ contract GovernanceScript is BaseScript {
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
-  // ==============================
-  // ========= Structs ============
-  // ==============================
-
-  struct UpdateRoleDescription {
-    uint8 role;
-    RoleDescription description;
-  }
-
-  struct CreateStrategies {
-    ILlamaStrategy llamaStrategyLogic;
-    bytes[] strategies;
-  }
-
   // =======================================
   // ======== Arbitrary Aggregation ========
   // =======================================
+
   /// @notice This method should be assigned carefully, since it allows for arbitrary calls to be made within the
-  /// context
-  /// of LlamaCore since this script will be delegatecalled. It is safer to permission out the functions below as
-  /// needed than to permission the aggregate function itself
+  /// context of `LlamaCore` since this script will be delegatecalled. It is safer to permission out the functions below
+  /// as needed than to permission the aggregate function itself.
   function aggregate(address[] calldata targets, bytes[] calldata data)
     external
     onlyDelegateCall

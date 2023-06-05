@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {RelativeQuorum} from "src/strategies/RelativeQuorum.sol";
+import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
@@ -101,7 +101,7 @@ contract Run is CreateActionTest {
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
 
     vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
-    rootLlama.castApproval(ACTION_CREATOR_ROLE_ID, actionInfo);
+    rootLlama.castApproval(ACTION_CREATOR_ROLE_ID, actionInfo, "");
 
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Approved));
 
@@ -120,9 +120,9 @@ contract Run is CreateActionTest {
     assertEq(factory.llamaCount(), 2);
 
     // There are three strategies we expect to have been deployed.
-    RelativeQuorum[] memory strategiesAuthorized = new RelativeQuorum[](3);
+    LlamaRelativeQuorum[] memory strategiesAuthorized = new LlamaRelativeQuorum[](3);
     uint8 strategiesCount;
-    bytes32 strategiesAuthorizedSig = keccak256("StrategyAuthorized(address,address,bytes)");
+    bytes32 strategiesAuthorizedSig = keccak256("StrategyCreated(address,address,bytes)");
 
     // There are two accounts we expect to have been deployed.
     LlamaAccount[] memory accountsCreated = new LlamaAccount[](2);
@@ -156,7 +156,7 @@ contract Run is CreateActionTest {
         //   bytes initializationData
         // );
         (address strategy,) = abi.decode(_event.data, (address, bytes));
-        strategiesAuthorized[strategiesCount++] = RelativeQuorum(strategy);
+        strategiesAuthorized[strategiesCount++] = LlamaRelativeQuorum(strategy);
       }
       if (eventSig == accountCreatedSig) {
         // event AccountCreated(
@@ -175,7 +175,7 @@ contract Run is CreateActionTest {
     assertEq(address(llamaInstance.factory()), address(factory));
     assertNotEq(address(llamaInstance), address(rootLlama));
 
-    RelativeQuorum firstStrategy = strategiesAuthorized[0];
+    LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
     assertEq(llamaInstance.strategies(firstStrategy), true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
@@ -188,7 +188,7 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceApprovalRole(1), false);
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
-    RelativeQuorum secondStrategy = strategiesAuthorized[1];
+    LlamaRelativeQuorum secondStrategy = strategiesAuthorized[1];
     assertEq(llamaInstance.strategies(secondStrategy), true);
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
@@ -201,7 +201,7 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceApprovalRole(1), false);
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
-    RelativeQuorum thirdStrategy = strategiesAuthorized[2];
+    LlamaRelativeQuorum thirdStrategy = strategiesAuthorized[2];
     assertEq(llamaInstance.strategies(thirdStrategy), true);
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);

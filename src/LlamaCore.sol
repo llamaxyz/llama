@@ -4,8 +4,8 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
-import {IActionGuard} from "src/interfaces/IActionGuard.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -43,7 +43,7 @@ contract LlamaCore is Initializable {
   /// @dev `ActionInfo` does not hash to the correct value.
   error InfoHashMismatch();
 
-  /// @dev `msg.value` does not equal the action's `value`.
+  /// @dev `msg.value` does not equal the action's value.
   error IncorrectMsgValue();
 
   /// @dev The action is not in the expected state.
@@ -77,6 +77,7 @@ contract LlamaCore is Initializable {
   /// @dev Accounts can only be created with valid logic contracts.
   error UnauthorizedAccountLogic();
 
+  /// @dev Checks that the caller is the Llama Executor and reverts if not.
   modifier onlyLlama() {
     if (msg.sender != address(executor)) revert OnlyLlama();
     _;
@@ -86,6 +87,7 @@ contract LlamaCore is Initializable {
   // ======== Events ========
   // ========================
 
+  /// @dev Emitted when an action is created.
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -96,8 +98,14 @@ contract LlamaCore is Initializable {
     bytes data,
     string description
   );
+
+  /// @dev Emitted when an action is canceled.
   event ActionCanceled(uint256 id);
-  event ActionGuardSet(address indexed target, bytes4 indexed selector, IActionGuard actionGuard);
+
+  /// @dev Emitted when an action guard is set.
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, ILlamaActionGuard actionGuard);
+
+  /// @dev Emitted when an action is queued.
   event ActionQueued(
     uint256 id,
     address indexed caller,
@@ -105,70 +113,82 @@ contract LlamaCore is Initializable {
     address indexed creator,
     uint256 minExecutionTime
   );
+
+  /// @dev Emitted when an action is executed.
   event ActionExecuted(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, bytes result
   );
+
+  /// @dev Emitted when an approval is cast.
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+
+  /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
-  event StrategyAuthorized(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+
+  /// @dev Emitted when a strategy is created and authorized.
+  event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+
+  /// @dev Emitted when an account is created.
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
+
+  /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
 
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
 
-  /// @notice EIP-712 base typehash.
+  /// @dev EIP-712 base typehash.
   bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-  /// @notice EIP-712 createAction typehash.
+  /// @dev EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
     "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
   );
 
-  /// @notice EIP-712 castApproval typehash.
+  /// @dev EIP-712 castApproval typehash.
   bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
     "CastApproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @notice EIP-712 castDisapproval typehash.
+  /// @dev EIP-712 castDisapproval typehash.
   bytes32 internal constant CAST_DISAPPROVAL_TYPEHASH = keccak256(
     "CastDisapproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @notice EIP-712 actionInfo typehash.
+  /// @dev EIP-712 actionInfo typehash.
   bytes32 internal constant ACTION_INFO_TYPEHASH = keccak256(
     "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @notice The contract that executes actions for this llama instance.
-  LlamaExecutor public executor;
-
-  /// @notice The NFT contract that defines the policies for this llama instance.
-  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
-  // variables, which are the key variables we want to check before and after a delegatecall.
-  LlamaPolicy public policy;
-
-  /// @notice The LlamaFactory contract that deployed this llama instance.
-  LlamaFactory public factory;
-
-  /// @notice Name of this llama instance.
-  string public name;
-
-  /// @notice The current number of actions created.
-  uint256 public actionsCount;
-
-  /// @notice Mapping of actionIds to Actions.
+  /// @dev Mapping of actionIds to Actions.
   /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
   /// accessed with the `getAction` function so this is ok. We want the contracts to compile
   /// without the optimizer so `forge coverage` can be used.
   mapping(uint256 => Action) internal actions;
 
+  /// @notice The contract that executes actions for this Llama instance.
+  LlamaExecutor public executor;
+
+  /// @notice The ERC721 contract that defines the policies for this Llama instance.
+  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
+  // variables, which are the key variables we want to check before and after a delegatecall.
+  LlamaPolicy public policy;
+
+  /// @notice The `LlamaFactory` contract that deployed this Llama instance.
+  LlamaFactory public factory;
+
+  /// @notice Name of this Llama instance.
+  string public name;
+
+  /// @notice The current number of actions created.
+  uint256 public actionsCount;
+
   /// @notice Mapping of actionIds to policyholders to approvals.
   mapping(uint256 => mapping(address => bool)) public approvals;
 
-  /// @notice Mapping of action ids to policyholders to disapprovals.
+  /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
@@ -178,12 +198,12 @@ contract LlamaCore is Initializable {
   mapping(address => bool) public authorizedScripts;
 
   /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
-  /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (createAction,
-  /// castApproval and castDisapproval) signed by the policyholder.
+  /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (`createAction`,
+  /// `castApproval` and `castDisapproval`) signed by the policyholder.
   mapping(address => mapping(bytes4 => uint256)) public nonces;
 
   /// @notice Mapping of target to selector to actionGuard address.
-  mapping(address target => mapping(bytes4 selector => IActionGuard)) public actionGuard;
+  mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -193,13 +213,13 @@ contract LlamaCore is Initializable {
     _disableInitializers();
   }
 
-  /// @notice Initializes a new LlamaCore clone.
-  /// @param _name The name of the LlamaCore clone.
-  /// @param _policy This llama instance's policy contract.
+  /// @notice Initializes a new `LlamaCore` clone.
+  /// @param _name The name of the `LlamaCore` clone.
+  /// @param _policy This Llama instance's policy contract.
   /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
-  /// @param initialStrategies The configuration of the initial strategies.
-  /// @param initialAccounts The configuration of the initial accounts.
+  /// @param initialStrategies Array of initial strategy configurations.
+  /// @param initialAccounts Array of initial account configurations.
   /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
   function initialize(
     string memory _name,
@@ -226,15 +246,16 @@ contract LlamaCore is Initializable {
   // ======== External and Public Logic ========
   // ===========================================
 
-  /// @notice Creates an action. The creator needs to hold a policy with the permissionId of the provided
-  /// {target, selector, strategy}.
-  /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
+  /// `(target, selector, strategy)`.
+  /// @dev Use `""` for `description` if there is no description.
+  /// @param role The role that will be used to determine the permission ID of the policyholder.
+  /// @param strategy The strategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param data Data to be called on the target when the action is executed.
   /// @param description A human readable description of the action and the changes it will enact.
-  /// @return actionId actionId of the newly created action.
+  /// @return actionId Action ID of the newly created action.
   function createAction(
     uint8 role,
     ILlamaStrategy strategy,
@@ -246,19 +267,20 @@ contract LlamaCore is Initializable {
     actionId = _createAction(msg.sender, role, strategy, target, value, data, description);
   }
 
-  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permissionId of
-  /// the provided {target, selector, strategy}.
+  /// @notice Creates an action via an off-chain signature. The creator needs to hold a policy with the permission ID
+  /// of the provided `(target, selector, strategy)`.
+  /// @dev Use `""` for `description` if there is no description.
   /// @param policyholder The policyholder that signed the message.
-  /// @param role The role that will be used to determine the permissionId of the policy holder.
-  /// @param strategy The ILlamaStrategy contract that will determine how the action is executed.
+  /// @param role The role that will be used to determine the permission ID of the policyholder.
+  /// @param strategy The strategy contract that will determine how the action is executed.
   /// @param target The contract called when the action is executed.
   /// @param value The value in wei to be sent when the action is executed.
-  /// @param data Data to be called on the `target` when the action is executed.
+  /// @param data Data to be called on the target when the action is executed.
   /// @param description A human readable description of the action and the changes it will enact.
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
-  /// @return actionId actionId of the newly created action.
+  /// @return actionId Action ID of the newly created action.
   function createActionBySig(
     address policyholder,
     uint8 role,
@@ -277,7 +299,7 @@ contract LlamaCore is Initializable {
     actionId = _createAction(signer, role, strategy, target, value, data, description);
   }
 
-  /// @notice Queue an action by actionId if it's in Approved state.
+  /// @notice Queue an action by its `actionInfo` struct if it's in Approved state.
   /// @param actionInfo Data required to create an action.
   function queueAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
@@ -290,7 +312,7 @@ contract LlamaCore is Initializable {
     emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
-  /// @notice Execute an action by actionId if it's in Queued state and executionTime has passed.
+  /// @notice Execute an action by its `actionInfo` struct if it's in Queued state and `minExecutionTime` has passed.
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
     // Initial checks that action is ready to execute.
@@ -304,8 +326,8 @@ contract LlamaCore is Initializable {
     action.executed = true;
 
     // Check pre-execution action guard.
-    IActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
-    if (guard != IActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
+    ILlamaActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
+    if (guard != ILlamaActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
     (bool success, bytes memory result) =
@@ -314,13 +336,14 @@ contract LlamaCore is Initializable {
     if (!success) revert FailedActionExecution(result);
 
     // Check post-execution action guard.
-    if (guard != IActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
+    if (guard != ILlamaActionGuard(address(0))) guard.validatePostActionExecution(actionInfo);
 
     // Action successfully executed.
     emit ActionExecuted(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, result);
   }
 
-  /// @notice Cancels an action. Rules for cancelation are defined by the strategy.
+  /// @notice Cancels an action by its `actionInfo` struct.
+  /// @dev Rules for cancelation are defined by the strategy.
   /// @param actionInfo Data required to create an action.
   function cancelAction(ActionInfo calldata actionInfo) external {
     Action storage action = actions[actionInfo.id];
@@ -334,14 +357,8 @@ contract LlamaCore is Initializable {
     emit ActionCanceled(actionInfo.id);
   }
 
-  /// @notice How policyholders add their support of the approval of an action.
-  /// @param role The role the policyholder uses to cast their approval.
-  /// @param actionInfo Data required to create an action.
-  function castApproval(uint8 role, ActionInfo calldata actionInfo) external {
-    return _castApproval(msg.sender, role, actionInfo, "");
-  }
-
   /// @notice How policyholders add their support of the approval of an action with a reason.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the approval by the policyholder.
@@ -350,6 +367,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the approval of an action via an off-chain signature.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param policyholder The policyholder that signed the message.
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
@@ -372,14 +390,8 @@ contract LlamaCore is Initializable {
     return _castApproval(signer, role, actionInfo, reason);
   }
 
-  /// @notice How policyholders add their support of the disapproval of an action.
-  /// @param role The role the policyholder uses to cast their disapproval.
-  /// @param actionInfo Data required to create an action.
-  function castDisapproval(uint8 role, ActionInfo calldata actionInfo) external {
-    return _castDisapproval(msg.sender, role, actionInfo, "");
-  }
-
   /// @notice How policyholders add their support of the disapproval of an action with a reason.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the disapproval by the policyholder.
@@ -388,6 +400,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice How policyholders add their support of the disapproval of an action via an off-chain signature.
+  /// @dev Use `""` for `reason` if there is no reason.
   /// @param policyholder The policyholder that signed the message.
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
@@ -411,15 +424,15 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
-  /// @param llamaStrategyLogic address of the Llama Strategy logic contract.
-  /// @param strategyConfigs list of new Strategys to be authorized.
+  /// @param llamaStrategyLogic address of the Llama strategy logic contract.
+  /// @param strategyConfigs Array of new strategy configurations.
   function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) external onlyLlama {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
   /// @notice Deploy new accounts.
-  /// @param llamaAccountLogic address of the Llama Account logic contract.
-  /// @param accountConfigs List of initialization configuration for new accounts to be created.
+  /// @param llamaAccountLogic address of the Llama account logic contract.
+  /// @param accountConfigs Array of new account configurations.
   function createAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) external onlyLlama {
     _deployAccounts(llamaAccountLogic, accountConfigs);
   }
@@ -428,7 +441,7 @@ contract LlamaCore is Initializable {
   /// @param target The target contract where the `guard` will apply.
   /// @param selector The function selector where the `guard` will apply.
   /// @dev To remove a guard, set `guard` to the zero address.
-  function setGuard(address target, bytes4 selector, IActionGuard guard) external onlyLlama {
+  function setGuard(address target, bytes4 selector, ILlamaActionGuard guard) external onlyLlama {
     if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
     emit ActionGuardSet(target, selector, guard);
@@ -436,8 +449,8 @@ contract LlamaCore is Initializable {
 
   /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
   /// @param script The address of the script contract.
-  /// @param authorized The boolean that determines if the script is being authorized or unauthorized.
-  /// @dev To remove a script, set `authorized` to false.
+  /// @param authorized The boolean that determines if the `script` is being authorized or unauthorized.
+  /// @dev To remove a `script`, set `authorized` to `false`.
   function authorizeScript(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
@@ -452,8 +465,8 @@ contract LlamaCore is Initializable {
     nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
   }
 
-  /// @notice Get an Action struct by actionId.
-  /// @param actionId id of the action.
+  /// @notice Get an Action struct by `actionId`.
+  /// @param actionId ID of the action.
   /// @return The Action struct.
   function getAction(uint256 actionId) external view returns (Action memory) {
     return actions[actionId];
@@ -466,9 +479,9 @@ contract LlamaCore is Initializable {
     return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
   }
 
-  /// @notice Get the current ActionState of an action by its actionId.
+  /// @notice Get the current action state of an action by its `actionInfo` struct.
   /// @param actionInfo Data required to create an action.
-  /// @return The current ActionState of the action.
+  /// @return The current action state of the action.
   function getActionState(ActionInfo calldata actionInfo) public view returns (ActionState) {
     // We don't need an explicit check on the action ID to make sure it exists, because if the
     // action does not exist, the expected payload hash from storage will be `bytes32(0)`, so
@@ -498,6 +511,8 @@ contract LlamaCore is Initializable {
   // ======== Internal Logic ========
   // ================================
 
+  /// @dev Creates an action. The creator needs to hold a policy with the permission ID of the provided
+  /// `(target, selector, strategy)`.
   function _createAction(
     address policyholder,
     uint8 role,
@@ -531,8 +546,8 @@ contract LlamaCore is Initializable {
 
     // Scope to avoid stack too deep
     {
-      IActionGuard guard = actionGuard[target][bytes4(data)];
-      if (guard != IActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+      ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
+      if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
 
       // Save action.
       Action storage newAction = actions[actionId];
@@ -546,6 +561,7 @@ contract LlamaCore is Initializable {
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
 
+  /// @dev How policyholders that have the right role contribute towards the approval of an action with a reason.
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -556,6 +572,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
+  /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
@@ -601,9 +618,10 @@ contract LlamaCore is Initializable {
     return currentCount + quantity;
   }
 
-  /// @dev Deploys strategies, and returns the address of the first strategy. This is only used
-  /// during initialization so we can ensure someone (specifically, policyholders with role ID 1)
-  /// have permission to assign role permissions.
+  /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to
+  /// initialize the new strategies with. Returns the address of the first strategy, which is only used during the
+  /// `LlamaCore` initialization so that we can ensure someone (specifically, policyholders with role ID 1) has the
+  /// permission to assign role permissions.
   function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
     internal
     returns (ILlamaStrategy firstStrategy)
@@ -620,12 +638,13 @@ contract LlamaCore is Initializable {
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy] = true;
-      emit StrategyAuthorized(strategy, llamaStrategyLogic, strategyConfigs[i]);
+      emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
   }
 
-  /// @dev Deploys accounts.
+  /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to
+  /// initialize the new accounts with.
   function _deployAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) internal {
     if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
       // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
@@ -642,6 +661,7 @@ contract LlamaCore is Initializable {
     }
   }
 
+  /// @dev Returns the hash of the `createAction` parameters using the `actionInfo` struct.
   function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return _infoHash(
       actionInfo.id,
@@ -654,6 +674,7 @@ contract LlamaCore is Initializable {
     );
   }
 
+  /// @dev Returns the hash of the `createAction` parameters.
   function _infoHash(
     uint256 id,
     address creator,
@@ -666,11 +687,14 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
+  /// @dev Validates that the hash of the `actionInfo` struct matches the provided hash.
   function _validateActionInfoHash(bytes32 actualHash, ActionInfo calldata actionInfo) internal pure {
     bytes32 expectedHash = _infoHash(actionInfo);
     if (actualHash != expectedHash) revert InfoHashMismatch();
   }
 
+  /// @dev Returns the current nonce for a given policyholder and selector, and increments it. Used to prevent
+  /// replay attacks.
   function _useNonce(address policyholder, bytes4 selector) internal returns (uint256 nonce) {
     nonce = nonces[policyholder][selector];
     nonces[policyholder][selector] = LlamaUtils.uncheckedIncrement(nonce);
@@ -761,7 +785,7 @@ contract LlamaCore is Initializable {
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), castDisapprovalHash));
   }
 
-  /// @dev Returns the hash of `ActionInfo`.
+  /// @dev Returns the hash of `actionInfo`.
   function _getActionInfoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
     return keccak256(
       abi.encode(

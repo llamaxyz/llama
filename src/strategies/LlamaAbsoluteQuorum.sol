@@ -6,19 +6,19 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
+import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-/// @title Absolute Quorum Llama Strategy
+/// @title Llama Absolute Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a llama strategy which has the following properties:
+/// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-contract AbsoluteQuorum is AbsoluteStrategyBase {
+contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   // ==========================================
   // ======== Interface Implementation ========
   // ==========================================

@@ -28,7 +28,7 @@ contract LlamaFactory {
   /// @dev A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
   error OnlyRootLlama();
 
-  /// @dev Checks that the caller is the Root Llama Executor and reverts if not.
+  /// @dev Checks that the caller is the root Llama executor and reverts if not.
   modifier onlyRootLlama() {
     if (msg.sender != address(ROOT_LLAMA_EXECUTOR)) revert OnlyRootLlama();
     _;
@@ -54,8 +54,8 @@ contract LlamaFactory {
   /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Llama instances.
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
 
-  /// @dev Emitted when a new Llama Policy Token Metadata is set.
-  event PolicyTokenMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
@@ -67,13 +67,13 @@ contract LlamaFactory {
   /// unusable. See the documentation for more info.
   uint8 public constant BOOTSTRAP_ROLE = 1;
 
-  /// @notice The Llama Core implementation (logic) contract.
+  /// @notice The Llama core implementation (logic) contract.
   LlamaCore public immutable LLAMA_CORE_LOGIC;
 
-  /// @notice The Llama Policy implementation (logic) contract.
+  /// @notice The Llama policy implementation (logic) contract.
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama Policy Token Metadata Parameter Registry contract for onchain image formats.
+  /// @notice The Llama policy metadata parameter registry contract for onchain image formats.
   LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
 
   /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
@@ -82,13 +82,13 @@ contract LlamaFactory {
   /// @notice The core of the Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA_CORE;
 
-  /// @notice Mapping of all authorized Llama Strategy implementation (logic) contracts.
+  /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
   mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
 
-  /// @notice Mapping of all authorized Llama Account implementation (logic) contracts.
+  /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
   mapping(ILlamaAccount => bool) public authorizedAccountLogics;
 
-  /// @notice The Llama Policy Token Metadata contract.
+  /// @notice The Llama policy metadata contract.
   LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice The current number of Llama instances created.
@@ -115,7 +115,7 @@ contract LlamaFactory {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
 
-    _setPolicyTokenMetadata(_llamaPolicyMetadata);
+    _setPolicyMetadata(_llamaPolicyMetadata);
     _authorizeStrategyLogic(initialLlamaStrategyLogic);
     _authorizeAccountLogic(initialLlamaAccountLogic);
 
@@ -140,17 +140,17 @@ contract LlamaFactory {
   /// @notice Deploys a new Llama instance.
   /// @dev This function can only be called by the root Llama instance.
   /// @param name The name of this Llama instance.
-  /// @param strategyLogic The ILlamaStrategy implementation (logic) contract to use for this Llama instance.
-  /// @param accountLogic The ILlamaAccount implementation (logic) contract to use for this Llama instance.
-  /// @param initialStrategies The list of initial strategies.
-  /// @param initialAccounts The list of initial accounts.
-  /// @param initialRoleDescriptions The list of initial role descriptions.
-  /// @param initialRoleHolders The list of initial role holders, their quantities and their role expirations.
-  /// @param initialRolePermissions The list of initial permissions given to roles.
+  /// @param strategyLogic The strategy implementation (logic) contract to use for this Llama instance.
+  /// @param accountLogic The account implementation (logic) contract to use for this Llama instance.
+  /// @param initialStrategies Array of initial strategy configurations.
+  /// @param initialAccounts Array of initial account configurations.
+  /// @param initialRoleDescriptions Array of initial role descriptions.
+  /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
+  /// @param initialRolePermissions Array of initial permissions given to roles.
   /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
-  /// @return executor The address of the LlamaExecutor of the newly created instance.
-  /// @return core The address of the LlamaCore of the newly created instance.
+  /// @return executor The address of the `LlamaExecutor` of the newly created instance.
+  /// @return core The address of the `LlamaCore` of the newly created instance.
   function deploy(
     string memory name,
     ILlamaStrategy strategyLogic,
@@ -191,15 +191,15 @@ contract LlamaFactory {
     _authorizeAccountLogic(accountLogic);
   }
 
-  /// @notice Sets the Llama Policy Token Metadata contract.
+  /// @notice Sets the Llama policy metadata contract.
   /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyMetadata The Llama Policy Token Metadata contract.
-  function setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
-    _setPolicyTokenMetadata(_llamaPolicyMetadata);
+  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+    _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
-  /// @param llamaExecutor The instance's LlamaExecutor.
+  /// @param llamaExecutor The instance's `LlamaExecutor`.
   /// @param name The name of the Llama system.
   /// @param tokenId The token ID of the Llama policyholder.
   /// @return The token URI for the given Llama policyholder.
@@ -212,7 +212,7 @@ contract LlamaFactory {
     return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
-  /// @notice Returns the token URI for a given Llama policyholder.
+  /// @notice Returns the contract URI for a given Llama policyholder.
   /// @param name The name of the Llama system.
   /// @return The contract URI for the given Llama instance.
   function contractURI(string memory name) external view returns (string memory) {
@@ -275,13 +275,13 @@ contract LlamaFactory {
     emit AccountLogicAuthorized(accountLogic);
   }
 
-  /// @dev Sets the Llama Policy Token Metadata contract.
-  function _setPolicyTokenMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+  /// @dev Sets the Llama policy metadata contract.
+  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
-    emit PolicyTokenMetadataSet(_llamaPolicyMetadata);
+    emit PolicyMetadataSet(_llamaPolicyMetadata);
   }
 
-  /// @dev Sets the color and logo of a Llama Instance.
+  /// @dev Sets the `color` and `logo` of a Llama instance.
   function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
     LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
     LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);

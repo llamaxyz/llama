@@ -9,7 +9,7 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
-import {AbsoluteStrategyBase} from "src/strategies/AbsoluteStrategyBase.sol";
+import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
@@ -54,9 +54,6 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   LlamaPolicy public policy;
 
   // -------- Strategy Configuration --------
-
-  /// @notice Equivalent to 100%, but in basis points.
-  uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
   /// @notice If false, action be queued before approvalEndTime.
   bool public isFixedLengthApprovalPeriod;
@@ -106,7 +103,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
 
   /// @inheritdoc ILlamaStrategy
   function initialize(bytes memory config) external initializer {
-    AbsoluteStrategyBase.Config memory strategyConfig = abi.decode(config, (AbsoluteStrategyBase.Config));
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = abi.decode(config, (LlamaAbsoluteStrategyBase.Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
     queuingPeriod = strategyConfig.queuingPeriod;
