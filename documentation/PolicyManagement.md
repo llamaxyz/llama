@@ -36,7 +36,6 @@ Lets look at each argument individually:
 There are a few additional concepts to keep in mind to understand granting policies:
 - The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies.
 - When `setRoleHolder` is called and `balanceOf(policyholder) == 0` a new policy NFT is minted to the policyholder address.
-- A role MUST be assigned when granting a policy (in addition to the `ALL_HOLDERS_ROLE`).
 - Every policyholder is automatically assigned the `ALL_HOLDERS_ROLE` when their policy is minted.
 
 ### Revoking Policies
@@ -72,6 +71,7 @@ Note that this method only changes the semantic meaning of a role, not the actua
 To grant a role to a policyholder, we use the `setRoleHolder` method.
 In order to grant a role, this method requires us to pass in a role that the policyholder does not hold, the policyholder's address, the quantity of this role they should hold, and expiration timestamp.
 After granting the role, the total supply of the role will increment by one, and the total quantity of the role will increase by the quantity passed in.
+To grant a policy with the `ALL_HOLDERS_ROLE` and no other role, call `setRoleHolder` and pass an arbitrary role ID with a quantity and expiration of 0.
 
 ### Revoking Roles
 
