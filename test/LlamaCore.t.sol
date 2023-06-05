@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
-import {Solarray} from "@solarray/Solarray.sol";
-
 import {MockAccountLogicContract} from "test/mock/MockAccountLogicContract.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
