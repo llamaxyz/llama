@@ -131,6 +131,4 @@ This is where the `aggregate` method becomes useful.
 `aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
 Since `aggregate` is a very powerful method, we recommend permissioning other methods on the `GovernanceScript` contract unless the use of `aggregate` is deemed necessary, and even then an `ActionGuard` is recommended
 
-## Checkpoints
-
 
