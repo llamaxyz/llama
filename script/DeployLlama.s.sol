@@ -94,5 +94,9 @@ contract DeployLlama is Script {
     vm.broadcast();
     lens = new LlamaLens(address(factory));
     DeployUtils.print(string.concat("  LlamaLens:", vm.toString(address(lens))));
+
+    vm.broadcast();
+    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
+    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
   }
 }
