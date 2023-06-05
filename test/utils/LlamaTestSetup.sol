@@ -7,8 +7,6 @@ import {stdJson} from "forge-std/Script.sol";
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
-import {Solarray} from "@solarray/Solarray.sol";
-
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 

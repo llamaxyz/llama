@@ -14,7 +14,3 @@
 	path = lib/solady
 	url = https://github.com/vectorized/solady
 	commit = 3d57528984275d1746ee6597acd36277f51c091d
-[submodule "lib/solarray"]
-	path = lib/solarray
-	url = https://github.com/emo-eth/solarray
-	commit = 4c3b8ff8e90c8cd11d30e02c1b6b2fcf9bc0f3db
