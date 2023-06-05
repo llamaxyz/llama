@@ -32,7 +32,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(factory), address(0));
+    assertEq(address(factory) == address(0), false);
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
     assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
@@ -169,7 +169,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(coreLogic), address(0));
+    assertEq(address(coreLogic) == address(0), false);
   }
 
   function test_DeploysStrategyLogic() public {
@@ -177,7 +177,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(relativeQuorumLogic), address(0));
+    assertEq(address(relativeQuorumLogic) == address(0), false);
   }
 
   function test_DeploysAccountLogic() public {
@@ -185,7 +185,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(accountLogic), address(0));
+    assertEq(address(accountLogic) == address(0), false);
   }
 
   function test_DeploysPolicyLogic() public {
@@ -193,7 +193,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(policyLogic), address(0));
+    assertEq(address(policyLogic) == address(0), false);
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
@@ -202,8 +202,8 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(policyMetadata), address(0));
-    assertNotEq(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com"), "");
+    assertEq(address(policyMetadata) == address(0), false);
+    assertEq(keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com"))) == keccak256(abi.encode("")), false);
   }
 
   function test_DeploysLens() public {
@@ -211,7 +211,7 @@ contract Run is DeployLlamaTest {
 
     DeployLlama.run();
 
-    assertNotEq(address(lens), address(0));
+    assertEq(address(lens) == address(0), false);
     PermissionData memory permissionData = PermissionData(
       makeAddr("target"), // Could be any address, choosing a random one.
       bytes4(bytes32("transfer(address,uint256)")),
