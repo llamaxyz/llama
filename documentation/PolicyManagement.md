@@ -56,7 +56,7 @@ Every role has two supplies that are checkpointed in storage:
 ### Creating New Roles
 
 When roles are created, a description is provided.
-This description serves as the plaintext mapping from description => role id, and provides semantic meaning to an otherwise meaningless unsigned integer.
+This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
 The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a bytes32 value. 
 
 ### Editing Existing Roles
