@@ -10,7 +10,7 @@ Let's dive into the best practices surrounding policy management.
 ## Key Concepts
 
 - **Policies**: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
-- **Token Ids**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyholderAddress))`.
+- **Token IDs**: The `tokenId` of a Llama policy NFT is always equal to `uint256(uint160(policyholderAddress))`.
 - **Roles**: A signifier given to one or more policyholders. Roles can be used to permission action creation, action approvals, and action disapprovals.
 - **Permission IDs**: A unique identifier that can be assigned to roles to permission action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission ID.
 - **Checkpoints**: Llama stores checkpointed role balances over time to enable querying historical role balances during the action approval and disapproval process.
@@ -99,10 +99,10 @@ Once revoked, the role can no longer be used by the policyholder.
 Permission IDs are units of access control that can be assigned to roles to allow for action creation.
 Policyholders are not allowed to create actions unless they have the corresponding permission.
 
-## Permission Ids
-Permission ids are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
+## Permission IDs
+Permission IDs are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
 The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission IDs.
-This is helpful because all of the functions required to manage permission IDs expect users to pass in pre-computed permission ids.
+This is helpful because all of the functions required to manage permission IDs expect users to pass in pre-computed permission IDs.
 
 ### Granting Permission IDs
 
