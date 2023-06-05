@@ -50,6 +50,10 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
 
     vm.broadcast();
+    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
+    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
+
+    vm.broadcast();
     accountLogic = new LlamaAccount();
     DeployUtils.print(string.concat("  LlamaAccountLogic:", vm.toString(address(accountLogic))));
 
