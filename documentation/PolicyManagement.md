@@ -35,7 +35,7 @@ Lets look at each argument individually:
 
 There are a few additional concepts to keep in mind to understand granting policies:
 - The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies.
-- When `setRoleHolder` is called and `balanceOf(policyholder) == 0` a new policy nft is minted to the policyholder address.
+- When `setRoleHolder` is called and `balanceOf(policyholder) == 0` a new policy NFT is minted to the policyholder address.
 - A role MUST be assigned when granting a policy (in addition to the `ALL_HOLDERS_ROLE`).
 - Every policyholder is automatically assigned the `ALL_HOLDERS_ROLE` when their policy is minted.
 
