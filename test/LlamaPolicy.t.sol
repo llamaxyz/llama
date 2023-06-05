@@ -7,8 +7,6 @@ import {Base64} from "@openzeppelin/utils/Base64.sol";
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
-import {Solarray} from "@solarray/Solarray.sol";
-
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";

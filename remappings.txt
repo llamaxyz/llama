@@ -1,4 +1,4 @@
 @openzeppelin=lib/openzeppelin-contracts/contracts/
 @solmate=lib/solmate/src/
 @solady=lib/solady/src/
-@solarray=lib/solarray/src/
+ds-test=lib/forge-std/lib/ds-test/src/
