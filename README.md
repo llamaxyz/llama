@@ -5,13 +5,17 @@
 
 # Llama
 
-Llama is a governance system for onchain organizations. It uses non-transferable NFTs to encode access control, features programmatic control of funds, and includes a modular framework to define action execution rules.
+Llama is a governance system for onchain organizations.
+It uses non-transferable NFTs to encode access control, features programmatic control of funds, and includes a modular framework to define action execution rules.
 
 ## Prerequisites
 
-It requires [Foundry](https://github.com/foundry-rs/foundry) installed to run. You can find instructions here: [Foundry installation](https://book.getfoundry.sh/getting-started/installation).
+[Foundry](https://github.com/foundry-rs/foundry) must be installed.
+You can find installation instructions in the [Foundry docs](https://book.getfoundry.sh/getting-started/installation).
 
-We use [just](https://github.com/casey/just) to save and run commands. You can find instructions here: [just installation](https://github.com/casey/just#packages).
+We use [just](https://github.com/casey/just) to save and run a few larger, more complex commands.
+You can find installation instructions in the [just docs](https://just.systems/man/en/).
+All commands can be listed by running `just -l` from the repo root, or by viewing the [`justfile`](https://github.com/code-423n4/2023-06-llama/blob/main/justfile).
 
 ### VS Code
 
@@ -31,11 +35,12 @@ $ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ## Setup
 
-Duplicate `.env.example` and rename to `.env`:
+Copy `.env.example` and rename it to `.env`.
+The comments in that file explain what each variable is for and when they're needed:
 
-- Add a valid mainnet URL for an Ethereum JSON-RPC client for the `MAINNET_RPC_URL` variable.
-- Add a valid Private Key for the `PRIVATE_KEY` variable.
-- Add a valid Etherscan API Key for the `ETHERSCAN_API_KEY` variable.
+- The `MAINNET_RPC_URL` variable is the only one that is required for running tests.
+- You may also want a mainnet `ETHERSCAN_API_KEY` for better traces when running fork tests.
+- The rest are only needed for deployment verification with forge scripts. An anvil default private key is provided in the `.env.example` file to facilitate testing.
 
 ### Commands
 
@@ -45,8 +50,7 @@ Duplicate `.env.example` and rename to `.env`:
 ### Deploy and Verify
 
 - `just deploy` - deploy and verify payload on mainnet
-
-To confirm the deploy was successful, re-run your test suite but use the newly created contract address.
+- Run `just -l` or see the [`justfile`](https://github.com/code-423n4/2023-06-llama/blob/main/justfile) for other commands such as dry runs.
 
 ## Deployments
 
