@@ -15,7 +15,7 @@ You can find installation instructions in the [Foundry docs](https://book.getfou
 
 We use [just](https://github.com/casey/just) to save and run a few larger, more complex commands.
 You can find installation instructions in the [just docs](https://just.systems/man/en/).
-All commands can be listed by running `just -l` from the repo root, or by viewing the [`justfile`](https://github.com/code-423n4/2023-06-llama/blob/main/justfile).
+All commands can be listed by running `just -l` from the repo root, or by viewing the [`justfile`](https://github.com/llamaxyz/llama/blob/main/justfile).
 
 ### VS Code
 
