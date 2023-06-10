@@ -491,7 +491,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     vm.warp(_timeUntilPermission);
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -512,7 +512,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     vm.assume(_policyHolder != address(0));
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -630,7 +630,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     vm.warp(_timeUntilPermission);
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -651,7 +651,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     vm.assume(_policyHolder != address(0));
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
