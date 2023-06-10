@@ -24,8 +24,8 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
     uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
     bytes32 constant DEFAULT_PERMISSION = bytes32(0);
     address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
-    uint64 constant DEFAULT_QUEUING_DURATION = 1 days;
-    uint64 constant DEFAULT_EXPIRATION_DELAY = 4 days;
+    uint64 constant DEFAULT_QUEUING_PERIOD = 1 days;
+    uint64 constant DEFAULT_EXPIRATION_PERIOD = 4 days;
     uint64 constant DEFAULT_APPROVAL_PERIOD = 1 days;
     bool constant DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD = true;
     uint16 constant DEFAULT_DISAPPROVALS = 1;
@@ -117,16 +117,16 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
 
   function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
     LlamaAbsoluteStrategyBase.Config memory testStrategyData = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: 1 days,
-      queuingPeriod: 2 days,
-      expirationPeriod: 8 days,
-      minApprovals: 4000,
-      minDisapprovals: 2000,
-      isFixedLengthApprovalPeriod: true,
-      approvalRole: uint8(Roles.TestRole1),
-      disapprovalRole: uint8(Roles.TestRole1),
-      forceApprovalRoles: new uint8[](0),
-      forceDisapprovalRoles: new uint8[](0)
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: DEFAULT_APPROVALS,
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
     });
     testStrategy = lens.computeLlamaStrategyAddress(
       address(mockLlamaAbsoluteStrategyBaseLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
@@ -162,7 +162,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
       _queuingDuration,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -178,7 +178,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
+      DEFAULT_QUEUING_PERIOD,
       _expirationDelay,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
@@ -195,8 +195,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       _isFixedLengthApprovalPeriod,
       DEFAULT_APPROVALS,
@@ -212,8 +212,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       _approvalPeriod,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -229,8 +229,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -246,8 +246,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -264,8 +264,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       _approvals,
@@ -281,8 +281,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -302,8 +302,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -325,8 +325,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -348,8 +348,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -369,8 +369,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -386,8 +386,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -408,16 +408,16 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     factory.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic);
 
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: 1 days,
-      queuingPeriod: 1 days,
-      expirationPeriod: 1 days,
-      isFixedLengthApprovalPeriod: false,
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
       minApprovals: toUint128(minApprovals),
-      minDisapprovals: 0,
-      approvalRole: uint8(Roles.TestRole1),
-      disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: new uint8[](0),
-      forceDisapprovalRoles: new uint8[](0)
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
     });
 
     LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
@@ -433,16 +433,16 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     uint8[] memory _forceApprovalRoles = new uint8[](1);
     _forceApprovalRoles[0] = uint8(Roles.AllHolders);
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: 1 days,
-      queuingPeriod: 1 days,
-      expirationPeriod: 1 days,
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: DEFAULT_APPROVALS,
+      minDisapprovals: DEFAULT_DISAPPROVALS,
       isFixedLengthApprovalPeriod: false,
-      minApprovals: 1,
-      minDisapprovals: 1,
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
       forceApprovalRoles: _forceApprovalRoles,
-      forceDisapprovalRoles: new uint8[](0)
+      forceDisapprovalRoles: defaultForceRoles
     });
 
     LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
@@ -457,15 +457,15 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     uint8[] memory _forceDisapprovalRoles = new uint8[](1);
     _forceDisapprovalRoles[0] = uint8(Roles.AllHolders);
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: 1 days,
-      queuingPeriod: 1 days,
-      expirationPeriod: 1 days,
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: DEFAULT_APPROVALS,
+      minDisapprovals: DEFAULT_DISAPPROVALS,
       isFixedLengthApprovalPeriod: false,
-      minApprovals: 1,
-      minDisapprovals: 1,
       approvalRole: uint8(Roles.Approver),
       disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: new uint8[](0),
+      forceApprovalRoles: defaultForceRoles,
       forceDisapprovalRoles: _forceDisapprovalRoles
     });
 
@@ -548,8 +548,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       _role,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -580,8 +580,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       _policyHolder,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -609,8 +609,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -686,8 +686,8 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       _role,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -720,7 +720,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       bytes32(0),
       _policyHolder,
       1 days,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
@@ -749,8 +749,8 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_ROLE,
       DEFAULT_PERMISSION,
       DEFAULT_POLICYHOLDER,
-      DEFAULT_QUEUING_DURATION,
-      DEFAULT_EXPIRATION_DELAY,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
       DEFAULT_APPROVAL_PERIOD,
       DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       DEFAULT_APPROVALS,
