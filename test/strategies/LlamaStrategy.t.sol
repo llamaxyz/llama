@@ -214,10 +214,12 @@
 //     // Create the action.
 //     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 //     vm.prank(actionCreatorAaron);
-//     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+//     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data,
+// "");
 
 //     actionInfo =
-//       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+//       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0,
+// data);
 
 //     vm.warp(block.timestamp + 1);
 //   }
@@ -703,7 +705,8 @@
 //     assertEq(_isActionApproved, true);
 //   }
 
-//   function testFuzz_AbsolutePeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+//   function testFuzz_AbsolutePeerReview_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256
+// _numberOfPolicies)
 //     public
 //   {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
@@ -752,7 +755,8 @@
 //     assertEq(_isActionApproved, false);
 //   }
 
-//   function testFuzz_AbsolutePeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
+//   function testFuzz_AbsolutePeerReview_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256
+// _numberOfPolicies)
 //     public
 //   {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
@@ -797,7 +801,8 @@
 //     uint256 _numberOfPolicies
 //   ) public {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) -
+// 1);
 
 //     ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
 
@@ -822,7 +827,8 @@
 //     uint256 _numberOfPolicies
 //   ) public {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) -
+// 1);
 
 //     ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
 
@@ -846,7 +852,8 @@
 //     uint256 _numberOfPolicies
 //   ) public {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) -
+// 1);
 //     uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
 
 //     ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
@@ -881,7 +888,8 @@
 //     uint256 _numberOfPolicies
 //   ) public {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+//     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) -
+// 1);
 //     uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
 
 //     ILlamaStrategy testStrategy = deployAbsolutePeerReviewAndSetRole(
@@ -974,7 +982,8 @@
 //     vm.assume(_role != 0);
 
 //     ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
-//       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+//       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new
+// uint8[](0)
 //     );
 
 //     vm.warp(_timestamp);
@@ -1102,7 +1111,8 @@
 //     vm.assume(_role != 0);
 
 //     ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
-//       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+//       _role, bytes32(0), address(0xdeadbeef), 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new
+// uint8[](0)
 //     );
 
 //     vm.warp(_timestamp);
@@ -1235,7 +1245,8 @@
 //     _roleQuantity = bound(_roleQuantity, 100, 1000);
 //     uint256 threshold = _roleQuantity / 2;
 //     ILlamaStrategy testStrategy =
-//       createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+//       createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity,
+// _otherRoleHolders);
 
 //     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
 //     mpCore.createAction(
@@ -1260,9 +1271,11 @@
 //     );
 //   }
 
-//   function testFuzz_AbsolutePeerReview_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
+//   function testFuzz_AbsolutePeerReview_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external
+// {
 //     ILlamaStrategy testStrategy =
-//       createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
+//       createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity,
+// _otherRoleHolders);
 
 //     uint256 actionId = mpCore.createAction(
 //       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
@@ -1299,7 +1312,8 @@
 //     assertEq(LlamaRelativeQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), _numberOfPolicies);
 //   }
 
-//   function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
+//   function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external
+// {
 //     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 //     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
 
@@ -1322,7 +1336,8 @@
 // contract IsApprovalEnabledRelative is LlamaStrategyTest {
 //   function test_PassesWhenCorrectRoleIsPassed() public {
 //     ActionInfo memory actionInfo = createAction(mpStrategy1);
-//     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
+//     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not
+// used
 //   }
 
 //   function test_RevertIf_WrongRoleIsPassed() public {
@@ -1343,7 +1358,8 @@
 //   function test_RevertIf_WrongRoleIsPassed() public {
 //     ActionInfo memory actionInfo = createAction(mpStrategy1);
 //     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.Disapprover)));
-//     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
+//     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are
+// not
 //       // used
 //   }
 // }
@@ -1453,7 +1469,8 @@
 //       new uint8[](0)
 //     );
 //     ActionInfo memory actionInfo = createAction(absolutePeerReview);
-//     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Disapprover)));
+//     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector,
+// uint8(Roles.Disapprover)));
 //     absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
 //   }
 
