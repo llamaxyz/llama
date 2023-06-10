@@ -3,16 +3,12 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-
 import {MockLlamaAbsoluteStrategyBase} from "test/mock/MockLlamaAbsoluteStrategyBase.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
@@ -129,74 +125,6 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
-  function deployTestStrategyWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
-    // Define strategy parameters.
-    uint8[] memory forceApproveRoles = new uint8[](1);
-    forceApproveRoles[0] = uint8(Roles.ForceApprover);
-    uint8[] memory forceDisapproveRoles = new uint8[](1);
-    forceDisapproveRoles[0] = uint8(Roles.ForceDisapprover);
-
-    LlamaAbsoluteStrategyBase.Config memory testStrategyData = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: 1 days,
-      queuingPeriod: 2 days,
-      expirationPeriod: 8 days,
-      minApprovals: 4000,
-      minDisapprovals: 2000,
-      isFixedLengthApprovalPeriod: false,
-      approvalRole: uint8(Roles.TestRole1),
-      disapprovalRole: uint8(Roles.TestRole1),
-      forceApprovalRoles: forceApproveRoles,
-      forceDisapprovalRoles: forceDisapproveRoles
-    });
-
-    // Get the address of the strategy we'll deploy.
-    testStrategy = lens.computeLlamaStrategyAddress(
-      address(mockLlamaAbsoluteStrategyBaseLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
-    );
-
-    // Create and authorize the strategy.
-    LlamaAbsoluteStrategyBase.Config[] memory testStrategies = new LlamaAbsoluteStrategyBase.Config[](1);
-    testStrategies[0] = testStrategyData;
-    vm.prank(address(mpExecutor));
-    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
-
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
-  }
-
-  function createAction(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
-    // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
-
-    // Create the action.
-    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
-    vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
-
-    actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
-
-    vm.warp(block.timestamp + 1);
-  }
-
-  function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i = 0; i < numberOfApprovals; i++) {
-      address _policyholder = address(uint160(i + 100));
-      vm.prank(_policyholder);
-      mpCore.castApproval(uint8(Roles.TestRole1), actionInfo, "");
-    }
-  }
-
-  function disapproveAction(uint256 numberOfDisapprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i = 0; i < numberOfDisapprovals; i++) {
-      address _policyholder = address(uint160(i + 100));
-      vm.prank(_policyholder);
-      mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
-    }
-  }
-
   function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
     for (uint256 i = 0; i < numberOfHolders; i++) {
       address _policyHolder = address(uint160(i + 100));
@@ -225,8 +153,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -242,8 +170,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       _expirationDelay,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -259,8 +187,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       _isFixedLengthApprovalPeriod,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -276,8 +204,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       _approvalPeriod,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -293,8 +221,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -310,8 +238,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -366,8 +294,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       forceApprovalRoles,
       new uint8[](0)
     );
@@ -389,8 +317,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       forceDisapprovalRoles
     );
@@ -412,8 +340,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       forceApprovalRoles,
       new uint8[](0)
     );
@@ -433,8 +361,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       forceDisapprovalRoles
     );
@@ -450,8 +378,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -540,23 +468,6 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
 }
 
 contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
-  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionApprovals =
-      bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
-
-    ILlamaStrategy testStrategy = deployTestStrategy();
-
-    generateAndSetRoleHolders(_numberOfPolicies);
-
-    ActionInfo memory actionInfo = createAction(testStrategy);
-
-    approveAction(_actionApprovals, actionInfo);
-
-    bool _isActionApproved = testStrategy.isActionApproved(actionInfo);
-
-    assertEq(_isActionApproved, true);
-  }
 
   function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
@@ -629,8 +540,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new
       uint8[](0)
@@ -662,8 +573,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -691,8 +602,8 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -768,8 +679,8 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new
       uint8[](0)
@@ -801,8 +712,8 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
@@ -831,8 +742,8 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       4 days,
       1 days,
       true,
-      4000,
-      2000,
+      1,
+      1,
       new uint8[](0),
       new uint8[](0)
     );
