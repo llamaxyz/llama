@@ -28,6 +28,7 @@ contract LlamaExecutor {
   /// @return result The data returned by the function being called.
   function execute(address target, uint256 value, bool isScript, bytes calldata data)
     external
+    payable
     returns (bool success, bytes memory result)
   {
     if (msg.sender != LLAMA_CORE) revert OnlyLlamaCore();

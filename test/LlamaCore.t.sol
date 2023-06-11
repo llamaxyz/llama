@@ -1105,6 +1105,36 @@ contract ExecuteAction is LlamaCoreTest {
     }
   }
 
+  function testFuzz_ExecuteActionWithValue(uint256 value) public {
+    bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data, "");
+    ActionInfo memory _actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
+    );
+
+    assertEq(address(mockProtocol).balance, 0);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.deal(actionCreatorAaron, value);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.executeAction{value: value}(_actionInfo);
+
+    assertEq(address(mockProtocol).balance, value);
+  }
+
   function testFuzz_RevertIf_IncorrectMsgValue(uint256 value) public {
     vm.assume(value != 1 ether);
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
