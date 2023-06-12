@@ -1109,9 +1109,9 @@ contract ExecuteAction is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
     vm.prank(actionCreatorAaron);
     uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data, "");
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), value, data, "");
     ActionInfo memory _actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 1 ether, data
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), value, data
     );
 
     assertEq(address(mockProtocol).balance, 0);
