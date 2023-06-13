@@ -52,6 +52,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event ScriptAuthorized(address script, bool authorized);
+  event ScriptExecutedWithValue(uint256 value);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -1046,15 +1047,11 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.warp(block.timestamp + 5 days);
 
-    vm.deal(address(mpCore), value);
+    vm.deal(address(this), value);
 
-    vm.prank(address(mpCore));
-    (bool success, bytes memory result) = mpExecutor.execute{value: value}(address(mockScript), true, data);
-
-    uint256 returnedValue = abi.decode(result, (uint256));
-
-    assertEq(returnedValue, value);
-    assertEq(success, true);
+    vm.expectEmit();
+    emit ScriptExecutedWithValue(value);
+    mpCore.executeAction{value: value}(_actionInfo);
   }
 
   function test_ScriptsAlwaysUseDelegatecall() public {
