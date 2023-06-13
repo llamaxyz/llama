@@ -21,16 +21,16 @@ contract LlamaExecutor {
   /// storage. By using a sole executor for calls and delegatecalls,
   /// a Llama instance is represented by one contract address.
   /// @param target The contract called when the action is executed.
-  /// @param value The value in wei to be sent when the action is executed.
   /// @param isScript A boolean that determines if the target is a script and should be delegatecalled.
   /// @param data Data to be called on the `target` when the action is executed.
   /// @return success A boolean that indicates if the call succeeded.
   /// @return result The data returned by the function being called.
-  function execute(address target, uint256 value, bool isScript, bytes calldata data)
+  function execute(address target, bool isScript, bytes calldata data)
     external
+    payable
     returns (bool success, bytes memory result)
   {
     if (msg.sender != LLAMA_CORE) revert OnlyLlamaCore();
-    (success, result) = isScript ? target.delegatecall(data) : target.call{value: value}(data);
+    (success, result) = isScript ? target.delegatecall(data) : target.call{value: msg.value}(data);
   }
 }

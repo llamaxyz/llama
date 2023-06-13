@@ -52,6 +52,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event ScriptAuthorized(address script, bool authorized);
+  event ScriptExecutedWithValue(uint256 value);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -1020,6 +1021,39 @@ contract ExecuteAction is LlamaCoreTest {
     mpCore.executeAction(actionInfo);
   }
 
+  function testFuzz_ScriptsCanTransferValue(uint256 value) public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeScript(address(mockScript), true);
+
+    bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_WITH_VALUE_SELECTOR);
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), value, data, "");
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), value, data);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.deal(address(this), value);
+
+    vm.expectEmit();
+    emit ScriptExecutedWithValue(value);
+    mpCore.executeAction{value: value}(_actionInfo);
+  }
+
   function test_ScriptsAlwaysUseDelegatecall() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
@@ -1103,6 +1137,36 @@ contract ExecuteAction is LlamaCoreTest {
       vm.expectRevert(LlamaCore.MinExecutionTimeNotReached.selector);
       mpCore.executeAction(actionInfo);
     }
+  }
+
+  function testFuzz_ExecuteActionWithValue(uint256 value) public {
+    bytes memory data = abi.encodeCall(MockProtocol.receiveEth, ());
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), value, data, "");
+    ActionInfo memory _actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), value, data
+    );
+
+    assertEq(address(mockProtocol).balance, 0);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.deal(actionCreatorAaron, value);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.executeAction{value: value}(_actionInfo);
+
+    assertEq(address(mockProtocol).balance, value);
   }
 
   function testFuzz_RevertIf_IncorrectMsgValue(uint256 value) public {

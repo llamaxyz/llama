@@ -113,6 +113,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant CREATE_STRATEGY_SELECTOR = 0x0f47de5a; // createStrategies(address,bytes[])
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x90010bb0; // createAccounts(address,bytes[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
+  bytes4 public constant EXECUTE_SCRIPT_WITH_VALUE_SELECTOR = 0xcf62157f; // executeScriptWithValue()
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
@@ -124,6 +125,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes32 createAccountId;
   bytes32 pausePermissionId2;
   bytes32 executeScriptPermissionId;
+  bytes32 executeScriptWithValuePermissionId;
 
   // Other addresses and constants.
   address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
@@ -261,6 +263,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
     pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
     executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
+    executeScriptWithValuePermissionId =
+      keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1));
 
     vm.startPrank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermissionId, true);
@@ -268,11 +272,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), authorizeScriptId, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptWithValuePermissionId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeActionId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), createStrategyId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), createAccountId, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), pausePermissionId2, true);
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptWithValuePermissionId, true);
     vm.stopPrank();
 
     // Skip forward 1 second so the most recent checkpoints are in the past.
@@ -312,6 +318,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     require(bytes32(0) != createStrategyId, "createStrategyId not set");
     require(bytes32(0) != createAccountId, "createAccountId not set");
     require(bytes32(0) != executeScriptPermissionId, "executeScriptPermissionId not set");
+    require(bytes32(0) != executeScriptWithValuePermissionId, "executeScriptWithValuePermissionId not set");
 
     require(BOOTSTRAP_ROLE == uint8(Roles.ActionCreator), "test suite bootstrap config mismatch");
   }
