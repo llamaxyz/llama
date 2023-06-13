@@ -6,4 +6,8 @@ contract MockScript {
   function executeScript() external view returns (address) {
     return msg.sender;
   }
+
+  function executeScriptWithValue() external payable returns (uint256) {
+    return msg.value;
+  }
 }

@@ -1020,6 +1020,43 @@ contract ExecuteAction is LlamaCoreTest {
     mpCore.executeAction(actionInfo);
   }
 
+  function testFuzz_ScriptsCanTransferValue(uint256 value) public {
+    address actionCreatorAustin = makeAddr("actionCreatorAustin");
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeScript(address(mockScript), true);
+
+    bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_WITH_VALUE_SELECTOR);
+    vm.prank(actionCreatorAustin);
+    uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mockScript), value, data, "");
+    ActionInfo memory _actionInfo =
+      ActionInfo(actionId, actionCreatorAustin, uint8(Roles.TestRole2), mpStrategy1, address(mockScript), value, data);
+
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(_actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.deal(address(mpCore), value);
+
+    vm.prank(address(mpCore));
+    (bool success, bytes memory result) = mpExecutor.execute{value: value}(address(mockScript), true, data);
+
+    uint256 returnedValue = abi.decode(result, (uint256));
+
+    assertEq(returnedValue, value);
+    assertEq(success, true);
+  }
+
   function test_ScriptsAlwaysUseDelegatecall() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
