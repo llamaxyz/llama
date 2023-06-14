@@ -74,32 +74,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
       address(absolutePeerReviewLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
-
-  function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i = 0; i < numberOfApprovals; i++) {
-      address _policyholder = address(uint160(i + 100));
-      vm.prank(_policyholder);
-      mpCore.castApproval(uint8(Roles.TestRole1), actionInfo, "");
-    }
-  }
-
-  function disapproveAction(uint256 numberOfDisapprovals, ActionInfo memory actionInfo) internal {
-    for (uint256 i = 0; i < numberOfDisapprovals; i++) {
-      address _policyholder = address(uint160(i + 100));
-      vm.prank(_policyholder);
-      mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
-    }
-  }
-
-  function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
-    for (uint256 i = 0; i < numberOfHolders; i++) {
-      address _policyHolder = address(uint160(i + 100));
-      if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        vm.prank(address(mpExecutor));
-        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
-      }
-    }
-  }
 }
 
 contract Constructor is LlamaStrategyTest {

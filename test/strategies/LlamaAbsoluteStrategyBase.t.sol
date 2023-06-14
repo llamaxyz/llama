@@ -114,16 +114,6 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
-
-  function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
-    for (uint256 i = 0; i < numberOfHolders; i++) {
-      address _policyHolder = address(uint160(i + 100));
-      if (mpPolicy.balanceOf(_policyHolder) == 0) {
-        vm.prank(address(mpExecutor));
-        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
-      }
-    }
-  }
 }
 
 contract Constructor is LlamaAbsoluteStrategyBaseTest {
