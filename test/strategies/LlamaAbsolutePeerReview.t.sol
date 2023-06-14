@@ -25,27 +25,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
-  function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
-    internal
-    pure
-    returns (uint8 largest)
-  {
-    largest = role;
-    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
-      if (forceApprovalRoles[i] > largest) largest = forceApprovalRoles[i];
-    }
-    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
-      if (forceDisapprovalRoles[i] > largest) largest = forceDisapprovalRoles[i];
-    }
-  }
-
-  function initializeRolesUpTo(uint8 role) internal {
-    while (mpPolicy.numRoles() < role) {
-      vm.prank(address(mpExecutor));
-      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
-    }
-  }
-
   function deployAbsolutePeerReviewAndSetRole(
     uint8 _role,
     bytes32 _permission,

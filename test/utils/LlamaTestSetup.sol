@@ -507,4 +507,25 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
+
+  function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
+    internal
+    pure
+    returns (uint8 largest)
+  {
+    largest = role;
+    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
+      if (forceApprovalRoles[i] > largest) largest = forceApprovalRoles[i];
+    }
+    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
+      if (forceDisapprovalRoles[i] > largest) largest = forceDisapprovalRoles[i];
+    }
+  }
+
+  function initializeRolesUpTo(uint8 role) internal {
+    while (mpPolicy.numRoles() < role) {
+      vm.prank(address(mpExecutor));
+      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
+    }
+  }
 }
