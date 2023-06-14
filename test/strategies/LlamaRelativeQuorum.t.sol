@@ -131,23 +131,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
   }
 
-  function createAction(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
-    // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
-
-    // Create the action.
-    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
-    vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
-
-    actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
-
-    vm.warp(block.timestamp + 1);
-  }
-
   function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
     for (uint256 i = 0; i < numberOfApprovals; i++) {
       address _policyholder = address(uint160(i + 100));
