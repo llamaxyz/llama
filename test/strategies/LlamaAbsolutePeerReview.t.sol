@@ -512,7 +512,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
+contract IsApprovalEnabled is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
@@ -567,7 +567,7 @@ contract IsApprovalEnabledAbsolute is LlamaStrategyTest {
   }
 }
 
-contract IsDisapprovalEnabledAbsolute is LlamaStrategyTest {
+contract IsDisapprovalEnabled is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),

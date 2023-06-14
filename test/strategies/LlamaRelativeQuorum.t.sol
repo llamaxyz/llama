@@ -920,7 +920,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract IsApprovalEnabledRelative is LlamaStrategyTest {
+contract IsApprovalEnabled is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
@@ -934,7 +934,7 @@ contract IsApprovalEnabledRelative is LlamaStrategyTest {
   }
 }
 
-contract IsDisapprovalEnabledRelative is LlamaStrategyTest {
+contract IsDisapprovalEnabled is LlamaStrategyTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are
