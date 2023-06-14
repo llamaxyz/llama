@@ -373,6 +373,12 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
+  function toAbsoluteQuorum(ILlamaStrategy strategy) internal pure returns (LlamaAbsoluteQuorum converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
   function toAbsoluteStrategyBase(ILlamaStrategy strategy) internal pure returns (LlamaAbsoluteStrategyBase converted) {
     assembly {
       converted := strategy

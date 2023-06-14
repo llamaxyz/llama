@@ -20,18 +20,17 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
+  uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
+  bytes32 constant DEFAULT_PERMISSION = bytes32(0);
+  address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
+  uint64 constant DEFAULT_QUEUING_PERIOD = 1 days;
+  uint64 constant DEFAULT_EXPIRATION_PERIOD = 4 days;
+  uint64 constant DEFAULT_APPROVAL_PERIOD = 1 days;
+  bool constant DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD = true;
+  uint16 constant DEFAULT_DISAPPROVALS = 1;
+  uint16 constant DEFAULT_APPROVALS = 1;
+  uint8[] defaultForceRoles;
 
-    uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
-    bytes32 constant DEFAULT_PERMISSION = bytes32(0);
-    address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
-    uint64 constant DEFAULT_QUEUING_PERIOD = 1 days;
-    uint64 constant DEFAULT_EXPIRATION_PERIOD = 4 days;
-    uint64 constant DEFAULT_APPROVAL_PERIOD = 1 days;
-    bool constant DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD = true;
-    uint16 constant DEFAULT_DISAPPROVALS = 1;
-    uint16 constant DEFAULT_APPROVALS = 1;
-    uint8[] defaultForceRoles;
-  
   MockLlamaAbsoluteStrategyBase mockLlamaAbsoluteStrategyBaseLogic;
 
   function setUp() public virtual override {
@@ -480,7 +479,6 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
 }
 
 contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
-
   function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(approverAdam));
