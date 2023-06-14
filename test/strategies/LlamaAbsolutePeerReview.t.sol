@@ -183,9 +183,7 @@ contract Initialize is LlamaStrategyTest {
     assertEq(toAbsolutePeerReview(newStrategy).minDisapprovals(), _disapprovals);
   }
 
-  function testFuzz_RevertIf_InvalidMinApprovals(uint256 _numberOfPolicies, uint256 _minApprovalIncrease)
-    public
-  {
+  function testFuzz_RevertIf_InvalidMinApprovals(uint256 _numberOfPolicies, uint256 _minApprovalIncrease) public {
     _minApprovalIncrease = bound(_minApprovalIncrease, 1, 1000);
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     generateAndSetRoleHolders(_numberOfPolicies);
