@@ -272,10 +272,7 @@ contract Initialize is LlamaStrategyTest {
 }
 
 contract IsActionApproved is LlamaStrategyTest {
-
-  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies)
-    public
-  {
+  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
@@ -457,7 +454,8 @@ contract ValidateActionCreation is LlamaStrategyTest {
     _otherRoleHolders = bound(_otherRoleHolders, 1, 10);
     generateAndSetRoleHolders(_otherRoleHolders);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), 1, type(uint64).max); // for action creation permission
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), 1, type(uint64).max); // for action creation
+      // permission
     uint128 roleQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
     ILlamaStrategy testStrategy = deployAbsoluteQuorum(
       uint8(Roles.TestRole1),
@@ -472,8 +470,11 @@ contract ValidateActionCreation is LlamaStrategyTest {
       new uint8[](0)
     );
     vm.startPrank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy)), true);
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(100)), 0, 0); // removing role holder from an address created in `generateAndSetRoleHolders`
+    mpPolicy.setRolePermission(
+      uint8(Roles.TestRole1), keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy)), true
+    );
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(100)), 0, 0); // removing role holder from an address
+      // created in `generateAndSetRoleHolders`
     vm.stopPrank();
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
@@ -481,10 +482,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
     );
   }
 
-  function testFuzz_RevertIf_NotEnoughDisapprovalQuantity(
-    uint256 _roleQuantity,
-    uint256 _otherRoleHolders
-  ) external {
+  function testFuzz_RevertIf_NotEnoughDisapprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
 
