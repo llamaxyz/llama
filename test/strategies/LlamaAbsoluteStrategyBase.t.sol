@@ -42,13 +42,6 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
     factory.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic);
   }
 
-  function initializeRolesUpTo(uint8 role) internal {
-    while (mpPolicy.numRoles() < role) {
-      vm.prank(address(mpExecutor));
-      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
-    }
-  }
-
   function deployTestStrategyAndSetRole(
     uint8 _role,
     bytes32 _permission,

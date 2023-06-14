@@ -23,12 +23,6 @@ contract LlamaStrategyTest is LlamaTestSetup {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
-  function initializeRolesUpTo(uint8 role) internal {
-    while (mpPolicy.numRoles() < role) {
-      vm.prank(address(mpExecutor));
-      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
-    }
-  }
 
   function deployRelativeQuorumAndSetRole(
     uint8 _role,
