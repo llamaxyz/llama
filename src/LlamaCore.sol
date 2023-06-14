@@ -331,7 +331,7 @@ contract LlamaCore is Initializable {
 
     // Execute action.
     (bool success, bytes memory result) =
-      executor.execute(actionInfo.target, actionInfo.value, action.isScript, actionInfo.data);
+      executor.execute{value: actionInfo.value}(actionInfo.target, action.isScript, actionInfo.data);
 
     if (!success) revert FailedActionExecution(result);
 
