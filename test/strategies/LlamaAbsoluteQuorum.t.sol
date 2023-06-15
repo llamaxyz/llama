@@ -18,7 +18,7 @@ import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBas
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract LlamaStrategyTest is LlamaTestSetup {
+contract LlamaAbsoluteQuorumTest is LlamaTestSetup {
   event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
@@ -74,7 +74,7 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 }
 
-contract Initialize is LlamaStrategyTest {
+contract Initialize is LlamaAbsoluteQuorumTest {
   function testFuzz_SetsStrategyStorageMinApprovals(uint128 _approvals) public {
     _approvals = toUint128(bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1))));
     ILlamaStrategy newStrategy = deployAbsoluteQuorumAndSetRole(
@@ -206,7 +206,7 @@ contract Initialize is LlamaStrategyTest {
   }
 }
 
-contract IsActionApproved is LlamaStrategyTest {
+contract IsActionApproved is LlamaAbsoluteQuorumTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -271,7 +271,7 @@ contract IsActionApproved is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCancelation is LlamaStrategyTest {
+contract ValidateActionCancelation is LlamaAbsoluteQuorumTest {
   function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -348,7 +348,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCreation is LlamaStrategyTest {
+contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
   function createAbsoluteQuorumWithDisproportionateQuantity(
     bool isApproval,
     uint128 threshold,
@@ -457,7 +457,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract IsApprovalEnabled is LlamaStrategyTest {
+contract IsApprovalEnabled is LlamaAbsoluteQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy testStrategy = deployAbsoluteQuorum(
       uint8(Roles.Approver),
@@ -512,7 +512,7 @@ contract IsApprovalEnabled is LlamaStrategyTest {
   }
 }
 
-contract IsDisapprovalEnabled is LlamaStrategyTest {
+contract IsDisapprovalEnabled is LlamaAbsoluteQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy testStrategy = deployAbsoluteQuorum(
       uint8(Roles.Approver),

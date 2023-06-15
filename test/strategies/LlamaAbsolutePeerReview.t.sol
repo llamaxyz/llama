@@ -20,7 +20,7 @@ import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBas
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract LlamaStrategyTest is LlamaTestSetup {
+contract LlamaAbsolutePeerReviewTest is LlamaTestSetup {
   event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
@@ -76,14 +76,14 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 }
 
-contract Constructor is LlamaStrategyTest {
+contract Constructor is LlamaAbsolutePeerReviewTest {
   function test_RevertIf_InitializeAbsoluteImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     absolutePeerReviewLogic.initialize(bytes(""));
   }
 }
 
-contract Initialize is LlamaStrategyTest {
+contract Initialize is LlamaAbsolutePeerReviewTest {
   function testFuzz_SetsStrategyStorageMinApprovals(uint128 _approvals) public {
     _approvals = toUint128(bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1))));
     ILlamaStrategy newStrategy = deployAbsolutePeerReviewAndSetRole(
@@ -213,7 +213,7 @@ contract Initialize is LlamaStrategyTest {
   }
 }
 
-contract IsActionApproved is LlamaStrategyTest {
+contract IsActionApproved is LlamaAbsolutePeerReviewTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -281,7 +281,7 @@ contract IsActionApproved is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCancelation is LlamaStrategyTest {
+contract ValidateActionCancelation is LlamaAbsolutePeerReviewTest {
   function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -358,7 +358,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCreation is LlamaStrategyTest {
+contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
   function createAbsolutePeerReviewWithDisproportionateQuantity(
     bool isApproval,
     uint128 threshold,
@@ -448,7 +448,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract IsApprovalEnabled is LlamaStrategyTest {
+contract IsApprovalEnabled is LlamaAbsolutePeerReviewTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),
@@ -503,7 +503,7 @@ contract IsApprovalEnabled is LlamaStrategyTest {
   }
 }
 
-contract IsDisapprovalEnabled is LlamaStrategyTest {
+contract IsDisapprovalEnabled is LlamaAbsolutePeerReviewTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
       uint8(Roles.Approver),

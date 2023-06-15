@@ -18,7 +18,7 @@ import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract LlamaStrategyTest is LlamaTestSetup {
+contract LlamaRelativeQuorumTest is LlamaTestSetup {
   event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
@@ -132,14 +132,14 @@ contract LlamaStrategyTest is LlamaTestSetup {
   }
 }
 
-contract Constructor is LlamaStrategyTest {
+contract Constructor is LlamaRelativeQuorumTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     relativeQuorumLogic.initialize(bytes(""));
   }
 }
 
-contract Initialize is LlamaStrategyTest {
+contract Initialize is LlamaRelativeQuorumTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
     ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
       uint8(Roles.TestRole1),
@@ -432,7 +432,7 @@ contract Initialize is LlamaStrategyTest {
   }
 }
 
-contract IsActionApproved is LlamaStrategyTest {
+contract IsActionApproved is LlamaRelativeQuorumTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -475,7 +475,7 @@ contract IsActionApproved is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCancelation is LlamaStrategyTest {
+contract ValidateActionCancelation is LlamaRelativeQuorumTest {
   function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -526,7 +526,7 @@ contract ValidateActionCancelation is LlamaStrategyTest {
   }
 }
 
-contract GetApprovalQuantityAt is LlamaStrategyTest {
+contract GetApprovalQuantityAt is LlamaRelativeQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
@@ -665,7 +665,7 @@ contract GetApprovalQuantityAt is LlamaStrategyTest {
   }
 }
 
-contract GetDisapprovalQuantityAt is LlamaStrategyTest {
+contract GetDisapprovalQuantityAt is LlamaRelativeQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     bytes32 _permission,
@@ -811,7 +811,7 @@ contract RelativeQuorumHarness is LlamaRelativeQuorum {
   }
 }
 
-contract GetMinimumAmountNeeded is LlamaStrategyTest {
+contract GetMinimumAmountNeeded is LlamaRelativeQuorumTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
     RelativeQuorumHarness newStrategy = new RelativeQuorumHarness();
     minPct = bound(minPct, 0, 10_000);
@@ -822,7 +822,7 @@ contract GetMinimumAmountNeeded is LlamaStrategyTest {
   }
 }
 
-contract ValidateActionCreation is LlamaStrategyTest {
+contract ValidateActionCreation is LlamaRelativeQuorumTest {
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 
@@ -856,7 +856,7 @@ contract ValidateActionCreation is LlamaStrategyTest {
   }
 }
 
-contract IsApprovalEnabled is LlamaStrategyTest {
+contract IsApprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
@@ -870,7 +870,7 @@ contract IsApprovalEnabled is LlamaStrategyTest {
   }
 }
 
-contract IsDisapprovalEnabled is LlamaStrategyTest {
+contract IsDisapprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are
