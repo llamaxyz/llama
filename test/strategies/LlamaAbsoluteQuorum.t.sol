@@ -74,6 +74,13 @@ contract LlamaAbsoluteQuorumTest is LlamaTestSetup {
   }
 }
 
+contract Constructor is LlamaAbsoluteQuorumTest {
+  function test_DisablesInitializationAtConstruction() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    absolutePeerReviewLogic.initialize(bytes(""));
+  }
+}
+
 contract Initialize is LlamaAbsoluteQuorumTest {
   function testFuzz_SetsStrategyStorageMinApprovals(uint128 _approvals) public {
     _approvals = toUint128(bound(_approvals, 0, mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1))));

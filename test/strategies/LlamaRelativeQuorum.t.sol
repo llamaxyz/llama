@@ -133,7 +133,7 @@ contract LlamaRelativeQuorumTest is LlamaTestSetup {
 }
 
 contract Constructor is LlamaRelativeQuorumTest {
-  function test_RevertIf_InitializeImplementationContract() public {
+  function test_DisablesInitializationAtConstruction() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     relativeQuorumLogic.initialize(bytes(""));
   }

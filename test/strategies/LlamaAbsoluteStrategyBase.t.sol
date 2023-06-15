@@ -117,7 +117,7 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
 }
 
 contract Constructor is LlamaAbsoluteStrategyBaseTest {
-  function test_RevertIf_InitializeImplementationContract() public {
+  function test_DisablesInitializationAtConstruction() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mockLlamaAbsoluteStrategyBaseLogic.initialize(bytes(""));
   }

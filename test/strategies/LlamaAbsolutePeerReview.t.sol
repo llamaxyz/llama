@@ -77,7 +77,7 @@ contract LlamaAbsolutePeerReviewTest is LlamaTestSetup {
 }
 
 contract Constructor is LlamaAbsolutePeerReviewTest {
-  function test_RevertIf_InitializeAbsoluteImplementationContract() public {
+  function test_DisablesInitializationAtConstruction() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     absolutePeerReviewLogic.initialize(bytes(""));
   }
