@@ -20,7 +20,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaAbsoluteQuorumTest is LlamaAbsoluteStrategyBaseTest {
-
   function deployAbsoluteQuorumAndSetRole(
     uint8 _role,
     bytes32 _permission,

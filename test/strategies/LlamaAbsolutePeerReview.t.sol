@@ -22,7 +22,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaAbsolutePeerReviewTest is LlamaAbsoluteStrategyBaseTest {
-
   function deployAbsolutePeerReviewAndSetRole(
     uint8 _role,
     bytes32 _permission,
