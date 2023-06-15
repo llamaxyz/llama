@@ -5,7 +5,7 @@ import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 
 // @dev A mock account implementation (logic) contract that doesn't have `name` or other functions. To be used for
-/// testing.
+/// testing the abstract `LlamaAbsoluteStrategyBase` contract
 contract MockLlamaAbsoluteStrategyBase is LlamaAbsoluteStrategyBase {
   function validateActionCreation(ActionInfo calldata) external view override {}
 
