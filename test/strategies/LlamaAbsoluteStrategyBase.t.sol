@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
+import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
+
 import {MockLlamaAbsoluteStrategyBase} from "test/mock/MockLlamaAbsoluteStrategyBase.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
@@ -10,6 +12,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionState} from "src/lib/Enums.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -452,6 +455,143 @@ contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
     vm.prank(address(approverAdam));
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+  }
+
+  function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals =
+      bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      toUint16(_actionApprovals),
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    approveAction(_actionApprovals, actionInfo);
+
+    bool _isActionApproved = testStrategy.isActionApproved(actionInfo);
+
+    assertEq(_isActionApproved, true);
+  }
+
+  function testFuzz_ReturnsFalseForFailedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 3000, 10_000) - 1);
+    uint256 approvalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000);
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      true,
+      toUint16(approvalThreshold),
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    approveAction(_actionApprovals, actionInfo);
+
+    bool _isActionApproved = testStrategy.isActionApproved(actionInfo);
+
+    assertEq(_isActionApproved, false);
+  }
+}
+
+contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
+  function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+    uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
+
+    ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      0,
+      toUint16(disapprovalThreshold),
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    mpCore.queueAction(actionInfo);
+
+    disapproveAction(_actionDisapprovals, actionInfo);
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
+
+    vm.expectRevert(LlamaAbsoluteStrategyBase.OnlyActionCreator.selector);
+    testStrategy.validateActionCancelation(actionInfo, address(this));
+  }
+
+  function testFuzz_NoRevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+    uint256 disapprovalThreshold = FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000);
+
+    ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
+      uint8(Roles.TestRole1),
+      bytes32(0),
+      address(this),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      0,
+      toUint16(disapprovalThreshold),
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    mpCore.queueAction(actionInfo);
+
+    disapproveAction(_actionDisapprovals, actionInfo);
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
+
+    testStrategy.validateActionCancelation(actionInfo, actionInfo.creator); // This should not revert.
+  }
+
+  function testFuzz_RevertForNonExistentActionId(ActionInfo calldata actionInfo) public {
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    vm.prank(address(disapproverDave));
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
   }
 }
 
