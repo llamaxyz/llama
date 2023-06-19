@@ -100,7 +100,7 @@ contract LlamaCore is Initializable {
   );
 
   /// @dev Emitted when an action is canceled.
-  event ActionCanceled(uint256 id);
+  event ActionCanceled(uint256 id, address indexed caller);
 
   /// @dev Emitted when an action guard is set.
   event ActionGuardSet(address indexed target, bytes4 indexed selector, ILlamaActionGuard actionGuard);
@@ -354,7 +354,7 @@ contract LlamaCore is Initializable {
     actionInfo.strategy.validateActionCancelation(actionInfo, msg.sender);
 
     action.canceled = true;
-    emit ActionCanceled(actionInfo.id);
+    emit ActionCanceled(actionInfo.id, msg.sender);
   }
 
   /// @notice How policyholders add their support of the approval of an action with a reason.
