@@ -73,12 +73,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _;
   }
 
-  /// @dev Checks that the caller is the Llama factory and reverts if not.
-  modifier onlyLlamaFactory() {
-    if (msg.sender != address(factory)) revert OnlyLlamaFactory();
-    _;
-  }
-
   /// @dev Ensures that none of the ERC721 `transfer` and `approval` functions can be called, so that the policies are
   /// soulbound.
   modifier nonTransferableToken() {
@@ -186,7 +180,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method can only be called once.
   /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
   /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
-  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external onlyLlamaFactory {
+  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
+    if (msg.sender != address(factory)) revert OnlyLlamaFactory();
     if (llamaExecutor != address(0)) revert AlreadyInitialized();
 
     llamaExecutor = _llamaExecutor;
