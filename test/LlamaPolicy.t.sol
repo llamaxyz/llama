@@ -173,7 +173,13 @@ contract SetLlama is LlamaPolicyTest {
     // method in the context it is used, instead of as a pure unit test.
   }
 
+  function test_RevertIf_CallerNotLlamaFactory() public {
+    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
+    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
+  }
+
   function test_RevertIf_LlamaAddressIsSet() public {
+    vm.prank(address(factory));
     vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
     mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
   }
