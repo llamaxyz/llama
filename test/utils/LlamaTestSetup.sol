@@ -508,7 +508,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     );
   }
 
-  function max(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
+  function maxRole(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
     internal
     pure
     returns (uint8 largest)

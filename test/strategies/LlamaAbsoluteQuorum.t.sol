@@ -37,7 +37,7 @@ contract LlamaAbsoluteQuorumTest is LlamaAbsoluteStrategyBaseTest {
       vm.prank(address(rootExecutor));
       factory.authorizeStrategyLogic(absoluteQuorumLogic);
       // Initialize roles if required.
-      initializeRolesUpTo(max(_role, _forceApprovalRoles, _forceDisapprovalRoles));
+      initializeRolesUpTo(maxRole(_role, _forceApprovalRoles, _forceDisapprovalRoles));
 
       vm.startPrank(address(mpExecutor));
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
