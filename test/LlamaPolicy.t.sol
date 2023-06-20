@@ -180,6 +180,13 @@ contract SetLlama is LlamaPolicyTest {
 }
 
 contract FinalizeInitialization is LlamaPolicyTest {
+
+  function test_RevertIf_LlamaAddressIsSet() public {
+    vm.prank(address(factory));
+    vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
+    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
+  }
+
   function test_RevertIf_CalledByEOA() public {
     vm.startPrank(arbitraryAddress);
 
@@ -188,6 +195,8 @@ contract FinalizeInitialization is LlamaPolicyTest {
 
     vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
     policyLogic.finalizeInitialization(arbitraryAddress, bytes32(0));
+
+    assertEq(address(policyLogic.factory()), address(0));
   }
 }
 
