@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-
 import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
@@ -612,7 +611,9 @@ contract LlamaCore is Initializable {
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
-      if (LlamaUtils.toUint64(block.timestamp) >= action.minExecutionTime) revert CannotDisapproveAfterMinExecutionTime();
+      if (LlamaUtils.toUint64(block.timestamp) >= action.minExecutionTime) {
+        revert CannotDisapproveAfterMinExecutionTime();
+      }
       actionInfo.strategy.isDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
