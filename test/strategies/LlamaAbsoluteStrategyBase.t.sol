@@ -95,28 +95,6 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
       address(mockLlamaAbsoluteStrategyBaseLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
-
-  function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
-    LlamaAbsoluteStrategyBase.Config memory testStrategyData = LlamaAbsoluteStrategyBase.Config({
-      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
-      queuingPeriod: DEFAULT_QUEUING_PERIOD,
-      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
-      minApprovals: DEFAULT_APPROVALS,
-      minDisapprovals: DEFAULT_DISAPPROVALS,
-      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
-      approvalRole: DEFAULT_ROLE,
-      disapprovalRole: DEFAULT_ROLE,
-      forceApprovalRoles: defaultForceRoles,
-      forceDisapprovalRoles: defaultForceRoles
-    });
-    testStrategy = lens.computeLlamaStrategyAddress(
-      address(mockLlamaAbsoluteStrategyBaseLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
-    );
-    LlamaAbsoluteStrategyBase.Config[] memory testStrategies = new LlamaAbsoluteStrategyBase.Config[](1);
-    testStrategies[0] = testStrategyData;
-    vm.prank(address(mpExecutor));
-    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
-  }
 }
 
 contract Constructor is LlamaAbsoluteStrategyBaseTest {
