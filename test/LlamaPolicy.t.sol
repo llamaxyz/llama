@@ -180,7 +180,6 @@ contract SetLlama is LlamaPolicyTest {
 }
 
 contract FinalizeInitialization is LlamaPolicyTest {
-
   function test_RevertIf_LlamaAddressIsSet() public {
     vm.prank(address(factory));
     vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
