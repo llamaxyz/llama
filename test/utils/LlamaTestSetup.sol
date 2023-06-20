@@ -380,6 +380,18 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
+  function toAbsoluteQuorum(ILlamaStrategy strategy) internal pure returns (LlamaAbsoluteQuorum converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toAbsoluteStrategyBase(ILlamaStrategy strategy) internal pure returns (LlamaAbsoluteStrategyBase converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
   function infoHash(ActionInfo memory actionInfo) internal pure returns (bytes32) {
     return infoHash(
       actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data
@@ -494,5 +506,69 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
+  }
+
+  function maxRole(uint8 role, uint8[] memory forceApprovalRoles, uint8[] memory forceDisapprovalRoles)
+    internal
+    pure
+    returns (uint8 largest)
+  {
+    largest = role;
+    for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
+      if (forceApprovalRoles[i] > largest) largest = forceApprovalRoles[i];
+    }
+    for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
+      if (forceDisapprovalRoles[i] > largest) largest = forceDisapprovalRoles[i];
+    }
+  }
+
+  function initializeRolesUpTo(uint8 role) internal {
+    while (mpPolicy.numRoles() < role) {
+      vm.prank(address(mpExecutor));
+      mpPolicy.initializeRole(RoleDescription.wrap("Test Role"));
+    }
+  }
+
+  function createAction(ILlamaStrategy testStrategy) internal returns (ActionInfo memory actionInfo) {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
+
+    vm.warp(block.timestamp + 1);
+  }
+
+  function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
+    for (uint256 i = 0; i < numberOfApprovals; i++) {
+      address _policyholder = address(uint160(i + 100));
+      vm.prank(_policyholder);
+      mpCore.castApproval(uint8(Roles.TestRole1), actionInfo, "");
+    }
+  }
+
+  function disapproveAction(uint256 numberOfDisapprovals, ActionInfo memory actionInfo) internal {
+    for (uint256 i = 0; i < numberOfDisapprovals; i++) {
+      address _policyholder = address(uint160(i + 100));
+      vm.prank(_policyholder);
+      mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
+    }
+  }
+
+  function generateAndSetRoleHolders(uint256 numberOfHolders) internal {
+    for (uint256 i = 0; i < numberOfHolders; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      if (mpPolicy.balanceOf(_policyHolder) == 0) {
+        vm.prank(address(mpExecutor));
+        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
+      }
+    }
   }
 }
