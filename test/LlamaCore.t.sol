@@ -1671,6 +1671,10 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
+
+  function test_RevertIf_CastAfterMinExecutionTime () public {
+    
+  }
 }
 
 contract CastDisapprovalBySig is LlamaCoreTest {
