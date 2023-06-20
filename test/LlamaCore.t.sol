@@ -40,7 +40,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     bytes data,
     string description
   );
-  event ActionCanceled(uint256 id);
+  event ActionCanceled(uint256 id, address indexed caller);
   event ActionQueued(
     uint256 id, address indexed caller, ILlamaStrategy indexed strategy, address indexed creator, uint256 executionTime
   );
@@ -837,7 +837,7 @@ contract CancelAction is LlamaCoreTest {
   function test_CreatorCancelFlow() public {
     vm.prank(actionCreatorAaron);
     vm.expectEmit();
-    emit ActionCanceled(actionInfo.id);
+    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
 
     uint256 state = uint256(mpCore.getActionState(actionInfo));
