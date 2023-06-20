@@ -1680,13 +1680,17 @@ contract CastDisapproval is LlamaCoreTest {
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Queued));
 
-    vm.warp(mpStrategy1.minExecutionTime(actionInfo));
-    
+    vm.warp(actionInfo.strategy.minExecutionTime(actionInfo) + 1);
+
+    vm.expectRevert(LlamaCore.CannotDisapproveAfterMinExecutionTime.selector);
+
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     state = mpCore.getActionState(actionInfo);
-    assertEq(uint8(state), uint8(ActionState.Failed));
+    assertEq(uint8(state), uint8(ActionState.Queued));
+
+    mpCore.executeAction(actionInfo); // should not revert
   }
 }
 

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+
+import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
+
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
@@ -26,6 +29,9 @@ contract LlamaCore is Initializable {
   /// @param policyholder Address of policyholder.
   /// @param role The role being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
+
+  /// @dev Policyholder cannot cast after the minimum execution time.
+  error CannotDisapproveAfterMinExecutionTime();
 
   /// @dev An action's target contract cannot be the executor.
   error CannotSetExecutorAsTarget();
@@ -606,6 +612,7 @@ contract LlamaCore is Initializable {
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
+      if (LlamaUtils.toUint64(block.timestamp) >= action.minExecutionTime) revert CannotDisapproveAfterMinExecutionTime();
       actionInfo.strategy.isDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
