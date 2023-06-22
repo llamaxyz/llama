@@ -58,6 +58,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Policy tokens cannot be transferred.
   error NonTransferableToken();
 
+  /// @dev Thrown when the provided token ID does not exist.
+  error NonexistentToken(uint256 tokenId);
+
   /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
 
@@ -339,11 +342,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   // -------- ERC-721 Getters --------
-
   /// @notice Returns the token URI for the given `tokenId` of this Llama instance.
   /// @param tokenId The ID of the policy token.
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
     return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
   }
 

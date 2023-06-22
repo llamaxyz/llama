@@ -1045,7 +1045,12 @@ contract PolicyMetadata is LlamaPolicyTest {
     // Setting this number as the upper limit ensures when this `tokenId` is converted to an address it will be be less
     // than `0x00000000000fffffffffffffffffffffffffffff`. This guarantees that the fuzz output will have at least 11
     // leading zeroes
-    tokenIdWithLeadingZeroes = bound(tokenIdWithLeadingZeroes, 0, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
+    tokenIdWithLeadingZeroes = bound(tokenIdWithLeadingZeroes, 1, 5_444_517_870_735_015_415_413_993_718_908_291_383_295);
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(
+      uint8(Roles.TestRole1), address(uint160(tokenIdWithLeadingZeroes)), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
+    );
 
     setTokenURIMetadata();
     string memory uri = mpPolicy.tokenURI(tokenIdWithLeadingZeroes);
@@ -1055,6 +1060,9 @@ contract PolicyMetadata is LlamaPolicyTest {
 
   function test_ReturnsCorrectTokenURI() public {
     setTokenURIMetadata();
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
@@ -1072,6 +1080,11 @@ contract PolicyMetadata is LlamaPolicyTest {
     assertEq(metadata.description, description);
     assertEq(metadata.name, name);
     assertEq(metadata.image, generateTokenUri(address(this)));
+  }
+
+  function test_RevertsIf_NonExistantTokenId() public {
+    vm.expectRevert("NOT_MINTED");
+    mpPolicy.tokenURI(1);
   }
 }
 
@@ -1105,6 +1118,9 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
 
   function test_ReturnsCorrectExternalUrl() public {
     setTokenURIMetadata();
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
