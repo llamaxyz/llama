@@ -186,7 +186,7 @@ contract FinalizeInitialization is LlamaPolicyTest {
     mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
   }
 
-  function test_RevertIf_CalledByEOA() public {
+  function test_RevertIf_CalledByNonFactory() public {
     // this test ensures that factory cannot be set on the policy logic contract and finalizeImplementation is properly
     // guarded
     vm.startPrank(arbitraryAddress);
