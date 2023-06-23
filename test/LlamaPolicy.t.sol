@@ -1082,9 +1082,9 @@ contract PolicyMetadata is LlamaPolicyTest {
     assertEq(metadata.image, generateTokenUri(address(this)));
   }
 
-  function test_RevertsIf_NonExistantTokenId() public {
+  function test_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
     vm.expectRevert("NOT_MINTED");
-    mpPolicy.tokenURI(1);
+    mpPolicy.tokenURI(nonExistantTokenId);
   }
 }
 
