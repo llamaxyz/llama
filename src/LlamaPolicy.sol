@@ -339,7 +339,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   // -------- ERC-721 Getters --------
-  
+
   /// @notice Returns the token URI for the given `tokenId` of this Llama instance.
   /// @param tokenId The ID of the policy token.
   /// @return The token URI for the given `tokenId` of this Llama instance.
