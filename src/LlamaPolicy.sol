@@ -58,9 +58,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Policy tokens cannot be transferred.
   error NonTransferableToken();
 
-  /// @dev Thrown when the provided token ID does not exist.
-  error NonexistentToken(uint256 tokenId);
-
   /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
 
