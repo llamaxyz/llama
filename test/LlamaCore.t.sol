@@ -225,6 +225,17 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
     vm.warp(block.timestamp + 1);
   }
+
+  function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    _queueAction(actionInfo);
+  }
 }
 
 contract Setup is LlamaCoreTest {
@@ -843,6 +854,24 @@ contract CancelAction is LlamaCoreTest {
     uint256 state = uint256(mpCore.getActionState(actionInfo));
     uint256 canceled = uint256(ActionState.Canceled);
     assertEq(state, canceled);
+  }
+
+  function test_CreatorCanCancelAfterMinExecutionTime () public {
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    vm.prank(disapproverDave);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
+
+    vm.warp(actionInfo.strategy.minExecutionTime(actionInfo) + 1);
+
+    vm.expectRevert(LlamaCore.CannotDisapproveAfterMinExecutionTime.selector);
+    vm.prank(disapproverDrake);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
+
+    vm.prank(actionCreatorAaron);
+    vm.expectEmit();
+    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
+    mpCore.cancelAction(actionInfo);
   }
 
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
@@ -1569,16 +1598,6 @@ contract CastApprovalBySig is LlamaCoreTest {
 }
 
 contract CastDisapproval is LlamaCoreTest {
-  function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
-    actionInfo = _createAction();
-    _approveAction(approverAdam, actionInfo);
-    _approveAction(approverAlicia, actionInfo);
-
-    vm.warp(block.timestamp + 6 days);
-
-    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
-    _queueAction(actionInfo);
-  }
 
   function test_SuccessfulDisapproval() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
@@ -1672,15 +1691,16 @@ contract CastDisapproval is LlamaCoreTest {
     mpCore.castDisapproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
 
-  function test_RevertIf_CastAfterMinExecutionTime() public {
+  function test_RevertIf_CastAfterMinExecutionTime(uint256 timeAfterExecutionTime) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    timeAfterExecutionTime = bound(timeAfterExecutionTime, 1, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
     ActionState state = mpCore.getActionState(actionInfo);
     assertEq(uint8(state), uint8(ActionState.Queued));
 
-    vm.warp(actionInfo.strategy.minExecutionTime(actionInfo) + 1);
+    vm.warp(actionInfo.strategy.minExecutionTime(actionInfo) + timeAfterExecutionTime);
 
     vm.expectRevert(LlamaCore.CannotDisapproveAfterMinExecutionTime.selector);
 
@@ -1713,17 +1733,6 @@ contract CastDisapprovalBySig is LlamaCoreTest {
 
   function castDisapprovalBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
     mpCore.castDisapprovalBySig(disapproverDrake, uint8(Roles.Disapprover), actionInfo, "", v, r, s);
-  }
-
-  function _createApproveAndQueueAction() internal returns (ActionInfo memory actionInfo) {
-    actionInfo = _createAction();
-    _approveAction(approverAdam, actionInfo);
-    _approveAction(approverAlicia, actionInfo);
-
-    vm.warp(block.timestamp + 6 days);
-
-    assertEq(actionInfo.strategy.isActionApproved(actionInfo), true);
-    _queueAction(actionInfo);
   }
 
   function test_CastsDisapprovalBySig() public {
