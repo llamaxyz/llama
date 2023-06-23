@@ -348,6 +348,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param tokenId The ID of the policy token.
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
     return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
   }
 
