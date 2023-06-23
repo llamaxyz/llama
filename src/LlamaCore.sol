@@ -27,6 +27,9 @@ contract LlamaCore is Initializable {
   /// @param role The role being used in the cast.
   error CannotCastWithZeroQuantity(address policyholder, uint8 role);
 
+  /// @dev Policyholder cannot cast after the minimum execution time.
+  error CannotDisapproveAfterMinExecutionTime();
+
   /// @dev An action's target contract cannot be the executor.
   error CannotSetExecutorAsTarget();
 
@@ -606,6 +609,9 @@ contract LlamaCore is Initializable {
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
+      if (LlamaUtils.toUint64(block.timestamp) >= action.minExecutionTime) {
+        revert CannotDisapproveAfterMinExecutionTime();
+      }
       actionInfo.strategy.checkIfDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
