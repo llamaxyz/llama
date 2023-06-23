@@ -40,6 +40,9 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // ======== Errors ========
   // ========================
 
+  /// @dev Only callable by a Llama instance's core contract.
+  error OnlyLlamaCore();
+
   /// @dev The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
   error CannotCancelInState(ActionState currentState);
@@ -197,6 +200,8 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external {
+    if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
+
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
     uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(approvalRole);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
@@ -273,7 +278,7 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActionActive(ActionInfo calldata actionInfo) external view returns (bool) {
     return
       block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }

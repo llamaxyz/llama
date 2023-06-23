@@ -89,7 +89,7 @@ interface ILlamaStrategy {
   /// @notice Get whether an action is currently active.
   /// @param actionInfo Data required to create an action.
   /// @return Boolean value that is `true` if the action is currently active, `false` otherwise.
-  function isActive(ActionInfo calldata actionInfo) external view returns (bool);
+  function isActionActive(ActionInfo calldata actionInfo) external view returns (bool);
 
   /// @notice Get whether an action has passed the approval process.
   /// @param actionInfo Data required to create an action.
