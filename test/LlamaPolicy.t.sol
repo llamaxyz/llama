@@ -1083,6 +1083,13 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function test_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
+    vm.assume(nonExistantTokenId != uint256(uint160(actionCreatorAaron)));
+    vm.assume(nonExistantTokenId != uint256(uint160(approverAdam)));
+    vm.assume(nonExistantTokenId != uint256(uint160(approverAlicia)));
+    vm.assume(nonExistantTokenId != uint256(uint160(approverAndy)));
+    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDave)));
+    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDiane)));
+    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDrake)));
     vm.expectRevert("NOT_MINTED");
     mpPolicy.tokenURI(nonExistantTokenId);
   }
