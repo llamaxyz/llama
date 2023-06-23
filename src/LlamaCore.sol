@@ -602,11 +602,11 @@ contract LlamaCore is Initializable {
     if (!hasRole) revert InvalidPolicyholder();
 
     if (isApproval) {
-      actionInfo.strategy.isApprovalEnabled(actionInfo, policyholder, role);
+      actionInfo.strategy.checkIfApprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
-      actionInfo.strategy.isDisapprovalEnabled(actionInfo, policyholder, role);
+      actionInfo.strategy.checkIfDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     }
@@ -634,7 +634,7 @@ contract LlamaCore is Initializable {
 
     uint256 strategyLength = strategyConfigs.length;
     for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(strategyConfigs[i]));
+      bytes32 salt = keccak256(strategyConfigs[i]);
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy] = true;
@@ -654,7 +654,7 @@ contract LlamaCore is Initializable {
 
     uint256 accountLength = accountConfigs.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
-      bytes32 salt = bytes32(keccak256(accountConfigs[i]));
+      bytes32 salt = keccak256(accountConfigs[i]);
       ILlamaAccount account = ILlamaAccount(Clones.cloneDeterministic(address(llamaAccountLogic), salt));
       account.initialize(accountConfigs[i]);
       emit AccountCreated(account, llamaAccountLogic, accountConfigs[i]);

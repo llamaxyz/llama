@@ -3,8 +3,6 @@ pragma solidity 0.8.19;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -14,9 +12,10 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Absolute Strategy Base
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a base contract for Llama strategies to inherit which has the following properties:
+/// @notice This is a base contract for Llama straftegies to inherit which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
-///   - The `validateActionCreation`, `isApprovalEnabled`, and `isDisapprovalEnabled` methods are left up to the
+///   - The `validateActionCreation`, `checkIfApprovalEnabled`, and `checkIfDisapprovalEnabled` methods are left up to
+/// the
 ///     implementing contract to determine the rest of the behavior.
 ///   - All methods are marked virtual in case future strategies need to override them.
 abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
@@ -201,7 +200,10 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view virtual;
+  function checkIfApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role)
+    external
+    view
+    virtual;
 
   /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
@@ -218,7 +220,10 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view virtual;
+  function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role)
+    external
+    view
+    virtual;
 
   /// @inheritdoc ILlamaStrategy
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)

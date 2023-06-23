@@ -217,7 +217,7 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+  function checkIfApprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
@@ -231,7 +231,7 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+  function checkIfDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
