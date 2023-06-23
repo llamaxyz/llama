@@ -869,32 +869,29 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
 contract IsApprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
-    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not
-      // used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.Approver)));
-    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are
-      // not
-      // used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 }
 
 contract IsDisapprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
-    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo
-      // are
-      // not used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.Disapprover)));
-    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are
-      // not
-      // used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 }
