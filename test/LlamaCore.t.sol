@@ -857,7 +857,7 @@ contract CancelAction is LlamaCoreTest {
   }
 
   function test_CreatorCanCancelAfterMinExecutionTime () public {
-    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
@@ -1693,7 +1693,7 @@ contract CastDisapproval is LlamaCoreTest {
 
   function test_RevertIf_CastAfterMinExecutionTime(uint256 timeAfterExecutionTime) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
-    timeAfterExecutionTime = bound(timeAfterExecutionTime, 1, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
+    timeAfterExecutionTime = bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
