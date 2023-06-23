@@ -1083,13 +1083,13 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function testFuzz_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
-    vm.assume(nonExistantTokenId != uint256(uint160(actionCreatorAaron)));
-    vm.assume(nonExistantTokenId != uint256(uint160(approverAdam)));
-    vm.assume(nonExistantTokenId != uint256(uint160(approverAlicia)));
-    vm.assume(nonExistantTokenId != uint256(uint160(approverAndy)));
-    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDave)));
-    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDiane)));
-    vm.assume(nonExistantTokenId != uint256(uint160(disapproverDrake)));
+    vm.assume(
+      nonExistantTokenId != uint256(uint160(actionCreatorAaron)) && nonExistantTokenId != uint256(uint160(approverAdam))
+        && nonExistantTokenId != uint256(uint160(approverAlicia)) && nonExistantTokenId != uint256(uint160(approverAndy))
+        && nonExistantTokenId != uint256(uint160(disapproverDave))
+        && nonExistantTokenId != uint256(uint160(disapproverDiane))
+        && nonExistantTokenId != uint256(uint160(disapproverDrake))
+    );
     vm.expectRevert("NOT_MINTED");
     mpPolicy.tokenURI(nonExistantTokenId);
   }
