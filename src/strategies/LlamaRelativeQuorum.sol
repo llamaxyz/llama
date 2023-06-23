@@ -17,6 +17,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
+///   - The approval and disapproval policy supplies are saved at action creation time and used to calculate that
+///     action's quorum.
+///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   // =========================
   // ======== Structs ========
