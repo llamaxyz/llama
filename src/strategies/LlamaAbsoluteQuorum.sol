@@ -11,6 +11,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
+///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   // ==========================================
   // ======== Interface Implementation ========

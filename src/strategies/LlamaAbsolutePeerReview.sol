@@ -17,6 +17,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     and approve an action. You can design a strategy where anyone in this group can propose
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
+///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   // ========================
   // ======== Errors ========
