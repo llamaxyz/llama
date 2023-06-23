@@ -432,7 +432,7 @@ contract Initialize is LlamaRelativeQuorumTest {
   }
 
   function testFuzz_RevertIf_MinApprovalPctIsGreaterThan100(uint16 minApprovalPct) public {
-    minApprovalPct = uint16(bound(minApprovalPct, 10001, type(uint16).max));
+    minApprovalPct = uint16(bound(minApprovalPct, 10_001, type(uint16).max));
     LlamaRelativeQuorum.Config memory strategyConfig = LlamaRelativeQuorum.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 1 days,
