@@ -856,7 +856,7 @@ contract CancelAction is LlamaCoreTest {
     assertEq(state, canceled);
   }
 
-  function test_CreatorCanCancelAfterMinExecutionTime () public {
+  function test_CreatorCanCancelAfterMinExecutionTime() public {
     actionInfo = _createApproveAndQueueAction();
 
     vm.prank(disapproverDave);
@@ -1598,7 +1598,6 @@ contract CastApprovalBySig is LlamaCoreTest {
 }
 
 contract CastDisapproval is LlamaCoreTest {
-
   function test_SuccessfulDisapproval() public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
@@ -1693,7 +1692,8 @@ contract CastDisapproval is LlamaCoreTest {
 
   function test_RevertIf_CastAfterMinExecutionTime(uint256 timeAfterExecutionTime) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
-    timeAfterExecutionTime = bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
+    timeAfterExecutionTime =
+      bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
