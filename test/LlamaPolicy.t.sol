@@ -1082,7 +1082,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     assertEq(metadata.image, generateTokenUri(address(this)));
   }
 
-  function test_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
+  function testFuzz_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
     vm.assume(nonExistantTokenId != uint256(uint160(actionCreatorAaron)));
     vm.assume(nonExistantTokenId != uint256(uint160(approverAdam)));
     vm.assume(nonExistantTokenId != uint256(uint160(approverAlicia)));
