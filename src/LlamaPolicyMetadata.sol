@@ -83,9 +83,9 @@ contract LlamaPolicyMetadata {
       bytes(
         string.concat(
           '{"name": "',
-          name,
+          LibString.escapeJSON(name),
           ' Member", "description": "This NFT represents membership in the Llama organization: ',
-          name,
+          LibString.escapeJSON(name),
           ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
           policyholder,
           ' to view their profile page.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
@@ -104,9 +104,9 @@ contract LlamaPolicyMetadata {
   function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
-    parts[1] = name;
+    parts[1] = LibString.escapeJSON(name);
     parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
-    parts[3] = name;
+    parts[3] = LibString.escapeJSON(name);
     parts[4] =
       '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
