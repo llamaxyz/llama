@@ -236,7 +236,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActive(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActionActive(ActionInfo calldata actionInfo) external view returns (bool) {
     return
       block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }

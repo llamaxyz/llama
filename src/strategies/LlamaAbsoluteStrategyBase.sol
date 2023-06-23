@@ -263,7 +263,7 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActive(ActionInfo calldata actionInfo) external view virtual returns (bool) {
+  function isActionActive(ActionInfo calldata actionInfo) external view virtual returns (bool) {
     return
       block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
