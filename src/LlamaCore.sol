@@ -609,9 +609,7 @@ contract LlamaCore is Initializable {
       quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
-      if (LlamaUtils.toUint64(block.timestamp) >= action.minExecutionTime) {
-        revert CannotDisapproveAfterMinExecutionTime();
-      }
+      if (block.timestamp >= action.minExecutionTime) revert CannotDisapproveAfterMinExecutionTime();
       actionInfo.strategy.checkIfDisapprovalEnabled(actionInfo, policyholder, role);
       quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
