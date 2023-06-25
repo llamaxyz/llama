@@ -11,6 +11,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -93,6 +94,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Emitted when a permission ID is assigned to a role.
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
+  /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+
+  /// @dev Emitted when the color code for SVG of a Llama instance is set.
+  event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+
+  /// @dev Emitted when the logo for SVG of a Llama instance is set.
+  event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
+
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -113,6 +123,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// unusable. See the documentation for more info.
   uint8 public constant BOOTSTRAP_ROLE = 1;
 
+  /// @notice The Llama policy metadata parameter registry contract for onchain image formats.
+  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
+
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
 
@@ -129,6 +142,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice The address of the `LlamaFactory` contract.
   LlamaFactory public factory;
+
+  /// @notice Color code for SVG.
+  string public color;
+
+  /// @notice Logo for SVG.
+  string public logo;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -186,6 +205,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     llamaExecutor = _llamaExecutor;
     _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+    _setPolicyMetadata(_llamaPolicyMetadata);
+    _setDeploymentMetadata(executor, color, logo);
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(llamaExecutor);
   }
 
   // -------- Role and Permission Management --------
@@ -240,6 +262,27 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function updateRoleDescription(uint8 role, RoleDescription description) external onlyLlama {
     if (role > numRoles) revert RoleNotInitialized(role);
     emit RoleInitialized(role, description);
+  }
+
+  /// @notice Sets the Llama policy metadata contract.
+  /// @dev This function can only be called by the Llama instance.
+  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
+    _setPolicyMetadata(_llamaPolicyMetadata);
+  }
+
+  /// @notice Sets the color code for SVG of a Llama instance.
+  /// @param _color The color code as a hex value (eg. #00FF00)
+  function setColor(string memory _color) public onlyLlama {
+    color = _color;
+    emit ColorSet(address(this), _color);
+  }
+
+  /// @notice Sets the logo for SVG of a Llama instance.
+  /// @param _logo The logo.
+  function setLogo(string memory _logo) public onlyLlama {
+    logo = _logo;
+    emit LogoSet(address(this), _logo);
   }
 
   // -------- Role and Permission Getters --------
@@ -349,13 +392,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
+    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return factory.contractURI(name);
+    return llamaPolicyMetadata.contractURI(name);
   }
 
   // -------- ERC-721 Methods --------
@@ -537,5 +580,16 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Returns the token ID for a `policyholder`.
   function _tokenId(address policyholder) internal pure returns (uint256) {
     return uint256(uint160(policyholder));
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyMetadataSet(_llamaPolicyMetadata);
+  }
+
+  function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
+    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);
   }
 }

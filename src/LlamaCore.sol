@@ -137,6 +137,12 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
 
+  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
+  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
+
+  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Llama instances.
+  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
+
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================

@@ -39,15 +39,6 @@ contract LlamaFactory {
     uint256 chainId
   );
 
-  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
-  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
-
-  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Llama instances.
-  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
-
-  /// @dev Emitted when a new Llama policy metadata contract is set.
-  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
-
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
@@ -64,18 +55,6 @@ contract LlamaFactory {
   /// @notice The Llama policy implementation (logic) contract.
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama policy metadata parameter registry contract for onchain image formats.
-  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
-
-  /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
-  LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
-
-  /// @notice The core of the Llama instance responsible for deploying new Llama instances.
-  LlamaCore public immutable ROOT_LLAMA_CORE;
-
-  /// @notice The Llama policy metadata contract.
-  LlamaPolicyMetadata public llamaPolicyMetadata;
-
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
 
@@ -83,22 +62,10 @@ contract LlamaFactory {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  /// @dev Constructs the Llama Factory and deploys the root Llama instance.
-  constructor(
-    LlamaCore llamaCoreLogic,
-    ILlamaStrategy initialLlamaStrategyLogic,
-    ILlamaAccount initialLlamaAccountLogic,
-    LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
-    string memory name,
-    bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts,
-    RoleDescription[] memory initialRoleDescriptions,
-    RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions
-  ) {
-    _setPolicyMetadata(_llamaPolicyMetadata);
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
+  /// @dev Constructs the Llama Factory.
+  constructor(LlamaCore llamaCoreLogic, LlamaPolicy llamaPolicyLogic) {
+    LLAMA_CORE_LOGIC = llamaCoreLogic;
+    LLAMA_POLICY_LOGIC = llamaPolicyLogic;
   }
 
   // ===========================================
@@ -130,64 +97,7 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions,
     string memory color,
     string memory logo
-  ) external returns (LlamaExecutor executor, LlamaCore core) {
-    (executor, core) = _deploy(
-      name,
-      strategyLogic,
-      accountLogic,
-      initialStrategies,
-      initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions
-    );
-
-    _setDeploymentMetadata(executor, color, logo);
-  }
-
-  /// @notice Sets the Llama policy metadata contract.
-  /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
-  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external {
-    _setPolicyMetadata(_llamaPolicyMetadata);
-  }
-
-  /// @notice Returns the token URI for a given Llama policyholder.
-  /// @param llamaExecutor The instance's `LlamaExecutor`.
-  /// @param name The name of the Llama system.
-  /// @param tokenId The token ID of the Llama policyholder.
-  /// @return The token URI for the given Llama policyholder.
-  function tokenURI(LlamaExecutor llamaExecutor, string memory name, uint256 tokenId)
-    external
-    view
-    returns (string memory)
-  {
-    (string memory color, string memory logo) = LLAMA_POLICY_METADATA_PARAM_REGISTRY.getMetadata(llamaExecutor);
-    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
-  }
-
-  /// @notice Returns the contract URI for a given Llama policyholder.
-  /// @param name The name of the Llama system.
-  /// @return The contract URI for the given Llama instance.
-  function contractURI(string memory name) external view returns (string memory) {
-    return llamaPolicyMetadata.contractURI(name);
-  }
-
-  // ================================
-  // ======== Internal Logic ========
-  // ================================
-
-  /// @dev Deploys a new Llama instance.
-  function _deploy(
-    string memory name,
-    ILlamaStrategy strategyLogic,
-    ILlamaAccount accountLogic,
-    bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts,
-    RoleDescription[] memory initialRoleDescriptions,
-    RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions
-  ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
+  ) external returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -215,17 +125,5 @@ contract LlamaFactory {
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
-  }
-
-  /// @dev Sets the Llama policy metadata contract.
-  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
-    llamaPolicyMetadata = _llamaPolicyMetadata;
-    emit PolicyMetadataSet(_llamaPolicyMetadata);
-  }
-
-  /// @dev Sets the `color` and `logo` of a Llama instance.
-  function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);
   }
 }
