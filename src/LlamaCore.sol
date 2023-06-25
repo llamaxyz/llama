@@ -208,6 +208,12 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of target to selector to actionGuard address.
   mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
 
+  /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
+  mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
+
+  /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
+  mapping(ILlamaAccount => bool) public authorizedAccountLogics;
+
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
@@ -466,6 +472,20 @@ contract LlamaCore is Initializable {
   function incrementNonce(bytes4 selector) external {
     // Safety: Can never overflow a uint256 by incrementing.
     nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
+  }
+
+  /// @notice Authorizes a strategy implementation (logic) contract.
+  /// @dev This function can only be called by the root Llama instance.
+  /// @param strategyLogic The strategy logic contract to authorize.
+  function authorizeStrategyLogic(ILlamaStrategy strategyLogic) external onlyRootLlama {
+    _authorizeStrategyLogic(strategyLogic);
+  }
+
+  /// @notice Authorizes an account implementation (logic) contract.
+  /// @dev This function can only be called by the root Llama instance.
+  /// @param accountLogic The account logic contract to authorize.
+  function authorizeAccountLogic(ILlamaAccount accountLogic) external onlyRootLlama {
+    _authorizeAccountLogic(accountLogic);
   }
 
   /// @notice Get an Action struct by `actionId`.
@@ -805,5 +825,17 @@ contract LlamaCore is Initializable {
         keccak256(actionInfo.data)
       )
     );
+  }
+
+  /// @dev Authorizes a strategy implementation (logic) contract.
+  function _authorizeStrategyLogic(ILlamaStrategy strategyLogic) internal {
+    authorizedStrategyLogics[strategyLogic] = true;
+    emit StrategyLogicAuthorized(strategyLogic);
+  }
+
+  /// @dev Authorizes an account implementation (logic) contract.
+  function _authorizeAccountLogic(ILlamaAccount accountLogic) internal {
+    authorizedAccountLogics[accountLogic] = true;
+    emit AccountLogicAuthorized(accountLogic);
   }
 }

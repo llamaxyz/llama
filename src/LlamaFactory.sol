@@ -25,15 +25,6 @@ contract LlamaFactory {
   /// @dev The initial set of role holders has to have at least one role holder with role ID 1.
   error InvalidDeployConfiguration();
 
-  /// @dev A protected external function in the factory can only be called by the root instance's `LlamaExecutor`.
-  error OnlyRootLlama();
-
-  /// @dev Checks that the caller is the root Llama executor and reverts if not.
-  modifier onlyRootLlama() {
-    if (msg.sender != address(ROOT_LLAMA_EXECUTOR)) revert OnlyRootLlama();
-    _;
-  }
-
   // ========================
   // ======== Events ========
   // ========================
@@ -82,12 +73,6 @@ contract LlamaFactory {
   /// @notice The core of the Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA_CORE;
 
-  /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
-  mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
-
-  /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
-  mapping(ILlamaAccount => bool) public authorizedAccountLogics;
-
   /// @notice The Llama policy metadata contract.
   LlamaPolicyMetadata public llamaPolicyMetadata;
 
@@ -112,24 +97,7 @@ contract LlamaFactory {
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
   ) {
-    LLAMA_CORE_LOGIC = llamaCoreLogic;
-    LLAMA_POLICY_LOGIC = llamaPolicyLogic;
-
     _setPolicyMetadata(_llamaPolicyMetadata);
-    _authorizeStrategyLogic(initialLlamaStrategyLogic);
-    _authorizeAccountLogic(initialLlamaAccountLogic);
-
-    (ROOT_LLAMA_EXECUTOR, ROOT_LLAMA_CORE) = _deploy(
-      name,
-      initialLlamaStrategyLogic,
-      initialLlamaAccountLogic,
-      initialStrategies,
-      initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions
-    );
-
     LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
   }
 
@@ -162,7 +130,7 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions,
     string memory color,
     string memory logo
-  ) external onlyRootLlama returns (LlamaExecutor executor, LlamaCore core) {
+  ) external returns (LlamaExecutor executor, LlamaCore core) {
     (executor, core) = _deploy(
       name,
       strategyLogic,
@@ -177,24 +145,10 @@ contract LlamaFactory {
     _setDeploymentMetadata(executor, color, logo);
   }
 
-  /// @notice Authorizes a strategy implementation (logic) contract.
-  /// @dev This function can only be called by the root Llama instance.
-  /// @param strategyLogic The strategy logic contract to authorize.
-  function authorizeStrategyLogic(ILlamaStrategy strategyLogic) external onlyRootLlama {
-    _authorizeStrategyLogic(strategyLogic);
-  }
-
-  /// @notice Authorizes an account implementation (logic) contract.
-  /// @dev This function can only be called by the root Llama instance.
-  /// @param accountLogic The account logic contract to authorize.
-  function authorizeAccountLogic(ILlamaAccount accountLogic) external onlyRootLlama {
-    _authorizeAccountLogic(accountLogic);
-  }
-
   /// @notice Sets the Llama policy metadata contract.
   /// @dev This function can only be called by the root Llama instance.
   /// @param _llamaPolicyMetadata The Llama policy metadata contract.
-  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external {
     _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
@@ -261,18 +215,6 @@ contract LlamaFactory {
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
-  }
-
-  /// @dev Authorizes a strategy implementation (logic) contract.
-  function _authorizeStrategyLogic(ILlamaStrategy strategyLogic) internal {
-    authorizedStrategyLogics[strategyLogic] = true;
-    emit StrategyLogicAuthorized(strategyLogic);
-  }
-
-  /// @dev Authorizes an account implementation (logic) contract.
-  function _authorizeAccountLogic(ILlamaAccount accountLogic) internal {
-    authorizedAccountLogics[accountLogic] = true;
-    emit AccountLogicAuthorized(accountLogic);
   }
 
   /// @dev Sets the Llama policy metadata contract.
