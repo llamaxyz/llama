@@ -1200,13 +1200,14 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    string memory name = '{ "name": "Mock Protocol Llama" }';
+    string memory name = '"name": "Mock Protocol Llama"';
+    string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
-    parts[1] = LibString.escapeJSON(name);
+    parts[1] = escapedName;
     parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
-    parts[3] = LibString.escapeJSON(name);
+    parts[3] = escapedName;
     parts[4] =
       '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
