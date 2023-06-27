@@ -430,6 +430,30 @@ contract Initialize is LlamaRelativeQuorumTest {
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
+
+  function testFuzz_RevertIf_MinApprovalPctIsGreaterThan100(uint16 minApprovalPct) public {
+    minApprovalPct = uint16(bound(minApprovalPct, 10_001, type(uint16).max));
+    LlamaRelativeQuorum.Config memory strategyConfig = LlamaRelativeQuorum.Config({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: minApprovalPct,
+      minDisapprovalPct: 5000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    LlamaRelativeQuorum.Config[] memory strategyConfigs = new LlamaRelativeQuorum.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpExecutor));
+
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidMinApprovalPct.selector, minApprovalPct));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
 }
 
 contract IsActionApproved is LlamaRelativeQuorumTest {
