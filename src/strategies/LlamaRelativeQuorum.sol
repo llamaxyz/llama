@@ -165,7 +165,7 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    if (strategyConfig.minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(minApprovalPct);
+    if (strategyConfig.minApprovalPct > ONE_HUNDRED_IN_BPS) revert InvalidMinApprovalPct(strategyConfig.minApprovalPct);
     minApprovalPct = strategyConfig.minApprovalPct;
     minDisapprovalPct = strategyConfig.minDisapprovalPct;
 
