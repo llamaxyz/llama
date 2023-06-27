@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {ActionState} from "src/lib/Enums.sol";
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo} from "src/lib/Structs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
+import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Absolute Quorum Strategy
@@ -18,6 +11,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as absolute numbers.
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
+///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   // ==========================================
   // ======== Interface Implementation ========
@@ -41,7 +35,7 @@ contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
+  function checkIfApprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
     external
     view
     override
@@ -52,7 +46,7 @@ contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
+  function checkIfDisapprovalEnabled(ActionInfo calldata, /* actionInfo */ address, /* policyholder */ uint8 role)
     external
     view
     override
