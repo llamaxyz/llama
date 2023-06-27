@@ -9,7 +9,7 @@ import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBas
 contract MockLlamaAbsoluteStrategyBase is LlamaAbsoluteStrategyBase {
   function validateActionCreation(ActionInfo calldata) external view override {}
 
-  function isApprovalEnabled(ActionInfo calldata, address, uint8) external view override {}
+  function checkIfApprovalEnabled(ActionInfo calldata, address, uint8) external view override {}
 
-  function isDisapprovalEnabled(ActionInfo calldata, address, uint8) external view override {}
+  function checkIfDisapprovalEnabled(ActionInfo calldata, address, uint8) external view override {}
 }

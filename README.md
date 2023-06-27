@@ -56,21 +56,21 @@ The comments in that file explain what each variable is for and when they're nee
 
 | Name                             | Address                                                                                                                      | Verified |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
-| LlamaCoreLogic                   | [0xa897FCE700D9AFe42431E9b096c785f1bcE6aD06](https://goerli.etherscan.io/address/0xa897FCE700D9AFe42431E9b096c785f1bcE6aD06) | ✅       |
-| LlamaRelativeStrategyLogic       | [0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD](https://goerli.etherscan.io/address/0x28b6E1Aac7a5c3eBfDD84e425b3e31be2fF714aD) | ✅       |
-| LlamaAbsoluteStrategyLogic       | [0x9839ea98F18fd06f2e9be19B6A2E00dc11654755](https://goerli.etherscan.io/address/0x9839ea98F18fd06f2e9be19B6A2E00dc11654755) | ✅       |
-| LlamaAccountLogic                | [0x6428F81B3c72449b6e4F94C6f40cAbC349B90b73](https://goerli.etherscan.io/address/0x6428F81B3c72449b6e4F94C6f40cAbC349B90b73) | ✅       |
-| LlamaPolicyLogic                 | [0x956b02429CB68FFa10B571D10A7cC8A92DbCefde](https://goerli.etherscan.io/address/0x956b02429CB68FFa10B571D10A7cC8A92DbCefde) | ❌       |
-| LlamaPolicyMetadata              | [0x760A113aca237bb7646B9Cc91A8223E522517344](https://goerli.etherscan.io/address/0x760A113aca237bb7646B9Cc91A8223E522517344) | ❌       |
-| LlamaFactory                     | [0x751eB347942429b783104f00B507b7774eA033Ea](https://goerli.etherscan.io/address/0x751eB347942429b783104f00B507b7774eA033Ea) | ❌       |
-| LlamaPolicyMetadataParamRegistry | [0x5eE8FCE7f2E3da5f618eF1b709b660DbF30A6951](https://goerli.etherscan.io/address/0x5eE8FCE7f2E3da5f618eF1b709b660DbF30A6951) | ❌       |
-| LlamaLens                        | [0xCEbd76456281441539200Baa575ba36A19BDf354](https://goerli.etherscan.io/address/0xCEbd76456281441539200Baa575ba36A19BDf354) | ❌       |
-| Root's Llama Policy              | [0x769daFACb25556B483264F57bD7647dE725F8FFe](https://goerli.etherscan.io/address/0x769daFACb25556B483264F57bD7647dE725F8FFe) | ❌       |
-| Root's LlamaCore                 | [0xD7941726eD07894c4b8E60B15e7973e0F0936bfa](https://goerli.etherscan.io/address/0xD7941726eD07894c4b8E60B15e7973e0F0936bfa) | ✅       |
-| Root's LlamaExecutor             | [0xaEe7e3b3eFd968fB93cb97ed0a61c155a17d8Fb9](https://goerli.etherscan.io/address/0xaEe7e3b3eFd968fB93cb97ed0a61c155a17d8Fb9) | ❌       |
-| Root's Strategy #1               | [0x0d7401D1CC655b64BA11C0AC4272C09528793a58](https://goerli.etherscan.io/address/0x0d7401D1CC655b64BA11C0AC4272C09528793a58) | ✅       |
-| Root's Llama Treasury Account    | [0xa68a6834485c3864bbf3311Fae178c85bF8852CE](https://goerli.etherscan.io/address/0xa68a6834485c3864bbf3311Fae178c85bF8852CE) | ✅       |
-| Root's Llama Grants Account      | [0xe57c7A46c71F864b1004e110dCB3e908496c1d55](https://goerli.etherscan.io/address/0xe57c7A46c71F864b1004e110dCB3e908496c1d55) | ✅       |
+| LlamaCoreLogic                   | [0x611e8bE39A7EDAd60fdEE5aDce3715674d9B807d](https://goerli.etherscan.io/address/0x611e8bE39A7EDAd60fdEE5aDce3715674d9B807d) |    ✅    |
+| LlamaRelativeStrategyLogic       | [0xaB957338f5488EeF3A2F61Af4A5bC7F44b603E92](https://goerli.etherscan.io/address/0xaB957338f5488EeF3A2F61Af4A5bC7F44b603E92) |    ✅    |
+| LlamaAbsoluteStrategyLogic       | [0xd5d8555bc5c038e09a9c8dF683C6BDC839C326Aa](https://goerli.etherscan.io/address/0xd5d8555bc5c038e09a9c8dF683C6BDC839C326Aa) |    ✅    |
+| LlamaAccountLogic                | [0x89eF1E0dA1628Eb070937ef0EBBa01B5b291a33f](https://goerli.etherscan.io/address/0x89eF1E0dA1628Eb070937ef0EBBa01B5b291a33f) |    ✅    |
+| LlamaPolicyLogic                 | [0x7F2B017FDA4A6C601Cc681367b25E886C504Af8a](https://goerli.etherscan.io/address/0x7F2B017FDA4A6C601Cc681367b25E886C504Af8a) |    ✅    |
+| LlamaPolicyMetadata              | [0x1cBC643b86E83f9DE30Ac501Cc4952FAFBa3Ad3a](https://goerli.etherscan.io/address/0x1cBC643b86E83f9DE30Ac501Cc4952FAFBa3Ad3a) |    ✅    |
+| LlamaFactory                     | [0xaC7c9eaf194d43d0f62E68472295eCbc403F13d0](https://goerli.etherscan.io/address/0xaC7c9eaf194d43d0f62E68472295eCbc403F13d0) |    ❌    |
+| LlamaPolicyMetadataParamRegistry | [0x4524909FBA0E10C878b15CbFCb0f60BB02afB348](https://goerli.etherscan.io/address/0x4524909FBA0E10C878b15CbFCb0f60BB02afB348) |    ❌    |
+| LlamaLens                        | [0x31165228dEe0F9c8C48c70d840FC5Ef6d5977920](https://goerli.etherscan.io/address/0x31165228dEe0F9c8C48c70d840FC5Ef6d5977920) |    ❌    |
+| Root's Llama Policy              | [0xf2157E064bca23Cab5322DE675366975acC36F05](https://goerli.etherscan.io/address/0xf2157E064bca23Cab5322DE675366975acC36F05) |    ✅    |
+| Root's LlamaCore                 | [0x4011EE728494Abe7BB5C20292BDc31420FF167d2](https://goerli.etherscan.io/address/0x4011EE728494Abe7BB5C20292BDc31420FF167d2) |    ✅    |
+| Root's LlamaExecutor             | [0x7489a99EC16f6F9010481F171e9131eA89c97A9F](https://goerli.etherscan.io/address/0x7489a99EC16f6F9010481F171e9131eA89c97A9F) |    ❌    |
+| Root's Strategy #1               | [0xDcD89690eD40Def836C6D264bAfC7B34A0C1e4f9](https://goerli.etherscan.io/address/0xDcD89690eD40Def836C6D264bAfC7B34A0C1e4f9) |    ✅    |
+| Root's Llama Treasury Account    | [0x7a7BC7DEaB9e885DDF81929eB7F0D33798D2600D](https://goerli.etherscan.io/address/0x7a7BC7DEaB9e885DDF81929eB7F0D33798D2600D) |    ✅    |
+| Root's Llama Grants Account      | [0xF76Ae203B988c5F12238c55E0d73047862DA4Ef6](https://goerli.etherscan.io/address/0xF76Ae203B988c5F12238c55E0d73047862DA4Ef6) |    ✅    |
 
 ## Documentation
 
