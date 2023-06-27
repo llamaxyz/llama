@@ -1107,17 +1107,17 @@ contract PolicyMetadata is LlamaPolicyTest {
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
     setTokenURIMetadata();
-    string memory nameWithJson = '{ "name": "Mock Protocol Llama" }';
+    string memory nameWithQuotes = '"name": "Mock Protocol Llama"';
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    string memory uri = factory.tokenURI(mpExecutor, nameWithJson, uint256(uint160(address(this))));
+    string memory uri = factory.tokenURI(mpExecutor, nameWithQuotes, uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
-    string memory name = LibString.concat(nameWithJson, " Member");
+    string memory name = LibString.concat(nameWithQuotes, " Member");
     string memory policyholder = LibString.toHexString(address(this));
     string memory description1 =
-      LibString.concat("This NFT represents membership in the Llama organization: ", nameWithJson);
+      LibString.concat("This NFT represents membership in the Llama organization: ", nameWithQuotes);
     string memory description = string.concat(
       description1,
       ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
