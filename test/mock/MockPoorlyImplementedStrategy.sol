@@ -173,7 +173,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
+  function checkIfApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external pure {
     // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     // if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
@@ -188,7 +188,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
+  function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
     // if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
     // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);

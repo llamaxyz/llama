@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
-
-import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
-
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {ActionState} from "src/lib/Enums.sol";
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo} from "src/lib/Structs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
+import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Absolute Peer Review Strategy
@@ -24,6 +17,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     and approve an action. You can design a strategy where anyone in this group can propose
 ///     but they need N number of approvals from their peers in this group for the action to be
 ///     approved.
+///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   // ========================
   // ======== Errors ========
@@ -63,7 +57,11 @@ contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view override {
+  function checkIfApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role)
+    external
+    view
+    override
+  {
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
@@ -71,7 +69,7 @@ contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function isDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role)
+  function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role)
     external
     view
     override

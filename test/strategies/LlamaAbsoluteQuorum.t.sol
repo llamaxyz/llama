@@ -145,7 +145,7 @@ contract IsApprovalEnabled is LlamaAbsoluteQuorumTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(testStrategy);
-    testStrategy.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
+    testStrategy.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
@@ -163,7 +163,7 @@ contract IsApprovalEnabled is LlamaAbsoluteQuorumTest {
     );
     ActionInfo memory actionInfo = createAction(testStrategy);
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Approver)));
-    testStrategy.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    testStrategy.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
   function test_ActionCreatorCanApprove() public {
@@ -181,7 +181,7 @@ contract IsApprovalEnabled is LlamaAbsoluteQuorumTest {
     );
     ActionInfo memory actionInfo = createAction(absoluteQuorum);
     // function reverts if approval disabled, so it not reverting is behavior we are testing
-    absoluteQuorum.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+    absoluteQuorum.checkIfApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
   }
 }
 
@@ -200,7 +200,7 @@ contract IsDisapprovalEnabled is LlamaAbsoluteQuorumTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(testStrategy);
-    testStrategy.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
+    testStrategy.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
@@ -218,7 +218,7 @@ contract IsDisapprovalEnabled is LlamaAbsoluteQuorumTest {
     );
     ActionInfo memory actionInfo = createAction(testStrategy);
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Disapprover)));
-    testStrategy.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    testStrategy.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
   function test_ActionCreatorCanDisapprove() public {
@@ -236,6 +236,6 @@ contract IsDisapprovalEnabled is LlamaAbsoluteQuorumTest {
     );
     ActionInfo memory actionInfo = createAction(absoluteQuorum);
     // function reverts if disapproval is disabled, so it not reverting is behavior we are testing
-    absoluteQuorum.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
+    absoluteQuorum.checkIfDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
   }
 }
