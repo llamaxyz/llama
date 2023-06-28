@@ -137,11 +137,11 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
 
-  /// @dev Emitted when a new Strategy implementation (logic) contract is authorized to be used by Llama instances.
-  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
-
-  /// @dev Emitted when a new Account implementation (logic) contract is authorized to be used by Llama instances.
+  /// @dev Emitted when a new account implementation (logic) contract is authorized.
   event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
+
+  /// @dev Emitted when a new strategy implementation (logic) contract is authorized.
+  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -214,11 +214,11 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of target to selector to actionGuard address.
   mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
 
-  /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
-  mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
-
   /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
   mapping(ILlamaAccount => bool) public authorizedAccountLogics;
+
+  /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
+  mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========

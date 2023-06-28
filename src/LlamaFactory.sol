@@ -11,15 +11,13 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
-import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Llama instances.
 contract LlamaFactory {
   // ======================================
-  // ======== Errors and Modifiers ========
+  // =============== Errors ===============
   // ======================================
 
   /// @dev The initial set of role holders has to have at least one role holder with role ID 1.
@@ -107,14 +105,15 @@ contract LlamaFactory {
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
+    bytes32 salt = keccak256(abi.encodePacked(name, msg.sender));
+
     // Now the configuration is likely valid (it's possible the configuration of the first strategy
     // will not actually be able to execute, but we leave that check off-chain / to the deploy
     // scripts), so we continue with deployment of this instance.
-    LlamaPolicy policy =
-      LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
+    LlamaPolicy policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), salt));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), salt));
     bytes32 bootstrapPermissionId =
       llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
     llamaExecutor = llamaCore.executor();
