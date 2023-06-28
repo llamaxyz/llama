@@ -555,7 +555,7 @@ contract LlamaCore is Initializable {
       newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
-      
+
       ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
       if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
     }

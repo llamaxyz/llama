@@ -261,7 +261,7 @@ contract LlamaFactory {
     emit LlamaInstanceCreated(
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
-    
+
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
