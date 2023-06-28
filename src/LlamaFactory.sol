@@ -116,6 +116,7 @@ contract LlamaFactory {
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), salt));
     bytes32 bootstrapPermissionId =
       llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+
     llamaExecutor = llamaCore.executor();
 
     policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
@@ -123,6 +124,7 @@ contract LlamaFactory {
     emit LlamaInstanceCreated(
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
+
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 }
