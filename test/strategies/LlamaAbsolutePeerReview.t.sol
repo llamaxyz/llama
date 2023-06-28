@@ -128,7 +128,7 @@ contract IsApprovalEnabled is LlamaAbsolutePeerReviewTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
-    absolutePeerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
+    absolutePeerReview.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
@@ -146,7 +146,7 @@ contract IsApprovalEnabled is LlamaAbsolutePeerReviewTest {
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Approver)));
-    absolutePeerReview.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    absolutePeerReview.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
   function test_ActionCreatorCannotApprove() public {
@@ -164,7 +164,7 @@ contract IsApprovalEnabled is LlamaAbsolutePeerReviewTest {
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(LlamaAbsolutePeerReview.ActionCreatorCannotCast.selector);
-    absolutePeerReview.isApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
+    absolutePeerReview.checkIfApprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Approver));
   }
 }
 
@@ -183,7 +183,7 @@ contract IsDisapprovalEnabled is LlamaAbsolutePeerReviewTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
-    absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
+    absolutePeerReview.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
@@ -201,7 +201,7 @@ contract IsDisapprovalEnabled is LlamaAbsolutePeerReviewTest {
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.Disapprover)));
-    absolutePeerReview.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
+    absolutePeerReview.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 
   function test_ActionCreatorCannotDisapprove() public {
@@ -219,6 +219,6 @@ contract IsDisapprovalEnabled is LlamaAbsolutePeerReviewTest {
     );
     ActionInfo memory actionInfo = createAction(absolutePeerReview);
     vm.expectRevert(LlamaAbsolutePeerReview.ActionCreatorCannotCast.selector);
-    absolutePeerReview.isDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
+    absolutePeerReview.checkIfDisapprovalEnabled(actionInfo, actionCreatorAaron, uint8(Roles.Disapprover));
   }
 }

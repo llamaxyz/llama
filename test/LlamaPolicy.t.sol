@@ -1088,10 +1088,11 @@ contract PolicyMetadata is LlamaPolicyTest {
 
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
-    string memory name = LibString.concat(mpPolicy.name(), " Member");
+    string memory name = LibString.concat(LibString.escapeJSON(mpPolicy.name()), " Member");
     string memory policyholder = LibString.toHexString(address(this));
-    string memory description1 =
-      LibString.concat("This NFT represents membership in the Llama organization: ", mpPolicy.name());
+    string memory description1 = LibString.concat(
+      "This NFT represents membership in the Llama organization: ", LibString.escapeJSON(mpPolicy.name())
+    );
     string memory description = string.concat(
       description1,
       ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
@@ -1104,7 +1105,32 @@ contract PolicyMetadata is LlamaPolicyTest {
     assertEq(metadata.image, generateTokenUri(address(this)));
   }
 
-  function testFuzz_RevertsIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
+  function test_ReturnsCorrectTokenURIEscapesJson() public {
+    setTokenURIMetadata();
+    string memory nameWithQuotes = '"name": "Mock Protocol Llama"';
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    string memory uri = factory.tokenURI(mpExecutor, nameWithQuotes, uint256(uint160(address(this))));
+    Metadata memory metadata = parseMetadata(uri);
+    string memory name = LibString.concat(nameWithQuotes, " Member");
+    string memory policyholder = LibString.toHexString(address(this));
+    string memory description1 =
+      LibString.concat("This NFT represents membership in the Llama organization: ", nameWithQuotes);
+    string memory description = string.concat(
+      description1,
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      policyholder,
+      " to view their profile page."
+    );
+
+    assertEq(metadata.description, description);
+    assertEq(metadata.name, name);
+    assertEq(metadata.image, generateTokenUri(address(this)));
+  }
+
+  function testFuzz_RevertIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
     vm.assume(
       nonExistantTokenId != uint256(uint160(actionCreatorAaron)) && nonExistantTokenId != uint256(uint160(approverAdam))
         && nonExistantTokenId != uint256(uint160(approverAlicia)) && nonExistantTokenId != uint256(uint160(approverAndy))
@@ -1163,14 +1189,30 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     string memory name = "Mock Protocol Llama";
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
-    parts[1] = name;
+    parts[1] = LibString.escapeJSON(name);
     parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
-    parts[3] = name;
+    parts[3] = LibString.escapeJSON(name);
     parts[4] =
       '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
     string memory encodedContractURI = string.concat("data:application/json;base64,", json);
     assertEq(mpPolicy.contractURI(), encodedContractURI);
+  }
+
+  function test_ReturnsContractURIEscapesJson() external {
+    string memory name = '"name": "Mock Protocol Llama"';
+    string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
+
+    string[5] memory parts;
+    parts[0] = '{ "name": "Llama Policies: ';
+    parts[1] = escapedName;
+    parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
+    parts[3] = escapedName;
+    parts[4] =
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+    string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
+    string memory encodedContractURI = string.concat("data:application/json;base64,", json);
+    assertEq(factory.contractURI(name), encodedContractURI);
   }
 }
 

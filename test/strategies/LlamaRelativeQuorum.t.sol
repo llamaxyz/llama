@@ -430,6 +430,30 @@ contract Initialize is LlamaRelativeQuorumTest {
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.AllHolders)));
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
+
+  function testFuzz_RevertIf_MinApprovalPctIsGreaterThan100(uint16 minApprovalPct) public {
+    minApprovalPct = uint16(bound(minApprovalPct, 10_001, type(uint16).max));
+    LlamaRelativeQuorum.Config memory strategyConfig = LlamaRelativeQuorum.Config({
+      approvalPeriod: 1 days,
+      queuingPeriod: 1 days,
+      expirationPeriod: 1 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: minApprovalPct,
+      minDisapprovalPct: 5000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    LlamaRelativeQuorum.Config[] memory strategyConfigs = new LlamaRelativeQuorum.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpExecutor));
+
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidMinApprovalPct.selector, minApprovalPct));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
 }
 
 contract IsActionApproved is LlamaRelativeQuorumTest {
@@ -869,28 +893,29 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
 contract IsApprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
-    mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver)); // address and actionInfo are not used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.Approver));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.Approver)));
-    mpStrategy1.isApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
-      // used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfApprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 }
 
 contract IsDisapprovalEnabled is LlamaRelativeQuorumTest {
   function test_PassesWhenCorrectRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
-    mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover)); // address and actionInfo are
-      // not used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.Disapprover));
   }
 
   function test_RevertIf_WrongRoleIsPassed() public {
     ActionInfo memory actionInfo = createAction(mpStrategy1);
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.InvalidRole.selector, uint8(Roles.Disapprover)));
-    mpStrategy1.isDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1)); // address and actionInfo are not
-      // used
+    // address and actionInfo are not used
+    mpStrategy1.checkIfDisapprovalEnabled(actionInfo, address(0), uint8(Roles.TestRole1));
   }
 }
