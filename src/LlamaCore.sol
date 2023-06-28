@@ -543,23 +543,22 @@ contract LlamaCore is Initializable {
 
     // Validate action creation.
     actionId = actionsCount;
+    actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
     strategy.validateActionCreation(actionInfo);
 
     // Scope to avoid stack too deep
     {
-      ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
-      if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
-
       // Save action.
       Action storage newAction = actions[actionId];
       newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
+      
+      ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
+      if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
     }
-
-    actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
 
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
   }
