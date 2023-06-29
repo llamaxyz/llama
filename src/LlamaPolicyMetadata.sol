@@ -5,8 +5,6 @@ import {Base64} from "@openzeppelin/utils/Base64.sol";
 
 import {LibString} from "@solady/utils/LibString.sol";
 
-import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-
 /// @dev Configuration for tokenUri metadata
 struct TokenMetadataConfig {
   string name; // The name of the Llama instance.
@@ -24,7 +22,9 @@ struct ContractMetadataConfig {
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata {
-  /// @inheritdoc ILlamaPolicyMetadata
+  /// @notice Returns the token URI for a given Llama policyholder.
+  /// @param config The parameter configuration, encoded as bytes to support differing arguments in
+  /// different metadata contracts.
   function tokenURI(bytes memory config) external pure returns (string memory) {
     TokenMetadataConfig memory metadataConfig = abi.decode(config, (TokenMetadataConfig));
 
@@ -108,7 +108,9 @@ contract LlamaPolicyMetadata {
     return output;
   }
 
-  /// @inheritdoc ILlamaPolicyMetadata
+  /// @notice Returns the contract URI for a Llama instance's policies.
+  /// @param config The parameter configuration, encoded as bytes to support differing arguments in
+  /// different metadata contracts.
   function contractURI(bytes memory config) public pure returns (string memory) {
     ContractMetadataConfig memory metadataConfig = abi.decode(config, (ContractMetadataConfig));
 
