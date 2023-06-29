@@ -13,6 +13,20 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
+struct InstanceConfiguration {
+  string name; // The name of this Llama instance.
+  ILlamaStrategy strategyLogic; // The strategy implementation (logic) contract to use for this Llama instance.
+  ILlamaAccount accountLogic; // The account implementation (logic) contract to use for this Llama instance.
+  bytes[] initialStrategies; // Array of initial strategy configurations.
+  bytes[] initialAccounts; // Array of initial account configurations.
+  RoleDescription[] initialRoleDescriptions; // Array of initial role descriptions.
+  RoleHolderData[] initialRoleHolders; // Array of initial role holders, their quantities and their role expirations.
+  RolePermissionData[] initialRolePermissions; // Array of initial permissions given to roles.
+  LlamaPolicyMetadata llamaPolicyMetadata; // Address with the tokenUri and contractUri functions for the policy NFT.
+  string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
+  string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
+}
+
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Llama instances.
@@ -73,57 +87,60 @@ contract LlamaFactory {
 
   /// @notice Deploys a new Llama instance.
   /// @dev This function can only be called by the root Llama instance.
-  /// @param name The name of this Llama instance.
-  /// @param strategyLogic The strategy implementation (logic) contract to use for this Llama instance.
-  /// @param accountLogic The account implementation (logic) contract to use for this Llama instance.
-  /// @param initialStrategies Array of initial strategy configurations.
-  /// @param initialAccounts Array of initial account configurations.
-  /// @param initialRoleDescriptions Array of initial role descriptions.
-  /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
-  /// @param initialRolePermissions Array of initial permissions given to roles.
-  /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
-  /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
+  /// @param llamaInstanceConfiguration The configuration of the deploy Llama instance.
   /// @return executor The address of the `LlamaExecutor` of the newly created instance.
   /// @return core The address of the `LlamaCore` of the newly created instance.
-  function deploy(
-    string memory name,
-    ILlamaStrategy strategyLogic,
-    ILlamaAccount accountLogic,
-    bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts,
-    RoleDescription[] memory initialRoleDescriptions,
-    RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
-    string memory color,
-    string memory logo
-  ) external returns (LlamaExecutor executor, LlamaCore core) {
+  function deploy(InstanceConfiguration memory llamaInstanceConfiguration)
+    external
+    returns (LlamaExecutor executor, LlamaCore core)
+  {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
     // Role ID 1 is referred to as the bootstrap role. We require that the bootstrap role is the
     // first role in the `initialRoleHolders` array, and that it never expires.
-    if (initialRoleHolders.length == 0) revert InvalidDeployConfiguration();
-    if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
-    if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
+    if (llamaInstanceConfiguration.initialRoleHolders.length == 0) revert InvalidDeployConfiguration();
+    if (llamaInstanceConfiguration.initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
+    if (llamaInstanceConfiguration.initialRoleHolders[0].expiration != type(uint64).max) {
+      revert InvalidDeployConfiguration();
+    }
 
-    bytes32 salt = keccak256(abi.encodePacked(name, msg.sender));
+    bytes32 salt = keccak256(abi.encodePacked(llamaInstanceConfiguration.name, msg.sender));
 
     // Now the configuration is likely valid (it's possible the configuration of the first strategy
     // will not actually be able to execute, but we leave that check off-chain / to the deploy
     // scripts), so we continue with deployment of this instance.
     LlamaPolicy policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), salt));
-    policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
+    policy.initialize(
+      llamaInstanceConfiguration.name,
+      llamaInstanceConfiguration.initialRoleDescriptions,
+      llamaInstanceConfiguration.initialRoleHolders,
+      llamaInstanceConfiguration.initialRolePermissions
+    );
 
     core = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), salt));
-    bytes32 bootstrapPermissionId =
-      core.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+    bytes32 bootstrapPermissionId = core.initialize(
+      llamaInstanceConfiguration.name,
+      policy,
+      llamaInstanceConfiguration.strategyLogic,
+      llamaInstanceConfiguration.accountLogic,
+      llamaInstanceConfiguration.initialStrategies,
+      llamaInstanceConfiguration.initialAccounts
+    );
 
     executor = core.executor();
 
-    policy.finalizeInitialization(address(executor), bootstrapPermissionId, _llamaPolicyMetadata, color, logo);
+    policy.finalizeInitialization(
+      address(executor),
+      bootstrapPermissionId,
+      llamaInstanceConfiguration.llamaPolicyMetadata,
+      llamaInstanceConfiguration.color,
+      llamaInstanceConfiguration.logo
+    );
 
-    emit LlamaInstanceCreated(llamaCount, name, address(core), address(executor), address(policy), block.chainid);
+    emit LlamaInstanceCreated(
+      llamaCount, llamaInstanceConfiguration.name, address(core), address(executor), address(policy), block.chainid
+    );
 
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
