@@ -576,6 +576,12 @@ contract RevokePolicy is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.balanceOf(policyholder), 1);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true);
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_QTY);
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), DEFAULT_ROLE_EXPIRATION);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), true);
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_QTY);
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), DEFAULT_ROLE_EXPIRATION);
 
     vm.expectEmit();
     emit Transfer(policyholder, address(0), uint256(uint160(policyholder)));
@@ -583,6 +589,12 @@ contract RevokePolicy is LlamaPolicyTest {
     mpPolicy.revokePolicy(policyholder);
 
     assertEq(mpPolicy.balanceOf(policyholder), 0);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), false);
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.TestRole1)), 0);
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.TestRole1)), 0);
+    assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.AllHolders)), false);
+    assertEq(mpPolicy.getQuantity(policyholder, uint8(Roles.AllHolders)), 0);
+    assertEq(mpPolicy.roleExpiration(policyholder, uint8(Roles.AllHolders)), 0);
   }
 
   function test_RevertIf_PolicyDoesNotExist(address policyholder) public {
