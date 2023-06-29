@@ -12,6 +12,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -95,7 +96,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   /// @dev Emitted when a new Llama policy metadata contract is set.
-  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event PolicyMetadataSet(ILlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   /// @dev Emitted when the color code for SVG of a Llama instance is set.
   event ColorSet(address indexed llamaExecutor, string color);
@@ -141,7 +142,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   LlamaFactory public factory;
 
   /// @notice The Llama policy metadata contract.
-  LlamaPolicyMetadata public llamaPolicyMetadata;
+  ILlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice Color code for SVG.
   string public color;
@@ -202,7 +203,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function finalizeInitialization(
     address _llamaExecutor,
     bytes32 bootstrapPermissionId,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
+    ILlamaPolicyMetadata _llamaPolicyMetadata,
     string memory _color,
     string memory _logo
   ) external {
@@ -274,7 +275,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Sets the Llama policy metadata contract.
   /// @dev This function can only be called by the Llama instance.
   /// @param _llamaPolicyMetadata The Llama policy metadata contract.
-  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
+  function setPolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
     _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
@@ -401,13 +402,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
+    return llamaPolicyMetadata.tokenURI(abi.encode(name, tokenId, color, logo));
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return llamaPolicyMetadata.contractURI(name);
+    return llamaPolicyMetadata.contractURI(abi.encode(name));
   }
 
   // -------- ERC-721 Methods --------
@@ -592,7 +593,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Sets the Llama policy metadata contract.
-  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+  function _setPolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyMetadataSet(_llamaPolicyMetadata);
   }

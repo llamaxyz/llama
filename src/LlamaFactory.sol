@@ -11,7 +11,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
 struct InstanceConfiguration {
   string name; // The name of this Llama instance.
@@ -22,7 +22,7 @@ struct InstanceConfiguration {
   RoleDescription[] initialRoleDescriptions; // Array of initial role descriptions.
   RoleHolderData[] initialRoleHolders; // Array of initial role holders, their quantities and their role expirations.
   RolePermissionData[] initialRolePermissions; // Array of initial permissions given to roles.
-  LlamaPolicyMetadata llamaPolicyMetadata; // Address with the tokenUri and contractUri functions for the policy NFT.
+  ILlamaPolicyMetadata llamaPolicyMetadata; // Address with the tokenUri and contractUri functions for the policy NFT.
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
 }
