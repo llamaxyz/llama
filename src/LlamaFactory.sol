@@ -11,6 +11,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -93,9 +94,10 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory color,
     string memory logo
-  ) external returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
+  ) external returns (LlamaExecutor executor, LlamaCore core) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -113,17 +115,15 @@ contract LlamaFactory {
     LlamaPolicy policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), salt));
     policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
 
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), salt));
+    core = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), salt));
     bytes32 bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+      core.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
 
-    llamaExecutor = llamaCore.executor();
+    executor = core.executor();
 
-    policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
+    policy.finalizeInitialization(address(executor), bootstrapPermissionId, _llamaPolicyMetadata, color, logo);
 
-    emit LlamaInstanceCreated(
-      llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
-    );
+    emit LlamaInstanceCreated(llamaCount, name, address(core), address(executor), address(policy), block.chainid);
 
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }

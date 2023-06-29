@@ -185,9 +185,6 @@ contract LlamaCore is Initializable {
   // variables, which are the key variables we want to check before and after a delegatecall.
   LlamaPolicy public policy;
 
-  /// @notice The `LlamaFactory` contract that deployed this Llama instance.
-  LlamaFactory public factory;
-
   /// @notice Name of this Llama instance.
   string public name;
 
@@ -244,7 +241,9 @@ contract LlamaCore is Initializable {
     bytes[] calldata initialStrategies,
     bytes[] calldata initialAccounts
   ) external initializer returns (bytes32 bootstrapPermissionId) {
-    factory = LlamaFactory(msg.sender);
+    _authorizeStrategyLogic(_llamaStrategyLogic);
+    _authorizeAccountLogic(_llamaAccountLogic);
+
     name = _name;
     executor = new LlamaExecutor();
     policy = _policy;
@@ -483,14 +482,14 @@ contract LlamaCore is Initializable {
   /// @notice Authorizes a strategy implementation (logic) contract.
   /// @dev This function can only be called by the root Llama instance.
   /// @param strategyLogic The strategy logic contract to authorize.
-  function authorizeStrategyLogic(ILlamaStrategy strategyLogic) external onlyRootLlama {
+  function authorizeStrategyLogic(ILlamaStrategy strategyLogic) external onlyLlama {
     _authorizeStrategyLogic(strategyLogic);
   }
 
   /// @notice Authorizes an account implementation (logic) contract.
   /// @dev This function can only be called by the root Llama instance.
   /// @param accountLogic The account logic contract to authorize.
-  function authorizeAccountLogic(ILlamaAccount accountLogic) external onlyRootLlama {
+  function authorizeAccountLogic(ILlamaAccount accountLogic) external onlyLlama {
     _authorizeAccountLogic(accountLogic);
   }
 
@@ -656,11 +655,7 @@ contract LlamaCore is Initializable {
     internal
     returns (ILlamaStrategy firstStrategy)
   {
-    if (address(factory).code.length > 0 && !factory.authorizedStrategyLogics(llamaStrategyLogic)) {
-      // The only edge case where this check is skipped is if `_deployStrategies()` is called by root llama instance
-      // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
-      revert UnauthorizedStrategyLogic();
-    }
+    if (!authorizedStrategyLogics[llamaStrategyLogic]) revert UnauthorizedStrategyLogic();
 
     uint256 strategyLength = strategyConfigs.length;
     for (uint256 i = 0; i < strategyLength; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -676,11 +671,7 @@ contract LlamaCore is Initializable {
   /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to
   /// initialize the new accounts with.
   function _deployAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) internal {
-    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
-      // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
-      // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
-      revert UnauthorizedAccountLogic();
-    }
+    if (!authorizedAccountLogics[llamaAccountLogic]) revert UnauthorizedStrategyLogic();
 
     uint256 accountLength = accountConfigs.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {

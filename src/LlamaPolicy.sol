@@ -98,10 +98,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 
   /// @dev Emitted when the color code for SVG of a Llama instance is set.
-  event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+  event ColorSet(address indexed llamaExecutor, string color);
 
   /// @dev Emitted when the logo for SVG of a Llama instance is set.
-  event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
+  event LogoSet(address indexed llamaExecutor, string logo);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -123,9 +123,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// unusable. See the documentation for more info.
   uint8 public constant BOOTSTRAP_ROLE = 1;
 
-  /// @notice The Llama policy metadata parameter registry contract for onchain image formats.
-  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
-
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
 
@@ -142,6 +139,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice The address of the `LlamaFactory` contract.
   LlamaFactory public factory;
+
+  /// @notice The Llama policy metadata contract.
+  LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice Color code for SVG.
   string public color;
@@ -199,15 +199,22 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This method can only be called once.
   /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
   /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
-  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
+  function finalizeInitialization(
+    address _llamaExecutor,
+    bytes32 bootstrapPermissionId,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
+    string memory _color,
+    string memory _logo
+  ) external {
     if (msg.sender != address(factory)) revert OnlyLlamaFactory();
     if (llamaExecutor != address(0)) revert AlreadyInitialized();
 
     llamaExecutor = _llamaExecutor;
     _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+
     _setPolicyMetadata(_llamaPolicyMetadata);
-    _setDeploymentMetadata(executor, color, logo);
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(llamaExecutor);
+    _setColor(_color);
+    _setLogo(_logo);
   }
 
   // -------- Role and Permission Management --------
@@ -269,20 +276,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param _llamaPolicyMetadata The Llama policy metadata contract.
   function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
     _setPolicyMetadata(_llamaPolicyMetadata);
-  }
-
-  /// @notice Sets the color code for SVG of a Llama instance.
-  /// @param _color The color code as a hex value (eg. #00FF00)
-  function setColor(string memory _color) public onlyLlama {
-    color = _color;
-    emit ColorSet(address(this), _color);
-  }
-
-  /// @notice Sets the logo for SVG of a Llama instance.
-  /// @param _logo The logo.
-  function setLogo(string memory _logo) public onlyLlama {
-    logo = _logo;
-    emit LogoSet(address(this), _logo);
   }
 
   // -------- Role and Permission Getters --------
@@ -383,6 +376,22 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev This is just an alias for convenience/familiarity.
   function totalSupply() public view returns (uint256) {
     return getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE);
+  }
+
+  // -------- Policy metadata --------
+
+  /// @notice Sets the color code for SVG of a Llama instance.
+  /// @param _color The color code as a hex value (eg. #00FF00)
+  function setColor(string memory _color) external onlyLlama {
+    color = _color;
+    emit ColorSet(llamaExecutor, _color);
+  }
+
+  /// @notice Sets the logo for SVG of a Llama instance.
+  /// @param _logo The logo as an SVG string.
+  function setLogo(string memory _logo) external onlyLlama {
+    logo = _logo;
+    emit LogoSet(llamaExecutor, _logo);
   }
 
   // -------- ERC-721 Getters --------
@@ -588,8 +597,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     emit PolicyMetadataSet(_llamaPolicyMetadata);
   }
 
-  function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);
+  /// @dev Sets the color code for SVG of a Llama instance.
+  function _setColor(string memory _color) internal {
+    color = _color;
+    emit ColorSet(llamaExecutor, _color);
+  }
+
+  /// @dev Sets the logo for SVG of a Llama instance.
+  function _setLogo(string memory _logo) internal {
+    logo = _logo;
+    emit LogoSet(llamaExecutor, _logo);
   }
 }
