@@ -225,10 +225,10 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   }
 
   /// @inheritdoc ILlamaStrategy
-  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     if (role != approvalRole && !forceApprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Casting Disapproval --------
@@ -240,14 +240,10 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   }
 
   /// @inheritdoc ILlamaStrategy
-  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
-    external
-    view
-    returns (uint128)
-  {
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Queueing --------

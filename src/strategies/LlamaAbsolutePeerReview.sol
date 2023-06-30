@@ -48,7 +48,7 @@ contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
 
       uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
       if (
-        minDisapprovals != type(uint128).max
+        minDisapprovals != type(uint96).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
       ) revert InsufficientDisapprovalQuantity();
     }
@@ -74,7 +74,7 @@ contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
     view
     override
   {
-    if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    if (minDisapprovals == type(uint96).max) revert DisapprovalDisabled();
     if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }

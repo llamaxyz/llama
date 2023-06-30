@@ -12,7 +12,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
  * checkpoint for the current transaction timestamp using the {push} function.
  *
  * @dev This was created by modifying then running the OpenZeppelin `Checkpoints.js` script, which generated a version
- * of this library that uses a 64 bit `timestamp` and 128 bit `quantity` field in the `Checkpoint` struct. The struct
+ * of this library that uses a 64 bit `timestamp` and 96 bit `quantity` field in the `Checkpoint` struct. The struct
  * was then modified to add a 64 bit `expiration` field. For simplicity, safe cast and math methods were inlined from
  * the OpenZeppelin versions at the same commit. We disable forge-fmt for this file to simplify diffing against the
  * original OpenZeppelin version: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/contracts/utils/Checkpoints.sol
@@ -25,7 +25,7 @@ library Checkpoints {
     struct Checkpoint {
         uint64 timestamp;
         uint64 expiration;
-        uint128 quantity;
+        uint96 quantity;
     }
 
     /**
@@ -34,7 +34,7 @@ library Checkpoints {
      * searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where N is the
      * timestamp of checkpoints.
      */
-    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint128) {
+    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint96) {
         require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
         uint64 _timestamp = LlamaUtils.toUint64(timestamp);
 
@@ -63,8 +63,8 @@ library Checkpoints {
      *
      * Returns previous quantity and new quantity.
      */
-    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint128, uint128) {
-        return _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(expiration), LlamaUtils.toUint128(quantity));
+    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint96, uint96) {
+        return _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(expiration), LlamaUtils.toUint96(quantity));
     }
 
     /**
@@ -73,14 +73,14 @@ library Checkpoints {
      *
      * Returns previous quantity and new quantity.
      */
-    function push(History storage self, uint256 quantity) internal returns (uint128, uint128) {
+    function push(History storage self, uint256 quantity) internal returns (uint96, uint96) {
         return push(self, quantity, type(uint64).max);
     }
 
     /**
      * @dev Returns the quantity in the most recent checkpoint, or zero if there are no checkpoints.
      */
-    function latest(History storage self) internal view returns (uint128) {
+    function latest(History storage self) internal view returns (uint96) {
         uint256 pos = self._checkpoints.length;
         return pos == 0 ? 0 : _unsafeAccess(self._checkpoints, pos - 1).quantity;
     }
@@ -96,7 +96,7 @@ library Checkpoints {
             bool exists,
             uint64 timestamp,
             uint64 expiration,
-            uint128 quantity
+            uint96 quantity
         )
     {
         uint256 pos = self._checkpoints.length;
@@ -123,8 +123,8 @@ library Checkpoints {
         Checkpoint[] storage self,
         uint64 timestamp,
         uint64 expiration,
-        uint128 quantity
-    ) private returns (uint128, uint128) {
+        uint96 quantity
+    ) private returns (uint96, uint96) {
         uint256 pos = self.length;
 
         if (pos > 0) {

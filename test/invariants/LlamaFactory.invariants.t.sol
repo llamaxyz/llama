@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaFactoryHandler is BaseHandler {
-  uint128 DEFAULT_ROLE_QTY = 1;
+  uint96 DEFAULT_ROLE_QTY = 1;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   // =========================

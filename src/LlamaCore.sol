@@ -567,7 +567,7 @@ contract LlamaCore is Initializable {
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
-    (Action storage action, uint128 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
+    (Action storage action, uint96 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
 
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
@@ -578,7 +578,7 @@ contract LlamaCore is Initializable {
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
   {
-    (Action storage action, uint128 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
+    (Action storage action, uint96 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
@@ -591,7 +591,7 @@ contract LlamaCore is Initializable {
     address policyholder,
     uint8 role,
     ActionState expectedState
-  ) internal returns (Action storage action, uint128 quantity) {
+  ) internal returns (Action storage action, uint96 quantity) {
     action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);
@@ -616,8 +616,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Returns the new total count of approvals or disapprovals.
-  function _newCastCount(uint128 currentCount, uint128 quantity) internal pure returns (uint128) {
-    if (currentCount == type(uint128).max || quantity == type(uint128).max) return type(uint128).max;
+  function _newCastCount(uint96 currentCount, uint96 quantity) internal pure returns (uint96) {
+    if (currentCount == type(uint96).max || quantity == type(uint96).max) return type(uint96).max;
     return currentCount + quantity;
   }
 
