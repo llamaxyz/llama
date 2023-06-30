@@ -31,7 +31,6 @@ contract LlamaFactoryTest is LlamaTestSetup {
     uint256 chainId
   );
   event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
-  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
@@ -84,16 +83,6 @@ contract Constructor is LlamaFactoryTest {
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.expectEmit();
     emit StrategyLogicAuthorized(relativeQuorumLogic);
-    deployLlamaFactory();
-  }
-
-  function test_SetsLlamaAccountLogicAddress() public {
-    assertTrue(factory.authorizedAccountLogics(accountLogic));
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.expectEmit();
-    emit AccountLogicAuthorized(accountLogic);
     deployLlamaFactory();
   }
 
@@ -402,29 +391,6 @@ contract AuthorizeStrategyLogic is LlamaFactoryTest {
     vm.expectEmit();
     emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress));
     factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-  }
-}
-
-contract AuthorizeAccountLogic is LlamaFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootExecutor));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    vm.prank(_caller);
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
-  }
-
-  function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
-    vm.prank(address(rootExecutor));
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
-    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.prank(address(rootExecutor));
-    vm.expectEmit();
-    emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress));
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
   }
 }
 

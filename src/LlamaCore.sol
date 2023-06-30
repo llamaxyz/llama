@@ -102,6 +102,12 @@ contract LlamaCore is Initializable {
     string description
   );
 
+  /// @dev Emitted when an account is created.
+  event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
+
+  /// @dev Emitted when a new account implementation (logic) contract is authorized or unauthorized.
+  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic, bool authorized);
+
   /// @dev Emitted when an action is canceled.
   event ActionCanceled(uint256 id, address indexed caller);
 
@@ -130,9 +136,6 @@ contract LlamaCore is Initializable {
 
   /// @dev Emitted when a strategy is created and authorized.
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
-
-  /// @dev Emitted when an account is created.
-  event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
@@ -208,6 +211,9 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of target to selector to actionGuard address.
   mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
 
+  /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
+  mapping(ILlamaAccount => bool) public authorizedAccountLogics;
+
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
@@ -237,8 +243,10 @@ contract LlamaCore is Initializable {
     executor = new LlamaExecutor();
     policy = _policy;
 
-    ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
+    _authorizeAccountLogic(_llamaAccountLogic, true);
     _deployAccounts(_llamaAccountLogic, initialAccounts);
+
+    ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
 
     // Now we compute the permission ID used to set role permissions and return it.
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
@@ -431,6 +439,14 @@ contract LlamaCore is Initializable {
   /// @param strategyConfigs Array of new strategy configurations.
   function createStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) external onlyLlama {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
+  }
+
+  /// @notice Authorizes an account implementation (logic) contract.
+  /// @dev This function can only be called by the root Llama instance.
+  /// @param accountLogic The account logic contract to authorize.
+  /// @param authorized The boolean that determines if the account logic is being authorized or unauthorized.
+  function authorizeAccountLogic(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
+    _authorizeAccountLogic(accountLogic, authorized);
   }
 
   /// @notice Deploy new accounts.
@@ -646,14 +662,16 @@ contract LlamaCore is Initializable {
     }
   }
 
+  /// @dev Authorizes an account implementation (logic) contract.
+  function _authorizeAccountLogic(ILlamaAccount accountLogic, bool authorized) internal {
+    authorizedAccountLogics[accountLogic] = authorized;
+    emit AccountLogicAuthorized(accountLogic, authorized);
+  }
+
   /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to
   /// initialize the new accounts with.
   function _deployAccounts(ILlamaAccount llamaAccountLogic, bytes[] calldata accountConfigs) internal {
-    if (address(factory).code.length > 0 && !factory.authorizedAccountLogics(llamaAccountLogic)) {
-      // The only edge case where this check is skipped is if `_deployAccounts()` is called by root llama instance
-      // during Llama Factory construction. This is because there is no code at the Llama Factory address yet.
-      revert UnauthorizedAccountLogic();
-    }
+    if (!authorizedAccountLogics[llamaAccountLogic]) revert UnauthorizedAccountLogic();
 
     uint256 accountLength = accountConfigs.length;
     for (uint256 i = 0; i < accountLength; i = LlamaUtils.uncheckedIncrement(i)) {
