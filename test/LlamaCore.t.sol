@@ -54,6 +54,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event ScriptAuthorized(address script, bool authorized);
   event ScriptExecutedWithValue(uint256 value);
+  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic, bool authorized);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -2645,6 +2646,39 @@ contract AuthorizeAccountLogic is LlamaCoreTest {
     vm.expectEmit();
     emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress), true);
     mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+  }
+}
+
+contract AuthorizeStrategyLogic is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address _caller) public {
+    vm.assume(_caller != address(mpExecutor));
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    vm.prank(_caller);
+    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
+  }
+
+  function test_SetsValueInStorageMappingToFalse() public {
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), false);
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
+  }
+
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress), true);
+    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
   }
 }
 

@@ -452,9 +452,9 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootExecutor));
+    vm.prank(address(mpExecutor));
 
-    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
+    mpCore.authorizeStrategyLogic(absolutePeerReviewLogic, true);
 
     vm.prank(address(mpExecutor));
 
@@ -495,9 +495,9 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootExecutor));
+    vm.prank(address(mpExecutor));
 
-    factory.authorizeStrategyLogic(absoluteQuorumLogic);
+    mpCore.authorizeStrategyLogic(absoluteQuorumLogic, true);
 
     vm.prank(address(mpExecutor));
 

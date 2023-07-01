@@ -442,8 +442,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Authorizes a strategy implementation (logic) contract.
-  /// @dev This function can only be called by the root Llama instance.
   /// @param strategyLogic The strategy logic contract to authorize.
+  /// @param authorized The boolean that determines if the strategy logic is being authorized or unauthorized.
   function authorizeStrategyLogic(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
     _authorizeStrategyLogic(strategyLogic, authorized);
   }

@@ -41,8 +41,8 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
 
     mockLlamaAbsoluteStrategyBaseLogic = new MockLlamaAbsoluteStrategyBase();
 
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic, true);
   }
 
   function deployTestStrategyAndSetRole(
@@ -353,8 +353,8 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
     uint256 minApprovals = totalQuantity + _minApprovalIncrease;
 
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(mockLlamaAbsoluteStrategyBaseLogic, true);
 
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
       approvalPeriod: DEFAULT_APPROVAL_PERIOD,
