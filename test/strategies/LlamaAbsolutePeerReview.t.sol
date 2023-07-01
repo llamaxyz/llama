@@ -38,8 +38,8 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
 
     generateAndSetRoleHolders(_otherRoleHolders);
 
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(absolutePeerReviewLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(absolutePeerReviewLogic, true);
 
     testStrategy = deployAbsolutePeerReview(
       uint8(Roles.TestRole1),

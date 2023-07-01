@@ -393,19 +393,40 @@ contract Initialize is LlamaCoreTest {
     assertEq(uninitializedLlama.strategies(strategyAddresses[1]), true);
   }
 
-  function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
-    vm.assume(notStrategyLogic != address(relativeQuorumLogic));
+  function test_SetsLlamaStrategyLogicAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
-    vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
+    assertFalse(uninitializedLlama.authorizedStrategyLogics(relativeQuorumLogic));
+
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
       "NewProject",
-      ILlamaStrategy(notStrategyLogic),
+      ILlamaStrategy(relativeQuorumLogic),
+      ILlamaAccount(accountLogic),
+      strategyConfigs,
+      accounts
+    );
+
+    assertTrue(uninitializedLlama.authorizedStrategyLogics(relativeQuorumLogic));
+  }
+
+  function test_EmitsStrategyLogicAuthorizedEvent() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+      deployWithoutInitialization();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+
+    vm.expectEmit();
+    emit StrategyLogicAuthorized(relativeQuorumLogic, true);
+    modifiedFactory.initialize(
+      uninitializedLlama,
+      policy,
+      "NewProject",
+      relativeQuorumLogic,
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
