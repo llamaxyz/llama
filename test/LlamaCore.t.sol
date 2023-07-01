@@ -133,8 +133,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (ILlamaStrategy) {
     LlamaRelativeQuorum additionalStrategyLogic = new LlamaRelativeQuorum();
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(additionalStrategyLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(additionalStrategyLogic, true);
     return additionalStrategyLogic;
   }
 
@@ -190,9 +190,8 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
     strategyConfigs[0] = strategyConfig;
 
-    vm.prank(address(rootExecutor));
-
-    factory.authorizeStrategyLogic(mockStrategyLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(mockStrategyLogic, true);
 
     vm.prank(address(mpExecutor));
 
