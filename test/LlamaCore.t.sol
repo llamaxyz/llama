@@ -439,7 +439,7 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
-    assertFalse(mpCore.authorizedAccountLogics(accountLogic));
+    assertFalse(uninitializedLlama.authorizedAccountLogics(accountLogic));
 
     modifiedFactory.initialize(
       uninitializedLlama,
@@ -451,7 +451,7 @@ contract Initialize is LlamaCoreTest {
       accounts
     );
 
-    assertTrue(mpCore.authorizedAccountLogics(accountLogic));
+    assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
   }
 
   function test_EmitsAccountLogicAuthorizedEvent() public {

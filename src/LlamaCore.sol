@@ -456,7 +456,6 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Authorizes an account implementation (logic) contract.
-  /// @dev This function can only be called by the root Llama instance.
   /// @param accountLogic The account logic contract to authorize.
   /// @param authorized The boolean that determines if the account logic is being authorized or unauthorized.
   function authorizeAccountLogic(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
