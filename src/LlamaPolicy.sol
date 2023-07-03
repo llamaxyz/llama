@@ -26,8 +26,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @dev Stores the two different supply values for a role.
   struct RoleSupply {
-    uint128 numberOfHolders; // The total number of unique policyholders holding a role.
-    uint128 totalQuantity; // The sum of the quantity field for all unique policyholders holding a role.
+    uint96 numberOfHolders; // The total number of unique policyholders holding a role.
+    uint96 totalQuantity; // The sum of the quantity field for all unique policyholders holding a role.
   }
 
   // ======================================
@@ -85,7 +85,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ========================
 
   /// @dev Emitted when a policyholder is assigned a role.
-  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint96 quantity);
 
   /// @dev Emitted when a role is initialized with a description.
   event RoleInitialized(uint8 indexed role, RoleDescription description);
@@ -200,7 +200,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param policyholder Policyholder to assign the role to.
   /// @param quantity Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   /// @param expiration When the role expires.
-  function setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) external onlyLlama {
+  function setRoleHolder(uint8 role, address policyholder, uint96 quantity, uint64 expiration) external onlyLlama {
     _setRoleHolder(role, policyholder, quantity, expiration);
   }
 
@@ -246,25 +246,25 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the quantity of the `role` for the given `policyholder`. The returned value is the
   /// quantity of the role when approving/disapproving (regardless of strategy).
-  function getQuantity(address policyholder, uint8 role) external view returns (uint128) {
+  function getQuantity(address policyholder, uint8 role) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `policyholder` at `timestamp`. The returned
   /// value is the quantity of the role when approving/disapproving (regardless of strategy).
-  function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+  function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the total number of role holders for given `role`.
-  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint128) {
+  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96) {
     return roleSupply[role].numberOfHolders;
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint128) {
+  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96) {
     return roleSupply[role].totalQuantity;
   }
 
@@ -307,7 +307,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns `true` if the `policyholder` has the `role`, `false` otherwise.
   function hasRole(address policyholder, uint8 role) public view returns (bool) {
-    uint128 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
+    uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0;
   }
 
@@ -320,13 +320,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns `true` if the given `policyholder` has a given `permissionId` under the `role`,
   /// `false` otherwise.
   function hasPermissionId(address policyholder, uint8 role, bytes32 permissionId) external view returns (bool) {
-    uint128 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
+    uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
   /// @notice Returns `true` if the `role` held by `policyholder` is expired, `false` otherwise.
   function isRoleExpired(address policyholder, uint8 role) public view returns (bool) {
-    (,, uint64 expiration, uint128 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
+    (,, uint64 expiration, uint96 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return quantity > 0 && block.timestamp > expiration;
   }
 
@@ -414,7 +414,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Checks if the conditions are met for a `role` to be updated.
-  function _assertValidRoleHolderUpdate(uint8 role, uint128 quantity, uint64 expiration) internal view {
+  function _assertValidRoleHolderUpdate(uint8 role, uint96 quantity, uint64 expiration) internal view {
     // Ensure role is initialized.
     if (role > numRoles) revert RoleNotInitialized(role);
 
@@ -433,7 +433,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Sets the `role` for the given `policyholder` to the given `quantity` and `expiration`.
-  function _setRoleHolder(uint8 role, address policyholder, uint128 quantity, uint64 expiration) internal {
+  function _setRoleHolder(uint8 role, address policyholder, uint96 quantity, uint64 expiration) internal {
     _assertNoActionCreationsAtCurrentTimestamp();
     _assertValidRoleHolderUpdate(role, quantity, expiration);
 
@@ -445,7 +445,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // checking if the quantity is nonzero, and we don't need to check the expiration when setting
     // the `hadRole` and `willHaveRole` variables.
     uint256 tokenId = _tokenId(policyholder);
-    uint128 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
+    uint96 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
     bool hadRole = initialQuantity > 0;
     bool willHaveRole = quantity > 0;
 
@@ -461,7 +461,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // was removed. Determining how to update total supply requires knowing if the policyholder currently
     // has a nonzero quantity of this role. This is strictly a quantity check and ignores the
     // expiration because this is used to determine whether or not to update the total supply.
-    uint128 quantityDiff;
+    uint96 quantityDiff;
     unchecked {
       // Safety: Can never underflow due to ternary operator check.
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
@@ -512,7 +512,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
     unchecked {
-      // Safety: Can never overflow a uint128 by incrementing.
+      // Safety: Can never overflow a uint96 by incrementing.
       allHoldersRoleSupply.numberOfHolders += 1;
       allHoldersRoleSupply.totalQuantity += 1;
     }

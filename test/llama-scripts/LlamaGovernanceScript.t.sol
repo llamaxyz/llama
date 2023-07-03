@@ -24,7 +24,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaGovernanceScriptTest is LlamaTestSetup {
-  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint128 quantity);
+  event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint96 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
@@ -267,8 +267,8 @@ contract InitializeRoles is LlamaGovernanceScriptTest {
 }
 
 contract SetRoleHolders is LlamaGovernanceScriptTest {
-  mapping(uint8 => uint128) public rolesHoldersSeen;
-  mapping(uint8 => uint128) public rolesQuantitySeen;
+  mapping(uint8 => uint96) public rolesHoldersSeen;
+  mapping(uint8 => uint96) public rolesQuantitySeen;
 
   function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
     vm.assume(roleHolders.length < 500);
@@ -277,7 +277,7 @@ contract SetRoleHolders is LlamaGovernanceScriptTest {
       roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
       vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
       vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint128(bound(roleHolders[i].quantity, 1, 100));
+      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
     }
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
     vm.prank(actionCreatorAaron);

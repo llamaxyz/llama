@@ -27,8 +27,8 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
       // enabled.
     uint64 expirationPeriod; // The length of time an action can be executed before it expires.
-    uint128 minApprovals; // Minimum number of total approval quantity.
-    uint128 minDisapprovals; // Minimum number of total disapproval quantity.
+    uint96 minApprovals; // Minimum number of total approval quantity.
+    uint96 minDisapprovals; // Minimum number of total disapproval quantity.
     bool isFixedLengthApprovalPeriod; // Determines if an action be queued before approvalEndTime.
     uint8 approvalRole; // Anyone with this role can cast approval of an action.
     uint8 disapprovalRole; // Anyone with this role can cast disapproval of an action.
@@ -114,12 +114,12 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   uint64 public expirationPeriod;
 
   /// @notice Minimum total quantity of approvals for the action to be queued.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minApprovals;
+  /// @dev We use a `uint96` here since quantities are stored as `uint96` in the policy.
+  uint96 public minApprovals;
 
   /// @notice Minimum total quantity of disapprovals for the action to be canceled.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minDisapprovals;
+  /// @dev We use a `uint96` here since quantities are stored as `uint96` in the policy.
+  uint96 public minDisapprovals;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;
@@ -209,11 +209,11 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     external
     view
     virtual
-    returns (uint128)
+    returns (uint96)
   {
     if (role != approvalRole && !forceApprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Casting Disapproval --------
@@ -229,11 +229,11 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     external
     view
     virtual
-    returns (uint128)
+    returns (uint96)
   {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Queueing --------
