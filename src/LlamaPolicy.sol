@@ -11,6 +11,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -93,6 +94,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Emitted when a permission ID is assigned to a role.
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
+  /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -130,6 +134,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The address of the `LlamaFactory` contract.
   LlamaFactory public factory;
 
+  /// @notice The Llama policy metadata contract.
+  LlamaPolicyMetadata public llamaPolicyMetadata;
+
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
@@ -144,6 +151,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param roleHolders The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   /// @param rolePermissions The `role`, `permissionId` and whether the role has the permission of the role permissions.
   function initialize(
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string calldata _name,
     RoleDescription[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
@@ -169,6 +177,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // we do not check that roles were assigned "properly" as there is no single correct way, so
     // this is more of a sanity check, not a guarantee that the system will work after initialization.
     if (numRoles == 0 || getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
+
+    _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
   // ===========================================
@@ -240,6 +250,16 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function updateRoleDescription(uint8 role, RoleDescription description) external onlyLlama {
     if (role > numRoles) revert RoleNotInitialized(role);
     emit RoleInitialized(role, description);
+  }
+
+  // -------- Metadata --------
+
+  /// @notice Sets the Llama policy metadata contract which contains the function body for `tokenURI()` and
+  /// `contractURI()`.
+  /// @dev This is handled by a separate contract to ensure contract size stays under 24kB.
+  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
+    _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
   // -------- Role and Permission Getters --------
@@ -349,13 +369,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
+    return llamaPolicyMetadata.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return factory.contractURI(name);
+    return llamaPolicyMetadata.contractURI(name));
   }
 
   // -------- ERC-721 Methods --------
@@ -532,6 +552,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyMetadataSet(_llamaPolicyMetadata);
   }
 
   /// @dev Returns the token ID for a `policyholder`.
