@@ -129,7 +129,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The total supply of a given role.
   /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of
   /// the role for each token ID that holds the role.
-  mapping(uint8 role => RoleSupply) public roleSupply;
+  mapping(uint8 role => RoleSupply) public roleSupplyCkpts;
 
   /// @notice The highest role ID that has been initialized.
   uint8 public numRoles;
@@ -309,12 +309,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the total number of role holders for given `role`.
   function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96) {
-    return roleSupply[role].numberOfHolders;
+    return roleSupplyCkpts[role].numberOfHolders;
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
   function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96) {
-    return roleSupply[role].totalQuantity;
+    return roleSupplyCkpts[role].totalQuantity;
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
@@ -520,7 +520,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
     }
 
-    RoleSupply storage currentRoleSupply = roleSupply[role];
+    RoleSupply storage currentRoleSupply = roleSupplyCkpts[role];
 
     if (hadRole && !willHaveRole) {
       currentRoleSupply.numberOfHolders -= 1;
@@ -563,7 +563,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(policyholder);
     _mint(policyholder, tokenId);
 
-    RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
+    RoleSupply storage allHoldersRoleSupply = roleSupplyCkpts[ALL_HOLDERS_ROLE];
     unchecked {
       // Safety: Can never overflow a uint96 by incrementing.
       allHoldersRoleSupply.numberOfHolders += 1;
@@ -577,7 +577,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function _burn(uint256 tokenId) internal override {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
-    RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
+    RoleSupply storage allHoldersRoleSupply = roleSupplyCkpts[ALL_HOLDERS_ROLE];
     unchecked {
       // Safety: Can never underflow, since we only burn tokens that currently exist.
       allHoldersRoleSupply.numberOfHolders -= 1;
