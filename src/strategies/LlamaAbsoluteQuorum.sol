@@ -20,10 +20,10 @@ contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata /* actionInfo */ ) external view override {
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
+    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, block.timestamp - 1);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(disapprovalRole, block.timestamp - 1);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     if (minApprovals > approvalPolicySupply) revert InsufficientApprovalQuantity();

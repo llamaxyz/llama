@@ -492,19 +492,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     emit RoleInitialized(numRoles, description);
   }
 
-  /// @dev Because role supplies are not checkpointed for simplicity, the following issue can occur
-  /// if each of the below is executed within the same timestamp:
-  //    1. An action is created that saves off the current role supply.
-  //    2. A policyholder is given a new role.
-  //    3. Now the total supply in that block is different than what it was at action creation.
-  // As a result, we disallow changes to roles if an action was created in the same block.
-  function _assertNoActionCreationsAtCurrentTimestamp() internal view {
-    if (llamaExecutor == address(0)) return; // Skip check during initialization.
-    address llamaCore = LlamaExecutor(llamaExecutor).LLAMA_CORE();
-    uint256 lastActionCreation = LlamaCore(llamaCore).getLastActionTimestamp();
-    if (lastActionCreation == block.timestamp) revert ActionCreationAtSameTimestamp();
-  }
-
   /// @dev Checks if the conditions are met for a `role` to be updated.
   function _assertValidRoleHolderUpdate(uint8 role, uint96 quantity, uint64 expiration) internal view {
     // Ensure role is initialized.
@@ -526,7 +513,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @dev Sets the `role` for the given `policyholder` to the given `quantity` and `expiration`.
   function _setRoleHolder(uint8 role, address policyholder, uint96 quantity, uint64 expiration) internal {
-    _assertNoActionCreationsAtCurrentTimestamp();
     _assertValidRoleHolderUpdate(role, quantity, expiration);
 
     // Save off whether or not the policyholder has a nonzero quantity of this role. This is used
