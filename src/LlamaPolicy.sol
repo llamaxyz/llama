@@ -304,9 +304,23 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     (numberOfHolders,) = roleSupplyCkpts[role].latest();
   }
 
+  /// @notice Returns the total number of role holders for given `role` at `timestamp`.
+  function getPastRoleSupplyAsNumberOfHolders(uint8 role, uint256 timestamp)
+    public
+    view
+    returns (uint96 numberOfHolders)
+  {
+    (numberOfHolders,) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
+  }
+
   /// @notice Returns the sum of quantity across all role holders for given `role`.
   function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].latest();
+  }
+
+  /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
+  function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) public view returns (uint96 totalQuantity) {
+    (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
@@ -319,7 +333,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return roleBalanceCkpts[tokenId][role];
   }
 
-  /// @notice Returns all checkpoints for the given policyholder and role between `start  ` and
+  /// @notice Returns all supply checkpoints for the given `role`.
+  function roleSupplyCheckpoints(uint8 role) external view returns (SupplyCheckpoints.History memory) {
+    return roleSupplyCkpts[role];
+  }
+
+  /// @notice Returns all checkpoints for the given policyholder and role between `start` and
   /// `end`, where `start` is inclusive and `end` is exclusive.
   /// @param policyholder Policyholder to get the checkpoints for.
   /// @param role Role held by policyholder to get the checkpoints for.
@@ -343,11 +362,39 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return RoleCheckpoints.History(checkpoints);
   }
 
+  /// @notice Returns all supply checkpoints for the given role between `start` and
+  /// `end`, where `start` is inclusive and `end` is exclusive.
+  /// @param role Role held by policyholder to get the checkpoints for.
+  /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
+  /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
+  function roleSupplyCheckpoints(uint8 role, uint256 start, uint256 end)
+    external
+    view
+    returns (SupplyCheckpoints.History memory)
+  {
+    if (start > end) revert InvalidIndices();
+    uint256 checkpointsLength = roleSupplyCkpts[role]._checkpoints.length;
+    if (end > checkpointsLength) revert InvalidIndices();
+
+    uint256 sliceLength = end - start;
+    SupplyCheckpoints.Checkpoint[] memory checkpoints = new SupplyCheckpoints.Checkpoint[](sliceLength);
+    for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
+      checkpoints[i - start] = roleSupplyCkpts[role]._checkpoints[i];
+    }
+    return SupplyCheckpoints.History(checkpoints);
+  }
+
   /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.
   /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleBalanceCheckpoints`.
   function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role]._checkpoints.length;
+  }
+
+  /// @notice Returns the number of supply checkpoints for the given `role`.
+  /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleSupplyCheckpoints`.
+  function roleSupplyCheckpointsLength(uint8 role) external view returns (uint256) {
+    return roleSupplyCkpts[role]._checkpoints.length;
   }
 
   /// @notice Returns `true` if the `policyholder` has the `role`, `false` otherwise.
