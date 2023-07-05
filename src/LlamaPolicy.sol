@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -20,16 +21,7 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 /// @dev The roles and permissions determine how the policyholder can interact with the Llama core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   using RoleCheckpoints for RoleCheckpoints.History;
-
-  // =========================
-  // ======== Structs ========
-  // =========================
-
-  /// @dev Stores the two different supply values for a role.
-  struct RoleSupply {
-    uint96 numberOfHolders; // The total number of unique policyholders holding a role.
-    uint96 totalQuantity; // The sum of the quantity field for all unique policyholders holding a role.
-  }
+  using SupplyCheckpoints for SupplyCheckpoints.History;
 
   // ======================================
   // ======== Errors and Modifiers ========
@@ -129,7 +121,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The total supply of a given role.
   /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of
   /// the role for each token ID that holds the role.
-  mapping(uint8 role => RoleSupply) public roleSupplyCkpts;
+  mapping(uint8 role => SupplyCheckpoints.History) internal roleSupplyCkpts;
 
   /// @notice The highest role ID that has been initialized.
   uint8 public numRoles;
@@ -308,13 +300,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the total number of role holders for given `role`.
-  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96) {
-    return roleSupplyCkpts[role].numberOfHolders;
+  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96 numberOfHolders) {
+    (numberOfHolders,) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96) {
-    return roleSupplyCkpts[role].totalQuantity;
+  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96 totalQuantity) {
+    (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
@@ -327,7 +319,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return roleBalanceCkpts[tokenId][role];
   }
 
-  /// @notice Returns all checkpoints for the given policyholder and role between `start` and
+  /// @notice Returns all checkpoints for the given policyholder and role between `start  ` and
   /// `end`, where `start` is inclusive and `end` is exclusive.
   /// @param policyholder Policyholder to get the checkpoints for.
   /// @param role Role held by policyholder to get the checkpoints for.
@@ -520,20 +512,16 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
     }
 
-    RoleSupply storage currentRoleSupply = roleSupplyCkpts[role];
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[role].latest();
 
     if (hadRole && !willHaveRole) {
-      currentRoleSupply.numberOfHolders -= 1;
-      currentRoleSupply.totalQuantity -= quantityDiff;
+      roleSupplyCkpts[role].push(numberOfHolders - 1, totalQuantity - quantityDiff);
     } else if (!hadRole && willHaveRole) {
-      currentRoleSupply.numberOfHolders += 1;
-      currentRoleSupply.totalQuantity += quantityDiff;
+      roleSupplyCkpts[role].push(numberOfHolders + 1, totalQuantity + quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity > quantity) {
-      // currentRoleSupply.numberOfHolders is unchanged
-      currentRoleSupply.totalQuantity -= quantityDiff;
+      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity - quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity < quantity) {
-      // currentRoleSupply.numberOfHolders is unchanged
-      currentRoleSupply.totalQuantity += quantityDiff;
+      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity + quantityDiff);
     } else {
       // There are two ways to reach this branch, both of which are nop-ops:
       //   1. `hadRole` and `willHaveRole` are both false.
@@ -563,11 +551,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(policyholder);
     _mint(policyholder, tokenId);
 
-    RoleSupply storage allHoldersRoleSupply = roleSupplyCkpts[ALL_HOLDERS_ROLE];
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
     unchecked {
       // Safety: Can never overflow a uint96 by incrementing.
-      allHoldersRoleSupply.numberOfHolders += 1;
-      allHoldersRoleSupply.totalQuantity += 1;
+      roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders + 1, totalQuantity + 1);
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
@@ -577,11 +564,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function _burn(uint256 tokenId) internal override {
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
-    RoleSupply storage allHoldersRoleSupply = roleSupplyCkpts[ALL_HOLDERS_ROLE];
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
     unchecked {
       // Safety: Can never underflow, since we only burn tokens that currently exist.
-      allHoldersRoleSupply.numberOfHolders -= 1;
-      allHoldersRoleSupply.totalQuantity -= 1;
+      roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders - 1, totalQuantity - 1);
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
