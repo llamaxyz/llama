@@ -324,7 +324,12 @@ contract Initialize is LlamaCoreTest {
     }
 
     vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[0], true);
+    vm.expectEmit();
     emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, strategyConfigs[0]);
+
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[1], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
 
@@ -382,6 +387,8 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
+    assertEq(uninitializedLlama.deployedStrategies(strategyAddresses[0]), false);
+    assertEq(uninitializedLlama.deployedStrategies(strategyAddresses[1]), false);
     assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), false);
     assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), false);
 
@@ -389,6 +396,8 @@ contract Initialize is LlamaCoreTest {
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
+    assertEq(uninitializedLlama.deployedStrategies(strategyAddresses[0]), true);
+    assertEq(uninitializedLlama.deployedStrategies(strategyAddresses[1]), true);
     assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), true);
   }
@@ -1890,13 +1899,25 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[0], true);
+    vm.expectEmit();
     emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[1], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+    
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[2], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[2], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+
+    assertEq(mpCore.deployedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.deployedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.deployedStrategies(strategyAddresses[2]), true);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -1957,13 +1978,25 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[0], true);
+    vm.expectEmit();
     emit StrategyCreated(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[1], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+    
+    vm.expectEmit();
+    emit StrategyAuthorized(strategyAddresses[2], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
-
+    
     mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+
+    assertEq(mpCore.deployedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.deployedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.deployedStrategies(strategyAddresses[2]), true);
 
     assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
     assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
@@ -2090,6 +2123,7 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.executeAction(actionInfo);
 
+    assertEq(mpCore.deployedStrategies(strategyAddress), true);
     assertEq(mpCore.authorizedStrategies(strategyAddress), true);
   }
 }
