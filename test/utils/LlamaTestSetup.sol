@@ -238,20 +238,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
-    rootStrategyBootstrapStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic),
-      rootStrategyConfigs[0],
-      address(rootCore)
-    );
+    rootStrategyBootstrapStrategy =
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[0], address(rootCore));
     rootStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
-    mpStrategyBootstrapStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic),
-      instanceStrategyConfigs[0],
-      address(mpCore)
-    );
+    mpStrategyBootstrapStrategy =
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[0], address(mpCore));
     mpStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =

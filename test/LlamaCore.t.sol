@@ -2103,10 +2103,38 @@ contract AuthorizeStrategy is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyIsNotAlreadyDeployed(address strategy) public {
-    vm.assume(strategy != address(mpStrategyBootstrapStrategy) && strategy != address(mpStrategy1) && strategy != address(mpStrategy2));
+    vm.assume(
+      strategy != address(mpStrategyBootstrapStrategy) && strategy != address(mpStrategy1)
+        && strategy != address(mpStrategy2)
+    );
     vm.expectRevert(LlamaCore.NonExistentStrategy.selector);
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(ILlamaStrategy(strategy), true);
+  }
+
+  function test_UnauthorizeStrategy() public {
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategy(mpStrategy1, false);
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
+  }
+
+  function test_ReauthorizeStrategy() public {
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategy(mpStrategy1, false);
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategy(mpStrategy1, true);
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+  }
+
+  function test_EmitsStrategyAuthorizedEvent() public {
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyAuthorized(mpStrategy1, false);
+    mpCore.authorizeStrategy(mpStrategy1, false);
   }
 }
 
