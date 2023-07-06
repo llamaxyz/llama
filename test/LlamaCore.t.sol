@@ -1902,12 +1902,12 @@ contract CreateStrategies is LlamaCoreTest {
     emit StrategyAuthorized(strategyAddresses[0], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-    
+
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
-    
+
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], true);
     vm.expectEmit();
@@ -1981,17 +1981,17 @@ contract CreateStrategies is LlamaCoreTest {
     emit StrategyAuthorized(strategyAddresses[0], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[0], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-    
+
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[1], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[1]));
-    
+
     vm.expectEmit();
     emit StrategyAuthorized(strategyAddresses[2], true);
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[2], additionalStrategyLogic, DeployUtils.encodeStrategy(newStrategies[2]));
-    
+
     mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEq(mpCore.deployedStrategies(strategyAddresses[0]), true);
