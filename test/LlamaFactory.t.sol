@@ -138,7 +138,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_RevertIf_CallerIsNotRootLlama(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(rootExecutor));
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
