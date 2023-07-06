@@ -244,8 +244,8 @@ contract Setup is LlamaCoreTest {
     assertEq(mpCore.name(), "Mock Protocol Llama");
     assertEq(address(mpCore.policy()), address(mpPolicy));
 
-    assertTrue(mpCore.strategies(mpStrategy1));
-    assertTrue(mpCore.strategies(mpStrategy1));
+    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
+    assertTrue(mpCore.authorizedStrategies(mpStrategy1));
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpAccount1.initialize("LlamaAccount0");
@@ -381,15 +381,15 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]), false);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]), false);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), false);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]), true);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]), true);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(uninitializedLlama.authorizedStrategies(strategyAddresses[1]), true);
   }
 
   function testFuzz_RevertIf_StrategyLogicIsNotAuthorized(address notStrategyLogic) public {
@@ -1897,9 +1897,9 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.strategies(strategyAddresses[0]), true);
-    assertEq(mpCore.strategies(strategyAddresses[1]), true);
-    assertEq(mpCore.strategies(strategyAddresses[2]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
   }
 
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
@@ -1964,9 +1964,9 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.strategies(strategyAddresses[0]), true);
-    assertEq(mpCore.strategies(strategyAddresses[1]), true);
-    assertEq(mpCore.strategies(strategyAddresses[2]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[0]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[1]), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddresses[2]), true);
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
@@ -2089,7 +2089,7 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.executeAction(actionInfo);
 
-    assertEq(mpCore.strategies(strategyAddress), true);
+    assertEq(mpCore.authorizedStrategies(strategyAddress), true);
   }
 }
 

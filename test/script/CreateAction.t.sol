@@ -176,7 +176,7 @@ contract Run is CreateActionTest {
     assertFalse(address(llamaInstance) == address(rootLlama));
 
     LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
-    assertEq(llamaInstance.strategies(firstStrategy), true);
+    assertEq(llamaInstance.authorizedStrategies(firstStrategy), true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
     assertEq(firstStrategy.disapprovalRole(), 3);
@@ -189,7 +189,7 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum secondStrategy = strategiesAuthorized[1];
-    assertEq(llamaInstance.strategies(secondStrategy), true);
+    assertEq(llamaInstance.authorizedStrategies(secondStrategy), true);
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
     assertEq(secondStrategy.disapprovalRole(), 3);
@@ -202,7 +202,7 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum thirdStrategy = strategiesAuthorized[2];
-    assertEq(llamaInstance.strategies(thirdStrategy), true);
+    assertEq(llamaInstance.authorizedStrategies(thirdStrategy), true);
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);
     assertEq(thirdStrategy.disapprovalRole(), 3);

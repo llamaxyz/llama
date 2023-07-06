@@ -83,7 +83,7 @@ contract Run is DeployLlamaTest {
     }
 
     ILlamaStrategy firstStrategy = strategiesAuthorized[0];
-    assertEq(rootLlamaCore.strategies(firstStrategy), true);
+    assertEq(rootLlamaCore.authorizedStrategies(firstStrategy), true);
     assertEq(toRelativeQuorum(firstStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(firstStrategy).approvalRole(), 1);
     assertEq(toRelativeQuorum(firstStrategy).disapprovalRole(), 3);
@@ -96,7 +96,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(firstStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy secondStrategy = strategiesAuthorized[1];
-    assertEq(rootLlamaCore.strategies(secondStrategy), true);
+    assertEq(rootLlamaCore.authorizedStrategies(secondStrategy), true);
     assertEq(toRelativeQuorum(secondStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(secondStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(secondStrategy).disapprovalRole(), 3);
@@ -109,7 +109,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(secondStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy thirdStrategy = strategiesAuthorized[2];
-    assertEq(rootLlamaCore.strategies(thirdStrategy), true);
+    assertEq(rootLlamaCore.authorizedStrategies(thirdStrategy), true);
     assertEq(toRelativeQuorum(thirdStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(thirdStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(thirdStrategy).disapprovalRole(), 3);

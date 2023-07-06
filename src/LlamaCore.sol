@@ -195,7 +195,7 @@ contract LlamaCore is Initializable {
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
   /// @notice Mapping of all authorized strategies.
-  mapping(ILlamaStrategy => bool) public strategies;
+  mapping(ILlamaStrategy => bool) public authorizedStrategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -526,7 +526,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
-    if (!strategies[strategy]) revert InvalidStrategy();
+    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -640,7 +640,7 @@ contract LlamaCore is Initializable {
       bytes32 salt = keccak256(strategyConfigs[i]);
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
-      strategies[strategy] = true;
+      authorizedStrategies[strategy] = true;
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
