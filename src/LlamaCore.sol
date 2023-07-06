@@ -59,11 +59,11 @@ contract LlamaCore is Initializable {
   /// @dev The recovered signer does not match the expected policyholder.
   error InvalidSignature();
 
-  /// @dev The provided address does not map to a deployed strategy.
-  error InvalidStrategy();
-
   /// @dev An action cannot queue successfully if it's `minExecutionTime` is less than `block.timestamp`.
   error MinExecutionTimeCannotBeInThePast();
+
+  /// @dev The provided strategy address does not map to a deployed strategy.
+  error NonExistentStrategy();
 
   /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
@@ -73,6 +73,9 @@ contract LlamaCore is Initializable {
 
   /// @dev If `block.timestamp` is less than `minExecutionTime`, the action cannot be executed.
   error MinExecutionTimeNotReached();
+
+  /// @dev Actions can only be created with authorized strategies.
+  error UnauthorizedStrategy();
 
   /// @dev Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
@@ -196,6 +199,9 @@ contract LlamaCore is Initializable {
 
   /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 => mapping(address => bool)) public disapprovals;
+
+  /// @notice Mapping of all deployed strategies.
+  mapping(ILlamaStrategy => bool) public deployedStrategies;
 
   /// @notice Mapping of all authorized strategies.
   mapping(ILlamaStrategy => bool) public authorizedStrategies;
@@ -436,6 +442,14 @@ contract LlamaCore is Initializable {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
+  /// @notice Authorizes `strategy` to be eligible to be used in actions.
+  /// @param strategy The address of the strategy contract.
+  /// @param authorized True to authorize the strategy, false to unauthorize it.
+  /// @dev To remove a `strategy`, set `authorized` to `false`.
+  function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
+    _authorizeStrategy(strategy, authorized);
+  }
+
   /// @notice Deploy new accounts.
   /// @param llamaAccountLogic address of the Llama account logic contract.
   /// @param accountConfigs Array of new account configurations.
@@ -529,7 +543,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
-    if (!authorizedStrategies[strategy]) revert InvalidStrategy();
+    if (!authorizedStrategies[strategy]) revert UnauthorizedStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -643,10 +657,18 @@ contract LlamaCore is Initializable {
       bytes32 salt = keccak256(strategyConfigs[i]);
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
-      authorizedStrategies[strategy] = true;
+      deployedStrategies[strategy] = true;
+      _authorizeStrategy(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
+  }
+
+  /// @dev Sets the `strategy` authorization status to `authorized`.
+  function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
+    if (!deployedStrategies[strategy]) revert NonExistentStrategy();
+    authorizedStrategies[strategy] = authorized;
+    emit StrategyAuthorized(strategy, authorized);
   }
 
   /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to

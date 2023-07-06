@@ -583,14 +583,14 @@ contract CreateAction is LlamaCoreTest {
   function test_RevertIf_StrategyUnauthorized() public {
     ILlamaStrategy unauthorizedStrategy = ILlamaStrategy(makeAddr("unauthorized strategy"));
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
+    vm.expectRevert(LlamaCore.UnauthorizedStrategy.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data, "");
   }
 
   function test_RevertIf_StrategyIsFromAnotherLlama() public {
     ILlamaStrategy unauthorizedStrategy = rootStrategy1;
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(LlamaCore.InvalidStrategy.selector);
+    vm.expectRevert(LlamaCore.UnauthorizedStrategy.selector);
     mpCore.createAction(uint8(Roles.ActionCreator), unauthorizedStrategy, address(mockProtocol), 0, data, "");
   }
 
