@@ -128,8 +128,11 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
-  /// @dev Emitted when a strategy is created and authorized.
+  /// @dev Emitted when a strategy is created.
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+
+  /// @dev Emitted when a strategy is authorized.
+  event StrategyAuthorized(ILlamaStrategy strategy, bool authorized);
 
   /// @dev Emitted when an account is created.
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
