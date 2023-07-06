@@ -575,8 +575,7 @@ contract RevokePolicy is LlamaPolicyTest {
 
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    // 7 policyholders set in LlamaTestSetup (Aaron, Adam, Alicia, Andy, Dave, Diane, Drake) + 1 policyholder set above
-    uint256 allHoldersRoleHolders = 8;
+    uint256 allHoldersRoleHolders = mpPolicy.totalSupply();
 
     assertEq(mpPolicy.balanceOf(policyholder), 1);
 
