@@ -2094,6 +2094,22 @@ contract CreateStrategies is LlamaCoreTest {
   }
 }
 
+contract AuthorizeStrategy is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
+    vm.assume(caller != address(mpExecutor));
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    vm.prank(caller);
+    mpCore.authorizeStrategy(mpStrategy1, false);
+  }
+
+  function testFuzz_RevertIf_StrategyIsNotAlreadyDeployed(address strategy) public {
+    vm.assume(strategy != address(mpStrategyBootstrapStrategy) && strategy != address(mpStrategy1) && strategy != address(mpStrategy2));
+    vm.expectRevert(LlamaCore.NonExistentStrategy.selector);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategy(ILlamaStrategy(strategy), true);
+  }
+}
+
 contract CreateAccounts is LlamaCoreTest {
   function encodeMockAccount(MockAccountLogicContract.Config memory account)
     internal

@@ -59,6 +59,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaCore rootCore;
   LlamaExecutor rootExecutor;
   LlamaPolicy rootPolicy;
+  ILlamaStrategy rootStrategyBootstrapStrategy;
   ILlamaStrategy rootStrategy1;
   ILlamaStrategy rootStrategy2;
   ILlamaAccount rootAccount1;
@@ -68,6 +69,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaCore mpCore;
   LlamaExecutor mpExecutor;
   LlamaPolicy mpPolicy;
+  ILlamaStrategy mpStrategyBootstrapStrategy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
   ILlamaAccount mpAccount1;
@@ -236,12 +238,20 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
-    // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
-    // check, but it's not part of the main test suite.
+    rootStrategyBootstrapStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuorumLogic),
+      rootStrategyConfigs[0],
+      address(rootCore)
+    );
     rootStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+    mpStrategyBootstrapStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuorumLogic),
+      instanceStrategyConfigs[0],
+      address(mpCore)
+    );
     mpStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
