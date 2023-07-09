@@ -2687,12 +2687,12 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
 
   function test_SetsValueInStorageMappingToFalse() public {
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
-    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), false);
-    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
+    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), false);
+    assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
