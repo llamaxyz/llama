@@ -28,10 +28,10 @@ contract LlamaPolicyMetadataParamRegistry {
   // ========================
 
   /// @dev Emitted when the color code for SVG of a Llama instance is set.
-  event ColorSet(LlamaExecutor indexed llamaExecutor, string color);
+  event PolicyColorSet(LlamaExecutor indexed llamaExecutor, string color);
 
   /// @dev Emitted when the logo for SVG of a Llama instance is set.
-  event LogoSet(LlamaExecutor indexed llamaExecutor, string logo);
+  event PolicyLogoSet(LlamaExecutor indexed llamaExecutor, string logo);
 
   // ==================================================
   // ======== Immutables and Storage Variables ========
@@ -81,7 +81,7 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @param _color The color code as a hex value (eg. #00FF00)
   function setColor(LlamaExecutor llamaExecutor, string memory _color) public onlyAuthorized(llamaExecutor) {
     color[llamaExecutor] = _color;
-    emit ColorSet(llamaExecutor, _color);
+    emit PolicyColorSet(llamaExecutor, _color);
   }
 
   /// @notice Sets the logo for SVG of a Llama instance.
@@ -89,6 +89,6 @@ contract LlamaPolicyMetadataParamRegistry {
   /// @param _logo The logo.
   function setLogo(LlamaExecutor llamaExecutor, string memory _logo) public onlyAuthorized(llamaExecutor) {
     logo[llamaExecutor] = _logo;
-    emit LogoSet(llamaExecutor, _logo);
+    emit PolicyLogoSet(llamaExecutor, _logo);
   }
 }

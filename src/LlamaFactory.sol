@@ -12,7 +12,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
-import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -48,9 +47,6 @@ contract LlamaFactory {
     uint256 chainId
   );
 
-  /// @dev Emitted when a new Llama policy metadata contract is set.
-  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
-
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
@@ -67,17 +63,11 @@ contract LlamaFactory {
   /// @notice The Llama policy implementation (logic) contract.
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama policy metadata parameter registry contract for onchain image formats.
-  LlamaPolicyMetadataParamRegistry public immutable LLAMA_POLICY_METADATA_PARAM_REGISTRY;
-
   /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
 
   /// @notice The core of the Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA_CORE;
-
-  /// @notice The Llama policy metadata contract.
-  LlamaPolicyMetadata public llamaPolicyMetadata;
 
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
@@ -92,7 +82,7 @@ contract LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
+    LlamaPolicyMetadata llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
     bytes[] memory initialAccounts,
@@ -103,7 +93,9 @@ contract LlamaFactory {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
 
-    _setPolicyMetadata(_llamaPolicyMetadata);
+    string memory rootColor = "#6A45EC";
+    string memory rootLogo =
+      '<g><path fill="#fff" d="M91.749 446.038H85.15v2.785h2.54v14.483h-3.272v2.785h9.746v-2.785h-2.416v-17.268ZM104.122 446.038h-6.598v2.785h2.54v14.483h-3.271v2.785h9.745v-2.785h-2.416v-17.268ZM113.237 456.162c.138-1.435 1.118-2.2 2.885-2.2 1.767 0 2.651.765 2.651 2.423v.403l-4.859.599c-2.885.362-5.149 1.63-5.149 4.484 0 2.841 2.14 4.47 5.383 4.47 2.72 0 3.921-1.044 4.487-1.935h.276v1.685h3.782v-9.135c0-3.983-2.54-5.78-6.488-5.78-3.975 0-6.404 1.797-6.694 4.568v.418h3.726Zm-.483 5.528c0-1.1.829-1.629 2.03-1.796l3.989-.529v.626c0 2.354-1.546 3.537-3.672 3.537-1.491 0-2.347-.724-2.347-1.838ZM125.765 466.091h3.727v-9.386c0-1.796.938-2.576 2.25-2.576 1.173 0 1.753.682 1.753 1.838v10.124h3.727v-9.386c0-1.796.939-2.576 2.236-2.576 1.187 0 1.753.682 1.753 1.838v10.124h3.741v-10.639c0-2.646-1.657-4.22-4.183-4.22-2.264 0-3.312.989-3.92 2.075h-.276c-.414-.947-1.436-2.075-3.534-2.075-2.056 0-2.954.864-3.45 1.741h-.277v-1.462h-3.547v14.58ZM151.545 456.162c.138-1.435 1.118-2.2 2.885-2.2 1.767 0 2.65.765 2.65 2.423v.403l-4.859.599c-2.885.362-5.149 1.63-5.149 4.484 0 2.841 2.14 4.47 5.384 4.47 2.719 0 3.92-1.044 4.486-1.935h.276v1.685H161v-9.135c0-3.983-2.54-5.78-6.488-5.78-3.975 0-6.404 1.797-6.694 4.568v.418h3.727Zm-.484 5.528c0-1.1.829-1.629 2.03-1.796l3.989-.529v.626c0 2.354-1.546 3.537-3.672 3.537-1.491 0-2.347-.724-2.347-1.838Z"/><g fill="#6A45EC"><path d="M36.736 456.934c.004-.338.137-.661.372-.901.234-.241.552-.38.886-.389h16.748a5.961 5.961 0 0 0 2.305-.458 6.036 6.036 0 0 0 3.263-3.287c.303-.737.46-1.528.46-2.326V428h-4.738v21.573c-.004.337-.137.66-.372.901-.234.24-.552.379-.886.388H38.01a5.984 5.984 0 0 0-4.248 1.781A6.108 6.108 0 0 0 32 456.934v14.891h4.736v-14.891ZM62.868 432.111h-.21l.2.204v4.448h4.36l2.043 2.084a6.008 6.008 0 0 0-3.456 2.109 6.12 6.12 0 0 0-1.358 3.841v27.034h4.717v-27.04c.005-.341.14-.666.38-.907.237-.24.56-.378.897-.383h.726c2.783 0 3.727-1.566 4.006-2.224.28-.658.711-2.453-1.257-4.448l-4.617-4.702h-1.437M50.34 469.477a7.728 7.728 0 0 1 3.013.61c.955.403 1.82.994 2.547 1.738h5.732a12.645 12.645 0 0 0-4.634-5.201 12.467 12.467 0 0 0-6.658-1.93c-2.355 0-4.662.669-6.659 1.93a12.644 12.644 0 0 0-4.634 5.201h5.733a7.799 7.799 0 0 1 2.546-1.738 7.728 7.728 0 0 1 3.014-.61Z"/></g></g>';
 
     (ROOT_LLAMA_EXECUTOR, ROOT_LLAMA_CORE) = _deploy(
       name,
@@ -113,10 +105,11 @@ contract LlamaFactory {
       initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
-      initialRolePermissions
+      initialRolePermissions,
+      llamaPolicyMetadata,
+      rootColor,
+      rootLogo
     );
-
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY = new LlamaPolicyMetadataParamRegistry(ROOT_LLAMA_EXECUTOR);
   }
 
   // ===========================================
@@ -133,6 +126,7 @@ contract LlamaFactory {
   /// @param initialRoleDescriptions Array of initial role descriptions.
   /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions Array of initial permissions given to roles.
+  /// @param llamaPolicyMetadata The Llama policy metadata contract.
   /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
   /// @return executor The address of the `LlamaExecutor` of the newly created instance.
@@ -146,6 +140,7 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions,
+    LlamaPolicyMetadata llamaPolicyMetadata,
     string memory color,
     string memory logo
   ) external onlyRootLlama returns (LlamaExecutor executor, LlamaCore core) {
@@ -157,38 +152,11 @@ contract LlamaFactory {
       initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
-      initialRolePermissions
+      initialRolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo
     );
-
-    _setDeploymentMetadata(executor, color, logo);
-  }
-
-  /// @notice Sets the Llama policy metadata contract.
-  /// @dev This function can only be called by the root Llama instance.
-  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
-  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
-    _setPolicyMetadata(_llamaPolicyMetadata);
-  }
-
-  /// @notice Returns the token URI for a given Llama policyholder.
-  /// @param llamaExecutor The instance's `LlamaExecutor`.
-  /// @param name The name of the Llama system.
-  /// @param tokenId The token ID of the Llama policyholder.
-  /// @return The token URI for the given Llama policyholder.
-  function tokenURI(LlamaExecutor llamaExecutor, string memory name, uint256 tokenId)
-    external
-    view
-    returns (string memory)
-  {
-    (string memory color, string memory logo) = LLAMA_POLICY_METADATA_PARAM_REGISTRY.getMetadata(llamaExecutor);
-    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
-  }
-
-  /// @notice Returns the contract URI for a given Llama policyholder.
-  /// @param name The name of the Llama system.
-  /// @return The contract URI for the given Llama instance.
-  function contractURI(string memory name) external view returns (string memory) {
-    return llamaPolicyMetadata.contractURI(name);
   }
 
   // ================================
@@ -204,7 +172,10 @@ contract LlamaFactory {
     bytes[] memory initialAccounts,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions
+    RolePermissionData[] memory initialRolePermissions,
+    LlamaPolicyMetadata llamaPolicyMetadata,
+    string memory color,
+    string memory logo
   ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
@@ -220,7 +191,9 @@ contract LlamaFactory {
     // scripts), so we continue with deployment of this instance.
     LlamaPolicy policy =
       LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
-    policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
+    policy.initialize(
+      llamaPolicyMetadata, name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo
+    );
 
     llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     bytes32 bootstrapPermissionId =
@@ -233,17 +206,5 @@ contract LlamaFactory {
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
-  }
-
-  /// @dev Sets the Llama policy metadata contract.
-  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
-    llamaPolicyMetadata = _llamaPolicyMetadata;
-    emit PolicyMetadataSet(_llamaPolicyMetadata);
-  }
-
-  /// @dev Sets the `color` and `logo` of a Llama instance.
-  function _setDeploymentMetadata(LlamaExecutor llamaExecutor, string memory color, string memory logo) internal {
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setColor(llamaExecutor, color);
-    LLAMA_POLICY_METADATA_PARAM_REGISTRY.setLogo(llamaExecutor, logo);
   }
 }
