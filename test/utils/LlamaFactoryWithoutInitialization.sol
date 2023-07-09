@@ -56,11 +56,15 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     string memory name,
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions
+    RolePermissionData[] memory initialRolePermissions,
+    string memory color,
+    string memory logo
   ) external returns (LlamaCore llama, LlamaPolicy policy) {
     // Deploy the system.
     policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encode(name))));
-    policy.initialize(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions);
+    policy.initialize(
+      llamaPolicyMetadata, name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo
+    );
 
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
 

@@ -31,7 +31,6 @@ contract DeployLlama is Script {
   // Core Protocol.
   LlamaFactory factory;
   LlamaPolicyMetadata policyMetadata;
-  LlamaPolicyMetadataParamRegistry policyMetadataParamRegistry;
   LlamaLens lens;
 
   function run() public {
@@ -85,11 +84,6 @@ contract DeployLlama is Script {
       DeployUtils.readRolePermissions(jsonInput)
     );
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
-
-    policyMetadataParamRegistry = factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY();
-    DeployUtils.print(
-      string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyMetadataParamRegistry)))
-    );
 
     vm.broadcast();
     lens = new LlamaLens(address(factory));

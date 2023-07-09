@@ -47,6 +47,9 @@ contract LlamaFactory {
     uint256 chainId
   );
 
+  /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+
   // =============================================================
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
@@ -69,6 +72,9 @@ contract LlamaFactory {
   /// @notice The core of the Llama instance responsible for deploying new Llama instances.
   LlamaCore public immutable ROOT_LLAMA_CORE;
 
+  /// @notice The Llama policy metadata contract.
+  LlamaPolicyMetadata public llamaPolicyMetadata;
+
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
 
@@ -82,7 +88,7 @@ contract LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyMetadata llamaPolicyMetadata,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory name,
     bytes[] memory initialStrategies,
     bytes[] memory initialAccounts,
@@ -92,6 +98,8 @@ contract LlamaFactory {
   ) {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
+
+    _setPolicyMetadata(_llamaPolicyMetadata);
 
     string memory rootColor = "#6A45EC";
     string memory rootLogo =
@@ -106,7 +114,6 @@ contract LlamaFactory {
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions,
-      llamaPolicyMetadata,
       rootColor,
       rootLogo
     );
@@ -126,7 +133,6 @@ contract LlamaFactory {
   /// @param initialRoleDescriptions Array of initial role descriptions.
   /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
   /// @param initialRolePermissions Array of initial permissions given to roles.
-  /// @param llamaPolicyMetadata The Llama policy metadata contract.
   /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
   /// @return executor The address of the `LlamaExecutor` of the newly created instance.
@@ -140,7 +146,6 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions,
-    LlamaPolicyMetadata llamaPolicyMetadata,
     string memory color,
     string memory logo
   ) external onlyRootLlama returns (LlamaExecutor executor, LlamaCore core) {
@@ -153,10 +158,16 @@ contract LlamaFactory {
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions,
-      llamaPolicyMetadata,
       color,
       logo
     );
+  }
+
+  /// @notice Sets the Llama policy metadata contract.
+  /// @dev This function can only be called by the root Llama instance.
+  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyRootLlama {
+    _setPolicyMetadata(_llamaPolicyMetadata);
   }
 
   // ================================
@@ -173,7 +184,6 @@ contract LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions,
-    LlamaPolicyMetadata llamaPolicyMetadata,
     string memory color,
     string memory logo
   ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
@@ -185,20 +195,11 @@ contract LlamaFactory {
     if (initialRoleHolders.length == 0) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
-
-    // Now the configuration is likely valid (it's possible the configuration of the first strategy
-    // will not actually be able to execute, but we leave that check off-chain / to the deploy
-    // scripts), so we continue with deployment of this instance.
+    bytes32 bootstrapPermissionId;
     LlamaPolicy policy =
-      LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
-    policy.initialize(
-      llamaPolicyMetadata, name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo
-    );
-
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-    bytes32 bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
-    llamaExecutor = llamaCore.executor();
+      _initializePolicy(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo);
+    (llamaExecutor, llamaCore, bootstrapPermissionId) =
+      _initializeCore(name, strategyLogic, accountLogic, initialStrategies, initialAccounts, policy);
 
     policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
 
@@ -206,5 +207,44 @@ contract LlamaFactory {
       llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
     );
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyMetadataSet(_llamaPolicyMetadata);
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _initializePolicy(
+    string memory name,
+    RoleDescription[] memory initialRoleDescriptions,
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions,
+    string memory color,
+    string memory logo
+  ) internal returns (LlamaPolicy _policy) {
+    // Now the configuration is likely valid (it's possible the configuration of the first strategy
+    // will not actually be able to execute, but we leave that check off-chain / to the deploy
+    // scripts), so we continue with deployment of this instance.
+    _policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
+    _policy.initialize(
+      llamaPolicyMetadata, name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo
+    );
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _initializeCore(
+    string memory name,
+    ILlamaStrategy strategyLogic,
+    ILlamaAccount accountLogic,
+    bytes[] memory initialStrategies,
+    bytes[] memory initialAccounts,
+    LlamaPolicy policy
+  ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore, bytes32 bootstrapPermissionId) {
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    bootstrapPermissionId =
+      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
+    llamaExecutor = llamaCore.executor();
   }
 }
