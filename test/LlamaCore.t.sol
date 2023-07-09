@@ -2678,6 +2678,16 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
     mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
   }
 
+  function test_RevertIf_StrategyLogicUnauthorized() public {
+    uint256 salt = 0;
+    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    newStrategies[0] = _createStrategy(salt, true);
+
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
+    mpCore.createStrategies(ILlamaStrategy(randomLogicAddress), DeployUtils.encodeStrategyConfigs(newStrategies));
+  }
+
   function test_SetsValueInStorageMappingToTrue() public {
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
     vm.prank(address(mpExecutor));
@@ -2693,6 +2703,31 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), false);
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
+  }
+
+  function test_CanBeReauthorized() public {
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(relativeQuorumLogic, false);
+
+    uint256 salt = 0;
+    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    newStrategies[0] = _createStrategy(salt, true);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](1);
+    strategyAddresses[0] = lens.computeLlamaStrategyAddress(
+      address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeStrategyLogic(relativeQuorumLogic, true);
+
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
