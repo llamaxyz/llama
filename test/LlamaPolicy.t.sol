@@ -10,11 +10,13 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
+import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
@@ -33,6 +35,29 @@ contract LlamaPolicyTest is LlamaTestSetup {
 
   function getRoleDescription(string memory str) internal pure returns (RoleDescription) {
     return RoleDescription.wrap(bytes32(bytes(str)));
+  }
+
+  function deployLlamaWithQuotesinName() internal returns (LlamaExecutor, LlamaCore) {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    vm.prank(address(rootExecutor));
+    return factory.deploy(
+      '"name": "Mock Protocol Llama"',
+      relativeQuorumLogic,
+      accountLogic,
+      strategyConfigs,
+      accounts,
+      roleDescriptionStrings,
+      roleHolders,
+      new RolePermissionData[](0),
+      color,
+      logo
+    );
   }
 
   function setUp() public virtual override {
@@ -1143,31 +1168,45 @@ contract PolicyMetadata is LlamaPolicyTest {
     assertEq(metadata.image, generateTokenUri(address(this)));
   }
 
-  // function test_ReturnsCorrectTokenURIEscapesJson() public {
-  //   setTokenURIMetadata();
-  //   string memory nameWithQuotes = '"name": "Mock Protocol Llama"';
+  function testFuzz_tokenURIProxiesCorrectly(address policyholder) external {
+    vm.assume(policyholder != address(0));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    uint256 tokenId = uint256(uint160(policyholder));
 
-  //   vm.prank(address(mpExecutor));
-  //   mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    string memory name = "Mock Protocol Llama";
+    string memory color = mpPolicy.color();
+    string memory logo = mpPolicy.logo();
+    LlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
+    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.tokenURI(name, tokenId, color, logo));
+  }
 
-  //   string memory uri = factory.tokenURI(mpExecutor, nameWithQuotes, uint256(uint160(address(this))));
-  //   Metadata memory metadata = parseMetadata(uri);
-  //   string memory name = LibString.concat(nameWithQuotes, " Member");
-  //   string memory policyholder = LibString.toHexString(address(this));
-  //   string memory description1 =
-  //     LibString.concat("This NFT represents membership in the Llama organization: ", nameWithQuotes);
-  //   string memory description = string.concat(
-  //     description1,
-  //     ". The owner of this NFT can participate in governance according to their roles and permissions. Visit
-  // https://app.llama.xyz/profiles/",
-  //     policyholder,
-  //     " to view their profile page."
-  //   );
+  function test_ReturnsCorrectTokenURIEscapesJson() public {
+    (LlamaExecutor deployedExecutor, LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaPolicy deployedPolicy = deployedCore.policy();
+    string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
+    setTokenURIMetadata();
 
-  //   assertEq(metadata.description, description);
-  //   assertEq(metadata.name, name);
-  //   assertEq(metadata.image, generateTokenUri(address(this)));
-  // }
+    vm.prank(address(deployedExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+
+    string memory uri = deployedPolicy.tokenURI(uint256(uint160(address(this))));
+    Metadata memory metadata = parseMetadata(uri);
+    string memory name = LibString.concat(nameWithQuotes, " Member");
+    string memory policyholder = LibString.toHexString(address(this));
+    string memory description1 =
+      LibString.concat("This NFT represents membership in the Llama organization: ", nameWithQuotes);
+    string memory description = string.concat(
+      description1,
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      policyholder,
+      " to view their profile page."
+    );
+
+    assertEq(metadata.description, description);
+    assertEq(metadata.name, name);
+    assertEq(metadata.image, generateTokenUri(address(this)));
+  }
 
   function testFuzz_RevertIf_NonExistantTokenId(uint256 nonExistantTokenId) public {
     vm.assume(
@@ -1235,22 +1274,28 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     assertEq(mpPolicy.contractURI(), encodedContractURI);
   }
 
-  // function test_ReturnsContractURIEscapesJson() external {
-  //   string memory name = '"name": "Mock Protocol Llama"';
-  //   string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
+  function test_ReturnsContractURIEscapesJson() external {
+    (, LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    LlamaPolicy deployedPolicy = deployedInstance.policy();
+    string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 
-  //   string[5] memory parts;
-  //   parts[0] = '{ "name": "Llama Policies: ';
-  //   parts[1] = escapedName;
-  //   parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
-  //   parts[3] = escapedName;
-  //   parts[4] =
-  //     '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png",
-  // "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
-  //   string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
-  //   string memory encodedContractURI = string.concat("data:application/json;base64,", json);
-  //   assertEq(factory.contractURI(name), encodedContractURI);
-  // }
+    string[5] memory parts;
+    parts[0] = '{ "name": "Llama Policies: ';
+    parts[1] = escapedName;
+    parts[2] = '", "description": "This collection includes all members of the Llama organization: ';
+    parts[3] = escapedName;
+    parts[4] =
+      '. Visit https://app.llama.xyz to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+    string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
+    string memory encodedContractURI = string.concat("data:application/json;base64,", json);
+    assertEq(deployedPolicy.contractURI(), encodedContractURI);
+  }
+
+  function test_contractURIProxiesCorrectly() external {
+    string memory name = "Mock Protocol Llama";
+    LlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
+    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.contractURI(name));
+  }
 }
 
 contract IsRoleExpired is LlamaPolicyTest {
@@ -1304,3 +1349,7 @@ contract UpdateRoleDescription is LlamaPolicyTest {
     mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
   }
 }
+
+contract SetColor is LlamaPolicyTest {}
+
+contract SetLogo is LlamaPolicyTest {}
