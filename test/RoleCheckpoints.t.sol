@@ -118,12 +118,12 @@ contract WithCheckpointsWithoutExpiration is RoleCheckpointsTest {
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
+    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp);
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
+    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp + 1);
   }
 
@@ -192,12 +192,12 @@ contract WithCheckpointsWithExpiration is RoleCheckpointsTest {
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
+    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp);
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("Checkpoints: timestamp is not in the past");
+    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp + 1);
   }
 

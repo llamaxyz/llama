@@ -35,7 +35,7 @@ library RoleCheckpoints {
      * timestamp of checkpoints.
      */
     function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint96) {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
+        require(timestamp < block.timestamp, "RoleCheckpoints: timestamp is not in the past");
         uint64 _timestamp = LlamaUtils.toUint64(timestamp);
 
         uint256 len = self._checkpoints.length;
@@ -122,7 +122,7 @@ library RoleCheckpoints {
             Checkpoint memory last = _unsafeAccess(self, pos - 1);
 
             // Checkpoints timestamps must be increasing.
-            require(last.timestamp <= timestamp, "Checkpoint: invalid timestamp");
+            require(last.timestamp <= timestamp, "Role Checkpoint: invalid timestamp");
 
             // Update or push new checkpoint
             if (last.timestamp == timestamp) {

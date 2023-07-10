@@ -39,7 +39,7 @@ library SupplyCheckpoints {
       view
       returns (uint96 numberOfHolders, uint96 totalQuantity)
     {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
+        require(timestamp < block.timestamp, "SupplyCheckpoints: timestamp is not in the past");
         uint64 _timestamp = LlamaUtils.toUint64(timestamp);
 
         uint256 len = self._checkpoints.length;
@@ -128,7 +128,7 @@ library SupplyCheckpoints {
             Checkpoint memory last = _unsafeAccess(self, pos - 1);
 
             // Checkpoints timestamps must be increasing.
-            require(last.timestamp <= timestamp, "Checkpoint: invalid timestamp");
+            require(last.timestamp <= timestamp, "Supply Checkpoint: invalid timestamp");
 
             // Update or push new checkpoint
             if (last.timestamp == timestamp) {
