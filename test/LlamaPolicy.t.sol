@@ -913,19 +913,6 @@ contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
     assertEq(length, checkpoints._checkpoints.length);
     assertEq(length, 3);
   }
-
-  // A fuzz test like this will result in lots of zero lengths and be mostly useless for now which
-  // is why it's commented out. Once https://github.com/foundry-rs/foundry/issues/4967 is resolved
-  // we can uncomment the test and use the below config to leverage a higher dictionary weight.
-  // Alternatively we could hardcode all known users and roles and loop through all of them, but
-  // this is a pretty simple method being tested, so in the interest of faster tests this is
-  // arguably overkill and therefore left commented out for now.
-  // /// forge-config: default.fuzz.dictionary_weight = 99
-  // function testFuzz_ReturnsTheCorrectLength(address policyholder, uint8 role) public {
-  //   RoleCheckpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
-  //   uint256 length = mpPolicy.roleBalanceCheckpointsLength(policyholder, role);
-  //   assertEq(length, checkpoints._checkpoints.length);
-  // }
 }
 
 contract HasRole is LlamaPolicyTest {
