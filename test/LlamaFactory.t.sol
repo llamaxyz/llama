@@ -359,15 +359,6 @@ contract Deploy is LlamaFactoryTest {
     assertEq(address(newLlamaExecutor), address(computedExecutor));
     assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
   }
-
-  function test_SetsColorAndLogoForMpExecutor() public {
-    (, LlamaCore core) = deployLlama();
-    LlamaPolicy deployedPolicy = core.policy();
-    string memory setColor = deployedPolicy.color();
-    string memory setLogo = deployedPolicy.logo();
-    assertEq(setColor, color);
-    assertEq(setLogo, logo);
-  }
 }
 
 contract SetPolicyTokenMetadata is LlamaFactoryTest {
