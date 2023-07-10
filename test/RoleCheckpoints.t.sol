@@ -1,70 +1,70 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @dev Tests in this contract mirror those in OpenZeppelin's Checkpoints.test.js, which is why
+/// @dev Tests in this contract mirror those in OpenZeppelin's RoleCheckpoints.test.js, which is why
 /// the tests are written in a different style than the rest of the tests in this repo (i.e. they
 /// do not follow the "one contract per method" pattern).
-/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/test/utils/Checkpoints.test.js
+/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/test/utils/RoleCheckpoints.test.js
 import {Test, console2} from "forge-std/Test.sol";
 
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 
-/// @dev The CheckpointsMock harness contract has its external functions written according to
+/// @dev The RoleCheckpointsMock harness contract has its external functions written according to
 /// https://github.com/foundry-rs/foundry/pull/3128#issuecomment-1241245086
 /// so that test coverage is captured for the Checkpoints library.
-contract CheckpointsMock {
-  Checkpoints.History private _totalCheckpoints;
+contract RoleCheckpointsMock {
+  RoleCheckpoints.History private _totalCheckpoints;
 
   function printCheckpoints() public view {
     for (uint256 i = 0; i < length(); i++) {
-      Checkpoints.Checkpoint memory ckpt = _totalCheckpoints._checkpoints[i];
+      RoleCheckpoints.Checkpoint memory ckpt = _totalCheckpoints._checkpoints[i];
       console2.log(ckpt.timestamp, ckpt.quantity, ckpt.expiration);
     }
   }
 
   function latest() external view returns (uint256) {
-    uint256 quantity = Checkpoints.latest(_totalCheckpoints);
+    uint256 quantity = RoleCheckpoints.latest(_totalCheckpoints);
     return quantity;
   }
 
   function latestCheckpoint() public view returns (bool, uint256, uint256, uint256) {
     (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration) =
-      Checkpoints.latestCheckpoint(_totalCheckpoints);
+      RoleCheckpoints.latestCheckpoint(_totalCheckpoints);
     return (exists, quantity, timestamp, expiration);
   }
 
   function length() public view returns (uint256) {
-    uint256 numCkpts = Checkpoints.length(_totalCheckpoints);
+    uint256 numCkpts = RoleCheckpoints.length(_totalCheckpoints);
     return numCkpts;
   }
 
   function push(uint256 quantity, uint256 expiration) public returns (uint256, uint256) {
-    (uint256 prevQty, uint256 newQty) = Checkpoints.push(_totalCheckpoints, quantity, expiration);
+    (uint256 prevQty, uint256 newQty) = RoleCheckpoints.push(_totalCheckpoints, quantity, expiration);
     return (prevQty, newQty);
   }
 
   function getAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256) {
-    uint256 quantity = Checkpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
+    uint256 quantity = RoleCheckpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
     return quantity;
   }
 }
 
-contract CheckpointsTest is Test {
-  CheckpointsMock checkpoints;
+contract RoleCheckpointsTest is Test {
+  RoleCheckpointsMock checkpoints;
   uint64 DEFAULT_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
-    checkpoints = new CheckpointsMock();
+    checkpoints = new RoleCheckpointsMock();
   }
 }
 
 // ====================================
 // ======== OpenZeppelin Tests ========
 // ====================================
-// All tests within this section mirror the tests in OpenZeppelin's Checkpoints.test.js and
+// All tests within this section mirror the tests in OpenZeppelin's RoleCheckpoints.test.js and
 // therefore do not account for checkpoint expiration.
 
-contract WithoutCheckpointsWithoutExpiration is CheckpointsTest {
+contract WithoutCheckpointsWithoutExpiration is RoleCheckpointsTest {
   function test_ReturnsZeroAsLatestValue() public {
     assertEq(checkpoints.latest(), 0);
 
@@ -75,13 +75,13 @@ contract WithoutCheckpointsWithoutExpiration is CheckpointsTest {
   }
 }
 
-contract WithCheckpointsWithoutExpiration is CheckpointsTest {
+contract WithCheckpointsWithoutExpiration is RoleCheckpointsTest {
   uint256 t0;
   uint256 t1;
   uint256 t2;
 
   function setUp() public override {
-    CheckpointsTest.setUp();
+    RoleCheckpointsTest.setUp();
 
     vm.warp(block.timestamp + 1);
     t0 = block.timestamp;
@@ -146,7 +146,7 @@ contract WithCheckpointsWithoutExpiration is CheckpointsTest {
 // ===========================
 // Modification of the above tests to account for checkpoint expiration.
 
-contract WithoutCheckpointsWithExpiration is CheckpointsTest {
+contract WithoutCheckpointsWithExpiration is RoleCheckpointsTest {
   function test_ReturnsZeroAsLatestValue() public {
     assertEq(checkpoints.latest(), 0);
 
@@ -158,13 +158,13 @@ contract WithoutCheckpointsWithExpiration is CheckpointsTest {
   }
 }
 
-contract WithCheckpointsWithExpiration is CheckpointsTest {
+contract WithCheckpointsWithExpiration is RoleCheckpointsTest {
   uint256 t0;
   uint256 t1;
   uint256 t2;
 
   function setUp() public override {
-    CheckpointsTest.setUp();
+    RoleCheckpointsTest.setUp();
 
     vm.warp(block.timestamp + 1);
     t0 = block.timestamp;

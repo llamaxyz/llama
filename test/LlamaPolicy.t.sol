@@ -11,7 +11,7 @@ import {LibString} from "@solady/utils/LibString.sol";
 
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -666,8 +666,8 @@ contract SetApprovalForAll is LlamaPolicyTest {
 // ====================================
 // ======== Permission Getters ========
 // ====================================
-// The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
-// that's added on top of that.
+// The actual checkpointing logic is tested in `RoleCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
+// so here we just test the logic that's added on top of that.
 
 contract GetQuantity is LlamaPolicyTest {
   function test_ReturnsZeroIfPolicyholderDoesNotHoldRole() public {
@@ -828,9 +828,10 @@ contract RoleBalanceCheckpointTest is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
   function test_ReturnsBalanceCheckpoint() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
-    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
+    RoleCheckpoints.History memory rbCheckpoint2 =
+      mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
     assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
@@ -857,8 +858,8 @@ contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
 }
 
 contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
-  function assertEqSlice(Checkpoints.History memory full, uint256 start, uint256 end) internal {
-    Checkpoints.History memory slice =
+  function assertEqSlice(RoleCheckpoints.History memory full, uint256 start, uint256 end) internal {
+    RoleCheckpoints.History memory slice =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), start, end);
 
     assertEq(slice._checkpoints.length, end - start);
@@ -883,7 +884,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_ReturnsSlicesOfCheckpointsArray() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -906,7 +907,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
 
 contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   function test_ReturnsTheCorrectLength() public {
-    Checkpoints.History memory checkpoints =
+    RoleCheckpoints.History memory checkpoints =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
     uint256 length = mpPolicy.roleBalanceCheckpointsLength(arbitraryPolicyholder, uint8(Roles.TestRole1));
     assertEq(length, checkpoints._checkpoints.length);
@@ -921,7 +922,7 @@ contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   // arguably overkill and therefore left commented out for now.
   // /// forge-config: default.fuzz.dictionary_weight = 99
   // function testFuzz_ReturnsTheCorrectLength(address policyholder, uint8 role) public {
-  //   Checkpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
+  //   RoleCheckpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
   //   uint256 length = mpPolicy.roleBalanceCheckpointsLength(policyholder, role);
   //   assertEq(length, checkpoints._checkpoints.length);
   // }

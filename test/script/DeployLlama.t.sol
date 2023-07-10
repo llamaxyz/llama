@@ -8,7 +8,7 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -141,8 +141,8 @@ contract Run is DeployLlamaTest {
     address initRoleHolder = makeAddr("randomLogicAddress");
     uint8 approverRoleId = 2;
     assertEq(rootPolicy.hasRole(initRoleHolder, approverRoleId), true);
-    Checkpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
-    Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    RoleCheckpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    RoleCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
 

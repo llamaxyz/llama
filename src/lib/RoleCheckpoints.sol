@@ -8,7 +8,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
  * @dev This library defines the `History` struct, for checkpointing values as they change at different points in
  * time, and later looking up past values by block timestamp.
  *
- * To create a history of checkpoints define a variable type `Checkpoints.History` in your contract, and store a new
+ * To create a history of checkpoints define a variable type `RoleCheckpoints.History` in your contract, and store a new
  * checkpoint for the current transaction timestamp using the {push} function.
  *
  * @dev This was created by modifying then running the OpenZeppelin `Checkpoints.js` script, which generated a version
@@ -17,7 +17,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
  * the OpenZeppelin versions at the same commit. We disable forge-fmt for this file to simplify diffing against the
  * original OpenZeppelin version: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/contracts/utils/Checkpoints.sol
  */
-library Checkpoints {
+library RoleCheckpoints {
     struct History {
         Checkpoint[] _checkpoints;
     }
