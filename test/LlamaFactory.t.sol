@@ -282,6 +282,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_InitializesLlamaPolicy() public {
     LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
 
     assertEq(address(_policy).code.length, 0);
     deployLlama();
@@ -289,11 +290,11 @@ contract Deploy is LlamaFactoryTest {
 
     vm.expectRevert("Initializable: contract is already initialized");
     _policy.initialize(
-      factory.llamaPolicyMetadata(),
       "Test",
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
+      llamaPolicyMetadata,
       color,
       logo
     );

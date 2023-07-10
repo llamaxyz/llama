@@ -163,11 +163,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param roleHolders The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   /// @param rolePermissions The `role`, `permissionId` and whether the role has the permission of the role permissions.
   function initialize(
-    LlamaPolicyMetadata _llamaPolicyMetadata,
     string calldata _name,
     RoleDescription[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
     RolePermissionData[] calldata rolePermissions,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
     string memory _color,
     string memory _logo
   ) external initializer {

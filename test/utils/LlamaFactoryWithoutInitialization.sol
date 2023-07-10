@@ -63,7 +63,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     // Deploy the system.
     policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encode(name))));
     policy.initialize(
-      llamaPolicyMetadata, name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo
+      name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, llamaPolicyMetadata, color, logo
     );
 
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
