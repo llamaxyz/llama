@@ -65,6 +65,8 @@ contract RoleCheckpointsTest is Test {
 // therefore do not account for checkpoint expiration.
 
 contract WithoutCheckpointsWithoutExpiration is RoleCheckpointsTest {
+  error UnsafeCast(uint256 n);
+
   function test_ReturnsZeroAsLatestValue() public {
     assertEq(checkpoints.latest(), 0);
 
@@ -72,6 +74,25 @@ contract WithoutCheckpointsWithoutExpiration is RoleCheckpointsTest {
     assertEq(exists, false);
     assertEq(timestamp, 0);
     assertEq(quantity, 0);
+  }
+
+  function testFuzz_PushesCorrectDataTypes(uint64 timestamp, uint64 expiration, uint96 quantity) public {
+    // This test should never revert if we cast data types correctly when pushing.
+    vm.warp(timestamp);
+    checkpoints.push(quantity, expiration);
+  }
+
+  function testFuzz_RevertIf_InputsAreTooLarge(uint256 timestamp, uint256 expiration, uint256 quantity) public {
+    if (timestamp > type(uint64).max) {
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, timestamp));
+    } else if (expiration > type(uint64).max) {
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, expiration));
+    } else {
+      quantity = bound(quantity, uint256(type(uint96).max) + 1, type(uint256).max);
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, quantity));
+    }
+    vm.warp(timestamp);
+    checkpoints.push(quantity, expiration);
   }
 }
 

@@ -98,9 +98,32 @@ contract CheckpointsTest is Test {
 // All tests within this section mirror the tests in OpenZeppelin's Checkpoints.test.js.
 
 contract WithoutCheckpoints is CheckpointsTest {
+  error UnsafeCast(uint256 n);
+
   function test_ReturnsZeroAsLatestValue() public {
     assertEqLatest(0, 0);
     assertEqLatestCheckpoint(false, 0, 0, 0);
+  }
+
+  function testFuzz_PushesCorrectDataTypes(uint64 timestamp, uint96 numberOfHolders, uint96 totalQuantity) public {
+    // This test should never revert if we cast data types correctly when pushing.
+    vm.warp(timestamp);
+    checkpoints.push(numberOfHolders, totalQuantity);
+  }
+
+  function testFuzz_RevertIf_InputsAreTooLarge(uint256 timestamp, uint256 numberOfHolders, uint256 totalQuantity)
+    public
+  {
+    if (timestamp > type(uint64).max) {
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, timestamp));
+    } else if (numberOfHolders > type(uint96).max) {
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, numberOfHolders));
+    } else {
+      totalQuantity = bound(totalQuantity, uint256(type(uint96).max) + 1, type(uint256).max);
+      vm.expectRevert(abi.encodeWithSelector(UnsafeCast.selector, totalQuantity));
+    }
+    vm.warp(timestamp);
+    checkpoints.push(numberOfHolders, totalQuantity);
   }
 }
 

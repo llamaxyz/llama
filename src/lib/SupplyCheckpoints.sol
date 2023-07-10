@@ -68,7 +68,7 @@ library SupplyCheckpoints {
      * For simplicity, this method does not return anything, since the return values are not needed by Llama.
      */
     function push(History storage self, uint256 numberOfHolders, uint256 totalQuantity) internal {
-        _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(numberOfHolders), LlamaUtils.toUint96(totalQuantity));
+        _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint96(numberOfHolders), LlamaUtils.toUint96(totalQuantity));
     }
 
     /**
