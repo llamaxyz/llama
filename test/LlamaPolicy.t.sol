@@ -1026,7 +1026,7 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function setTokenURIMetadata() internal {
-    vm.startPrank(address(rootExecutor));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setColor(color);
     mpPolicy.setLogo(logo);
     vm.stopPrank();
@@ -1193,7 +1193,7 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
   }
 
   function setTokenURIMetadata() internal {
-    vm.startPrank(address(rootExecutor));
+    vm.startPrank(address(mpExecutor));
     mpPolicy.setColor(color);
     mpPolicy.setLogo(logo);
     vm.stopPrank();
