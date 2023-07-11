@@ -55,7 +55,7 @@ contract UnauthorizeAfterRun is LlamaSingleUseScriptTest {
   function test_CanOnlyBeCalledOnce() public {
     // First call should succeed, and any subsequent calls should fail (unless the script is reauthorized)
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(singleUseScript), true);
+    mpCore.setScriptAuthorization(address(singleUseScript), true);
     ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectEmit();
     emit SuccessfulCall();
