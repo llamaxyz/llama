@@ -453,7 +453,7 @@ contract LlamaCore is Initializable {
   /// @notice Authorizes a strategy implementation (logic) contract.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
   /// @param strategyLogic The strategy logic contract to authorize.
-  /// @param authorized True to authorize the strategy logic, false to unauthorize it.
+  /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
   function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
     _setStrategyLogicAuthorization(strategyLogic, authorized);
   }
@@ -465,10 +465,10 @@ contract LlamaCore is Initializable {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
-  /// @notice Authorizes `strategy` to be eligible to be used in actions.
-  /// @param strategy The address of the strategy contract.
-  /// @param authorized True to authorize the strategy, false to unauthorize it.
+  /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
   /// @dev To remove a `strategy`, set `authorized` to `false`.
+  /// @param strategy The address of the strategy contract.
+  /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
   function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
     _authorizeStrategy(strategy, authorized);
   }
@@ -476,7 +476,7 @@ contract LlamaCore is Initializable {
   /// @notice Authorizes an account implementation (logic) contract.
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
-  /// @param authorized True to authorize the account logic, false to unauthorize it.
+  /// @param authorized `true` to authorize the account logic, `false` to unauthorize it.
   function setAccountLogicAuthorization(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
     _setAccountLogicAuthorization(accountLogic, authorized);
   }
@@ -489,9 +489,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a guard, set `guard` to the zero address.
   /// @param target The target contract where the `guard` will apply.
   /// @param selector The function selector where the `guard` will apply.
-  /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, ILlamaActionGuard guard) external onlyLlama {
     if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
@@ -499,9 +499,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
+  /// @dev To remove a `script`, set `authorized` to `false`.
   /// @param script The address of the script contract.
   /// @param authorized True to authorize the script, false to unauthorize it.
-  /// @dev To remove a `script`, set `authorized` to `false`.
   function setScriptAuthorization(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
