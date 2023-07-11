@@ -51,7 +51,7 @@ contract LlamaBaseScriptTest is LlamaTestSetup {
 contract OnlyDelegateCall is LlamaBaseScriptTest {
   function test_CanDelegateCallBaseScript() public {
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(baseScript), true);
+    mpCore.setScriptAuthorization(address(baseScript), true);
     ActionInfo memory actionInfo = createPermissionAndActionAndApproveAndQueue();
     vm.expectEmit();
     emit SuccessfulCall();

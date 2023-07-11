@@ -36,8 +36,8 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
 
     generateAndSetRoleHolders(_otherRoleHolders);
 
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(absoluteQuorumLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(absoluteQuorumLogic, true);
 
     testStrategy = deployAbsoluteQuorum(
       uint8(Roles.TestRole1),
