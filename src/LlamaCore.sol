@@ -652,7 +652,7 @@ contract LlamaCore is Initializable {
     return currentCount + quantity;
   }
 
-  /// @dev Authorizes a strategy implementation (logic) contract.
+  /// @dev Sets the authorization status for a strategy implementation (logic) contract.
   function _authorizeStrategyLogic(ILlamaStrategy strategyLogic, bool authorized) internal {
     authorizedStrategyLogics[strategyLogic] = authorized;
     emit StrategyLogicAuthorized(strategyLogic, authorized);
