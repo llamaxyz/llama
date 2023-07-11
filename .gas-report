@@ -37,7 +37,7 @@
 | actionGuard                                                                                          | 1204            | 1204                | 1204    | 1204                | 1       |
 | actionsCount                                                                                         | 593             | 735                 | 593     | 2593                | 14      |
 | approvals                                                                                            | 926             | 926                 | 926     | 926                 | 2       |
-| setScriptAuthorization                                                                                      | 2408            | 17321               | 23909   | 28909               | 20      |
+| setScriptAuthorization                                                                               | 2408            | 17321               | 23909   | 28909               | 20      |
 | authorizedScripts                                                                                    | 685             | 685                 | 685     | 685                 | 1       |
 | cancelAction                                                                                         | 3887            | 20807               | 19226   | 32870               | 12      |
 | castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                            | 4051            | 63252               | 72811   | 129624              | 691     |
@@ -81,7 +81,7 @@
 | LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 452             | 452     | 452     | 452     | 383     |
 | ROOT_LLAMA_CORE                            | 342             | 342     | 342     | 342     | 752     |
 | ROOT_LLAMA_EXECUTOR                        | 408             | 408     | 408     | 408     | 375     |
-| setStrategyLogicAuthorization                     | 409             | 19944   | 23708   | 23708   | 30      |
+| setStrategyLogicAuthorization              | 409             | 19944   | 23708   | 23708   | 30      |
 | authorizedStrategyLogics                   | 600             | 826     | 600     | 2600    | 450     |
 | contractURI                                | 44070           | 44070   | 44070   | 44070   | 1       |
 | deploy                                     | 5205            | 1400836 | 1425170 | 1652591 | 393     |

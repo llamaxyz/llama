@@ -68,16 +68,6 @@ library Checkpoints {
     }
 
     /**
-     * @dev Pushes a `quantity` with no expiration onto a History so that it is stored as the checkpoint for the current
-     * `timestamp`.
-     *
-     * Returns previous quantity and new quantity.
-     */
-    function push(History storage self, uint256 quantity) internal returns (uint128, uint128) {
-        return push(self, quantity, type(uint64).max);
-    }
-
-    /**
      * @dev Returns the quantity in the most recent checkpoint, or zero if there are no checkpoints.
      */
     function latest(History storage self) internal view returns (uint128) {
