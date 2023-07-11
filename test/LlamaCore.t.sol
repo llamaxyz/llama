@@ -473,46 +473,6 @@ contract Initialize is LlamaCoreTest {
     );
   }
 
-  function test_SetsLlamaAccountLogicAddress() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
-      deployWithoutInitialization();
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-
-    assertFalse(uninitializedLlama.authorizedAccountLogics(accountLogic));
-
-    modifiedFactory.initialize(
-      uninitializedLlama,
-      policy,
-      "NewProject",
-      relativeQuorumLogic,
-      ILlamaAccount(accountLogic),
-      strategyConfigs,
-      accounts
-    );
-
-    assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
-  }
-
-  function test_EmitsAccountLogicAuthorizationSetEvent() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
-      deployWithoutInitialization();
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-
-    vm.expectEmit();
-    emit AccountLogicAuthorizationSet(accountLogic, true);
-    modifiedFactory.initialize(
-      uninitializedLlama,
-      policy,
-      "NewProject",
-      relativeQuorumLogic,
-      ILlamaAccount(accountLogic),
-      strategyConfigs,
-      accounts
-    );
-  }
-
   function test_AccountsAreDeployedAtExpectedAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
@@ -2775,9 +2735,6 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyLogicAuthorizationSet(ILlamaStrategy(randomLogicAddress), true);
     mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
-
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
-    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
   }
 }
 
