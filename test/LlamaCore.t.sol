@@ -2694,10 +2694,10 @@ contract SetAccountLogicAuthorization is LlamaCoreTest {
 
   function test_SetsValueInStorageMappingToFalse() public {
     vm.prank(address(mpExecutor));
-
     mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
 
+    vm.prank(address(mpExecutor))
     mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), false);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
   }
@@ -2779,7 +2779,9 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
     mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
   }
+}
 
+contract LlamaCoreHarness is LlamaCore {
   function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
     return _infoHash(actionInfo);
   }
