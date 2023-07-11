@@ -137,17 +137,17 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
+  /// @dev Emitted when a created strategy is authorized or unauthorized.
+  event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool authorized);
+
   /// @dev Emitted when a strategy is created.
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
-
-  /// @dev Emitted when a strategy is authorized.
-  event StrategyAuthorized(ILlamaStrategy strategy, bool authorized);
 
   /// @dev Emitted when a new strategy implementation (logic) contract is authorized or unauthorized.
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
-  /// @dev Emitted when a script is authorized.
-  event ScriptAuthorizationSet(address script, bool authorized);
+  /// @dev Emitted when a script is authorized or unauthorized.
+  event ScriptAuthorizationSet(address indexed script, bool authorized);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -701,7 +701,7 @@ contract LlamaCore is Initializable {
   function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
     if (!deployedStrategies[strategy]) revert NonExistentStrategy();
     authorizedStrategies[strategy] = authorized;
-    emit StrategyAuthorized(strategy, authorized);
+    emit StrategyAuthorizationSet(strategy, authorized);
   }
 
   /// @dev Authorizes an account implementation (logic) contract.
