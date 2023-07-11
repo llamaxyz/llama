@@ -2697,7 +2697,7 @@ contract SetAccountLogicAuthorization is LlamaCoreTest {
     mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
 
-    vm.prank(address(mpExecutor))
+    vm.prank(address(mpExecutor));
     mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), false);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
   }
