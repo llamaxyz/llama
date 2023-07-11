@@ -454,7 +454,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     vm.prank(address(mpExecutor));
 
-    mpCore.authorizeStrategyLogic(absolutePeerReviewLogic, true);
+    mpCore.setStrategyLogicAuthorization(absolutePeerReviewLogic, true);
 
     vm.prank(address(mpExecutor));
 
@@ -497,7 +497,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
     vm.prank(address(mpExecutor));
 
-    mpCore.authorizeStrategyLogic(absoluteQuorumLogic, true);
+    mpCore.setStrategyLogicAuthorization(absoluteQuorumLogic, true);
 
     vm.prank(address(mpExecutor));
 

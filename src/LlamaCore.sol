@@ -138,7 +138,7 @@ contract LlamaCore is Initializable {
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
 
   /// @dev Emitted when a new strategy implementation (logic) contract is authorized.
-  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic, bool authorized);
+  event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
@@ -249,7 +249,7 @@ contract LlamaCore is Initializable {
     executor = new LlamaExecutor();
     policy = _policy;
 
-    _authorizeStrategyLogic(_llamaStrategyLogic, true);
+    _setStrategyLogicAuthorization(_llamaStrategyLogic, true);
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
 
     _authorizeAccountLogic(_llamaAccountLogic, true);
@@ -445,8 +445,8 @@ contract LlamaCore is Initializable {
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
   /// @param strategyLogic The strategy logic contract to authorize.
   /// @param authorized True to authorize the strategy logic, false to unauthorize it.
-  function authorizeStrategyLogic(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
-    _authorizeStrategyLogic(strategyLogic, authorized);
+  function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
+    _setStrategyLogicAuthorization(strategyLogic, authorized);
   }
 
   /// @notice Deploy new strategies and add them to the mapping of authorized strategies.
@@ -653,9 +653,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Authorizes a strategy implementation (logic) contract.
-  function _authorizeStrategyLogic(ILlamaStrategy strategyLogic, bool authorized) internal {
+  function _setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) internal {
     authorizedStrategyLogics[strategyLogic] = authorized;
-    emit StrategyLogicAuthorized(strategyLogic, authorized);
+    emit StrategyLogicAuthorizationSet(strategyLogic, authorized);
   }
 
   /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to

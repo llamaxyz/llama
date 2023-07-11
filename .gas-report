@@ -81,7 +81,7 @@
 | LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 452             | 452     | 452     | 452     | 383     |
 | ROOT_LLAMA_CORE                            | 342             | 342     | 342     | 342     | 752     |
 | ROOT_LLAMA_EXECUTOR                        | 408             | 408     | 408     | 408     | 375     |
-| authorizeStrategyLogic                     | 409             | 19944   | 23708   | 23708   | 30      |
+| setStrategyLogicAuthorization                     | 409             | 19944   | 23708   | 23708   | 30      |
 | authorizedStrategyLogics                   | 600             | 826     | 600     | 2600    | 450     |
 | contractURI                                | 44070           | 44070   | 44070   | 44070   | 1       |
 | deploy                                     | 5205            | 1400836 | 1425170 | 1652591 | 393     |

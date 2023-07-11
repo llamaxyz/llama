@@ -54,7 +54,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
   event ScriptAuthorized(address script, bool authorized);
   event ScriptExecutedWithValue(uint256 value);
-  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic, bool authorized);
+  event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
   // We use this to easily generate, save off, and pass around `ActionInfo` structs.
   // mapping (uint256 actionId => ActionInfo) actionInfo;
@@ -135,7 +135,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (ILlamaStrategy) {
     LlamaRelativeQuorum additionalStrategyLogic = new LlamaRelativeQuorum();
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(additionalStrategyLogic, true);
+    mpCore.setStrategyLogicAuthorization(additionalStrategyLogic, true);
     return additionalStrategyLogic;
   }
 
@@ -192,7 +192,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(mockStrategyLogic, true);
+    mpCore.setStrategyLogicAuthorization(mockStrategyLogic, true);
 
     vm.prank(address(mpExecutor));
 
@@ -421,7 +421,7 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
 
     vm.expectEmit();
-    emit StrategyLogicAuthorized(relativeQuorumLogic, true);
+    emit StrategyLogicAuthorizationSet(relativeQuorumLogic, true);
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
@@ -2670,12 +2670,12 @@ contract AuthorizeAccountLogic is LlamaCoreTest {
   }
 }
 
-contract AuthorizeStrategyLogic is LlamaCoreTest {
+contract setStrategyLogicAuthorization is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address _caller) public {
     vm.assume(_caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(_caller);
-    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
   }
 
   function test_RevertIf_StrategyLogicUnauthorized() public {
@@ -2691,23 +2691,23 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
   function test_SetsValueInStorageMappingToTrue() public {
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
   }
 
   function test_SetsValueInStorageMappingToFalse() public {
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), false);
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), false);
     assertEq(mpCore.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
   }
 
   function test_CanBeReauthorized() public {
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(relativeQuorumLogic, false);
+    mpCore.setStrategyLogicAuthorization(relativeQuorumLogic, false);
 
     uint256 salt = 0;
     LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
@@ -2722,7 +2722,7 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategyLogic(relativeQuorumLogic, true);
+    mpCore.setStrategyLogicAuthorization(relativeQuorumLogic, true);
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();
@@ -2733,8 +2733,8 @@ contract AuthorizeStrategyLogic is LlamaCoreTest {
   function test_EmitsStrategyLogicAuthorizedEvent() public {
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress), true);
-    mpCore.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress), true);
+    emit StrategyLogicAuthorizationSet(ILlamaStrategy(randomLogicAddress), true);
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
   }
 }
 
