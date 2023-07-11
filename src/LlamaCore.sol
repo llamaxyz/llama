@@ -472,7 +472,7 @@ contract LlamaCore is Initializable {
   function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
     _authorizeStrategy(strategy, authorized);
   }
-  
+
   /// @notice Authorizes an account implementation (logic) contract.
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
@@ -703,7 +703,7 @@ contract LlamaCore is Initializable {
     authorizedStrategies[strategy] = authorized;
     emit StrategyAuthorized(strategy, authorized);
   }
-  
+
   /// @dev Authorizes an account implementation (logic) contract.
   function _setAccountLogicAuthorization(ILlamaAccount accountLogic, bool authorized) internal {
     authorizedAccountLogics[accountLogic] = authorized;
