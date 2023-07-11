@@ -30,7 +30,6 @@ contract LlamaFactoryTest is LlamaTestSetup {
     address llamaPolicy,
     uint256 chainId
   );
-  event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
@@ -73,16 +72,6 @@ contract Constructor is LlamaFactoryTest {
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
     emit PolicyMetadataSet(policyMetadata);
-    deployLlamaFactory();
-  }
-
-  function test_SetsLlamaStrategyLogicAddress() public {
-    assertTrue(factory.authorizedStrategyLogics(relativeQuorumLogic));
-  }
-
-  function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.expectEmit();
-    emit StrategyLogicAuthorized(relativeQuorumLogic);
     deployLlamaFactory();
   }
 
@@ -368,29 +357,6 @@ contract Deploy is LlamaFactoryTest {
       factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY().getMetadata(llamaExecutor);
     assertEq(setColor, color);
     assertEq(setLogo, logo);
-  }
-}
-
-contract AuthorizeStrategyLogic is LlamaFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootExecutor));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    vm.prank(_caller);
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-  }
-
-  function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
-  }
-
-  function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.prank(address(rootExecutor));
-    vm.expectEmit();
-    emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress));
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
   }
 }
 
