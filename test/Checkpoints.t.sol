@@ -38,11 +38,6 @@ contract CheckpointsMock {
     return numCkpts;
   }
 
-  function push(uint256 quantity) public returns (uint256, uint256) {
-    (uint256 prevQty, uint256 newQty) = Checkpoints.push(_totalCheckpoints, quantity);
-    return (prevQty, newQty);
-  }
-
   function push(uint256 quantity, uint256 expiration) public returns (uint256, uint256) {
     (uint256 prevQty, uint256 newQty) = Checkpoints.push(_totalCheckpoints, quantity, expiration);
     return (prevQty, newQty);
@@ -56,6 +51,7 @@ contract CheckpointsMock {
 
 contract CheckpointsTest is Test {
   CheckpointsMock checkpoints;
+  uint64 DEFAULT_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
     checkpoints = new CheckpointsMock();
@@ -89,15 +85,15 @@ contract WithCheckpointsWithoutExpiration is CheckpointsTest {
 
     vm.warp(block.timestamp + 1);
     t0 = block.timestamp;
-    checkpoints.push(1);
+    checkpoints.push(1, DEFAULT_EXPIRATION);
 
     vm.warp(block.timestamp + 1);
     t1 = block.timestamp;
-    checkpoints.push(2);
+    checkpoints.push(2, DEFAULT_EXPIRATION);
 
     vm.warp(block.timestamp + 2);
     t2 = block.timestamp;
-    checkpoints.push(3);
+    checkpoints.push(3, DEFAULT_EXPIRATION);
 
     vm.warp(block.timestamp + 3);
   }
@@ -134,9 +130,9 @@ contract WithCheckpointsWithoutExpiration is CheckpointsTest {
   function test_MultipleCheckpointsAtTheSameTimestamp() public {
     uint256 lengthBefore = checkpoints.length();
 
-    checkpoints.push(8);
-    checkpoints.push(9);
-    checkpoints.push(10);
+    checkpoints.push(8, DEFAULT_EXPIRATION);
+    checkpoints.push(9, DEFAULT_EXPIRATION);
+    checkpoints.push(10, DEFAULT_EXPIRATION);
 
     vm.warp(block.timestamp + 1);
 
