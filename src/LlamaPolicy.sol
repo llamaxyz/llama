@@ -517,7 +517,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       allHoldersRoleSupply.totalQuantity += 1;
     }
 
-    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
   }
 
   /// @dev Burns a policyholder's policy.
@@ -531,7 +531,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       allHoldersRoleSupply.totalQuantity -= 1;
     }
 
-    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
   }
 
   /// @dev Returns the token ID for a `policyholder`.
