@@ -94,7 +94,7 @@ contract LlamaCore is Initializable {
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   /// @dev Emitted when a new account implementation (logic) contract is authorized or unauthorized.
-  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic, bool authorized);
+  event AccountLogicAuthorizationSet(ILlamaAccount indexed accountLogic, bool authorized);
 
   /// @dev Emitted when an action is created.
   event ActionCreated(
@@ -141,7 +141,7 @@ contract LlamaCore is Initializable {
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
   /// @dev Emitted when a script is authorized.
-  event ScriptAuthorized(address script, bool authorized);
+  event ScriptAuthorizationSet(address script, bool authorized);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -252,7 +252,7 @@ contract LlamaCore is Initializable {
     _setStrategyLogicAuthorization(_llamaStrategyLogic, true);
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
 
-    _authorizeAccountLogic(_llamaAccountLogic, true);
+    _setAccountLogicAuthorization(_llamaAccountLogic, true);
     _deployAccounts(_llamaAccountLogic, initialAccounts);
 
     // Now we compute the permission ID used to set role permissions and return it.
@@ -460,8 +460,8 @@ contract LlamaCore is Initializable {
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
   /// @param authorized True to authorize the account logic, false to unauthorize it.
-  function authorizeAccountLogic(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
-    _authorizeAccountLogic(accountLogic, authorized);
+  function setAccountLogicAuthorization(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
+    _setAccountLogicAuthorization(accountLogic, authorized);
   }
 
   /// @notice Deploy new accounts.
@@ -485,10 +485,10 @@ contract LlamaCore is Initializable {
   /// @param script The address of the script contract.
   /// @param authorized True to authorize the script, false to unauthorize it.
   /// @dev To remove a `script`, set `authorized` to `false`.
-  function authorizeScript(address script, bool authorized) external onlyLlama {
+  function setScriptAuthorization(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
-    emit ScriptAuthorized(script, authorized);
+    emit ScriptAuthorizationSet(script, authorized);
   }
 
   /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
@@ -680,9 +680,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Authorizes an account implementation (logic) contract.
-  function _authorizeAccountLogic(ILlamaAccount accountLogic, bool authorized) internal {
+  function _setAccountLogicAuthorization(ILlamaAccount accountLogic, bool authorized) internal {
     authorizedAccountLogics[accountLogic] = authorized;
-    emit AccountLogicAuthorized(accountLogic, authorized);
+    emit AccountLogicAuthorizationSet(accountLogic, authorized);
   }
 
   /// @dev Deploys new accounts. Takes in the account logic contract to be used and an array of configurations to

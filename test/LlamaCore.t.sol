@@ -30,7 +30,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
-  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic, bool authorized);
+  event AccountLogicAuthorizationSet(ILlamaAccount indexed accountLogic, bool authorized);
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -52,7 +52,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
-  event ScriptAuthorized(address script, bool authorized);
+  event ScriptAuthorizationSet(address script, bool authorized);
   event ScriptExecutedWithValue(uint256 value);
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
@@ -142,14 +142,14 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function _deployAndAuthorizeAdditionalAccountLogic() internal returns (ILlamaAccount) {
     LlamaAccount additionalAccountLogic = new LlamaAccount();
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(additionalAccountLogic, true);
+    mpCore.setAccountLogicAuthorization(additionalAccountLogic, true);
     return additionalAccountLogic;
   }
 
   function _deployAndAuthorizeMockAccountLogic() internal returns (ILlamaAccount) {
     MockAccountLogicContract mockAccountLogic = new MockAccountLogicContract();
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(mockAccountLogic, true);
+    mpCore.setAccountLogicAuthorization(mockAccountLogic, true);
     return mockAccountLogic;
   }
 
@@ -454,14 +454,14 @@ contract Initialize is LlamaCoreTest {
     assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
   }
 
-  function test_EmitsAccountLogicAuthorizedEvent() public {
+  function test_EmitsAccountLogicAuthorizationSetEvent() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
     vm.expectEmit();
-    emit AccountLogicAuthorized(accountLogic, true);
+    emit AccountLogicAuthorizationSet(accountLogic, true);
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
@@ -693,7 +693,7 @@ contract CreateAction is LlamaCoreTest {
     PermissionData memory permissionData = PermissionData(scriptAddress, bytes4(data), mpStrategy1);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(scriptAddress, true);
+    mpCore.setScriptAuthorization(scriptAddress, true);
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
@@ -1052,7 +1052,7 @@ contract ExecuteAction is LlamaCoreTest {
   ActionInfo actionInfo;
 
   function _executeScriptAuthorizationActionFlow(bool authorize) internal {
-    bytes memory data = abi.encodeCall(mpCore.authorizeScript, (address(mockScript), authorize));
+    bytes memory data = abi.encodeCall(mpCore.setScriptAuthorization, (address(mockScript), authorize));
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mpCore), 0, data, "");
     actionInfo =
@@ -1100,7 +1100,7 @@ contract ExecuteAction is LlamaCoreTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), true);
+    mpCore.setScriptAuthorization(address(mockScript), true);
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_WITH_VALUE_SELECTOR);
     vm.prank(actionCreatorAustin);
@@ -1133,7 +1133,7 @@ contract ExecuteAction is LlamaCoreTest {
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), true);
+    mpCore.setScriptAuthorization(address(mockScript), true);
 
     bytes memory data = abi.encodeWithSelector(EXECUTE_SCRIPT_SELECTOR);
     vm.prank(actionCreatorAustin);
@@ -1333,7 +1333,7 @@ contract ExecuteAction is LlamaCoreTest {
   function test_ScriptAuthorizationDoesNotAffectExecution() external {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), false);
+    mpCore.setScriptAuthorization(address(mockScript), false);
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -1352,7 +1352,7 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 6 days);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), true);
+    mpCore.setScriptAuthorization(address(mockScript), true);
 
     mpCore.queueAction(_actionInfo);
 
@@ -1369,7 +1369,7 @@ contract ExecuteAction is LlamaCoreTest {
   function test_ScriptUnauthorizationDoesNotAffectExecution() external {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), true);
+    mpCore.setScriptAuthorization(address(mockScript), true);
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
@@ -1388,7 +1388,7 @@ contract ExecuteAction is LlamaCoreTest {
     vm.warp(block.timestamp + 6 days);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeScript(address(mockScript), false);
+    mpCore.setScriptAuthorization(address(mockScript), false);
 
     mpCore.queueAction(_actionInfo);
 
@@ -2261,7 +2261,7 @@ contract CreateAccounts is LlamaCoreTest {
     newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), false);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(accountLogic), false);
 
     vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpExecutor));
@@ -2366,14 +2366,14 @@ contract CreateAccounts is LlamaCoreTest {
       lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[2]), address(mpCore));
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), false);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(accountLogic), false);
 
     vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(accountLogic), true);
 
     vm.expectEmit();
     emit AccountCreated(accountAddress, accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
@@ -2425,28 +2425,28 @@ contract AuthorizeScript is LlamaCoreTest {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
-    mpCore.authorizeScript(script, authorized);
+    mpCore.setScriptAuthorization(script, authorized);
   }
 
-  function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizedEvent(address script, bool authorized) public {
+  function testFuzz_UpdatesScriptMappingAndEmitsScriptAuthorizationSetEvent(address script, bool authorized) public {
     vm.assume(script != address(mpCore) && script != address(mpPolicy) && script != address(mpExecutor));
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit ScriptAuthorized(script, authorized);
-    mpCore.authorizeScript(script, authorized);
+    emit ScriptAuthorizationSet(script, authorized);
+    mpCore.setScriptAuthorization(script, authorized);
     assertEq(mpCore.authorizedScripts(script), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsCore(bool authorized) public {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
-    mpCore.authorizeScript(address(mpCore), authorized);
+    mpCore.setScriptAuthorization(address(mpCore), authorized);
   }
 
   function testFuzz_RevertIf_ScriptIsPolicy(bool authorized) public {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
-    mpCore.authorizeScript(address(mpPolicy), authorized);
+    mpCore.setScriptAuthorization(address(mpPolicy), authorized);
   }
 }
 
@@ -2637,40 +2637,40 @@ contract GetActionState is LlamaCoreTest {
   }
 }
 
-contract AuthorizeAccountLogic is LlamaCoreTest {
+contract SetAccountLogicAuthorization is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address _caller) public {
     vm.assume(_caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(_caller);
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
   }
 
   function test_SetsValueInStorageMappingToTrue() public {
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
   }
 
   function test_SetsValueInStorageMappingToFalse() public {
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), false);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), false);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
   }
 
-  function test_EmitsAccountLogicAuthorizedEvent() public {
+  function test_EmitsAccountLogicAuthorizationSetEvent() public {
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress), true);
-    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    emit AccountLogicAuthorizationSet(ILlamaAccount(randomLogicAddress), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(randomLogicAddress), true);
   }
 }
 
-contract setStrategyLogicAuthorization is LlamaCoreTest {
+contract SetStrategyLogicAuthorization is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address _caller) public {
     vm.assume(_caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);

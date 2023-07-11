@@ -104,7 +104,7 @@ The main use-case for scripts is to batch multiple calls together into one actio
 In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks. 
 
 `DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use. 
-To authorize a script, a policyholder must create an action that calls the `authorizeScript` function on `LlamaCore`. 
+To authorize a script, a policyholder must create an action that calls the `setScriptAuthorization` function on `LlamaCore`. 
 Scripts may also be unauthorized using the same function.
 
 ## Guards

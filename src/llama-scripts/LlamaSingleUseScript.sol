@@ -14,10 +14,10 @@ abstract contract LlamaSingleUseScript is LlamaBaseScript {
   modifier unauthorizeAfterRun() {
     _;
     LlamaCore core = LlamaCore(EXECUTOR.LLAMA_CORE());
-    core.authorizeScript(SELF, false);
+    core.setScriptAuthorization(SELF, false);
   }
 
-  /// @dev Address of the executor contract. We save it off in order to access the authorizeScript method in
+  /// @dev Address of the executor contract. We save it off in order to access the setScriptAuthorization method in
   /// `LlamaCore`.
   LlamaExecutor internal immutable EXECUTOR;
 

@@ -37,7 +37,7 @@
 | actionGuard                                                                                          | 1204            | 1204                | 1204    | 1204                | 1       |
 | actionsCount                                                                                         | 593             | 735                 | 593     | 2593                | 14      |
 | approvals                                                                                            | 926             | 926                 | 926     | 926                 | 2       |
-| authorizeScript                                                                                      | 2408            | 17321               | 23909   | 28909               | 20      |
+| setScriptAuthorization                                                                                      | 2408            | 17321               | 23909   | 28909               | 20      |
 | authorizedScripts                                                                                    | 685             | 685                 | 685     | 685                 | 1       |
 | cancelAction                                                                                         | 3887            | 20807               | 19226   | 32870               | 12      |
 | castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                            | 4051            | 63252               | 72811   | 129624              | 691     |
