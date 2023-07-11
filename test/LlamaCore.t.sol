@@ -494,14 +494,14 @@ contract Initialize is LlamaCoreTest {
     assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
   }
 
-  function test_EmitsAccountLogicAuthorizedEvent() public {
+  function test_EmitsAccountLogicAuthorizationSetEvent() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
     vm.expectEmit();
-    emit AccountLogicAuthorized(accountLogic, true);
+    emit AccountLogicAuthorizationSet(accountLogic, true);
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
