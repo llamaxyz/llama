@@ -2778,6 +2778,7 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
 
     mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
     assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+  }
 
   function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
     return _infoHash(actionInfo);
