@@ -30,6 +30,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
+  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic, bool authorized);
   event ActionCreated(
     uint256 id,
     address indexed creator,
@@ -139,15 +140,15 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
   function _deployAndAuthorizeAdditionalAccountLogic() internal returns (ILlamaAccount) {
     LlamaAccount additionalAccountLogic = new LlamaAccount();
-    vm.prank(address(rootExecutor));
-    factory.authorizeAccountLogic(additionalAccountLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(additionalAccountLogic, true);
     return additionalAccountLogic;
   }
 
   function _deployAndAuthorizeMockAccountLogic() internal returns (ILlamaAccount) {
     MockAccountLogicContract mockAccountLogic = new MockAccountLogicContract();
-    vm.prank(address(rootExecutor));
-    factory.authorizeAccountLogic(mockAccountLogic);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(mockAccountLogic, true);
     return mockAccountLogic;
   }
 
@@ -411,6 +412,46 @@ contract Initialize is LlamaCoreTest {
     );
   }
 
+  function test_SetsLlamaAccountLogicAddress() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+      deployWithoutInitialization();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+
+    assertFalse(uninitializedLlama.authorizedAccountLogics(accountLogic));
+
+    modifiedFactory.initialize(
+      uninitializedLlama,
+      policy,
+      "NewProject",
+      relativeQuorumLogic,
+      ILlamaAccount(accountLogic),
+      strategyConfigs,
+      accounts
+    );
+
+    assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
+      deployWithoutInitialization();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+
+    vm.expectEmit();
+    emit AccountLogicAuthorized(accountLogic, true);
+    modifiedFactory.initialize(
+      uninitializedLlama,
+      policy,
+      "NewProject",
+      relativeQuorumLogic,
+      ILlamaAccount(accountLogic),
+      strategyConfigs,
+      accounts
+    );
+  }
+
   function test_AccountsAreDeployedAtExpectedAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
       deployWithoutInitialization();
@@ -489,25 +530,6 @@ contract Initialize is LlamaCoreTest {
 
     assertEq(LlamaAccount(payable(address(accountAddresses[0]))).name(), "Llama Treasury");
     assertEq(LlamaAccount(payable(address(accountAddresses[1]))).name(), "Llama Grants");
-  }
-
-  function testFuzz_RevertIf_AccountLogicIsNotAuthorized(address notAccountLogic) public {
-    vm.assume(notAccountLogic != address(accountLogic));
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama, LlamaPolicy policy) =
-      deployWithoutInitialization();
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-
-    vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
-    modifiedFactory.initialize(
-      uninitializedLlama,
-      policy,
-      "NewProject",
-      relativeQuorumLogic,
-      ILlamaAccount(notAccountLogic),
-      strategyConfigs,
-      accounts
-    );
   }
 }
 
@@ -2211,6 +2233,20 @@ contract CreateAccounts is LlamaCoreTest {
     mpCore.createAccounts(ILlamaAccount(randomLogicAddress), DeployUtils.encodeAccountConfigs(newAccounts));
   }
 
+  function test_RevertIf_AccountLogicUnauthorized() public {
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), false);
+
+    vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
+  }
+
   function test_RevertIf_Reinitialized() public {
     LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
     newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
@@ -2293,6 +2329,37 @@ contract CreateAccounts is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddress, accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
     mpCore.executeAction(actionInfo);
+  }
+
+  function test_CanBeReauthorized() public {
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](3);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+    newAccounts[1] = LlamaAccount.Config({name: "LlamaAccount3"});
+    newAccounts[2] = LlamaAccount.Config({name: "LlamaAccount4"});
+
+    ILlamaAccount accountAddress =
+      lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[0]), address(mpCore));
+    ILlamaAccount accountAddress1 =
+      lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[1]), address(mpCore));
+    ILlamaAccount accountAddress2 =
+      lens.computeLlamaAccountAddress(address(accountLogic), DeployUtils.encodeAccount(newAccounts[2]), address(mpCore));
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), false);
+
+    vm.expectRevert(LlamaCore.UnauthorizedAccountLogic.selector);
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(accountLogic), true);
+
+    vm.expectEmit();
+    emit AccountCreated(accountAddress, accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
+    emit AccountCreated(accountAddress1, accountLogic, DeployUtils.encodeAccount(newAccounts[1]));
+    emit AccountCreated(accountAddress2, accountLogic, DeployUtils.encodeAccount(newAccounts[2]));
+    vm.prank(address(mpExecutor));
+    mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
   }
 }
 
@@ -2546,6 +2613,39 @@ contract GetActionState is LlamaCoreTest {
     uint256 currentState = uint256(mpCore.getActionState(actionInfo));
     uint256 failedState = uint256(ActionState.Failed);
     assertEq(currentState, failedState);
+  }
+}
+
+contract AuthorizeAccountLogic is LlamaCoreTest {
+  function testFuzz_RevertIf_CallerIsNotLlama(address _caller) public {
+    vm.assume(_caller != address(mpExecutor));
+    vm.expectRevert(LlamaCore.OnlyLlama.selector);
+    vm.prank(_caller);
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+  }
+
+  function test_SetsValueInStorageMappingToTrue() public {
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+  }
+
+  function test_SetsValueInStorageMappingToFalse() public {
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), false);
+    assertEq(mpCore.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
+  }
+
+  function test_EmitsAccountLogicAuthorizedEvent() public {
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress), true);
+    mpCore.authorizeAccountLogic(ILlamaAccount(randomLogicAddress), true);
   }
 }
 

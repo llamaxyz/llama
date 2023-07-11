@@ -36,7 +36,6 @@ contract Run is DeployLlamaTest {
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
     assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
-    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootLlama() public {
@@ -48,6 +47,7 @@ contract Run is DeployLlamaTest {
     LlamaCore rootLlamaCore = factory.ROOT_LLAMA_CORE();
     LlamaExecutor rootLlamaExecutor = factory.ROOT_LLAMA_EXECUTOR();
     assertEq(rootLlamaCore.name(), "Root Llama");
+    assertEq(rootLlamaCore.authorizedAccountLogics(accountLogic), true);
 
     // There are three strategies we expect to have been deployed.
     ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](3);
