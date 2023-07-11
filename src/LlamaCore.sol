@@ -137,13 +137,8 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a strategy is created and authorized.
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
 
-<<<<<<< HEAD
-  /// @dev Emitted when a new strategy implementation (logic) contract is authorized.
-  event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
-=======
   /// @dev Emitted when a new strategy implementation (logic) contract is authorized or unauthorized.
-  event StrategyLogicAuthorized(ILlamaStrategy indexed strategyLogic, bool authorized);
->>>>>>> 6743fc4ec121297e0aed66fae3c09b288b68b23c
+  event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
   /// @dev Emitted when a script is authorized.
   event ScriptAuthorized(address script, bool authorized);
