@@ -215,7 +215,7 @@ contract LlamaFactory {
     emit PolicyMetadataSet(_llamaPolicyMetadata);
   }
 
-  /// @dev Sets the Llama policy metadata contract.
+  /// @dev Deploy a new `LlamaPolicy` clone and initialize it.
   function _initializePolicy(
     string memory name,
     RoleDescription[] memory initialRoleDescriptions,
@@ -233,7 +233,7 @@ contract LlamaFactory {
     );
   }
 
-  /// @dev Sets the Llama policy metadata contract.
+  /// @dev Deploy a new `LlamaCore` clone and initialize it.
   function _initializeCore(
     string memory name,
     ILlamaStrategy strategyLogic,
