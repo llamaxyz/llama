@@ -2195,6 +2195,8 @@ contract AuthorizeStrategy is LlamaCoreTest {
   }
 
   function test_ReauthorizeStrategy() public {
+    assertEq(mpCore.authorizedStrategies(mpStrategy1), true);
+
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, false);
     assertEq(mpCore.authorizedStrategies(mpStrategy1), false);
