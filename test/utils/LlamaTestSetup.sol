@@ -571,4 +571,15 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       }
     }
   }
+
+  function assertEqStrategyStatus(
+    LlamaCore core,
+    ILlamaStrategy strategy,
+    bool expectedDeployed,
+    bool expectedAuthorized
+  ) internal {
+    (bool deployed, bool authorized) = core.strategies(strategy);
+    assertEq(deployed, expectedDeployed);
+    assertEq(authorized, expectedAuthorized);
+  }
 }

@@ -18,6 +18,16 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Manages the action process from creation to execution.
 contract LlamaCore is Initializable {
+  // =========================
+  // ======== Structs ========
+  // =========================
+
+  /// @dev Stores the two different status values for a strategy.
+  struct StrategyStatus {
+    bool deployed; // Whether or not the strategy has been deployed from this `LlamaCore`.
+    bool authorized; // Whether or not the strategy has been authorized for action creations in this `LlamaCore`.
+  }
+
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -59,11 +69,11 @@ contract LlamaCore is Initializable {
   /// @dev The recovered signer does not match the expected policyholder.
   error InvalidSignature();
 
-  /// @dev The provided address does not map to a deployed strategy.
-  error InvalidStrategy();
-
   /// @dev An action cannot queue successfully if it's `minExecutionTime` is less than `block.timestamp`.
   error MinExecutionTimeCannotBeInThePast();
+
+  /// @dev The provided strategy address does not map to a deployed strategy.
+  error NonExistentStrategy();
 
   /// @dev Only callable by a Llama instance's executor.
   error OnlyLlama();
@@ -73,6 +83,9 @@ contract LlamaCore is Initializable {
 
   /// @dev If `block.timestamp` is less than `minExecutionTime`, the action cannot be executed.
   error MinExecutionTimeNotReached();
+
+  /// @dev Actions can only be created with authorized strategies.
+  error UnauthorizedStrategy();
 
   /// @dev Strategies can only be created with valid logic contracts.
   error UnauthorizedStrategyLogic();
@@ -134,14 +147,17 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
-  /// @dev Emitted when a strategy is created and authorized.
+  /// @dev Emitted when a deployed strategy is authorized or unauthorized.
+  event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool authorized);
+
+  /// @dev Emitted when a strategy is created.
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
 
   /// @dev Emitted when a new strategy implementation (logic) contract is authorized or unauthorized.
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
 
-  /// @dev Emitted when a script is authorized.
-  event ScriptAuthorizationSet(address script, bool authorized);
+  /// @dev Emitted when a script is authorized or unauthorized.
+  event ScriptAuthorizationSet(address indexed script, bool authorized);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -200,8 +216,8 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
-  /// @notice Mapping of all authorized strategies.
-  mapping(ILlamaStrategy => bool) public strategies;
+  /// @notice Mapping of all deployed strategies and their current authorizaton status.
+  mapping(ILlamaStrategy => StrategyStatus) public strategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -444,7 +460,7 @@ contract LlamaCore is Initializable {
   /// @notice Authorizes a strategy implementation (logic) contract.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
   /// @param strategyLogic The strategy logic contract to authorize.
-  /// @param authorized True to authorize the strategy logic, false to unauthorize it.
+  /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
   function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
     _setStrategyLogicAuthorization(strategyLogic, authorized);
   }
@@ -456,10 +472,18 @@ contract LlamaCore is Initializable {
     _deployStrategies(llamaStrategyLogic, strategyConfigs);
   }
 
+  /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
+  /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
+  /// @param strategy The address of the deployed strategy contract.
+  /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
+  function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
+    _authorizeStrategy(strategy, authorized);
+  }
+
   /// @notice Authorizes an account implementation (logic) contract.
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
-  /// @param authorized True to authorize the account logic, false to unauthorize it.
+  /// @param authorized `true` to authorize the account logic, `false` to unauthorize it.
   function setAccountLogicAuthorization(ILlamaAccount accountLogic, bool authorized) external onlyLlama {
     _setAccountLogicAuthorization(accountLogic, authorized);
   }
@@ -472,9 +496,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Sets `guard` as the action guard for the given `target` and `selector`.
+  /// @dev To remove a guard, set `guard` to the zero address.
   /// @param target The target contract where the `guard` will apply.
   /// @param selector The function selector where the `guard` will apply.
-  /// @dev To remove a guard, set `guard` to the zero address.
   function setGuard(address target, bytes4 selector, ILlamaActionGuard guard) external onlyLlama {
     if (target == address(this) || target == address(policy)) revert RestrictedAddress();
     actionGuard[target][selector] = guard;
@@ -482,9 +506,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
+  /// @dev To unauthorize a `script`, set `authorized` to `false`.
   /// @param script The address of the script contract.
-  /// @param authorized True to authorize the script, false to unauthorize it.
-  /// @dev To remove a `script`, set `authorized` to `false`.
+  /// @param authorized `true` to authorize the script, `false` to unauthorize it.
   function setScriptAuthorization(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
@@ -557,7 +581,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
-    if (!strategies[strategy]) revert InvalidStrategy();
+    if (!strategies[strategy].authorized) revert UnauthorizedStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -673,10 +697,18 @@ contract LlamaCore is Initializable {
       bytes32 salt = keccak256(strategyConfigs[i]);
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
-      strategies[strategy] = true;
+      strategies[strategy].deployed = true;
+      _authorizeStrategy(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
     }
+  }
+
+  /// @dev Sets the `strategy` authorization status to `authorized`.
+  function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
+    if (!strategies[strategy].deployed) revert NonExistentStrategy();
+    strategies[strategy].authorized = authorized;
+    emit StrategyAuthorizationSet(strategy, authorized);
   }
 
   /// @dev Authorizes an account implementation (logic) contract.
