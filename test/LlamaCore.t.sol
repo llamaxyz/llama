@@ -2214,37 +2214,35 @@ contract AuthorizeStrategy is LlamaCoreTest {
     (, bool strategyAuthorized) = mpCore.strategies(mpStrategy1);
     assertEq(strategyAuthorized, true);
 
-    vm.prank(address(mpExecutor));
+    vm.startPrank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, false);
     (, strategyAuthorized) = mpCore.strategies(mpStrategy1);
     assertEq(strategyAuthorized, false);
 
-    vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, true);
     (, strategyAuthorized) = mpCore.strategies(mpStrategy1);
     assertEq(strategyAuthorized, true);
+    vm.stopPrank();
   }
 
   function test_EmitsStrategyAuthorizedEvent() public {
-    vm.prank(address(mpExecutor));
+    vm.startPrank(address(mpExecutor));
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy1, false);
     mpCore.authorizeStrategy(mpStrategy1, false);
 
-    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy1, true);
     mpCore.authorizeStrategy(mpStrategy1, true);
 
-    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy2, false);
     mpCore.authorizeStrategy(mpStrategy2, false);
 
-    vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy2, true);
     mpCore.authorizeStrategy(mpStrategy2, true);
+    vm.stopPrank();
   }
 }
 
