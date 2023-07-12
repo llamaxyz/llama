@@ -15,10 +15,12 @@ contract Setup is LlamaIntegrationsTest {
   function test_setUp() public {
     assertEq(mpCore.name(), "Mock Protocol Llama");
 
-    assertTrue(mpCore.strategies(mpStrategy1).authorized);
-    assertTrue(mpCore.strategies(mpStrategy2).authorized);
-    assertTrue(mpCore.strategies(mpStrategy1).deployed);
-    assertTrue(mpCore.strategies(mpStrategy2).deployed);
+    (bool mpStrategy1Deployed, bool mpStrategy1Authorized) = mpCore.strategies(mpStrategy1);
+    (bool mpStrategy2Deployed, bool mpStrategy2Authorized) = mpCore.strategies(mpStrategy2);
+    assertTrue(mpStrategy1Deployed);
+    assertTrue(mpStrategy2Deployed);
+    assertTrue(mpStrategy1Authorized);
+    assertTrue(mpStrategy2Authorized);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpAccount1.initialize("LlamaAccount0");

@@ -176,8 +176,12 @@ contract Run is CreateActionTest {
     assertFalse(address(llamaInstance) == address(rootLlama));
 
     LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
-    assertEq(llamaInstance.strategies(firstStrategy).authorized, true);
-    assertEq(llamaInstance.strategies(firstStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool firstStrategyDeployed, bool firstStrategyAuthorized) = llamaInstance.strategies(firstStrategy);
+      assertEq(firstStrategyDeployed, true);
+      assertEq(firstStrategyAuthorized, true);
+    }
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
     assertEq(firstStrategy.disapprovalRole(), 3);
@@ -190,8 +194,12 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum secondStrategy = strategiesAuthorized[1];
-    assertEq(llamaInstance.strategies(secondStrategy).authorized, true);
-    assertEq(llamaInstance.strategies(secondStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool secondStrategyDeployed, bool secondStrategyAuthorized) = llamaInstance.strategies(secondStrategy);
+      assertEq(secondStrategyDeployed, true);
+      assertEq(secondStrategyAuthorized, true);
+    }
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
     assertEq(secondStrategy.disapprovalRole(), 3);
@@ -204,8 +212,12 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum thirdStrategy = strategiesAuthorized[2];
-    assertEq(llamaInstance.strategies(thirdStrategy).authorized, true);
-    assertEq(llamaInstance.strategies(thirdStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool thirdStrategyDeployed, bool thirdStrategyAuthorized) = llamaInstance.strategies(thirdStrategy);
+      assertEq(thirdStrategyDeployed, true);
+      assertEq(thirdStrategyAuthorized, true);
+    }
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);
     assertEq(thirdStrategy.disapprovalRole(), 3);

@@ -82,8 +82,12 @@ contract Run is DeployLlamaTest {
     }
 
     ILlamaStrategy firstStrategy = strategiesAuthorized[0];
-    assertEq(rootLlamaCore.strategies(firstStrategy).authorized, true);
-    assertEq(rootLlamaCore.strategies(firstStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool firstStrategyDeployed, bool firstStrategyAuthorized) = rootLlamaCore.strategies(firstStrategy);
+      assertEq(firstStrategyDeployed, true);
+      assertEq(firstStrategyAuthorized, true);
+    }
     assertEq(toRelativeQuorum(firstStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(firstStrategy).approvalRole(), 1);
     assertEq(toRelativeQuorum(firstStrategy).disapprovalRole(), 3);
@@ -96,8 +100,12 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(firstStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy secondStrategy = strategiesAuthorized[1];
-    assertEq(rootLlamaCore.strategies(secondStrategy).authorized, true);
-    assertEq(rootLlamaCore.strategies(secondStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool secondStrategyDeployed, bool secondStrategyAuthorized) = rootLlamaCore.strategies(secondStrategy);
+      assertEq(secondStrategyDeployed, true);
+      assertEq(secondStrategyAuthorized, true);
+    }
     assertEq(toRelativeQuorum(secondStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(secondStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(secondStrategy).disapprovalRole(), 3);
@@ -110,8 +118,12 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(secondStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy thirdStrategy = strategiesAuthorized[2];
-    assertEq(rootLlamaCore.strategies(thirdStrategy).authorized, true);
-    assertEq(rootLlamaCore.strategies(thirdStrategy).deployed, true);
+    // Scope to avoid stack too deep
+    {
+      (bool thirdStrategyDeployed, bool thirdStrategyAuthorized) = rootLlamaCore.strategies(thirdStrategy);
+      assertEq(thirdStrategyDeployed, true);
+      assertEq(thirdStrategyAuthorized, true);
+    }
     assertEq(toRelativeQuorum(thirdStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(thirdStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(thirdStrategy).disapprovalRole(), 3);

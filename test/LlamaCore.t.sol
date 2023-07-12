@@ -246,10 +246,12 @@ contract Setup is LlamaCoreTest {
     assertEq(mpCore.name(), "Mock Protocol Llama");
     assertEq(address(mpCore.policy()), address(mpPolicy));
 
-    assertTrue(mpCore.strategies(mpStrategy1).authorized);
-    assertTrue(mpCore.strategies(mpStrategy2).authorized);
-    assertTrue(mpCore.strategies(mpStrategy1).deployed);
-    assertTrue(mpCore.strategies(mpStrategy2).deployed);
+    (bool mpStrategy1Deployed, bool mpStrategy1Authorized) = mpCore.strategies(mpStrategy1);
+    (bool mpStrategy2Deployed, bool mpStrategy2Authorized) = mpCore.strategies(mpStrategy2);
+    assertTrue(mpStrategy1Deployed);
+    assertTrue(mpStrategy2Deployed);
+    assertTrue(mpStrategy1Authorized);
+    assertTrue(mpStrategy2Authorized);
 
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpAccount1.initialize("LlamaAccount0");
@@ -390,19 +392,23 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
     }
 
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]).deployed, false);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]).deployed, false);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]).authorized, false);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]).authorized, false);
+    (bool strategy0Deployed, bool strategy0Authorized) = uninitializedLlama.strategies(strategyAddresses[0]);
+    (bool strategy1Deployed, bool strategy1Authorized) = uninitializedLlama.strategies(strategyAddresses[1]);
+    assertEq(strategy0Deployed, false);
+    assertEq(strategy1Deployed, false);
+    assertEq(strategy0Authorized, false);
+    assertEq(strategy1Authorized, false);
 
     modifiedFactory.initialize(
       uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]).deployed, true);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]).deployed, true);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[0]).authorized, true);
-    assertEq(uninitializedLlama.strategies(strategyAddresses[1]).authorized, true);
+    (strategy0Deployed, strategy0Authorized) = uninitializedLlama.strategies(strategyAddresses[0]);
+    (strategy1Deployed, strategy1Authorized) = uninitializedLlama.strategies(strategyAddresses[1]);
+    assertEq(strategy0Deployed, true);
+    assertEq(strategy1Deployed, true);
+    assertEq(strategy0Authorized, true);
+    assertEq(strategy1Authorized, true);
   }
 
   function test_SetsLlamaStrategyLogicAddress() public {
@@ -1960,13 +1966,15 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.strategies(strategyAddresses[0]).deployed, true);
-    assertEq(mpCore.strategies(strategyAddresses[1]).deployed, true);
-    assertEq(mpCore.strategies(strategyAddresses[2]).deployed, true);
-
-    assertEq(mpCore.strategies(strategyAddresses[0]).authorized, true);
-    assertEq(mpCore.strategies(strategyAddresses[1]).authorized, true);
-    assertEq(mpCore.strategies(strategyAddresses[2]).authorized, true);
+    (bool strategy0Deployed, bool strategy0Authorized) = mpCore.strategies(strategyAddresses[0]);
+    (bool strategy1Deployed, bool strategy1Authorized) = mpCore.strategies(strategyAddresses[1]);
+    (bool strategy2Deployed, bool strategy2Authorized) = mpCore.strategies(strategyAddresses[2]);
+    assertEq(strategy0Deployed, true);
+    assertEq(strategy1Deployed, true);
+    assertEq(strategy2Deployed, true);
+    assertEq(strategy0Authorized, true);
+    assertEq(strategy1Authorized, true);
+    assertEq(strategy2Authorized, true);
   }
 
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
@@ -2039,13 +2047,15 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.createStrategies(additionalStrategyLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
-    assertEq(mpCore.strategies(strategyAddresses[0]).deployed, true);
-    assertEq(mpCore.strategies(strategyAddresses[1]).deployed, true);
-    assertEq(mpCore.strategies(strategyAddresses[2]).deployed, true);
-
-    assertEq(mpCore.strategies(strategyAddresses[0]).authorized, true);
-    assertEq(mpCore.strategies(strategyAddresses[1]).authorized, true);
-    assertEq(mpCore.strategies(strategyAddresses[2]).authorized, true);
+    (bool strategy0Deployed, bool strategy0Authorized) = mpCore.strategies(strategyAddresses[0]);
+    (bool strategy1Deployed, bool strategy1Authorized) = mpCore.strategies(strategyAddresses[1]);
+    (bool strategy2Deployed, bool strategy2Authorized) = mpCore.strategies(strategyAddresses[2]);
+    assertEq(strategy0Deployed, true);
+    assertEq(strategy1Deployed, true);
+    assertEq(strategy2Deployed, true);
+    assertEq(strategy0Authorized, true);
+    assertEq(strategy1Authorized, true);
+    assertEq(strategy2Authorized, true);
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
@@ -2168,8 +2178,9 @@ contract CreateStrategies is LlamaCoreTest {
 
     mpCore.executeAction(actionInfo);
 
-    assertEq(mpCore.strategies(strategyAddress).deployed, true);
-    assertEq(mpCore.strategies(strategyAddress).authorized, true);
+    (bool strategyDeployed, bool strategyAuthorized) = mpCore.strategies(strategyAddress);
+    assertEq(strategyDeployed, true);
+    assertEq(strategyAuthorized, true);
   }
 }
 
@@ -2182,30 +2193,36 @@ contract AuthorizeStrategy is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyIsNotAlreadyDeployed(address strategy) public {
-    vm.assume(!mpCore.strategies(ILlamaStrategy(strategy)).deployed);
+    (bool strategyDeployed,) = mpCore.strategies(ILlamaStrategy(strategy));
+    vm.assume(!strategyDeployed);
     vm.expectRevert(LlamaCore.NonExistentStrategy.selector);
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(ILlamaStrategy(strategy), true);
   }
 
   function test_UnauthorizeStrategy() public {
-    assertEq(mpCore.strategies(mpStrategy1).authorized, true);
+    (, bool strategyAuthorized) = mpCore.strategies(mpStrategy1);
+    assertEq(strategyAuthorized, true);
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, false);
-    assertEq(mpCore.strategies(mpStrategy1).authorized, false);
+    (, strategyAuthorized) = mpCore.strategies(mpStrategy1);
+    assertEq(strategyAuthorized, false);
   }
 
   function test_ReauthorizeStrategy() public {
-    assertEq(mpCore.strategies(mpStrategy1).authorized, true);
+    (, bool strategyAuthorized) = mpCore.strategies(mpStrategy1);
+    assertEq(strategyAuthorized, true);
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, false);
-    assertEq(mpCore.strategies(mpStrategy1).authorized, false);
+    (, strategyAuthorized) = mpCore.strategies(mpStrategy1);
+    assertEq(strategyAuthorized, false);
 
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(mpStrategy1, true);
-    assertEq(mpCore.strategies(mpStrategy1).authorized, true);
+    (, strategyAuthorized) = mpCore.strategies(mpStrategy1);
+    assertEq(strategyAuthorized, true);
   }
 
   function test_EmitsStrategyAuthorizedEvent() public {
