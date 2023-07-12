@@ -236,6 +236,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mockScript = new MockScript();
 
     // Set strategy and account addresses.
+    // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
+    // check, but it's not part of the main test suite.
     rootStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =

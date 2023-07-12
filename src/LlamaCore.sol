@@ -18,6 +18,16 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Manages the action process from creation to execution.
 contract LlamaCore is Initializable {
+  // =========================
+  // ======== Structs ========
+  // =========================
+
+  /// @dev Stores the two different status values for a strategy.
+  struct StrategyStatus {
+    bool deployed; // Whether or not the strategy contract has been deployed from this Llama core.
+    bool authorized; // Whether or not the strategy has been authorized for creating actions in this Llama instance.
+  }
+
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
@@ -137,7 +147,7 @@ contract LlamaCore is Initializable {
   /// @dev Emitted when a disapproval is cast.
   event DisapprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
 
-  /// @dev Emitted when a created strategy is authorized or unauthorized.
+  /// @dev Emitted when a deployed strategy is authorized or unauthorized.
   event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool authorized);
 
   /// @dev Emitted when a strategy is created.
@@ -206,11 +216,8 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 => mapping(address => bool)) public disapprovals;
 
-  /// @notice Mapping of all deployed strategies.
-  mapping(ILlamaStrategy => bool) public deployedStrategies;
-
-  /// @notice Mapping of all authorized strategies.
-  mapping(ILlamaStrategy => bool) public authorizedStrategies;
+  /// @notice Mapping of all deployed strategies and their current authorizaton status.
+  mapping(ILlamaStrategy => StrategyStatus) public strategies;
 
   /// @notice Mapping of all authorized scripts.
   mapping(address => bool) public authorizedScripts;
@@ -574,7 +581,7 @@ contract LlamaCore is Initializable {
     string memory description
   ) internal returns (uint256 actionId) {
     if (target == address(executor)) revert CannotSetExecutorAsTarget();
-    if (!authorizedStrategies[strategy]) revert UnauthorizedStrategy();
+    if (!strategies[strategy].authorized) revert UnauthorizedStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
     bytes32 permissionId = keccak256(abi.encode(permission));
@@ -690,7 +697,7 @@ contract LlamaCore is Initializable {
       bytes32 salt = keccak256(strategyConfigs[i]);
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
-      deployedStrategies[strategy] = true;
+      strategies[strategy].deployed = true;
       _authorizeStrategy(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
       if (i == 0) firstStrategy = strategy;
@@ -699,8 +706,8 @@ contract LlamaCore is Initializable {
 
   /// @dev Sets the `strategy` authorization status to `authorized`.
   function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
-    if (!deployedStrategies[strategy]) revert NonExistentStrategy();
-    authorizedStrategies[strategy] = authorized;
+    if (!strategies[strategy].deployed) revert NonExistentStrategy();
+    strategies[strategy].authorized = authorized;
     emit StrategyAuthorizationSet(strategy, authorized);
   }
 
