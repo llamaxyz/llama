@@ -176,12 +176,7 @@ contract Run is CreateActionTest {
     assertFalse(address(llamaInstance) == address(rootLlama));
 
     LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
-    // Scope to avoid stack too deep
-    {
-      (bool firstStrategyDeployed, bool firstStrategyAuthorized) = llamaInstance.strategies(firstStrategy);
-      assertEq(firstStrategyDeployed, true);
-      assertEq(firstStrategyAuthorized, true);
-    }
+    assertEqStrategyStatus(llamaInstance, firstStrategy, true, true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
     assertEq(firstStrategy.disapprovalRole(), 3);
@@ -194,12 +189,7 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum secondStrategy = strategiesAuthorized[1];
-    // Scope to avoid stack too deep
-    {
-      (bool secondStrategyDeployed, bool secondStrategyAuthorized) = llamaInstance.strategies(secondStrategy);
-      assertEq(secondStrategyDeployed, true);
-      assertEq(secondStrategyAuthorized, true);
-    }
+    assertEqStrategyStatus(llamaInstance, secondStrategy, true, true);
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
     assertEq(secondStrategy.disapprovalRole(), 3);
@@ -212,12 +202,7 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
     LlamaRelativeQuorum thirdStrategy = strategiesAuthorized[2];
-    // Scope to avoid stack too deep
-    {
-      (bool thirdStrategyDeployed, bool thirdStrategyAuthorized) = llamaInstance.strategies(thirdStrategy);
-      assertEq(thirdStrategyDeployed, true);
-      assertEq(thirdStrategyAuthorized, true);
-    }
+    assertEqStrategyStatus(llamaInstance, thirdStrategy, true, true);
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);
     assertEq(thirdStrategy.disapprovalRole(), 3);
@@ -253,5 +238,11 @@ contract Run is CreateActionTest {
     Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
+  }
+
+  function assertEqStrategyStatus(LlamaCore core, ILlamaStrategy strategy, bool expectedDeployed, bool expectedAuthorized) internal {
+    (bool deployed, bool authorized) = core.strategies(strategy);
+    assertEq(deployed, expectedDeployed);
+    assertEq(authorized, expectedAuthorized);
   }
 }
