@@ -239,7 +239,12 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
     _queueAction(actionInfo);
   }
 
-  function assertEqStrategyStatus(LlamaCore core, ILlamaStrategy strategy, bool expectedDeployed, bool expectedAuthorized) internal {
+  function assertEqStrategyStatus(
+    LlamaCore core,
+    ILlamaStrategy strategy,
+    bool expectedDeployed,
+    bool expectedAuthorized
+  ) internal {
     (bool deployed, bool authorized) = core.strategies(strategy);
     assertEq(deployed, expectedDeployed);
     assertEq(authorized, expectedAuthorized);

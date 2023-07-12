@@ -240,7 +240,12 @@ contract Run is CreateActionTest {
     assertEq(checkpoint.quantity, 1);
   }
 
-  function assertEqStrategyStatus(LlamaCore core, ILlamaStrategy strategy, bool expectedDeployed, bool expectedAuthorized) internal {
+  function assertEqStrategyStatus(
+    LlamaCore core,
+    ILlamaStrategy strategy,
+    bool expectedDeployed,
+    bool expectedAuthorized
+  ) internal {
     (bool deployed, bool authorized) = core.strategies(strategy);
     assertEq(deployed, expectedDeployed);
     assertEq(authorized, expectedAuthorized);
