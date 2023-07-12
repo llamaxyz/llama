@@ -2211,6 +2211,21 @@ contract AuthorizeStrategy is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy1, false);
     mpCore.authorizeStrategy(mpStrategy1, false);
+
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, true);
+    mpCore.authorizeStrategy(mpStrategy1, true);
+
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy2, false);
+    mpCore.authorizeStrategy(mpStrategy2, false);
+
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy2, true);
+    mpCore.authorizeStrategy(mpStrategy2, true);
   }
 }
 
