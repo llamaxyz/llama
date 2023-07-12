@@ -2180,10 +2180,7 @@ contract AuthorizeStrategy is LlamaCoreTest {
   }
 
   function testFuzz_RevertIf_StrategyIsNotAlreadyDeployed(address strategy) public {
-    vm.assume(
-      strategy != address(mpStrategyBootstrapStrategy) && strategy != address(mpStrategy1)
-        && strategy != address(mpStrategy2)
-    );
+    vm.assume(!mpCore.deployedStrategies(ILlamaStrategy(strategy)));
     vm.expectRevert(LlamaCore.NonExistentStrategy.selector);
     vm.prank(address(mpExecutor));
     mpCore.authorizeStrategy(ILlamaStrategy(strategy), true);
