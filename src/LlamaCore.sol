@@ -24,8 +24,8 @@ contract LlamaCore is Initializable {
 
   /// @dev Stores the two different status values for a strategy.
   struct StrategyStatus {
-    bool deployed; // Whether or not the strategy contract has been deployed from this Llama core.
-    bool authorized; // Whether or not the strategy has been authorized for creating actions in this Llama instance.
+    bool deployed; // Whether or not the strategy has been deployed from this `LlamaCore`.
+    bool authorized; // Whether or not the strategy has been authorized for action creations in this `LlamaCore`.
   }
 
   // ======================================
@@ -473,8 +473,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
-  /// @dev To remove a `strategy`, set `authorized` to `false`.
-  /// @param strategy The address of the strategy contract.
+  /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
+  /// @param strategy The address of the deployed strategy contract.
   /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
   function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
     _authorizeStrategy(strategy, authorized);
@@ -506,9 +506,9 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
-  /// @dev To remove a `script`, set `authorized` to `false`.
+  /// @dev To unauthorize a `script`, set `authorized` to `false`.
   /// @param script The address of the script contract.
-  /// @param authorized True to authorize the script, false to unauthorize it.
+  /// @param authorized `true` to authorize the script, `false` to unauthorize it.
   function setScriptAuthorization(address script, bool authorized) external onlyLlama {
     if (script == address(this) || script == address(policy)) revert RestrictedAddress();
     authorizedScripts[script] = authorized;
