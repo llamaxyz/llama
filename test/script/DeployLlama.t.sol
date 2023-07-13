@@ -35,8 +35,6 @@ contract Run is DeployLlamaTest {
     assertFalse(address(factory) == address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
-    assertEq(factory.authorizedStrategyLogics(relativeQuorumLogic), true);
-    assertEq(factory.authorizedAccountLogics(accountLogic), true);
   }
 
   function test_DeploysRootLlama() public {
@@ -48,6 +46,7 @@ contract Run is DeployLlamaTest {
     LlamaCore rootLlamaCore = factory.ROOT_LLAMA_CORE();
     LlamaExecutor rootLlamaExecutor = factory.ROOT_LLAMA_EXECUTOR();
     assertEq(rootLlamaCore.name(), "Root Llama");
+    assertEq(rootLlamaCore.authorizedAccountLogics(accountLogic), true);
 
     // There are three strategies we expect to have been deployed.
     ILlamaStrategy[] memory strategiesAuthorized = new ILlamaStrategy[](3);
@@ -83,7 +82,7 @@ contract Run is DeployLlamaTest {
     }
 
     ILlamaStrategy firstStrategy = strategiesAuthorized[0];
-    assertEq(rootLlamaCore.strategies(firstStrategy), true);
+    assertEqStrategyStatus(rootLlamaCore, firstStrategy, true, true);
     assertEq(toRelativeQuorum(firstStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(firstStrategy).approvalRole(), 1);
     assertEq(toRelativeQuorum(firstStrategy).disapprovalRole(), 3);
@@ -96,7 +95,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(firstStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy secondStrategy = strategiesAuthorized[1];
-    assertEq(rootLlamaCore.strategies(secondStrategy), true);
+    assertEqStrategyStatus(rootLlamaCore, secondStrategy, true, true);
     assertEq(toRelativeQuorum(secondStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(secondStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(secondStrategy).disapprovalRole(), 3);
@@ -109,7 +108,7 @@ contract Run is DeployLlamaTest {
     assertEq(toRelativeQuorum(secondStrategy).forceDisapprovalRole(1), false);
 
     ILlamaStrategy thirdStrategy = strategiesAuthorized[2];
-    assertEq(rootLlamaCore.strategies(thirdStrategy), true);
+    assertEqStrategyStatus(rootLlamaCore, thirdStrategy, true, true);
     assertEq(toRelativeQuorum(thirdStrategy).approvalPeriod(), 172_800);
     assertEq(toRelativeQuorum(thirdStrategy).approvalRole(), 2);
     assertEq(toRelativeQuorum(thirdStrategy).disapprovalRole(), 3);
@@ -230,5 +229,16 @@ contract Run is DeployLlamaTest {
     assembly {
       converted := strategy
     }
+  }
+
+  function assertEqStrategyStatus(
+    LlamaCore core,
+    ILlamaStrategy strategy,
+    bool expectedDeployed,
+    bool expectedAuthorized
+  ) internal {
+    (bool deployed, bool authorized) = core.strategies(strategy);
+    assertEq(deployed, expectedDeployed);
+    assertEq(authorized, expectedAuthorized);
   }
 }

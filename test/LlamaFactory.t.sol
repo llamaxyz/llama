@@ -30,8 +30,6 @@ contract LlamaFactoryTest is LlamaTestSetup {
     address llamaPolicy,
     uint256 chainId
   );
-  event StrategyLogicAuthorized(ILlamaStrategy indexed relativeQuorumLogic);
-  event AccountLogicAuthorized(ILlamaAccount indexed accountLogic);
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
 }
 
@@ -77,26 +75,6 @@ contract Constructor is LlamaFactoryTest {
     deployLlamaFactory();
   }
 
-  function test_SetsLlamaStrategyLogicAddress() public {
-    assertTrue(factory.authorizedStrategyLogics(relativeQuorumLogic));
-  }
-
-  function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.expectEmit();
-    emit StrategyLogicAuthorized(relativeQuorumLogic);
-    deployLlamaFactory();
-  }
-
-  function test_SetsLlamaAccountLogicAddress() public {
-    assertTrue(factory.authorizedAccountLogics(accountLogic));
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.expectEmit();
-    emit AccountLogicAuthorized(accountLogic);
-    deployLlamaFactory();
-  }
-
   function test_SetsRootLlamaCore() public {
     assertEq(address(factory.ROOT_LLAMA_CORE()), address(rootCore));
   }
@@ -138,7 +116,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_RevertIf_CallerIsNotRootLlama(address caller) public {
-    vm.assume(caller != address(rootCore));
+    vm.assume(caller != address(rootExecutor));
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
@@ -379,52 +357,6 @@ contract Deploy is LlamaFactoryTest {
       factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY().getMetadata(llamaExecutor);
     assertEq(setColor, color);
     assertEq(setLogo, logo);
-  }
-}
-
-contract AuthorizeStrategyLogic is LlamaFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootExecutor));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    vm.prank(_caller);
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-  }
-
-  function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), false);
-    vm.prank(address(rootExecutor));
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-    assertEq(factory.authorizedStrategyLogics(ILlamaStrategy(randomLogicAddress)), true);
-  }
-
-  function test_EmitsStrategyLogicAuthorizedEvent() public {
-    vm.prank(address(rootExecutor));
-    vm.expectEmit();
-    emit StrategyLogicAuthorized(ILlamaStrategy(randomLogicAddress));
-    factory.authorizeStrategyLogic(ILlamaStrategy(randomLogicAddress));
-  }
-}
-
-contract AuthorizeAccountLogic is LlamaFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller) public {
-    vm.assume(_caller != address(rootExecutor));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    vm.prank(_caller);
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
-  }
-
-  function test_SetsValueInStorageMappingToTrue() public {
-    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), false);
-    vm.prank(address(rootExecutor));
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
-    assertEq(factory.authorizedAccountLogics(ILlamaAccount(randomLogicAddress)), true);
-  }
-
-  function test_EmitsAccountLogicAuthorizedEvent() public {
-    vm.prank(address(rootExecutor));
-    vm.expectEmit();
-    emit AccountLogicAuthorized(ILlamaAccount(randomLogicAddress));
-    factory.authorizeAccountLogic(ILlamaAccount(randomLogicAddress));
   }
 }
 

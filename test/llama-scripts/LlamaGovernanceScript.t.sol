@@ -80,7 +80,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
     vm.startPrank(address(mpExecutor));
 
-    mpCore.authorizeScript(address(governanceScript), true);
+    mpCore.setScriptAuthorization(address(governanceScript), true);
 
     executeActionPermission = keccak256(abi.encode(address(governanceScript), EXECUTE_ACTION_SELECTOR, mpStrategy2));
     aggregatePermission = keccak256(abi.encode(address(governanceScript), AGGREGATE_SELECTOR, mpStrategy2));

@@ -94,15 +94,6 @@ contract LlamaFactoryHandler is BaseHandler {
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
   }
 
-  function llamaFactory_authorizeStrategyLogic(ILlamaStrategy newStrategyLogic)
-    public
-    recordCall("llamaFactory_authorizeStrategyLogic")
-    useCurrentTimestamp
-  {
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
-    LLAMA_FACTORY.authorizeStrategyLogic(newStrategyLogic);
-  }
-
   function llamaFactory_setPolicyTokenMetadata(LlamaPolicyMetadata newPolicyMetadata)
     public
     recordCall("llamaFactory_setPolicyMetadata")
