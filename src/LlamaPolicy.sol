@@ -163,7 +163,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     __initializeERC721MinimalProxy(
       config.name, string.concat("LL-", LibString.replace(LibString.upper(config.name), " ", "-"))
     );
-    factory = LlamaFactory(msg.sender);
+    factory = config.llamaFactory;
     for (uint256 i = 0; i < config.roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _initializeRole(config.roleDescriptions[i]);
     }
@@ -191,14 +191,24 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _setPolicyMetadata(config.llamaPolicyMetadata);
     _setColor(config.color);
     _setLogo(config.logo);
-
-    llamaExecutor = config.llamaExecutor;
-    _setRolePermission(BOOTSTRAP_ROLE, config.bootstrapPermissionId, true);
   }
 
   // ===========================================
   // ======== External and Public Logic ========
   // ===========================================
+
+  /// @notice Sets the address of the `LlamaExecutor` contract and gives holders of role ID 1 permission
+  /// to change role permissions.
+  /// @dev This method can only be called once.
+  /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
+  /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
+  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
+    if (msg.sender != address(factory)) revert OnlyLlamaFactory();
+    if (llamaExecutor != address(0)) revert AlreadyInitialized();
+
+    llamaExecutor = _llamaExecutor;
+    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+  }
 
   // -------- Role and Permission Management --------
 

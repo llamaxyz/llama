@@ -240,24 +240,16 @@ contract LlamaCore is Initializable {
 
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param config config
-  function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
+  function initialize(LlamaCoreInitializationConfig calldata config)
+    external
+    initializer
+    returns (bytes32 bootstrapPermissionId)
+  {
     factory = LlamaFactory(msg.sender);
     name = config.name;
     executor = new LlamaExecutor();
-
-    _setStrategyLogicAuthorization(config.strategyLogic, true);
-    ILlamaStrategy bootstrapStrategy = _deployStrategies(config.strategyLogic, config.initialStrategies);
-
-    _setAccountLogicAuthorization(config.accountLogic, true);
-    _deployAccounts(config.accountLogic, config.initialAccounts);
-
-    policy = LlamaPolicy(
-      Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
-    );
+    policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
     // Now we compute the permission ID used to set role permissions
-    bytes4 selector = LlamaPolicy.setRolePermission.selector;
-    bytes32 bootstrapPermissionId =
-      keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,
@@ -267,10 +259,18 @@ contract LlamaCore is Initializable {
       config.color,
       config.logo,
       address(executor),
-      bootstrapPermissionId
+      factory
     );
-
     policy.initialize(policyConfig);
+
+    _setStrategyLogicAuthorization(config.strategyLogic, true);
+    ILlamaStrategy bootstrapStrategy = _deployStrategies(config.strategyLogic, config.initialStrategies);
+
+    _setAccountLogicAuthorization(config.accountLogic, true);
+    _deployAccounts(config.accountLogic, config.initialAccounts);
+
+    bytes4 selector = LlamaPolicy.setRolePermission.selector;
+    bootstrapPermissionId = keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
   }
 
   // ===========================================

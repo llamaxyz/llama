@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -18,6 +18,8 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Llama systems.
 contract LlamaFactoryWithoutInitialization is LlamaFactory {
+  LlamaCore public lastDeployedLlamaCore;
+
   constructor(
     LlamaCore _llamaCoreLogic,
     ILlamaStrategy initialLlamaStrategyLogic,
@@ -51,11 +53,11 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   /// @return llama the address of the LlamaCore contract of the newly created system.
   function deployWithoutInitialization(string memory name) external returns (LlamaCore llama) {
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
+    lastDeployedLlamaCore = llama;
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
   function initialize(
-    LlamaCore llama,
     string memory name,
     ILlamaStrategy relativeQuorumLogic,
     ILlamaAccount accountLogic,
@@ -68,7 +70,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     string memory color,
     string memory logo
   ) external {
-    llama.initialize(
+    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
       relativeQuorumLogic,
@@ -83,5 +85,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
       logo,
       msg.sender
     );
+
+    lastDeployedLlamaCore.initialize(config);
   }
 }

@@ -212,12 +212,15 @@ contract LlamaFactory {
       msg.sender
     );
 
-    llamaCore =
-      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
-    llamaCore.initialize(config);
+    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    bytes32 bootstrapPermissionId = llamaCore.initialize(config);
+    LlamaPolicy llamaPolicy = llamaCore.policy();
+    LlamaExecutor llamaExecutor = llamaCore.executor();
+
+    llamaPolicy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(
-      llamaCount, name, address(llamaCore), address(llamaCore.executor()), address(llamaCore.policy()), block.chainid
+      llamaCount, name, address(llamaCore), address(llamaExecutor), address(llamaPolicy), block.chainid
     );
 
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);

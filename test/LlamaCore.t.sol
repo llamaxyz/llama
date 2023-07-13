@@ -20,7 +20,14 @@ import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  Action,
+  ActionInfo,
+  LlamaCoreInitializationConfig,
+  PermissionData,
+  RoleHolderData,
+  RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
@@ -264,7 +271,7 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    coreLogic.initialize(
+    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       "NewProject",
       mpPolicy,
       relativeQuorumLogic,
@@ -279,6 +286,7 @@ contract Constructor is LlamaCoreTest {
       LOGO,
       address(this)
     );
+    coreLogic.initialize(config);
   }
 }
 
@@ -322,7 +330,6 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -357,7 +364,6 @@ contract Initialize is LlamaCoreTest {
     emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -384,7 +390,6 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -414,7 +419,6 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -449,7 +453,6 @@ contract Initialize is LlamaCoreTest {
     assertEq(uninitializedLlama.strategies(strategyAddresses[1]), false);
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -476,7 +479,6 @@ contract Initialize is LlamaCoreTest {
     assertFalse(uninitializedLlama.authorizedStrategyLogics(relativeQuorumLogic));
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       ILlamaStrategy(relativeQuorumLogic),
       ILlamaAccount(accountLogic),
@@ -494,7 +496,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama) = deployWithoutInitialization();
+    (LlamaFactoryWithoutInitialization modifiedFactory,) = deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
@@ -502,7 +504,6 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyLogicAuthorizationSet(relativeQuorumLogic, true);
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       ILlamaAccount(accountLogic),
@@ -526,7 +527,6 @@ contract Initialize is LlamaCoreTest {
     assertFalse(uninitializedLlama.authorizedAccountLogics(accountLogic));
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       ILlamaAccount(accountLogic),
@@ -544,7 +544,7 @@ contract Initialize is LlamaCoreTest {
   }
 
   function test_EmitsAccountLogicAuthorizationSetEvent() public {
-    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama) = deployWithoutInitialization();
+    (LlamaFactoryWithoutInitialization modifiedFactory,) = deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
@@ -552,7 +552,6 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit AccountLogicAuthorizationSet(accountLogic, true);
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       ILlamaAccount(accountLogic),
@@ -582,7 +581,6 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -616,7 +614,6 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accountLogic, accounts[1]);
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -643,7 +640,6 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,
@@ -675,7 +671,6 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama,
       "NewProject",
       relativeQuorumLogic,
       accountLogic,

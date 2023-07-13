@@ -8,7 +8,14 @@ import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Action, RoleHolderData, RolePermissionData, PermissionData} from "src/lib/Structs.sol";
+import {
+  Action,
+  LlamaCoreInitializationConfig,
+  LlamaPolicyInitializationConfig,
+  RoleHolderData,
+  RolePermissionData,
+  PermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -289,7 +296,7 @@ contract Deploy is LlamaFactoryTest {
     assertGt(address(_policy).code.length, 0);
 
     vm.expectRevert("Initializable: contract is already initialized");
-    _policy.initialize(
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test",
       new RoleDescription[](0),
       new RoleHolderData[](0),
@@ -298,8 +305,9 @@ contract Deploy is LlamaFactoryTest {
       color,
       logo,
       address(mpExecutor),
-      bytes32(0)
+      factory
     );
+    _policy.initialize(config);
   }
 
   function test_DeploysLlamaCore() public {
@@ -321,7 +329,7 @@ contract Deploy is LlamaFactoryTest {
 
     LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _llama.initialize(
+    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       "NewProject",
       _policy,
       relativeQuorumLogic,
@@ -336,6 +344,7 @@ contract Deploy is LlamaFactoryTest {
       logo,
       address(this)
     );
+    _llama.initialize(config);
   }
 
   function test_SetsLlamaExecutorOnThePolicy() public {
