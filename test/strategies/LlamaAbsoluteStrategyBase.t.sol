@@ -360,7 +360,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       approvalPeriod: DEFAULT_APPROVAL_PERIOD,
       queuingPeriod: DEFAULT_QUEUING_PERIOD,
       expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
-      minApprovals: toUint128(minApprovals),
+      minApprovals: toUint96(minApprovals),
       minDisapprovals: DEFAULT_DISAPPROVALS,
       isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
       approvalRole: DEFAULT_ROLE,
@@ -683,12 +683,12 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     );
   }
 
-  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint96 _quantity) public {
     _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint128(bound(_quantity, 1, type(uint128).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
@@ -822,13 +822,13 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     );
   }
 
-  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint96 _quantity) public {
     _role = uint8(bound(_role, 1, 8)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
       // roles
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint128(bound(_quantity, 1, type(uint128).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,

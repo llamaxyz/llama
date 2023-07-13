@@ -44,11 +44,11 @@ contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
     external
     view
     override
-    returns (uint128)
+    returns (uint96)
   {
     if (role != approvalRole && !forceApprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint96).max : quantity;
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -56,10 +56,10 @@ contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
     external
     view
     override
-    returns (uint128)
+    returns (uint96)
   {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
   }
 }

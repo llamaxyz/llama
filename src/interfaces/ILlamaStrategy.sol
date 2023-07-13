@@ -48,7 +48,7 @@ interface ILlamaStrategy {
   /// @param role The role to check quantity for.
   /// @param timestamp The timestamp at which to get the approval quantity.
   /// @return The quantity of the policyholder's approval.
-  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128);
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96);
 
   // -------- When Casting Disapproval --------
 
@@ -64,10 +64,7 @@ interface ILlamaStrategy {
   /// @param role The role to check quantity for.
   /// @param timestamp The timestamp at which to get the disapproval quantity.
   /// @return The quantity of the policyholder's disapproval.
-  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
-    external
-    view
-    returns (uint128);
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96);
 
   // -------- When Queueing --------
 
