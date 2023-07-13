@@ -661,12 +661,12 @@ contract GetApprovalQuantityAt is LlamaRelativeQuorumTest {
     );
   }
 
-  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint96 _quantity) public {
     _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint128(bound(_quantity, 1, type(uint128).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
     ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
       uint8(Roles.TestRole1),
@@ -800,13 +800,13 @@ contract GetDisapprovalQuantityAt is LlamaRelativeQuorumTest {
     );
   }
 
-  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint128 _quantity) public {
+  function testFuzz_ReturnsZeroForNonApprovalRoles(uint8 _role, address _policyHolder, uint96 _quantity) public {
     _role = uint8(bound(_role, 1, 8)); // ignoring all roles in the test setup to avoid conflicts with pre-assigned
       // roles
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint128(bound(_quantity, 1, type(uint128).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
     ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
       uint8(Roles.TestRole1),
@@ -879,7 +879,7 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
     generateAndSetRoleHolders(_numberOfPolicies);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint128(_creatorQuantity), type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint96(_creatorQuantity), type(uint64).max);
 
     uint256 supply = mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1));
 

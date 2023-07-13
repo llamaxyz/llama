@@ -68,12 +68,12 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   uint64 public expirationPeriod;
 
   /// @notice Minimum total quantity of approvals for the action to be queued.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minApprovals;
+  /// @dev We use a `uint96` here since quantities are stored as `uint96` in the policy.
+  uint96 public minApprovals;
 
   /// @notice Minimum total quantity of disapprovals for the action to be canceled.
-  /// @dev We use a `uint128` here since quantities are stored as `uint128` in the policy.
-  uint128 public minDisapprovals;
+  /// @dev We use a `uint96` here since quantities are stored as `uint96` in the policy.
+  uint96 public minDisapprovals;
 
   /// @notice The role that can approve an action.
   uint8 public approvalRole;
@@ -164,7 +164,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
 
       uint256 actionCreatorDisapprovalRoleQty = policy.getQuantity(actionInfo.creator, disapprovalRole);
       if (
-        minDisapprovals != type(uint128).max
+        minDisapprovals != type(uint96).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
       ) revert InsufficientDisapprovalQuantity();
     }
@@ -179,30 +179,26 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   }
 
   /// @inheritdoc ILlamaStrategy
-  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint128) {
+  function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     if (role != approvalRole && !forceApprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceApprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
   function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view {
-    // if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    // if (minDisapprovals == type(uint96).max) revert DisapprovalDisabled();
     // if (actionInfo.creator == policyholder) revert ActionCreatorCannotCast();
     // if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(actionInfo.creatorRole);
   }
 
   /// @inheritdoc ILlamaStrategy
-  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
-    external
-    view
-    returns (uint128)
-  {
+  function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
-    uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity > 0 && forceDisapprovalRole[role] ? type(uint128).max : quantity;
+    uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
+    return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
   }
 
   // -------- When Queueing --------

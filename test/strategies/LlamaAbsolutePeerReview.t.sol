@@ -26,7 +26,7 @@ contract LlamaAbsolutePeerReviewTest is LlamaAbsoluteStrategyBaseTest {}
 contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
   function createAbsolutePeerReviewWithDisproportionateQuantity(
     bool isApproval,
-    uint128 threshold,
+    uint96 threshold,
     uint256 _roleQuantity,
     uint256 _otherRoleHolders
   ) internal returns (ILlamaStrategy testStrategy) {
@@ -34,7 +34,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     _otherRoleHolders = bound(_otherRoleHolders, 1, 10);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), uint128(_roleQuantity), type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), uint96(_roleQuantity), type(uint64).max);
 
     generateAndSetRoleHolders(_otherRoleHolders);
 
@@ -64,7 +64,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
     ILlamaStrategy testStrategy =
-      createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+      createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint96(threshold), _roleQuantity, _otherRoleHolders);
 
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
@@ -76,9 +76,8 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
 
-    ILlamaStrategy testStrategy = createAbsolutePeerReviewWithDisproportionateQuantity(
-      false, toUint128(threshold), _roleQuantity, _otherRoleHolders
-    );
+    ILlamaStrategy testStrategy =
+      createAbsolutePeerReviewWithDisproportionateQuantity(false, toUint96(threshold), _roleQuantity, _otherRoleHolders);
 
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
@@ -88,7 +87,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
 
   function testFuzz_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     ILlamaStrategy testStrategy =
-      createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
+      createAbsolutePeerReviewWithDisproportionateQuantity(false, type(uint96).max, _roleQuantity, _otherRoleHolders);
 
     uint256 actionId = mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""

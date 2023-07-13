@@ -40,7 +40,7 @@ library DeployUtils {
     string comment;
     uint64 expiration;
     address policyholder;
-    uint128 quantity;
+    uint96 quantity;
     uint8 role;
   }
 

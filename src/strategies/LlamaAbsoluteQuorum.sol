@@ -27,7 +27,7 @@ contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     if (minApprovals > approvalPolicySupply) revert InsufficientApprovalQuantity();
-    if (minDisapprovals != type(uint128).max && minDisapprovals > disapprovalPolicySupply) {
+    if (minDisapprovals != type(uint96).max && minDisapprovals > disapprovalPolicySupply) {
       revert InsufficientDisapprovalQuantity();
     }
   }
@@ -51,7 +51,7 @@ contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
     view
     override
   {
-    if (minDisapprovals == type(uint128).max) revert DisapprovalDisabled();
+    if (minDisapprovals == type(uint96).max) revert DisapprovalDisabled();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
 }
