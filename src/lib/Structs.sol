@@ -30,8 +30,8 @@ struct Action {
   bool isScript; // Is the action's target a script.
   uint64 creationTime; // The timestamp when action was created (used for policy snapshots).
   uint64 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
-  uint128 totalApprovals; // The total quantity of policyholder approvals.
-  uint128 totalDisapprovals; // The total quantity of policyholder disapprovals.
+  uint96 totalApprovals; // The total quantity of policyholder approvals.
+  uint96 totalDisapprovals; // The total quantity of policyholder disapprovals.
 }
 
 /// @dev Data that represents a permission.
@@ -45,7 +45,7 @@ struct PermissionData {
 struct RoleHolderData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
   address policyholder; // Policyholder to assign the role to.
-  uint128 quantity; // Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
+  uint96 quantity; // Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   uint64 expiration; // When the role expires.
 }
 
