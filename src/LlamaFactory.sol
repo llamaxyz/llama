@@ -104,7 +104,7 @@ contract LlamaFactory {
 
     _setPolicyMetadata(_llamaPolicyMetadata);
 
-    (ROOT_LLAMA_EXECUTOR, ROOT_LLAMA_CORE) = _deploy(
+    (ROOT_LLAMA_CORE) = _deploy(
       name,
       initialLlamaStrategyLogic,
       initialLlamaAccountLogic,
@@ -116,6 +116,8 @@ contract LlamaFactory {
       rootColor,
       rootLogo
     );
+
+    ROOT_LLAMA_EXECUTOR = ROOT_LLAMA_CORE.executor();
   }
 
   // ===========================================
@@ -147,8 +149,8 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions,
     string memory color,
     string memory logo
-  ) external onlyRootLlama returns (LlamaExecutor executor, LlamaCore core) {
-    (executor, core) = _deploy(
+  ) external onlyRootLlama returns (LlamaCore core) {
+    (core) = _deploy(
       name,
       strategyLogic,
       accountLogic,
@@ -185,7 +187,7 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions,
     string memory color,
     string memory logo
-  ) internal returns (LlamaExecutor llamaExecutor, LlamaCore llamaCore) {
+  ) internal returns (LlamaCore llamaCore) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -195,17 +197,28 @@ contract LlamaFactory {
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
-    bytes32 bootstrapPermissionId;
-    LlamaPolicy policy =
-      _initializePolicy(name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, color, logo);
-    (llamaCore, bootstrapPermissionId, llamaExecutor) =
-      _initializeCore(name, strategyLogic, accountLogic, initialStrategies, initialAccounts, policy);
-
-    policy.finalizeInitialization(address(llamaExecutor), bootstrapPermissionId);
+    llamaCore =
+      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
+    llamaCore.initialize(
+      name,
+      LLAMA_POLICY_LOGIC,
+      strategyLogic,
+      accountLogic,
+      initialStrategies,
+      initialAccounts,
+      initialRoleDescriptions,
+      initialRoleHolders,
+      initialRolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      msg.sender
+    );
 
     emit LlamaInstanceCreated(
-      llamaCount, name, address(llamaCore), address(llamaExecutor), address(policy), block.chainid
+      llamaCount, name, address(llamaCore), address(llamaCore.executor()), address(llamaCore.policy()), block.chainid
     );
+
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
@@ -213,38 +226,5 @@ contract LlamaFactory {
   function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
     llamaPolicyMetadata = _llamaPolicyMetadata;
     emit PolicyMetadataSet(_llamaPolicyMetadata);
-  }
-
-  /// @dev Deploy a new `LlamaPolicy` clone and initialize it.
-  function _initializePolicy(
-    string memory name,
-    RoleDescription[] memory initialRoleDescriptions,
-    RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions,
-    string memory color,
-    string memory logo
-  ) internal returns (LlamaPolicy _policy) {
-    // Now the configuration is likely valid (it's possible the configuration of the first strategy
-    // will not actually be able to execute, but we leave that check off-chain / to the deploy
-    // scripts), so we continue with deployment of this instance.
-    _policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encodePacked(name))));
-    _policy.initialize(
-      name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, llamaPolicyMetadata, color, logo
-    );
-  }
-
-  /// @dev Deploy a new `LlamaCore` clone and initialize it.
-  function _initializeCore(
-    string memory name,
-    ILlamaStrategy strategyLogic,
-    ILlamaAccount accountLogic,
-    bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts,
-    LlamaPolicy policy
-  ) internal returns (LlamaCore llamaCore, bytes32 bootstrapPermissionId, LlamaExecutor llamaExecutor) {
-    llamaCore = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-    bootstrapPermissionId =
-      llamaCore.initialize(name, policy, strategyLogic, accountLogic, initialStrategies, initialAccounts);
-    llamaExecutor = llamaCore.executor();
   }
 }

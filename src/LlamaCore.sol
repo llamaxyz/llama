@@ -9,10 +9,12 @@ import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
@@ -230,24 +232,36 @@ contract LlamaCore is Initializable {
 
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param _name The name of the `LlamaCore` clone.
-  /// @param _policy This Llama instance's policy contract.
+  /// @param llamaPolicyLogic This Llama instance's policy contract.
   /// @param _llamaStrategyLogic The Llama Strategy implementation (logic) contract.
   /// @param _llamaAccountLogic The Llama Account implementation (logic) contract.
   /// @param initialStrategies Array of initial strategy configurations.
   /// @param initialAccounts Array of initial account configurations.
-  /// @return bootstrapPermissionId The permission ID that's used to set role permissions.
+  /// @param initialRoleDescriptions Array of initial role descriptions.
+  /// @param initialRoleHolders Array of initial role holders, their quantities and their role expirations.
+  /// @param initialRolePermissions Array of initial permissions given to roles.
+  /// @param llamaPolicyMetadata The metadata contract for the policy NFT.
+  /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
+  /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
+  /// @param deployer The caller of the factory's deploy function
   function initialize(
     string memory _name,
-    LlamaPolicy _policy,
+    LlamaPolicy llamaPolicyLogic,
     ILlamaStrategy _llamaStrategyLogic,
     ILlamaAccount _llamaAccountLogic,
     bytes[] calldata initialStrategies,
-    bytes[] calldata initialAccounts
-  ) external initializer returns (bytes32 bootstrapPermissionId) {
+    bytes[] calldata initialAccounts,
+    RoleDescription[] memory initialRoleDescriptions,
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions,
+    LlamaPolicyMetadata llamaPolicyMetadata,
+    string memory color,
+    string memory logo,
+    address deployer
+  ) external initializer {
     factory = LlamaFactory(msg.sender);
     name = _name;
     executor = new LlamaExecutor();
-    policy = _policy;
 
     _setStrategyLogicAuthorization(_llamaStrategyLogic, true);
     ILlamaStrategy bootstrapStrategy = _deployStrategies(_llamaStrategyLogic, initialStrategies);
@@ -255,9 +269,23 @@ contract LlamaCore is Initializable {
     _setAccountLogicAuthorization(_llamaAccountLogic, true);
     _deployAccounts(_llamaAccountLogic, initialAccounts);
 
-    // Now we compute the permission ID used to set role permissions and return it.
+    policy =
+      LlamaPolicy(Clones.cloneDeterministic(address(llamaPolicyLogic), keccak256(abi.encodePacked(name, deployer))));
+    // Now we compute the permission ID used to set role permissions
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
-    return keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
+    bytes32 bootstrapPermissionId =
+      keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
+    policy.initialize(
+      _name,
+      initialRoleDescriptions,
+      initialRoleHolders,
+      initialRolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      address(executor),
+      bootstrapPermissionId
+    );
   }
 
   // ===========================================

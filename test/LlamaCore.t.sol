@@ -259,7 +259,20 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    coreLogic.initialize("NewProject", mpPolicy, relativeQuorumLogic, accountLogic, new bytes[](0), new bytes[](0));
+    coreLogic.initialize(
+      "NewProject",
+      mpPolicy,
+      relativeQuorumLogic,
+      accountLogic,
+      new bytes[](0),
+      new bytes[](0),
+      new RoleDescription[](0),
+      new RoleHolderData[](0),
+      new RolePermissionData[](0),
+      llamaPolicyMetadata,
+      color,
+      logo
+    );
   }
 }
 

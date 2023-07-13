@@ -60,29 +60,38 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     string memory color,
     string memory logo
   ) external returns (LlamaCore llama, LlamaPolicy policy) {
-    // Deploy the system.
-    policy = LlamaPolicy(Clones.cloneDeterministic(address(LLAMA_POLICY_LOGIC), keccak256(abi.encode(name))));
-    policy.initialize(
-      name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, llamaPolicyMetadata, color, logo
-    );
-
-    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name))));
-
-    policy.finalizeInitialization(address(llama), bytes32(0));
-
+    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
   function initialize(
     LlamaCore llama,
-    LlamaPolicy policy,
     string memory name,
     ILlamaStrategy relativeQuorumLogic,
     ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts
-  ) external returns (LlamaExecutor llamaExecutor) {
-    llama.initialize(name, policy, relativeQuorumLogic, accountLogic, initialStrategies, initialAccounts);
-    llamaExecutor = llama.executor();
+    bytes[] memory initialAccounts,
+    RoleDescription[] memory initialRoleDescriptions,
+    RoleHolderData[] memory initialRoleHolders,
+    RolePermissionData[] memory initialRolePermissions,
+    LlamaPolicyMetadata llamaPolicyMetadata,
+    string memory color,
+    string memory logo
+  ) external returns (LlamaCore llamaCore) {
+    llama.initialize(
+      name,
+      LLAMA_POLICY_LOGIC,
+      relativeQuorumLogic,
+      accountLogic,
+      initialStrategies,
+      initialAccounts,
+      initialRoleDescriptions,
+      initialRoleHolders,
+      initialRolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      msg.sender
+    );
   }
 }
