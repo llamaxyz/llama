@@ -129,8 +129,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
 
   // Other addresses and constants.
   address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
-  uint128 DEFAULT_ROLE_QTY = 1;
-  uint128 EMPTY_ROLE_QTY = 0;
+  uint96 DEFAULT_ROLE_QTY = 1;
+  uint96 EMPTY_ROLE_QTY = 0;
   uint64 DEFAULT_ROLE_EXPIRATION = type(uint64).max;
 
   string deployScriptInput;
@@ -409,9 +409,9 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return keccak256(abi.encodePacked(id, creator, strategy, target, value, data));
   }
 
-  function toUint128(uint256 n) internal pure returns (uint128) {
-    require(n <= type(uint128).max, string.concat("Value cannot fit in a uint128: ", vm.toString(n)));
-    return uint128(n);
+  function toUint96(uint256 n) internal pure returns (uint96) {
+    require(n <= type(uint96).max, string.concat("Value cannot fit in a uint96: ", vm.toString(n)));
+    return uint96(n);
   }
 
   function toUint64(uint256 n) internal pure returns (uint64) {
@@ -431,8 +431,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint64 _expirationDelay,
     uint64 _approvalPeriod,
     bool _isFixedLengthApprovalPeriod,
-    uint128 _minApprovals,
-    uint128 _minDisapprovals,
+    uint96 _minApprovals,
+    uint96 _minDisapprovals,
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
@@ -472,8 +472,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     uint64 _expirationDelay,
     uint64 _approvalPeriod,
     bool _isFixedLengthApprovalPeriod,
-    uint128 _minApprovals,
-    uint128 _minDisapprovals,
+    uint96 _minApprovals,
+    uint96 _minDisapprovals,
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {

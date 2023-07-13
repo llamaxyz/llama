@@ -24,7 +24,7 @@ contract LlamaAbsoluteQuorumTest is LlamaAbsoluteStrategyBaseTest {}
 contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
   function createAbsoluteQuorumWithDisproportionateQuantity(
     bool isApproval,
-    uint128 threshold,
+    uint96 threshold,
     uint256 _roleQuantity,
     uint256 _otherRoleHolders
   ) internal returns (ILlamaStrategy testStrategy) {
@@ -32,7 +32,7 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
     _otherRoleHolders = bound(_otherRoleHolders, 1, 10);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), uint128(_roleQuantity), type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), uint96(_roleQuantity), type(uint64).max);
 
     generateAndSetRoleHolders(_otherRoleHolders);
 
@@ -64,7 +64,7 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), 1, type(uint64).max); // for action creation
       // permission
-    uint128 roleQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint96 roleQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
     ILlamaStrategy testStrategy = deployAbsoluteQuorum(
       uint8(Roles.TestRole1),
       uint8(Roles.Disapprover),
@@ -95,7 +95,7 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
     uint256 threshold = _roleQuantity / 2;
 
     ILlamaStrategy testStrategy =
-      createAbsoluteQuorumWithDisproportionateQuantity(false, toUint128(threshold), _roleQuantity, _otherRoleHolders);
+      createAbsoluteQuorumWithDisproportionateQuantity(false, toUint96(threshold), _roleQuantity, _otherRoleHolders);
 
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
@@ -105,7 +105,7 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
 
   function testFuzz_DisableDisapprovals(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     ILlamaStrategy testStrategy =
-      createAbsoluteQuorumWithDisproportionateQuantity(false, type(uint128).max, _roleQuantity, _otherRoleHolders);
+      createAbsoluteQuorumWithDisproportionateQuantity(false, type(uint96).max, _roleQuantity, _otherRoleHolders);
 
     uint256 actionId = mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
