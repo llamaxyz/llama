@@ -2,6 +2,10 @@
 pragma solidity 0.8.19;
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @dev Data required to create an action.
 struct ActionInfo {
@@ -51,4 +55,32 @@ struct RolePermissionData {
   // each field in the `PermissionData` struct.
   bytes32 permissionId;
   bool hasPermission; // Whether to assign the permission or remove the permission.
+}
+
+struct LlamaCoreInitializationConfig {
+  string name;
+  LlamaPolicy policyLogic;
+  ILlamaStrategy strategyLogic;
+  ILlamaAccount accountLogic;
+  bytes[] initialStrategies;
+  bytes[] initialAccounts;
+  RoleDescription[] initialRoleDescriptions;
+  RoleHolderData[] initialRoleHolders;
+  RolePermissionData[] initialRolePermissions;
+  LlamaPolicyMetadata llamaPolicyMetadata;
+  string color;
+  string logo;
+  address deployer;
+}
+
+struct LlamaPolicyInitializationConfig {
+  string name;
+  RoleDescription[] roleDescriptions;
+  RoleHolderData[] roleHolders;
+  RolePermissionData[] rolePermissions;
+  LlamaPolicyMetadata llamaPolicyMetadata;
+  string color;
+  string logo;
+  address llamaExecutor;
+  bytes32 bootstrapPermissionId;
 }

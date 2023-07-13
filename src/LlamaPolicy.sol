@@ -6,7 +6,7 @@ import {LibString} from "@solady/utils/LibString.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaPolicyInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -158,35 +158,29 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Initializes a new `LlamaPolicy` clone.
-  /// @param _name The name of the policy.
-  /// @param roleDescriptions The role descriptions.
-  /// @param roleHolders The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
-  /// @param rolePermissions The `role`, `permissionId` and whether the role has the permission of the role permissions.
-  function initialize(
-    string calldata _name,
-    RoleDescription[] calldata roleDescriptions,
-    RoleHolderData[] calldata roleHolders,
-    RolePermissionData[] calldata rolePermissions,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
-    string memory _color,
-    string memory _logo,
-    address _llamaExecutor,
-    bytes32 bootstrapPermissionId
-  ) external initializer {
-    __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
+  /// @param config config
+  function initialize(LlamaPolicyInitializationConfig calldata config) external initializer {
+    __initializeERC721MinimalProxy(
+      config.name, string.concat("LL-", LibString.replace(LibString.upper(config.name), " ", "-"))
+    );
     factory = LlamaFactory(msg.sender);
-    for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      _initializeRole(roleDescriptions[i]);
+    for (uint256 i = 0; i < config.roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      _initializeRole(config.roleDescriptions[i]);
     }
 
-    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    for (uint256 i = 0; i < config.roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(
-        roleHolders[i].role, roleHolders[i].policyholder, roleHolders[i].quantity, roleHolders[i].expiration
+        config.roleHolders[i].role,
+        config.roleHolders[i].policyholder,
+        config.roleHolders[i].quantity,
+        config.roleHolders[i].expiration
       );
     }
 
-    for (uint256 i = 0; i < rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      _setRolePermission(rolePermissions[i].role, rolePermissions[i].permissionId, rolePermissions[i].hasPermission);
+    for (uint256 i = 0; i < config.rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      _setRolePermission(
+        config.rolePermissions[i].role, config.rolePermissions[i].permissionId, config.rolePermissions[i].hasPermission
+      );
     }
 
     // Must have assigned roles during initialization, otherwise the system cannot be used. However,
@@ -194,12 +188,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // this is more of a sanity check, not a guarantee that the system will work after initialization.
     if (numRoles == 0 || getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
 
-    _setPolicyMetadata(_llamaPolicyMetadata);
-    _setColor(_color);
-    _setLogo(_logo);
+    _setPolicyMetadata(config.llamaPolicyMetadata);
+    _setColor(config.color);
+    _setLogo(config.logo);
 
-    llamaExecutor = _llamaExecutor;
-    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+    llamaExecutor = config.llamaExecutor;
+    _setRolePermission(BOOTSTRAP_ROLE, config.bootstrapPermissionId, true);
   }
 
   // ===========================================

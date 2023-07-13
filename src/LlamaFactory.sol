@@ -6,7 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -136,7 +136,6 @@ contract LlamaFactory {
   /// @param initialRolePermissions Array of initial permissions given to roles.
   /// @param color The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   /// @param logo The SVG string representing the logo for the deployed Llama instance's NFT.
-  /// @return executor The address of the `LlamaExecutor` of the newly created instance.
   /// @return core The address of the `LlamaCore` of the newly created instance.
   function deploy(
     string memory name,
@@ -197,9 +196,7 @@ contract LlamaFactory {
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
-    llamaCore =
-      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
-    llamaCore.initialize(
+    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
       strategyLogic,
@@ -214,6 +211,10 @@ contract LlamaFactory {
       logo,
       msg.sender
     );
+
+    llamaCore =
+      LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
+    llamaCore.initialize(config);
 
     emit LlamaInstanceCreated(
       llamaCount, name, address(llamaCore), address(llamaCore.executor()), address(llamaCore.policy()), block.chainid

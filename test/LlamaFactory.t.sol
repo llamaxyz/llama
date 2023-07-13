@@ -92,7 +92,7 @@ contract Constructor is LlamaFactoryTest {
 }
 
 contract Deploy is LlamaFactoryTest {
-  function deployLlama() internal returns (LlamaExecutor, LlamaCore) {
+  function deployLlama() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -296,7 +296,9 @@ contract Deploy is LlamaFactoryTest {
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo
+      logo,
+      address(mpExecutor),
+      bytes32(0)
     );
   }
 
@@ -311,7 +313,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_InitializesLlamaCore() public {
-    (, LlamaCore _llama) = deployLlama();
+    (LlamaCore _llama) = deployLlama();
     assertEq(_llama.name(), "NewProject");
 
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
@@ -319,11 +321,25 @@ contract Deploy is LlamaFactoryTest {
 
     LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
-    _llama.initialize("NewProject", _policy, relativeQuorumLogic, accountLogic, strategyConfigs, accounts);
+    _llama.initialize(
+      "NewProject",
+      _policy,
+      relativeQuorumLogic,
+      accountLogic,
+      strategyConfigs,
+      accounts,
+      new RoleDescription[](0),
+      new RoleHolderData[](0),
+      new RolePermissionData[](0),
+      policyMetadata,
+      color,
+      logo,
+      address(this)
+    );
   }
 
   function test_SetsLlamaExecutorOnThePolicy() public {
-    (, LlamaCore _llama) = deployLlama();
+    (LlamaCore _llama) = deployLlama();
     LlamaPolicy _policy = _llama.policy();
     LlamaCore _llamaFromPolicy = LlamaCore(_policy.llamaExecutor());
     assertEq(address(_llamaFromPolicy), address(_llama.executor()));
@@ -331,7 +347,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_SetsPolicyAddressOnLlamaCore() public {
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
-    (, LlamaCore _llama) = deployLlama();
+    (LlamaCore _llama) = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
   }
 
@@ -348,14 +364,15 @@ contract Deploy is LlamaFactoryTest {
 
   function test_ReturnsAddressOfTheNewLlamaCoreContract() public {
     LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
-    (, LlamaCore newLlama) = deployLlama();
+    (LlamaCore newLlama) = deployLlama();
     assertEq(address(newLlama), address(computedLlama));
   }
 
   function test_ReturnsAddressOfTheNewLlamaExecutorContract() public {
     LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
-    (LlamaExecutor newLlamaExecutor,) = deployLlama();
+    (LlamaCore newLlama) = deployLlama();
+    LlamaExecutor newLlamaExecutor = newLlama.executor();
     assertEq(address(newLlamaExecutor), address(computedExecutor));
     assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
   }
