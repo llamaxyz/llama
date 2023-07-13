@@ -158,7 +158,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Initializes a new `LlamaPolicy` clone.
-  /// @param config config
+  /// @param config The struct that contains the configuration for this instance's policy.
   function initialize(LlamaPolicyInitializationConfig calldata config) external initializer {
     __initializeERC721MinimalProxy(
       config.name, string.concat("LL-", LibString.replace(LibString.upper(config.name), " ", "-"))

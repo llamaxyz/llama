@@ -239,17 +239,14 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
-  /// @param config config
-  function initialize(LlamaCoreInitializationConfig calldata config)
-    external
-    initializer
-    returns (bytes32 bootstrapPermissionId)
-  {
+  /// @param config The struct that contains the configuration for this Llama instance.
+  /// @return The bootstrap permission ID that's used to set role permissions.
+  function initialize(LlamaCoreInitializationConfig calldata config) external initializer returns (bytes32) {
     factory = LlamaFactory(msg.sender);
     name = config.name;
     executor = new LlamaExecutor();
     policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
-    // Now we compute the permission ID used to set role permissions
+
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,
@@ -269,8 +266,9 @@ contract LlamaCore is Initializable {
     _setAccountLogicAuthorization(config.accountLogic, true);
     _deployAccounts(config.accountLogic, config.initialAccounts);
 
+    // Now we compute the permission ID used to set role permissions
     bytes4 selector = LlamaPolicy.setRolePermission.selector;
-    bootstrapPermissionId = keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
+    return keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
   }
 
   // ===========================================
