@@ -271,8 +271,7 @@ contract LlamaCore is Initializable {
       config.initialRoleHolders,
       config.initialRolePermissions,
       config.llamaPolicyMetadata,
-      config.color,
-      config.logo,
+      config.metadataConfig,
       address(executor),
       factory
     );

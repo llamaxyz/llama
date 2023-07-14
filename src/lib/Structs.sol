@@ -68,9 +68,8 @@ struct LlamaCoreInitializationConfig {
   RoleDescription[] initialRoleDescriptions; // Array of initial role descriptions.
   RoleHolderData[] initialRoleHolders; // Array of initial role holders, their quantities and their role expirations.
   RolePermissionData[] initialRolePermissions; // Array of initial permissions given to roles.
-  LlamaPolicyMetadata llamaPolicyMetadata; // The metadata contract for the policy NFT.
-  string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
-  string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
+  LlamaPolicyMetadata llamaPolicyMetadata; // The metadata logic contract for the policy NFT.
+  bytes metadataConfig; // The configuration used for the policy metadata contract intialization.
   address deployer; // The caller of the factory's deploy function
 }
 
@@ -80,9 +79,8 @@ struct LlamaPolicyInitializationConfig {
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the role has the permission of the
     // role permissions.
-  LlamaPolicyMetadata llamaPolicyMetadata; // The metadata contract for the policy NFT.
-  string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
-  string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
+  LlamaPolicyMetadata llamaPolicyMetadata; // The metadata logic contract for the policy NFT.
+  bytes metadataConfig; // The configuration used for the policy metadata contract intialization.
   address llamaExecutor; // The address of the instance's LlamaExecutor
   LlamaFactory llamaFactory; // The factory address
 }

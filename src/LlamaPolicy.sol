@@ -189,8 +189,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     if (numRoles == 0 || getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
 
     _setPolicyMetadata(config.llamaPolicyMetadata);
-    _setColor(config.color);
-    _setLogo(config.logo);
+
+    (string memory _color, string memory _logo) = abi.decode(config.metadataConfig, (string, string));
+    _setColor(_color);
+    _setLogo(_logo);
   }
 
   // ===========================================
