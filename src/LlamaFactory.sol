@@ -148,7 +148,7 @@ contract LlamaFactory {
     RolePermissionData[] memory initialRolePermissions,
     string memory color,
     string memory logo
-  ) external onlyRootLlama returns (LlamaCore core) {
+  ) external returns (LlamaCore core) {
     (core) = _deploy(
       name,
       strategyLogic,

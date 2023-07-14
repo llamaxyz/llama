@@ -45,7 +45,6 @@ contract LlamaPolicyTest is LlamaTestSetup {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    vm.prank(address(rootExecutor));
     return factory.deploy(
       '"name": "Mock Protocol Llama"',
       relativeQuorumLogic,

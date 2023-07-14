@@ -107,7 +107,6 @@ contract Deploy is LlamaFactoryTest {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    vm.prank(address(rootExecutor));
     return factory.deploy(
       "NewProject",
       relativeQuorumLogic,
@@ -122,26 +121,13 @@ contract Deploy is LlamaFactoryTest {
     );
   }
 
-  function test_RevertIf_CallerIsNotRootLlama(address caller) public {
-    vm.assume(caller != address(rootExecutor));
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+  function testFuzz_DeployCallsArePublic(address caller) public {
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(caller));
+    assertEq(address(computedLlama).code.length, 0);
 
     vm.prank(address(caller));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.deploy(
-      "NewProject",
-      relativeQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+    deployLlama();
+    assertGt(address(computedLlama).code.length, 0);
   }
 
   function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
@@ -152,7 +138,6 @@ contract Deploy is LlamaFactoryTest {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    vm.prank(address(rootExecutor));
     factory.deploy(
       name,
       relativeQuorumLogic,
@@ -173,7 +158,44 @@ contract Deploy is LlamaFactoryTest {
       accountLogic,
       strategyConfigs,
       accounts,
-      new RoleDescription[](0),
+      roleDescriptionStrings,
+      roleHolders,
+      new RolePermissionData[](0),
+      color,
+      logo
+    );
+  }
+
+  function test_AllowSameNamesFromDifferentDeployers(string memory name) public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    vm.prank(disapproverDiane);
+    factory.deploy(
+      name,
+      relativeQuorumLogic,
+      accountLogic,
+      strategyConfigs,
+      accounts,
+      roleDescriptionStrings,
+      roleHolders,
+      new RolePermissionData[](0),
+      color,
+      logo
+    );
+
+    vm.prank(disapproverDrake);
+    factory.deploy(
+      name,
+      relativeQuorumLogic,
+      accountLogic,
+      strategyConfigs,
+      accounts,
+      roleDescriptionStrings,
       roleHolders,
       new RolePermissionData[](0),
       color,
@@ -281,14 +303,14 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_DeploysPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(this));
     assertEq(address(_policy).code.length, 0);
     deployLlama();
     assertGt(address(_policy).code.length, 0);
   }
 
   function test_InitializesLlamaPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(this));
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
 
     assertEq(address(_policy).code.length, 0);
@@ -311,7 +333,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_DeploysLlamaCore() public {
-    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(this));
     assertEq(address(_llama).code.length, 0);
     deployLlama();
     assertGt(address(_llama).code.length, 0);
@@ -355,15 +377,15 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_SetsPolicyAddressOnLlamaCore() public {
-    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(this));
     (LlamaCore _llama) = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
   }
 
   function test_EmitsLlamaInstanceCreatedEvent() public {
     vm.expectEmit();
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
-    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(this));
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(this));
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
     emit LlamaInstanceCreated(
       2, "NewProject", address(computedLlama), address(computedExecutor), address(computedPolicy), block.chainid
@@ -372,13 +394,13 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_ReturnsAddressOfTheNewLlamaCoreContract() public {
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(this));
     (LlamaCore newLlama) = deployLlama();
     assertEq(address(newLlama), address(computedLlama));
   }
 
   function test_ReturnsAddressOfTheNewLlamaExecutorContract() public {
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(this));
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
     (LlamaCore newLlama) = deployLlama();
     LlamaExecutor newLlamaExecutor = newLlama.executor();
