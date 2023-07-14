@@ -699,13 +699,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to
-  /// initialize the new strategies with. Returns the address of the first strategy, which is only used during the
-  /// `LlamaCore` initialization so that we can ensure someone (specifically, policyholders with role ID 1) has the
-  /// permission to assign role permissions.
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
-    internal
-    returns (ILlamaStrategy firstStrategy)
-  {
+  /// initialize the new strategies with. 
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) internal {
     if (!authorizedStrategyLogics[llamaStrategyLogic]) revert UnauthorizedStrategyLogic();
 
     uint256 strategyLength = strategyConfigs.length;
@@ -716,7 +711,6 @@ contract LlamaCore is Initializable {
       strategies[strategy].deployed = true;
       _authorizeStrategy(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
-      if (i == 0) firstStrategy = strategy;
     }
   }
 
