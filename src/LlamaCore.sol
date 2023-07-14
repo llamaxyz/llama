@@ -699,7 +699,7 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to
-  /// initialize the new strategies with. 
+  /// initialize the new strategies with.
   function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) internal {
     if (!authorizedStrategyLogics[llamaStrategyLogic]) revert UnauthorizedStrategyLogic();
 
