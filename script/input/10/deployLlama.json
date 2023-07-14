@@ -88,7 +88,7 @@
     },
     {
       "comment": "This is just used for the DeployLlama test file. It also gives the ActionCreator permission to call LlamaFactory.deploy which creates new Llama instances.",
-      "permissionId": "0x952670a74d5eedeefca63f912fbcb2f60c21cbf3356f5e4103827030e535d600",
+      "permissionId": "0x38daa1c2137a9a332687b1f20ad379d838345e779c6cad6623b5b342c74e549b",
       "role": 1
     }
   ]
