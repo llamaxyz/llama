@@ -13,7 +13,9 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {Checkpoints} from "src/lib/Checkpoints.sol";
-import {LlamaPolicyInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -107,7 +109,7 @@ contract Constructor is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      bytes32(0)
     );
     policyLogic.initialize(config);
   }
@@ -119,7 +121,6 @@ contract Initialize is LlamaPolicyTest {
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test Policy",
       new RoleDescription[](0),
@@ -129,8 +130,9 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     localPolicy.initialize(config);
   }
 
@@ -158,7 +160,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
     assertEq(localPolicy.numRoles(), numRoles);
@@ -166,7 +168,6 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_InitializeIsCalledTwice() public {
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert("Initializable: contract is already initialized");
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test",
       new RoleDescription[](0),
@@ -176,8 +177,9 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert("Initializable: contract is already initialized");
     mpPolicy.initialize(config);
   }
 
@@ -204,7 +206,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
   }
@@ -234,7 +236,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
 
@@ -266,45 +268,10 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
-  }
-}
-
-contract SetLlama is LlamaPolicyTest {
-  function test_SetsLlamaAddress() public {
-    // This test is a no-op because this functionality is already tested in
-    // `test_SetsLlamaCoreOnThePolicy`, which also is a stronger test since it tests that
-    // method in the context it is used, instead of as a pure unit test.
-  }
-
-  function test_RevertIf_CallerNotLlamaFactory() public {
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
-}
-
-contract FinalizeInitialization is LlamaPolicyTest {
-  function test_RevertIf_LlamaAddressIsSet() public {
-    vm.prank(address(factory));
-    vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
-
-  function test_RevertIf_CalledByNonFactory() public {
-    // this test ensures that factory cannot be set on the policy logic contract and finalizeImplementation is properly
-    // guarded
-    vm.startPrank(arbitraryAddress);
-
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    policyLogic.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    assertEq(address(policyLogic.factory()), address(0));
   }
 }
 

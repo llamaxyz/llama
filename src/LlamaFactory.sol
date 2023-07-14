@@ -196,7 +196,9 @@ contract LlamaFactory {
     if (initialRoleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (initialRoleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();
 
-    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
+    // Deploy and initialize `LlamaCore`.
+    core = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    LlamaCoreInitializationConfig memory coreConfig = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
       strategyLogic,
@@ -211,15 +213,10 @@ contract LlamaFactory {
       logo,
       msg.sender
     );
+    core.initialize(coreConfig);
 
-    core = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
-
-    bytes32 bootstrapPermissionId = core.initialize(config);
-    LlamaPolicy policy = core.policy();
     LlamaExecutor executor = core.executor();
-
-    policy.finalizeInitialization(address(executor), bootstrapPermissionId);
-
+    LlamaPolicy policy = core.policy();
     emit LlamaInstanceCreated(llamaCount, name, address(core), address(executor), address(policy), block.chainid);
 
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);

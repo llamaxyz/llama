@@ -254,7 +254,6 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
 
 contract Setup is LlamaCoreTest {
   function test_setUp() public {
-    assertEq(address(mpCore.factory()), address(factory));
     assertEq(mpCore.name(), "Mock Protocol Llama");
     assertEq(address(mpCore.policy()), address(mpPolicy));
 

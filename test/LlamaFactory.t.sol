@@ -287,29 +287,6 @@ contract Deploy is LlamaFactoryTest {
     assertGt(address(_policy).code.length, 0);
   }
 
-  function test_InitializesLlamaPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-
-    assertEq(address(_policy).code.length, 0);
-    deployLlama();
-    assertGt(address(_policy).code.length, 0);
-
-    vm.expectRevert("Initializable: contract is already initialized");
-    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "Test",
-      new RoleDescription[](0),
-      new RoleHolderData[](0),
-      new RolePermissionData[](0),
-      llamaPolicyMetadata,
-      color,
-      logo,
-      address(mpExecutor),
-      factory
-    );
-    _policy.initialize(config);
-  }
-
   function test_DeploysLlamaCore() public {
     LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
     assertEq(address(_llama).code.length, 0);

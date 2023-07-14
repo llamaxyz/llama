@@ -68,6 +68,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaCore mpCore;
   LlamaExecutor mpExecutor;
   LlamaPolicy mpPolicy;
+  ILlamaStrategy mpBootstrapStrategy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
   ILlamaAccount mpAccount1;
@@ -114,6 +115,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   bytes4 public constant CREATE_ACCOUNT_SELECTOR = 0x90010bb0; // createAccounts(address,bytes[])
   bytes4 public constant EXECUTE_SCRIPT_SELECTOR = 0x2eec6087; // executeScript()
   bytes4 public constant EXECUTE_SCRIPT_WITH_VALUE_SELECTOR = 0xcf62157f; // executeScriptWithValue()
+  bytes4 public constant SET_ROLE_PERMISSION_SELECTOR = LlamaPolicy.setRolePermission.selector;
 
   // Permission IDs for those selectors.
   bytes32 pausePermissionId;
@@ -242,6 +244,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+    mpBootstrapStrategy =
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[0], address(mpCore));
     mpStrategy1 =
       lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
