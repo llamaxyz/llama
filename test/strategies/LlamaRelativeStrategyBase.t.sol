@@ -24,7 +24,18 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
   event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
   event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
 
-  function deployRelativeQuorumAndSetRole(
+  MockLlamaRelativeStrategyBase mockLlamaRelativeStrategyBaseLogic;
+
+  function setUp() public virtual override {
+    LlamaTestSetup.setUp();
+
+    mockLlamaRelativeStrategyBaseLogic = new MockLlamaRelativeStrategyBase();
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaRelativeStrategyBaseLogic, true);
+  }
+
+  function deployRelativeBaseAndSetRole(
     uint8 _role,
     bytes32 _permission,
     address _policyHolder,
@@ -68,10 +79,10 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
     vm.expectEmit();
     emit StrategyCreated(mpCore, mpPolicy);
 
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(mockLlamaRelativeStrategyBaseLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 
@@ -89,15 +100,15 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
       forceDisapprovalRoles: new uint8[](0)
     });
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(mockLlamaRelativeStrategyBaseLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
     LlamaRelativeStrategyBase.Config[] memory testStrategies = new LlamaRelativeStrategyBase.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
-  function deployRelativeQuorumWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
+  function deployRelativeBaseWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
     // Define strategy parameters.
     uint8[] memory forceApproveRoles = new uint8[](1);
     forceApproveRoles[0] = uint8(Roles.ForceApprover);
@@ -119,14 +130,14 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
 
     // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(mockLlamaRelativeStrategyBaseLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
 
     // Create and authorize the strategy.
     LlamaRelativeStrategyBase.Config[] memory testStrategies = new LlamaRelativeStrategyBase.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
@@ -136,13 +147,13 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
 contract Constructor is LlamaRelativeStrategyBaseTest {
   function test_DisablesInitializationAtConstruction() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    relativeQuorumLogic.initialize(bytes(""));
+    mockLlamaRelativeStrategyBaseLogic.initialize(bytes(""));
   }
 }
 
 contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -155,11 +166,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).queuingPeriod(), _queuingDuration);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).queuingPeriod(), _queuingDuration);
   }
 
   function testFuzz_SetsStrategyStorageExpirationDelay(uint64 _expirationDelay) public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -172,11 +183,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).expirationPeriod(), _expirationDelay);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).expirationPeriod(), _expirationDelay);
   }
 
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -189,11 +200,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
   }
 
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint64 _approvalPeriod) public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -206,11 +217,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).approvalPeriod(), _approvalPeriod);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).approvalPeriod(), _approvalPeriod);
   }
 
   function test_SetsStrategyStoragePolicy() public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -227,7 +238,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   }
 
   function test_SetsStrategyStorageLlama() public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -245,7 +256,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
 
   function testFuzz_SetsStrategyStorageMinApprovalPct(uint256 _percent) public {
     _percent = bound(_percent, 0, 10_000);
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -258,11 +269,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).minApprovalPct(), _percent);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).minApprovalPct(), _percent);
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint16 _percent) public {
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -275,7 +286,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).minDisapprovalPct(), _percent);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).minDisapprovalPct(), _percent);
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
@@ -283,7 +294,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       // 0 = All Holders Role, which will revert if set as force role
       if (forceApprovalRoles[i] == 0) forceApprovalRoles[i] = 1;
     }
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -297,7 +308,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0)
     );
     for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
-      assertEq(toRelativeQuorum(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
+      assertEq(LlamaRelativeStrategyBase(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
     }
   }
 
@@ -306,7 +317,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       // 0 = All Holders Role, which will revert if set as force role
       if (forceDisapprovalRoles[i] == 0) forceDisapprovalRoles[i] = 1;
     }
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -320,7 +331,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       forceDisapprovalRoles
     );
     for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
-      assertEq(toRelativeQuorum(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
+      assertEq(LlamaRelativeStrategyBase(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
     }
   }
 
@@ -329,7 +340,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     uint8[] memory forceApprovalRoles = new uint8[](2);
     forceApprovalRoles[0] = _role;
     forceApprovalRoles[1] = _role;
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -342,7 +353,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       forceApprovalRoles,
       new uint8[](0)
     );
-    assertEq(toRelativeQuorum(newStrategy).forceApprovalRole(_role), true);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).forceApprovalRole(_role), true);
   }
 
   function testFuzz_HandlesDuplicateDisapprovalRoles(uint8 _role) public {
@@ -350,7 +361,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     uint8[] memory forceDisapprovalRoles = new uint8[](2);
     forceDisapprovalRoles[0] = _role;
     forceDisapprovalRoles[1] = _role;
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -363,11 +374,11 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       forceDisapprovalRoles
     );
-    assertEq(toRelativeQuorum(newStrategy).forceDisapprovalRole(_role), true);
+    assertEq(LlamaRelativeStrategyBase(newStrategy).forceDisapprovalRole(_role), true);
   }
 
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
-    deployRelativeQuorumAndSetRole(
+    deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(this),
@@ -404,7 +415,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
   function test_RevertIf_SetAllHoldersRoleAsForceDisapprovalRole() public {
@@ -429,7 +440,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
   function testFuzz_RevertIf_MinApprovalPctIsGreaterThan100(uint16 minApprovalPct) public {
@@ -453,7 +464,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.InvalidMinApprovalPct.selector, minApprovalPct));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
 
@@ -508,7 +519,7 @@ contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -533,7 +544,7 @@ contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
