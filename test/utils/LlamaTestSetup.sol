@@ -21,6 +21,7 @@ import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.so
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -348,7 +349,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(LlamaRelativeQuorum.Config[] memory strategies)
+  function toILlamaStrategy(LlamaRelativeStrategyBase.Config[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -358,7 +359,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toILlamaStrategy(LlamaRelativeQuorum.Config memory strategy)
+  function toILlamaStrategy(LlamaRelativeStrategyBase.Config memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)

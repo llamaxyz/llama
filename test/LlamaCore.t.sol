@@ -24,6 +24,7 @@ import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} 
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -157,9 +158,9 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
     internal
     pure
-    returns (LlamaRelativeQuorum.Config memory)
+    returns (LlamaRelativeStrategyBase.Config memory)
   {
-    return LlamaRelativeQuorum.Config({
+    return LlamaRelativeStrategyBase.Config({
       approvalPeriod: toUint64(salt % 1000 days),
       queuingPeriod: toUint64(salt % 1001 days),
       expirationPeriod: toUint64(salt % 1002 days),
@@ -929,7 +930,7 @@ contract CancelAction is LlamaCoreTest {
   function testFuzz_RevertIf_NotCreator(address _randomCaller) public {
     vm.assume(_randomCaller != actionCreatorAaron);
     vm.prank(_randomCaller);
-    vm.expectRevert(LlamaRelativeQuorum.OnlyActionCreator.selector);
+    vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 
@@ -942,7 +943,7 @@ contract CancelAction is LlamaCoreTest {
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.CannotCancelInState.selector, ActionState.Canceled));
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Canceled));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -950,7 +951,7 @@ contract CancelAction is LlamaCoreTest {
     ActionInfo memory _actionInfo = _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.CannotCancelInState.selector, ActionState.Executed));
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Executed));
     mpCore.cancelAction(_actionInfo);
   }
 
@@ -968,7 +969,7 @@ contract CancelAction is LlamaCoreTest {
     vm.warp(block.timestamp + 15 days);
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.CannotCancelInState.selector, ActionState.Expired));
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Expired));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -979,7 +980,7 @@ contract CancelAction is LlamaCoreTest {
 
     assertEq(mpStrategy1.isActionApproved(actionInfo), false);
 
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeQuorum.CannotCancelInState.selector, ActionState.Failed));
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Failed));
     mpCore.cancelAction(actionInfo);
   }
 
@@ -992,7 +993,7 @@ contract CancelAction is LlamaCoreTest {
     assertEq(mpStrategy1.isActionApproved(actionInfo), true);
     _queueAction(actionInfo);
 
-    vm.expectRevert(LlamaRelativeQuorum.OnlyActionCreator.selector);
+    vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
   }
 }
@@ -1913,7 +1914,7 @@ contract CreateStrategies is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](3);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
 
     vm.prank(caller);
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
@@ -1922,7 +1923,7 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
     public
   {
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](3);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     vm.assume(salt1 != salt2);
     vm.assume(salt1 != salt3);
@@ -1965,10 +1966,10 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CreateNewStrategiesWithAdditionalStrategyLogic() public {
     ILlamaStrategy additionalStrategyLogic = _deployAndAuthorizeAdditionalStrategyLogic();
 
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](3);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
 
-    newStrategies[0] = LlamaRelativeQuorum.Config({
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1981,7 +1982,7 @@ contract CreateStrategies is LlamaCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    newStrategies[1] = LlamaRelativeQuorum.Config({
+    newStrategies[1] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 5 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -1994,7 +1995,7 @@ contract CreateStrategies is LlamaCoreTest {
       forceDisapprovalRoles: new uint8[](0)
     });
 
-    newStrategies[2] = LlamaRelativeQuorum.Config({
+    newStrategies[2] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 6 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -2038,9 +2039,9 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_StrategyLogicNotAuthorized() public {
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
 
-    newStrategies[0] = LlamaRelativeQuorum.Config({
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -2060,9 +2061,9 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_StrategiesAreIdentical() public {
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](2);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](2);
 
-    LlamaRelativeQuorum.Config memory duplicateStrategy = LlamaRelativeQuorum.Config({
+    LlamaRelativeStrategyBase.Config memory duplicateStrategy = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -2085,10 +2086,10 @@ contract CreateStrategies is LlamaCoreTest {
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
-    LlamaRelativeQuorum.Config[] memory newStrategies1 = new LlamaRelativeQuorum.Config[](1);
-    LlamaRelativeQuorum.Config[] memory newStrategies2 = new LlamaRelativeQuorum.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies1 = new LlamaRelativeStrategyBase.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies2 = new LlamaRelativeStrategyBase.Config[](1);
 
-    LlamaRelativeQuorum.Config memory duplicateStrategy = LlamaRelativeQuorum.Config({
+    LlamaRelativeStrategyBase.Config memory duplicateStrategy = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -2114,9 +2115,9 @@ contract CreateStrategies is LlamaCoreTest {
   function test_CanBeCalledByASuccessfulAction() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
 
-    newStrategies[0] = LlamaRelativeQuorum.Config({
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 4 days,
       queuingPeriod: 14 days,
       expirationPeriod: 3 days,
@@ -2762,7 +2763,7 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
 
   function test_RevertIf_StrategyLogicUnauthorized() public {
     uint256 salt = 0;
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
     newStrategies[0] = _createStrategy(salt, true);
 
     vm.prank(address(mpExecutor));
@@ -2792,7 +2793,7 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
     mpCore.setStrategyLogicAuthorization(relativeQuorumLogic, false);
 
     uint256 salt = 0;
-    LlamaRelativeQuorum.Config[] memory newStrategies = new LlamaRelativeQuorum.Config[](1);
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
     newStrategies[0] = _createStrategy(salt, true);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](1);
     strategyAddresses[0] = lens.computeLlamaStrategyAddress(
