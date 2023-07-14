@@ -943,7 +943,9 @@ contract CancelAction is LlamaCoreTest {
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Canceled));
+    vm.expectRevert(
+      abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Canceled)
+    );
     mpCore.cancelAction(actionInfo);
   }
 
@@ -951,7 +953,9 @@ contract CancelAction is LlamaCoreTest {
     ActionInfo memory _actionInfo = _executeCompleteActionFlow();
 
     vm.prank(actionCreatorAaron);
-    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Executed));
+    vm.expectRevert(
+      abi.encodeWithSelector(LlamaRelativeStrategyBase.CannotCancelInState.selector, ActionState.Executed)
+    );
     mpCore.cancelAction(_actionInfo);
   }
 

@@ -23,12 +23,6 @@ import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBas
 ///     action's quorum.
 ///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
-  // ==========================================
-  // ======== Interface Implementation ========
-  // ==========================================
-
-  // -------- At Action Creation --------
-
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external override {
     if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
@@ -45,8 +39,6 @@ contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
     actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
   }
 
-  // -------- When Casting Approval --------
-
   /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
@@ -58,8 +50,6 @@ contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
     uint128 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceApprovalRole[role] ? type(uint128).max : quantity;
   }
-
-  // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
