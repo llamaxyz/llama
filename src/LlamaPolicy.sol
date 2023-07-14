@@ -203,8 +203,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
   /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
   function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
+    console2.log("Start");
     if (msg.sender != address(factory)) revert OnlyLlamaFactory();
+    console2.log("Only factory passed");
     if (llamaExecutor != address(0)) revert AlreadyInitialized();
+    console2.log("Already initialized apssed");
 
     llamaExecutor = _llamaExecutor;
     _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);

@@ -261,7 +261,9 @@ contract LlamaCore is Initializable {
     factory = LlamaFactory(msg.sender);
     name = config.name;
     executor = new LlamaExecutor();
-    policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
+    policy = LlamaPolicy(
+      Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
+    );
 
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,

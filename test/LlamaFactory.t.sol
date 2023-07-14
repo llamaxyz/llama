@@ -281,14 +281,14 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_DeploysPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
     assertEq(address(_policy).code.length, 0);
     deployLlama();
     assertGt(address(_policy).code.length, 0);
   }
 
   function test_InitializesLlamaPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
 
     assertEq(address(_policy).code.length, 0);
@@ -311,7 +311,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_DeploysLlamaCore() public {
-    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
     assertEq(address(_llama).code.length, 0);
     deployLlama();
     assertGt(address(_llama).code.length, 0);
@@ -355,15 +355,15 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_SetsPolicyAddressOnLlamaCore() public {
-    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
     (LlamaCore _llama) = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
   }
 
   function test_EmitsLlamaInstanceCreatedEvent() public {
     vm.expectEmit();
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
-    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
     emit LlamaInstanceCreated(
       2, "NewProject", address(computedLlama), address(computedExecutor), address(computedPolicy), block.chainid
@@ -372,13 +372,13 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_ReturnsAddressOfTheNewLlamaCoreContract() public {
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
     (LlamaCore newLlama) = deployLlama();
     assertEq(address(newLlama), address(computedLlama));
   }
 
   function test_ReturnsAddressOfTheNewLlamaExecutorContract() public {
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
     (LlamaCore newLlama) = deployLlama();
     LlamaExecutor newLlamaExecutor = newLlama.executor();
