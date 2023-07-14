@@ -11,6 +11,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
+import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -93,6 +94,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Emitted when a permission ID is assigned to a role.
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
+  /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+
+  /// @dev Emitted when the color code for SVG of a Llama instance is set.
+  event PolicyColorSet(string color);
+
+  /// @dev Emitted when the logo for SVG of a Llama instance is set.
+  event PolicyLogoSet(string logo);
+
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -130,6 +140,15 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The address of the `LlamaFactory` contract.
   LlamaFactory public factory;
 
+  /// @notice The Llama policy metadata contract.
+  LlamaPolicyMetadata public llamaPolicyMetadata;
+
+  /// @notice Color code for SVG.
+  string public color;
+
+  /// @notice Logo for SVG.
+  string public logo;
+
   // ======================================================
   // ======== Contract Creation and Initialization ========
   // ======================================================
@@ -147,7 +166,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     string calldata _name,
     RoleDescription[] calldata roleDescriptions,
     RoleHolderData[] calldata roleHolders,
-    RolePermissionData[] calldata rolePermissions
+    RolePermissionData[] calldata rolePermissions,
+    LlamaPolicyMetadata _llamaPolicyMetadata,
+    string memory _color,
+    string memory _logo
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     factory = LlamaFactory(msg.sender);
@@ -169,6 +191,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // we do not check that roles were assigned "properly" as there is no single correct way, so
     // this is more of a sanity check, not a guarantee that the system will work after initialization.
     if (numRoles == 0 || getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
+
+    _setPolicyMetadata(_llamaPolicyMetadata);
+    _setColor(_color);
+    _setLogo(_logo);
   }
 
   // ===========================================
@@ -240,6 +266,29 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function updateRoleDescription(uint8 role, RoleDescription description) external onlyLlama {
     if (role > numRoles) revert RoleNotInitialized(role);
     emit RoleInitialized(role, description);
+  }
+
+  // -------- Metadata --------
+
+  /// @notice Sets the Llama policy metadata contract which contains the function body for `tokenURI()` and
+  /// `contractURI()`.
+  /// @dev This is handled by a separate contract to ensure contract size stays under 24kB.
+  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
+  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
+    _setPolicyMetadata(_llamaPolicyMetadata);
+  }
+
+  /// @notice Sets the primary color of the token's SVG.
+  /// @param _color The color code as any valid SVG color value (eg. #00FF00).
+  function setColor(string memory _color) external onlyLlama {
+    _setColor(_color);
+  }
+
+  /// @notice Sets the token SVG's logo.
+  /// @dev It must be a valid SVG fragment that has the correct positioning to display correctly.
+  /// @param _logo The logo as an SVG string.
+  function setLogo(string memory _logo) external onlyLlama {
+    _setLogo(_logo);
   }
 
   // -------- Role and Permission Getters --------
@@ -349,13 +398,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return factory.tokenURI(LlamaExecutor(llamaExecutor), name, tokenId);
+    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return factory.contractURI(name);
+    return llamaPolicyMetadata.contractURI(name);
   }
 
   // -------- ERC-721 Methods --------
@@ -532,6 +581,25 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
+  }
+
+  /// @dev Sets the Llama policy metadata contract.
+  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
+    llamaPolicyMetadata = _llamaPolicyMetadata;
+    emit PolicyMetadataSet(_llamaPolicyMetadata);
+  }
+
+  /// @dev Sets the primary color of the token's SVG.
+  function _setColor(string memory _color) internal {
+    color = _color;
+    emit PolicyColorSet(_color);
+  }
+
+  /// @dev Sets the token SVG's logo. It must be a valid SVG fragment that has the correct positioning to display
+  /// correctly.
+  function _setLogo(string memory _logo) internal {
+    logo = _logo;
+    emit PolicyLogoSet(_logo);
   }
 
   /// @dev Returns the token ID for a `policyholder`.
