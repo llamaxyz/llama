@@ -213,10 +213,11 @@ contract LlamaFactory {
     );
 
     core = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+
+    bytes32 bootstrapPermissionId = core.initialize(config);
     LlamaPolicy policy = core.policy();
     LlamaExecutor executor = core.executor();
 
-    bytes32 bootstrapPermissionId = core.initialize(config);
     policy.finalizeInitialization(address(executor), bootstrapPermissionId);
 
     emit LlamaInstanceCreated(llamaCount, name, address(core), address(executor), address(policy), block.chainid);
