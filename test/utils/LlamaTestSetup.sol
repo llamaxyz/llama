@@ -182,6 +182,11 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
       createActionCallData
     );
     rootCore.castApproval(uint8(Roles.ActionCreator), deployActionInfo, "");
+    console2.log(
+      ILlamaStrategy(createActionScriptInput.readAddress(".rootLlamaActionCreationStrategy")).isActionApproved(
+        deployActionInfo
+      )
+    );
     rootCore.queueAction(deployActionInfo);
 
     // Advance the clock to execute the action.

@@ -13,10 +13,10 @@ contract LlamaLensTestSetup is LlamaTestSetup {}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaCoreAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER));
+    address expected = address(lens.computeLlamaCoreAddress("Root Llama", address(rootExecutor)));
     assertEq(expected, address(rootCore));
 
-    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
+    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", address(rootExecutor)));
     assertEq(expected, address(mpCore));
   }
 }

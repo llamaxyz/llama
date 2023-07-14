@@ -82,8 +82,8 @@
   ],
   "initialRolePermissions": [
     {
-      "comment": "This gives the ActionCreator permission to call LlamaFactory.deploy which creates new Llama instances. The permissionId was derived by encoding and hashing (a) the LlamaFactory address that this script deploys, (b) LlamaFactory.deploy.selector, and (c) the address of the second Strategy specified above -- the one without a fixed voting period.",
-      "permissionId": "0x7794bba7981978f0d85b128fc7bf65f557b9a5b61642c69c6fffddf844a9484b",
+      "comment": "This gives the ActionCreator permission to call LlamaFactory.deploy which creates new Llama instances. The permissionId was derived by encoding and hashing (a) the LlamaFactory address that this script deploys, (b) LlamaFactory.deploy.selector, and (c) the address of the third Strategy specified above -- the one without a fixed voting period.",
+      "permissionId": "0x5ad5b12535f32c691d86749ccec9e466b64ed0bd5a86f17466ecc82c5ded8118",
       "role": 1
     },
     {
