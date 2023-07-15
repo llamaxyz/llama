@@ -84,5 +84,5 @@ struct LlamaPolicyInitializationConfig {
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
   address llamaExecutor; // The address of the instance's LlamaExecutor
-  LlamaFactory llamaFactory; // The factory address
+  bytes32 bootstrapPermissionId; // The permission ID that allows holders to change role permissions.
 }

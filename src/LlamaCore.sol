@@ -211,9 +211,6 @@ contract LlamaCore is Initializable {
   // variables, which are the key variables we want to check before and after a delegatecall.
   LlamaPolicy public policy;
 
-  /// @notice The `LlamaFactory` contract that deployed this Llama instance.
-  LlamaFactory public factory;
-
   /// @notice Name of this Llama instance.
   string public name;
 
@@ -256,15 +253,23 @@ contract LlamaCore is Initializable {
 
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param config The struct that contains the configuration for this Llama instance.
-  /// @return The bootstrap permission ID that's used to set role permissions.
-  function initialize(LlamaCoreInitializationConfig calldata config) external initializer returns (bytes32) {
-    factory = LlamaFactory(msg.sender);
+  function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
     name = config.name;
+    // Deploy Executor.
     executor = new LlamaExecutor();
-    policy = LlamaPolicy(
-      Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
-    );
 
+    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootsrap Role) given permission to change role
+    // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
+    // that results in the instance being unusable.
+    policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
+    // Calcuated from the first strategy configuration passed in.
+    ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
+      Clones.predictDeterministicAddress(
+        address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)
+      )
+    );
+    bytes32 bootstrapPermissionId =
+      keccak256(abi.encode(PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy)));
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,
@@ -274,19 +279,17 @@ contract LlamaCore is Initializable {
       config.color,
       config.logo,
       address(executor),
-      factory
+      bootstrapPermissionId
     );
     policy.initialize(policyConfig);
 
+    // Authorize strategy logic contract and deploy strategies.
     _setStrategyLogicAuthorization(config.strategyLogic, true);
-    ILlamaStrategy bootstrapStrategy = _deployStrategies(config.strategyLogic, config.initialStrategies);
+    _deployStrategies(config.strategyLogic, config.initialStrategies);
 
+    // Authorize account logic contract and deploy accounts.
     _setAccountLogicAuthorization(config.accountLogic, true);
     _deployAccounts(config.accountLogic, config.initialAccounts);
-
-    // Now we compute the permission ID used to set role permissions
-    bytes4 selector = LlamaPolicy.setRolePermission.selector;
-    return keccak256(abi.encode(PermissionData(address(policy), bytes4(selector), bootstrapStrategy)));
   }
 
   // ===========================================
@@ -696,13 +699,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Deploys new strategies. Takes in the strategy logic contract to be used and an array of configurations to
-  /// initialize the new strategies with. Returns the address of the first strategy, which is only used during the
-  /// `LlamaCore` initialization so that we can ensure someone (specifically, policyholders with role ID 1) has the
-  /// permission to assign role permissions.
-  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs)
-    internal
-    returns (ILlamaStrategy firstStrategy)
-  {
+  /// initialize the new strategies with.
+  function _deployStrategies(ILlamaStrategy llamaStrategyLogic, bytes[] calldata strategyConfigs) internal {
     if (!authorizedStrategyLogics[llamaStrategyLogic]) revert UnauthorizedStrategyLogic();
 
     uint256 strategyLength = strategyConfigs.length;
@@ -713,7 +711,6 @@ contract LlamaCore is Initializable {
       strategies[strategy].deployed = true;
       _authorizeStrategy(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
-      if (i == 0) firstStrategy = strategy;
     }
   }
 
