@@ -2,23 +2,58 @@
 pragma solidity 0.8.19;
 
 import {Base64} from "@openzeppelin/utils/Base64.sol";
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {LibString} from "@solady/utils/LibString.sol";
+
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+
+/// @dev Llama account initialization configuration.
+struct Config {
+  string color; // Color code for SVG.
+  string logo; // Logo for SVG.
+}
 
 /// @title Llama Policy Metadata
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
-contract LlamaPolicyMetadata {
+contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
+  /// @dev Emitted when the color code for SVG of a Llama instance is set.
+  event PolicyColorSet(string color);
+
+  /// @dev Emitted when the logo for SVG of a Llama instance is set.
+  event PolicyLogoSet(string logo);
+
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
+
+  /// @notice Color code for SVG.
+  string public color;
+
+  /// @notice Logo for SVG.
+  string public logo;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  /// @notice Initializes a new `LlamaAccount` clone.
+  /// @param config Llama account initialization configuration.
+  function initialize(bytes memory config) external initializer {
+    Config memory metadataConfig = abi.decode(config, (Config));
+    color = metadataConfig.color;
+    logo = metadataConfig.logo;
+  }
+
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  /// @param color The color of the Llama instance.
-  /// @param logo The logo of the Llama instance.
-  function tokenURI(string memory name, uint256 tokenId, string memory color, string memory logo)
-    external
-    pure
-    returns (string memory)
-  {
+  function tokenURI(string memory name, uint256 tokenId) external pure returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
 

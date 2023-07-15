@@ -29,7 +29,7 @@ contract DeployLlama is Script {
 
   // Core Protocol.
   LlamaFactory factory;
-  LlamaPolicyMetadata policyMetadata;
+  LlamaPolicyMetadata policyMetadataLogic;
   LlamaLens lens;
 
   function run() public {
@@ -56,8 +56,8 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaPolicyLogic:", vm.toString(address(policyLogic))));
 
     vm.broadcast();
-    policyMetadata = new LlamaPolicyMetadata();
-    DeployUtils.print(string.concat("  LlamaPolicyMetadata:", vm.toString(address(policyMetadata))));
+    policyMetadataLogic = new LlamaPolicyMetadata();
+    DeployUtils.print(string.concat("  LlamaPolicyMetadataLogic:", vm.toString(address(policyMetadataLogic))));
 
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
@@ -74,7 +74,7 @@ contract DeployLlama is Script {
       relativeQuorumLogic,
       accountLogic,
       policyLogic,
-      policyMetadata,
+      policyMetadataLogic,
       jsonInput.readString(".rootLlamaName"),
       DeployUtils.readRelativeStrategies(jsonInput),
       DeployUtils.readAccounts(jsonInput),

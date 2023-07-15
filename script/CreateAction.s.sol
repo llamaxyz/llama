@@ -7,7 +7,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract CreateAction is Script {
@@ -18,8 +17,6 @@ contract CreateAction is Script {
 
   // The data needed to for the Factory.deploy call
   bytes createActionCallData;
-
-  LlamaPolicyMetadata policyMetadata;
 
   function run(address deployer) public {
     // ======== START SAFETY CHECK ========
@@ -33,10 +30,6 @@ contract CreateAction is Script {
     string memory jsonInput = DeployUtils.readScriptInput(filename);
     string memory llamaInstanceName = jsonInput.readString(".newLlamaName");
 
-    string memory color = jsonInput.readString(".newLlamaColor");
-    string memory logo = jsonInput.readString(".newLlamaLogo");
-    bytes memory metadataConfig = abi.encode(color, logo);
-
     createActionCallData = abi.encodeCall(
       LlamaFactory.deploy,
       (
@@ -48,7 +41,8 @@ contract CreateAction is Script {
         DeployUtils.readRoleDescriptions(jsonInput),
         DeployUtils.readRoleHolders(jsonInput),
         DeployUtils.readRolePermissions(jsonInput),
-        metadataConfig
+        jsonInput.readString(".newLlamaColor"),
+        jsonInput.readString(".newLlamaLogo")
       )
     );
 

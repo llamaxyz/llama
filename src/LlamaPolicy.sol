@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {LibString} from "@solady/utils/LibString.sol";
 
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {Checkpoints} from "src/lib/Checkpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -11,7 +14,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -95,13 +97,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   /// @dev Emitted when a new Llama policy metadata contract is set.
-  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
-
-  /// @dev Emitted when the color code for SVG of a Llama instance is set.
-  event PolicyColorSet(string color);
-
-  /// @dev Emitted when the logo for SVG of a Llama instance is set.
-  event PolicyLogoSet(string logo);
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
+    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
+    bytes config
+  );
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -138,13 +138,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   address public llamaExecutor;
 
   /// @notice The Llama policy metadata contract.
-  LlamaPolicyMetadata public llamaPolicyMetadata;
-
-  /// @notice Color code for SVG.
-  string public color;
-
-  /// @notice Logo for SVG.
-  string public logo;
+  ILlamaPolicyMetadata public llamaPolicyMetadata;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========
@@ -193,11 +187,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // instance is deployed with an invalid configuration that results in the instance being unusable.
     _setRolePermission(BOOTSTRAP_ROLE, config.bootstrapPermissionId, true);
 
-    _setPolicyMetadata(config.llamaPolicyMetadata);
-
-    (string memory _color, string memory _logo) = abi.decode(config.metadataConfig, (string, string));
-    _setColor(_color);
-    _setLogo(_logo);
+    _setAndInitializePolicyMetadata(config.llamaPolicyMetadataLogic, abi.encode(config.color, config.logo));
   }
 
   // ===========================================
@@ -263,22 +253,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Sets the Llama policy metadata contract which contains the function body for `tokenURI()` and
   /// `contractURI()`.
   /// @dev This is handled by a separate contract to ensure contract size stays under 24kB.
-  /// @param _llamaPolicyMetadata The Llama policy metadata contract.
-  function setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) external onlyLlama {
-    _setPolicyMetadata(_llamaPolicyMetadata);
-  }
-
-  /// @notice Sets the primary color of the token's SVG.
-  /// @param _color The color code as any valid SVG color value (eg. #00FF00).
-  function setColor(string memory _color) external onlyLlama {
-    _setColor(_color);
-  }
-
-  /// @notice Sets the token SVG's logo.
-  /// @dev It must be a valid SVG fragment that has the correct positioning to display correctly.
-  /// @param _logo The logo as an SVG string.
-  function setLogo(string memory _logo) external onlyLlama {
-    _setLogo(_logo);
+  /// @param _llamaPolicyMetadataLogic The logic contract of the Llama policy metadata contract.
+  /// @param config The configuration data used to initialize the Llama policy metadata logic contract.
+  function setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
+    external
+    onlyLlama
+  {
+    _setAndInitializePolicyMetadata(_llamaPolicyMetadataLogic, config);
   }
 
   // -------- Role and Permission Getters --------
@@ -388,7 +369,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return llamaPolicyMetadata.tokenURI(name, tokenId, color, logo);
+    return llamaPolicyMetadata.tokenURI(name, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
@@ -574,22 +555,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Sets the Llama policy metadata contract.
-  function _setPolicyMetadata(LlamaPolicyMetadata _llamaPolicyMetadata) internal {
-    llamaPolicyMetadata = _llamaPolicyMetadata;
-    emit PolicyMetadataSet(_llamaPolicyMetadata);
-  }
-
-  /// @dev Sets the primary color of the token's SVG.
-  function _setColor(string memory _color) internal {
-    color = _color;
-    emit PolicyColorSet(_color);
-  }
-
-  /// @dev Sets the token SVG's logo. It must be a valid SVG fragment that has the correct positioning to display
-  /// correctly.
-  function _setLogo(string memory _logo) internal {
-    logo = _logo;
-    emit PolicyLogoSet(_logo);
+  function _setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
+    internal
+  {
+    llamaPolicyMetadata = ILlamaPolicyMetadata(Clones.clone(address(_llamaPolicyMetadataLogic)));
+    llamaPolicyMetadata.initialize(config);
+    emit PolicyMetadataSet(_llamaPolicyMetadataLogic, llamaPolicyMetadata, config);
   }
 
   /// @dev Returns the token ID for a `policyholder`.
