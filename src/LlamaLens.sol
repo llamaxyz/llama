@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -80,13 +81,21 @@ contract LlamaLens {
   /// @param deployer The deployer of this Llama instance.
   /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name, address deployer) external view returns (LlamaPolicy) {
-    LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
-    address _computedAddress = Clones.predictDeterministicAddress(
-      LLAMA_POLICY_LOGIC,
-      keccak256(abi.encodePacked(name, deployer)), // salt
-      address(llamaCore) // deployer
-    );
-    return LlamaPolicy(_computedAddress);
+    return _computeLlamaPolicyAddress(name, deployer);
+  }
+
+  /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
+  /// @param name The name of this Llama instance.
+  /// @param deployer The deployer of this Llama instance.
+  /// @param nonce The amount of times the LlamaPolicy has cloned a new policy metadata minimal proxy
+  /// @return The computed address of the `LlamaExecutor` contract.
+  function computeLlamaPolicyMetadataAddress(string memory name, address deployer, uint256 nonce)
+    external
+    view
+    returns (ILlamaPolicyMetadata)
+  {
+    LlamaPolicy llamaPolicy = _computeLlamaPolicyAddress(name, deployer);
+    return ILlamaPolicyMetadata(_computeCreateAddress(address(llamaPolicy), nonce));
   }
 
   /// @notice Computes the address of a Llama strategy contract with the strategy configuration value.
@@ -137,6 +146,17 @@ contract LlamaLens {
       LLAMA_FACTORY // deployer
     );
     return LlamaCore(_computedAddress);
+  }
+
+  /// @dev Computes the address of a Llama core contract from the name and deployer of the Llama instance.
+  function _computeLlamaPolicyAddress(string memory name, address deployer) internal view returns (LlamaPolicy) {
+    LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
+    address _computedAddress = Clones.predictDeterministicAddress(
+      LLAMA_POLICY_LOGIC,
+      keccak256(abi.encodePacked(name, deployer)), // salt
+      address(llamaCore) // deployer
+    );
+    return LlamaPolicy(_computedAddress);
   }
 
   /// @dev Adapted from the Forge Standard Library
