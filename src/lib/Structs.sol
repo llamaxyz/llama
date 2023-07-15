@@ -82,5 +82,5 @@ struct LlamaPolicyInitializationConfig {
   LlamaPolicyMetadata llamaPolicyMetadata; // The metadata logic contract for the policy NFT.
   bytes metadataConfig; // The configuration used for the policy metadata contract intialization.
   address llamaExecutor; // The address of the instance's LlamaExecutor
-  LlamaFactory llamaFactory; // The factory address
+  bytes32 bootstrapPermissionId; // The permission ID that allows holders to change role permissions.
 }
