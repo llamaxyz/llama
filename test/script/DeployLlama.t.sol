@@ -200,7 +200,6 @@ contract Run is DeployLlamaTest {
     DeployLlama.run();
 
     assertFalse(address(policyMetadataLogic) == address(0));
-    // TODO check this on the root instance's clone
     assertFalse(keccak256(abi.encode(policyMetadataLogic.tokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
   }
 

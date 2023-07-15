@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @dev Data required to create an action.
 struct ActionInfo {
@@ -68,7 +68,7 @@ struct LlamaCoreInitializationConfig {
   RoleDescription[] initialRoleDescriptions; // Array of initial role descriptions.
   RoleHolderData[] initialRoleHolders; // Array of initial role holders, their quantities and their role expirations.
   RolePermissionData[] initialRolePermissions; // Array of initial permissions given to roles.
-  LlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
+  ILlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
   address deployer; // The caller of the factory's deploy function
@@ -80,7 +80,7 @@ struct LlamaPolicyInitializationConfig {
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the role has the permission of the
     // role permissions.
-  LlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
+  ILlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
   address llamaExecutor; // The address of the instance's LlamaExecutor

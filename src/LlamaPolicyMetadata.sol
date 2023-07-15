@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Base64} from "@openzeppelin/utils/Base64.sol";
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
+import {Base64} from "@openzeppelin/utils/Base64.sol";
 
 import {LibString} from "@solady/utils/LibString.sol";
 
@@ -12,10 +12,14 @@ import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
-  /// @dev Emitted when the color code for SVG of a Llama instance is set.
+  // ========================
+  // ======== Events ========
+  // ========================
+
+  /// @dev Emitted when the SVG color code of a Llama instance is set.
   event PolicyColorSet(string color);
 
-  /// @dev Emitted when the logo for SVG of a Llama instance is set.
+  /// @dev Emitted when the SVG logo of a Llama instance is set.
   event PolicyLogoSet(string logo);
 
   // =================================================
@@ -36,8 +40,8 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     _disableInitializers();
   }
 
-  /// @notice Initializes a new `LlamaAccount` clone.
-  /// @param config Llama account initialization configuration.
+  /// @notice Initializes a new `LlamaPolicyMetadata` clone.
+  /// @param config Llama policy metadata initialization configuration.
   function initialize(bytes memory config) external initializer {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
     color = _color;

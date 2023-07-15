@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -11,7 +12,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Factory
 /// @author Llama (devsdosomething@llama.xyz)
@@ -55,7 +55,7 @@ contract LlamaFactory {
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
   /// @notice The Llama policy implementation (logic) contract.
-  LlamaPolicyMetadata public immutable LLAMA_POLICY_METADATA_LOGIC;
+  ILlamaPolicyMetadata public immutable LLAMA_POLICY_METADATA_LOGIC;
 
   /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.
   LlamaExecutor public immutable ROOT_LLAMA_EXECUTOR;
@@ -76,7 +76,7 @@ contract LlamaFactory {
     ILlamaStrategy initialLlamaStrategyLogic,
     ILlamaAccount initialLlamaAccountLogic,
     LlamaPolicy llamaPolicyLogic,
-    LlamaPolicyMetadata llamaPolicyMetadataLogic,
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic,
     string memory name,
     bytes[] memory initialStrategies,
     bytes[] memory initialAccounts,
