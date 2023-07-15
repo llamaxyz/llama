@@ -8,12 +8,6 @@ import {LibString} from "@solady/utils/LibString.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
-/// @dev Llama account initialization configuration.
-struct Config {
-  string color; // Color code for SVG.
-  string logo; // Logo for SVG.
-}
-
 /// @title Llama Policy Metadata
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
@@ -45,9 +39,9 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
   /// @notice Initializes a new `LlamaAccount` clone.
   /// @param config Llama account initialization configuration.
   function initialize(bytes memory config) external initializer {
-    Config memory metadataConfig = abi.decode(config, (Config));
-    color = metadataConfig.color;
-    logo = metadataConfig.logo;
+    (string memory _color, string memory _logo) = abi.decode(config, (string, string));
+    color = _color;
+    logo = _logo;
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
@@ -136,7 +130,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @notice Returns the contract URI for a given Llama policy.
   /// @param name The name of the Llama instance.
-  function contractURI(string memory name) public view returns (string memory) {
+  function contractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);
