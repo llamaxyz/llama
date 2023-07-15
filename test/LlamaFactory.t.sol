@@ -25,7 +25,6 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaFactoryTest is LlamaTestSetup {
-  address constant FORGE_DEFAULT_SCRIPT_DEPLOYER = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
   uint96 constant DEFAULT_QUANTITY = 1;
   string color = "#FF0420";
   string logo =
@@ -88,9 +87,9 @@ contract Constructor is LlamaFactoryTest {
   }
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
-    // TODO use lens function to calculate address
-    ILlamaPolicyMetadata policyMetadata =
-      lens.computeLlamaPolicyMetadataAddress("Root Llama", 0x1893AF52119b9b53cd5955B50df3e0924A1bc955, 1);
+    // We could calculate this by redeploying LlamaLens with the new factory but this test will be removed when we
+    // remove the root instance.
+    ILlamaPolicyMetadata policyMetadata = ILlamaPolicyMetadata(0x1893AF52119b9b53cd5955B50df3e0924A1bc955);
     vm.expectEmit();
     emit PolicyMetadataSet(policyMetadataLogic, policyMetadata, abi.encode(rootColor, rootLogo));
     deployLlamaFactory();
