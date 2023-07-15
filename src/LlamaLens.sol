@@ -129,7 +129,7 @@ contract LlamaLens {
   // ======== Internal Logic ========
   // ================================
 
-  /// @dev Computes the address of a Llama core contract from the name of the Llama instance.
+  /// @dev Computes the address of a Llama core contract from the name and deployer of the Llama instance.
   function _computeLlamaCoreAddress(string memory name, address deployer) internal view returns (LlamaCore) {
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_CORE_LOGIC,
