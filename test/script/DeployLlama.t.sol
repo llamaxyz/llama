@@ -196,15 +196,13 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysPolicyMetadata() public {
-    assertEq(address(policyMetadata), address(0));
+    assertEq(address(policyMetadataLogic), address(0));
 
     DeployLlama.run();
 
-    assertFalse(address(policyMetadata) == address(0));
-    assertFalse(
-      keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com")))
-        == keccak256(abi.encode(""))
-    );
+    assertFalse(address(policyMetadataLogic) == address(0));
+    // TODO check this on the root instance's clone
+    assertFalse(keccak256(abi.encode(policyMetadataLogic.tokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
   }
 
   function test_DeploysLens() public {

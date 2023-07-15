@@ -7,6 +7,7 @@ import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
@@ -37,7 +38,11 @@ contract LlamaFactoryTest is LlamaTestSetup {
     address llamaPolicy,
     uint256 chainId
   );
-  event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
+    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
+    bytes config
+  );
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -54,7 +59,7 @@ contract Constructor is LlamaFactoryTest {
       relativeQuorumLogic,
       accountLogic,
       policyLogic,
-      policyMetadata,
+      policyMetadataLogic,
       "Root Llama",
       strategyConfigs,
       accounts,
@@ -73,12 +78,12 @@ contract Constructor is LlamaFactoryTest {
   }
 
   function test_SetsLlamaPolicyMetadataAddress() public {
-    assertEq(address(factory.llamaPolicyMetadata()), address(policyMetadata));
+    assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
   }
 
   function test_EmitsPolicyTokenURIUpdatedEvent() public {
     vm.expectEmit();
-    emit PolicyMetadataSet(policyMetadata);
+    emit PolicyMetadataSet(policyMetadataLogic, policyMetadataLogic, abi.encode(color, logo));
     deployLlamaFactory();
   }
 
@@ -311,7 +316,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_InitializesLlamaPolicy() public {
     LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(this));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     assertEq(address(_policy).code.length, 0);
     deployLlama();
@@ -327,7 +332,7 @@ contract Deploy is LlamaFactoryTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      bytes32(0)
     );
     _policy.initialize(config);
   }
@@ -361,7 +366,7 @@ contract Deploy is LlamaFactoryTest {
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       color,
       logo,
       address(this)
@@ -406,22 +411,5 @@ contract Deploy is LlamaFactoryTest {
     LlamaExecutor newLlamaExecutor = newLlama.executor();
     assertEq(address(newLlamaExecutor), address(computedExecutor));
     assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
-  }
-}
-
-contract SetPolicyTokenMetadata is LlamaFactoryTest {
-  function testFuzz_RevertIf_CallerIsNotRootLlama(address _caller, address _policyMetadata) public {
-    vm.assume(_caller != address(rootExecutor));
-    vm.prank(address(_caller));
-    vm.expectRevert(LlamaFactory.OnlyRootLlama.selector);
-    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
-  }
-
-  function testFuzz_WritesMetadataAddressToStorage(address _policyMetadata) public {
-    vm.prank(address(rootExecutor));
-    vm.expectEmit();
-    emit PolicyMetadataSet(LlamaPolicyMetadata(_policyMetadata));
-    factory.setPolicyMetadata(LlamaPolicyMetadata(_policyMetadata));
-    assertEq(address(factory.llamaPolicyMetadata()), _policyMetadata);
   }
 }

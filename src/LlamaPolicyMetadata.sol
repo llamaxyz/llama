@@ -53,7 +53,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  function tokenURI(string memory name, uint256 tokenId) external pure returns (string memory) {
+  function tokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
 
@@ -136,7 +136,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @notice Returns the contract URI for a given Llama policy.
   /// @param name The name of the Llama instance.
-  function contractURI(string memory name) public pure returns (string memory) {
+  function contractURI(string memory name) public view returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);
