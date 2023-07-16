@@ -63,11 +63,11 @@ contract Run is DeployLlamaInstanceTest {
 
   function test_newInstanceCanBeDeployed() public {
     // Confirm that a new llama instance was created.
-    assertEq(factory.llamaCount(), 2);
+    assertEq(factory.llamaCount(), 1);
     vm.recordLogs();
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    assertEq(factory.llamaCount(), 3);
+    assertEq(factory.llamaCount(), 2);
 
     // There are three strategies we expect to have been deployed.
     LlamaRelativeQuorum[] memory strategiesAuthorized = new LlamaRelativeQuorum[](3);
