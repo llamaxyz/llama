@@ -25,99 +25,49 @@ import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstance {
   LlamaCore rootLlama;
+  address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
+  uint8 ACTION_CREATOR_ROLE_ID = 1;
 
   function setUp() public virtual {
-    // Deploy the root llama infra.
     DeployLlamaFactory.run();
-    rootLlama = factory.ROOT_LLAMA_CORE();
+
+    // Deploy the root llama instance
+    vm.recordLogs();
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+
+    // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
+    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
+
+    Vm.Log memory _event;
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
+      _event = emittedEvents[i];
+      bytes32 eventSig = _event.topics[0];
+      if (eventSig == llamaInstanceCreatedSig) {
+        // event LlamaInstanceCreated(
+        //   uint256 indexed id,
+        //   string indexed name,
+        //   address llamaCore,       <--- What we want.
+        //   address llamaExecutor,
+        //   address llamaPolicy,
+        //   uint256 chainId
+        // )
+        (rootLlama,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
+      }
+    }
   }
 }
 
 contract Run is DeployLlamaInstanceTest {
   using stdJson for string;
 
-  // This is the address that we're using with the CreateAction script to
-  // automate action creation to deploy new Llama instances. It could be
-  // replaced with any address that we hold the private key for.
-  address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
-
-  uint8 ACTION_CREATOR_ROLE_ID = 1;
-
-  function getActionInfo() internal returns (ActionInfo memory) {
-    string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
-    return ActionInfo(
-      deployActionId,
-      LLAMA_INSTANCE_DEPLOYER, // creator
-      uint8(Roles.ActionCreator), // role
-      ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
-      address(factory), // target
-      uint256(0), // value
-      createActionCallData
-    );
-  }
-
-  function test_createsAnActionOnTheRootLlama() public {
-    uint256 initActionCount = rootLlama.actionsCount();
-
-    CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
-
-    uint256 newActionCount = rootLlama.actionsCount();
-    assertEq(initActionCount + 1, newActionCount);
-
-    Action memory action = rootLlama.getAction(deployActionId);
-    ActionInfo memory actionInfo = getActionInfo();
-
-    string memory jsonInput = DeployUtils.readScriptInput("createAction.json");
-    bytes32 deployActionInfoHash = keccak256(
-      abi.encodePacked(
-        deployActionId,
-        LLAMA_INSTANCE_DEPLOYER, // creator
-        uint8(Roles.ActionCreator), // role
-        ILlamaStrategy(jsonInput.readAddress(".rootLlamaActionCreationStrategy")),
-        address(factory), // target
-        uint256(0), // value
-        createActionCallData
-      )
-    );
-
-    // If the infoHash matches, then this validates that all of the Factory.deploy
-    // function input data is correct, since the function calldata was passed to
-    // the hash function.
-    assertEq(deployActionInfoHash, action.infoHash);
-    assertFalse(action.executed);
-    assertFalse(action.canceled);
-
-    assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
-  }
-
-  function test_actionCanBeExecuted() public {
-    CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
-
-    // Advance the clock so that checkpoints take effect.
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
-
-    ActionInfo memory actionInfo = getActionInfo();
-    assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
-
-    vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
-    rootLlama.castApproval(ACTION_CREATOR_ROLE_ID, actionInfo, "");
-
-    assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Approved));
-
-    rootLlama.queueAction(actionInfo);
-
-    // Advance the clock to execute the action.
-    vm.roll(block.number + 1);
-    Action memory action = rootLlama.getAction(deployActionId);
-    vm.warp(action.minExecutionTime + 1);
-
+  function test_newInstanceCanBeDeployed() public {
     // Confirm that a new llama instance was created.
-    assertEq(factory.llamaCount(), 1);
-    vm.recordLogs();
-    rootLlama.executeAction(actionInfo);
-    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     assertEq(factory.llamaCount(), 2);
+    vm.recordLogs();
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+    assertEq(factory.llamaCount(), 3);
 
     // There are three strategies we expect to have been deployed.
     LlamaRelativeQuorum[] memory strategiesAuthorized = new LlamaRelativeQuorum[](3);
@@ -239,12 +189,12 @@ contract Run is DeployLlamaInstanceTest {
   }
 
   function assertEqStrategyStatus(
-    LlamaCore core,
+    LlamaCore _core,
     ILlamaStrategy strategy,
     bool expectedDeployed,
     bool expectedAuthorized
   ) internal {
-    (bool deployed, bool authorized) = core.strategies(strategy);
+    (bool deployed, bool authorized) = _core.strategies(strategy);
     assertEq(deployed, expectedDeployed);
     assertEq(authorized, expectedAuthorized);
   }

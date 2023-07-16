@@ -153,8 +153,8 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
     // We use input from the deploy scripts to bootstrap our test suite.
-    deployScriptInput = DeployUtils.readScriptInput("deployLlama.json");
-    createActionScriptInput = DeployUtils.readScriptInput("createAction.json");
+    deployScriptInput = DeployUtils.readScriptInput("deployLlamaFactory.json");
+    createActionScriptInput = DeployUtils.readScriptInput("deployLlamaInstance.json");
 
     DeployLlamaFactory.run();
 
@@ -171,7 +171,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
 
     // Deploy the Llama instance and get a reference to the deployed LlamaCore.
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER);
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
