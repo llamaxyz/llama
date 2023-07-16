@@ -1398,7 +1398,14 @@ contract UpdateRoleDescription is LlamaPolicyTest {
   }
 }
 
-contract SetAndInitializePolicyMetadata is LlamaPolicyTest {}
+contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
+  function test_RevertIf_CallerIsNotLlama() public {}
+  function test_EmitsPolicyMetadataSetEvent() public {}
+  function test_DeploysAndSetsMetadataClone() public {}
+  function test_InitializationSetsColor() public {}
+  function test_InitializationSetsLogo() public {}
+  function test_InitializeCannotBeCalledTwice() public {}
+}
 
 contract LlamaPolicyMetadataConstructor is LlamaPolicyTest {
   function test_RevertIf_InitializeImplementationContract() public {

@@ -46,6 +46,9 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
     color = _color;
     logo = _logo;
+
+    emit PolicyColorSet(color);
+    emit PolicyLogoSet(logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
