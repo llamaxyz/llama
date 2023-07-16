@@ -9,13 +9,11 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
-contract LlamaLensTestSetup is LlamaTestSetup {
-  address FORGE_DEFAULT_SCRIPT_DEPLOYER = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
-}
+contract LlamaLensTestSetup is LlamaTestSetup {}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaCoreAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
+    address expected = address(lens.computeLlamaCoreAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(rootCore));
 
     expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
@@ -25,7 +23,7 @@ contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaPolicyAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
+    address expected = address(lens.computeLlamaPolicyAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(rootPolicy));
 
     expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
@@ -35,10 +33,10 @@ contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
 
 contract ComputeLlamaPolicyMetadataAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaPolicyMetadataAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER, 1));
+    address expected = address(lens.computeLlamaPolicyMetadataAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER, 1));
     assertEq(expected, address(rootPolicyMetadata));
 
-    LlamaPolicy _rootPolicy = lens.computeLlamaPolicyAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER);
+    LlamaPolicy _rootPolicy = lens.computeLlamaPolicyAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER);
     expected = address(lens.computeLlamaPolicyMetadataAddress(_rootPolicy, 1));
     assertEq(expected, address(rootPolicyMetadata));
 
@@ -108,7 +106,7 @@ contract ComputeLlamaExecutorAddress is LlamaLensTestSetup {
     address expected = address(lens.computeLlamaExecutorAddress(address(rootCore)));
     assertEq(expected, address(rootExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
+    expected = address(lens.computeLlamaExecutorAddress("Root Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(rootExecutor));
 
     expected = address(lens.computeLlamaExecutorAddress(address(mpCore)));

@@ -153,7 +153,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
     // We use input from the deploy scripts to bootstrap our test suite.
-    deployScriptInput = DeployUtils.readScriptInput("deployLlamaFactory.json");
+    deployScriptInput = DeployUtils.readScriptInput("deployRootLlamaInstance.json");
     createActionScriptInput = DeployUtils.readScriptInput("deployLlamaInstance.json");
 
     // Deploy the factory

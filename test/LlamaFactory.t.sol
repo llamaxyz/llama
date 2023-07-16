@@ -52,25 +52,10 @@ contract LlamaFactoryTest is LlamaTestSetup {
 
 contract Constructor is LlamaFactoryTest {
   function deployLlamaFactory() internal returns (LlamaFactory) {
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-
-    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
-      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-    );
-    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new LlamaFactory(
       coreLogic,
-      relativeQuorumLogic,
-      accountLogic,
       policyLogic,
-      policyMetadataLogic,
-      "Root Llama",
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0)
+      policyMetadataLogic
     );
   }
 
@@ -84,23 +69,6 @@ contract Constructor is LlamaFactoryTest {
 
   function test_SetsLlamaPolicyMetadataAddress() public {
     assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
-  }
-
-  function test_EmitsPolicyTokenURIUpdatedEvent() public {
-    // We could calculate this by redeploying LlamaLens with the new factory but this test will be removed when we
-    // remove the root instance.
-    ILlamaPolicyMetadata policyMetadata = ILlamaPolicyMetadata(0x1893AF52119b9b53cd5955B50df3e0924A1bc955);
-    vm.expectEmit();
-    emit PolicyMetadataSet(policyMetadataLogic, policyMetadata, abi.encode(rootColor, rootLogo));
-    deployLlamaFactory();
-  }
-
-  function test_SetsRootLlamaCore() public {
-    assertEq(address(factory.ROOT_LLAMA_CORE()), address(rootCore));
-  }
-
-  function test_SetsRootLlamaExecutor() public {
-    assertEq(address(factory.ROOT_LLAMA_EXECUTOR()), address(rootExecutor));
   }
 
   function test_DeploysRootLlamaViaInternalDeployMethod() public {
