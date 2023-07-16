@@ -156,10 +156,31 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     deployScriptInput = DeployUtils.readScriptInput("deployLlamaFactory.json");
     createActionScriptInput = DeployUtils.readScriptInput("deployLlamaInstance.json");
 
+    // Deploy the factory
     DeployLlamaFactory.run();
 
-    rootCore = factory.ROOT_LLAMA_CORE();
-    rootExecutor = factory.ROOT_LLAMA_EXECUTOR();
+    // Deploy the root Llama instance and get a reference to the deployed LlamaCore.
+    vm.recordLogs();
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+    Vm.Log memory _event;
+    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
+      _event = emittedEvents[i];
+      if (_event.topics[0] == llamaInstanceCreatedSig) {
+        // event LlamaInstanceCreated(
+        //   uint256 indexed id,
+        //   string indexed name,
+        //   address llamaCore,       <--- What we want.
+        //   address llamaExecutor,
+        //   address llamaPolicy,
+        //   uint256 chainId
+        // )
+        (rootCore,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
+      }
+    }
+
+    rootExecutor = rootCore.executor();
     rootPolicy = rootCore.policy();
     rootPolicyMetadata = rootPolicy.llamaPolicyMetadata();
 
@@ -172,9 +193,8 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     // Deploy the Llama instance and get a reference to the deployed LlamaCore.
     vm.recordLogs();
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
-    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    Vm.Log memory _event;
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
+    emittedEvents = vm.getRecordedLogs();
+    llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
     for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       if (_event.topics[0] == llamaInstanceCreatedSig) {
