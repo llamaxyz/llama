@@ -16,7 +16,7 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-contract DeployLlama is Script {
+contract DeployLlamaFactory is Script {
   using stdJson for string;
 
   // Logic contracts.

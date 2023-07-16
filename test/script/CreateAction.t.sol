@@ -17,18 +17,18 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {DeployLlama} from "script/DeployLlama.s.sol";
+import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {Roles} from "test/utils/LlamaTestSetup.sol";
 
-contract CreateActionTest is Test, DeployLlama, CreateAction {
+contract CreateActionTest is Test, DeployLlamaFactory, CreateAction {
   LlamaCore rootLlama;
 
   function setUp() public virtual {
     // Deploy the root llama infra.
-    DeployLlama.run();
+    DeployLlamaFactory.run();
     rootLlama = factory.ROOT_LLAMA_CORE();
   }
 }

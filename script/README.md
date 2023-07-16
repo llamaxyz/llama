@@ -1,11 +1,11 @@
 # Llama Scripts
 
 The current Llama scripts are:
-* `DeployLlama.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
+* `DeployLlamaFactory.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
 * `CreateAction.s.sol`, which creates actions on the root LlamaCore to deploy
   new LlamaCore instances
 
-Additionally, both `DeployLlama` and `CreateAction` are called during the test bootstrap process to establish the state against which most of the test suite runs.
+Additionally, both `DeployLlamaFactory` and `CreateAction` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
 ## Deployment Configurations
 
@@ -27,9 +27,9 @@ Therefore, we help enforce this at the protocol level with the following behavio
 
 A key part of ensuring the instance is not misconfigured is ensuring that the `bootstrapStrategy` is a valid strategy that can actually be executed. This is checked in deploy scripts, because the strategy can have any logic, so it's not necessarily possible to check this at the protocol level.
 
-## DeployLlama
+## DeployLlamaFactory
 
-To perform a dry-run of the `DeployLlama` script on a network, first set the
+To perform a dry-run of the `DeployLlamaFactory` script on a network, first set the
 `SCRIPT_RPC_URL` variable in your `.env` file to a local node, e.g. anvil.
 
 To start anvil:
@@ -60,11 +60,11 @@ but with `SCRIPT_RPC_URL` pointing to the appropriate node and
 
 ## CreateAction
 
-The `CreateAction` script presupposes that the `DeployLlama` script has already
+The `CreateAction` script presupposes that the `DeployLlamaFactory` script has already
 been run for a given chain. So follow the instructions above before continuing
 here.
 
-Once `DeployLlama` has been run, set a `SCRIPT_DEPLOYER_ADDRESS` in your `.env` that corresponds to the `SCRIPT_PRIVATE_KEY` that you want to sign the action-creation transactions.
+Once `DeployLlamaFactory` has been run, set a `SCRIPT_DEPLOYER_ADDRESS` in your `.env` that corresponds to the `SCRIPT_PRIVATE_KEY` that you want to sign the action-creation transactions.
 It does *not* have to be the same address that did the initial deploy, but it could be.
 
 Once your `.env` file is configured and anvil is running, you can perform a dry

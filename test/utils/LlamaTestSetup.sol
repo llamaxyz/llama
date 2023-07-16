@@ -10,7 +10,7 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
-import {DeployLlama} from "script/DeployLlama.s.sol";
+import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -40,7 +40,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract LlamaTestSetup is DeployLlama, CreateAction, Test {
+contract LlamaTestSetup is DeployLlamaFactory, CreateAction, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -156,7 +156,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     deployScriptInput = DeployUtils.readScriptInput("deployLlama.json");
     createActionScriptInput = DeployUtils.readScriptInput("createAction.json");
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     rootCore = factory.ROOT_LLAMA_CORE();
     rootExecutor = factory.ROOT_LLAMA_EXECUTOR();
