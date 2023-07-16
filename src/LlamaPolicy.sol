@@ -253,7 +253,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Sets the Llama policy metadata contract which contains the function body for `tokenURI()` and
   /// `contractURI()`.
   /// @dev This is handled by a separate contract to ensure contract size stays under 24kB.
-  /// @param _llamaPolicyMetadataLogic The logic contract of the Llama policy metadata contract.
+  /// @param _llamaPolicyMetadataLogic The logic contract address for the Llama policy metadata contract.
   /// @param config The configuration data used to initialize the Llama policy metadata logic contract.
   function setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
     external
