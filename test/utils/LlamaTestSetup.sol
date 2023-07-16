@@ -11,7 +11,7 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
-import {CreateAction} from "script/CreateAction.s.sol";
+import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
@@ -40,7 +40,7 @@ enum Roles {
   MadeUpRole
 }
 
-contract LlamaTestSetup is DeployLlamaFactory, CreateAction, Test {
+contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   using stdJson for string;
 
   // The actual length of the Roles enum is type(Roles).max *plus* 1 because
@@ -169,35 +169,9 @@ contract LlamaTestSetup is DeployLlamaFactory, CreateAction, Test {
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
     bytes[] memory rootAccounts = accountConfigsRootLlama();
 
-    // First we create an action to deploy a new llamaCore instance.
-    CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
-
-    // Advance the clock so that checkpoints take effect.
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
-
-    // Second, we approve the action.
-    vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
-    ActionInfo memory deployActionInfo = ActionInfo(
-      deployActionId,
-      LLAMA_INSTANCE_DEPLOYER, // creator
-      uint8(Roles.ActionCreator), // role
-      ILlamaStrategy(createActionScriptInput.readAddress(".rootLlamaActionCreationStrategy")),
-      address(factory), // target
-      0, // value
-      createActionCallData
-    );
-    rootCore.castApproval(uint8(Roles.ActionCreator), deployActionInfo, "");
-    rootCore.queueAction(deployActionInfo);
-
-    // Advance the clock to execute the action.
-    vm.roll(block.number + 1);
-    Action memory action = rootCore.getAction(deployActionId);
-    vm.warp(action.minExecutionTime + 1);
-
-    // Execute the action and get a reference to the deployed LlamaCore.
+    // Deploy the Llama instance and get a reference to the deployed LlamaCore.
     vm.recordLogs();
-    rootCore.executeAction(deployActionInfo);
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER);
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
     Vm.Log memory _event;
     bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");

@@ -2686,14 +2686,14 @@ contract GetLastActionTimestamp is LlamaCoreTest {
     // Current block timestamp is 4, but no actions have been created yet, so we expect `t0 == 0`.
     uint256 t0 = mpCore.getLastActionTimestamp();
     assertEq(t0, 0);
-    assertEq(block.timestamp, 4);
+    assertEq(block.timestamp, 2);
 
     // Now an action is created. It's created when the block timestamp is 4, so we expect `t1 == 4`.
     // The `_createAction()` helper method advances the timestamp by 1 second.
     _createAction();
     uint256 t1 = mpCore.getLastActionTimestamp();
-    assertEq(t1, 4);
-    assertEq(block.timestamp, 5);
+    assertEq(t1, 2);
+    assertEq(block.timestamp, 3);
   }
 }
 

@@ -16,11 +16,11 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 
-contract DeployLlamaTest is Test, DeployLlamaFactory {
+contract DeployLlamaFactoryTest is Test, DeployLlamaFactory {
   function setUp() public virtual {}
 }
 
-contract Run is DeployLlamaTest {
+contract Run is DeployLlamaFactoryTest {
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
   // replaced with any address that we hold the private key for.

@@ -2,7 +2,7 @@
 
 The current Llama scripts are:
 * `DeployLlamaFactory.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
-* `CreateAction.s.sol`, which creates actions on the root LlamaCore to deploy
+* `DeployLlamaInstance.s.sol`, which creates actions on the root LlamaCore to deploy
   new LlamaCore instances
 
 Additionally, both `DeployLlamaFactory` and `CreateAction` are called during the test bootstrap process to establish the state against which most of the test suite runs.
