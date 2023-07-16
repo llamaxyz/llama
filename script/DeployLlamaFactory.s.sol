@@ -59,28 +59,11 @@ contract DeployLlamaFactory is Script {
     policyMetadataLogic = new LlamaPolicyMetadata();
     DeployUtils.print(string.concat("  LlamaPolicyMetadataLogic:", vm.toString(address(policyMetadataLogic))));
 
-    // ======== START SAFETY CHECK ========
-    // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
-    // ensure it can be used to pass actions.
-    // NOTE: This check currently only supports relative strategies.
-    string memory filename = "deployLlamaFactory.json";
-    DeployUtils.bootstrapSafetyCheck(filename);
-    // ======== END SAFETY CHECK ========
-
-    string memory jsonInput = DeployUtils.readScriptInput(filename);
     vm.broadcast();
     factory = new LlamaFactory(
       coreLogic,
-      relativeQuorumLogic,
-      accountLogic,
       policyLogic,
-      policyMetadataLogic,
-      jsonInput.readString(".rootLlamaName"),
-      DeployUtils.readRelativeStrategies(jsonInput),
-      DeployUtils.readAccounts(jsonInput),
-      DeployUtils.readRoleDescriptions(jsonInput),
-      DeployUtils.readRoleHolders(jsonInput),
-      DeployUtils.readRolePermissions(jsonInput)
+      policyMetadataLogic
     );
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
