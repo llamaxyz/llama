@@ -324,7 +324,7 @@ contract Deploy is LlamaFactoryTest {
 
   function test_InitializesLlamaPolicy() public {
     LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(this));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     assertEq(address(_policy).code.length, 0);
     deployLlama();

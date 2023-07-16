@@ -28,6 +28,11 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
+    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
+    bytes config
+  );
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -98,7 +103,7 @@ contract NonTransferableToken is LlamaPolicyTest {
 
 contract Constructor is LlamaPolicyTest {
   function test_RevertIf_InitializeImplementationContract() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Mock Protocol",
@@ -120,7 +125,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test Policy",
       new RoleDescription[](0),
@@ -143,7 +148,7 @@ contract Initialize is LlamaPolicyTest {
 
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {
     numRoles = bound(numRoles, 1, 255); // Reverts if zero roles are given.
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
@@ -167,7 +172,7 @@ contract Initialize is LlamaPolicyTest {
   }
 
   function test_RevertIf_InitializeIsCalledTwice() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test",
       new RoleDescription[](0),
@@ -185,7 +190,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_SetsRoleDescriptions() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
@@ -213,7 +218,7 @@ contract Initialize is LlamaPolicyTest {
 
   function test_SetsRoleHolders() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
@@ -245,7 +250,7 @@ contract Initialize is LlamaPolicyTest {
   }
 
   function test_SetsRolePermissions() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     assertFalse(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
 
@@ -272,6 +277,39 @@ contract Initialize is LlamaPolicyTest {
     );
     localPolicy.initialize(config);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
+  }
+
+  function test_SetsAndInitializesPolicyMetadata() public {
+    LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(localPolicy, 1);
+
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Test Policy");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+
+    vm.expectEmit();
+    emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(color, logo));
+
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "local policy",
+      roleDescriptions,
+      roleHolders,
+      rolePermissions,
+      llamaPolicyMetadataLogic,
+      color,
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+    );
+    localPolicy.initialize(config);
+
+    assertEq(address(llamaPolicyMetadata), address(localPolicy.llamaPolicyMetadata()));
+    assertEq(color, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
+    assertEq(logo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());
   }
 }
 
@@ -1197,7 +1235,6 @@ contract PolicyMetadata is LlamaPolicyTest {
     uint256 tokenId = uint256(uint160(policyholder));
 
     string memory name = "Mock Protocol Llama";
-    ILlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
     assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.tokenURI(name, tokenId));
   }
 
@@ -1305,7 +1342,6 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
 
   function test_contractURIProxiesCorrectly() external {
     string memory name = "Mock Protocol Llama";
-    ILlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
     assertEq(mpPolicy.contractURI(), mpPolicyMetadata.contractURI(name));
   }
 }
@@ -1359,5 +1395,15 @@ contract UpdateRoleDescription is LlamaPolicyTest {
   function test_FailsForNonOwner() public {
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
     mpPolicy.updateRoleDescription(uint8(Roles.TestRole1), RoleDescription.wrap("New Description"));
+  }
+}
+
+contract SetAndInitializePolicyMetadata is LlamaPolicyTest {}
+
+contract LlamaPolicyMetadataConstructor is LlamaPolicyTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    llamaPolicyMetadataLogic.initialize(abi.encode(color, logo));
   }
 }

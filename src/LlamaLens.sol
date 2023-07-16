@@ -85,10 +85,22 @@ contract LlamaLens {
   }
 
   /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
+  /// @param llamaPolicy The LlamaPolicy contract that clones this metadata contract.
+  /// @param nonce The amount of times the LlamaPolicy has cloned a new policy metadata minimal proxy
+  /// @return The computed address of the `LlamaPolicyMetadata` contract.
+  function computeLlamaPolicyMetadataAddress(LlamaPolicy llamaPolicy, uint256 nonce)
+    external
+    pure
+    returns (ILlamaPolicyMetadata)
+  {
+    return ILlamaPolicyMetadata(_computeCreateAddress(address(llamaPolicy), nonce));
+  }
+
+  /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
   /// @param name The name of this Llama instance.
   /// @param deployer The deployer of this Llama instance.
   /// @param nonce The amount of times the LlamaPolicy has cloned a new policy metadata minimal proxy
-  /// @return The computed address of the `LlamaExecutor` contract.
+  /// @return The computed address of the `LlamaPolicyMetadata` contract.
   function computeLlamaPolicyMetadataAddress(string memory name, address deployer, uint256 nonce)
     external
     view

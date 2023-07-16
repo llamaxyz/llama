@@ -33,6 +33,24 @@ contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
   }
 }
 
+contract ComputeLlamaPolicyMetadataAddress is LlamaLensTestSetup {
+  function test_ProperlyComputesAddress() public {
+    address expected = address(lens.computeLlamaPolicyMetadataAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER, 1));
+    assertEq(expected, address(rootPolicyMetadata));
+
+    LlamaPolicy _rootPolicy = lens.computeLlamaPolicyAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER);
+    expected = address(lens.computeLlamaPolicyMetadataAddress(_rootPolicy, 1));
+    assertEq(expected, address(rootPolicyMetadata));
+
+    expected = address(lens.computeLlamaPolicyMetadataAddress("Mock Protocol Llama", address(rootExecutor), 1));
+    assertEq(expected, address(mpPolicyMetadata));
+
+    LlamaPolicy _mpPolicy = lens.computeLlamaPolicyAddress("Mock Protocol Llama", address(rootExecutor));
+    expected = address(lens.computeLlamaPolicyMetadataAddress(_mpPolicy, 1));
+    assertEq(expected, address(mpPolicyMetadata));
+  }
+}
+
 contract ComputeLlamaStrategyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();

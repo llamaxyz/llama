@@ -34,6 +34,7 @@ contract Run is DeployLlamaTest {
     assertFalse(address(factory) == address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
+    assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
   }
 
   function test_DeploysRootLlama() public {
