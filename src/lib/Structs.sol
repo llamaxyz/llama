@@ -59,7 +59,7 @@ struct RolePermissionData {
 }
 
 struct LlamaCoreInitializationConfig {
-  string name; // The name of the `LlamaCore` clone.
+  string name; // The name of the `LlamaCore` instance.
   LlamaPolicy policyLogic; // This Llama instance's policy contract.
   ILlamaStrategy strategyLogic; // The Llama Strategy implementation (logic) contract.
   ILlamaAccount accountLogic; // The Llama Account implementation (logic) contract.
