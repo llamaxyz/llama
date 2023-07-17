@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // forgefmt: disable-start
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.0;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
