@@ -177,7 +177,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       );
     }
 
-    // Assign the remaining role permissions.
+    // Assign the role permissions.
     for (uint256 i = 0; i < config.rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRolePermission(
         config.rolePermissions[i].role, config.rolePermissions[i].permissionId, config.rolePermissions[i].hasPermission

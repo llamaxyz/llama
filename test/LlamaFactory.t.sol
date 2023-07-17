@@ -285,6 +285,9 @@ contract Deploy is LlamaFactoryTest {
     assertEq(address(_policy).code.length, 0);
     deployLlama();
     assertGt(address(_policy).code.length, 0);
+
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
+    assertEq(address(_llama.policy()), address(_policy));
   }
 
   function test_DeploysLlamaCore() public {
@@ -297,7 +300,7 @@ contract Deploy is LlamaFactoryTest {
     LlamaCore(address(_llama.policy())).name(); // Sanity check that this doesn't revert.
   }
 
-  function test_InitializesLlamaCore() public {
+  function test_RevertIf_ReInitializesLlamaCore() public {
     (LlamaCore _llama) = deployLlama();
     assertEq(_llama.name(), "NewProject");
 

@@ -52,7 +52,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   /// @param name The name of this Llama system.
   /// @return llama the address of the LlamaCore contract of the newly created system.
   function deployWithoutInitialization(string memory name) external returns (LlamaCore llama) {
-    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
+    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
     lastDeployedLlamaCore = llama;
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }

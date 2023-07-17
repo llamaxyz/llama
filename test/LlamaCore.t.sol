@@ -315,6 +315,39 @@ contract Initialize is LlamaCoreTest {
     (llama) = modifiedFactory.deployWithoutInitialization("NewProject");
   }
 
+  function test_ExecutorIsSetInCore() public {
+    (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama) = deployWithoutInitialization();
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
+    for (uint256 i = 0; i < strategyConfigs.length; i++) {
+      strategyAddresses[i] =
+        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+    }
+
+    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(uninitializedLlama));
+    assertEq(address(uninitializedLlama.executor()), address(0));
+    assertEq(address(computedExecutor).code.length, 0);
+
+    modifiedFactory.initialize(
+      "NewProject",
+      relativeQuorumLogic,
+      accountLogic,
+      strategyConfigs,
+      accounts,
+      rootLlamaRoleDescriptions(),
+      roleHolders,
+      new RolePermissionData[](0),
+      policyMetadata,
+      COLOR,
+      LOGO
+    );
+
+    assertEq(address(uninitializedLlama.executor()), address(computedExecutor));
+    assertGt(address(computedExecutor).code.length, 0);
+  }
+
   function test_StrategiesAreDeployedAtExpectedAddress() public {
     (LlamaFactoryWithoutInitialization modifiedFactory, LlamaCore uninitializedLlama) = deployWithoutInitialization();
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
