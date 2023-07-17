@@ -38,6 +38,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
     uint256 chainId
   );
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -391,6 +392,24 @@ contract Deploy is LlamaFactoryTest {
     LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
     (LlamaCore newLlama) = deployLlama();
     assertEq(address(newLlama), address(computedLlama));
+  }
+
+  function test_BootstrapRoleHasSetRolePermissionPermission() public {
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
+
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    ILlamaStrategy bootstrapStrategy =
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[0], address(computedLlama));
+    bytes32 bootstrapPermissionId = keccak256(
+      abi.encode(PermissionData(address(computedPolicy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy))
+    );
+
+    vm.expectEmit();
+    emit RolePermissionAssigned(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+    LlamaCore _llama = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.canCreateAction(BOOTSTRAP_ROLE, bootstrapPermissionId), true);
   }
 }
 
