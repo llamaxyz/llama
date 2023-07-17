@@ -346,17 +346,34 @@ contract Deploy is LlamaFactoryTest {
     _policy.initialize(config);
   }
 
-  function test_SetsLlamaExecutorOnThePolicy() public {
+  function test_SetsNameOnLlamaCore() public {
     (LlamaCore _llama) = deployLlama();
-    LlamaPolicy _policy = _llama.policy();
-    LlamaCore _llamaFromPolicy = LlamaCore(_policy.llamaExecutor());
-    assertEq(address(_llamaFromPolicy), address(_llama.executor()));
+    assertEq(_llama.name(), "NewProject");
   }
 
-  function test_SetsPolicyAddressOnLlamaCore() public {
+  function test_SetsExecutorOnLlamaCore() public {
+    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject");
+    (LlamaCore _llama) = deployLlama();
+    assertEq(address(_llama.executor()), address(computedExecutor));
+  }
+
+  function test_SetsPolicyOnLlamaCore() public {
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
     (LlamaCore _llama) = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
+  }
+
+  function test_SetsNameOnLlamaPolicy() public {
+    (LlamaCore _llama) = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.name(), "NewProject");
+  }
+
+  function test_SetsExecutorOnLlamaPolicy() public {
+    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject");
+    (LlamaCore _llama) = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.llamaExecutor(), address(computedExecutor));
   }
 
   function test_EmitsLlamaInstanceCreatedEvent() public {
@@ -374,15 +391,6 @@ contract Deploy is LlamaFactoryTest {
     LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
     (LlamaCore newLlama) = deployLlama();
     assertEq(address(newLlama), address(computedLlama));
-  }
-
-  function test_ReturnsAddressOfTheNewLlamaExecutorContract() public {
-    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject");
-    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress(address(computedLlama));
-    (LlamaCore newLlama) = deployLlama();
-    LlamaExecutor newLlamaExecutor = newLlama.executor();
-    assertEq(address(newLlamaExecutor), address(computedExecutor));
-    assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
   }
 }
 
