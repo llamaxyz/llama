@@ -400,7 +400,6 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-
   function infoHash(ActionInfo memory actionInfo) internal pure returns (bytes32) {
     return infoHash(
       actionInfo.id, actionInfo.creator, actionInfo.strategy, actionInfo.target, actionInfo.value, actionInfo.data

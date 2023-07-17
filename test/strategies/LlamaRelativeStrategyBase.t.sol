@@ -166,7 +166,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).queuingPeriod(), _queuingDuration);
+    assertEq(toRelativeStrategyBase(newStrategy).queuingPeriod(), _queuingDuration);
   }
 
   function testFuzz_SetsStrategyStorageExpirationDelay(uint64 _expirationDelay) public {
@@ -183,7 +183,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).expirationPeriod(), _expirationDelay);
+    assertEq(toRelativeStrategyBase(newStrategy).expirationPeriod(), _expirationDelay);
   }
 
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
@@ -200,7 +200,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
+    assertEq(toRelativeStrategyBase(newStrategy).isFixedLengthApprovalPeriod(), _isFixedLengthApprovalPeriod);
   }
 
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint64 _approvalPeriod) public {
@@ -217,7 +217,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).approvalPeriod(), _approvalPeriod);
+    assertEq(toRelativeStrategyBase(newStrategy).approvalPeriod(), _approvalPeriod);
   }
 
   function test_SetsStrategyStoragePolicy() public {
@@ -269,7 +269,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).minApprovalPct(), _percent);
+    assertEq(toRelativeStrategyBase(newStrategy).minApprovalPct(), _percent);
   }
 
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint16 _percent) public {
@@ -286,7 +286,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).minDisapprovalPct(), _percent);
+    assertEq(toRelativeStrategyBase(newStrategy).minDisapprovalPct(), _percent);
   }
 
   function testFuzz_SetsForceApprovalRoles(uint8[] memory forceApprovalRoles) public {
@@ -308,7 +308,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0)
     );
     for (uint256 i = 0; i < forceApprovalRoles.length; i++) {
-      assertEq(LlamaRelativeStrategyBase(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
+      assertEq(toRelativeStrategyBase(newStrategy).forceApprovalRole(forceApprovalRoles[i]), true);
     }
   }
 
@@ -331,7 +331,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       forceDisapprovalRoles
     );
     for (uint256 i = 0; i < forceDisapprovalRoles.length; i++) {
-      assertEq(LlamaRelativeStrategyBase(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
+      assertEq(toRelativeStrategyBase(newStrategy).forceDisapprovalRole(forceDisapprovalRoles[i]), true);
     }
   }
 
@@ -353,7 +353,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       forceApprovalRoles,
       new uint8[](0)
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).forceApprovalRole(_role), true);
+    assertEq(toRelativeStrategyBase(newStrategy).forceApprovalRole(_role), true);
   }
 
   function testFuzz_HandlesDuplicateDisapprovalRoles(uint8 _role) public {
@@ -374,7 +374,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
       new uint8[](0),
       forceDisapprovalRoles
     );
-    assertEq(LlamaRelativeStrategyBase(newStrategy).forceDisapprovalRole(_role), true);
+    assertEq(toRelativeStrategyBase(newStrategy).forceDisapprovalRole(_role), true);
   }
 
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
