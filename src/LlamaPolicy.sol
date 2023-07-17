@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {LibString} from "@solady/utils/LibString.sol";
 
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -19,7 +19,7 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 /// policyholder and has roles assigned to `create`, `approve` and `disapprove` actions.
 /// @dev The roles and permissions determine how the policyholder can interact with the Llama core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
-  using Checkpoints for Checkpoints.History;
+  using RoleCheckpoints for RoleCheckpoints.History;
 
   // =========================
   // ======== Structs ========
@@ -110,7 +110,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
+  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice A special role used to reference all policyholders.
   /// @dev DO NOT assign policyholders this role directly. Doing so can result in the wrong total supply
@@ -318,7 +318,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
-  function roleBalanceCheckpoints(address policyholder, uint8 role) external view returns (Checkpoints.History memory) {
+  function roleBalanceCheckpoints(address policyholder, uint8 role)
+    external
+    view
+    returns (RoleCheckpoints.History memory)
+  {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role];
   }
@@ -332,7 +336,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
     external
     view
-    returns (Checkpoints.History memory)
+    returns (RoleCheckpoints.History memory)
   {
     if (start > end) revert InvalidIndices();
     uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
@@ -340,11 +344,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     uint256 tokenId = _tokenId(policyholder);
     uint256 sliceLength = end - start;
-    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](sliceLength);
+    RoleCheckpoints.Checkpoint[] memory checkpoints = new RoleCheckpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
       checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }
-    return Checkpoints.History(checkpoints);
+    return RoleCheckpoints.History(checkpoints);
   }
 
   /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.
