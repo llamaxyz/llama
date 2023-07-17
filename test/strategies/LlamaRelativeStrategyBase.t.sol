@@ -446,57 +446,6 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   }
 }
 
-contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
-  function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
-    uint256 _actionDisapprovals,
-    uint256 _numberOfPolicies
-  ) public {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
-
-    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
-
-    generateAndSetRoleHolders(_numberOfPolicies);
-
-    ActionInfo memory actionInfo = createAction(testStrategy);
-
-    vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
-
-    mpCore.queueAction(actionInfo);
-
-    disapproveAction(_actionDisapprovals, actionInfo);
-    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
-
-    vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
-    testStrategy.validateActionCancelation(actionInfo, address(this));
-  }
-
-  function testFuzz_NoRevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
-    uint256 _actionDisapprovals,
-    uint256 _numberOfPolicies
-  ) public {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
-
-    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
-
-    generateAndSetRoleHolders(_numberOfPolicies);
-
-    ActionInfo memory actionInfo = createAction(testStrategy);
-
-    vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
-
-    // mpCore.queueAction(actionInfo);
-
-    // disapproveAction(_actionDisapprovals, actionInfo);
-    // assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
-
-    // testStrategy.validateActionCancelation(actionInfo, actionInfo.creator); // This should not revert.
-  }
-}
-
 contract RelativeQuorumHarness is MockLlamaRelativeStrategyBase {
   function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256) {
     return _getMinimumAmountNeeded(supply, minPct);

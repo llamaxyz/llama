@@ -503,3 +503,52 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
     assertEq(LlamaRelativeQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
   }
 }
+
+contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
+  function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+
+    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+
+    mpCore.queueAction(actionInfo);
+
+    disapproveAction(_actionDisapprovals, actionInfo);
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
+
+    vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
+    testStrategy.validateActionCancelation(actionInfo, address(this));
+  }
+
+  function testFuzz_NoRevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
+    uint256 _actionDisapprovals,
+    uint256 _numberOfPolicies
+  ) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
+
+    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
+
+    generateAndSetRoleHolders(_numberOfPolicies);
+
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    mpCore.queueAction(actionInfo);
+
+    console2.logUint(uint(mpCore.getActionState(actionInfo)));
+    disapproveAction(_actionDisapprovals, actionInfo);
+    assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
+
+    testStrategy.validateActionCancelation(actionInfo, actionInfo.creator); // This should not revert.
+  }
+}
