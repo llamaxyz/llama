@@ -252,7 +252,8 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
-  /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on the parameters
+  /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
+  /// the parameters
   function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
     name = config.name;
     // Deploy Executor.
