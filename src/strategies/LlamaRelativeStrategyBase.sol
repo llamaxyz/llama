@@ -214,7 +214,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
     external
     view
     virtual
-    returns (uint128);
+    returns (uint96);
 
   // -------- When Casting Disapproval --------
 
@@ -229,7 +229,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
     external
     view
     virtual
-    returns (uint128);
+    returns (uint96);
 
   // -------- When Queueing --------
 
