@@ -13,13 +13,13 @@ contract MockLlamaRelativeStrategyBase is LlamaRelativeStrategyBase {
     external
     view
     override
-    returns (uint128)
+    returns (uint96)
   {}
 
   function getDisapprovalQuantityAt(address, /* policyholder */ uint8, /* role */ uint256 /* timestamp */ )
     external
     view
     override
-    returns (uint128)
+    returns (uint96)
   {}
 }
