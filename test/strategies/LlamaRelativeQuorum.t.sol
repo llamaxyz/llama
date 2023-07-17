@@ -483,8 +483,7 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
     LlamaRelativeQuorum(address(testStrategy)).validateActionCreation(actionInfo);
   }
 
-  function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external
-{
+  function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
 
@@ -529,7 +528,7 @@ contract ValidateActionCancelation is LlamaRelativeQuorumTest {
     vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
     testStrategy.validateActionCancelation(actionInfo, address(this));
   }
-  
+
   function testFuzz_NoRevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
