@@ -262,7 +262,7 @@ contract LlamaCore is Initializable {
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
     policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
-    // Calcuated from the first strategy configuration passed in.
+    // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
       Clones.predictDeterministicAddress(
         address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)
