@@ -9,7 +9,6 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
-import {LlamaPolicyMetadataParamRegistry} from "src/LlamaPolicyMetadataParamRegistry.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
@@ -31,7 +30,6 @@ contract DeployLlama is Script {
   // Core Protocol.
   LlamaFactory factory;
   LlamaPolicyMetadata policyMetadata;
-  LlamaPolicyMetadataParamRegistry policyMetadataParamRegistry;
   LlamaLens lens;
 
   function run() public {
@@ -85,11 +83,6 @@ contract DeployLlama is Script {
       DeployUtils.readRolePermissions(jsonInput)
     );
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
-
-    policyMetadataParamRegistry = factory.LLAMA_POLICY_METADATA_PARAM_REGISTRY();
-    DeployUtils.print(
-      string.concat("  LlamaPolicyMetadataParamRegistry:", vm.toString(address(policyMetadataParamRegistry)))
-    );
 
     vm.broadcast();
     lens = new LlamaLens(address(factory));
