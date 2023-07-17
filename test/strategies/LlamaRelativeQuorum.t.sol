@@ -504,7 +504,7 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
   }
 }
 
-contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
+contract ValidateActionCancelation is LlamaRelativeQuorumTest {
   function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -512,7 +512,7 @@ contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -537,7 +537,7 @@ contract ValidateActionCancelation is LlamaRelativeStrategyBaseTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeBaseWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
