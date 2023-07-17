@@ -531,7 +531,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       // currentRoleSupply.numberOfHolders is unchanged
       currentRoleSupply.totalQuantity += quantityDiff;
     } else {
-      // There are two ways to reach this branch, both of which are nop-ops:
+      // There are two ways to reach this branch, both of which are no-ops:
       //   1. `hadRole` and `willHaveRole` are both false.
       //   2. `hadRole` and `willHaveRole` are both true, and `initialQuantity == quantity`.
       // We allow these no-ops without reverting so you can give someone a policy with only the
