@@ -280,16 +280,6 @@ contract Deploy is LlamaFactoryTest {
     assertEq(factory.llamaCount(), initialLlamaCount + 1);
   }
 
-  function test_DeploysPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
-    assertEq(address(_policy).code.length, 0);
-    deployLlama();
-    assertGt(address(_policy).code.length, 0);
-
-    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
-    assertEq(address(_llama.policy()), address(_policy));
-  }
-
   function test_DeploysLlamaCore() public {
     LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
     assertEq(address(_llama).code.length, 0);
@@ -307,11 +297,10 @@ contract Deploy is LlamaFactoryTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
-    LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       "NewProject",
-      _policy,
+      policyLogic,
       relativeQuorumLogic,
       accountLogic,
       strategyConfigs,
@@ -325,6 +314,36 @@ contract Deploy is LlamaFactoryTest {
       address(this)
     );
     _llama.initialize(config);
+  }
+
+  function test_DeploysPolicy() public {
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
+    assertEq(address(_policy).code.length, 0);
+    deployLlama();
+    assertGt(address(_policy).code.length, 0);
+
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject");
+    assertEq(address(_llama.policy()), address(_policy));
+  }
+
+  function test_RevertIf_ReInitializesLlamaPolicy() public {
+    deployLlama();
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject");
+    LlamaExecutor _executor = lens.computeLlamaExecutorAddress("NewProject");
+
+    vm.expectRevert("Initializable: contract is already initialized");
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "NewProject",
+      new RoleDescription[](0),
+      new RoleHolderData[](0),
+      new RolePermissionData[](0),
+      policyMetadata,
+      color,
+      logo,
+      address(_executor),
+      bytes32(0)
+    );
+    _policy.initialize(config);
   }
 
   function test_SetsLlamaExecutorOnThePolicy() public {
