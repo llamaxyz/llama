@@ -39,7 +39,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
     return RoleDescription.wrap(bytes32(bytes(str)));
   }
 
-  function deployLlamaWithQuotesinName() internal returns (LlamaCore) {
+  function deployLlamaWithQuotesInName() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -1202,7 +1202,7 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
-    (LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaCore deployedCore = deployLlamaWithQuotesInName();
     LlamaExecutor deployedExecutor = deployedCore.executor();
     LlamaPolicy deployedPolicy = deployedCore.policy();
     string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
@@ -1298,7 +1298,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    (LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 

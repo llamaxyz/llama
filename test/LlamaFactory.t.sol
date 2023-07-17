@@ -292,7 +292,7 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_RevertIf_ReInitializesLlamaCore() public {
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     assertEq(_llama.name(), "NewProject");
 
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
@@ -348,31 +348,31 @@ contract Deploy is LlamaFactoryTest {
   }
 
   function test_SetsNameOnLlamaCore() public {
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     assertEq(_llama.name(), "NewProject");
   }
 
   function test_SetsExecutorOnLlamaCore() public {
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject");
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     assertEq(address(_llama.executor()), address(computedExecutor));
   }
 
   function test_SetsPolicyOnLlamaCore() public {
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject");
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
   }
 
   function test_SetsNameOnLlamaPolicy() public {
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     LlamaPolicy _policy = _llama.policy();
     assertEq(_policy.name(), "NewProject");
   }
 
   function test_SetsExecutorOnLlamaPolicy() public {
     LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject");
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     LlamaPolicy _policy = _llama.policy();
     assertEq(_policy.llamaExecutor(), address(computedExecutor));
   }
