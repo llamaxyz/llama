@@ -107,21 +107,19 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Constants and Storage Variables ========
   // =================================================
 
-  /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
-  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
-  /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
-
   /// @notice A special role used to reference all policyholders.
-  /// @dev DO NOT assign policyholders this role directly. Doing so can result in the wrong total supply
-  /// values for this role.
-  uint8 public constant ALL_HOLDERS_ROLE = 0;
+  uint8 internal constant ALL_HOLDERS_ROLE = 0;
 
   /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
   /// However, this may change depending on how the Llama instance is configured.
   /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
   /// unusable. See the documentation for more info.
-  uint8 public constant BOOTSTRAP_ROLE = 1;
+  uint8 internal constant BOOTSTRAP_ROLE = 1;
+
+  /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
+  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
+  /// strategy).
+  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;

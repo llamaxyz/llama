@@ -58,7 +58,7 @@ contract LlamaFactory {
   /// However, this may change depending on how the Llama instance is configured.
   /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
   /// unusable. See the documentation for more info.
-  uint8 public constant BOOTSTRAP_ROLE = 1;
+  uint8 internal constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The Llama core implementation (logic) contract.
   LlamaCore public immutable LLAMA_CORE_LOGIC;
