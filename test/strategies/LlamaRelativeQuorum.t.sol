@@ -529,7 +529,7 @@ contract ValidateActionCancelation is LlamaRelativeQuorumTest {
     vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
     testStrategy.validateActionCancelation(actionInfo, address(this));
   }
-
+  
   function testFuzz_NoRevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies
@@ -543,9 +543,11 @@ contract ValidateActionCancelation is LlamaRelativeQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+
     mpCore.queueAction(actionInfo);
 
-    console2.logUint(uint(mpCore.getActionState(actionInfo)));
     disapproveAction(_actionDisapprovals, actionInfo);
     assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
 
