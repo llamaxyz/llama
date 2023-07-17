@@ -257,7 +257,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     for (uint256 i = 1; i <= numRoles; i = LlamaUtils.uncheckedIncrement(i)) {
       if (hasRole(policyholder, uint8(i))) _setRoleHolder(uint8(i), policyholder, 0, 0);
     }
-    _burn(_tokenId(policyholder));
+    _burn(policyholder);
   }
 
   /// @notice Updates the description of a role.
@@ -532,10 +532,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       currentRoleSupply.totalQuantity += quantityDiff;
     } else {
       // There are two ways to reach this branch, both of which are no-ops:
-      //   1. `hadRole` and `willHaveRole` are both false.
-      //   2. `hadRole` and `willHaveRole` are both true, and `initialQuantity == quantity`.
-      // We allow these no-ops without reverting so you can give someone a policy with only the
-      // `ALL_HOLDERS_ROLE`.
+      //   1. `hadRole` and `willHaveRole` are both false. We allow this without reverting so you can give
+      //      someone a policy with only the `ALL_HOLDERS_ROLE` by passing in any other role that won't be set.
+      //   2. `hadRole` and `willHaveRole` are both true, and `initialQuantity == quantity`. We allow this without
+      //      reverting so that you can update the expiration of an existing role.
     }
     emit RoleAssigned(policyholder, role, expiration, quantity);
   }
@@ -557,7 +557,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Mints a policyholder's policy.
   function _mint(address policyholder) internal {
     uint256 tokenId = _tokenId(policyholder);
-    _mint(policyholder, tokenId);
+    ERC721NonTransferableMinimalProxy._mint(policyholder, tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
     unchecked {
@@ -567,10 +567,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
+    emit RoleAssigned(policyholder, ALL_HOLDERS_ROLE, type(uint64).max, 1);
   }
 
   /// @dev Burns a policyholder's policy.
-  function _burn(uint256 tokenId) internal override {
+  function _burn(address policyholder) internal {
+    uint256 tokenId = _tokenId(policyholder);
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
     RoleSupply storage allHoldersRoleSupply = roleSupply[ALL_HOLDERS_ROLE];
@@ -581,6 +583,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
+    emit RoleAssigned(policyholder, ALL_HOLDERS_ROLE, 0, 0);
   }
 
   /// @dev Sets the Llama policy metadata contract.
