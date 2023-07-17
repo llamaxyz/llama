@@ -311,7 +311,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96) {
+  function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96) {
     return roleSupply[role].totalQuantity;
   }
 
@@ -389,7 +389,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the total number of policies in existence.
   /// @dev This is just an alias for convenience/familiarity.
-  function totalSupply() public view returns (uint256) {
+  function totalSupply() external view returns (uint256) {
     return getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE);
   }
 
@@ -405,7 +405,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
-  function contractURI() public view returns (string memory) {
+  function contractURI() external view returns (string memory) {
     return llamaPolicyMetadata.contractURI(name);
   }
 
