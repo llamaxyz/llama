@@ -31,8 +31,11 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
 
     mockLlamaRelativeStrategyBaseLogic = new MockLlamaRelativeStrategyBase();
 
-    vm.prank(address(mpExecutor));
+    vm.startPrank(address(mpExecutor));
     mpCore.setStrategyLogicAuthorization(mockLlamaRelativeStrategyBaseLogic, true);
+    mpCore.setStrategyLogicAuthorization(relativeHolderQuorumLogic, true);
+    mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
+    mpCore.setStrategyLogicAuthorization(relativeUniqueHolderQuorumLogic, true);
   }
 
   function deployRelativeBaseAndSetRole(
