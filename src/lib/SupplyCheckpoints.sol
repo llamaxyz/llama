@@ -23,9 +23,9 @@ library SupplyCheckpoints {
     }
 
     struct Checkpoint {
-        uint64 timestamp; // The timestamp of the checkpoint.
-        uint96 numberOfHolders; // The total number of unique policyholders holding a role.
-        uint96 totalQuantity; // The sum of the quantity field for all unique policyholders holding a role.
+        uint64 timestamp;
+        uint96 numberOfHolders;
+        uint96 totalQuantity;
     }
 
     /**
