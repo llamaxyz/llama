@@ -294,7 +294,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the total number of role holders for given `role` at `timestamp`.
   function getPastRoleSupplyAsNumberOfHolders(uint8 role, uint256 timestamp)
-    public
+    external
     view
     returns (uint96 numberOfHolders)
   {
@@ -302,12 +302,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-  function getRoleSupplyAsQuantitySum(uint8 role) public view returns (uint96 totalQuantity) {
+  function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
-  function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) public view returns (uint96 totalQuantity) {
+  function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
