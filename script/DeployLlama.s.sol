@@ -12,6 +12,8 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
+import {LlamaRelativeQuantityQuorum} from "src/strategies/LlamaRelativeQuantityQuorum.sol";
+import {LlamaRelativeUniqueHolderQuorum} from "src/strategies/LlamaRelativeUniqueHolderQuorum.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
@@ -21,7 +23,9 @@ contract DeployLlama is Script {
 
   // Logic contracts.
   LlamaCore coreLogic;
-  LlamaRelativeHolderQuorum relativeQuorumLogic;
+  LlamaRelativeHolderQuorum relativeHolderQuorumLogic;
+  LlamaRelativeQuantityQuorum relativeQuantityQuorumLogic;
+  LlamaRelativeUniqueHolderQuorum relativeUniqueHolderQuorum;
   LlamaAbsolutePeerReview absolutePeerReviewLogic;
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
@@ -40,8 +44,22 @@ contract DeployLlama is Script {
     DeployUtils.print(string.concat("  LlamaCoreLogic:", vm.toString(address(coreLogic))));
 
     vm.broadcast();
-    relativeQuorumLogic = new LlamaRelativeHolderQuorum();
-    DeployUtils.print(string.concat("  LlamaRelativeHolderQuorumLogic:", vm.toString(address(relativeQuorumLogic))));
+    relativeHolderQuorumLogic = new LlamaRelativeHolderQuorum();
+    DeployUtils.print(
+      string.concat("  LlamaRelativeHolderQuorumLogic:", vm.toString(address(relativeHolderQuorumLogic)))
+    );
+
+    vm.broadcast();
+    relativeQuantityQuorumLogic = new LlamaRelativeHolderQuorum();
+    DeployUtils.print(
+      string.concat("  LlamaRelativeQuantityQuorumLogic:", vm.toString(address(relativeQuantityQuorumLogic)))
+    );
+
+    vm.broadcast();
+    relativeUniqueHolderQuorum = new LlamaRelativeHolderQuorum();
+    DeployUtils.print(
+      string.concat("  LlamaRelativeUniqueHolderQuorum:", vm.toString(address(relativeUniqueHolderQuorum)))
+    );
 
     vm.broadcast();
     absolutePeerReviewLogic = new LlamaAbsolutePeerReview();
@@ -71,7 +89,7 @@ contract DeployLlama is Script {
     vm.broadcast();
     factory = new LlamaFactory(
       coreLogic,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,

@@ -22,7 +22,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeStrategyBaseTest} from "test/strategies/LlamaRelativeStrategyBase.t.sol";
 
 contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
-  function deployRelativeQuorumAndSetRole(
+  function deployRelativeHolderQuorumAndSetRole(
     uint8 _role,
     bytes32 _permission,
     address _policyHolder,
@@ -66,14 +66,14 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
     vm.expectEmit();
     emit StrategyCreated(mpCore, mpPolicy);
 
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 
-  function deployTestStrategy() internal returns (ILlamaStrategy testStrategy) {
+  function deployTestRelativeHolderQuorumStrategy() internal returns (ILlamaStrategy testStrategy) {
     LlamaRelativeStrategyBase.Config memory testStrategyData = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
@@ -87,15 +87,15 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
       forceDisapprovalRoles: new uint8[](0)
     });
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
     LlamaRelativeStrategyBase.Config[] memory testStrategies = new LlamaRelativeStrategyBase.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
   }
 
-  function deployRelativeQuorumWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
+  function deployRelativeHolderQuorumWithForceApproval() internal returns (ILlamaStrategy testStrategy) {
     // Define strategy parameters.
     uint8[] memory forceApproveRoles = new uint8[](1);
     forceApproveRoles[0] = uint8(Roles.ForceApprover);
@@ -117,14 +117,14 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
 
     // Get the address of the strategy we'll deploy.
     testStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(testStrategyData), address(mpCore)
     );
 
     // Create and authorize the strategy.
     LlamaRelativeStrategyBase.Config[] memory testStrategies = new LlamaRelativeStrategyBase.Config[](1);
     testStrategies[0] = testStrategyData;
     vm.prank(address(mpExecutor));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(testStrategies));
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
@@ -137,7 +137,7 @@ contract IsActionApproved is LlamaRelativeHolderQuorumTest {
     _actionApprovals =
       bound(_actionApprovals, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000), _numberOfPolicies);
 
-    ILlamaStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -154,7 +154,7 @@ contract IsActionApproved is LlamaRelativeHolderQuorumTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals = bound(_actionApprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 4000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -188,7 +188,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -209,7 +209,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
@@ -230,7 +230,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
     vm.assume(_role != 0);
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role,
       bytes32(0),
       address(0xdeadbeef),
@@ -263,7 +263,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       // roles
     vm.assume(_policyHolder != address(0));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       _policyHolder,
@@ -292,7 +292,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
     _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(0xdeadbeef),
@@ -327,7 +327,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
@@ -348,7 +348,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(_permission > bytes32(0));
     vm.assume(_policyHolder != address(0));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
@@ -369,7 +369,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(mpPolicy.balanceOf(_nonPolicyHolder) == 0);
     vm.assume(_role != 0);
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role,
       bytes32(0),
       address(0xdeadbeef),
@@ -402,7 +402,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       // roles
     vm.assume(_policyHolder != address(0));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       _policyHolder,
@@ -432,7 +432,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
     _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
 
-    ILlamaStrategy newStrategy = deployRelativeQuorumAndSetRole(
+    ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
       bytes32(0),
       address(0xdeadbeef),
@@ -463,7 +463,7 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 
-    ILlamaStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -475,7 +475,7 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
 
   function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    ILlamaStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
     generateAndSetRoleHolders(_numberOfPolicies);
     ActionInfo memory actionInfo = createAction(testStrategy);
 
@@ -487,7 +487,7 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
 
-    ILlamaStrategy testStrategy = deployTestStrategy();
+    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -511,7 +511,7 @@ contract ValidateActionCancelation is LlamaRelativeHolderQuorumTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeHolderQuorumWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 
@@ -536,7 +536,7 @@ contract ValidateActionCancelation is LlamaRelativeHolderQuorumTest {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionDisapprovals = bound(_actionDisapprovals, 0, FixedPointMathLib.mulDivUp(_numberOfPolicies, 2000, 10_000) - 1);
 
-    ILlamaStrategy testStrategy = deployRelativeQuorumWithForceApproval();
+    ILlamaStrategy testStrategy = deployRelativeHolderQuorumWithForceApproval();
 
     generateAndSetRoleHolders(_numberOfPolicies);
 

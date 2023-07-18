@@ -446,7 +446,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   }
 }
 
-contract RelativeQuorumHarness is MockLlamaRelativeStrategyBase {
+contract RelativeBaseHarness is MockLlamaRelativeStrategyBase {
   function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256) {
     return _getMinimumAmountNeeded(supply, minPct);
   }
@@ -454,7 +454,7 @@ contract RelativeQuorumHarness is MockLlamaRelativeStrategyBase {
 
 contract GetMinimumAmountNeeded is LlamaRelativeStrategyBaseTest {
   function testFuzz_calculatesMinimumAmountCorrectly(uint256 supply, uint256 minPct) public {
-    RelativeQuorumHarness newStrategy = new RelativeQuorumHarness();
+    RelativeBaseHarness newStrategy = new RelativeBaseHarness();
     minPct = bound(minPct, 0, 10_000);
     vm.assume(minPct == 0 || supply <= type(uint256).max / minPct); // avoid solmate revert statement
 

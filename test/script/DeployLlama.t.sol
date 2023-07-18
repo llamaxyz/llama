@@ -172,11 +172,11 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    assertEq(address(relativeQuorumLogic), address(0));
+    assertEq(address(relativeHolderQuorumLogic), address(0));
 
     DeployLlama.run();
 
-    assertFalse(address(relativeQuorumLogic) == address(0));
+    assertFalse(address(relativeHolderQuorumLogic) == address(0));
   }
 
   function test_DeploysAccountLogic() public {

@@ -23,7 +23,7 @@ contract LlamaFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  ILlamaStrategy public relativeQuorumLogic;
+  ILlamaStrategy public relativeHolderQuorumLogic;
   ILlamaAccount public accountLogic;
 
   // Used to track the last seen `llamaCount` value.
@@ -36,11 +36,11 @@ contract LlamaFactoryHandler is BaseHandler {
   constructor(
     LlamaFactory _llamaFactory,
     LlamaCore _llamaCore,
-    ILlamaStrategy _relativeQuorumLogic,
+    ILlamaStrategy _relativeHolderQuorumLogic,
     ILlamaAccount _accountLogic
   ) BaseHandler(_llamaFactory, _llamaCore) {
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
-    relativeQuorumLogic = _relativeQuorumLogic;
+    relativeHolderQuorumLogic = _relativeHolderQuorumLogic;
     accountLogic = _accountLogic;
   }
 
@@ -81,7 +81,7 @@ contract LlamaFactoryHandler is BaseHandler {
     vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.deploy(
       name(),
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       new bytes[](0),
       new bytes[](0),
@@ -109,7 +109,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
 
   function setUp() public override {
     LlamaTestSetup.setUp();
-    handler = new LlamaFactoryHandler(factory, mpCore, relativeQuorumLogic, accountLogic);
+    handler = new LlamaFactoryHandler(factory, mpCore, relativeHolderQuorumLogic, accountLogic);
 
     // Target the handler contract and only call it's `llamaFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being

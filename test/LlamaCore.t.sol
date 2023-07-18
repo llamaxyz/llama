@@ -261,7 +261,9 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    coreLogic.initialize("NewProject", mpPolicy, relativeQuorumLogic, accountLogic, new bytes[](0), new bytes[](0));
+    coreLogic.initialize(
+      "NewProject", mpPolicy, relativeHolderQuorumLogic, accountLogic, new bytes[](0), new bytes[](0)
+    );
   }
 }
 
@@ -275,7 +277,7 @@ contract Initialize is LlamaCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     modifiedFactory = new LlamaFactoryWithoutInitialization(
       coreLogic,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       policyLogic,
       policyMetadata,
@@ -302,15 +304,16 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), strategyConfigs[i], address(uninitializedLlama)
+      );
     }
 
     assertEq(address(strategyAddresses[0]).code.length, 0);
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
@@ -324,22 +327,23 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), strategyConfigs[i], address(uninitializedLlama)
+      );
     }
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddresses[0], true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, strategyConfigs[0]);
+    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, strategyConfigs[0]);
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddresses[1], true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, strategyConfigs[1]);
+    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, strategyConfigs[1]);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -350,12 +354,13 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), strategyConfigs[i], address(uninitializedLlama)
+      );
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].llamaCore()), address(uninitializedLlama));
@@ -369,12 +374,13 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), strategyConfigs[i], address(uninitializedLlama)
+      );
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(strategyAddresses[0].policy()), address(policy));
@@ -388,15 +394,16 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
     for (uint256 i = 0; i < strategyConfigs.length; i++) {
-      strategyAddresses[i] =
-        lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[i], address(uninitializedLlama));
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), strategyConfigs[i], address(uninitializedLlama)
+      );
     }
 
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[0], false, false);
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[1], false, false);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[0], true, true);
@@ -409,19 +416,19 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
-    assertFalse(uninitializedLlama.authorizedStrategyLogics(relativeQuorumLogic));
+    assertFalse(uninitializedLlama.authorizedStrategyLogics(relativeHolderQuorumLogic));
 
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
       "NewProject",
-      ILlamaStrategy(relativeQuorumLogic),
+      ILlamaStrategy(relativeHolderQuorumLogic),
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
     );
 
-    assertTrue(uninitializedLlama.authorizedStrategyLogics(relativeQuorumLogic));
+    assertTrue(uninitializedLlama.authorizedStrategyLogics(relativeHolderQuorumLogic));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {
@@ -431,12 +438,12 @@ contract Initialize is LlamaCoreTest {
     bytes[] memory accounts = accountConfigsRootLlama();
 
     vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(relativeQuorumLogic, true);
+    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, true);
     modifiedFactory.initialize(
       uninitializedLlama,
       policy,
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
@@ -455,7 +462,7 @@ contract Initialize is LlamaCoreTest {
       uninitializedLlama,
       policy,
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
@@ -476,7 +483,7 @@ contract Initialize is LlamaCoreTest {
       uninitializedLlama,
       policy,
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts
@@ -498,7 +505,7 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(accountAddresses[1]).code.length, 0);
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertGt(address(accountAddresses[0]).code.length, 0);
@@ -521,7 +528,7 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[1], accountLogic, accounts[1]);
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
   }
 
@@ -537,7 +544,7 @@ contract Initialize is LlamaCoreTest {
     }
 
     LlamaExecutor executor = modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(address(accountAddresses[0].llamaExecutor()), address(executor));
@@ -556,7 +563,7 @@ contract Initialize is LlamaCoreTest {
     }
 
     modifiedFactory.initialize(
-      uninitializedLlama, policy, "NewProject", relativeQuorumLogic, accountLogic, strategyConfigs, accounts
+      uninitializedLlama, policy, "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts
     );
 
     assertEq(LlamaAccount(payable(address(accountAddresses[0]))).name(), "Llama Treasury");
@@ -1922,7 +1929,7 @@ contract CreateStrategies is LlamaCoreTest {
     LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
 
     vm.prank(caller);
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_CreateNewStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
@@ -1940,7 +1947,7 @@ contract CreateStrategies is LlamaCoreTest {
 
     for (uint256 i = 0; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
+        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
       );
     }
 
@@ -1949,19 +1956,19 @@ contract CreateStrategies is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddresses[0], true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddresses[1], true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[1], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddresses[2], true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[2], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    emit StrategyCreated(strategyAddresses[2], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
 
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     assertEqStrategyStatus(mpCore, strategyAddresses[0], true, true);
     assertEqStrategyStatus(mpCore, strategyAddresses[1], true, true);
@@ -2087,7 +2094,7 @@ contract CreateStrategies is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_RevertIf_IdenticalStrategyIsAlreadyDeployed() public {
@@ -2111,10 +2118,10 @@ contract CreateStrategies is LlamaCoreTest {
     newStrategies2[0] = duplicateStrategy;
 
     vm.startPrank(address(mpExecutor));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies1));
 
     vm.expectRevert("ERC1167: create2 failed");
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies2));
   }
 
   function test_CanBeCalledByASuccessfulAction() public {
@@ -2136,14 +2143,14 @@ contract CreateStrategies is LlamaCoreTest {
     });
 
     ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole2), actionCreatorAustin, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     bytes memory data = abi.encodeCall(
-      LlamaCore.createStrategies, (relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
+      LlamaCore.createStrategies, (relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies))
     );
     vm.prank(actionCreatorAustin);
     uint256 actionId = mpCore.createAction(uint8(Roles.TestRole2), mpStrategy1, address(mpCore), 0, data, "");
@@ -2795,27 +2802,27 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
 
   function test_CanBeReauthorized() public {
     vm.prank(address(mpExecutor));
-    mpCore.setStrategyLogicAuthorization(relativeQuorumLogic, false);
+    mpCore.setStrategyLogicAuthorization(relativeHolderQuorumLogic, false);
 
     uint256 salt = 0;
     LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
     newStrategies[0] = _createStrategy(salt, true);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](1);
     strategyAddresses[0] = lens.computeLlamaStrategyAddress(
-      address(relativeQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
     );
 
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.UnauthorizedStrategyLogic.selector);
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
 
     vm.prank(address(mpExecutor));
-    mpCore.setStrategyLogicAuthorization(relativeQuorumLogic, true);
+    mpCore.setStrategyLogicAuthorization(relativeHolderQuorumLogic, true);
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-    mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 
   function test_EmitsStrategyLogicAuthorizedEvent() public {

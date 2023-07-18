@@ -241,13 +241,13 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -289,7 +289,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(relativeQuorumLogic), "relativeQuorumLogic not set");
+    require(address(0) != address(relativeHolderQuorumLogic), "relativeHolderQuorumLogic not set");
+    require(address(0) != address(relativeQuantityQuorumLogic), "relativeQuantityQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
