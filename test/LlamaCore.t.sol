@@ -1749,8 +1749,9 @@ contract CastDisapproval is LlamaCoreTest {
 
   function test_RevertIf_CastAfterMinExecutionTime(uint256 timeAfterExecutionTime) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
-    timeAfterExecutionTime =
-      bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeHolderQuorum(address(actionInfo.strategy)).expirationPeriod()));
+    timeAfterExecutionTime = bound(
+      timeAfterExecutionTime, 0, uint256(LlamaRelativeHolderQuorum(address(actionInfo.strategy)).expirationPeriod())
+    );
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
