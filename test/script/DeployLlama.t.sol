@@ -135,7 +135,6 @@ contract Run is DeployLlamaTest {
     );
 
     LlamaPolicy rootPolicy = rootLlamaCore.policy();
-    assertEq(address(rootPolicy.factory()), address(factory));
     assertEq(rootPolicy.numRoles(), 8);
 
     address initRoleHolder = makeAddr("randomLogicAddress");

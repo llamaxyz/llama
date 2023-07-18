@@ -77,10 +77,11 @@ contract LlamaLens {
   /// @param name The name of this Llama instance.
   /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name) external view returns (LlamaPolicy) {
+    LlamaCore llamaCore = _computeLlamaCoreAddress(name);
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_POLICY_LOGIC,
       keccak256(abi.encodePacked(name)), // salt
-      LLAMA_FACTORY // deployer
+      address(llamaCore) // deployer
     );
     return LlamaPolicy(_computedAddress);
   }
