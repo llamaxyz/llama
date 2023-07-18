@@ -291,7 +291,7 @@ contract Deploy is LlamaFactoryTest {
     LlamaCore(address(_llama.policy())).name(); // Sanity check that this doesn't revert.
   }
 
-  function test_RevertIf_ReInitializesLlamaCore() public {
+  function test_RevertIf_ReinitializesLlamaCore() public {
     LlamaCore _llama = deployLlama();
     assertEq(_llama.name(), "NewProject");
 
