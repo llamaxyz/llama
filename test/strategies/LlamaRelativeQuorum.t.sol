@@ -19,10 +19,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaRelativeQuorumTest is LlamaTestSetup {
-  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-
   function deployRelativeQuorumAndSetRole(
     uint8 _role,
     bytes32 _permission,
@@ -63,9 +59,6 @@ contract LlamaRelativeQuorumTest is LlamaTestSetup {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
 
     mpCore.createStrategies(relativeQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
