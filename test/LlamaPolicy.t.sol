@@ -12,8 +12,10 @@ import {LibString} from "@solady/utils/LibString.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
-import {Checkpoints} from "src/lib/Checkpoints.sol";
-import {LlamaPolicyInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {
+  LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -37,7 +39,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
     return RoleDescription.wrap(bytes32(bytes(str)));
   }
 
-  function deployLlamaWithQuotesinName() internal returns (LlamaCore) {
+  function deployLlamaWithQuotesInName() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -107,7 +109,7 @@ contract Constructor is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      bytes32(0)
     );
     policyLogic.initialize(config);
   }
@@ -119,7 +121,6 @@ contract Initialize is LlamaPolicyTest {
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test Policy",
       new RoleDescription[](0),
@@ -129,8 +130,9 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
     localPolicy.initialize(config);
   }
 
@@ -158,7 +160,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
     assertEq(localPolicy.numRoles(), numRoles);
@@ -166,7 +168,6 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_InitializeIsCalledTwice() public {
     LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert("Initializable: contract is already initialized");
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test",
       new RoleDescription[](0),
@@ -176,8 +177,9 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert("Initializable: contract is already initialized");
     mpPolicy.initialize(config);
   }
 
@@ -204,7 +206,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
   }
@@ -234,7 +236,7 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
 
@@ -266,45 +268,10 @@ contract Initialize is LlamaPolicyTest {
       color,
       logo,
       address(mpExecutor),
-      factory
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
     localPolicy.initialize(config);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
-  }
-}
-
-contract SetLlama is LlamaPolicyTest {
-  function test_SetsLlamaAddress() public {
-    // This test is a no-op because this functionality is already tested in
-    // `test_SetsLlamaCoreOnThePolicy`, which also is a stronger test since it tests that
-    // method in the context it is used, instead of as a pure unit test.
-  }
-
-  function test_RevertIf_CallerNotLlamaFactory() public {
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
-}
-
-contract FinalizeInitialization is LlamaPolicyTest {
-  function test_RevertIf_LlamaAddressIsSet() public {
-    vm.prank(address(factory));
-    vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
-
-  function test_RevertIf_CalledByNonFactory() public {
-    // this test ensures that factory cannot be set on the policy logic contract and finalizeImplementation is properly
-    // guarded
-    vm.startPrank(arbitraryAddress);
-
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    policyLogic.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    assertEq(address(policyLogic.factory()), address(0));
   }
 }
 
@@ -773,8 +740,8 @@ contract SetApprovalForAll is LlamaPolicyTest {
 // ====================================
 // ======== Permission Getters ========
 // ====================================
-// The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
-// that's added on top of that.
+// The actual checkpointing logic is tested in `RoleCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
+// so here we just test the logic that's added on top of that.
 
 contract GetQuantity is LlamaPolicyTest {
   function test_ReturnsZeroIfPolicyholderDoesNotHoldRole() public {
@@ -935,9 +902,10 @@ contract RoleBalanceCheckpointTest is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
   function test_ReturnsBalanceCheckpoint() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
-    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
+    RoleCheckpoints.History memory rbCheckpoint2 =
+      mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
     assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
@@ -964,8 +932,8 @@ contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
 }
 
 contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
-  function assertEqSlice(Checkpoints.History memory full, uint256 start, uint256 end) internal {
-    Checkpoints.History memory slice =
+  function assertEqSlice(RoleCheckpoints.History memory full, uint256 start, uint256 end) internal {
+    RoleCheckpoints.History memory slice =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), start, end);
 
     assertEq(slice._checkpoints.length, end - start);
@@ -990,7 +958,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_ReturnsSlicesOfCheckpointsArray() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -1013,25 +981,12 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
 
 contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   function test_ReturnsTheCorrectLength() public {
-    Checkpoints.History memory checkpoints =
+    RoleCheckpoints.History memory checkpoints =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
     uint256 length = mpPolicy.roleBalanceCheckpointsLength(arbitraryPolicyholder, uint8(Roles.TestRole1));
     assertEq(length, checkpoints._checkpoints.length);
     assertEq(length, 3);
   }
-
-  // A fuzz test like this will result in lots of zero lengths and be mostly useless for now which
-  // is why it's commented out. Once https://github.com/foundry-rs/foundry/issues/4967 is resolved
-  // we can uncomment the test and use the below config to leverage a higher dictionary weight.
-  // Alternatively we could hardcode all known users and roles and loop through all of them, but
-  // this is a pretty simple method being tested, so in the interest of faster tests this is
-  // arguably overkill and therefore left commented out for now.
-  // /// forge-config: default.fuzz.dictionary_weight = 99
-  // function testFuzz_ReturnsTheCorrectLength(address policyholder, uint8 role) public {
-  //   Checkpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
-  //   uint256 length = mpPolicy.roleBalanceCheckpointsLength(policyholder, role);
-  //   assertEq(length, checkpoints._checkpoints.length);
-  // }
 }
 
 contract HasRole is LlamaPolicyTest {
@@ -1247,7 +1202,7 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
-    (LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaCore deployedCore = deployLlamaWithQuotesInName();
     LlamaExecutor deployedExecutor = deployedCore.executor();
     LlamaPolicy deployedPolicy = deployedCore.policy();
     string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
@@ -1343,7 +1298,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    (LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 

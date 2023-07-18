@@ -59,7 +59,7 @@ struct RolePermissionData {
 }
 
 struct LlamaCoreInitializationConfig {
-  string name; // The name of the `LlamaCore` clone.
+  string name; // The name of the `LlamaCore` instance.
   LlamaPolicy policyLogic; // This Llama instance's policy contract.
   ILlamaStrategy strategyLogic; // The Llama Strategy implementation (logic) contract.
   ILlamaAccount accountLogic; // The Llama Account implementation (logic) contract.
@@ -75,7 +75,7 @@ struct LlamaCoreInitializationConfig {
 }
 
 struct LlamaPolicyInitializationConfig {
-  string name; // The name of the policy.
+  string name; // The ERC-721 name of the policy NFT.
   RoleDescription[] roleDescriptions; // The role descriptions.
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the role has the permission of the
@@ -84,5 +84,5 @@ struct LlamaPolicyInitializationConfig {
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
   address llamaExecutor; // The address of the instance's LlamaExecutor
-  LlamaFactory llamaFactory; // The factory address
+  bytes32 bootstrapPermissionId; // The permission ID that allows holders to change role permissions.
 }

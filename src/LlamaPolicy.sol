@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {LibString} from "@solady/utils/LibString.sol";
 
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {LlamaPolicyInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -19,7 +19,7 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 /// policyholder and has roles assigned to `create`, `approve` and `disapprove` actions.
 /// @dev The roles and permissions determine how the policyholder can interact with the Llama core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
-  using Checkpoints for Checkpoints.History;
+  using RoleCheckpoints for RoleCheckpoints.History;
 
   // =========================
   // ======== Structs ========
@@ -110,7 +110,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => Checkpoints.History)) internal roleBalanceCkpts;
+  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice A special role used to reference all policyholders.
   /// @dev DO NOT assign policyholders this role directly. Doing so can result in the wrong total supply
@@ -137,9 +137,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice The address of the `LlamaExecutor` of this instance.
   address public llamaExecutor;
 
-  /// @notice The address of the `LlamaFactory` contract.
-  LlamaFactory public factory;
-
   /// @notice The Llama policy metadata contract.
   LlamaPolicyMetadata public llamaPolicyMetadata;
 
@@ -163,11 +160,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     __initializeERC721MinimalProxy(
       config.name, string.concat("LL-", LibString.replace(LibString.upper(config.name), " ", "-"))
     );
-    factory = config.llamaFactory;
+    llamaExecutor = config.llamaExecutor;
+
+    // Initialize the roles.
     for (uint256 i = 0; i < config.roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _initializeRole(config.roleDescriptions[i]);
     }
 
+    // Assign the role holders.
     for (uint256 i = 0; i < config.roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRoleHolder(
         config.roleHolders[i].role,
@@ -177,6 +177,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       );
     }
 
+    // Assign the role permissions.
     for (uint256 i = 0; i < config.rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRolePermission(
         config.rolePermissions[i].role, config.rolePermissions[i].permissionId, config.rolePermissions[i].hasPermission
@@ -188,6 +189,10 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // this is more of a sanity check, not a guarantee that the system will work after initialization.
     if (numRoles == 0 || getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE) == 0) revert InvalidRoleHolderInput();
 
+    // Gives holders of role ID 1 permission to change role permissions. This is required to reduce the chance that an
+    // instance is deployed with an invalid configuration that results in the instance being unusable.
+    _setRolePermission(BOOTSTRAP_ROLE, config.bootstrapPermissionId, true);
+
     _setPolicyMetadata(config.llamaPolicyMetadata);
     _setColor(config.color);
     _setLogo(config.logo);
@@ -196,19 +201,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ===========================================
   // ======== External and Public Logic ========
   // ===========================================
-
-  /// @notice Sets the address of the `LlamaExecutor` contract and gives holders of role ID 1 permission
-  /// to change role permissions.
-  /// @dev This method can only be called once.
-  /// @param _llamaExecutor The address of the `LlamaExecutor` contract.
-  /// @param bootstrapPermissionId The permission ID that allows holders to change role permissions.
-  function finalizeInitialization(address _llamaExecutor, bytes32 bootstrapPermissionId) external {
-    if (msg.sender != address(factory)) revert OnlyLlamaFactory();
-    if (llamaExecutor != address(0)) revert AlreadyInitialized();
-
-    llamaExecutor = _llamaExecutor;
-    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
-  }
 
   // -------- Role and Permission Management --------
 
@@ -314,7 +306,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
-  function roleBalanceCheckpoints(address policyholder, uint8 role) external view returns (Checkpoints.History memory) {
+  function roleBalanceCheckpoints(address policyholder, uint8 role)
+    external
+    view
+    returns (RoleCheckpoints.History memory)
+  {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role];
   }
@@ -328,7 +324,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
     external
     view
-    returns (Checkpoints.History memory)
+    returns (RoleCheckpoints.History memory)
   {
     if (start > end) revert InvalidIndices();
     uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
@@ -336,11 +332,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     uint256 tokenId = _tokenId(policyholder);
     uint256 sliceLength = end - start;
-    Checkpoints.Checkpoint[] memory checkpoints = new Checkpoints.Checkpoint[](sliceLength);
+    RoleCheckpoints.Checkpoint[] memory checkpoints = new RoleCheckpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
       checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }
-    return Checkpoints.History(checkpoints);
+    return RoleCheckpoints.History(checkpoints);
   }
 
   /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.

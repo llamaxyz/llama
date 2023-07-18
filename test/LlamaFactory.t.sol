@@ -38,6 +38,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
     uint256 chainId
   );
   event PolicyMetadataSet(LlamaPolicyMetadata indexed llamaPolicyMetadata);
+  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 }
 
 contract Constructor is LlamaFactoryTest {
@@ -280,36 +281,6 @@ contract Deploy is LlamaFactoryTest {
     assertEq(factory.llamaCount(), initialLlamaCount + 1);
   }
 
-  function test_DeploysPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
-    assertEq(address(_policy).code.length, 0);
-    deployLlama();
-    assertGt(address(_policy).code.length, 0);
-  }
-
-  function test_InitializesLlamaPolicy() public {
-    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-
-    assertEq(address(_policy).code.length, 0);
-    deployLlama();
-    assertGt(address(_policy).code.length, 0);
-
-    vm.expectRevert("Initializable: contract is already initialized");
-    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "Test",
-      new RoleDescription[](0),
-      new RoleHolderData[](0),
-      new RolePermissionData[](0),
-      llamaPolicyMetadata,
-      color,
-      logo,
-      address(mpExecutor),
-      factory
-    );
-    _policy.initialize(config);
-  }
-
   function test_DeploysLlamaCore() public {
     LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
     assertEq(address(_llama).code.length, 0);
@@ -320,18 +291,17 @@ contract Deploy is LlamaFactoryTest {
     LlamaCore(address(_llama.policy())).name(); // Sanity check that this doesn't revert.
   }
 
-  function test_InitializesLlamaCore() public {
-    (LlamaCore _llama) = deployLlama();
+  function test_RevertIf_ReInitializesLlamaCore() public {
+    LlamaCore _llama = deployLlama();
     assertEq(_llama.name(), "NewProject");
 
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
 
-    LlamaPolicy _policy = _llama.policy();
     vm.expectRevert("Initializable: contract is already initialized");
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       "NewProject",
-      _policy,
+      policyLogic,
       relativeQuorumLogic,
       accountLogic,
       strategyConfigs,
@@ -347,17 +317,64 @@ contract Deploy is LlamaFactoryTest {
     _llama.initialize(config);
   }
 
-  function test_SetsLlamaExecutorOnThePolicy() public {
-    (LlamaCore _llama) = deployLlama();
-    LlamaPolicy _policy = _llama.policy();
-    LlamaCore _llamaFromPolicy = LlamaCore(_policy.llamaExecutor());
-    assertEq(address(_llamaFromPolicy), address(_llama.executor()));
+  function test_DeploysPolicy() public {
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    assertEq(address(_policy).code.length, 0);
+    deployLlama();
+    assertGt(address(_policy).code.length, 0);
+
+    LlamaCore _llama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    assertEq(address(_llama.policy()), address(_policy));
   }
 
-  function test_SetsPolicyAddressOnLlamaCore() public {
+  function test_RevertIf_ReinitializesLlamaPolicy() public {
+    deployLlama();
+    LlamaPolicy _policy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+    LlamaExecutor _executor = lens.computeLlamaExecutorAddress("NewProject", address(rootExecutor));
+
+    vm.expectRevert("Initializable: contract is already initialized");
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "NewProject",
+      new RoleDescription[](0),
+      new RoleHolderData[](0),
+      new RolePermissionData[](0),
+      policyMetadata,
+      color,
+      logo,
+      address(_executor),
+      bytes32(0)
+    );
+    _policy.initialize(config);
+  }
+
+  function test_SetsNameOnLlamaCore() public {
+    LlamaCore _llama = deployLlama();
+    assertEq(_llama.name(), "NewProject");
+  }
+
+  function test_SetsExecutorOnLlamaCore() public {
+    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject", address(rootExecutor));
+    LlamaCore _llama = deployLlama();
+    assertEq(address(_llama.executor()), address(computedExecutor));
+  }
+
+  function test_SetsPolicyOnLlamaCore() public {
     LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
-    (LlamaCore _llama) = deployLlama();
+    LlamaCore _llama = deployLlama();
     assertEq(address(_llama.policy()), address(computedPolicy));
+  }
+
+  function test_SetsNameOnLlamaPolicy() public {
+    LlamaCore _llama = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.name(), "NewProject");
+  }
+
+  function test_SetsExecutorOnLlamaPolicy() public {
+    LlamaExecutor computedExecutor = lens.computeLlamaExecutorAddress("NewProject", address(rootExecutor));
+    LlamaCore _llama = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.llamaExecutor(), address(computedExecutor));
   }
 
   function test_EmitsLlamaInstanceCreatedEvent() public {
@@ -384,6 +401,24 @@ contract Deploy is LlamaFactoryTest {
     LlamaExecutor newLlamaExecutor = newLlama.executor();
     assertEq(address(newLlamaExecutor), address(computedExecutor));
     assertEq(address(computedExecutor), LlamaPolicy(computedLlama.policy()).llamaExecutor());
+  }
+
+  function test_BootstrapRoleHasSetRolePermissionPermission() public {
+    LlamaCore computedLlama = lens.computeLlamaCoreAddress("NewProject", address(rootExecutor));
+    LlamaPolicy computedPolicy = lens.computeLlamaPolicyAddress("NewProject", address(rootExecutor));
+
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    ILlamaStrategy bootstrapStrategy =
+      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[0], address(computedLlama));
+    bytes32 bootstrapPermissionId = keccak256(
+      abi.encode(PermissionData(address(computedPolicy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy))
+    );
+
+    vm.expectEmit();
+    emit RolePermissionAssigned(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+    LlamaCore _llama = deployLlama();
+    LlamaPolicy _policy = _llama.policy();
+    assertEq(_policy.canCreateAction(BOOTSTRAP_ROLE, bootstrapPermissionId), true);
   }
 }
 
