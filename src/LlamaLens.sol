@@ -84,7 +84,7 @@ contract LlamaLens {
     return _computeLlamaPolicyAddress(name, deployer);
   }
 
-  /// @notice Computes the address of a Llama executor contract from the name of the Llama instance.
+  /// @notice Computes the address of a Llama policy metadata contract.
   /// @param llamaPolicy The LlamaPolicy contract that clones this metadata contract.
   /// @param nonce The amount of times the LlamaPolicy has cloned a new policy metadata minimal proxy
   /// @return The computed address of the `LlamaPolicyMetadata` contract.
