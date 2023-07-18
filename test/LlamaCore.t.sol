@@ -1649,6 +1649,29 @@ contract CastApproval is LlamaCoreTest {
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, reason);
   }
 
+  function test_UsesQuantityFromPreviousTimestamp() public {
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+
+    // Go back to 1 second before action creation and give the user a weight of 25.
+    uint256 initialTimestamp = block.timestamp;
+    vm.warp(mpCore.getAction(actionInfo.id).creationTime - 1);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), newApprover, 25, type(uint64).max);
+
+    // At action creation time, give the user a weight of 2.
+    vm.warp(mpCore.getAction(actionInfo.id).creationTime);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), newApprover, 2, type(uint64).max);
+
+    // Go back to the original timestamp and cast approval, ensuring we see a weight of 25 cast.
+    vm.warp(initialTimestamp);
+    assertEq(0, mpCore.getAction(actionInfo.id).totalApprovals);
+    vm.prank(newApprover);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    assertEq(25, mpCore.getAction(actionInfo.id).totalApprovals);
+  }
+
   function test_RevertIf_ActionNotActive() public {
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
@@ -1833,6 +1856,30 @@ contract CastDisapproval is LlamaCoreTest {
     emit DisapprovalCast(actionInfo.id, disapproverDrake, uint8(Roles.Disapprover), 1, reason);
     vm.prank(disapproverDrake);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, reason);
+  }
+
+  function test_UsesQuantityFromPreviousTimestamp() public {
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+
+    // Go back to 1 second before action creation and give the user a weight of 25.
+    uint256 initialTimestamp = block.timestamp;
+    vm.warp(mpCore.getAction(actionInfo.id).creationTime - 1);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), newApprover, 25, type(uint64).max);
+
+    // At action creation time, give the user a weight of 2.
+    vm.warp(mpCore.getAction(actionInfo.id).creationTime);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), newApprover, 2, type(uint64).max);
+
+    // Go back to the original timestamp and cast approval, ensuring we see a weight of 25 cast.
+    vm.warp(initialTimestamp);
+    assertEq(0, mpCore.getAction(actionInfo.id).totalDisapprovals);
+    vm.prank(newApprover);
+    mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
+    assertEq(25, mpCore.getAction(actionInfo.id).totalDisapprovals);
   }
 
   function test_RevertIf_ActionNotQueued() public {
