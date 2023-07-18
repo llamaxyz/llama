@@ -10,9 +10,12 @@ import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+
+import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaFactoryHandler is BaseHandler {
   uint96 DEFAULT_ROLE_QTY = 1;
@@ -78,12 +81,28 @@ contract LlamaFactoryHandler is BaseHandler {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Action Creator");
 
+    LlamaRelativeQuorum.Config[] memory strategyConfigs = new LlamaRelativeQuorum.Config[](1);
+    strategyConfigs[0] = LlamaRelativeQuorum.Config({
+      approvalPeriod: 1 days,
+      queuingPeriod: 2 days,
+      expirationPeriod: 8 days,
+      isFixedLengthApprovalPeriod: true,
+      minApprovalPct: 4000,
+      minDisapprovalPct: 2000,
+      approvalRole: 1,
+      disapprovalRole: 1,
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    bytes[] memory encodedStrategyConfig = DeployUtils.encodeStrategyConfigs(strategyConfigs);
+
     vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.deploy(
       name(),
       relativeQuorumLogic,
       accountLogic,
-      new bytes[](0),
+      encodedStrategyConfig,
       new bytes[](0),
       roleDescriptions,
       roleHolders,
