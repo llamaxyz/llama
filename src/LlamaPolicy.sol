@@ -111,7 +111,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   uint8 public constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The total supply of a given role.
-  /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of
+  /// @dev At a given timestamp, the `totalQuantity` of a role must equal the sum of the quantity of
   /// the role for each token ID that holds the role.
   mapping(uint8 role => SupplyCheckpoints.History) internal roleSupplyCkpts;
 
