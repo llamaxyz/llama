@@ -562,7 +562,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function _setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
     internal
   {
-    llamaPolicyMetadata = ILlamaPolicyMetadata(Clones.clone(address(_llamaPolicyMetadataLogic)));
+    llamaPolicyMetadata =
+      ILlamaPolicyMetadata(Clones.cloneDeterministic(address(_llamaPolicyMetadataLogic), keccak256(abi.encode(config))));
     llamaPolicyMetadata.initialize(config);
     emit PolicyMetadataSet(_llamaPolicyMetadataLogic, llamaPolicyMetadata, config);
   }

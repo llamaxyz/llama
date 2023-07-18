@@ -373,7 +373,7 @@ contract Deploy is LlamaFactoryTest {
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       color,
       logo,
       address(_executor),

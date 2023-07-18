@@ -284,7 +284,9 @@ contract Initialize is LlamaPolicyTest {
   function test_SetsAndInitializesPolicyMetadata() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(localPolicy, 1);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(color, logo), address(localPolicy)
+    );
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
@@ -1401,7 +1403,9 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_EmitsPolicyMetadataSetEvent() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
     vm.prank(address(mpExecutor));
     vm.expectEmit();
     emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(newColor, newLogo));
@@ -1410,7 +1414,9 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_DeploysAndSetsMetadataClone() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
     assertEq(address(llamaPolicyMetadata).code.length, 0);
 
     vm.prank(address(mpExecutor));
@@ -1422,7 +1428,9 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_InitializationSetsColor() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();
@@ -1434,7 +1442,9 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_InitializationSetsLogo() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();

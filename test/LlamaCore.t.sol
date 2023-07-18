@@ -339,7 +339,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
