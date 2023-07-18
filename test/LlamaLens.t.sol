@@ -9,24 +9,26 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
-contract LlamaLensTestSetup is LlamaTestSetup {}
+contract LlamaLensTestSetup is LlamaTestSetup {
+  address FORGE_DEFAULT_SCRIPT_DEPLOYER = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
+}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaCoreAddress("Root Llama"));
+    address expected = address(lens.computeLlamaCoreAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
     assertEq(expected, address(rootCore));
 
-    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama"));
+    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", address(rootExecutor)));
     assertEq(expected, address(mpCore));
   }
 }
 
 contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {
-    address expected = address(lens.computeLlamaPolicyAddress("Root Llama"));
+    address expected = address(lens.computeLlamaPolicyAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
     assertEq(expected, address(rootPolicy));
 
-    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama"));
+    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama", address(rootExecutor)));
     assertEq(expected, address(mpPolicy));
   }
 }
@@ -88,13 +90,13 @@ contract ComputeLlamaExecutorAddress is LlamaLensTestSetup {
     address expected = address(lens.computeLlamaExecutorAddress(address(rootCore)));
     assertEq(expected, address(rootExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Root Llama"));
+    expected = address(lens.computeLlamaExecutorAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
     assertEq(expected, address(rootExecutor));
 
     expected = address(lens.computeLlamaExecutorAddress(address(mpCore)));
     assertEq(expected, address(mpExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama"));
+    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama", address(rootExecutor)));
     assertEq(expected, address(mpExecutor));
   }
 }
