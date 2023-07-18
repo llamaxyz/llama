@@ -25,7 +25,7 @@ contract DeployLlama is Script {
   LlamaCore coreLogic;
   LlamaRelativeHolderQuorum relativeHolderQuorumLogic;
   LlamaRelativeQuantityQuorum relativeQuantityQuorumLogic;
-  LlamaRelativeUniqueHolderQuorum relativeUniqueHolderQuorum;
+  LlamaRelativeUniqueHolderQuorum relativeUniqueHolderQuorumLogic;
   LlamaAbsolutePeerReview absolutePeerReviewLogic;
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
@@ -50,15 +50,15 @@ contract DeployLlama is Script {
     );
 
     vm.broadcast();
-    relativeQuantityQuorumLogic = new LlamaRelativeHolderQuorum();
+    relativeQuantityQuorumLogic = new LlamaRelativeQuantityQuorum();
     DeployUtils.print(
       string.concat("  LlamaRelativeQuantityQuorumLogic:", vm.toString(address(relativeQuantityQuorumLogic)))
     );
 
     vm.broadcast();
-    relativeUniqueHolderQuorum = new LlamaRelativeHolderQuorum();
+    relativeUniqueHolderQuorumLogic = new LlamaRelativeUniqueHolderQuorum();
     DeployUtils.print(
-      string.concat("  LlamaRelativeUniqueHolderQuorum:", vm.toString(address(relativeUniqueHolderQuorum)))
+      string.concat("  LlamaRelativeUniqueHolderQuorumLogic:", vm.toString(address(relativeUniqueHolderQuorumLogic)))
     );
 
     vm.broadcast();
