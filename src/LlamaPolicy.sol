@@ -373,13 +373,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return llamaPolicyMetadata.tokenURI(name, tokenId);
+    return llamaPolicyMetadata.getTokenURI(name, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return llamaPolicyMetadata.contractURI(name);
+    return llamaPolicyMetadata.getContractURI(name);
   }
 
   // -------- ERC-721 Methods --------
@@ -563,7 +563,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     internal
   {
     llamaPolicyMetadata =
-      ILlamaPolicyMetadata(Clones.cloneDeterministic(address(_llamaPolicyMetadataLogic), keccak256(abi.encode(config))));
+      ILlamaPolicyMetadata(Clones.cloneDeterministic(address(_llamaPolicyMetadataLogic), keccak256(config)));
     llamaPolicyMetadata.initialize(config);
     emit PolicyMetadataSet(_llamaPolicyMetadataLogic, llamaPolicyMetadata, config);
   }

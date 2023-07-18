@@ -1227,7 +1227,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     uint256 tokenId = uint256(uint160(policyholder));
 
     string memory name = "Mock Protocol Llama";
-    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.tokenURI(name, tokenId));
+    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.getTokenURI(name, tokenId));
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
@@ -1334,7 +1334,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
 
   function test_contractURIProxiesCorrectly() external {
     string memory name = "Mock Protocol Llama";
-    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.contractURI(name));
+    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.getContractURI(name));
   }
 }
 
