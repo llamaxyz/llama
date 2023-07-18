@@ -16,11 +16,8 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
   // ======== Events ========
   // ========================
 
-  /// @dev Emitted when the SVG color code of a Llama instance is set.
-  event PolicyColorSet(string color);
-
-  /// @dev Emitted when the SVG logo of a Llama instance is set.
-  event PolicyLogoSet(string logo);
+  /// @dev Emitted when the metadata is set during initialization.
+  event PolicyMetadataSet(string color, string logo);
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -47,8 +44,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     color = _color;
     logo = _logo;
 
-    emit PolicyColorSet(color);
-    emit PolicyLogoSet(logo);
+    emit PolicyMetadataSet(color, logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.

@@ -33,8 +33,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
     ILlamaPolicyMetadata indexed llamaPolicyMetadata,
     bytes config
   );
-  event PolicyColorSet(string color);
-  event PolicyLogoSet(string logo);
+  event PolicyMetadataSet(string color, string logo);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -1434,7 +1433,7 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit PolicyColorSet(newColor);
+    emit PolicyMetadataSet(newColor, newLogo);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newColor, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
@@ -1448,7 +1447,7 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit PolicyLogoSet(newLogo);
+    emit PolicyMetadataSet(newColor, newLogo);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newLogo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());
