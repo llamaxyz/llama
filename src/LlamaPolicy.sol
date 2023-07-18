@@ -98,9 +98,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @dev Emitted when a new Llama policy metadata contract is set.
   event PolicyMetadataSet(
-    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
-    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
-    bytes config
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
 
   // =================================================
@@ -565,7 +563,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     llamaPolicyMetadata =
       ILlamaPolicyMetadata(Clones.cloneDeterministic(address(_llamaPolicyMetadataLogic), keccak256(config)));
     llamaPolicyMetadata.initialize(config);
-    emit PolicyMetadataSet(_llamaPolicyMetadataLogic, llamaPolicyMetadata, config);
+    emit PolicyMetadataSet(llamaPolicyMetadata, _llamaPolicyMetadataLogic, config);
   }
 
   /// @dev Returns the token ID for a `policyholder`.

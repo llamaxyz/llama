@@ -44,9 +44,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
   );
 
   event PolicyMetadataSet(
-    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
-    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
-    bytes config
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 }
@@ -92,7 +90,7 @@ contract Constructor is LlamaFactoryTest {
     // remove the root instance.
     ILlamaPolicyMetadata policyMetadata = ILlamaPolicyMetadata(0x6A8C2B425EAA75903112Afafd93724f2d0406d0a);
     vm.expectEmit();
-    emit PolicyMetadataSet(policyMetadataLogic, policyMetadata, abi.encode(rootColor, rootLogo));
+    emit PolicyMetadataSet(policyMetadata, policyMetadataLogic, abi.encode(rootColor, rootLogo));
     deployLlamaFactory();
   }
 
@@ -142,6 +140,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(address(caller));
     deployLlama();
     assertGt(address(computedLlama).code.length, 0);
+    assertEq("NewProject", computedLlama.name());
   }
 
   function test_RevertIf_InstanceDeployedWithSameNameAndCaller(string memory name) public {

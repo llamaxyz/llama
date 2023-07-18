@@ -81,13 +81,19 @@ contract LlamaLens {
   /// @param deployer The deployer of this Llama instance.
   /// @return The computed address of the `LlamaPolicy` contract.
   function computeLlamaPolicyAddress(string memory name, address deployer) external view returns (LlamaPolicy) {
-    return _computeLlamaPolicyAddress(name, deployer);
+    LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
+    address _computedAddress = Clones.predictDeterministicAddress(
+      LLAMA_POLICY_LOGIC,
+      keccak256(abi.encodePacked(name, deployer)), // salt
+      address(llamaCore) // deployer
+    );
+    return LlamaPolicy(_computedAddress);
   }
 
   /// @notice Computes the address of a Llama policy metadata contract.
   /// @param llamaPolicyMetadataLogic The Llama policy metadata logic contract.
   /// @param metadataConfig The initialization configuration for the new metadata contract.
-  /// @param llamaPolicy The LlamaPolicy that deploys this metadata contract.
+  /// @param llamaPolicy The `LlamaPolicy` that deploys this metadata contract.
   /// @return The computed address of the `LlamaPolicyMetadata` contract.
   function computeLlamaPolicyMetadataAddress(
     address llamaPolicyMetadataLogic,
@@ -150,17 +156,6 @@ contract LlamaLens {
       LLAMA_FACTORY // deployer
     );
     return LlamaCore(_computedAddress);
-  }
-
-  /// @dev Computes the address of a Llama core contract from the name and deployer of the Llama instance.
-  function _computeLlamaPolicyAddress(string memory name, address deployer) internal view returns (LlamaPolicy) {
-    LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
-    address _computedAddress = Clones.predictDeterministicAddress(
-      LLAMA_POLICY_LOGIC,
-      keccak256(abi.encodePacked(name, deployer)), // salt
-      address(llamaCore) // deployer
-    );
-    return LlamaPolicy(_computedAddress);
   }
 
   /// @dev Adapted from the Forge Standard Library

@@ -12,13 +12,6 @@ import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
-  // ========================
-  // ======== Events ========
-  // ========================
-
-  /// @dev Emitted when the metadata is set during initialization.
-  event PolicyMetadataSet(string color, string logo);
-
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -43,8 +36,6 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
     color = _color;
     logo = _logo;
-
-    emit PolicyMetadataSet(color, logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.

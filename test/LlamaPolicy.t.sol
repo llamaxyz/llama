@@ -29,11 +29,8 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
   event PolicyMetadataSet(
-    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
-    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
-    bytes config
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
-  event PolicyMetadataSet(string color, string logo);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -295,7 +292,7 @@ contract Initialize is LlamaPolicyTest {
     rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
     vm.expectEmit();
-    emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(color, logo));
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(color, logo));
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "local policy",
@@ -1407,7 +1404,7 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
     );
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(newColor, newLogo));
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
   }
 
@@ -1432,8 +1429,6 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
     );
 
     vm.prank(address(mpExecutor));
-    vm.expectEmit();
-    emit PolicyMetadataSet(newColor, newLogo);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newColor, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
@@ -1446,8 +1441,6 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
     );
 
     vm.prank(address(mpExecutor));
-    vm.expectEmit();
-    emit PolicyMetadataSet(newColor, newLogo);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newLogo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());
