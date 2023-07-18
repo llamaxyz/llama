@@ -143,7 +143,7 @@ contract Deploy is LlamaFactoryTest {
     assertGt(address(computedLlama).code.length, 0);
   }
 
-  function test_RevertIf_InstanceDeployedWithSameName(string memory name) public {
+  function test_RevertIf_InstanceDeployedWithSameNameAndCaller(string memory name) public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
