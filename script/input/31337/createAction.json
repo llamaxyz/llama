@@ -1,7 +1,7 @@
 {
   "comment": "These addresses and IDs are what you get when you run the DeployLlama script test. The initialRoleDescriptions are expected to match those in the DeployLlama script.",
   "factory": "0xDEb1E9a6Be7Baf84208BB6E10aC9F9bbE1D70809",
-  "rootLlamaActionCreationStrategy": "0xb715e82650647764eF43D6ed5329a844f4830D45",
+  "rootLlamaActionCreationStrategy": "0x7903f875Fca5fb9749C63887CF08944782f5266F",
   "rootLlamaActionCreatorRole": 1,
   "newLlamaName": "Mock Protocol Llama",
   "newLlamaColor": "#FF0420",

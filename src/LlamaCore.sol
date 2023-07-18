@@ -262,7 +262,9 @@ contract LlamaCore is Initializable {
     // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
-    policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name))));
+    policy = LlamaPolicy(
+      Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
+    );
     // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
       Clones.predictDeterministicAddress(
@@ -271,6 +273,7 @@ contract LlamaCore is Initializable {
     );
     bytes32 bootstrapPermissionId =
       keccak256(abi.encode(PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy)));
+
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,
