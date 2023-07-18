@@ -122,11 +122,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Returns `true` if the role can create actions with the given permission ID.
-  mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
+  mapping(uint8 role => mapping(bytes32 permissionId => bool hasPermission)) public canCreateAction;
 
-  /// @notice The total supply of a given role.
-  /// @dev At a given timestamp, the total supply of a role must equal the sum of the quantity of
-  /// the role for each token ID that holds the role.
+  /// @notice The supply values for a given role.
+  /// @dev RoleSupply consists of `numberOfHolders` and `totalQuantity`. These supplies are used by different strategy
+  /// types to calculate quorums.
   mapping(uint8 role => RoleSupply) public roleSupply;
 
   /// @notice The highest role ID that has been initialized.

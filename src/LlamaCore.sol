@@ -191,7 +191,7 @@ contract LlamaCore is Initializable {
   /// @dev Making this `public` results in stack too deep with no optimizer, but this data can be
   /// accessed with the `getAction` function so this is ok. We want the contracts to compile
   /// without the optimizer so `forge coverage` can be used.
-  mapping(uint256 => Action) internal actions;
+  mapping(uint256 actionId => Action) internal actions;
 
   /// @notice The contract that executes actions for this Llama instance.
   LlamaExecutor public executor;
@@ -211,30 +211,30 @@ contract LlamaCore is Initializable {
   uint256 public actionsCount;
 
   /// @notice Mapping of actionIds to policyholders to approvals.
-  mapping(uint256 => mapping(address => bool)) public approvals;
+  mapping(uint256 actionId => mapping(address policyholder => bool hasApproved)) public approvals;
 
   /// @notice Mapping of actionIds to policyholders to disapprovals.
-  mapping(uint256 => mapping(address => bool)) public disapprovals;
+  mapping(uint256 actionId => mapping(address policyholder => bool hasDisapproved)) public disapprovals;
 
   /// @notice Mapping of all deployed strategies and their current authorizaton status.
-  mapping(ILlamaStrategy => StrategyStatus) public strategies;
+  mapping(ILlamaStrategy strategy => StrategyStatus authorizationStatus) public strategies;
 
   /// @notice Mapping of all authorized scripts.
-  mapping(address => bool) public authorizedScripts;
+  mapping(address script => bool isAuthorized) public authorizedScripts;
 
   /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (`createAction`,
   /// `castApproval` and `castDisapproval`) signed by the policyholder.
-  mapping(address => mapping(bytes4 => uint256)) public nonces;
+  mapping(address policyholder => mapping(bytes4 selector => uint256 currentNonce)) public nonces;
 
   /// @notice Mapping of target to selector to actionGuard address.
-  mapping(address target => mapping(bytes4 selector => ILlamaActionGuard)) public actionGuard;
+  mapping(address target => mapping(bytes4 selector => ILlamaActionGuard guard)) public actionGuard;
 
   /// @notice Mapping of all authorized Llama account implementation (logic) contracts.
-  mapping(ILlamaAccount => bool) public authorizedAccountLogics;
+  mapping(ILlamaAccount accountLogic => bool isAuthorized) public authorizedAccountLogics;
 
   /// @notice Mapping of all authorized Llama strategy implementation (logic) contracts.
-  mapping(ILlamaStrategy => bool) public authorizedStrategyLogics;
+  mapping(ILlamaStrategy strategyLogic => bool isAuthorized) public authorizedStrategyLogics;
 
   // ======================================================
   // ======== Contract Creation and Initialization ========

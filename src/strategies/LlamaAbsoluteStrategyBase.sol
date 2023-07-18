@@ -128,10 +128,10 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   uint8 public disapprovalRole;
 
   /// @notice Mapping of roles that can force an action to be approved.
-  mapping(uint8 => bool) public forceApprovalRole;
+  mapping(uint8 role => bool isForceApproval) public forceApprovalRole;
 
   /// @notice Mapping of roles that can force an action to be disapproved.
-  mapping(uint8 => bool) public forceDisapprovalRole;
+  mapping(uint8 role => bool isForceDisapproval) public forceDisapprovalRole;
 
   // =============================
   // ======== Constructor ========

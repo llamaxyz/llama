@@ -133,16 +133,16 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
   uint8 public disapprovalRole;
 
   /// @notice Mapping of roles that can force an action to be approved.
-  mapping(uint8 => bool) public forceApprovalRole;
+  mapping(uint8 role => bool isForceApproval) public forceApprovalRole;
 
   /// @notice Mapping of roles that can force an action to be disapproved.
-  mapping(uint8 => bool) public forceDisapprovalRole;
+  mapping(uint8 role => bool isForceDisapproval) public forceDisapprovalRole;
 
   /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
-  mapping(uint256 => uint256) public actionApprovalSupply;
+  mapping(uint256 actionId => uint256 approvalRolePolicySupply) public actionApprovalSupply;
 
   /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
-  mapping(uint256 => uint256) public actionDisapprovalSupply;
+  mapping(uint256 actionId => uint256 disapprovalRolePolicySupply) public actionDisapprovalSupply;
 
   // =============================
   // ======== Constructor ========
