@@ -14,10 +14,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Relative Strategy Base
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice This is a base contract for Llama strategies to inherit which has the following properties:
+/// @notice This is a base contract for relative Llama strategies to inherit which has the following properties:
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
-///   - The approval and disapproval role holder supplies are saved at action creation time and used to calculate that
-///     action's quorum.
+///   - Quorum is calculated relatively as a percentage of total supply.
 abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // =========================
   // ======== Structs ========
