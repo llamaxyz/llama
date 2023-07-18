@@ -50,18 +50,6 @@ contract DeployLlama is Script {
     );
 
     vm.broadcast();
-    relativeQuantityQuorumLogic = new LlamaRelativeQuantityQuorum();
-    DeployUtils.print(
-      string.concat("  LlamaRelativeQuantityQuorumLogic:", vm.toString(address(relativeQuantityQuorumLogic)))
-    );
-
-    vm.broadcast();
-    relativeUniqueHolderQuorumLogic = new LlamaRelativeUniqueHolderQuorum();
-    DeployUtils.print(
-      string.concat("  LlamaRelativeUniqueHolderQuorumLogic:", vm.toString(address(relativeUniqueHolderQuorumLogic)))
-    );
-
-    vm.broadcast();
     absolutePeerReviewLogic = new LlamaAbsolutePeerReview();
     DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
 
@@ -109,5 +97,17 @@ contract DeployLlama is Script {
     vm.broadcast();
     absoluteQuorumLogic = new LlamaAbsoluteQuorum();
     DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
+
+    vm.broadcast();
+    relativeQuantityQuorumLogic = new LlamaRelativeQuantityQuorum();
+    DeployUtils.print(
+      string.concat("  LlamaRelativeQuantityQuorumLogic:", vm.toString(address(relativeQuantityQuorumLogic)))
+    );
+
+    vm.broadcast();
+    relativeUniqueHolderQuorumLogic = new LlamaRelativeUniqueHolderQuorum();
+    DeployUtils.print(
+      string.concat("  LlamaRelativeUniqueHolderQuorumLogic:", vm.toString(address(relativeUniqueHolderQuorumLogic)))
+    );
   }
 }
