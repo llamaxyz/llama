@@ -668,6 +668,9 @@ contract LlamaCore is Initializable {
     bool alreadyCast = isApproval ? approvals[actionInfo.id][policyholder] : disapprovals[actionInfo.id][policyholder];
     if (alreadyCast) revert DuplicateCast();
 
+    // We look up data at `action.creationTime - 1` to avoid race conditions: A user's role balances
+    // can change after action creation in the same block, so we can't actually know what the
+    // correct values are at the time of action creation.
     uint256 checkpointTime = action.creationTime - 1;
     bool hasRole = policy.hasRole(policyholder, role, checkpointTime);
     if (!hasRole) revert InvalidPolicyholder();
