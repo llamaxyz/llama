@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlama} from "script/DeployLlama.s.sol";
 import {CreateAction} from "script/CreateAction.s.sol";
@@ -120,7 +120,7 @@ contract Run is CreateActionTest {
     assertEq(factory.llamaCount(), 2);
 
     // There are three strategies we expect to have been deployed.
-    LlamaRelativeQuorum[] memory strategiesAuthorized = new LlamaRelativeQuorum[](3);
+    LlamaRelativeHolderQuorum[] memory strategiesAuthorized = new LlamaRelativeHolderQuorum[](3);
     uint8 strategiesCount;
     bytes32 strategiesAuthorizedSig = keccak256("StrategyCreated(address,address,bytes)");
 
@@ -156,7 +156,7 @@ contract Run is CreateActionTest {
         //   bytes initializationData
         // );
         (address strategy,) = abi.decode(_event.data, (address, bytes));
-        strategiesAuthorized[strategiesCount++] = LlamaRelativeQuorum(strategy);
+        strategiesAuthorized[strategiesCount++] = LlamaRelativeHolderQuorum(strategy);
       }
       if (eventSig == accountCreatedSig) {
         // event AccountCreated(
@@ -175,7 +175,7 @@ contract Run is CreateActionTest {
     assertEq(address(llamaInstance.factory()), address(factory));
     assertFalse(address(llamaInstance) == address(rootLlama));
 
-    LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
+    LlamaRelativeHolderQuorum firstStrategy = strategiesAuthorized[0];
     assertEqStrategyStatus(llamaInstance, firstStrategy, true, true);
     assertEq(firstStrategy.approvalPeriod(), 172_800);
     assertEq(firstStrategy.approvalRole(), 1);
@@ -188,7 +188,7 @@ contract Run is CreateActionTest {
     assertEq(firstStrategy.forceApprovalRole(1), false);
     assertEq(firstStrategy.forceDisapprovalRole(1), false);
 
-    LlamaRelativeQuorum secondStrategy = strategiesAuthorized[1];
+    LlamaRelativeHolderQuorum secondStrategy = strategiesAuthorized[1];
     assertEqStrategyStatus(llamaInstance, secondStrategy, true, true);
     assertEq(secondStrategy.approvalPeriod(), 172_800);
     assertEq(secondStrategy.approvalRole(), 2);
@@ -201,7 +201,7 @@ contract Run is CreateActionTest {
     assertEq(secondStrategy.forceApprovalRole(1), false);
     assertEq(secondStrategy.forceDisapprovalRole(1), false);
 
-    LlamaRelativeQuorum thirdStrategy = strategiesAuthorized[2];
+    LlamaRelativeHolderQuorum thirdStrategy = strategiesAuthorized[2];
     assertEqStrategyStatus(llamaInstance, thirdStrategy, true, true);
     assertEq(thirdStrategy.approvalPeriod(), 172_800);
     assertEq(thirdStrategy.approvalRole(), 2);

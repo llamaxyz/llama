@@ -14,14 +14,14 @@ import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 import {LlamaRelativeStrategyBaseTest} from "test/strategies/LlamaRelativeStrategyBase.t.sol";
 
-contract LlamaRelativeQuorumTest is LlamaRelativeStrategyBaseTest {
+contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
   function deployRelativeQuorumAndSetRole(
     uint8 _role,
     bytes32 _permission,
@@ -131,7 +131,7 @@ contract LlamaRelativeQuorumTest is LlamaRelativeStrategyBaseTest {
   }
 }
 
-contract IsActionApproved is LlamaRelativeQuorumTest {
+contract IsActionApproved is LlamaRelativeHolderQuorumTest {
   function testFuzz_ReturnsTrueForPassedActions(uint256 _actionApprovals, uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _actionApprovals =
@@ -174,7 +174,7 @@ contract IsActionApproved is LlamaRelativeQuorumTest {
   }
 }
 
-contract GetApprovalQuantityAt is LlamaRelativeQuorumTest {
+contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
@@ -313,7 +313,7 @@ contract GetApprovalQuantityAt is LlamaRelativeQuorumTest {
   }
 }
 
-contract GetDisapprovalQuantityAt is LlamaRelativeQuorumTest {
+contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     bytes32 _permission,
@@ -453,13 +453,13 @@ contract GetDisapprovalQuantityAt is LlamaRelativeQuorumTest {
   }
 }
 
-contract RelativeQuorumHarness is LlamaRelativeQuorum {
+contract RelativeQuorumHarness is LlamaRelativeHolderQuorum {
   function exposed_getMinimumAmountNeeded(uint256 supply, uint256 minPct) external pure returns (uint256) {
     return _getMinimumAmountNeeded(supply, minPct);
   }
 }
 
-contract ValidateActionCreation is LlamaRelativeQuorumTest {
+contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 
@@ -469,8 +469,8 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), _numberOfPolicies);
-    assertEq(LlamaRelativeQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), _numberOfPolicies);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), _numberOfPolicies);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), _numberOfPolicies);
   }
 
   function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
@@ -480,7 +480,7 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.expectRevert(LlamaRelativeStrategyBase.OnlyLlamaCore.selector);
-    LlamaRelativeQuorum(address(testStrategy)).validateActionCreation(actionInfo);
+    LlamaRelativeHolderQuorum(address(testStrategy)).validateActionCreation(actionInfo);
   }
 
   function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
@@ -498,12 +498,12 @@ contract ValidateActionCreation is LlamaRelativeQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
-    assertEq(LlamaRelativeQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
   }
 }
 
-contract ValidateActionCancelation is LlamaRelativeQuorumTest {
+contract ValidateActionCancelation is LlamaRelativeHolderQuorumTest {
   function testFuzz_RevertIf_ActionNotFullyDisapprovedAndCallerIsNotCreator(
     uint256 _actionDisapprovals,
     uint256 _numberOfPolicies

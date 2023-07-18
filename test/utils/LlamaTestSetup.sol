@@ -20,7 +20,7 @@ import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} 
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -370,7 +370,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
   }
 
-  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeQuorum converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeHolderQuorum converted) {
     assembly {
       converted := strategy
     }

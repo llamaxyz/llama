@@ -120,7 +120,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
     excludeArtifact("LlamaCore");
     excludeArtifact("LlamaExecutor");
     excludeArtifact("LlamaPolicy");
-    excludeArtifact("LlamaRelativeQuorum");
+    excludeArtifact("LlamaRelativeHolderQuorum");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.llamaFactory_deploy.selector;

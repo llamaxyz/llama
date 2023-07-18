@@ -23,7 +23,7 @@ import {ActionState} from "src/lib/Enums.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -135,7 +135,7 @@ contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
   }
 
   function _deployAndAuthorizeAdditionalStrategyLogic() internal returns (ILlamaStrategy) {
-    LlamaRelativeQuorum additionalStrategyLogic = new LlamaRelativeQuorum();
+    LlamaRelativeHolderQuorum additionalStrategyLogic = new LlamaRelativeHolderQuorum();
     vm.prank(address(mpExecutor));
     mpCore.setStrategyLogicAuthorization(additionalStrategyLogic, true);
     return additionalStrategyLogic;
@@ -1750,7 +1750,7 @@ contract CastDisapproval is LlamaCoreTest {
   function test_RevertIf_CastAfterMinExecutionTime(uint256 timeAfterExecutionTime) public {
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
     timeAfterExecutionTime =
-      bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeQuorum(address(actionInfo.strategy)).expirationPeriod()));
+      bound(timeAfterExecutionTime, 0, uint256(LlamaRelativeHolderQuorum(address(actionInfo.strategy)).expirationPeriod()));
     vm.prank(disapproverDave);
     mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 

@@ -231,7 +231,7 @@ library DeployUtils {
     if (bootstrapStrategy.approvalRole == BOOTSTRAP_ROLE) {
       // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
       // minimum number of role holders to pass a vote. The calculation here MUST match the one
-      // in the LlamaRelativeQuorum's `_getMinimumAmountNeeded` method. This check should never fail
+      // in the LlamaRelativeHolderQuorum's `_getMinimumAmountNeeded` method. This check should never fail
       // for relative strategies, but it's left in as a reminder that it needs to be checked for
       // absolute strategies.
       uint256 minPct = bootstrapStrategy.minApprovalPct;

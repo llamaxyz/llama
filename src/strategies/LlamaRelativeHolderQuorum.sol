@@ -14,7 +14,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 
-/// @title Llama Relative Quorum Strategy
+/// @title Llama Relative Holder Quorum Strategy
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is a Llama strategy which has the following properties:
 ///   - Approval/disapproval thresholds are specified as percentages of total supply.
@@ -22,7 +22,7 @@ import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBas
 ///   - The approval and disapproval role holder supplies are saved at action creation time and used to calculate that
 ///     action's quorum.
 ///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
-contract LlamaRelativeQuorum is LlamaRelativeStrategyBase {
+contract LlamaRelativeHolderQuorum is LlamaRelativeStrategyBase {
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external override {
     if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();

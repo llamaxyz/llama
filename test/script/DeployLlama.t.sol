@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 
 contract DeployLlamaTest is Test, DeployLlama {
   function setUp() public virtual {}
@@ -225,7 +225,7 @@ contract Run is DeployLlamaTest {
     );
   }
 
-  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeQuorum converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeHolderQuorum converted) {
     assembly {
       converted := strategy
     }
