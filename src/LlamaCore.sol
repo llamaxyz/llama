@@ -251,20 +251,20 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
-  /// @param config The struct that contains the configuration for this Llama instance.
+  /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
+  /// the parameters
   function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
     name = config.name;
     // Deploy Executor.
     executor = new LlamaExecutor();
 
-    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootsrap Role) given permission to change role
+    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
     policy = LlamaPolicy(
       Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
     );
-
-    // Calcuated from the first strategy configuration passed in.
+    // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
       Clones.predictDeterministicAddress(
         address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)

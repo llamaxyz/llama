@@ -13,7 +13,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {
   LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
 } from "src/lib/Structs.sol";
@@ -47,7 +47,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
     return RoleDescription.wrap(bytes32(bytes(str)));
   }
 
-  function deployLlamaWithQuotesinName() internal returns (LlamaCore) {
+  function deployLlamaWithQuotesInName() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -780,8 +780,8 @@ contract SetApprovalForAll is LlamaPolicyTest {
 // ====================================
 // ======== Permission Getters ========
 // ====================================
-// The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
-// that's added on top of that.
+// The actual checkpointing logic is tested in `RoleCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
+// so here we just test the logic that's added on top of that.
 
 contract GetQuantity is LlamaPolicyTest {
   function test_ReturnsZeroIfPolicyholderDoesNotHoldRole() public {
@@ -942,9 +942,10 @@ contract RoleBalanceCheckpointTest is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
   function test_ReturnsBalanceCheckpoint() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
-    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
+    RoleCheckpoints.History memory rbCheckpoint2 =
+      mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
     assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
@@ -971,8 +972,8 @@ contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
 }
 
 contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
-  function assertEqSlice(Checkpoints.History memory full, uint256 start, uint256 end) internal {
-    Checkpoints.History memory slice =
+  function assertEqSlice(RoleCheckpoints.History memory full, uint256 start, uint256 end) internal {
+    RoleCheckpoints.History memory slice =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), start, end);
 
     assertEq(slice._checkpoints.length, end - start);
@@ -997,7 +998,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_ReturnsSlicesOfCheckpointsArray() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    RoleCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -1020,25 +1021,12 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
 
 contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   function test_ReturnsTheCorrectLength() public {
-    Checkpoints.History memory checkpoints =
+    RoleCheckpoints.History memory checkpoints =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
     uint256 length = mpPolicy.roleBalanceCheckpointsLength(arbitraryPolicyholder, uint8(Roles.TestRole1));
     assertEq(length, checkpoints._checkpoints.length);
     assertEq(length, 3);
   }
-
-  // A fuzz test like this will result in lots of zero lengths and be mostly useless for now which
-  // is why it's commented out. Once https://github.com/foundry-rs/foundry/issues/4967 is resolved
-  // we can uncomment the test and use the below config to leverage a higher dictionary weight.
-  // Alternatively we could hardcode all known users and roles and loop through all of them, but
-  // this is a pretty simple method being tested, so in the interest of faster tests this is
-  // arguably overkill and therefore left commented out for now.
-  // /// forge-config: default.fuzz.dictionary_weight = 99
-  // function testFuzz_ReturnsTheCorrectLength(address policyholder, uint8 role) public {
-  //   Checkpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
-  //   uint256 length = mpPolicy.roleBalanceCheckpointsLength(policyholder, role);
-  //   assertEq(length, checkpoints._checkpoints.length);
-  // }
 }
 
 contract HasRole is LlamaPolicyTest {
@@ -1241,7 +1229,7 @@ contract PolicyMetadata is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
-    (LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaCore deployedCore = deployLlamaWithQuotesInName();
     LlamaExecutor deployedExecutor = deployedCore.executor();
     LlamaPolicy deployedPolicy = deployedCore.policy();
     string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
@@ -1326,7 +1314,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    (LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 

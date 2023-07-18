@@ -8,34 +8,38 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
  * @dev This library defines the `History` struct, for checkpointing values as they change at different points in
  * time, and later looking up past values by block timestamp.
  *
- * To create a history of checkpoints define a variable type `Checkpoints.History` in your contract, and store a new
- * checkpoint for the current transaction timestamp using the {push} function.
+ * To create a history of checkpoints define a variable type `SupplyCheckpoints.History` in your contract, and store a
+ * new checkpoint for the current transaction timestamp using the {push} function.
  *
  * @dev This was created by modifying then running the OpenZeppelin `Checkpoints.js` script, which generated a version
  * of this library that uses a 64 bit `timestamp` and 96 bit `quantity` field in the `Checkpoint` struct. The struct
- * was then modified to add a 64 bit `expiration` field. For simplicity, safe cast and math methods were inlined from
- * the OpenZeppelin versions at the same commit. We disable forge-fmt for this file to simplify diffing against the
+ * was then modified to work with the below `Checkpoint` struct. For simplicity, safe cast and math methods were inlined
+ * from the OpenZeppelin versions at the same commit. We disable forge-fmt for this file to simplify diffing against the
  * original OpenZeppelin version: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/contracts/utils/Checkpoints.sol
  */
-library Checkpoints {
+library SupplyCheckpoints {
     struct History {
         Checkpoint[] _checkpoints;
     }
 
     struct Checkpoint {
         uint64 timestamp;
-        uint64 expiration;
-        uint96 quantity;
+        uint96 numberOfHolders;
+        uint96 totalQuantity;
     }
 
     /**
-     * @dev Returns the quantity at a given block timestamp. If a checkpoint is not available at that time, the closest
+     * @dev Returns the supply quantities at a given block timestamp. If a checkpoint is not available at that time, the closest
      * one before it is returned, or zero otherwise. Similar to {upperLookup} but optimized for the case when the
      * searched checkpoint is probably "recent", defined as being among the last sqrt(N) checkpoints where N is the
      * timestamp of checkpoints.
      */
-    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp) internal view returns (uint96) {
-        require(timestamp < block.timestamp, "Checkpoints: timestamp is not in the past");
+    function getAtProbablyRecentTimestamp(History storage self, uint256 timestamp)
+      internal
+      view
+      returns (uint96 numberOfHolders, uint96 totalQuantity)
+    {
+        require(timestamp < block.timestamp, "SupplyCheckpoints: timestamp is not in the past");
         uint64 _timestamp = LlamaUtils.toUint64(timestamp);
 
         uint256 len = self._checkpoints.length;
@@ -54,30 +58,30 @@ library Checkpoints {
 
         uint256 pos = _upperBinaryLookup(self._checkpoints, _timestamp, low, high);
 
-        return pos == 0 ? 0 : _unsafeAccess(self._checkpoints, pos - 1).quantity;
+        return pos == 0 ? (0, 0) : _unsafeSupplyAccess(self._checkpoints, pos - 1);
     }
 
     /**
-     * @dev Pushes a `quantity` and `expiration` onto a History so that it is stored as the checkpoint for the current
-     * `timestamp`.
+     * @dev Pushes the `numberOfHolders` and `totalQuantity` supplies onto a History so that it is stored as the
+     * checkpoint for the current `timestamp`.
      *
-     * Returns previous quantity and new quantity.
+     * For simplicity, this method does not return anything, since the return values are not needed by Llama.
      */
-    function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint96, uint96) {
-        return _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(expiration), LlamaUtils.toUint96(quantity));
+    function push(History storage self, uint256 numberOfHolders, uint256 totalQuantity) internal {
+        _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint96(numberOfHolders), LlamaUtils.toUint96(totalQuantity));
     }
 
     /**
-     * @dev Returns the quantity in the most recent checkpoint, or zero if there are no checkpoints.
+     * @dev Returns the supplies in the most recent checkpoint, or zeros if there are no checkpoints.
      */
-    function latest(History storage self) internal view returns (uint96) {
+    function latest(History storage self) internal view returns (uint96 numberOfHolders, uint96 totalQuantity) {
         uint256 pos = self._checkpoints.length;
-        return pos == 0 ? 0 : _unsafeAccess(self._checkpoints, pos - 1).quantity;
+        return pos == 0 ? (0, 0) : _unsafeSupplyAccess(self._checkpoints, pos - 1);
     }
 
     /**
      * @dev Returns whether there is a checkpoint in the structure (i.e. it is not empty), and if so the timestamp and
-     * quantity in the most recent checkpoint.
+     * supplies in the most recent checkpoint.
      */
     function latestCheckpoint(History storage self)
         internal
@@ -85,8 +89,8 @@ library Checkpoints {
         returns (
             bool exists,
             uint64 timestamp,
-            uint64 expiration,
-            uint96 quantity
+            uint96 numberOfHolders,
+            uint96 totalQuantity
         )
     {
         uint256 pos = self._checkpoints.length;
@@ -94,7 +98,7 @@ library Checkpoints {
             return (false, 0, 0, 0);
         } else {
             Checkpoint memory ckpt = _unsafeAccess(self._checkpoints, pos - 1);
-            return (true, ckpt.timestamp, ckpt.expiration, ckpt.quantity);
+            return (true, ckpt.timestamp, ckpt.numberOfHolders, ckpt.totalQuantity);
         }
     }
 
@@ -106,15 +110,17 @@ library Checkpoints {
     }
 
     /**
-     * @dev Pushes a (`timestamp`, `expiration`, `quantity`) pair into an ordered list of checkpoints, either by inserting a new
-     * checkpoint, or by updating the last one.
+     * @dev Pushes a (`timestamp`, `numberOfHolders`, `totalQuantity`) pair into an ordered list of checkpoints, either
+     * by inserting a new checkpoint, or by updating the last one.
+     *
+     * For simplicity, this method does not return anything, since the return values are not needed by Llama.
      */
     function _insert(
         Checkpoint[] storage self,
         uint64 timestamp,
-        uint64 expiration,
-        uint96 quantity
-    ) private returns (uint96, uint96) {
+        uint96 numberOfHolders,
+        uint96 totalQuantity
+    ) private {
         uint256 pos = self.length;
 
         if (pos > 0) {
@@ -122,20 +128,18 @@ library Checkpoints {
             Checkpoint memory last = _unsafeAccess(self, pos - 1);
 
             // Checkpoints timestamps must be increasing.
-            require(last.timestamp <= timestamp, "Checkpoint: invalid timestamp");
+            require(last.timestamp <= timestamp, "Supply Checkpoint: invalid timestamp");
 
             // Update or push new checkpoint
             if (last.timestamp == timestamp) {
                 Checkpoint storage ckpt = _unsafeAccess(self, pos - 1);
-                ckpt.quantity = quantity;
-                ckpt.expiration = expiration;
+                ckpt.numberOfHolders = numberOfHolders;
+                ckpt.totalQuantity = totalQuantity;
             } else {
-                self.push(Checkpoint({timestamp: timestamp, expiration: expiration, quantity: quantity}));
+                self.push(Checkpoint({timestamp: timestamp, numberOfHolders: numberOfHolders, totalQuantity: totalQuantity}));
             }
-            return (last.quantity, quantity);
         } else {
-            self.push(Checkpoint({timestamp: timestamp, expiration: expiration, quantity: quantity}));
-            return (0, quantity);
+            self.push(Checkpoint({timestamp: timestamp, numberOfHolders: numberOfHolders, totalQuantity: totalQuantity}));
         }
     }
 
@@ -196,6 +200,20 @@ library Checkpoints {
             mstore(0, self.slot)
             result.slot := add(keccak256(0, 0x20), pos)
         }
+    }
+
+    function _unsafeSupplyAccess(Checkpoint[] storage self, uint256 pos)
+        private
+        view
+        returns (uint96 numberOfHolders, uint96 totalQuantity)
+    {
+        Checkpoint storage result;
+        assembly {
+            mstore(0, self.slot)
+            result.slot := add(keccak256(0, 0x20), pos)
+        }
+        numberOfHolders = result.numberOfHolders;
+        totalQuantity = result.totalQuantity;
     }
 
     /**
