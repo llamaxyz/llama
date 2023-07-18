@@ -530,13 +530,6 @@ contract LlamaCore is Initializable {
     return actions[actionId];
   }
 
-  /// @notice Returns the timestamp of most recently created action.
-  /// @dev Used by `LlamaPolicy` to ensure policy management does not occur immediately after action
-  /// creation in the same timestamp, as this could result in invalid role supply counts being used.
-  function getLastActionTimestamp() external view returns (uint256 timestamp) {
-    return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
-  }
-
   /// @notice Get the current action state of an action by its `actionInfo` struct.
   /// @param actionInfo Data required to create an action.
   /// @return The current action state of the action.
@@ -655,17 +648,18 @@ contract LlamaCore is Initializable {
     bool alreadyCast = isApproval ? approvals[actionInfo.id][policyholder] : disapprovals[actionInfo.id][policyholder];
     if (alreadyCast) revert DuplicateCast();
 
-    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    uint256 checkpointTime = action.creationTime - 1;
+    bool hasRole = policy.hasRole(policyholder, role, checkpointTime);
     if (!hasRole) revert InvalidPolicyholder();
 
     if (isApproval) {
       actionInfo.strategy.checkIfApprovalEnabled(actionInfo, policyholder, role);
-      quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+      quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, checkpointTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
       if (block.timestamp >= action.minExecutionTime) revert CannotDisapproveAfterMinExecutionTime();
       actionInfo.strategy.checkIfDisapprovalEnabled(actionInfo, policyholder, role);
-      quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+      quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, checkpointTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     }
   }

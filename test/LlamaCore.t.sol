@@ -2550,22 +2550,6 @@ contract IncrementNonce is LlamaCoreTest {
   }
 }
 
-contract GetLastActionTimestamp is LlamaCoreTest {
-  function test_ReturnsCorrectTimestamp() public {
-    // Current block timestamp is 5, but no actions have been created yet, so we expect `t0 == 0`.
-    uint256 t0 = mpCore.getLastActionTimestamp();
-    assertEq(t0, 0);
-    assertEq(block.timestamp, 5);
-
-    // Now an action is created. It's created when the block timestamp is 5, so we expect `t1 == 5`.
-    // The `_createAction()` helper method advances the timestamp by 1 second.
-    _createAction();
-    uint256 t1 = mpCore.getLastActionTimestamp();
-    assertEq(t1, 5);
-    assertEq(block.timestamp, 6);
-  }
-}
-
 contract GetActionState is LlamaCoreTest {
   function testFuzz_RevertsOnInvalidAction(ActionInfo calldata actionInfo) public {
     vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
