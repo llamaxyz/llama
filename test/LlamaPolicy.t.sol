@@ -13,7 +13,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
+import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
 import {
   LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
 } from "src/lib/Structs.sol";
@@ -28,6 +28,9 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
+  );
   event PolicyMetadataSet(
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );

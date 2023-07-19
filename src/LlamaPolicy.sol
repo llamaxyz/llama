@@ -6,6 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
@@ -90,6 +91,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
 
   /// @dev Emitted when a new Llama policy metadata contract is set.
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
+  );
   event PolicyMetadataSet(
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
