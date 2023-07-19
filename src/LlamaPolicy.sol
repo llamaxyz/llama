@@ -92,9 +92,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event PolicyMetadataSet(
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
-  event PolicyMetadataSet(
-    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
-  );
 
   // =================================================
   // ======== Constants and Storage Variables ========
@@ -285,27 +282,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     returns (uint96 numberOfHolders)
   {
     (numberOfHolders,) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
-  function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96 numberOfHolders) {
-    (numberOfHolders,) = roleSupplyCkpts[role].latest();
-  }
-
-  /// @notice Returns the total number of role holders for given `role` at `timestamp`.
-  function getPastRoleSupplyAsNumberOfHolders(uint8 role, uint256 timestamp)
-    external
-    view
-    returns (uint96 numberOfHolders)
-  {
-    (numberOfHolders,) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-  function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
-    (, totalQuantity) = roleSupplyCkpts[role].latest();
-  }
-
-  /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
-  function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) external view returns (uint96 totalQuantity) {
-    (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
@@ -323,11 +302,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role];
-  }
-
-  /// @notice Returns all supply checkpoints for the given `role`.
-  function roleSupplyCheckpoints(uint8 role) external view returns (SupplyCheckpoints.History memory) {
-    return roleSupplyCkpts[role];
   }
 
   /// @notice Returns all supply checkpoints for the given `role`.
@@ -386,12 +360,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role]._checkpoints.length;
-  }
-
-  /// @notice Returns the number of supply checkpoints for the given `role`.
-  /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleSupplyCheckpoints`.
-  function roleSupplyCheckpointsLength(uint8 role) external view returns (uint256) {
-    return roleSupplyCkpts[role]._checkpoints.length;
   }
 
   /// @notice Returns the number of supply checkpoints for the given `role`.
@@ -549,19 +517,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     }
 
     (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[role].latest();
-    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[role].latest();
 
     if (hadRole && !willHaveRole) {
       roleSupplyCkpts[role].push(numberOfHolders - 1, totalQuantity - quantityDiff);
-      roleSupplyCkpts[role].push(numberOfHolders - 1, totalQuantity - quantityDiff);
     } else if (!hadRole && willHaveRole) {
-      roleSupplyCkpts[role].push(numberOfHolders + 1, totalQuantity + quantityDiff);
       roleSupplyCkpts[role].push(numberOfHolders + 1, totalQuantity + quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity > quantity) {
       roleSupplyCkpts[role].push(numberOfHolders, totalQuantity - quantityDiff);
-      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity - quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity < quantity) {
-      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity + quantityDiff);
       roleSupplyCkpts[role].push(numberOfHolders, totalQuantity + quantityDiff);
     } else {
       // There are two ways to reach this branch, both of which are nop-ops:
@@ -593,7 +556,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     _mint(policyholder, tokenId);
 
     (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
-    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
     unchecked {
       // Safety: Can never overflow a uint96 by incrementing.
       roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders + 1, totalQuantity + 1);
@@ -610,6 +572,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     unchecked {
       // Safety: Can never underflow, since we only burn tokens that currently exist.
       roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders - 1, totalQuantity - 1);
+    }
     }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
