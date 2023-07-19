@@ -8,12 +8,11 @@ import {DeployLlama} from "script/DeployLlama.s.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 
@@ -35,6 +34,7 @@ contract Run is DeployLlamaTest {
     assertFalse(address(factory) == address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
+    assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
   }
 
   function test_DeploysRootLlama() public {
@@ -135,14 +135,13 @@ contract Run is DeployLlamaTest {
     );
 
     LlamaPolicy rootPolicy = rootLlamaCore.policy();
-    assertEq(address(rootPolicy.factory()), address(factory));
     assertEq(rootPolicy.numRoles(), 8);
 
     address initRoleHolder = makeAddr("randomLogicAddress");
     uint8 approverRoleId = 2;
     assertEq(rootPolicy.hasRole(initRoleHolder, approverRoleId), true);
-    RoleCheckpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
-    RoleCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    PolicyholderCheckpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
 
@@ -196,15 +195,12 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysPolicyMetadata() public {
-    assertEq(address(policyMetadata), address(0));
+    assertEq(address(policyMetadataLogic), address(0));
 
     DeployLlama.run();
 
-    assertFalse(address(policyMetadata) == address(0));
-    assertFalse(
-      keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com")))
-        == keccak256(abi.encode(""))
-    );
+    assertFalse(address(policyMetadataLogic) == address(0));
+    assertFalse(keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
   }
 
   function test_DeploysLens() public {

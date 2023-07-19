@@ -142,9 +142,8 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    if (strategyConfig.minApprovals > policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)) {
-      revert InvalidMinApprovals(strategyConfig.minApprovals);
-    }
+    uint256 roleSupply = policy.getPastRoleSupplyAsQuantitySum(strategyConfig.approvalRole, block.timestamp - 1);
+    if (strategyConfig.minApprovals > roleSupply) revert InvalidMinApprovals(strategyConfig.minApprovals);
 
     minApprovals = strategyConfig.minApprovals;
     minDisapprovals = strategyConfig.minDisapprovals;

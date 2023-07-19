@@ -8,7 +8,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -30,6 +30,12 @@ contract CreateActionTest is Test, DeployLlama, CreateAction {
     // Deploy the root llama infra.
     DeployLlama.run();
     rootLlama = factory.ROOT_LLAMA_CORE();
+    mineBlock();
+  }
+
+  function mineBlock() internal {
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
   }
 }
 
@@ -94,8 +100,7 @@ contract Run is CreateActionTest {
     CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
 
     // Advance the clock so that checkpoints take effect.
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     ActionInfo memory actionInfo = getActionInfo();
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
@@ -108,7 +113,6 @@ contract Run is CreateActionTest {
     rootLlama.queueAction(actionInfo);
 
     // Advance the clock to execute the action.
-    vm.roll(block.number + 1);
     Action memory action = rootLlama.getAction(deployActionId);
     vm.warp(action.minExecutionTime + 1);
 
@@ -172,7 +176,6 @@ contract Run is CreateActionTest {
     llamaInstanceExecutor = llamaInstance.executor();
 
     // Confirm new llama instance has the desired properties.
-    assertEq(address(llamaInstance.factory()), address(factory));
     assertFalse(address(llamaInstance) == address(rootLlama));
 
     LlamaRelativeQuorum firstStrategy = strategiesAuthorized[0];
@@ -229,13 +232,13 @@ contract Run is CreateActionTest {
     );
 
     LlamaPolicy policy = llamaInstance.policy();
-    assertEq(address(policy.factory()), address(factory));
     assertEq(policy.numRoles(), 8);
 
     address initRoleHolder = makeAddr("actionCreatorAaron");
     assertEq(policy.hasRole(initRoleHolder, ACTION_CREATOR_ROLE_ID), true);
-    RoleCheckpoints.History memory balances = policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
-    RoleCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    PolicyholderCheckpoints.History memory balances =
+      policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
+    PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
   }

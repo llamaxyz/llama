@@ -1,24 +1,47 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 
 import {LibString} from "@solady/utils/LibString.sol";
 
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+
 /// @title Llama Policy Metadata
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
-contract LlamaPolicyMetadata {
+contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
+  // =================================================
+  // ======== Constants and Storage Variables ========
+  // =================================================
+
+  /// @notice Color code for SVG.
+  string public color;
+
+  /// @notice Logo for SVG.
+  string public logo;
+
+  // ======================================================
+  // ======== Contract Creation and Initialization ========
+  // ======================================================
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  /// @notice Initializes a new `LlamaPolicyMetadata` clone.
+  /// @param config Llama policy metadata initialization configuration.
+  function initialize(bytes memory config) external initializer {
+    (string memory _color, string memory _logo) = abi.decode(config, (string, string));
+    color = _color;
+    logo = _logo;
+  }
+
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  /// @param color The color of the Llama instance.
-  /// @param logo The logo of the Llama instance.
-  function tokenURI(string memory name, uint256 tokenId, string memory color, string memory logo)
-    external
-    pure
-    returns (string memory)
-  {
+  function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
 
@@ -101,7 +124,7 @@ contract LlamaPolicyMetadata {
 
   /// @notice Returns the contract URI for a given Llama policy.
   /// @param name The name of the Llama instance.
-  function contractURI(string memory name) external pure returns (string memory) {
+  function getContractURI(string memory name) external pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);

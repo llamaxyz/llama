@@ -12,8 +12,11 @@ import {LibString} from "@solady/utils/LibString.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
+import {
+  LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -25,19 +28,22 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
+  event PolicyMetadataSet(
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
+  );
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
   address arbitraryPolicyholder = makeAddr("arbitraryPolicyholder");
-  string color = "#FF0000";
+  string color = "#FF0420";
   string logo =
-    '<path fill="#fff" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
+    "<g fill=\'#FF0420\'><path d=\'M44.876 462c-3.783 0-6.883-.881-9.3-2.645-2.384-1.794-3.576-4.344-3.576-7.65 0-.692.08-1.542.238-2.55.414-2.266 1.002-4.989 1.765-8.169C36.165 432.329 41.744 428 50.742 428c2.448 0 4.641.409 6.58 1.228 1.94.787 3.466 1.983 4.579 3.589 1.112 1.574 1.669 3.463 1.669 5.666 0 .661-.08 1.496-.239 2.503a106.077 106.077 0 0 1-1.716 8.169c-1.113 4.314-3.037 7.54-5.77 9.681-2.735 2.109-6.39 3.164-10.97 3.164Zm.668-6.8c1.78 0 3.29-.52 4.53-1.558 1.272-1.039 2.178-2.629 2.718-4.77.731-2.959 1.288-5.541 1.67-7.744.127-.661.19-1.338.19-2.031 0-2.865-1.51-4.297-4.53-4.297-1.78 0-3.307.519-4.578 1.558-1.24 1.039-2.13 2.629-2.671 4.77-.572 2.109-1.145 4.691-1.717 7.744-.127.63-.19 1.291-.19 1.983 0 2.897 1.526 4.345 4.578 4.345ZM68.409 461.528c-.35 0-.62-.11-.81-.331a1.12 1.12 0 0 1-.144-.85l6.581-30.694c.064-.347.239-.63.525-.85.286-.221.588-.331.906-.331h12.685c3.529 0 6.358.724 8.489 2.172 2.161 1.449 3.242 3.542 3.242 6.281 0 .787-.095 1.605-.286 2.455-.795 3.621-2.4 6.297-4.816 8.028-2.385 1.732-5.66 2.597-9.824 2.597h-6.438l-2.194 10.342a1.35 1.35 0 0 1-.524.85c-.287.221-.588.331-.907.331H68.41Zm16.882-18.039c1.335 0 2.495-.362 3.48-1.086 1.018-.724 1.686-1.763 2.004-3.117a8.185 8.185 0 0 0 .143-1.417c0-.913-.27-1.605-.81-2.077-.541-.504-1.463-.756-2.767-.756H81.62l-1.813 8.453h5.485ZM110.628 461.528c-.349 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l5.293-24.461h-8.488c-.35 0-.62-.11-.811-.33a1.12 1.12 0 0 1-.143-.851l1.097-5.052c.063-.347.238-.63.524-.85.286-.221.588-.331.906-.331h25.657c.35 0 .62.11.811.331.127.189.19.378.19.566a.909.909 0 0 1-.047.284l-1.097 5.052c-.064.347-.239.63-.525.851-.254.22-.556.33-.906.33h-8.441l-5.293 24.461c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-6.295ZM135.88 461.528c-.35 0-.62-.11-.811-.331a1.016 1.016 0 0 1-.191-.85l6.629-30.694a1.35 1.35 0 0 1 .525-.85c.286-.221.588-.331.906-.331h6.438c.349 0 .62.11.81.331.128.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-6.438ZM154.038 461.528c-.349 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.064-.347.238-.63.524-.85.287-.221.605-.331.954-.331h5.151c.763 0 1.255.346 1.478 1.039l5.198 14.875 11.588-14.875c.159-.252.382-.488.668-.708.318-.221.7-.331 1.145-.331h5.198c.349 0 .62.11.81.331.127.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-5.771c-.349 0-.62-.11-.81-.331a1.118 1.118 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803-.286.189-.62.283-1.002.283h-2.479c-.668 0-1.129-.362-1.383-1.086l-3.386-10.011-3.815 17.85c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-5.723ZM196.132 461.528c-.35 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l6.628-30.694a1.35 1.35 0 0 1 .525-.85c.285-.221.588-.331.906-.331h6.438c.35 0 .62.11.811.331.127.189.19.378.19.566a.88.88 0 0 1-.047.284l-6.581 30.694c-.063.346-.238.63-.525.85a1.46 1.46 0 0 1-.907.331h-6.437ZM226.07 462c-2.798 0-5.198-.378-7.201-1.133-1.972-.756-3.466-1.763-4.483-3.022-.986-1.26-1.479-2.661-1.479-4.203 0-.252.033-.63.095-1.134.065-.283.193-.519.383-.708.223-.189.476-.283.763-.283h6.103c.383 0 .668.063.859.188.222.126.445.347.668.662.223.818.731 1.495 1.526 2.03.827.535 1.955.803 3.385.803 1.812 0 3.276-.283 4.388-.85 1.113-.567 1.781-1.338 2.002-2.314a2.42 2.42 0 0 0 .048-.566c0-.788-.491-1.401-1.477-1.842-.986-.473-2.798-1.023-5.437-1.653-3.084-.661-5.421-1.653-7.011-2.975-1.589-1.354-2.383-3.117-2.383-5.289 0-.755.095-1.527.286-2.314.635-2.928 2.21-5.226 4.72-6.894 2.544-1.669 5.818-2.503 9.825-2.503 2.415 0 4.563.425 6.438 1.275 1.875.85 3.321 1.936 4.34 3.258 1.049 1.291 1.572 2.582 1.572 3.873 0 .377-.015.645-.047.802-.063.284-.206.52-.429.709a.975.975 0 0 1-.715.283h-6.391c-.698 0-1.176-.268-1.429-.803-.033-.724-.415-1.338-1.146-1.841-.731-.504-1.685-.756-2.861-.756-1.399 0-2.559.252-3.482.756-.889.503-1.447 1.243-1.668 2.219a3.172 3.172 0 0 0-.049.614c0 .755.445 1.385 1.336 1.889.922.472 2.528.96 4.816 1.464 3.562.692 6.153 1.684 7.774 2.975 1.653 1.29 2.479 3.006 2.479 5.147 0 .724-.095 1.511-.286 2.361-.698 3.211-2.4 5.651-5.103 7.32-2.669 1.636-6.246 2.455-10.729 2.455ZM248.515 461.528c-.35 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.063-.347.238-.63.525-.85.286-.221.604-.331.954-.331h5.149c.763 0 1.256.346 1.479 1.039l5.199 14.875 11.587-14.875c.16-.252.382-.488.668-.708.318-.221.699-.331 1.144-.331h5.199c.35 0 .62.11.811.331.127.189.19.378.19.566a.856.856 0 0 1-.048.284l-6.58 30.694c-.065.346-.24.63-.526.85a1.456 1.456 0 0 1-.906.331h-5.769c-.351 0-.621-.11-.811-.331a1.109 1.109 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803a1.776 1.776 0 0 1-1.001.283h-2.481c-.668 0-1.128-.362-1.382-1.086l-3.386-10.011-3.815 17.85a1.36 1.36 0 0 1-.525.85c-.286.221-.588.331-.906.331h-5.723Z\'/></g>";
 
   function getRoleDescription(string memory str) internal pure returns (RoleDescription) {
     return RoleDescription.wrap(bytes32(bytes(str)));
   }
 
-  function deployLlamaWithQuotesinName() internal returns (LlamaExecutor, LlamaCore) {
+  function deployLlamaWithQuotesInName() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -45,7 +51,6 @@ contract LlamaPolicyTest is LlamaTestSetup {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    vm.prank(address(rootExecutor));
     return factory.deploy(
       '"name": "Mock Protocol Llama"',
       relativeQuorumLogic,
@@ -96,17 +101,20 @@ contract NonTransferableToken is LlamaPolicyTest {
 
 contract Constructor is LlamaPolicyTest {
   function test_RevertIf_InitializeImplementationContract() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    policyLogic.initialize(
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Mock Protocol",
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo
+      logo,
+      address(mpExecutor),
+      bytes32(0)
     );
+    policyLogic.initialize(config);
   }
 }
 
@@ -115,17 +123,20 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
-    localPolicy.initialize(
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test Policy",
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
+    localPolicy.initialize(config);
   }
 
   function test_SetsNameAndSymbol() public {
@@ -135,7 +146,7 @@ contract Initialize is LlamaPolicyTest {
 
   function testFuzz_SetsNumRolesToNumberOfRoleDescriptionsGiven(uint256 numRoles) public {
     numRoles = bound(numRoles, 1, 255); // Reverts if zero roles are given.
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](numRoles);
     for (uint8 i = 0; i < numRoles; i++) {
@@ -143,35 +154,41 @@ contract Initialize is LlamaPolicyTest {
     }
 
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    localPolicy.initialize(
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test Policy",
       roleDescriptions,
       defaultActionCreatorRoleHolder(actionCreatorAaron),
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    localPolicy.initialize(config);
     assertEq(localPolicy.numRoles(), numRoles);
   }
 
   function test_RevertIf_InitializeIsCalledTwice() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
-    vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize(
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "Test",
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    vm.expectRevert("Initializable: contract is already initialized");
+    mpPolicy.initialize(config);
   }
 
   function test_SetsRoleDescriptions() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
@@ -183,14 +200,23 @@ contract Initialize is LlamaPolicyTest {
     vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
 
-    localPolicy.initialize(
-      "local policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "local policy",
+      roleDescriptions,
+      roleHolders,
+      rolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    localPolicy.initialize(config);
   }
 
   function test_SetsRoleHolders() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Role 1");
@@ -204,16 +230,25 @@ contract Initialize is LlamaPolicyTest {
     vm.expectEmit();
     emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
 
-    localPolicy.initialize(
-      "Test Policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "Test Policy",
+      roleDescriptions,
+      roleHolders,
+      rolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    localPolicy.initialize(config);
 
     assertEq(localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
     assertEq(localPolicy.numRoles(), 1);
   }
 
   function test_SetsRolePermissions() public {
-    LlamaPolicyMetadata llamaPolicyMetadata = factory.llamaPolicyMetadata();
+    ILlamaPolicyMetadata llamaPolicyMetadata = factory.LLAMA_POLICY_METADATA_LOGIC();
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     assertFalse(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
 
@@ -227,45 +262,54 @@ contract Initialize is LlamaPolicyTest {
     vm.expectEmit();
     emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, true);
 
-    localPolicy.initialize(
-      "Test Policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "Test Policy",
+      roleDescriptions,
+      roleHolders,
+      rolePermissions,
+      llamaPolicyMetadata,
+      color,
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
+    localPolicy.initialize(config);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
-}
 
-contract SetLlama is LlamaPolicyTest {
-  function test_SetsLlamaAddress() public {
-    // This test is a no-op because this functionality is already tested in
-    // `test_SetsLlamaCoreOnThePolicy`, which also is a stronger test since it tests that
-    // method in the context it is used, instead of as a pure unit test.
-  }
+  function test_SetsAndInitializesPolicyMetadata() public {
+    LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(color, logo), address(localPolicy)
+    );
 
-  function test_RevertIf_CallerNotLlamaFactory() public {
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
-}
+    RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
+    roleDescriptions[0] = RoleDescription.wrap("Test Policy");
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
-contract FinalizeInitialization is LlamaPolicyTest {
-  function test_RevertIf_LlamaAddressIsSet() public {
-    vm.prank(address(factory));
-    vm.expectRevert(LlamaPolicy.AlreadyInitialized.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-  }
+    vm.expectEmit();
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(color, logo));
 
-  function test_RevertIf_CalledByNonFactory() public {
-    // this test ensures that factory cannot be set on the policy logic contract and finalizeImplementation is properly
-    // guarded
-    vm.startPrank(arbitraryAddress);
+    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
+      "local policy",
+      roleDescriptions,
+      roleHolders,
+      rolePermissions,
+      llamaPolicyMetadataLogic,
+      color,
+      logo,
+      address(mpExecutor),
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+    );
+    localPolicy.initialize(config);
 
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    mpPolicy.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    vm.expectRevert(LlamaPolicy.OnlyLlamaFactory.selector);
-    policyLogic.finalizeInitialization(arbitraryAddress, bytes32(0));
-
-    assertEq(address(policyLogic.factory()), address(0));
+    assertEq(address(llamaPolicyMetadata), address(localPolicy.llamaPolicyMetadata()));
+    assertEq(color, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
+    assertEq(logo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());
   }
 }
 
@@ -355,18 +399,6 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     vm.expectRevert(LlamaPolicy.AllHoldersRole.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-  }
-
-  function test_RevertIf_ActionWasCreatedAtSameTimestamp() public {
-    // First it should work, then we mock creating an action at the current timestamp, then it
-    // should revert.
-    vm.startPrank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    vm.mockCall(
-      address(mpCore), abi.encodeWithSelector(LlamaCore.getLastActionTimestamp.selector), abi.encode(block.timestamp)
-    );
-    vm.expectRevert(LlamaPolicy.ActionCreationAtSameTimestamp.selector);
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
@@ -796,7 +828,7 @@ contract SetApprovalForAll is LlamaPolicyTest {
 // ====================================
 // ======== Permission Getters ========
 // ====================================
-// The actual checkpointing logic is tested in `RoleCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
+// The actual checkpointing logic is tested in `PolicyholderCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
 // so here we just test the logic that's added on top of that.
 
 contract GetQuantity is LlamaPolicyTest {
@@ -958,9 +990,9 @@ contract RoleBalanceCheckpointTest is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
   function test_ReturnsBalanceCheckpoint() public {
-    RoleCheckpoints.History memory rbCheckpoint1 =
+    PolicyholderCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
-    RoleCheckpoints.History memory rbCheckpoint2 =
+    PolicyholderCheckpoints.History memory rbCheckpoint2 =
       mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -988,8 +1020,8 @@ contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
 }
 
 contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
-  function assertEqSlice(RoleCheckpoints.History memory full, uint256 start, uint256 end) internal {
-    RoleCheckpoints.History memory slice =
+  function assertEqSlice(PolicyholderCheckpoints.History memory full, uint256 start, uint256 end) internal {
+    PolicyholderCheckpoints.History memory slice =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), start, end);
 
     assertEq(slice._checkpoints.length, end - start);
@@ -1014,7 +1046,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_ReturnsSlicesOfCheckpointsArray() public {
-    RoleCheckpoints.History memory rbCheckpoint1 =
+    PolicyholderCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -1037,7 +1069,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
 
 contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   function test_ReturnsTheCorrectLength() public {
-    RoleCheckpoints.History memory checkpoints =
+    PolicyholderCheckpoints.History memory checkpoints =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
     uint256 length = mpPolicy.roleBalanceCheckpointsLength(arbitraryPolicyholder, uint8(Roles.TestRole1));
     assertEq(length, checkpoints._checkpoints.length);
@@ -1126,13 +1158,6 @@ contract PolicyMetadata is LlamaPolicyTest {
     string external_url;
   }
 
-  function setTokenURIMetadata() internal {
-    vm.startPrank(address(mpExecutor));
-    mpPolicy.setColor(color);
-    mpPolicy.setLogo(logo);
-    vm.stopPrank();
-  }
-
   function parseMetadata(string memory uri) internal returns (Metadata memory) {
     string[] memory inputs = new string[](3);
     inputs[0] = "node";
@@ -1213,15 +1238,12 @@ contract PolicyMetadata is LlamaPolicyTest {
       uint8(Roles.TestRole1), address(uint160(tokenIdWithLeadingZeroes)), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION
     );
 
-    setTokenURIMetadata();
     string memory uri = mpPolicy.tokenURI(tokenIdWithLeadingZeroes);
     Metadata memory metadata = parseMetadata(uri);
     assertEq(metadata.image, generateTokenUri(address(uint160(tokenIdWithLeadingZeroes))));
   }
 
   function test_ReturnsCorrectTokenURI() public {
-    setTokenURIMetadata();
-
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
@@ -1251,20 +1273,16 @@ contract PolicyMetadata is LlamaPolicyTest {
     uint256 tokenId = uint256(uint160(policyholder));
 
     string memory name = "Mock Protocol Llama";
-    string memory color = mpPolicy.color();
-    string memory logo = mpPolicy.logo();
-    LlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
-    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.tokenURI(name, tokenId, color, logo));
+    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.getTokenURI(name, tokenId));
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
-    (LlamaExecutor deployedExecutor, LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaCore deployedCore = deployLlamaWithQuotesInName();
+    LlamaExecutor deployedExecutor = deployedCore.executor();
     LlamaPolicy deployedPolicy = deployedCore.policy();
     string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
 
     vm.startPrank(address(deployedExecutor));
-    deployedPolicy.setColor(color);
-    deployedPolicy.setLogo(logo);
     deployedPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     vm.stopPrank();
 
@@ -1309,13 +1327,6 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
     string external_url;
   }
 
-  function setTokenURIMetadata() internal {
-    vm.startPrank(address(mpExecutor));
-    mpPolicy.setColor(color);
-    mpPolicy.setLogo(logo);
-    vm.stopPrank();
-  }
-
   function parseMetadata(string memory uri) internal returns (Metadata memory) {
     string[] memory inputs = new string[](3);
     inputs[0] = "node";
@@ -1325,8 +1336,6 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectExternalUrl() public {
-    setTokenURIMetadata();
-
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
@@ -1353,7 +1362,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    (, LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 
@@ -1371,8 +1380,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
 
   function test_contractURIProxiesCorrectly() external {
     string memory name = "Mock Protocol Llama";
-    LlamaPolicyMetadata mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
-    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.contractURI(name));
+    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.getContractURI(name));
   }
 }
 
@@ -1428,79 +1436,76 @@ contract UpdateRoleDescription is LlamaPolicyTest {
   }
 }
 
-contract SetColor is LlamaPolicyTest {
-  function test_ColorIsSetAtDeploy() public {
-    // The value set in `script/31337/createAction.json`
-    string memory defaultColor = "#FF0420";
-    string memory setColor = mpPolicy.color();
-    assertEq(setColor, defaultColor);
-  }
+contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
+  string newColor = "#BADA55";
+  string newLogo =
+    "<g fill=\'#BADA55\'><path d=\'M44.876 462c-3.783 0-6.883-.881-9.3-2.645-2.384-1.794-3.576-4.344-3.576-7.65 0-.692.08-1.542.238-2.55.414-2.266 1.002-4.989 1.765-8.169C36.165 432.329 41.744 428 50.742 428c2.448 0 4.641.409 6.58 1.228 1.94.787 3.466 1.983 4.579 3.589 1.112 1.574 1.669 3.463 1.669 5.666 0 .661-.08 1.496-.239 2.503a106.077 106.077 0 0 1-1.716 8.169c-1.113 4.314-3.037 7.54-5.77 9.681-2.735 2.109-6.39 3.164-10.97 3.164Zm.668-6.8c1.78 0 3.29-.52 4.53-1.558 1.272-1.039 2.178-2.629 2.718-4.77.731-2.959 1.288-5.541 1.67-7.744.127-.661.19-1.338.19-2.031 0-2.865-1.51-4.297-4.53-4.297-1.78 0-3.307.519-4.578 1.558-1.24 1.039-2.13 2.629-2.671 4.77-.572 2.109-1.145 4.691-1.717 7.744-.127.63-.19 1.291-.19 1.983 0 2.897 1.526 4.345 4.578 4.345ZM68.409 461.528c-.35 0-.62-.11-.81-.331a1.12 1.12 0 0 1-.144-.85l6.581-30.694c.064-.347.239-.63.525-.85.286-.221.588-.331.906-.331h12.685c3.529 0 6.358.724 8.489 2.172 2.161 1.449 3.242 3.542 3.242 6.281 0 .787-.095 1.605-.286 2.455-.795 3.621-2.4 6.297-4.816 8.028-2.385 1.732-5.66 2.597-9.824 2.597h-6.438l-2.194 10.342a1.35 1.35 0 0 1-.524.85c-.287.221-.588.331-.907.331H68.41Zm16.882-18.039c1.335 0 2.495-.362 3.48-1.086 1.018-.724 1.686-1.763 2.004-3.117a8.185 8.185 0 0 0 .143-1.417c0-.913-.27-1.605-.81-2.077-.541-.504-1.463-.756-2.767-.756H81.62l-1.813 8.453h5.485ZM110.628 461.528c-.349 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l5.293-24.461h-8.488c-.35 0-.62-.11-.811-.33a1.12 1.12 0 0 1-.143-.851l1.097-5.052c.063-.347.238-.63.524-.85.286-.221.588-.331.906-.331h25.657c.35 0 .62.11.811.331.127.189.19.378.19.566a.909.909 0 0 1-.047.284l-1.097 5.052c-.064.347-.239.63-.525.851-.254.22-.556.33-.906.33h-8.441l-5.293 24.461c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-6.295ZM135.88 461.528c-.35 0-.62-.11-.811-.331a1.016 1.016 0 0 1-.191-.85l6.629-30.694a1.35 1.35 0 0 1 .525-.85c.286-.221.588-.331.906-.331h6.438c.349 0 .62.11.81.331.128.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-6.438ZM154.038 461.528c-.349 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.064-.347.238-.63.524-.85.287-.221.605-.331.954-.331h5.151c.763 0 1.255.346 1.478 1.039l5.198 14.875 11.588-14.875c.159-.252.382-.488.668-.708.318-.221.7-.331 1.145-.331h5.198c.349 0 .62.11.81.331.127.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-5.771c-.349 0-.62-.11-.81-.331a1.118 1.118 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803-.286.189-.62.283-1.002.283h-2.479c-.668 0-1.129-.362-1.383-1.086l-3.386-10.011-3.815 17.85c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-5.723ZM196.132 461.528c-.35 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l6.628-30.694a1.35 1.35 0 0 1 .525-.85c.285-.221.588-.331.906-.331h6.438c.35 0 .62.11.811.331.127.189.19.378.19.566a.88.88 0 0 1-.047.284l-6.581 30.694c-.063.346-.238.63-.525.85a1.46 1.46 0 0 1-.907.331h-6.437ZM226.07 462c-2.798 0-5.198-.378-7.201-1.133-1.972-.756-3.466-1.763-4.483-3.022-.986-1.26-1.479-2.661-1.479-4.203 0-.252.033-.63.095-1.134.065-.283.193-.519.383-.708.223-.189.476-.283.763-.283h6.103c.383 0 .668.063.859.188.222.126.445.347.668.662.223.818.731 1.495 1.526 2.03.827.535 1.955.803 3.385.803 1.812 0 3.276-.283 4.388-.85 1.113-.567 1.781-1.338 2.002-2.314a2.42 2.42 0 0 0 .048-.566c0-.788-.491-1.401-1.477-1.842-.986-.473-2.798-1.023-5.437-1.653-3.084-.661-5.421-1.653-7.011-2.975-1.589-1.354-2.383-3.117-2.383-5.289 0-.755.095-1.527.286-2.314.635-2.928 2.21-5.226 4.72-6.894 2.544-1.669 5.818-2.503 9.825-2.503 2.415 0 4.563.425 6.438 1.275 1.875.85 3.321 1.936 4.34 3.258 1.049 1.291 1.572 2.582 1.572 3.873 0 .377-.015.645-.047.802-.063.284-.206.52-.429.709a.975.975 0 0 1-.715.283h-6.391c-.698 0-1.176-.268-1.429-.803-.033-.724-.415-1.338-1.146-1.841-.731-.504-1.685-.756-2.861-.756-1.399 0-2.559.252-3.482.756-.889.503-1.447 1.243-1.668 2.219a3.172 3.172 0 0 0-.049.614c0 .755.445 1.385 1.336 1.889.922.472 2.528.96 4.816 1.464 3.562.692 6.153 1.684 7.774 2.975 1.653 1.29 2.479 3.006 2.479 5.147 0 .724-.095 1.511-.286 2.361-.698 3.211-2.4 5.651-5.103 7.32-2.669 1.636-6.246 2.455-10.729 2.455ZM248.515 461.528c-.35 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.063-.347.238-.63.525-.85.286-.221.604-.331.954-.331h5.149c.763 0 1.256.346 1.479 1.039l5.199 14.875 11.587-14.875c.16-.252.382-.488.668-.708.318-.221.699-.331 1.144-.331h5.199c.35 0 .62.11.811.331.127.189.19.378.19.566a.856.856 0 0 1-.048.284l-6.58 30.694c-.065.346-.24.63-.526.85a1.456 1.456 0 0 1-.906.331h-5.769c-.351 0-.621-.11-.811-.331a1.109 1.109 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803a1.776 1.776 0 0 1-1.001.283h-2.481c-.668 0-1.128-.362-1.382-1.086l-3.386-10.011-3.815 17.85a1.36 1.36 0 0 1-.525.85c-.286.221-.588.331-.906.331h-5.723Z\'/></g>";
 
-  function testFuzz_SetsColor(string memory newColor) public {
-    vm.prank(address(mpExecutor));
-    mpPolicy.setColor(newColor);
-
-    string memory setColor = mpPolicy.color();
-    assertEq(setColor, newColor);
-  }
-
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    string memory newColor = "#BADA55";
-    vm.assume(caller != address(mpExecutor));
+  function test_RevertIf_CallerIsNotLlama() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
-    vm.prank(caller);
-    mpPolicy.setColor(newColor);
+    mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+  }
+
+  function test_EmitsPolicyMetadataSetEvent() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+    mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+  }
+
+  function test_DeploysAndSetsMetadataClone() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
+    assertEq(address(llamaPolicyMetadata).code.length, 0);
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+
+    assertEq(address(llamaPolicyMetadata), address(mpPolicy.llamaPolicyMetadata()));
+    assertGt(address(llamaPolicyMetadata).code.length, 0);
+  }
+
+  function test_InitializationSetsColor() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+
+    assertEq(newColor, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
+  }
+
+  function test_InitializationSetsLogo() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
+
+    assertEq(newLogo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());
+  }
+
+  function test_InitializeCannotBeCalledTwice() public {
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    mpPolicyMetadata.initialize(abi.encode(color, logo));
   }
 }
 
-contract SetLogo is LlamaPolicyTest {
-  function test_LogoIsSetAtDeploy() public {
-    // The value set in `script/31337/createAction.json`
-    string memory defaultLogo =
-      "<g fill=\\#FF0420\\><path d=\\M44.876 462c-3.783 0-6.883-.881-9.3-2.645-2.384-1.794-3.576-4.344-3.576-7.65 0-.692.08-1.542.238-2.55.414-2.266 1.002-4.989 1.765-8.169C36.165 432.329 41.744 428 50.742 428c2.448 0 4.641.409 6.58 1.228 1.94.787 3.466 1.983 4.579 3.589 1.112 1.574 1.669 3.463 1.669 5.666 0 .661-.08 1.496-.239 2.503a106.077 106.077 0 0 1-1.716 8.169c-1.113 4.314-3.037 7.54-5.77 9.681-2.735 2.109-6.39 3.164-10.97 3.164Zm.668-6.8c1.78 0 3.29-.52 4.53-1.558 1.272-1.039 2.178-2.629 2.718-4.77.731-2.959 1.288-5.541 1.67-7.744.127-.661.19-1.338.19-2.031 0-2.865-1.51-4.297-4.53-4.297-1.78 0-3.307.519-4.578 1.558-1.24 1.039-2.13 2.629-2.671 4.77-.572 2.109-1.145 4.691-1.717 7.744-.127.63-.19 1.291-.19 1.983 0 2.897 1.526 4.345 4.578 4.345ZM68.409 461.528c-.35 0-.62-.11-.81-.331a1.12 1.12 0 0 1-.144-.85l6.581-30.694c.064-.347.239-.63.525-.85.286-.221.588-.331.906-.331h12.685c3.529 0 6.358.724 8.489 2.172 2.161 1.449 3.242 3.542 3.242 6.281 0 .787-.095 1.605-.286 2.455-.795 3.621-2.4 6.297-4.816 8.028-2.385 1.732-5.66 2.597-9.824 2.597h-6.438l-2.194 10.342a1.35 1.35 0 0 1-.524.85c-.287.221-.588.331-.907.331H68.41Zm16.882-18.039c1.335 0 2.495-.362 3.48-1.086 1.018-.724 1.686-1.763 2.004-3.117a8.185 8.185 0 0 0 .143-1.417c0-.913-.27-1.605-.81-2.077-.541-.504-1.463-.756-2.767-.756H81.62l-1.813 8.453h5.485ZM110.628 461.528c-.349 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l5.293-24.461h-8.488c-.35 0-.62-.11-.811-.33a1.12 1.12 0 0 1-.143-.851l1.097-5.052c.063-.347.238-.63.524-.85.286-.221.588-.331.906-.331h25.657c.35 0 .62.11.811.331.127.189.19.378.19.566a.909.909 0 0 1-.047.284l-1.097 5.052c-.064.347-.239.63-.525.851-.254.22-.556.33-.906.33h-8.441l-5.293 24.461c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-6.295ZM135.88 461.528c-.35 0-.62-.11-.811-.331a1.016 1.016 0 0 1-.191-.85l6.629-30.694a1.35 1.35 0 0 1 .525-.85c.286-.221.588-.331.906-.331h6.438c.349 0 .62.11.81.331.128.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-6.438ZM154.038 461.528c-.349 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.064-.347.238-.63.524-.85.287-.221.605-.331.954-.331h5.151c.763 0 1.255.346 1.478 1.039l5.198 14.875 11.588-14.875c.159-.252.382-.488.668-.708.318-.221.7-.331 1.145-.331h5.198c.349 0 .62.11.81.331.127.189.191.378.191.566a.882.882 0 0 1-.048.284l-6.581 30.694c-.063.346-.238.63-.524.85-.286.221-.588.331-.906.331h-5.771c-.349 0-.62-.11-.81-.331a1.118 1.118 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803-.286.189-.62.283-1.002.283h-2.479c-.668 0-1.129-.362-1.383-1.086l-3.386-10.011-3.815 17.85c-.064.346-.239.63-.525.85-.286.221-.588.331-.906.331h-5.723ZM196.132 461.528c-.35 0-.62-.11-.81-.331-.191-.252-.255-.535-.191-.85l6.628-30.694a1.35 1.35 0 0 1 .525-.85c.285-.221.588-.331.906-.331h6.438c.35 0 .62.11.811.331.127.189.19.378.19.566a.88.88 0 0 1-.047.284l-6.581 30.694c-.063.346-.238.63-.525.85a1.46 1.46 0 0 1-.907.331h-6.437ZM226.07 462c-2.798 0-5.198-.378-7.201-1.133-1.972-.756-3.466-1.763-4.483-3.022-.986-1.26-1.479-2.661-1.479-4.203 0-.252.033-.63.095-1.134.065-.283.193-.519.383-.708.223-.189.476-.283.763-.283h6.103c.383 0 .668.063.859.188.222.126.445.347.668.662.223.818.731 1.495 1.526 2.03.827.535 1.955.803 3.385.803 1.812 0 3.276-.283 4.388-.85 1.113-.567 1.781-1.338 2.002-2.314a2.42 2.42 0 0 0 .048-.566c0-.788-.491-1.401-1.477-1.842-.986-.473-2.798-1.023-5.437-1.653-3.084-.661-5.421-1.653-7.011-2.975-1.589-1.354-2.383-3.117-2.383-5.289 0-.755.095-1.527.286-2.314.635-2.928 2.21-5.226 4.72-6.894 2.544-1.669 5.818-2.503 9.825-2.503 2.415 0 4.563.425 6.438 1.275 1.875.85 3.321 1.936 4.34 3.258 1.049 1.291 1.572 2.582 1.572 3.873 0 .377-.015.645-.047.802-.063.284-.206.52-.429.709a.975.975 0 0 1-.715.283h-6.391c-.698 0-1.176-.268-1.429-.803-.033-.724-.415-1.338-1.146-1.841-.731-.504-1.685-.756-2.861-.756-1.399 0-2.559.252-3.482.756-.889.503-1.447 1.243-1.668 2.219a3.172 3.172 0 0 0-.049.614c0 .755.445 1.385 1.336 1.889.922.472 2.528.96 4.816 1.464 3.562.692 6.153 1.684 7.774 2.975 1.653 1.29 2.479 3.006 2.479 5.147 0 .724-.095 1.511-.286 2.361-.698 3.211-2.4 5.651-5.103 7.32-2.669 1.636-6.246 2.455-10.729 2.455ZM248.515 461.528c-.35 0-.62-.11-.81-.331-.191-.22-.255-.504-.191-.85l6.581-30.694c.063-.347.238-.63.525-.85.286-.221.604-.331.954-.331h5.149c.763 0 1.256.346 1.479 1.039l5.199 14.875 11.587-14.875c.16-.252.382-.488.668-.708.318-.221.699-.331 1.144-.331h5.199c.35 0 .62.11.811.331.127.189.19.378.19.566a.856.856 0 0 1-.048.284l-6.58 30.694c-.065.346-.24.63-.526.85a1.456 1.456 0 0 1-.906.331h-5.769c-.351 0-.621-.11-.811-.331a1.109 1.109 0 0 1-.143-.85l3.719-17.425-7.296 9.586c-.318.347-.62.614-.906.803a1.776 1.776 0 0 1-1.001.283h-2.481c-.668 0-1.128-.362-1.382-1.086l-3.386-10.011-3.815 17.85a1.36 1.36 0 0 1-.525.85c-.286.221-.588.331-.906.331h-5.723Z\\/></g>";
-    string memory setLogo = mpPolicy.logo();
-    assertEq(setLogo, defaultLogo);
-  }
-
-  function testFuzz_SetsLogo(string memory newLogo) public {
-    vm.prank(address(mpExecutor));
-    mpPolicy.setLogo(newLogo);
-
-    string memory setLogo = mpPolicy.logo();
-    assertEq(setLogo, newLogo);
-  }
-
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    string memory newLogo =
-      '<path fill="#000" fill-rule="evenodd" d="M344.211 459c7.666-3.026 13.093-10.52 13.093-19.284 0-11.441-9.246-20.716-20.652-20.716S316 428.275 316 439.716a20.711 20.711 0 0 0 9.38 17.36c.401-.714 1.144-1.193 1.993-1.193.188 0 .347-.173.3-.353a14.088 14.088 0 0 1-.457-3.58c0-7.456 5.752-13.501 12.848-13.501.487 0 .917-.324 1.08-.777l.041-.111c.334-.882-.223-2.13-1.153-2.341-4.755-1.082-8.528-4.915-9.714-9.825-.137-.564.506-.939.974-.587l18.747 14.067a.674.674 0 0 1 .254.657 12.485 12.485 0 0 0 .102 4.921.63.63 0 0 1-.247.666 5.913 5.913 0 0 1-6.062.332 1.145 1.145 0 0 0-.794-.116 1.016 1.016 0 0 0-.789.986v8.518a.658.658 0 0 1-.663.653h-1.069a.713.713 0 0 1-.694-.629c-.397-2.96-2.819-5.238-5.749-5.238-.186 0-.37.009-.551.028a.416.416 0 0 0-.372.42c0 .234.187.424.423.457 2.412.329 4.275 2.487 4.275 5.099 0 .344-.033.687-.097 1.025-.072.369.197.741.578.741h.541c.003 0 .007.001.01.004.002.003.004.006.004.01l.001.005.003.005.005.003.005.001h4.183a.17.17 0 0 1 .123.05c.124.118.244.24.362.364.248.266.349.64.39 1.163Zm-19.459-22.154c-.346-.272-.137-.788.306-.788h11.799c.443 0 .652.516.306.788a10.004 10.004 0 0 1-6.205 2.162c-2.329 0-4.478-.804-6.206-2.162Zm22.355 3.712c0 .645-.5 1.168-1.118 1.168-.617 0-1.117-.523-1.117-1.168 0-.646.5-1.168 1.117-1.168.618 0 1.118.523 1.118 1.168Z" clip-rule="evenodd"/>';
-
-    vm.assume(caller != address(mpExecutor));
-    vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
-    vm.prank(caller);
-    mpPolicy.setLogo(newLogo);
-  }
-}
-
-contract SetPolicyMetadata is LlamaPolicyTest {
-  function test_PolicyMetadataIsSetAtDeploy() public {
-    address factoryPolicyMetadata = address(factory.llamaPolicyMetadata());
-    address setPolicyMetadata = address(mpPolicy.llamaPolicyMetadata());
-    assertEq(setPolicyMetadata, factoryPolicyMetadata);
-  }
-
-  function testFuzz_SetsPolicyMetadata(address newPolicyMetadata) public {
-    vm.prank(address(mpExecutor));
-    mpPolicy.setPolicyMetadata(LlamaPolicyMetadata(newPolicyMetadata));
-
-    address setPolicyMetadata = address(mpPolicy.llamaPolicyMetadata());
-    assertEq(setPolicyMetadata, newPolicyMetadata);
-  }
-
-  function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
-    LlamaPolicyMetadata newPolicyMetadata = LlamaPolicyMetadata(address(1337));
-    vm.assume(caller != address(mpExecutor));
-    vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
-    vm.prank(caller);
-    mpPolicy.setPolicyMetadata(newPolicyMetadata);
+contract LlamaPolicyMetadataConstructor is LlamaPolicyTest {
+  function test_RevertIf_InitializeImplementationContract() public {
+    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
+    vm.expectRevert(bytes("Initializable: contract is already initialized"));
+    llamaPolicyMetadataLogic.initialize(abi.encode(color, logo));
   }
 }

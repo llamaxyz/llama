@@ -61,9 +61,12 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
   function testFuzz_RevertIf_NotEnoughApprovalQuantity(uint256 _otherRoleHolders) external {
     _otherRoleHolders = bound(_otherRoleHolders, 1, 10);
     generateAndSetRoleHolders(_otherRoleHolders);
+
+    // Assign role for action creation permission.
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), 1, type(uint64).max); // for action creation
-      // permission
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), 1, type(uint64).max);
+    mineBlock();
+
     uint96 roleQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
     ILlamaStrategy testStrategy = deployAbsoluteQuorum(
       uint8(Roles.TestRole1),
@@ -77,13 +80,16 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
       new uint8[](0),
       new uint8[](0)
     );
+
     vm.startPrank(address(mpExecutor));
     mpPolicy.setRolePermission(
       uint8(Roles.TestRole1), keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy)), true
     );
-    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(100)), 0, 0); // removing role holder from an address
-      // created in `generateAndSetRoleHolders`
+    // Removing role holder from an address created in `generateAndSetRoleHolders`.
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(uint160(100)), 0, 0);
+    mineBlock();
     vm.stopPrank();
+
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
