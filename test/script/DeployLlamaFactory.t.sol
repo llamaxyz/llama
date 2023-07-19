@@ -8,7 +8,7 @@ import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -140,8 +140,8 @@ contract Run is DeployLlamaFactoryTest {
     address initRoleHolder = makeAddr("randomLogicAddress");
     uint8 approverRoleId = 2;
     assertEq(rootPolicy.hasRole(initRoleHolder, approverRoleId), true);
-    Checkpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
-    Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    PolicyholderCheckpoints.History memory balances = rootPolicy.roleBalanceCheckpoints(initRoleHolder, approverRoleId);
+    PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
 
@@ -201,7 +201,7 @@ contract Run is DeployLlamaFactoryTest {
     DeployLlamaFactory.run();
 
     assertFalse(address(policyMetadataLogic) == address(0));
-    assertFalse(keccak256(abi.encode(policyMetadataLogic.tokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
+    assertFalse(keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
   }
 
   function test_DeploysLens() public {

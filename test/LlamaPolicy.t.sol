@@ -13,7 +13,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {
   LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
 } from "src/lib/Structs.sol";
@@ -29,12 +29,8 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
   event PolicyMetadataSet(
-    ILlamaPolicyMetadata indexed llamaPolicyMetadataLogic,
-    ILlamaPolicyMetadata indexed llamaPolicyMetadata,
-    bytes config
+    ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
-  event PolicyColorSet(string color);
-  event PolicyLogoSet(string logo);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -47,7 +43,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
     return RoleDescription.wrap(bytes32(bytes(str)));
   }
 
-  function deployLlamaWithQuotesinName() internal returns (LlamaCore) {
+  function deployLlamaWithQuotesInName() internal returns (LlamaCore) {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
     RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
@@ -284,7 +280,9 @@ contract Initialize is LlamaPolicyTest {
   function test_SetsAndInitializesPolicyMetadata() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(localPolicy, 1);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(color, logo), address(localPolicy)
+    );
 
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Test Policy");
@@ -294,7 +292,7 @@ contract Initialize is LlamaPolicyTest {
     rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
 
     vm.expectEmit();
-    emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(color, logo));
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(color, logo));
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
       "local policy",
@@ -401,18 +399,6 @@ contract SetRoleHolder is LlamaPolicyTest {
 
     vm.expectRevert(LlamaPolicy.AllHoldersRole.selector);
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-  }
-
-  function test_RevertIf_ActionWasCreatedAtSameTimestamp() public {
-    // First it should work, then we mock creating an action at the current timestamp, then it
-    // should revert.
-    vm.startPrank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    vm.mockCall(
-      address(mpCore), abi.encodeWithSelector(LlamaCore.getLastActionTimestamp.selector), abi.encode(block.timestamp)
-    );
-    vm.expectRevert(LlamaPolicy.ActionCreationAtSameTimestamp.selector);
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
   function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
@@ -780,8 +766,8 @@ contract SetApprovalForAll is LlamaPolicyTest {
 // ====================================
 // ======== Permission Getters ========
 // ====================================
-// The actual checkpointing logic is tested in `Checkpoints.t.sol`, so here we just test the logic
-// that's added on top of that.
+// The actual checkpointing logic is tested in `PolicyholderCheckpoints.t.sol` and `SupplyCheckpoints.t.sol`,
+// so here we just test the logic that's added on top of that.
 
 contract GetQuantity is LlamaPolicyTest {
   function test_ReturnsZeroIfPolicyholderDoesNotHoldRole() public {
@@ -942,9 +928,10 @@ contract RoleBalanceCheckpointTest is LlamaPolicyTest {
 
 contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
   function test_ReturnsBalanceCheckpoint() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    PolicyholderCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
-    Checkpoints.History memory rbCheckpoint2 = mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
+    PolicyholderCheckpoints.History memory rbCheckpoint2 =
+      mpPolicy.roleBalanceCheckpoints(newRoleHolder, uint8(Roles.TestRole2));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
     assertEq(rbCheckpoint1._checkpoints[0].timestamp, 100);
@@ -971,8 +958,8 @@ contract RoleBalanceCheckpoints is RoleBalanceCheckpointTest {
 }
 
 contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
-  function assertEqSlice(Checkpoints.History memory full, uint256 start, uint256 end) internal {
-    Checkpoints.History memory slice =
+  function assertEqSlice(PolicyholderCheckpoints.History memory full, uint256 start, uint256 end) internal {
+    PolicyholderCheckpoints.History memory slice =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), start, end);
 
     assertEq(slice._checkpoints.length, end - start);
@@ -997,7 +984,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   }
 
   function test_ReturnsSlicesOfCheckpointsArray() public {
-    Checkpoints.History memory rbCheckpoint1 =
+    PolicyholderCheckpoints.History memory rbCheckpoint1 =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
 
     assertEq(rbCheckpoint1._checkpoints.length, 3);
@@ -1020,25 +1007,12 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
 
 contract RoleBalanceCheckpointsLength is RoleBalanceCheckpointTest {
   function test_ReturnsTheCorrectLength() public {
-    Checkpoints.History memory checkpoints =
+    PolicyholderCheckpoints.History memory checkpoints =
       mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1));
     uint256 length = mpPolicy.roleBalanceCheckpointsLength(arbitraryPolicyholder, uint8(Roles.TestRole1));
     assertEq(length, checkpoints._checkpoints.length);
     assertEq(length, 3);
   }
-
-  // A fuzz test like this will result in lots of zero lengths and be mostly useless for now which
-  // is why it's commented out. Once https://github.com/foundry-rs/foundry/issues/4967 is resolved
-  // we can uncomment the test and use the below config to leverage a higher dictionary weight.
-  // Alternatively we could hardcode all known users and roles and loop through all of them, but
-  // this is a pretty simple method being tested, so in the interest of faster tests this is
-  // arguably overkill and therefore left commented out for now.
-  // /// forge-config: default.fuzz.dictionary_weight = 99
-  // function testFuzz_ReturnsTheCorrectLength(address policyholder, uint8 role) public {
-  //   Checkpoints.History memory checkpoints = mpPolicy.roleBalanceCheckpoints(policyholder, role);
-  //   uint256 length = mpPolicy.roleBalanceCheckpointsLength(policyholder, role);
-  //   assertEq(length, checkpoints._checkpoints.length);
-  // }
 }
 
 contract HasRole is LlamaPolicyTest {
@@ -1237,11 +1211,11 @@ contract PolicyMetadata is LlamaPolicyTest {
     uint256 tokenId = uint256(uint160(policyholder));
 
     string memory name = "Mock Protocol Llama";
-    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.tokenURI(name, tokenId));
+    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.getTokenURI(name, tokenId));
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
-    (LlamaCore deployedCore) = deployLlamaWithQuotesinName();
+    LlamaCore deployedCore = deployLlamaWithQuotesInName();
     LlamaExecutor deployedExecutor = deployedCore.executor();
     LlamaPolicy deployedPolicy = deployedCore.policy();
     string memory nameWithQuotes = '\\"name\\": \\"Mock Protocol Llama\\"';
@@ -1326,7 +1300,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
   }
 
   function test_ReturnsContractURIEscapesJson() external {
-    (LlamaCore deployedInstance) = deployLlamaWithQuotesinName();
+    (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
 
@@ -1344,7 +1318,7 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
 
   function test_contractURIProxiesCorrectly() external {
     string memory name = "Mock Protocol Llama";
-    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.contractURI(name));
+    assertEq(mpPolicy.contractURI(), mpPolicyMetadata.getContractURI(name));
   }
 }
 
@@ -1413,16 +1387,20 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_EmitsPolicyMetadataSetEvent() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
     vm.prank(address(mpExecutor));
     vm.expectEmit();
-    emit PolicyMetadataSet(llamaPolicyMetadataLogic, llamaPolicyMetadata, abi.encode(newColor, newLogo));
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
   }
 
   function test_DeploysAndSetsMetadataClone() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
     assertEq(address(llamaPolicyMetadata).code.length, 0);
 
     vm.prank(address(mpExecutor));
@@ -1434,11 +1412,11 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_InitializationSetsColor() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
-    vm.expectEmit();
-    emit PolicyColorSet(newColor);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newColor, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
@@ -1446,11 +1424,11 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
 
   function test_InitializationSetsLogo() public {
     ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(mpPolicy, 2);
+    ILlamaPolicyMetadata llamaPolicyMetadata = lens.computeLlamaPolicyMetadataAddress(
+      address(llamaPolicyMetadataLogic), abi.encode(newColor, newLogo), address(mpPolicy)
+    );
 
     vm.prank(address(mpExecutor));
-    vm.expectEmit();
-    emit PolicyLogoSet(newLogo);
     mpPolicy.setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, abi.encode(newColor, newLogo));
 
     assertEq(newLogo, LlamaPolicyMetadata(address(llamaPolicyMetadata)).logo());

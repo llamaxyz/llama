@@ -54,7 +54,7 @@ contract LlamaFactory {
   /// @notice The Llama policy implementation (logic) contract.
   LlamaPolicy public immutable LLAMA_POLICY_LOGIC;
 
-  /// @notice The Llama policy implementation (logic) contract.
+  /// @notice The Llama policy metadata implementation (logic) contract.
   ILlamaPolicyMetadata public immutable LLAMA_POLICY_METADATA_LOGIC;
 
   /// @notice The executor of the Llama instance's executor responsible for deploying new Llama instances.

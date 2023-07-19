@@ -251,20 +251,20 @@ contract LlamaCore is Initializable {
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
-  /// @param config The struct that contains the configuration for this Llama instance.
+  /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
+  /// the parameters
   function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
     name = config.name;
     // Deploy Executor.
     executor = new LlamaExecutor();
 
-    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootsrap Role) given permission to change role
+    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
     policy = LlamaPolicy(
       Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
     );
-
-    // Calcuated from the first strategy configuration passed in.
+    // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
       Clones.predictDeterministicAddress(
         address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)
@@ -549,13 +549,6 @@ contract LlamaCore is Initializable {
     return actions[actionId];
   }
 
-  /// @notice Returns the timestamp of most recently created action.
-  /// @dev Used by `LlamaPolicy` to ensure policy management does not occur immediately after action
-  /// creation in the same timestamp, as this could result in invalid role supply counts being used.
-  function getLastActionTimestamp() external view returns (uint256 timestamp) {
-    return actionsCount == 0 ? 0 : actions[actionsCount - 1].creationTime;
-  }
-
   /// @notice Get the current action state of an action by its `actionInfo` struct.
   /// @param actionInfo Data required to create an action.
   /// @return The current action state of the action.
@@ -674,17 +667,21 @@ contract LlamaCore is Initializable {
     bool alreadyCast = isApproval ? approvals[actionInfo.id][policyholder] : disapprovals[actionInfo.id][policyholder];
     if (alreadyCast) revert DuplicateCast();
 
-    bool hasRole = policy.hasRole(policyholder, role, action.creationTime);
+    // We look up data at `action.creationTime - 1` to avoid race conditions: A user's role balances
+    // can change after action creation in the same block, so we can't actually know what the
+    // correct values are at the time of action creation.
+    uint256 checkpointTime = action.creationTime - 1;
+    bool hasRole = policy.hasRole(policyholder, role, checkpointTime);
     if (!hasRole) revert InvalidPolicyholder();
 
     if (isApproval) {
       actionInfo.strategy.checkIfApprovalEnabled(actionInfo, policyholder, role);
-      quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, action.creationTime);
+      quantity = actionInfo.strategy.getApprovalQuantityAt(policyholder, role, checkpointTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     } else {
       if (block.timestamp >= action.minExecutionTime) revert CannotDisapproveAfterMinExecutionTime();
       actionInfo.strategy.checkIfDisapprovalEnabled(actionInfo, policyholder, role);
-      quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, action.creationTime);
+      quantity = actionInfo.strategy.getDisapprovalQuantityAt(policyholder, role, checkpointTime);
       if (quantity == 0) revert CannotCastWithZeroQuantity(policyholder, role);
     }
   }

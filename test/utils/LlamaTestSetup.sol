@@ -264,8 +264,8 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptWithValuePermissionId, true);
     vm.stopPrank();
 
-    // Skip forward 1 second so the most recent checkpoints are in the past.
-    vm.warp(block.timestamp + 1);
+    // Skip forward one block so the most recent checkpoints are in the past.
+    mineBlock();
 
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
@@ -526,7 +526,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
 
-    vm.warp(block.timestamp + 1);
+    mineBlock();
   }
 
   function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
@@ -553,6 +553,15 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
         mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
       }
     }
+
+    // We often call this `generateAndSetRoleHolders` before creating an action, so we must mine a
+    // block here to ensure the role balance and supply checkpoints are set at `block.timestamp - 1`.
+    mineBlock();
+  }
+
+  function mineBlock() internal {
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
   }
 
   function assertEqStrategyStatus(
