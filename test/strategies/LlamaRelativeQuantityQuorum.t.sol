@@ -456,20 +456,18 @@ contract GetDisapprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
 contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies, uint96 quantity) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-     quantity = uint96(bound(quantity, 1, 100));
+    quantity = uint96(bound(quantity, 1, 100));
 
     ILlamaStrategy testStrategy = deployTestRelativeQuantityQuorumStrategy();
 
-    generateAndSetRoleHolders(_numberOfPolicies,  quantity);
+    generateAndSetRoleHolders(_numberOfPolicies, quantity);
 
-        uint256 supply = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 supply = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
-    assertEq(
-      LlamaRelativeQuantityQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply
-    );
+    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
   }
 
   function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
@@ -482,7 +480,11 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
     LlamaRelativeQuantityQuorum(address(testStrategy)).validateActionCreation(actionInfo);
   }
 
-  function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity, uint96 quantity) external {
+  function test_CalculateSupplyWhenActionCreatorHasRole(
+    uint256 _numberOfPolicies,
+    uint256 _creatorQuantity,
+    uint96 quantity
+  ) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
     quantity = uint96(bound(quantity, 1, 100));
