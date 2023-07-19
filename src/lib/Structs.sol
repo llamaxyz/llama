@@ -58,6 +58,7 @@ struct RolePermissionData {
   bool hasPermission; // Whether to assign the permission or remove the permission.
 }
 
+/// @dev Data required to initialize a Llama core.
 struct LlamaCoreInitializationConfig {
   string name; // The name of the `LlamaCore` instance.
   LlamaPolicy policyLogic; // This Llama instance's policy contract.
@@ -74,6 +75,7 @@ struct LlamaCoreInitializationConfig {
   address deployer; // The caller of the factory's deploy function
 }
 
+/// @dev Data required to initialize a Llama policy.
 struct LlamaPolicyInitializationConfig {
   string name; // The ERC-721 name of the policy NFT.
   RoleDescription[] roleDescriptions; // The role descriptions.
