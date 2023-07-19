@@ -159,27 +159,9 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     // Deploy the factory
     DeployLlamaFactory.run();
 
-    // Deploy the root Llama instance and get a reference to the deployed LlamaCore.
-    vm.recordLogs();
+    // Deploy the root Llama instance and set the instance variables
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
-    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    Vm.Log memory _event;
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
-    for (uint256 i = 0; i < emittedEvents.length; i++) {
-      _event = emittedEvents[i];
-      if (_event.topics[0] == llamaInstanceCreatedSig) {
-        // event LlamaInstanceCreated(
-        //   uint256 indexed id,
-        //   string indexed name,
-        //   address llamaCore,       <--- What we want.
-        //   address llamaExecutor,
-        //   address llamaPolicy,
-        //   uint256 chainId
-        // )
-        (rootCore,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
-      }
-    }
-
+    rootCore = core;
     rootExecutor = rootCore.executor();
     rootPolicy = rootCore.policy();
     rootPolicyMetadata = rootPolicy.llamaPolicyMetadata();
@@ -190,25 +172,9 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
     bytes[] memory rootAccounts = accountConfigsRootLlama();
 
-    // Deploy the Llama instance and get a reference to the deployed LlamaCore.
-    vm.recordLogs();
+    // Deploy the root Llama instance and set the instance variables
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
-    emittedEvents = vm.getRecordedLogs();
-    llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
-    for (uint256 i = 0; i < emittedEvents.length; i++) {
-      _event = emittedEvents[i];
-      if (_event.topics[0] == llamaInstanceCreatedSig) {
-        // event LlamaInstanceCreated(
-        //   uint256 indexed id,
-        //   string indexed name,
-        //   address llamaCore,       <--- What we want.
-        //   address llamaExecutor,
-        //   address llamaPolicy,
-        //   uint256 chainId
-        // )
-        (mpCore,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
-      }
-    }
+    mpCore = core;
     mpPolicy = mpCore.policy();
     mpExecutor = mpCore.executor();
     mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();

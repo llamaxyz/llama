@@ -6,7 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {Action, ActionInfo} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -196,6 +196,15 @@ contract Run is DeployLlamaInstanceTest {
     PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
+
+    bytes32 permissionId = lens.computePermissionId(
+      PermissionData(
+        address(secondAccount), // target
+        LlamaAccount.transferERC20.selector, // selector
+        thirdStrategy // strategy
+      )
+    );
+    assertTrue(policy.canCreateAction(ACTION_CREATOR_ROLE_ID, permissionId));
   }
 
   function assertEqStrategyStatus(

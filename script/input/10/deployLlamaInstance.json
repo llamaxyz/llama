@@ -71,5 +71,11 @@
       "role": 1
     }
   ],
-  "initialRolePermissions": []
+  "initialRolePermissions": [
+    {
+      "comment": "This is just used for the DeployLlamaInstance test file. It gives the ActionCreator permission to call `transferERC20()` on the second account with the third strategy.",
+      "permissionId": "0x7f2fc4a63a37e0531a5e9f35f09ea48850f610f5966d07b751f0a62c701cd7f5",
+      "role": 1
+    }
+  ]
 }
