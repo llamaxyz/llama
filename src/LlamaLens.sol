@@ -158,17 +158,6 @@ contract LlamaLens {
     return LlamaCore(_computedAddress);
   }
 
-  /// @dev Computes the address of a Llama core contract from the name and deployer of the Llama instance.
-  function _computeLlamaPolicyAddress(string memory name, address deployer) internal view returns (LlamaPolicy) {
-    LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
-    address _computedAddress = Clones.predictDeterministicAddress(
-      LLAMA_POLICY_LOGIC,
-      keccak256(abi.encodePacked(name, deployer)), // salt
-      address(llamaCore) // deployer
-    );
-    return LlamaPolicy(_computedAddress);
-  }
-
   /// @dev Adapted from the Forge Standard Library
   /// (https://github.com/foundry-rs/forge-std/blob/9b49a72cfdb36bcf195eb863f868f01a6d6d3186/src/StdUtils.sol#L177)
   function _addressFromLast20Bytes(bytes32 bytesValue) internal pure returns (address) {
