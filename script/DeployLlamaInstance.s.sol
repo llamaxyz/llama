@@ -15,15 +15,15 @@ contract DeployLlamaInstance is Script {
   // The core of the deployed Llama instance.
   LlamaCore core;
 
-  function run(address deployer, string memory filename) public {
+  function run(address deployer, string memory configFile) public {
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
     // ensure it can be used to pass actions.
     // NOTE: This check currently only supports relative strategies.
-    DeployUtils.bootstrapSafetyCheck(filename);
+    DeployUtils.bootstrapSafetyCheck(configFile);
     // ======== END SAFETY CHECK ========
 
-    string memory jsonInput = DeployUtils.readScriptInput(filename);
+    string memory jsonInput = DeployUtils.readScriptInput(configFile);
     string memory llamaInstanceName = jsonInput.readString(".newLlamaName");
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
@@ -42,6 +42,9 @@ contract DeployLlamaInstance is Script {
       jsonInput.readString(".newLlamaLogo")
     );
 
-    DeployUtils.print(string.concat("Deployed Llama Instance core:", vm.toString(address(core))));
+    DeployUtils.print("Successfully deployed a new Llama instance");
+    DeployUtils.print(string.concat("  LlamaCore:     ", vm.toString(address(core))));
+    DeployUtils.print(string.concat("  LlamaPolicy:   ", vm.toString(address(core.policy()))));
+    DeployUtils.print(string.concat("  LlamaExecutor: ", vm.toString(address(core.executor()))));
   }
 }

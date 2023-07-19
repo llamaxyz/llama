@@ -10,12 +10,12 @@ interface ILlamaPolicyMetadata {
   /// different policy metadata logic contracts.
   function initialize(bytes memory config) external;
 
-  /// @notice Returns the token URI for a given Llama policyholder.
+  /// @notice Returns the token URI for a given Llama policy ID.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  function tokenURI(string memory name, uint256 tokenId) external view returns (string memory);
+  function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory);
 
   /// @notice Returns the contract URI for a Llama instance's policies.
   /// @param name The name of the Llama instance.
-  function contractURI(string memory name) external pure returns (string memory);
+  function getContractURI(string memory name) external pure returns (string memory);
 }

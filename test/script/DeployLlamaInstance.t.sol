@@ -8,7 +8,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {Checkpoints} from "src/lib/Checkpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -25,6 +25,9 @@ import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstance {
   LlamaCore rootLlama;
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new Llama instances. It could be
+  // replaced with any address that we hold the private key for.
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
   uint8 ACTION_CREATOR_ROLE_ID = 1;
 
@@ -55,6 +58,12 @@ contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstanc
         (rootLlama,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
       }
     }
+    mineBlock();
+  }
+
+  function mineBlock() internal {
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
   }
 }
 
@@ -182,8 +191,9 @@ contract Run is DeployLlamaInstanceTest {
 
     address initRoleHolder = makeAddr("actionCreatorAaron");
     assertEq(policy.hasRole(initRoleHolder, ACTION_CREATOR_ROLE_ID), true);
-    Checkpoints.History memory balances = policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
-    Checkpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    PolicyholderCheckpoints.History memory balances =
+      policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
+    PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
   }

@@ -12,16 +12,6 @@ import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Utility contract to compute Llama policy metadata.
 contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
-  // ========================
-  // ======== Events ========
-  // ========================
-
-  /// @dev Emitted when the SVG color code of a Llama instance is set.
-  event PolicyColorSet(string color);
-
-  /// @dev Emitted when the SVG logo of a Llama instance is set.
-  event PolicyLogoSet(string logo);
-
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -46,15 +36,12 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
     color = _color;
     logo = _logo;
-
-    emit PolicyColorSet(color);
-    emit PolicyLogoSet(logo);
   }
 
   /// @notice Returns the token URI for a given Llama policyholder.
   /// @param name The name of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  function tokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
+  function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
 
@@ -137,7 +124,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @notice Returns the contract URI for a given Llama policy.
   /// @param name The name of the Llama instance.
-  function contractURI(string memory name) public pure returns (string memory) {
+  function getContractURI(string memory name) public pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);
