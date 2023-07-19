@@ -97,13 +97,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Constants and Storage Variables ========
   // =================================================
 
-  /// @notice A special role used to reference all policyholders.
+  /// @dev A special role used to reference all policyholders.
   uint8 internal constant ALL_HOLDERS_ROLE = 0;
 
-  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
-  /// However, this may change depending on how the Llama instance is configured.
-  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
-  /// unusable. See the documentation for more info.
+  /// @dev At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured. This is done to mitigate the chances
+  /// of deploying a misconfigured Llama instance that is unusable. See the documentation for more info.
   uint8 internal constant BOOTSTRAP_ROLE = 1;
 
   /// @dev Tracks total supplies of a given role. There are two notions of total supply:

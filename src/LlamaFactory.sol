@@ -42,10 +42,9 @@ contract LlamaFactory {
   // ======== Constants, Immutables and Storage Variables ========
   // =============================================================
 
-  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
-  /// However, this may change depending on how the Llama instance is configured.
-  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
-  /// unusable. See the documentation for more info.
+  /// @dev At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured. This is done to mitigate the chances
+  /// of deploying a misconfigured Llama instance that is unusable. See the documentation for more info.
   uint8 internal constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The Llama core implementation (logic) contract.
