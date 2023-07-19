@@ -69,13 +69,6 @@ contract Constructor is LlamaFactoryTest {
   function test_SetsLlamaPolicyMetadataAddress() public {
     assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
   }
-
-  function test_DeploysRootLlamaViaInternalDeployMethod() public {
-    // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
-    // one side effect of that method as a sanity check it was called. If it was called, the
-    // llama count should no longer be zero.
-    assertEq(factory.llamaCount(), 2);
-  }
 }
 
 contract Deploy is LlamaFactoryTest {

@@ -9,9 +9,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 
-contract LlamaLensTestSetup is LlamaTestSetup {
-  address FORGE_DEFAULT_SCRIPT_DEPLOYER = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
-}
+contract LlamaLensTestSetup is LlamaTestSetup {}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
   function test_ProperlyComputesAddress() public {

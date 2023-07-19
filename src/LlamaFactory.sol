@@ -17,16 +17,8 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice Factory for deploying new Llama instances.
 contract LlamaFactory {
-  // ========================
-  // ======== Errors ========
-  // ========================
-
   /// @dev The initial set of role holders has to have at least one role holder with role ID 1.
   error InvalidDeployConfiguration();
-
-  // ========================
-  // ======== Events ========
-  // ========================
 
   /// @dev Emitted when a new Llama instance is created.
   event LlamaInstanceCreated(
@@ -37,10 +29,6 @@ contract LlamaFactory {
     address llamaPolicy,
     uint256 chainId
   );
-
-  // =============================================================
-  // ======== Constants, Immutables and Storage Variables ========
-  // =============================================================
 
   /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
   /// However, this may change depending on how the Llama instance is configured.
@@ -60,20 +48,12 @@ contract LlamaFactory {
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
 
-  // ======================================================
-  // ======== Contract Creation and Initialization ========
-  // ======================================================
-
   /// @dev Constructs the Llama Factory.
   constructor(LlamaCore llamaCoreLogic, LlamaPolicy llamaPolicyLogic, ILlamaPolicyMetadata llamaPolicyMetadataLogic) {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
     LLAMA_POLICY_METADATA_LOGIC = llamaPolicyMetadataLogic;
   }
-
-  // ===========================================
-  // ======== External and Public Logic ========
-  // ===========================================
 
   /// @notice Deploys a new Llama instance.
   /// @dev This function can only be called by the root Llama instance.
