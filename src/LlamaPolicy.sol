@@ -251,13 +251,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Sets the Llama policy metadata contract which contains the function body for `tokenURI()` and
   /// `contractURI()`.
   /// @dev This is handled by a separate contract to ensure contract size stays under 24kB.
-  /// @param _llamaPolicyMetadataLogic The logic contract address for the Llama policy metadata contract.
+  /// @param llamaPolicyMetadataLogic The logic contract address for the Llama policy metadata contract.
   /// @param config The configuration data used to initialize the Llama policy metadata logic contract.
-  function setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
+  function setAndInitializePolicyMetadata(ILlamaPolicyMetadata llamaPolicyMetadataLogic, bytes memory config)
     external
     onlyLlama
   {
-    _setAndInitializePolicyMetadata(_llamaPolicyMetadataLogic, config);
+    _setAndInitializePolicyMetadata(llamaPolicyMetadataLogic, config);
   }
 
   // -------- Role and Permission Getters --------
@@ -557,13 +557,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Sets the Llama policy metadata contract.
-  function _setAndInitializePolicyMetadata(ILlamaPolicyMetadata _llamaPolicyMetadataLogic, bytes memory config)
-    internal
-  {
+  function _setAndInitializePolicyMetadata(ILlamaPolicyMetadata llamaPolicyMetadataLogic, bytes memory config) internal {
     llamaPolicyMetadata =
-      ILlamaPolicyMetadata(Clones.cloneDeterministic(address(_llamaPolicyMetadataLogic), keccak256(config)));
+      ILlamaPolicyMetadata(Clones.cloneDeterministic(address(llamaPolicyMetadataLogic), keccak256(config)));
     llamaPolicyMetadata.initialize(config);
-    emit PolicyMetadataSet(llamaPolicyMetadata, _llamaPolicyMetadataLogic, config);
+    emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, config);
   }
 
   /// @dev Returns the token ID for a `policyholder`.
