@@ -214,7 +214,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// infrastructure, otherwise expired roles can continue to create actions (if they have the right permissions) and
   /// take part in the approval/disapproval process if the strategy allows it.
   function revokeExpiredRole(uint8 role, address policyholder) external {
-    _revokeExpiredRole(role, policyholder);
+    // Read the most recent checkpoint for the policyholder's role balance.
+    if (!isRoleExpired(policyholder, role)) revert InvalidRoleHolderInput();
+    _setRoleHolder(role, policyholder, 0, 0);
   }
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.
@@ -538,13 +540,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     if (role > numRoles) revert RoleNotInitialized(role);
     canCreateAction[role][permissionId] = hasPermission;
     emit RolePermissionAssigned(role, permissionId, hasPermission);
-  }
-
-  /// @dev Revokes a policyholder's expired `role`.
-  function _revokeExpiredRole(uint8 role, address policyholder) internal {
-    // Read the most recent checkpoint for the policyholder's role balance.
-    if (!isRoleExpired(policyholder, role)) revert InvalidRoleHolderInput();
-    _setRoleHolder(role, policyholder, 0, 0);
   }
 
   /// @dev Mints a policyholder's policy.
