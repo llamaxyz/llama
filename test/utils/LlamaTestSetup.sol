@@ -153,13 +153,16 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     (disapproverDrake, disapproverDrakePrivateKey) = makeAddrAndKey("disapproverDrake");
 
     // We use input from the deploy scripts to bootstrap our test suite.
-    deployScriptInput = DeployUtils.readScriptInput("deployLlamaFactory.json");
+    deployScriptInput = DeployUtils.readScriptInput("deployRootLlamaInstance.json");
     createActionScriptInput = DeployUtils.readScriptInput("deployLlamaInstance.json");
 
+    // Deploy the factory
     DeployLlamaFactory.run();
 
-    rootCore = factory.ROOT_LLAMA_CORE();
-    rootExecutor = factory.ROOT_LLAMA_EXECUTOR();
+    // Deploy the root Llama instance and set the instance variables
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
+    rootCore = core;
+    rootExecutor = rootCore.executor();
     rootPolicy = rootCore.policy();
     rootPolicyMetadata = rootPolicy.llamaPolicyMetadata();
 
@@ -169,26 +172,9 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
     bytes[] memory rootAccounts = accountConfigsRootLlama();
 
-    // Deploy the Llama instance and get a reference to the deployed LlamaCore.
-    vm.recordLogs();
+    // Deploy the root Llama instance and set the instance variables
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
-    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    Vm.Log memory _event;
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
-    for (uint256 i = 0; i < emittedEvents.length; i++) {
-      _event = emittedEvents[i];
-      if (_event.topics[0] == llamaInstanceCreatedSig) {
-        // event LlamaInstanceCreated(
-        //   uint256 indexed id,
-        //   string indexed name,
-        //   address llamaCore,       <--- What we want.
-        //   address llamaExecutor,
-        //   address llamaPolicy,
-        //   uint256 chainId
-        // )
-        (mpCore,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
-      }
-    }
+    mpCore = core;
     mpPolicy = mpCore.policy();
     mpExecutor = mpCore.executor();
     mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();

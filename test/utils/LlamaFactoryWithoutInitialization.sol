@@ -32,21 +32,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  )
-    LlamaFactory(
-      _llamaCoreLogic,
-      initialLlamaStrategyLogic,
-      initialLlamaAccountLogic,
-      _llamaPolicyLogic,
-      _llamaPolicyMetadata,
-      name,
-      initialStrategies,
-      initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions
-    )
-  {}
+  ) LlamaFactory(_llamaCoreLogic, _llamaPolicyLogic, _llamaPolicyMetadata) {}
 
   /// @notice Deploys a new Llama system. This function can only be called by the initial Llama system.
   /// @param name The name of this Llama system.
