@@ -66,6 +66,8 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
       vm.prank(address(mpExecutor));
       mpPolicy.setRolePermission(_role, _permission, true);
+
+      mineBlock();
     }
 
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({

@@ -206,10 +206,11 @@ contract LlamaRelativeQuorum is ILlamaStrategy, Initializable {
     if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
 
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(approvalRole);
+    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsNumberOfHolders(approvalRole, block.timestamp - 1);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
+    uint256 disapprovalPolicySupply =
+      llamaPolicy.getPastRoleSupplyAsNumberOfHolders(disapprovalRole, block.timestamp - 1);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // Save off the supplies to use for checking quorum.
