@@ -6,9 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
-import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -24,7 +22,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 /// policyholder and has roles assigned to `create`, `approve` and `disapprove` actions.
 /// @dev The roles and permissions determine how the policyholder can interact with the Llama core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
-  using RoleCheckpoints for RoleCheckpoints.History;
+  using PolicyholderCheckpoints for PolicyholderCheckpoints.History;
   using SupplyCheckpoints for SupplyCheckpoints.History;
 
   // ======================================
@@ -123,7 +121,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
+  mapping(uint256 tokenId => mapping(uint8 role => PolicyholderCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
@@ -359,50 +357,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }
     return PolicyholderCheckpoints.History(checkpoints);
-  }
-
-  /// @notice Returns all supply checkpoints for the given role between `start` and
-  /// `end`, where `start` is inclusive and `end` is exclusive.
-  /// @param role Role held by policyholder to get the checkpoints for.
-  /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
-  /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
-  function roleSupplyCheckpoints(uint8 role, uint256 start, uint256 end)
-    external
-    view
-    returns (SupplyCheckpoints.History memory)
-  {
-    if (start > end) revert InvalidIndices();
-    uint256 checkpointsLength = roleSupplyCkpts[role]._checkpoints.length;
-    if (end > checkpointsLength) revert InvalidIndices();
-
-    uint256 sliceLength = end - start;
-    SupplyCheckpoints.Checkpoint[] memory checkpoints = new SupplyCheckpoints.Checkpoint[](sliceLength);
-    for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
-      checkpoints[i - start] = roleSupplyCkpts[role]._checkpoints[i];
-    }
-    return SupplyCheckpoints.History(checkpoints);
-  }
-
-  /// @notice Returns all supply checkpoints for the given role between `start` and
-  /// `end`, where `start` is inclusive and `end` is exclusive.
-  /// @param role Role held by policyholder to get the checkpoints for.
-  /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
-  /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
-  function roleSupplyCheckpoints(uint8 role, uint256 start, uint256 end)
-    external
-    view
-    returns (SupplyCheckpoints.History memory)
-  {
-    if (start > end) revert InvalidIndices();
-    uint256 checkpointsLength = roleSupplyCkpts[role]._checkpoints.length;
-    if (end > checkpointsLength) revert InvalidIndices();
-
-    uint256 sliceLength = end - start;
-    SupplyCheckpoints.Checkpoint[] memory checkpoints = new SupplyCheckpoints.Checkpoint[](sliceLength);
-    for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
-      checkpoints[i - start] = roleSupplyCkpts[role]._checkpoints[i];
-    }
-    return SupplyCheckpoints.History(checkpoints);
   }
 
   /// @notice Returns all supply checkpoints for the given role between `start` and

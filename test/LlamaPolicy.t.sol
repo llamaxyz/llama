@@ -13,7 +13,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {
   LlamaPolicyInitializationConfig, PermissionData, RoleHolderData, RolePermissionData
 } from "src/lib/Structs.sol";
