@@ -112,15 +112,6 @@ contract LlamaFactoryHandler is BaseHandler {
     );
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
   }
-
-  function llamaFactory_setPolicyTokenMetadata(LlamaPolicyMetadata newPolicyMetadata)
-    public
-    recordCall("llamaFactory_setPolicyMetadata")
-    useCurrentTimestamp
-  {
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
-    LLAMA_FACTORY.setPolicyMetadata(newPolicyMetadata);
-  }
 }
 
 contract LlamaFactoryInvariants is LlamaTestSetup {

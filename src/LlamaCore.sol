@@ -22,7 +22,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 /// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
@@ -279,7 +278,7 @@ contract LlamaCore is Initializable {
       config.initialRoleDescriptions,
       config.initialRoleHolders,
       config.initialRolePermissions,
-      config.llamaPolicyMetadata,
+      config.llamaPolicyMetadataLogic,
       config.color,
       config.logo,
       address(executor),
