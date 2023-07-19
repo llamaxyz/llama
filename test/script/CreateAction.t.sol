@@ -8,7 +8,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {Action, ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
@@ -236,8 +236,9 @@ contract Run is CreateActionTest {
 
     address initRoleHolder = makeAddr("actionCreatorAaron");
     assertEq(policy.hasRole(initRoleHolder, ACTION_CREATOR_ROLE_ID), true);
-    RoleCheckpoints.History memory balances = policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
-    RoleCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
+    PolicyholderCheckpoints.History memory balances =
+      policy.roleBalanceCheckpoints(initRoleHolder, ACTION_CREATOR_ROLE_ID);
+    PolicyholderCheckpoints.Checkpoint memory checkpoint = balances._checkpoints[0];
     assertEq(checkpoint.expiration, type(uint64).max);
     assertEq(checkpoint.quantity, 1);
   }

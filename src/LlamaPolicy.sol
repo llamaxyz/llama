@@ -6,7 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {LibString} from "@solady/utils/LibString.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -22,7 +22,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 /// policyholder and has roles assigned to `create`, `approve` and `disapprove` actions.
 /// @dev The roles and permissions determine how the policyholder can interact with the Llama core contract.
 contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
-  using RoleCheckpoints for RoleCheckpoints.History;
+  using PolicyholderCheckpoints for PolicyholderCheckpoints.History;
   using SupplyCheckpoints for SupplyCheckpoints.History;
 
   // ======================================
@@ -118,7 +118,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
+  mapping(uint256 tokenId => mapping(uint8 role => PolicyholderCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool)) public canCreateAction;
@@ -298,7 +298,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpoints(address policyholder, uint8 role)
     external
     view
-    returns (RoleCheckpoints.History memory)
+    returns (PolicyholderCheckpoints.History memory)
   {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role];
@@ -318,7 +318,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
     external
     view
-    returns (RoleCheckpoints.History memory)
+    returns (PolicyholderCheckpoints.History memory)
   {
     if (start > end) revert InvalidIndices();
     uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
@@ -326,11 +326,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     uint256 tokenId = _tokenId(policyholder);
     uint256 sliceLength = end - start;
-    RoleCheckpoints.Checkpoint[] memory checkpoints = new RoleCheckpoints.Checkpoint[](sliceLength);
+    PolicyholderCheckpoints.Checkpoint[] memory checkpoints = new PolicyholderCheckpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
       checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }
-    return RoleCheckpoints.History(checkpoints);
+    return PolicyholderCheckpoints.History(checkpoints);
   }
 
   /// @notice Returns all supply checkpoints for the given role between `start` and
