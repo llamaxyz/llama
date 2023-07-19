@@ -263,6 +263,7 @@ contract LlamaCore is Initializable {
     policy = LlamaPolicy(
       Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
     );
+
     // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
       Clones.predictDeterministicAddress(
@@ -271,6 +272,7 @@ contract LlamaCore is Initializable {
     );
     bytes32 bootstrapPermissionId =
       keccak256(abi.encode(PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy)));
+
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,

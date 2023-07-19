@@ -146,6 +146,7 @@ contract LlamaFactory {
     // Deploy and initialize `LlamaCore`.
     core =
       LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
+
     LlamaCoreInitializationConfig memory coreConfig = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
