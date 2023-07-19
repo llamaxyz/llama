@@ -346,7 +346,7 @@ contract Deploy is LlamaFactoryTest {
     );
     _policy.initialize(config);
   }
-  
+
   function test_SetsNameOnLlamaCore() public {
     LlamaCore _llama = deployLlama();
     assertEq(_llama.name(), "NewProject");
