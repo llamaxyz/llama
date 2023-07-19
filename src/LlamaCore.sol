@@ -271,7 +271,6 @@ contract LlamaCore is Initializable {
     );
     bytes32 bootstrapPermissionId =
       keccak256(abi.encode(PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy)));
-
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       config.name,
       config.initialRoleDescriptions,

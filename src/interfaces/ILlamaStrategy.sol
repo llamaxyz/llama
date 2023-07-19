@@ -9,8 +9,6 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice This is the interface for Llama strategies which determine the rules of an action's process.
 /// @dev The interface is sorted by the stage of the action's lifecycle in which the method's are used.
-/// @dev Validation methods are not `view` because (1) the strategy may want to save off some data
-/// during the call, and (2) having `view` methods that can revert isn't great UX.
 interface ILlamaStrategy {
   // -------- For Inspection --------
   // These are not strictly required by the core, but are useful for inspecting a strategy contract.

@@ -65,11 +65,11 @@ contract LlamaFactory {
   /// @notice The current number of Llama instances created.
   uint256 public llamaCount;
 
-  // ======================================================
-  // ======== Contract Creation and Initialization ========
-  // ======================================================
+  // ===================================
+  // ======== Contract Creation ========
+  // ===================================
 
-  /// @dev Constructs the Llama Factory and deploys the root Llama instance.
+  /// @dev Constructs the Llama Factory.
   constructor(
     LlamaCore llamaCoreLogic,
     ILlamaStrategy initialLlamaStrategyLogic,
@@ -111,7 +111,6 @@ contract LlamaFactory {
   // ===========================================
 
   /// @notice Deploys a new Llama instance.
-  /// @dev This function can only be called by the root Llama instance.
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The strategy implementation (logic) contract to use for this Llama instance.
   /// @param accountLogic The account implementation (logic) contract to use for this Llama instance.
