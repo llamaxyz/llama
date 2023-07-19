@@ -282,7 +282,7 @@ contract Constructor is LlamaCoreTest {
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO,
       address(this)
@@ -304,7 +304,7 @@ contract Initialize is LlamaCoreTest {
       relativeHolderQuorumLogic,
       accountLogic,
       policyLogic,
-      policyMetadata,
+      policyMetadataLogic,
       "Root Llama",
       strategyConfigs,
       accounts,
@@ -341,7 +341,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -374,7 +374,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -414,7 +414,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -441,7 +441,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -471,7 +471,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -506,7 +506,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -532,7 +532,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -557,7 +557,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -580,7 +580,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -605,7 +605,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -634,7 +634,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -667,7 +667,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -693,7 +693,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );
@@ -724,7 +724,7 @@ contract Initialize is LlamaCoreTest {
       rootLlamaRoleDescriptions(),
       roleHolders,
       new RolePermissionData[](0),
-      policyMetadata,
+      policyMetadataLogic,
       COLOR,
       LOGO
     );

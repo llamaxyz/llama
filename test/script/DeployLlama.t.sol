@@ -13,7 +13,6 @@ import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 
@@ -35,6 +34,7 @@ contract Run is DeployLlamaTest {
     assertFalse(address(factory) == address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
     assertEq(address(factory.LLAMA_POLICY_LOGIC()), address(policyLogic));
+    assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
   }
 
   function test_DeploysRootLlama() public {
@@ -196,15 +196,12 @@ contract Run is DeployLlamaTest {
   }
 
   function test_DeploysPolicyMetadata() public {
-    assertEq(address(policyMetadata), address(0));
+    assertEq(address(policyMetadataLogic), address(0));
 
     DeployLlama.run();
 
-    assertFalse(address(policyMetadata) == address(0));
-    assertFalse(
-      keccak256(abi.encode(policyMetadata.tokenURI("MyLlama", 42, "teal", "https://logo.com")))
-        == keccak256(abi.encode(""))
-    );
+    assertFalse(address(policyMetadataLogic) == address(0));
+    assertFalse(keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
   }
 
   function test_DeploysLens() public {

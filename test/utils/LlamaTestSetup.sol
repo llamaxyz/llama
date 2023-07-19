@@ -15,6 +15,7 @@ import {CreateAction} from "script/CreateAction.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
@@ -61,6 +62,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaCore rootCore;
   LlamaExecutor rootExecutor;
   LlamaPolicy rootPolicy;
+  ILlamaPolicyMetadata rootPolicyMetadata;
   ILlamaStrategy rootStrategy1;
   ILlamaStrategy rootStrategy2;
   ILlamaAccount rootAccount1;
@@ -70,6 +72,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
   LlamaCore mpCore;
   LlamaExecutor mpExecutor;
   LlamaPolicy mpPolicy;
+  ILlamaPolicyMetadata mpPolicyMetadata;
   ILlamaStrategy mpBootstrapStrategy;
   ILlamaStrategy mpStrategy1;
   ILlamaStrategy mpStrategy2;
@@ -160,6 +163,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootCore = factory.ROOT_LLAMA_CORE();
     rootExecutor = factory.ROOT_LLAMA_EXECUTOR();
     rootPolicy = rootCore.policy();
+    rootPolicyMetadata = rootPolicy.llamaPolicyMetadata();
 
     // Now we deploy a mock protocol's llama, again with a single action creator role.
     bytes[] memory mpAccounts = accountConfigsLlamaInstance();
@@ -220,6 +224,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     }
     mpPolicy = mpCore.policy();
     mpExecutor = mpCore.executor();
+    mpPolicyMetadata = mpPolicy.llamaPolicyMetadata();
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));

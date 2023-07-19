@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -87,6 +88,24 @@ contract LlamaLens {
       address(llamaCore) // deployer
     );
     return LlamaPolicy(_computedAddress);
+  }
+
+  /// @notice Computes the address of a Llama policy metadata contract.
+  /// @param llamaPolicyMetadataLogic The Llama policy metadata logic contract.
+  /// @param metadataConfig The initialization configuration for the new metadata contract.
+  /// @param llamaPolicy The `LlamaPolicy` that deploys this metadata contract.
+  /// @return The computed address of the `LlamaPolicyMetadata` contract.
+  function computeLlamaPolicyMetadataAddress(
+    address llamaPolicyMetadataLogic,
+    bytes memory metadataConfig,
+    address llamaPolicy
+  ) external pure returns (ILlamaPolicyMetadata) {
+    address _computedAddress = Clones.predictDeterministicAddress(
+      llamaPolicyMetadataLogic,
+      keccak256(metadataConfig), // salt
+      llamaPolicy // deployer
+    );
+    return ILlamaPolicyMetadata(_computedAddress);
   }
 
   /// @notice Computes the address of a Llama strategy contract with the strategy configuration value.
