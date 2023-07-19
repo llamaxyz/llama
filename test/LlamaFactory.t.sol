@@ -153,7 +153,7 @@ contract Deploy is LlamaFactoryTest {
 
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -167,7 +167,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(disapproverDrake);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -190,7 +190,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(disapproverDiane);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -204,7 +204,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(disapproverDrake);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,

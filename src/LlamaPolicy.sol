@@ -573,7 +573,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       // Safety: Can never underflow, since we only burn tokens that currently exist.
       roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders - 1, totalQuantity - 1);
     }
-    }
 
     roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
   }

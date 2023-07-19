@@ -599,6 +599,16 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mineBlock();
   }
 
+  function generateAndSetRoleHolders(uint256 numberOfHolders, uint96 quantity) internal {
+    for (uint256 i = 0; i < numberOfHolders; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      if (mpPolicy.balanceOf(_policyHolder) == 0) {
+        vm.prank(address(mpExecutor));
+        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, quantity, type(uint64).max);
+      }
+    }
+  }
+
   function mineBlock() internal {
     vm.roll(block.number + 1);
     vm.warp(block.timestamp + 1);
