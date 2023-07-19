@@ -30,6 +30,12 @@ contract CreateActionTest is Test, DeployLlama, CreateAction {
     // Deploy the root llama infra.
     DeployLlama.run();
     rootLlama = factory.ROOT_LLAMA_CORE();
+    mineBlock();
+  }
+
+  function mineBlock() internal {
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
   }
 }
 
@@ -94,8 +100,7 @@ contract Run is CreateActionTest {
     CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
 
     // Advance the clock so that checkpoints take effect.
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     ActionInfo memory actionInfo = getActionInfo();
     assertEq(uint8(rootLlama.getActionState(actionInfo)), uint8(ActionState.Active));
@@ -108,7 +113,6 @@ contract Run is CreateActionTest {
     rootLlama.queueAction(actionInfo);
 
     // Advance the clock to execute the action.
-    vm.roll(block.number + 1);
     Action memory action = rootLlama.getAction(deployActionId);
     vm.warp(action.minExecutionTime + 1);
 

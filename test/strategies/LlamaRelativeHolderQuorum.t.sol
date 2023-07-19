@@ -493,6 +493,7 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint96(_creatorQuantity), type(uint64).max);
+    mineBlock();
 
     uint256 supply = mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1));
 
