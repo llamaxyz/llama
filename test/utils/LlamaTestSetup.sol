@@ -169,12 +169,14 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     bytes[] memory instanceStrategyConfigs = strategyConfigsLlamaInstance();
     bytes[] memory rootAccounts = accountConfigsRootLlama();
 
-    // First we create an action to deploy a new llamaCore instance.
+    // First we create an action to deploy a new llamaCore instance. We skip forward a block
+    // because strategies check supplies at `block.timestamp - 1`, and we just set those during
+    // the `DeployLlama.run()` call.
+    mineBlock();
     CreateAction.run(LLAMA_INSTANCE_DEPLOYER);
 
     // Advance the clock so that checkpoints take effect.
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     // Second, we approve the action.
     vm.prank(LLAMA_INSTANCE_DEPLOYER); // This EOA has force-approval permissions.
@@ -191,9 +193,12 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     rootCore.queueAction(deployActionInfo);
 
     // Advance the clock to execute the action.
-    vm.roll(block.number + 1);
+    mineBlock();
     Action memory action = rootCore.getAction(deployActionId);
+
+    // Skip forward to when the action can be executed.
     vm.warp(action.minExecutionTime + 1);
+    vm.roll(block.number + 1);
 
     // Execute the action and get a reference to the deployed LlamaCore.
     vm.recordLogs();
@@ -290,8 +295,8 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptWithValuePermissionId, true);
     vm.stopPrank();
 
-    // Skip forward 1 second so the most recent checkpoints are in the past.
-    vm.warp(block.timestamp + 1);
+    // Skip forward one block so the most recent checkpoints are in the past.
+    mineBlock();
 
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
@@ -552,7 +557,7 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
     actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data);
 
-    vm.warp(block.timestamp + 1);
+    mineBlock();
   }
 
   function approveAction(uint256 numberOfApprovals, ActionInfo memory actionInfo) internal {
@@ -579,6 +584,15 @@ contract LlamaTestSetup is DeployLlama, CreateAction, Test {
         mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 1, type(uint64).max);
       }
     }
+
+    // We often call this `generateAndSetRoleHolders` before creating an action, so we must mine a
+    // block here to ensure the role balance and supply checkpoints are set at `block.timestamp - 1`.
+    mineBlock();
+  }
+
+  function mineBlock() internal {
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
   }
 
   function assertEqStrategyStatus(

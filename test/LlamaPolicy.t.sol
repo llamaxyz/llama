@@ -401,18 +401,6 @@ contract SetRoleHolder is LlamaPolicyTest {
     mpPolicy.setRoleHolder(uint8(Roles.AllHolders), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
   }
 
-  function test_RevertIf_ActionWasCreatedAtSameTimestamp() public {
-    // First it should work, then we mock creating an action at the current timestamp, then it
-    // should revert.
-    vm.startPrank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-    vm.mockCall(
-      address(mpCore), abi.encodeWithSelector(LlamaCore.getLastActionTimestamp.selector), abi.encode(block.timestamp)
-    );
-    vm.expectRevert(LlamaPolicy.ActionCreationAtSameTimestamp.selector);
-    mpPolicy.setRoleHolder(uint8(Roles.ActionCreator), arbitraryAddress, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
-  }
-
   function test_NoOpIfNoChangesAreMade_WhenUserAlreadyHasSameRoleData() public {
     address policyholder = arbitraryPolicyholder;
     vm.startPrank(address(mpExecutor));
