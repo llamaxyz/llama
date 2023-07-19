@@ -18,7 +18,7 @@ contract ComputeLlamaCoreAddress is LlamaLensTestSetup {
     address expected = address(lens.computeLlamaCoreAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
     assertEq(expected, address(rootCore));
 
-    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", address(rootExecutor)));
+    expected = address(lens.computeLlamaCoreAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(mpCore));
   }
 }
@@ -28,7 +28,7 @@ contract ComputeLlamaPolicyAddress is LlamaLensTestSetup {
     address expected = address(lens.computeLlamaPolicyAddress("Root Llama", FORGE_DEFAULT_SCRIPT_DEPLOYER));
     assertEq(expected, address(rootPolicy));
 
-    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama", address(rootExecutor)));
+    expected = address(lens.computeLlamaPolicyAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(mpPolicy));
   }
 }
@@ -121,7 +121,7 @@ contract ComputeLlamaExecutorAddress is LlamaLensTestSetup {
     expected = address(lens.computeLlamaExecutorAddress(address(mpCore)));
     assertEq(expected, address(mpExecutor));
 
-    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama", address(rootExecutor)));
+    expected = address(lens.computeLlamaExecutorAddress("Mock Protocol Llama", LLAMA_INSTANCE_DEPLOYER));
     assertEq(expected, address(mpExecutor));
   }
 }
