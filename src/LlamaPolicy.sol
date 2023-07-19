@@ -106,11 +106,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// unusable. See the documentation for more info.
   uint8 internal constant BOOTSTRAP_ROLE = 1;
 
-  /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
-  /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
-  /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => RoleCheckpoints.History)) internal roleBalanceCkpts;
-
   /// @dev Tracks total supplies of a given role. There are two notions of total supply:
   ///   - The `numberOfHolders` is simply the number of policyholders that hold the role.
   ///   - The `totalQuantity` is the sum of the quantity of the role for each policyholder that
@@ -126,14 +121,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool hasPermission)) public canCreateAction;
 
-<<<<<<< HEAD
-  /// @notice The supply values for a given role.
-  /// @dev RoleSupply consists of `numberOfHolders` and `totalQuantity`. These supplies are used by different strategy
-  /// types to calculate quorums.
-  mapping(uint8 role => RoleSupply) public roleSupply;
-
-=======
->>>>>>> main
   /// @notice The highest role ID that has been initialized.
   uint8 public numRoles;
 
@@ -296,10 +283,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
-<<<<<<< HEAD
-  function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96) {
-    return roleSupply[role].totalQuantity;
-=======
   function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
@@ -307,7 +290,6 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
   function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
->>>>>>> main
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
@@ -433,13 +415,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
-<<<<<<< HEAD
-  function contractURI() external view returns (string memory) {
-    return llamaPolicyMetadata.contractURI(name);
-=======
   function contractURI() public view returns (string memory) {
     return llamaPolicyMetadata.getContractURI(name);
->>>>>>> main
   }
 
   // -------- ERC-721 Methods --------
