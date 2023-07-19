@@ -1,70 +1,70 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @dev Tests in this contract mirror those in OpenZeppelin's RoleCheckpoints.test.js, which is why
+/// @dev Tests in this contract mirror those in OpenZeppelin's PolicyholderCheckpoints.test.js, which is why
 /// the tests are written in a different style than the rest of the tests in this repo (i.e. they
 /// do not follow the "one contract per method" pattern).
-/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/test/utils/RoleCheckpoints.test.js
+/// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d00acef4059807535af0bd0dd0ddf619747a044b/test/utils/PolicyholderCheckpoints.test.js
 import {Test, console2} from "forge-std/Test.sol";
 
-import {RoleCheckpoints} from "src/lib/RoleCheckpoints.sol";
+import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 
-/// @dev The RoleCheckpointsMock harness contract has its external functions written according to
+/// @dev The PolicyholderCheckpointsMock harness contract has its external functions written according to
 /// https://github.com/foundry-rs/foundry/pull/3128#issuecomment-1241245086
 /// so that test coverage is captured for the Checkpoints library.
-contract RoleCheckpointsMock {
-  RoleCheckpoints.History private _totalCheckpoints;
+contract PolicyholderCheckpointsMock {
+  PolicyholderCheckpoints.History private _totalCheckpoints;
 
   function printCheckpoints() public view {
     for (uint256 i = 0; i < length(); i++) {
-      RoleCheckpoints.Checkpoint memory ckpt = _totalCheckpoints._checkpoints[i];
+      PolicyholderCheckpoints.Checkpoint memory ckpt = _totalCheckpoints._checkpoints[i];
       console2.log(ckpt.timestamp, ckpt.quantity, ckpt.expiration);
     }
   }
 
   function latest() external view returns (uint256) {
-    uint256 quantity = RoleCheckpoints.latest(_totalCheckpoints);
+    uint256 quantity = PolicyholderCheckpoints.latest(_totalCheckpoints);
     return quantity;
   }
 
   function latestCheckpoint() public view returns (bool, uint256, uint256, uint256) {
     (bool exists, uint256 quantity, uint256 timestamp, uint256 expiration) =
-      RoleCheckpoints.latestCheckpoint(_totalCheckpoints);
+      PolicyholderCheckpoints.latestCheckpoint(_totalCheckpoints);
     return (exists, quantity, timestamp, expiration);
   }
 
   function length() public view returns (uint256) {
-    uint256 numCkpts = RoleCheckpoints.length(_totalCheckpoints);
+    uint256 numCkpts = PolicyholderCheckpoints.length(_totalCheckpoints);
     return numCkpts;
   }
 
   function push(uint256 quantity, uint256 expiration) public returns (uint256, uint256) {
-    (uint256 prevQty, uint256 newQty) = RoleCheckpoints.push(_totalCheckpoints, quantity, expiration);
+    (uint256 prevQty, uint256 newQty) = PolicyholderCheckpoints.push(_totalCheckpoints, quantity, expiration);
     return (prevQty, newQty);
   }
 
   function getAtProbablyRecentTimestamp(uint256 timestamp) public view returns (uint256) {
-    uint256 quantity = RoleCheckpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
+    uint256 quantity = PolicyholderCheckpoints.getAtProbablyRecentTimestamp(_totalCheckpoints, timestamp);
     return quantity;
   }
 }
 
-contract RoleCheckpointsTest is Test {
-  RoleCheckpointsMock checkpoints;
+contract PolicyholderCheckpointsTest is Test {
+  PolicyholderCheckpointsMock checkpoints;
   uint64 DEFAULT_EXPIRATION = type(uint64).max;
 
   function setUp() public virtual {
-    checkpoints = new RoleCheckpointsMock();
+    checkpoints = new PolicyholderCheckpointsMock();
   }
 }
 
 // ====================================
 // ======== OpenZeppelin Tests ========
 // ====================================
-// All tests within this section mirror the tests in OpenZeppelin's RoleCheckpoints.test.js and
+// All tests within this section mirror the tests in OpenZeppelin's PolicyholderCheckpoints.test.js and
 // therefore do not account for checkpoint expiration.
 
-contract WithoutCheckpointsWithoutExpiration is RoleCheckpointsTest {
+contract WithoutCheckpointsWithoutExpiration is PolicyholderCheckpointsTest {
   error UnsafeCast(uint256 n);
 
   function test_ReturnsZeroAsLatestValue() public {
@@ -96,13 +96,13 @@ contract WithoutCheckpointsWithoutExpiration is RoleCheckpointsTest {
   }
 }
 
-contract WithCheckpointsWithoutExpiration is RoleCheckpointsTest {
+contract WithCheckpointsWithoutExpiration is PolicyholderCheckpointsTest {
   uint256 t0;
   uint256 t1;
   uint256 t2;
 
   function setUp() public override {
-    RoleCheckpointsTest.setUp();
+    PolicyholderCheckpointsTest.setUp();
 
     vm.warp(block.timestamp + 1);
     t0 = block.timestamp;
@@ -139,12 +139,12 @@ contract WithCheckpointsWithoutExpiration is RoleCheckpointsTest {
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
+    vm.expectRevert("PolicyholderCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp);
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
+    vm.expectRevert("PolicyholderCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp + 1);
   }
 
@@ -167,7 +167,7 @@ contract WithCheckpointsWithoutExpiration is RoleCheckpointsTest {
 // ===========================
 // Modification of the above tests to account for checkpoint expiration.
 
-contract WithoutCheckpointsWithExpiration is RoleCheckpointsTest {
+contract WithoutCheckpointsWithExpiration is PolicyholderCheckpointsTest {
   function test_ReturnsZeroAsLatestValue() public {
     assertEq(checkpoints.latest(), 0);
 
@@ -179,13 +179,13 @@ contract WithoutCheckpointsWithExpiration is RoleCheckpointsTest {
   }
 }
 
-contract WithCheckpointsWithExpiration is RoleCheckpointsTest {
+contract WithCheckpointsWithExpiration is PolicyholderCheckpointsTest {
   uint256 t0;
   uint256 t1;
   uint256 t2;
 
   function setUp() public override {
-    RoleCheckpointsTest.setUp();
+    PolicyholderCheckpointsTest.setUp();
 
     vm.warp(block.timestamp + 1);
     t0 = block.timestamp;
@@ -213,12 +213,12 @@ contract WithCheckpointsWithExpiration is RoleCheckpointsTest {
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampEqualsCurrentTimestamp() public {
-    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
+    vm.expectRevert("PolicyholderCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp);
   }
 
   function test_Lookup_ProbablyRecentTimestamp_RevertIf_BlockTimestampGreaterThanCurrentTimestamp() public {
-    vm.expectRevert("RoleCheckpoints: timestamp is not in the past");
+    vm.expectRevert("PolicyholderCheckpoints: timestamp is not in the past");
     checkpoints.getAtProbablyRecentTimestamp(block.timestamp + 1);
   }
 
