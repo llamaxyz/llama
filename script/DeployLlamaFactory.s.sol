@@ -16,7 +16,7 @@ import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
-contract DeployLlama is Script {
+contract DeployLlamaFactory is Script {
   using stdJson for string;
 
   // Logic contracts.
@@ -63,7 +63,7 @@ contract DeployLlama is Script {
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
     // ensure it can be used to pass actions.
     // NOTE: This check currently only supports relative strategies.
-    string memory filename = "deployLlama.json";
+    string memory filename = "deployLlamaFactory.json";
     DeployUtils.bootstrapSafetyCheck(filename);
     // ======== END SAFETY CHECK ========
 

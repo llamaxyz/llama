@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 
-import {DeployLlama} from "script/DeployLlama.s.sol";
+import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -16,11 +16,11 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
 
-contract DeployLlamaTest is Test, DeployLlama {
+contract DeployLlamaFactoryTest is Test, DeployLlamaFactory {
   function setUp() public virtual {}
 }
 
-contract Run is DeployLlamaTest {
+contract Run is DeployLlamaFactoryTest {
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
   // replaced with any address that we hold the private key for.
@@ -29,7 +29,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysFactory() public {
     assertEq(address(factory), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(factory) == address(0));
     assertEq(address(factory.LLAMA_CORE_LOGIC()), address(coreLogic));
@@ -39,7 +39,7 @@ contract Run is DeployLlamaTest {
 
   function test_DeploysRootLlama() public {
     vm.recordLogs();
-    DeployLlama.run();
+    DeployLlamaFactory.run();
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     assertEq(factory.llamaCount(), 1);
@@ -165,7 +165,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysCoreLogic() public {
     assertEq(address(coreLogic), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(coreLogic) == address(0));
   }
@@ -173,7 +173,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysStrategyLogic() public {
     assertEq(address(relativeQuorumLogic), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(relativeQuorumLogic) == address(0));
   }
@@ -181,7 +181,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysAccountLogic() public {
     assertEq(address(accountLogic), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(accountLogic) == address(0));
   }
@@ -189,7 +189,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysPolicyLogic() public {
     assertEq(address(policyLogic), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(policyLogic) == address(0));
     assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
@@ -198,7 +198,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysPolicyMetadata() public {
     assertEq(address(policyMetadataLogic), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(policyMetadataLogic) == address(0));
     assertFalse(keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
@@ -207,7 +207,7 @@ contract Run is DeployLlamaTest {
   function test_DeploysLens() public {
     assertEq(address(lens), address(0));
 
-    DeployLlama.run();
+    DeployLlamaFactory.run();
 
     assertFalse(address(lens) == address(0));
     PermissionData memory permissionData = PermissionData(
