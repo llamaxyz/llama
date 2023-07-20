@@ -196,9 +196,7 @@ contract LlamaCore is Initializable {
     "ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
-  /// @dev Mapping of actionIds to Actions. Making this `public` results in stack too deep with no optimizer, but this
-  /// data can be accessed with the `getAction` function so this is ok. We want the contracts to compile without the
-  /// optimizer so `forge coverage` can be used.
+  /// @dev Mapping of actionIds to Actions. This data can be accessed through the `getAction` function.
   mapping(uint256 actionId => Action) internal actions;
 
   /// @notice The contract that executes actions for this Llama instance.
