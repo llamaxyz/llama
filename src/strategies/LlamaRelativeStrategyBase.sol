@@ -178,11 +178,8 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external view virtual {
-    uint256 approvalPolicySupply = getApprovalSupply(actionInfo);
-    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
-
-    uint256 disapprovalPolicySupply = getDisapprovalSupply(actionInfo);
-    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+    if (getApprovalSupply(actionInfo) == 0) revert RoleHasZeroSupply(approvalRole);
+    if (getDisapprovalSupply(actionInfo) == 0) revert RoleHasZeroSupply(disapprovalRole);
   }
 
   // -------- When Casting Approval --------
