@@ -43,15 +43,15 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // ======== Errors ========
   // ========================
 
-  /// @dev Only callable by a Llama instance's core contract.
-  error OnlyLlamaCore();
-
   /// @dev The action cannot be canceled if it's already in a terminal state.
   /// @param currentState The current state of the action.
   error CannotCancelInState(ActionState currentState);
 
   /// @dev The strategy has disabled disapprovals.
   error DisapprovalDisabled();
+
+  /// @dev The provided action could not be fou.
+  error InvalidActionInfo();
 
   /// @dev The action cannot be created because the minimum approval percentage cannot be greater than 100%.
   /// @param minApprovalPct The provided minApprovalPct.
@@ -177,7 +177,13 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external view virtual;
+  function validateActionCreation(ActionInfo calldata actionInfo) external view virtual {
+    uint256 approvalPolicySupply = getApprovalSupply(actionInfo);
+    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
+
+    uint256 disapprovalPolicySupply = getDisapprovalSupply(actionInfo);
+    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+  }
 
   // -------- When Casting Approval --------
 

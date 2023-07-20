@@ -470,16 +470,6 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
     assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), _numberOfPolicies);
   }
 
-  function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    ILlamaStrategy testStrategy = deployTestRelativeHolderQuorumStrategy();
-    generateAndSetRoleHolders(_numberOfPolicies);
-    ActionInfo memory actionInfo = createAction(testStrategy);
-
-    vm.expectRevert(LlamaRelativeStrategyBase.OnlyLlamaCore.selector);
-    LlamaRelativeHolderQuorum(address(testStrategy)).validateActionCreation(actionInfo);
-  }
-
   function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     _creatorQuantity = bound(_creatorQuantity, 1, 1000);
