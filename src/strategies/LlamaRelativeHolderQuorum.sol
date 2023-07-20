@@ -34,6 +34,7 @@ contract LlamaRelativeHolderQuorum is LlamaRelativeStrategyBase {
     actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
   }
 
+  /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
