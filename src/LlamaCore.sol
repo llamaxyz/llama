@@ -221,7 +221,7 @@ contract LlamaCore is Initializable {
   /// @notice Mapping of actionIds to policyholders to disapprovals.
   mapping(uint256 actionId => mapping(address policyholder => bool hasDisapproved)) public disapprovals;
 
-  /// @notice Mapping of all deployed strategies and their current authorizaton status.
+  /// @notice Mapping of all deployed strategies and their current authorization status.
   mapping(ILlamaStrategy strategy => StrategyStatus authorizationStatus) public strategies;
 
   /// @notice Mapping of all authorized scripts.
