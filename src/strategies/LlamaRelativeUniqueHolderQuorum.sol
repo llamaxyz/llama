@@ -22,7 +22,7 @@ contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
     if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
 
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(approvalRole);
+    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsNumberOfHolders(approvalRole, block.timestamp - 1);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
     uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsNumberOfHolders(disapprovalRole);
