@@ -45,7 +45,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
 
   function initialize(
     string memory name,
-    ILlamaStrategy relativeQuorumLogic,
+    ILlamaStrategy relativeHolderQuorumLogic,
     ILlamaAccount accountLogic,
     bytes[] memory initialStrategies,
     bytes[] memory initialAccounts,
@@ -59,7 +59,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       initialStrategies,
       initialAccounts,

@@ -21,7 +21,9 @@ import {Action, ActionInfo, PermissionData, RoleHolderData, RolePermissionData} 
 import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -206,15 +208,15 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     // NOTE: We ignore index 0, which was added later in development as part of the bootstrap safety
     // check, but it's not part of the main test suite.
     rootStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[1], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), rootStrategyConfigs[1], address(rootCore));
     rootStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), rootStrategyConfigs[2], address(rootCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), rootStrategyConfigs[2], address(rootCore));
     mpBootstrapStrategy =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[0], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[0], address(mpCore));
     mpStrategy1 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[1], address(mpCore));
     mpStrategy2 =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[2], address(mpCore));
 
     // Set llama account addresses.
     rootAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
@@ -256,7 +258,8 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     // Verify that all storage variables were initialized. Standard assertions are in `setUp` are
     // not well supported by the Forge test runner, so we use require statements instead.
     require(address(0) != address(coreLogic), "coreLogic not set");
-    require(address(0) != address(relativeQuorumLogic), "relativeQuorumLogic not set");
+    require(address(0) != address(relativeHolderQuorumLogic), "relativeHolderQuorumLogic not set");
+    require(address(0) != address(relativeQuantityQuorumLogic), "relativeQuantityQuorumLogic not set");
     require(address(0) != address(accountLogic), "accountLogic not set");
     require(address(0) != address(policyLogic), "policyLogic not set");
 
@@ -317,7 +320,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     return DeployUtils.readRoleDescriptions(deployScriptInput);
   }
 
-  function toILlamaStrategy(LlamaRelativeQuorum.Config[] memory strategies)
+  function toILlamaStrategy(LlamaRelativeStrategyBase.Config[] memory strategies)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -327,7 +330,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     }
   }
 
-  function toILlamaStrategy(LlamaRelativeQuorum.Config memory strategy)
+  function toILlamaStrategy(LlamaRelativeStrategyBase.Config memory strategy)
     internal
     pure
     returns (ILlamaStrategy[] memory converted)
@@ -337,7 +340,13 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     }
   }
 
-  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeQuorum converted) {
+  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeHolderQuorum converted) {
+    assembly {
+      converted := strategy
+    }
+  }
+
+  function toRelativeStrategyBase(ILlamaStrategy strategy) internal pure returns (LlamaRelativeStrategyBase converted) {
     assembly {
       converted := strategy
     }
@@ -543,6 +552,16 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     // We often call this `generateAndSetRoleHolders` before creating an action, so we must mine a
     // block here to ensure the role balance and supply checkpoints are set at `block.timestamp - 1`.
     mineBlock();
+  }
+
+  function generateAndSetRoleHolders(uint256 numberOfHolders, uint96 quantity) internal {
+    for (uint256 i = 0; i < numberOfHolders; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      if (mpPolicy.balanceOf(_policyHolder) == 0) {
+        vm.prank(address(mpExecutor));
+        mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, quantity, type(uint64).max);
+      }
+    }
   }
 
   function mineBlock() internal {

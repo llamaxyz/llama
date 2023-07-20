@@ -82,7 +82,7 @@ contract Deploy is LlamaFactoryTest {
 
     return factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -114,7 +114,7 @@ contract Deploy is LlamaFactoryTest {
 
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -125,10 +125,10 @@ contract Deploy is LlamaFactoryTest {
       logo
     );
 
-    vm.expectRevert();
+    vm.prank(disapproverDrake);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -151,7 +151,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(disapproverDiane);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -165,7 +165,7 @@ contract Deploy is LlamaFactoryTest {
     vm.prank(disapproverDrake);
     factory.deploy(
       name,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -188,7 +188,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -203,7 +203,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -226,7 +226,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -242,7 +242,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -258,7 +258,7 @@ contract Deploy is LlamaFactoryTest {
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
     factory.deploy(
       "NewProject",
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -297,7 +297,7 @@ contract Deploy is LlamaFactoryTest {
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       "NewProject",
       policyLogic,
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
@@ -404,7 +404,7 @@ contract Deploy is LlamaFactoryTest {
 
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     ILlamaStrategy bootstrapStrategy =
-      lens.computeLlamaStrategyAddress(address(relativeQuorumLogic), strategyConfigs[0], address(computedLlama));
+      lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), strategyConfigs[0], address(computedLlama));
     bytes32 bootstrapPermissionId = keccak256(
       abi.encode(PermissionData(address(computedPolicy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy))
     );

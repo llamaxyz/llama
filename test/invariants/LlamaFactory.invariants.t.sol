@@ -10,7 +10,7 @@ import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
@@ -26,7 +26,7 @@ contract LlamaFactoryHandler is BaseHandler {
   // =========================
 
   // The default strategy and account logic contracts.
-  ILlamaStrategy public relativeQuorumLogic;
+  ILlamaStrategy public relativeHolderQuorumLogic;
   ILlamaAccount public accountLogic;
 
   // Used to track the last seen `llamaCount` value.
@@ -39,11 +39,11 @@ contract LlamaFactoryHandler is BaseHandler {
   constructor(
     LlamaFactory _llamaFactory,
     LlamaCore _llamaCore,
-    ILlamaStrategy _relativeQuorumLogic,
+    ILlamaStrategy _relativeHolderQuorumLogic,
     ILlamaAccount _accountLogic
   ) BaseHandler(_llamaFactory, _llamaCore) {
     llamaCounts.push(LLAMA_FACTORY.llamaCount());
-    relativeQuorumLogic = _relativeQuorumLogic;
+    relativeHolderQuorumLogic = _relativeHolderQuorumLogic;
     accountLogic = _accountLogic;
   }
 
@@ -81,8 +81,8 @@ contract LlamaFactoryHandler is BaseHandler {
     RoleDescription[] memory roleDescriptions = new RoleDescription[](1);
     roleDescriptions[0] = RoleDescription.wrap("Action Creator");
 
-    LlamaRelativeQuorum.Config[] memory strategyConfigs = new LlamaRelativeQuorum.Config[](1);
-    strategyConfigs[0] = LlamaRelativeQuorum.Config({
+    LlamaRelativeStrategyBase.Config[] memory strategyConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    strategyConfigs[0] = LlamaRelativeStrategyBase.Config({
       approvalPeriod: 1 days,
       queuingPeriod: 2 days,
       expirationPeriod: 8 days,
@@ -99,7 +99,7 @@ contract LlamaFactoryHandler is BaseHandler {
 
     LLAMA_FACTORY.deploy(
       name(),
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       encodedStrategyConfig,
       new bytes[](0),
@@ -118,7 +118,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
 
   function setUp() public override {
     LlamaTestSetup.setUp();
-    handler = new LlamaFactoryHandler(factory, mpCore, relativeQuorumLogic, accountLogic);
+    handler = new LlamaFactoryHandler(factory, mpCore, relativeHolderQuorumLogic, accountLogic);
 
     // Target the handler contract and only call it's `llamaFactory_deploy` method. We use
     // `excludeArtifact` to prevent contracts deployed by the factory from automatically being
@@ -129,7 +129,7 @@ contract LlamaFactoryInvariants is LlamaTestSetup {
     excludeArtifact("LlamaCore");
     excludeArtifact("LlamaExecutor");
     excludeArtifact("LlamaPolicy");
-    excludeArtifact("LlamaRelativeQuorum");
+    excludeArtifact("LlamaRelativeHolderQuorum");
 
     bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = handler.llamaFactory_deploy.selector;
