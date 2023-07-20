@@ -113,12 +113,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   ///   - The `totalQuantity` is the sum of the quantity of the role for each policyholder that
   ///     holds the role.
   /// Both versions of supply are tracked to enable different types of strategies.
-  mapping(uint8 role => SupplyCheckpoints.History) internal _roleSupplyCkpts;
+  mapping(uint8 role => SupplyCheckpoints.History) internal roleSupplyCkpts;
 
   /// @dev Checkpoints a token ID's "balance" (quantity) of a given role. The quantity of the
   /// role is how much quantity the role-holder gets when approving/disapproving (regardless of
   /// strategy).
-  mapping(uint256 tokenId => mapping(uint8 role => PolicyholderCheckpoints.History)) internal _roleBalanceCkpts;
+  mapping(uint256 tokenId => mapping(uint8 role => PolicyholderCheckpoints.History)) internal roleBalanceCkpts;
 
   /// @notice Returns `true` if the role can create actions with the given permission ID.
   mapping(uint8 role => mapping(bytes32 permissionId => bool hasPermission)) public canCreateAction;
@@ -263,19 +263,19 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// quantity of the role when approving/disapproving (regardless of strategy).
   function getQuantity(address policyholder, uint8 role) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
-    return _roleBalanceCkpts[tokenId][role].latest();
+    return roleBalanceCkpts[tokenId][role].latest();
   }
 
   /// @notice Returns the quantity of the `role` for the given `policyholder` at `timestamp`. The returned
   /// value is the quantity of the role when approving/disapproving (regardless of strategy).
   function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
-    return _roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
+    return roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the total number of role holders for given `role`.
   function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96 numberOfHolders) {
-    (numberOfHolders,) = _roleSupplyCkpts[role].latest();
+    (numberOfHolders,) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns the total number of role holders for given `role` at `timestamp`.
@@ -284,17 +284,17 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     view
     returns (uint96 numberOfHolders)
   {
-    (numberOfHolders,) = _roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
+    (numberOfHolders,) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role`.
   function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
-    (, totalQuantity) = _roleSupplyCkpts[role].latest();
+    (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
   function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) external view returns (uint96 totalQuantity) {
-    (, totalQuantity) = _roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
+    (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
   /// @notice Returns all checkpoints for the given `policyholder` and `role`.
@@ -304,12 +304,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     returns (PolicyholderCheckpoints.History memory)
   {
     uint256 tokenId = _tokenId(policyholder);
-    return _roleBalanceCkpts[tokenId][role];
+    return roleBalanceCkpts[tokenId][role];
   }
 
   /// @notice Returns all supply checkpoints for the given `role`.
   function roleSupplyCheckpoints(uint8 role) external view returns (SupplyCheckpoints.History memory) {
-    return _roleSupplyCkpts[role];
+    return roleSupplyCkpts[role];
   }
 
   /// @notice Returns all checkpoints for the given policyholder and role between `start` and
@@ -324,14 +324,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     returns (PolicyholderCheckpoints.History memory)
   {
     if (start > end) revert InvalidIndices();
-    uint256 checkpointsLength = _roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
+    uint256 checkpointsLength = roleBalanceCkpts[_tokenId(policyholder)][role]._checkpoints.length;
     if (end > checkpointsLength) revert InvalidIndices();
 
     uint256 tokenId = _tokenId(policyholder);
     uint256 sliceLength = end - start;
     PolicyholderCheckpoints.Checkpoint[] memory checkpoints = new PolicyholderCheckpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
-      checkpoints[i - start] = _roleBalanceCkpts[tokenId][role]._checkpoints[i];
+      checkpoints[i - start] = roleBalanceCkpts[tokenId][role]._checkpoints[i];
     }
     return PolicyholderCheckpoints.History(checkpoints);
   }
@@ -347,13 +347,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     returns (SupplyCheckpoints.History memory)
   {
     if (start > end) revert InvalidIndices();
-    uint256 checkpointsLength = _roleSupplyCkpts[role]._checkpoints.length;
+    uint256 checkpointsLength = roleSupplyCkpts[role]._checkpoints.length;
     if (end > checkpointsLength) revert InvalidIndices();
 
     uint256 sliceLength = end - start;
     SupplyCheckpoints.Checkpoint[] memory checkpoints = new SupplyCheckpoints.Checkpoint[](sliceLength);
     for (uint256 i = start; i < end; i = LlamaUtils.uncheckedIncrement(i)) {
-      checkpoints[i - start] = _roleSupplyCkpts[role]._checkpoints[i];
+      checkpoints[i - start] = roleSupplyCkpts[role]._checkpoints[i];
     }
     return SupplyCheckpoints.History(checkpoints);
   }
@@ -362,43 +362,43 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleBalanceCheckpoints`.
   function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(policyholder);
-    return _roleBalanceCkpts[tokenId][role]._checkpoints.length;
+    return roleBalanceCkpts[tokenId][role]._checkpoints.length;
   }
 
   /// @notice Returns the number of supply checkpoints for the given `role`.
   /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleSupplyCheckpoints`.
   function roleSupplyCheckpointsLength(uint8 role) external view returns (uint256) {
-    return _roleSupplyCkpts[role]._checkpoints.length;
+    return roleSupplyCkpts[role]._checkpoints.length;
   }
 
   /// @notice Returns `true` if the `policyholder` has the `role`, `false` otherwise.
   function hasRole(address policyholder, uint8 role) public view returns (bool) {
-    uint96 quantity = _roleBalanceCkpts[_tokenId(policyholder)][role].latest();
+    uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0;
   }
 
   /// @notice Returns `true` if the `policyholder` has the `role` at `timestamp`, `false` otherwise.
   function hasRole(address policyholder, uint8 role, uint256 timestamp) external view returns (bool) {
-    uint256 quantity = _roleBalanceCkpts[_tokenId(policyholder)][role].getAtProbablyRecentTimestamp(timestamp);
+    uint256 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].getAtProbablyRecentTimestamp(timestamp);
     return quantity > 0;
   }
 
   /// @notice Returns `true` if the given `policyholder` has a given `permissionId` under the `role`,
   /// `false` otherwise.
   function hasPermissionId(address policyholder, uint8 role, bytes32 permissionId) external view returns (bool) {
-    uint96 quantity = _roleBalanceCkpts[_tokenId(policyholder)][role].latest();
+    uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
   /// @notice Returns `true` if the `role` held by `policyholder` is expired, `false` otherwise.
   function isRoleExpired(address policyholder, uint8 role) public view returns (bool) {
-    (,, uint64 expiration, uint96 quantity) = _roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
+    (,, uint64 expiration, uint96 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return quantity > 0 && block.timestamp > expiration;
   }
 
   /// @notice Returns the expiration timestamp of the `role` held by `policyholder`.
   function roleExpiration(address policyholder, uint8 role) external view returns (uint64) {
-    (,, uint64 expiration,) = _roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
+    (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return expiration;
   }
 
@@ -497,12 +497,12 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // checking if the quantity is nonzero, and we don't need to check the expiration when setting
     // the `hadRole` and `willHaveRole` variables.
     uint256 tokenId = _tokenId(policyholder);
-    uint96 initialQuantity = _roleBalanceCkpts[tokenId][role].latest();
+    uint96 initialQuantity = roleBalanceCkpts[tokenId][role].latest();
     bool hadRole = initialQuantity > 0;
     bool willHaveRole = quantity > 0;
 
     // Now we update the policyholder's role balance checkpoint.
-    _roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
+    roleBalanceCkpts[tokenId][role].push(willHaveRole ? quantity : 0, expiration);
 
     // If they don't hold a policy, we mint one for them. This means that even if you use 0 quantity
     // and 0 expiration, a policy is still minted even though they hold no roles. This is because
@@ -519,16 +519,16 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
       quantityDiff = initialQuantity > quantity ? initialQuantity - quantity : quantity - initialQuantity;
     }
 
-    (uint96 numberOfHolders, uint96 totalQuantity) = _roleSupplyCkpts[role].latest();
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[role].latest();
 
     if (hadRole && !willHaveRole) {
-      _roleSupplyCkpts[role].push(numberOfHolders - 1, totalQuantity - quantityDiff);
+      roleSupplyCkpts[role].push(numberOfHolders - 1, totalQuantity - quantityDiff);
     } else if (!hadRole && willHaveRole) {
-      _roleSupplyCkpts[role].push(numberOfHolders + 1, totalQuantity + quantityDiff);
+      roleSupplyCkpts[role].push(numberOfHolders + 1, totalQuantity + quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity > quantity) {
-      _roleSupplyCkpts[role].push(numberOfHolders, totalQuantity - quantityDiff);
+      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity - quantityDiff);
     } else if (hadRole && willHaveRole && initialQuantity < quantity) {
-      _roleSupplyCkpts[role].push(numberOfHolders, totalQuantity + quantityDiff);
+      roleSupplyCkpts[role].push(numberOfHolders, totalQuantity + quantityDiff);
     } else {
       // There are two ways to reach this branch, both of which are no-ops:
       //   1. `hadRole` and `willHaveRole` are both false. We allow this without reverting so you can give
@@ -551,13 +551,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(policyholder);
     ERC721NonTransferableMinimalProxy._mint(policyholder, tokenId);
 
-    (uint96 numberOfHolders, uint96 totalQuantity) = _roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
     unchecked {
       // Safety: Can never overflow a uint96 by incrementing.
-      _roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders + 1, totalQuantity + 1);
+      roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders + 1, totalQuantity + 1);
     }
 
-    _roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(1, type(uint64).max);
     emit RoleAssigned(policyholder, ALL_HOLDERS_ROLE, type(uint64).max, 1);
   }
 
@@ -566,13 +566,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     uint256 tokenId = _tokenId(policyholder);
     ERC721NonTransferableMinimalProxy._burn(tokenId);
 
-    (uint96 numberOfHolders, uint96 totalQuantity) = _roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
+    (uint96 numberOfHolders, uint96 totalQuantity) = roleSupplyCkpts[ALL_HOLDERS_ROLE].latest();
     unchecked {
       // Safety: Can never underflow, since we only burn tokens that currently exist.
-      _roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders - 1, totalQuantity - 1);
+      roleSupplyCkpts[ALL_HOLDERS_ROLE].push(numberOfHolders - 1, totalQuantity - 1);
     }
 
-    _roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
+    roleBalanceCkpts[tokenId][ALL_HOLDERS_ROLE].push(0, 0);
     emit RoleAssigned(policyholder, ALL_HOLDERS_ROLE, 0, 0);
   }
 

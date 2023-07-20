@@ -199,7 +199,7 @@ contract LlamaCore is Initializable {
   /// @dev Mapping of actionIds to Actions. Making this `public` results in stack too deep with no optimizer, but this
   /// data can be accessed with the `getAction` function so this is ok. We want the contracts to compile without the
   /// optimizer so `forge coverage` can be used.
-  mapping(uint256 actionId => Action) internal _actions;
+  mapping(uint256 actionId => Action) internal actions;
 
   /// @notice The contract that executes actions for this Llama instance.
   LlamaExecutor public executor;
@@ -355,7 +355,7 @@ contract LlamaCore is Initializable {
   /// @notice Queue an action by its `actionInfo` struct if it's in Approved state.
   /// @param actionInfo Data required to create an action.
   function queueAction(ActionInfo calldata actionInfo) external {
-    Action storage action = _actions[actionInfo.id];
+    Action storage action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
@@ -369,7 +369,7 @@ contract LlamaCore is Initializable {
   /// @param actionInfo Data required to create an action.
   function executeAction(ActionInfo calldata actionInfo) external payable {
     // Initial checks that action is ready to execute.
-    Action storage action = _actions[actionInfo.id];
+    Action storage action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
 
     if (currentState != ActionState.Queued) revert InvalidActionState(currentState);
@@ -399,7 +399,7 @@ contract LlamaCore is Initializable {
   /// @dev Rules for cancelation are defined by the strategy.
   /// @param actionInfo Data required to create an action.
   function cancelAction(ActionInfo calldata actionInfo) external {
-    Action storage action = _actions[actionInfo.id];
+    Action storage action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
 
     // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
@@ -546,7 +546,7 @@ contract LlamaCore is Initializable {
   /// @param actionId ID of the action.
   /// @return The Action struct.
   function getAction(uint256 actionId) external view returns (Action memory) {
-    return _actions[actionId];
+    return actions[actionId];
   }
 
   /// @notice Get the current action state of an action by its `actionInfo` struct.
@@ -557,7 +557,7 @@ contract LlamaCore is Initializable {
     // action does not exist, the expected payload hash from storage will be `bytes32(0)`, so
     // bypassing this check by providing a non-existent actionId would require finding a collision
     // to get a hash of zero.
-    Action storage action = _actions[actionInfo.id];
+    Action storage action = actions[actionInfo.id];
     _validateActionInfoHash(action.infoHash, actionInfo);
 
     if (action.canceled) return ActionState.Canceled;
@@ -618,7 +618,7 @@ contract LlamaCore is Initializable {
     // Scope to avoid stack too deep
     {
       // Save action.
-      Action storage newAction = _actions[actionId];
+      Action storage newAction = actions[actionId];
       newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
@@ -659,7 +659,7 @@ contract LlamaCore is Initializable {
     uint8 role,
     ActionState expectedState
   ) internal returns (Action storage action, uint96 quantity) {
-    action = _actions[actionInfo.id];
+    action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);
 
