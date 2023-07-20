@@ -25,7 +25,7 @@ contract LlamaRelativeQuantityQuorum is LlamaRelativeStrategyBase {
     uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, block.timestamp - 1);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
+    uint256 disapprovalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(disapprovalRole, block.timestamp - 1);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
 
     // Save off the supplies to use for checking quorum.
