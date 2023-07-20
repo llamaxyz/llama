@@ -93,6 +93,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
 
+  /// @dev Emitted when an expired role is explicitly revoked from a policyholder.
+  event ExpiredRoleRevoked(address indexed caller, address indexed policyholder, uint8 indexed role);
+
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -217,6 +220,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // Read the most recent checkpoint for the policyholder's role balance.
     if (!isRoleExpired(policyholder, role)) revert InvalidRoleHolderInput();
     _setRoleHolder(role, policyholder, 0, 0);
+    emit ExpiredRoleRevoked(msg.sender, policyholder, role);
   }
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.

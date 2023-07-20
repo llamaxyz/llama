@@ -31,6 +31,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
   event PolicyMetadataSet(
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
+  event ExpiredRoleRevoked(address indexed caller, address indexed policyholder, uint8 indexed role);
 
   uint8 constant ALL_HOLDERS_ROLE = 0;
   address arbitraryAddress = makeAddr("arbitraryAddress");
@@ -692,13 +693,15 @@ contract RevokeExpiredRole is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max - 1));
 
-    vm.startPrank(address(mpExecutor));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.warp(expiration + 1);
 
     vm.expectEmit();
     emit RoleAssigned(policyholder, uint8(Roles.TestRole1), 0, 0);
+    vm.expectEmit();
+    emit ExpiredRoleRevoked(address(this), policyholder, uint8(Roles.TestRole1));
 
     assertEq(mpPolicy.hasRole(policyholder, uint8(Roles.TestRole1)), true);
 
@@ -711,7 +714,7 @@ contract RevokeExpiredRole is LlamaPolicyTest {
     vm.assume(policyholder != address(0));
     expiration = uint64(bound(expiration, block.timestamp + 1, type(uint64).max));
 
-    vm.startPrank(address(mpExecutor));
+    vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), policyholder, DEFAULT_ROLE_QTY, expiration);
 
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
