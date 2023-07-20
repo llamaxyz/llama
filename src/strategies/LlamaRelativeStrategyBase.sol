@@ -123,12 +123,6 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   /// @notice Mapping of roles that can force an action to be disapproved.
   mapping(uint8 role => bool isForceDisapproval) public forceDisapprovalRole;
 
-  /// @notice Mapping of action ID to the supply of the approval role at the time the action was created.
-  mapping(uint256 actionId => uint256 approvalRolePolicySupply) public actionApprovalSupply;
-
-  /// @notice Mapping of action ID to the supply of the disapproval role at the time the action was created.
-  mapping(uint256 actionId => uint256 disapprovalRolePolicySupply) public actionDisapprovalSupply;
-
   // =============================
   // ======== Constructor ========
   // =============================
@@ -183,7 +177,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external virtual;
+  function validateActionCreation(ActionInfo calldata actionInfo) external view virtual;
 
   // -------- When Casting Approval --------
 
@@ -253,14 +247,13 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   /// @inheritdoc ILlamaStrategy
   function isActionApproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
-    return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionInfo.id], minApprovalPct);
+    return action.totalApprovals >= _getMinimumAmountNeeded(getApprovalSupply(actionInfo), minApprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
   function isActionDisapproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
-    return
-      action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
+    return action.totalDisapprovals >= _getMinimumAmountNeeded(getDisapprovalSupply(actionInfo), minDisapprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
@@ -268,6 +261,16 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
+
+  // ===================================================
+  // ======== Implementation-Specific Functions ========
+  // ===================================================
+
+  /// @dev Given an action, returns the supply of the approval role at the time the action was created.
+  function getApprovalSupply(ActionInfo calldata actionInfo) public view virtual returns (uint96);
+
+  /// @dev Given an action, returns the supply of the disapproval role at the time the action was created.
+  function getDisapprovalSupply(ActionInfo calldata actionInfo) public view virtual returns (uint96);
 
   // ========================================
   // ======== Other Public Functions ========

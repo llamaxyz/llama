@@ -22,4 +22,8 @@ contract MockLlamaRelativeStrategyBase is LlamaRelativeStrategyBase {
     override
     returns (uint96)
   {}
+
+  function getApprovalSupply(ActionInfo calldata) public view override returns (uint96) {}
+
+  function getDisapprovalSupply(ActionInfo calldata) public view override returns (uint96) {}
 }

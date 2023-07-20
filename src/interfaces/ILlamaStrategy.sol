@@ -30,7 +30,7 @@ interface ILlamaStrategy {
 
   /// @notice Reverts if action creation is not allowed.
   /// @param actionInfo Data required to create an action.
-  function validateActionCreation(ActionInfo calldata actionInfo) external;
+  function validateActionCreation(ActionInfo calldata actionInfo) external view;
 
   // -------- When Casting Approval --------
 

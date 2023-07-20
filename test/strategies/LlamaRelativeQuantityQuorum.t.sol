@@ -469,8 +469,8 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
-    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
+    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getApprovalSupply(actionInfo), supply);
+    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), supply);
   }
 
   function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
@@ -505,8 +505,8 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
-    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
+    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getApprovalSupply(actionInfo), supply);
+    assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), supply);
   }
 }
 
