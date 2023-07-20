@@ -290,7 +290,9 @@ contract GetApprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(
+      bound(_quantity, 1, type(uint96).max - mpPolicy.getPastRoleSupplyAsQuantitySum(_role, block.timestamp - 1))
+    );
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
       uint8(Roles.TestRole1),
@@ -430,7 +432,9 @@ contract GetDisapprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
     vm.assume(_role != uint8(Roles.TestRole1));
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
-    _quantity = uint96(bound(_quantity, 1, type(uint96).max - mpPolicy.getRoleSupplyAsQuantitySum(_role)));
+    _quantity = uint96(
+      bound(_quantity, 1, type(uint96).max - mpPolicy.getPastRoleSupplyAsQuantitySum(_role, block.timestamp - 1))
+    );
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
       uint8(Roles.TestRole1),
@@ -462,7 +466,7 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
 
     generateAndSetRoleHolders(_numberOfPolicies, quantity);
 
-    uint256 supply = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 supply = mpPolicy.getPastRoleSupplyAsQuantitySum(uint8(Roles.TestRole1), block.timestamp - 1);
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
