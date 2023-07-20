@@ -39,7 +39,7 @@ interface ILlamaStrategy {
   /// @param actionInfo Data required to create an action.
   /// @param policyholder Address of the policyholder.
   /// @param role The role of the policyholder being used to cast approval.
-  function checkIfApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
+  function checkIfApprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view;
 
   /// @notice Get the quantity of an approval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -55,7 +55,7 @@ interface ILlamaStrategy {
   /// @param actionInfo Data required to create an action.
   /// @param policyholder Address of the policyholder.
   /// @param role The role of the policyholder being used to cast disapproval.
-  function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external;
+  function checkIfDisapprovalEnabled(ActionInfo calldata actionInfo, address policyholder, uint8 role) external view;
 
   /// @notice Get the quantity of a disapproval of a policyholder at a specific timestamp.
   /// @param policyholder Address of the policyholder.
@@ -76,7 +76,7 @@ interface ILlamaStrategy {
   /// @notice Reverts if the action cannot be canceled.
   /// @param actionInfo Data required to create an action.
   /// @param caller Policyholder initiating the cancelation.
-  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external;
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view;
 
   // -------- When Determining Action State --------
   // These are used during casting of approvals and disapprovals, when queueing, and when executing.

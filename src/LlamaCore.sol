@@ -656,7 +656,7 @@ contract LlamaCore is Initializable {
     address policyholder,
     uint8 role,
     ActionState expectedState
-  ) internal returns (Action storage action, uint96 quantity) {
+  ) internal view returns (Action storage action, uint96 quantity) {
     action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);
