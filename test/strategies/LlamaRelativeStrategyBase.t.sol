@@ -20,10 +20,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
-  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-
   MockLlamaRelativeStrategyBase mockLlamaRelativeStrategyBaseLogic;
 
   function setUp() public virtual override {
@@ -79,9 +75,6 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
 
     mpCore.createStrategies(mockLlamaRelativeStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 

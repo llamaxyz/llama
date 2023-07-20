@@ -124,7 +124,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @notice Returns the contract URI for a given Llama policy.
   /// @param name The name of the Llama instance.
-  function getContractURI(string memory name) public pure returns (string memory) {
+  function getContractURI(string memory name) external pure returns (string memory) {
     string[5] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);

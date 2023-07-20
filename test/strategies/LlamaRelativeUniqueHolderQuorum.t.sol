@@ -63,9 +63,6 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
 
     vm.prank(address(mpExecutor));
 
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
-
     mpCore.createStrategies(relativeUniqueHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(

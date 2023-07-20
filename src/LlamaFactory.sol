@@ -30,11 +30,10 @@ contract LlamaFactory {
     uint256 chainId
   );
 
-  /// @notice At deployment, this role is given permission to call the `setRolePermission` function.
-  /// However, this may change depending on how the Llama instance is configured.
-  /// @dev This is done to mitigate the chances of deploying a misconfigured Llama instance that is
-  /// unusable. See the documentation for more info.
-  uint8 public constant BOOTSTRAP_ROLE = 1;
+  /// @dev At deployment, this role is given permission to call the `setRolePermission` function.
+  /// However, this may change depending on how the Llama instance is configured. This is done to mitigate the chances
+  /// of deploying a misconfigured Llama instance that is unusable. See the documentation for more info.
+  uint8 internal constant BOOTSTRAP_ROLE = 1;
 
   /// @notice The Llama core implementation (logic) contract.
   LlamaCore public immutable LLAMA_CORE_LOGIC;
@@ -56,7 +55,6 @@ contract LlamaFactory {
   }
 
   /// @notice Deploys a new Llama instance.
-  /// @dev This function can only be called by the root Llama instance.
   /// @param name The name of this Llama instance.
   /// @param strategyLogic The strategy implementation (logic) contract to use for this Llama instance.
   /// @param accountLogic The account implementation (logic) contract to use for this Llama instance.
@@ -92,6 +90,7 @@ contract LlamaFactory {
     // Deploy and initialize `LlamaCore`.
     core =
       LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
+
     LlamaCoreInitializationConfig memory coreConfig = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,

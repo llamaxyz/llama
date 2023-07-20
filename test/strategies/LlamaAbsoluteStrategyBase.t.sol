@@ -19,10 +19,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
-  event StrategyCreated(LlamaCore llama, LlamaPolicy policy);
-  event ApprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-  event DisapprovalCast(uint256 id, address indexed policyholder, uint256 quantity, string reason);
-
   uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
   bytes32 constant DEFAULT_PERMISSION = bytes32(0);
   address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
@@ -87,9 +83,6 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-
-    vm.expectEmit();
-    emit StrategyCreated(mpCore, mpPolicy);
 
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 

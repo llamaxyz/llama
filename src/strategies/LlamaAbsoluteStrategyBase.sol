@@ -72,21 +72,6 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   /// @param role The role being used.
   error RoleNotInitialized(uint8 role);
 
-  // ========================
-  // ======== Events ========
-  // ========================
-
-  /// @dev Emitted when a force approval role is added to the strategy. This can only happen at strategy deployment
-  /// time during initialization.
-  event ForceApprovalRoleAdded(uint8 role);
-
-  /// @dev Emitted when a force disapproval role is added to the strategy. This can only happen at strategy deployment
-  /// time during initialization.
-  event ForceDisapprovalRoleAdded(uint8 role);
-
-  /// @dev Emitted when a strategy is created referencing the core and policy.
-  event StrategyCreated(LlamaCore llamaCore, LlamaPolicy policy);
-
   // =================================================
   // ======== Constants and Storage Variables ========
   // =================================================
@@ -128,10 +113,10 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   uint8 public disapprovalRole;
 
   /// @notice Mapping of roles that can force an action to be approved.
-  mapping(uint8 => bool) public forceApprovalRole;
+  mapping(uint8 role => bool isForceApproval) public forceApprovalRole;
 
   /// @notice Mapping of roles that can force an action to be disapproved.
-  mapping(uint8 => bool) public forceDisapprovalRole;
+  mapping(uint8 role => bool isForceDisapproval) public forceDisapprovalRole;
 
   // =============================
   // ======== Constructor ========
@@ -176,7 +161,6 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
       if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceApprovalRole[role] = true;
-      emit ForceApprovalRoleAdded(role);
     }
 
     for (uint256 i = 0; i < strategyConfig.forceDisapprovalRoles.length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -184,10 +168,7 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
       if (role == 0) revert InvalidRole(0);
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
-      emit ForceDisapprovalRoleAdded(role);
     }
-
-    emit StrategyCreated(llamaCore, policy);
   }
 
   // -------- At Action Creation --------

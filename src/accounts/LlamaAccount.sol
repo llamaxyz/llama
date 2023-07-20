@@ -290,6 +290,9 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   // -------- Generic Execution --------
 
   /// @notice Execute arbitrary calls from the Llama Account.
+  /// @dev Be careful and intentional while assigning permissions to a policyholder that can create an action to call
+  /// this function, especially while using the delegatecall functionality as it can lead to arbitrary code execution in
+  /// the context of this Llama account.
   /// @param target The address of the contract to call.
   /// @param withDelegatecall Whether to use delegatecall or call.
   /// @param callData The calldata to pass to the contract.

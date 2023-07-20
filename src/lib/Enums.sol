@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/// @dev Possible states of an action during its lifecycle.
 enum ActionState {
   Active, // Action created and approval period begins.
   Canceled, // Action canceled by creator.

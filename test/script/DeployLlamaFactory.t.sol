@@ -67,7 +67,6 @@ contract Run is DeployLlamaFactoryTest {
     DeployLlamaFactory.run();
 
     assertFalse(address(policyLogic) == address(0));
-    assertEq(policyLogic.ALL_HOLDERS_ROLE(), 0);
   }
 
   function test_DeploysPolicyMetadata() public {
