@@ -32,27 +32,13 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     RoleDescription[] memory initialRoleDescriptions,
     RoleHolderData[] memory initialRoleHolders,
     RolePermissionData[] memory initialRolePermissions
-  )
-    LlamaFactory(
-      _llamaCoreLogic,
-      initialLlamaStrategyLogic,
-      initialLlamaAccountLogic,
-      _llamaPolicyLogic,
-      _llamaPolicyMetadata,
-      name,
-      initialStrategies,
-      initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions
-    )
-  {}
+  ) LlamaFactory(_llamaCoreLogic, _llamaPolicyLogic, _llamaPolicyMetadata) {}
 
   /// @notice Deploys a new Llama system. This function can only be called by the initial Llama system.
   /// @param name The name of this Llama system.
   /// @return llama the address of the LlamaCore contract of the newly created system.
   function deployWithoutInitialization(string memory name) external returns (LlamaCore llama) {
-    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name))));
+    llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
     lastDeployedLlamaCore = llama;
     llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }

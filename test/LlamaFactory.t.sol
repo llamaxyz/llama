@@ -51,25 +51,10 @@ contract LlamaFactoryTest is LlamaTestSetup {
 
 contract Constructor is LlamaFactoryTest {
   function deployLlamaFactory() internal returns (LlamaFactory) {
-    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
-    bytes[] memory accounts = accountConfigsRootLlama();
-
-    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
-      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
-    );
-    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
     return new LlamaFactory(
       coreLogic,
-      relativeHolderQuorumLogic,
-      accountLogic,
       policyLogic,
-      policyMetadataLogic,
-      "Root Llama",
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0)
+      policyMetadataLogic
     );
   }
 
@@ -83,30 +68,6 @@ contract Constructor is LlamaFactoryTest {
 
   function test_SetsLlamaPolicyMetadataAddress() public {
     assertEq(address(factory.LLAMA_POLICY_METADATA_LOGIC()), address(policyMetadataLogic));
-  }
-
-  function test_EmitsPolicyTokenURIUpdatedEvent() public {
-    // We could calculate this by redeploying LlamaLens with the new factory but this test will be removed when we
-    // remove the root instance.
-    ILlamaPolicyMetadata policyMetadata = ILlamaPolicyMetadata(0x6A8C2B425EAA75903112Afafd93724f2d0406d0a);
-    vm.expectEmit();
-    emit PolicyMetadataSet(policyMetadata, policyMetadataLogic, abi.encode(rootColor, rootLogo));
-    deployLlamaFactory();
-  }
-
-  function test_SetsRootLlamaCore() public {
-    assertEq(address(factory.ROOT_LLAMA_CORE()), address(rootCore));
-  }
-
-  function test_SetsRootLlamaExecutor() public {
-    assertEq(address(factory.ROOT_LLAMA_EXECUTOR()), address(rootExecutor));
-  }
-
-  function test_DeploysRootLlamaViaInternalDeployMethod() public {
-    // The internal `_deploy` method is tested in the `Deploy` contract, so here we just check
-    // one side effect of that method as a sanity check it was called. If it was called, the
-    // llama count should no longer be zero.
-    assertEq(factory.llamaCount(), 2);
   }
 }
 

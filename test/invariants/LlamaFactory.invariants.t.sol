@@ -97,7 +97,6 @@ contract LlamaFactoryHandler is BaseHandler {
 
     bytes[] memory encodedStrategyConfig = DeployUtils.encodeStrategyConfigs(strategyConfigs);
 
-    vm.prank(address(LLAMA_FACTORY.ROOT_LLAMA_EXECUTOR()));
     LLAMA_FACTORY.deploy(
       name(),
       relativeHolderQuorumLogic,
