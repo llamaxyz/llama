@@ -466,6 +466,8 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
 
     generateAndSetRoleHolders(_numberOfPolicies, quantity);
 
+    mineBlock();
+
     uint256 supply = mpPolicy.getPastRoleSupplyAsQuantitySum(uint8(Roles.TestRole1), block.timestamp - 1);
 
     ActionInfo memory actionInfo = createAction(testStrategy);
@@ -500,7 +502,9 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), actionCreatorAaron, uint96(_creatorQuantity), type(uint64).max);
 
-    uint256 supply = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    mineBlock();
+
+    uint256 supply = mpPolicy.getPastRoleSupplyAsQuantitySum(uint8(Roles.TestRole1), block.timestamp - 1);
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
