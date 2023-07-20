@@ -22,7 +22,7 @@ contract LlamaRelativeQuantityQuorum is LlamaRelativeStrategyBase {
     if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
 
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(approvalRole);
+    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, block.timestamp - 1);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
     uint256 disapprovalPolicySupply = llamaPolicy.getRoleSupplyAsQuantitySum(disapprovalRole);
