@@ -36,6 +36,7 @@ contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
     mpCore.setStrategyLogicAuthorization(relativeHolderQuorumLogic, true);
     mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
     mpCore.setStrategyLogicAuthorization(relativeUniqueHolderQuorumLogic, true);
+    vm.stopPrank();
   }
 
   function deployRelativeBaseAndSetRole(

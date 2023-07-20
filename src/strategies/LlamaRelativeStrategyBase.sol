@@ -17,6 +17,9 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 /// @notice This is a base contract for relative Llama strategies to inherit which has the following properties:
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 ///   - Quorum is calculated relatively as a percentage of total supply.
+///   - The `validateActionCreation`, `getApprovalQuantityAt`, and `getDisapprovalQuantityAt` methods are left up to
+///     the implementing contract to determine the rest of the behavior.
+///   - All methods are marked virtual in case future strategies need to override them.
 abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // =========================
   // ======== Structs ========
@@ -156,7 +159,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- At Strategy Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function initialize(bytes memory config) external initializer {
+  function initialize(bytes memory config) external virtual initializer {
     Config memory strategyConfig = abi.decode(config, (Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
@@ -204,7 +207,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Casting Approval --------
 
   /// @inheritdoc ILlamaStrategy
-  function checkIfApprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+  function checkIfApprovalEnabled(ActionInfo calldata, address, uint8 role) external view virtual {
     if (role != approvalRole && !forceApprovalRole[role]) revert InvalidRole(approvalRole);
   }
 
@@ -218,7 +221,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Casting Disapproval --------
 
   /// @inheritdoc ILlamaStrategy
-  function checkIfDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view {
+  function checkIfDisapprovalEnabled(ActionInfo calldata, address, uint8 role) external view virtual {
     if (minDisapprovalPct > ONE_HUNDRED_IN_BPS) revert DisapprovalDisabled();
     if (role != disapprovalRole && !forceDisapprovalRole[role]) revert InvalidRole(disapprovalRole);
   }
@@ -233,14 +236,14 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Queueing --------
 
   /// @inheritdoc ILlamaStrategy
-  function minExecutionTime(ActionInfo calldata) external view returns (uint64) {
+  function minExecutionTime(ActionInfo calldata) external view virtual returns (uint64) {
     return LlamaUtils.toUint64(block.timestamp + queuingPeriod);
   }
 
   // -------- When Canceling --------
 
   /// @inheritdoc ILlamaStrategy
-  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view {
+  function validateActionCancelation(ActionInfo calldata actionInfo, address caller) external view virtual {
     // The rules for cancelation are:
     //   1. The action cannot be canceled if it's state is any of the following: Executed, Canceled,
     //      Expired, Failed.
@@ -261,26 +264,26 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // -------- When Determining Action State --------
 
   /// @inheritdoc ILlamaStrategy
-  function isActionActive(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActionActive(ActionInfo calldata actionInfo) external view virtual returns (bool) {
     return
       block.timestamp <= approvalEndTime(actionInfo) && (isFixedLengthApprovalPeriod || !isActionApproved(actionInfo));
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionApproved(ActionInfo calldata actionInfo) public view returns (bool) {
+  function isActionApproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.totalApprovals >= _getMinimumAmountNeeded(actionApprovalSupply[actionInfo.id], minApprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionDisapproved(ActionInfo calldata actionInfo) public view returns (bool) {
+  function isActionDisapproved(ActionInfo calldata actionInfo) public view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return
       action.totalDisapprovals >= _getMinimumAmountNeeded(actionDisapprovalSupply[actionInfo.id], minDisapprovalPct);
   }
 
   /// @inheritdoc ILlamaStrategy
-  function isActionExpired(ActionInfo calldata actionInfo) external view returns (bool) {
+  function isActionExpired(ActionInfo calldata actionInfo) external view virtual returns (bool) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
@@ -290,7 +293,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // ========================================
 
   /// @notice Returns the timestamp at which the approval period ends.
-  function approvalEndTime(ActionInfo calldata actionInfo) public view returns (uint256) {
+  function approvalEndTime(ActionInfo calldata actionInfo) public view virtual returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;
   }
