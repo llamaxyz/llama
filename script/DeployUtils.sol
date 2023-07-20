@@ -10,7 +10,7 @@ import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 
 library DeployUtils {
   using stdJson for string;
@@ -73,7 +73,8 @@ library DeployUtils {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
     RelativeQuorumJsonInputs[] memory rawStrategyConfigs = abi.decode(strategyData, (RelativeQuorumJsonInputs[]));
 
-    LlamaRelativeQuorum.Config[] memory strategyConfigs = new LlamaRelativeQuorum.Config[](rawStrategyConfigs.length);
+    LlamaRelativeStrategyBase.Config[] memory strategyConfigs =
+      new LlamaRelativeStrategyBase.Config[](rawStrategyConfigs.length);
     for (uint256 i = 0; i < rawStrategyConfigs.length; i++) {
       RelativeQuorumJsonInputs memory rawStrategy = rawStrategyConfigs[i];
       strategyConfigs[i].approvalPeriod = rawStrategy.approvalPeriod;
@@ -143,7 +144,11 @@ library DeployUtils {
     }
   }
 
-  function encodeStrategy(LlamaRelativeQuorum.Config memory strategy) internal pure returns (bytes memory encoded) {
+  function encodeStrategy(LlamaRelativeStrategyBase.Config memory strategy)
+    internal
+    pure
+    returns (bytes memory encoded)
+  {
     encoded = abi.encode(strategy);
   }
 
@@ -159,7 +164,7 @@ library DeployUtils {
     encoded = abi.encode(account);
   }
 
-  function encodeStrategyConfigs(LlamaRelativeQuorum.Config[] memory strategies)
+  function encodeStrategyConfigs(LlamaRelativeStrategyBase.Config[] memory strategies)
     internal
     pure
     returns (bytes[] memory encoded)
@@ -226,7 +231,7 @@ library DeployUtils {
     if (bootstrapStrategy.approvalRole == BOOTSTRAP_ROLE) {
       // Based on the bootstrap strategy config and number of bootstrap role holders, compute the
       // minimum number of role holders to pass a vote. The calculation here MUST match the one
-      // in the LlamaRelativeQuorum's `_getMinimumAmountNeeded` method. This check should never fail
+      // in the LlamaRelativeHolderQuorum's `_getMinimumAmountNeeded` method. This check should never fail
       // for relative strategies, but it's left in as a reminder that it needs to be checked for
       // absolute strategies.
       uint256 minPct = bootstrapStrategy.minApprovalPct;

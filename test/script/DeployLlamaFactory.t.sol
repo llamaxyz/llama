@@ -14,7 +14,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaRelativeQuorum} from "src/strategies/LlamaRelativeQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 
 contract DeployLlamaFactoryTest is Test, DeployLlamaFactory {
   function setUp() public virtual {}
@@ -46,11 +46,11 @@ contract Run is DeployLlamaFactoryTest {
   }
 
   function test_DeploysStrategyLogic() public {
-    assertEq(address(relativeQuorumLogic), address(0));
+    assertEq(address(relativeHolderQuorumLogic), address(0));
 
     DeployLlamaFactory.run();
 
-    assertFalse(address(relativeQuorumLogic) == address(0));
+    assertFalse(address(relativeHolderQuorumLogic) == address(0));
   }
 
   function test_DeploysAccountLogic() public {
@@ -94,12 +94,6 @@ contract Run is DeployLlamaFactoryTest {
       lens.computePermissionId(permissionData),
       bytes32(0xb015298f3f29356efa6d653f1f06c375fa6ad631144702003798f9939f8ce444)
     );
-  }
-
-  function toRelativeQuorum(ILlamaStrategy strategy) internal pure returns (LlamaRelativeQuorum converted) {
-    assembly {
-      converted := strategy
-    }
   }
 
   function assertEqStrategyStatus(

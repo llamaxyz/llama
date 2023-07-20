@@ -53,7 +53,7 @@ contract LlamaPolicyTest is LlamaTestSetup {
 
     return factory.deploy(
       '"name": "Mock Protocol Llama"',
-      relativeQuorumLogic,
+      relativeHolderQuorumLogic,
       accountLogic,
       strategyConfigs,
       accounts,
