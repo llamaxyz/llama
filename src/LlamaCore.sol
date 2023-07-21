@@ -6,6 +6,7 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -20,7 +21,6 @@ import {
 } from "src/lib/Structs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
 /// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
