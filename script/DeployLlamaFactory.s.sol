@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Script, stdJson, console2} from "forge-std/Script.sol";
+import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
