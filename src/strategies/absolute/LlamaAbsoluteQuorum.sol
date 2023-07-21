@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
+import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
