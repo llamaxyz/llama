@@ -253,13 +253,15 @@ contract LlamaCore is Initializable {
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
+  /// @param policyLogic The `LlamaPolicy` implementation (logic) contract
+  /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract
   function initialize(
     LlamaInstanceConfig calldata config,
     LlamaPolicy policyLogic,
     ILlamaPolicyMetadata policyMetadataLogic
   ) external initializer {
     name = config.name;
-    // Deploy the executor
+    // Deploy the executor.
     executor = new LlamaExecutor();
 
     // Since the `LlamaCore` salt is dependent on the name and deployer, we can use a constant salt of 0 here.
@@ -287,6 +289,7 @@ contract LlamaCore is Initializable {
     _deployStrategies(config.strategyLogic, config.initialStrategies);
 
     // Check that the bootstrap strategy was deployed and authorized to the pre-calculated address.
+    // This should never be thrown in production and is just here as an extra safety check.
     if (!strategies[bootstrapStrategy].authorized) revert BootstrapStrategyNotAuthorized();
 
     // Authorize account logic contract and deploy accounts.

@@ -139,7 +139,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Initializes a new `LlamaPolicy` clone.
+  /// @param _name The ERC-721 name of the policy NFT.
   /// @param config The struct that contains the configuration for this instance's policy.
+  /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract.
+  /// @param executor The instance's `LlamaExecutor`.
+  /// @param bootstrapPermissionId The permission ID that allows policyholders to change role permissions.
   function initialize(
     string memory _name,
     LlamaPolicyConfig calldata config,

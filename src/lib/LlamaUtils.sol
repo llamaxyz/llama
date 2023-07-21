@@ -27,7 +27,7 @@ library LlamaUtils {
     }
   }
 
-  /// @dev Hashes a permission.
+  /// @dev Hashes a permission to return the corresponding permission ID.
   function computePermissionId(PermissionData memory permission) internal pure returns (bytes32) {
     return keccak256(abi.encode(permission));
   }
