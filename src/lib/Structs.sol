@@ -61,7 +61,6 @@ struct RolePermissionData {
 /// @dev Data required to initialize a Llama core.
 struct LlamaCoreInitializationConfig {
   string name; // The name of the `LlamaCore` instance.
-  LlamaPolicy policyLogic; // This Llama instance's policy contract.
   ILlamaStrategy strategyLogic; // The Llama Strategy implementation (logic) contract.
   ILlamaAccount accountLogic; // The Llama Account implementation (logic) contract.
   bytes[] initialStrategies; // Array of initial strategy configurations.
@@ -71,12 +70,10 @@ struct LlamaCoreInitializationConfig {
 
 /// @dev Data required to initialize a Llama policy.
 struct LlamaPolicyInitializationConfig {
-  string name; // The ERC-721 name of the policy NFT.
   RoleDescription[] roleDescriptions; // The role descriptions.
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
   RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the role has the permission of the
     // role permissions.
-  ILlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
 }

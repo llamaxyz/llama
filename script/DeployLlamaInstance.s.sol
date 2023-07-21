@@ -7,6 +7,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaCoreInitializationConfig, LlamaPolicyInitializationConfig} from "src/lib/Structs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract DeployLlamaInstance is Script {
@@ -28,19 +29,25 @@ contract DeployLlamaInstance is Script {
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
 
-    vm.broadcast(deployer);
-    core = factory.deploy(
-      llamaInstanceName,
-      ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
-      ILlamaAccount(jsonInput.readAddress(".accountLogic")),
-      DeployUtils.readRelativeStrategies(jsonInput),
-      DeployUtils.readAccounts(jsonInput),
+    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       DeployUtils.readRoleDescriptions(jsonInput),
       DeployUtils.readRoleHolders(jsonInput),
       DeployUtils.readRolePermissions(jsonInput),
       jsonInput.readString(".newLlamaColor"),
       jsonInput.readString(".newLlamaLogo")
     );
+
+    LlamaCoreInitializationConfig memory instanceConfig = LlamaCoreInitializationConfig(
+      llamaInstanceName,
+      ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
+      ILlamaAccount(jsonInput.readAddress(".accountLogic")),
+      DeployUtils.readRelativeStrategies(jsonInput),
+      DeployUtils.readAccounts(jsonInput),
+      policyConfig
+    );
+
+    vm.broadcast(deployer);
+    core = factory.deploy(instanceConfig);
 
     DeployUtils.print("Successfully deployed a new Llama instance");
     DeployUtils.print(string.concat("  LlamaCore:     ", vm.toString(address(core))));

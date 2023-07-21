@@ -22,6 +22,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
 /// @title Llama Core
 /// @author Llama (devsdosomething@llama.xyz)
@@ -253,7 +254,11 @@ contract LlamaCore is Initializable {
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
-  function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
+  function initialize(
+    LlamaCoreInitializationConfig calldata config,
+    LlamaPolicy policyLogic,
+    ILlamaPolicyMetadata policyMetadataLogic
+  ) external initializer {
     name = config.name;
     // Deploy Executor.
     executor = new LlamaExecutor();
@@ -261,7 +266,7 @@ contract LlamaCore is Initializable {
     // Since the `LlamaCore` salt is dependent on the name and deployer, we can use a constant salt of 0 here.
     // The policy address will still be deterministic and dependent on the name and deployer because with CREATE2
     // the resulting address is a function of the deployer address (the core address).
-    policy = LlamaPolicy(Clones.cloneDeterministic(address(config.policyLogic), 0));
+    policy = LlamaPolicy(Clones.cloneDeterministic(address(policyLogic), 0));
 
     // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
@@ -276,7 +281,7 @@ contract LlamaCore is Initializable {
     // Initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
-    policy.initialize(config.policyConfig, address(executor), bootstrapPermissionId);
+    policy.initialize(config.name, config.policyConfig, policyMetadataLogic, address(executor), bootstrapPermissionId);
 
     // Authorize strategy logic contract and deploy strategies.
     _setStrategyLogicAuthorization(config.strategyLogic, true);

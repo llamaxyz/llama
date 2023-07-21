@@ -142,13 +142,14 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Initializes a new `LlamaPolicy` clone.
   /// @param config The struct that contains the configuration for this instance's policy.
-  function initialize(LlamaPolicyInitializationConfig calldata config, address executor, bytes32 bootstrapPermissionId)
-    external
-    initializer
-  {
-    __initializeERC721MinimalProxy(
-      config.name, string.concat("LL-", LibString.replace(LibString.upper(config.name), " ", "-"))
-    );
+  function initialize(
+    string memory name,
+    LlamaPolicyInitializationConfig calldata config,
+    ILlamaPolicyMetadata policyMetadataLogic,
+    address executor,
+    bytes32 bootstrapPermissionId
+  ) external initializer {
+    __initializeERC721MinimalProxy(name, string.concat("LL-", LibString.replace(LibString.upper(name), " ", "-")));
     llamaExecutor = executor;
 
     // Initialize the roles.
@@ -182,7 +183,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // instance is deployed with an invalid configuration that results in the instance being unusable.
     _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
 
-    _setAndInitializePolicyMetadata(config.llamaPolicyMetadataLogic, abi.encode(config.color, config.logo));
+    _setAndInitializePolicyMetadata(policyMetadataLogic, abi.encode(config.color, config.logo));
   }
 
   // ===========================================
