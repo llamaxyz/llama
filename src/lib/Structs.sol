@@ -2,11 +2,8 @@
 pragma solidity 0.8.19;
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
-import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @dev Data required to create an action.
 struct ActionInfo {

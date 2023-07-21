@@ -30,13 +30,11 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAbsolutePeerReview} from "src/strategies/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaCoreTest is LlamaTestSetup, LlamaCoreSigUtils {
