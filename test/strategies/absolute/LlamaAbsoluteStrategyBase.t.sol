@@ -704,6 +704,34 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     assertEq(newStrategy.getApprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
   }
+
+  function testFuzz_ReturnsMaxValueForForceApprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder) public {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
+    vm.assume(_policyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
+
+    uint8[] memory forceApproveRoles = new uint8[](1);
+    forceApproveRoles[0] = _role;
+
+    ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
+      _role,
+      DEFAULT_PERMISSION,
+      _policyHolder,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
+      DEFAULT_APPROVAL_PERIOD,
+      DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      DEFAULT_APPROVALS,
+      DEFAULT_DISAPPROVALS,
+      forceApproveRoles,
+      new uint8[](0)
+    );
+
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getApprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
+  }
 }
 
 contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
@@ -843,5 +871,35 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
     mpPolicy.setRoleHolder(_role, _policyHolder, _quantity, type(uint64).max);
 
     assertEq(newStrategy.getDisapprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
+  }
+
+  function testFuzz_ReturnsMaxValueForForceDisapprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder)
+    public
+  {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
+    vm.assume(_policyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
+
+    uint8[] memory forceDisapproveRoles = new uint8[](1);
+    forceDisapproveRoles[0] = _role;
+
+    ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
+      _role,
+      DEFAULT_PERMISSION,
+      _policyHolder,
+      DEFAULT_QUEUING_PERIOD,
+      DEFAULT_EXPIRATION_PERIOD,
+      DEFAULT_APPROVAL_PERIOD,
+      DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      DEFAULT_APPROVALS,
+      DEFAULT_DISAPPROVALS,
+      new uint8[](0),
+      forceDisapproveRoles
+    );
+
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
   }
 }
