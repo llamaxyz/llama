@@ -48,7 +48,7 @@ contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstanc
       bytes32 eventSig = _event.topics[0];
       if (eventSig == llamaInstanceCreatedSig) {
         // event LlamaInstanceCreated(
-        //   uint256 indexed id,
+        //   address indexed deployer,
         //   string indexed name,
         //   address llamaCore,       <--- What we want.
         //   address llamaExecutor,
@@ -71,12 +71,9 @@ contract Run is DeployLlamaInstanceTest {
   using stdJson for string;
 
   function test_newInstanceCanBeDeployed() public {
-    // Confirm that a new llama instance was created.
-    assertEq(factory.llamaCount(), 1);
     vm.recordLogs();
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
-    assertEq(factory.llamaCount(), 2);
 
     // There are three strategies we expect to have been deployed.
     LlamaRelativeHolderQuorum[] memory strategiesAuthorized = new LlamaRelativeHolderQuorum[](3);
@@ -89,25 +86,13 @@ contract Run is DeployLlamaInstanceTest {
     bytes32 accountCreatedSig = keccak256("AccountCreated(address,address,bytes)");
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
-    bytes32 llamaInstanceCreatedSig = keccak256("LlamaInstanceCreated(uint256,string,address,address,address,uint256)");
-    LlamaCore llamaInstance;
-    LlamaExecutor llamaInstanceExecutor;
+    LlamaCore llamaInstance = core;
+    LlamaExecutor llamaInstanceExecutor = core.executor();
 
     Vm.Log memory _event;
     for (uint256 i = 0; i < emittedEvents.length; i++) {
       _event = emittedEvents[i];
       bytes32 eventSig = _event.topics[0];
-      if (eventSig == llamaInstanceCreatedSig) {
-        // event LlamaInstanceCreated(
-        //   uint256 indexed id,
-        //   string indexed name,
-        //   address llamaCore,       <--- What we want.
-        //   address llamaExecutor,
-        //   address llamaPolicy,
-        //   uint256 chainId
-        // )
-        (llamaInstance,,,) = abi.decode(_event.data, (LlamaCore, LlamaExecutor, address, uint256));
-      }
       if (eventSig == strategiesAuthorizedSig) {
         // event StrategyAuthorized(
         //   ILlamaStrategy strategy,  <-- The field we want.
@@ -127,8 +112,6 @@ contract Run is DeployLlamaInstanceTest {
         accountsCreated[accountsCount++] = LlamaAccount(payable(account));
       }
     }
-
-    llamaInstanceExecutor = llamaInstance.executor();
 
     // Confirm new llama instance has the desired properties.
     assertFalse(address(llamaInstance) == address(rootLlama));

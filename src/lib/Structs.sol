@@ -66,13 +66,7 @@ struct LlamaCoreInitializationConfig {
   ILlamaAccount accountLogic; // The Llama Account implementation (logic) contract.
   bytes[] initialStrategies; // Array of initial strategy configurations.
   bytes[] initialAccounts; // Array of initial account configurations.
-  RoleDescription[] initialRoleDescriptions; // Array of initial role descriptions.
-  RoleHolderData[] initialRoleHolders; // Array of initial role holders, their quantities and their role expirations.
-  RolePermissionData[] initialRolePermissions; // Array of initial permissions given to roles.
-  ILlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
-  string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
-  string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
-  address deployer; // The caller of the factory's deploy function
+  LlamaPolicyInitializationConfig policyConfig; // configuration struct for `LlamaPolicy`.
 }
 
 /// @dev Data required to initialize a Llama policy.
@@ -85,6 +79,4 @@ struct LlamaPolicyInitializationConfig {
   ILlamaPolicyMetadata llamaPolicyMetadataLogic; // The metadata logic contract for the policy NFT.
   string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
-  address llamaExecutor; // The address of the instance's LlamaExecutor
-  bytes32 bootstrapPermissionId; // The permission ID that allows holders to change role permissions.
 }

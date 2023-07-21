@@ -6,8 +6,12 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  LlamaCoreInitializationConfig,
+  LlamaPolicyInitializationConfig,
+  RoleHolderData,
+  RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -22,7 +26,7 @@ contract LlamaFactory {
 
   /// @dev Emitted when a new Llama instance is created.
   event LlamaInstanceCreated(
-    uint256 indexed id,
+    address indexed deployer,
     string indexed name,
     address llamaCore,
     address llamaExecutor,
@@ -43,9 +47,6 @@ contract LlamaFactory {
 
   /// @notice The Llama policy metadata implementation (logic) contract.
   ILlamaPolicyMetadata public immutable LLAMA_POLICY_METADATA_LOGIC;
-
-  /// @notice The current number of Llama instances created.
-  uint256 public llamaCount;
 
   /// @dev Constructs the Llama Factory.
   constructor(LlamaCore llamaCoreLogic, LlamaPolicy llamaPolicyLogic, ILlamaPolicyMetadata llamaPolicyMetadataLogic) {
@@ -91,27 +92,23 @@ contract LlamaFactory {
     core =
       LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encodePacked(name, msg.sender))));
 
-    LlamaCoreInitializationConfig memory coreConfig = LlamaCoreInitializationConfig(
+    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       name,
-      LLAMA_POLICY_LOGIC,
-      strategyLogic,
-      accountLogic,
-      initialStrategies,
-      initialAccounts,
       initialRoleDescriptions,
       initialRoleHolders,
       initialRolePermissions,
       LLAMA_POLICY_METADATA_LOGIC,
       color,
-      logo,
-      msg.sender
+      logo
+    );
+
+    LlamaCoreInitializationConfig memory coreConfig = LlamaCoreInitializationConfig(
+      name, LLAMA_POLICY_LOGIC, strategyLogic, accountLogic, initialStrategies, initialAccounts, policyConfig
     );
     core.initialize(coreConfig);
 
     LlamaExecutor executor = core.executor();
     LlamaPolicy policy = core.policy();
-    emit LlamaInstanceCreated(llamaCount, name, address(core), address(executor), address(policy), block.chainid);
-
-    llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
+    emit LlamaInstanceCreated(msg.sender, name, address(core), address(executor), address(policy), block.chainid);
   }
 }

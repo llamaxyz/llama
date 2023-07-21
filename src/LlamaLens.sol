@@ -84,7 +84,7 @@ contract LlamaLens {
     LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_POLICY_LOGIC,
-      keccak256(abi.encodePacked(name, deployer)), // salt
+      0, // salt
       address(llamaCore) // deployer
     );
     return LlamaPolicy(_computedAddress);

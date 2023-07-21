@@ -4,7 +4,12 @@ pragma solidity ^0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {
+  LlamaCoreInitializationConfig,
+  LlamaPolicyInitializationConfig,
+  RoleHolderData,
+  RolePermissionData
+} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -40,7 +45,6 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   function deployWithoutInitialization(string memory name) external returns (LlamaCore llama) {
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
     lastDeployedLlamaCore = llama;
-    llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
   function initialize(
@@ -56,6 +60,10 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
     string memory color,
     string memory logo
   ) external {
+    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
+      name, initialRoleDescriptions, initialRoleHolders, initialRolePermissions, _llamaPolicyMetadata, color, logo
+    );
+
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
       name,
       LLAMA_POLICY_LOGIC,
@@ -63,13 +71,7 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
       accountLogic,
       initialStrategies,
       initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions,
-      _llamaPolicyMetadata,
-      color,
-      logo,
-      msg.sender
+      policyConfig
     );
 
     lastDeployedLlamaCore.initialize(config);

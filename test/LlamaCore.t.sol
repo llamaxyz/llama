@@ -24,6 +24,7 @@ import {
   Action,
   ActionInfo,
   LlamaCoreInitializationConfig,
+  LlamaPolicyInitializationConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -272,20 +273,18 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
+    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
       "NewProject",
-      mpPolicy,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      new bytes[](0),
-      new bytes[](0),
       new RoleDescription[](0),
       new RoleHolderData[](0),
       new RolePermissionData[](0),
       policyMetadataLogic,
       COLOR,
-      LOGO,
-      address(this)
+      LOGO
+    );
+
+    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
+      "NewProject", mpPolicy, relativeHolderQuorumLogic, accountLogic, new bytes[](0), new bytes[](0), policyConfig
     );
     coreLogic.initialize(config);
   }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {PermissionData} from "src/lib/Structs.sol";
+
 /// @dev Shared helper methods for Llama's contracts.
 library LlamaUtils {
   /// @dev Thrown when a value cannot be safely casted to a smaller type.
@@ -23,5 +25,10 @@ library LlamaUtils {
     unchecked {
       return i + 1;
     }
+  }
+
+  /// @dev Hashes a permission.
+  function computePermissionId(PermissionData memory permission) internal pure returns (bytes32) {
+    return keccak256(abi.encode(permission));
   }
 }

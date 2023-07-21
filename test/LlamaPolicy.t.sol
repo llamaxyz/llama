@@ -111,11 +111,9 @@ contract Constructor is LlamaPolicyTest {
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo,
-      address(mpExecutor),
-      bytes32(0)
+      logo
     );
-    policyLogic.initialize(config);
+    policyLogic.initialize(config, address(mpExecutor), bytes32(0));
   }
 }
 
@@ -132,12 +130,12 @@ contract Initialize is LlamaPolicyTest {
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo,
-      address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      logo
     );
+    bytes32 permissionId =
+      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy));
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
-    localPolicy.initialize(config);
+    localPolicy.initialize(config, address(mpExecutor), permissionId);
   }
 
   function test_SetsNameAndSymbol() public {
@@ -162,11 +160,13 @@ contract Initialize is LlamaPolicyTest {
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo,
+      logo
+    );
+    localPolicy.initialize(
+      config,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
-    localPolicy.initialize(config);
     assertEq(localPolicy.numRoles(), numRoles);
   }
 
@@ -179,12 +179,12 @@ contract Initialize is LlamaPolicyTest {
       new RolePermissionData[](0),
       llamaPolicyMetadata,
       color,
-      logo,
-      address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      logo
     );
+    bytes32 permissionId =
+      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy));
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize(config);
+    mpPolicy.initialize(config, address(mpExecutor), permissionId);
   }
 
   function test_SetsRoleDescriptions() public {
@@ -202,17 +202,13 @@ contract Initialize is LlamaPolicyTest {
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "local policy",
-      roleDescriptions,
-      roleHolders,
-      rolePermissions,
-      llamaPolicyMetadata,
-      color,
-      logo,
+      "local policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    );
+    localPolicy.initialize(
+      config,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
-    localPolicy.initialize(config);
   }
 
   function test_SetsRoleHolders() public {
@@ -232,17 +228,13 @@ contract Initialize is LlamaPolicyTest {
     emit RoleAssigned(address(this), INIT_TEST_ROLE, DEFAULT_ROLE_EXPIRATION, DEFAULT_ROLE_QTY);
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "Test Policy",
-      roleDescriptions,
-      roleHolders,
-      rolePermissions,
-      llamaPolicyMetadata,
-      color,
-      logo,
+      "Test Policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    );
+    localPolicy.initialize(
+      config,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
-    localPolicy.initialize(config);
 
     assertEq(localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
     assertEq(localPolicy.numRoles(), 1);
@@ -264,17 +256,13 @@ contract Initialize is LlamaPolicyTest {
     emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, true);
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "Test Policy",
-      roleDescriptions,
-      roleHolders,
-      rolePermissions,
-      llamaPolicyMetadata,
-      color,
-      logo,
+      "Test Policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadata, color, logo
+    );
+    localPolicy.initialize(
+      config,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
-    localPolicy.initialize(config);
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
 
@@ -296,17 +284,13 @@ contract Initialize is LlamaPolicyTest {
     emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(color, logo));
 
     LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "local policy",
-      roleDescriptions,
-      roleHolders,
-      rolePermissions,
-      llamaPolicyMetadataLogic,
-      color,
-      logo,
+      "local policy", roleDescriptions, roleHolders, rolePermissions, llamaPolicyMetadataLogic, color, logo
+    );
+    localPolicy.initialize(
+      config,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
-    localPolicy.initialize(config);
 
     assertEq(address(llamaPolicyMetadata), address(localPolicy.llamaPolicyMetadata()));
     assertEq(color, LlamaPolicyMetadata(address(llamaPolicyMetadata)).color());
@@ -1502,13 +1486,5 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
   function test_InitializeCannotBeCalledTwice() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpPolicyMetadata.initialize(abi.encode(color, logo));
-  }
-}
-
-contract LlamaPolicyMetadataConstructor is LlamaPolicyTest {
-  function test_RevertIf_InitializeImplementationContract() public {
-    ILlamaPolicyMetadata llamaPolicyMetadataLogic = factory.LLAMA_POLICY_METADATA_LOGIC();
-    vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    llamaPolicyMetadataLogic.initialize(abi.encode(color, logo));
   }
 }
