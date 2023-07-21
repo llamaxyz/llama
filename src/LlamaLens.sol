@@ -6,6 +6,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -49,7 +50,7 @@ contract LlamaLens {
   /// @param permission The permission to hash.
   /// @return The hash of the permission.
   function computePermissionId(PermissionData calldata permission) external pure returns (bytes32) {
-    return keccak256(abi.encode(permission));
+    return LlamaUtils.computePermissionId(permission);
   }
 
   /// @notice Computes the address of a Llama core contract from the name of the Llama instance.
@@ -84,7 +85,7 @@ contract LlamaLens {
     LlamaCore llamaCore = _computeLlamaCoreAddress(name, deployer);
     address _computedAddress = Clones.predictDeterministicAddress(
       LLAMA_POLICY_LOGIC,
-      keccak256(abi.encodePacked(name, deployer)), // salt
+      0, // salt
       address(llamaCore) // deployer
     );
     return LlamaPolicy(_computedAddress);

@@ -6,21 +6,20 @@ import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
+import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   Action,
   ActionInfo,
-  LlamaCoreInitializationConfig,
-  LlamaPolicyInitializationConfig,
+  LlamaInstanceConfig,
+  LlamaPolicyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
 } from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Core
@@ -40,6 +39,10 @@ contract LlamaCore is Initializable {
   // ======================================
   // ======== Errors and Modifiers ========
   // ======================================
+
+  /// @dev Bootstrap strategy must be deployed and authorized during initialization.
+  /// @dev This should never be thrown in production.
+  error BootstrapStrategyNotAuthorized();
 
   /// @dev Policyholder cannot cast if it has 0 quantity of role.
   /// @param policyholder Address of policyholder.
@@ -250,17 +253,21 @@ contract LlamaCore is Initializable {
   /// @notice Initializes a new `LlamaCore` clone.
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
-  function initialize(LlamaCoreInitializationConfig calldata config) external initializer {
+  /// @param policyLogic The `LlamaPolicy` implementation (logic) contract
+  /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract
+  function initialize(
+    LlamaInstanceConfig calldata config,
+    LlamaPolicy policyLogic,
+    ILlamaPolicyMetadata policyMetadataLogic
+  ) external initializer {
     name = config.name;
-    // Deploy Executor.
+    // Deploy the executor.
     executor = new LlamaExecutor();
 
-    // Deploy and initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
-    // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
-    // that results in the instance being unusable.
-    policy = LlamaPolicy(
-      Clones.cloneDeterministic(address(config.policyLogic), keccak256(abi.encodePacked(name, config.deployer)))
-    );
+    // Since the `LlamaCore` salt is dependent on the name and deployer, we can use a constant salt of 0 here.
+    // The policy address will still be deterministic and dependent on the name and deployer because with CREATE2
+    // the resulting address is a function of the deployer address (the core address).
+    policy = LlamaPolicy(Clones.cloneDeterministic(address(policyLogic), 0));
 
     // Calculated from the first strategy configuration passed in.
     ILlamaStrategy bootstrapStrategy = ILlamaStrategy(
@@ -268,25 +275,22 @@ contract LlamaCore is Initializable {
         address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)
       )
     );
-    bytes32 bootstrapPermissionId =
-      keccak256(abi.encode(PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy)));
+    PermissionData memory permission =
+      PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy);
+    bytes32 bootstrapPermissionId = LlamaUtils.computePermissionId(permission);
 
-    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
-      config.name,
-      config.initialRoleDescriptions,
-      config.initialRoleHolders,
-      config.initialRolePermissions,
-      config.llamaPolicyMetadataLogic,
-      config.color,
-      config.logo,
-      address(executor),
-      bootstrapPermissionId
-    );
-    policy.initialize(policyConfig);
+    // Initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
+    // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
+    // that results in the instance being unusable.
+    policy.initialize(config.name, config.policyConfig, policyMetadataLogic, address(executor), bootstrapPermissionId);
 
     // Authorize strategy logic contract and deploy strategies.
     _setStrategyLogicAuthorization(config.strategyLogic, true);
     _deployStrategies(config.strategyLogic, config.initialStrategies);
+
+    // Check that the bootstrap strategy was deployed and authorized to the pre-calculated address.
+    // This should never be thrown in production and is just here as an extra safety check.
+    if (!strategies[bootstrapStrategy].authorized) revert BootstrapStrategyNotAuthorized();
 
     // Authorize account logic contract and deploy accounts.
     _setAccountLogicAuthorization(config.accountLogic, true);
@@ -594,7 +598,7 @@ contract LlamaCore is Initializable {
     if (!strategies[strategy].authorized) revert UnauthorizedStrategy();
 
     PermissionData memory permission = PermissionData(target, bytes4(data), strategy);
-    bytes32 permissionId = keccak256(abi.encode(permission));
+    bytes32 permissionId = LlamaUtils.computePermissionId(permission);
 
     // Typically (such as in Governor contracts) this should check that the caller has permission
     // at `block.number|timestamp - 1` but here we're just checking if the caller *currently* has

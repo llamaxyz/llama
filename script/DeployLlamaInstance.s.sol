@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Script, stdJson, console2} from "forge-std/Script.sol";
+import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaInstanceConfig, LlamaPolicyConfig} from "src/lib/Structs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract DeployLlamaInstance is Script {
@@ -24,23 +25,29 @@ contract DeployLlamaInstance is Script {
     // ======== END SAFETY CHECK ========
 
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
-    string memory llamaInstanceName = jsonInput.readString(".newLlamaName");
+    string memory llamaInstanceName = jsonInput.readString(".instanceName");
 
     LlamaFactory factory = LlamaFactory(jsonInput.readAddress(".factory"));
 
-    vm.broadcast(deployer);
-    core = factory.deploy(
+    LlamaPolicyConfig memory policyConfig = LlamaPolicyConfig(
+      DeployUtils.readRoleDescriptions(jsonInput),
+      DeployUtils.readRoleHolders(jsonInput),
+      DeployUtils.readRolePermissions(jsonInput),
+      jsonInput.readString(".instanceColor"),
+      jsonInput.readString(".instanceLogo")
+    );
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
       llamaInstanceName,
       ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
       ILlamaAccount(jsonInput.readAddress(".accountLogic")),
       DeployUtils.readRelativeStrategies(jsonInput),
       DeployUtils.readAccounts(jsonInput),
-      DeployUtils.readRoleDescriptions(jsonInput),
-      DeployUtils.readRoleHolders(jsonInput),
-      DeployUtils.readRolePermissions(jsonInput),
-      jsonInput.readString(".newLlamaColor"),
-      jsonInput.readString(".newLlamaLogo")
+      policyConfig
     );
+
+    vm.broadcast(deployer);
+    core = factory.deploy(instanceConfig);
 
     DeployUtils.print("Successfully deployed a new Llama instance");
     DeployUtils.print(string.concat("  LlamaCore:     ", vm.toString(address(core))));

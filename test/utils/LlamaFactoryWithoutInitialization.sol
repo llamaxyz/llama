@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaInstanceConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -40,38 +40,9 @@ contract LlamaFactoryWithoutInitialization is LlamaFactory {
   function deployWithoutInitialization(string memory name) external returns (LlamaCore llama) {
     llama = LlamaCore(Clones.cloneDeterministic(address(LLAMA_CORE_LOGIC), keccak256(abi.encode(name, msg.sender))));
     lastDeployedLlamaCore = llama;
-    llamaCount = LlamaUtils.uncheckedIncrement(llamaCount);
   }
 
-  function initialize(
-    string memory name,
-    ILlamaStrategy relativeHolderQuorumLogic,
-    ILlamaAccount accountLogic,
-    bytes[] memory initialStrategies,
-    bytes[] memory initialAccounts,
-    RoleDescription[] memory initialRoleDescriptions,
-    RoleHolderData[] memory initialRoleHolders,
-    RolePermissionData[] memory initialRolePermissions,
-    LlamaPolicyMetadata _llamaPolicyMetadata,
-    string memory color,
-    string memory logo
-  ) external {
-    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
-      name,
-      LLAMA_POLICY_LOGIC,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      initialStrategies,
-      initialAccounts,
-      initialRoleDescriptions,
-      initialRoleHolders,
-      initialRolePermissions,
-      _llamaPolicyMetadata,
-      color,
-      logo,
-      msg.sender
-    );
-
-    lastDeployedLlamaCore.initialize(config);
+  function initialize(LlamaInstanceConfig memory instanceConfig) external {
+    lastDeployedLlamaCore.initialize(instanceConfig, LLAMA_POLICY_LOGIC, LLAMA_POLICY_METADATA_LOGIC);
   }
 }

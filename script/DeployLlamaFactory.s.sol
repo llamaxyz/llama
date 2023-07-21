@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {Script, stdJson, console2} from "forge-std/Script.sol";
+import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -14,8 +14,6 @@ import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.s
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeQuantityQuorum} from "src/strategies/relative/LlamaRelativeQuantityQuorum.sol";
 import {LlamaRelativeUniqueHolderQuorum} from "src/strategies/relative/LlamaRelativeUniqueHolderQuorum.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract DeployLlamaFactory is Script {
@@ -30,14 +28,14 @@ contract DeployLlamaFactory is Script {
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
-
-  // Core Protocol.
-  LlamaFactory factory;
   LlamaPolicyMetadata policyMetadataLogic;
+
+  // Factory and lens contracts.
+  LlamaFactory factory;
   LlamaLens lens;
 
   function run() public {
-    DeployUtils.print(string.concat("Deploying Llama framework to chain:", vm.toString(block.chainid)));
+    DeployUtils.print(string.concat("Deploying Llama factory to chain:", vm.toString(block.chainid)));
 
     vm.broadcast();
     coreLogic = new LlamaCore();
