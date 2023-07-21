@@ -18,22 +18,6 @@ import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBas
 ///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaRelativeQuantityQuorum is LlamaRelativeStrategyBase {
   /// @inheritdoc ILlamaStrategy
-  function validateActionCreation(ActionInfo calldata actionInfo) external override {
-    if (msg.sender != address(llamaCore)) revert OnlyLlamaCore();
-
-    LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, block.timestamp - 1);
-    if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
-
-    uint256 disapprovalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(disapprovalRole, block.timestamp - 1);
-    if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
-
-    // Save off the supplies to use for checking quorum.
-    actionApprovalSupply[actionInfo.id] = approvalPolicySupply;
-    actionDisapprovalSupply[actionInfo.id] = disapprovalPolicySupply;
-  }
-
-  /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
     view
@@ -55,5 +39,19 @@ contract LlamaRelativeQuantityQuorum is LlamaRelativeStrategyBase {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
     uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
     return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
+  }
+
+  /// @inheritdoc LlamaRelativeStrategyBase
+  function getApprovalSupply(ActionInfo calldata actionInfo) public view override returns (uint96) {
+    uint256 creationTime = llamaCore.getAction(actionInfo.id).creationTime;
+    if (creationTime == 0) revert InvalidActionInfo();
+    return policy.getPastRoleSupplyAsQuantitySum(approvalRole, creationTime - 1);
+  }
+
+  /// @inheritdoc LlamaRelativeStrategyBase
+  function getDisapprovalSupply(ActionInfo calldata actionInfo) public view override returns (uint96) {
+    uint256 creationTime = llamaCore.getAction(actionInfo.id).creationTime;
+    if (creationTime == 0) revert InvalidActionInfo();
+    return policy.getPastRoleSupplyAsQuantitySum(disapprovalRole, creationTime - 1);
   }
 }

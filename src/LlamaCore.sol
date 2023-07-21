@@ -606,12 +606,10 @@ contract LlamaCore is Initializable {
     // this race condition is unlikely to matter.
     if (!policy.hasPermissionId(policyholder, role, permissionId)) revert PolicyholderDoesNotHavePermission();
 
-    // Validate action creation.
+    // Update `actionsCount` and create `actionInfo` struct.
     actionId = actionsCount;
     actionsCount = LlamaUtils.uncheckedIncrement(actionsCount); // Safety: Can never overflow a uint256 by incrementing.
-
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
-    strategy.validateActionCreation(actionInfo);
 
     // Scope to avoid stack too deep
     {
@@ -620,6 +618,9 @@ contract LlamaCore is Initializable {
       newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
+
+      // Validate action creation.
+      strategy.validateActionCreation(actionInfo);
 
       ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
       if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
@@ -656,7 +657,7 @@ contract LlamaCore is Initializable {
     address policyholder,
     uint8 role,
     ActionState expectedState
-  ) internal returns (Action storage action, uint96 quantity) {
+  ) internal view returns (Action storage action, uint96 quantity) {
     action = actions[actionInfo.id];
     ActionState currentState = getActionState(actionInfo);
     if (currentState != expectedState) revert InvalidActionState(currentState);

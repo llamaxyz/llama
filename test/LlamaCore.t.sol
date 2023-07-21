@@ -682,8 +682,8 @@ contract CreateAction is LlamaCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getApprovalSupply(actionInfo), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getDisapprovalSupply(actionInfo), 3);
   }
 
   function test_CreatesAnActionWithDescription() public {
@@ -706,8 +706,8 @@ contract CreateAction is LlamaCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionInfo.id), 3);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionInfo.id), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getApprovalSupply(actionInfo), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getDisapprovalSupply(actionInfo), 3);
   }
 
   function testFuzz_RevertIf_PolicyholderDoesNotHavePermission(address _target, uint256 _value) public {
@@ -895,8 +895,8 @@ contract CreateActionBySig is LlamaCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionId), 3);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getApprovalSupply(actionInfo), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getDisapprovalSupply(actionInfo), 3);
   }
 
   function test_CreatesActionBySigWithDescription() public {
@@ -938,8 +938,8 @@ contract CreateActionBySig is LlamaCoreTest {
     assertEq(mpCore.actionsCount(), 1);
     assertEq(action.creationTime, block.timestamp);
     assertEq(approvalPeriodEnd, block.timestamp + 2 days);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionApprovalSupply(actionId), 3);
-    assertEq(toRelativeQuorum(actionInfo.strategy).actionDisapprovalSupply(actionId), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getApprovalSupply(actionInfo), 3);
+    assertEq(toRelativeQuorum(actionInfo.strategy).getDisapprovalSupply(actionInfo), 3);
   }
 
   function test_CheckNonceIncrements() public {
