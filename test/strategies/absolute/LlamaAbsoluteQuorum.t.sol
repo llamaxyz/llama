@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
+import {LlamaAbsoluteStrategyBaseTest} from "test/strategies/absolute/LlamaAbsoluteStrategyBase.t.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles} from "test/utils/LlamaTestSetup.sol";
 
