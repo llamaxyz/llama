@@ -9,8 +9,8 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
-import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBase.sol";
+import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
+import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 
 library DeployUtils {
   using stdJson for string;

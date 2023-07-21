@@ -15,7 +15,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
+import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
