@@ -308,7 +308,8 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     assertEq(newStrategy.getApprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
   }
 
-  function testFuzz_ReturnsMaxValueForForceApprovalRoles(uint8 _role, address _policyHolder) public {
+  function testFuzz_ReturnsMaxValueForForceApprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder) public {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
@@ -320,7 +321,9 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, forceApproveRoles, new uint8[](0)
     );
 
-    assertEq(newStrategy.getApprovalQuantityAt(_policyHolder, _role, block.timestamp - 1), type(uint96).max);
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getApprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
   }
 }
 
@@ -463,7 +466,10 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     assertEq(newStrategy.getDisapprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
   }
 
-  function testFuzz_ReturnsMaxValueForForceDisapprovalRoles(uint8 _role, address _policyHolder) public {
+  function testFuzz_ReturnsMaxValueForForceDisapprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder)
+    public
+  {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
     _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
     vm.assume(_policyHolder != address(0));
     vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
@@ -475,7 +481,9 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), forceDisapproveRoles
     );
 
-    assertEq(newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, block.timestamp - 1), type(uint96).max);
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
   }
 }
 
