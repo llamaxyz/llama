@@ -289,19 +289,13 @@ contract Deploy is LlamaFactoryTest {
 
     vm.expectRevert("Initializable: contract is already initialized");
     LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
-      "NewProject",
-      new RoleDescription[](0),
-      new RoleHolderData[](0),
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      color,
-      logo
+      new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo
     );
 
     LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
-      "NewProject", policyLogic, relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
-    _llama.initialize(config);
+    _llama.initialize(config, policyLogic, policyMetadataLogic);
   }
 
   function test_DeploysPolicy() public {
