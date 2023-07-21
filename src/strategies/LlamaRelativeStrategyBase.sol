@@ -50,7 +50,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   /// @dev The strategy has disabled disapprovals.
   error DisapprovalDisabled();
 
-  /// @dev The provided action could not be fou.
+  /// @dev The provided action could not be found.
   error InvalidActionInfo();
 
   /// @dev The action cannot be created because the minimum approval percentage cannot be greater than 100%.
