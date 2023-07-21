@@ -7,8 +7,6 @@ import {LlamaRelativeStrategyBase} from "src/strategies/LlamaRelativeStrategyBas
 // @dev A mock strategy implementation (logic) contract. To be used for testing the abstract `LlamaRelativeStrategyBase`
 // contract
 contract MockLlamaRelativeStrategyBase is LlamaRelativeStrategyBase {
-  function validateActionCreation(ActionInfo calldata) external view override {}
-
   function getApprovalQuantityAt(address, /* policyholder */ uint8, /* role */ uint256 /* timestamp */ )
     external
     view
@@ -22,4 +20,8 @@ contract MockLlamaRelativeStrategyBase is LlamaRelativeStrategyBase {
     override
     returns (uint96)
   {}
+
+  function getApprovalSupply(ActionInfo calldata) public view override returns (uint96) {}
+
+  function getDisapprovalSupply(ActionInfo calldata) public view override returns (uint96) {}
 }

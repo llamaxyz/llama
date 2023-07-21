@@ -466,18 +466,8 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), _numberOfPolicies);
-    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), _numberOfPolicies);
-  }
-
-  function test_OnlyLlamaCoreCanValidate(uint256 _numberOfPolicies) external {
-    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
-    ILlamaStrategy testStrategy = deployTestRelativeUniqueHolderQuorumStrategy();
-    generateAndSetRoleHolders(_numberOfPolicies);
-    ActionInfo memory actionInfo = createAction(testStrategy);
-
-    vm.expectRevert(LlamaRelativeStrategyBase.OnlyLlamaCore.selector);
-    LlamaRelativeHolderQuorum(address(testStrategy)).validateActionCreation(actionInfo);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getApprovalSupply(actionInfo), _numberOfPolicies);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), _numberOfPolicies);
   }
 
   function test_CalculateSupplyWhenActionCreatorHasRole(uint256 _numberOfPolicies, uint256 _creatorQuantity) external {
@@ -495,8 +485,8 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
 
     ActionInfo memory actionInfo = createAction(testStrategy);
 
-    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionApprovalSupply(actionInfo.id), supply);
-    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).actionDisapprovalSupply(actionInfo.id), supply);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getApprovalSupply(actionInfo), supply);
+    assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), supply);
   }
 }
 
