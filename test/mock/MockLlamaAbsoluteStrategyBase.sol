@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {ActionInfo} from "src/lib/Structs.sol";
-import {LlamaAbsoluteStrategyBase} from "src/strategies/LlamaAbsoluteStrategyBase.sol";
+import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 
 // @dev A mock strategy implementation (logic) contract. To be used for testing the abstract `LlamaAbsoluteStrategyBase`
 // contract
