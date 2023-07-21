@@ -5,6 +5,7 @@ import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
+// Most of this contract is tested indirectly through LlamaPolicy tests
 contract LlamaPolicyMetadataTest is LlamaTestSetup {
   string color = "#FF0420";
   string logo =
