@@ -14,8 +14,6 @@ import {LlamaAbsoluteQuorum} from "src/strategies/LlamaAbsoluteQuorum.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeQuantityQuorum} from "src/strategies/LlamaRelativeQuantityQuorum.sol";
 import {LlamaRelativeUniqueHolderQuorum} from "src/strategies/LlamaRelativeUniqueHolderQuorum.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
 contract DeployLlamaFactory is Script {
@@ -30,14 +28,14 @@ contract DeployLlamaFactory is Script {
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
-
-  // Core Protocol.
-  LlamaFactory factory;
   LlamaPolicyMetadata policyMetadataLogic;
+
+  // Factory and lens contracts.
+  LlamaFactory factory;
   LlamaLens lens;
 
   function run() public {
-    DeployUtils.print(string.concat("Deploying Llama framework to chain:", vm.toString(block.chainid)));
+    DeployUtils.print(string.concat("Deploying Llama factory to chain:", vm.toString(block.chainid)));
 
     vm.broadcast();
     coreLogic = new LlamaCore();

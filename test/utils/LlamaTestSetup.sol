@@ -58,7 +58,9 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   // replaced with any address that we hold the private key for.
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
 
-  // Root Llama instance.
+  // As part of our test setup we deploy two mock llama instances.
+  // This first instance we deploy is prefixed with "root", but it is an independent,
+  // standalone instance like all others. It could have been named "first instance" as well.
   LlamaCore rootCore;
   LlamaExecutor rootExecutor;
   LlamaPolicy rootPolicy;

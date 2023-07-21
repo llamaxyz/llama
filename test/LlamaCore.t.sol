@@ -23,8 +23,8 @@ import {ActionState} from "src/lib/Enums.sol";
 import {
   Action,
   ActionInfo,
-  LlamaCoreInitializationConfig,
-  LlamaPolicyInitializationConfig,
+  LlamaInstanceConfig,
+  LlamaPolicyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
@@ -273,11 +273,10 @@ contract Setup is LlamaCoreTest {
 contract Constructor is LlamaCoreTest {
   function test_RevertIf_InitializeImplementationContract() public {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
-      new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), COLOR, LOGO
-    );
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), COLOR, LOGO);
 
-    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
+    LlamaInstanceConfig memory config = LlamaInstanceConfig(
       "NewProject", relativeHolderQuorumLogic, accountLogic, new bytes[](0), new bytes[](0), policyConfig
     );
     coreLogic.initialize(config, mpPolicy, policyMetadataLogic);
@@ -325,19 +324,14 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(uninitializedLlama.executor()), address(0));
     assertEq(address(computedExecutor).code.length, 0);
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertEq(address(uninitializedLlama.executor()), address(computedExecutor));
     assertGt(address(computedExecutor).code.length, 0);
@@ -358,19 +352,14 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(strategyAddresses[0]).code.length, 0);
     assertEq(address(strategyAddresses[1]).code.length, 0);
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertGt(address(strategyAddresses[0]).code.length, 0);
     assertGt(address(strategyAddresses[1]).code.length, 0);
@@ -398,19 +387,14 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, strategyConfigs[1]);
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
   }
 
   function test_StrategiesHaveLlamaCoreAddressInStorage() public {
@@ -425,19 +409,14 @@ contract Initialize is LlamaCoreTest {
       );
     }
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertEq(address(strategyAddresses[0].llamaCore()), address(uninitializedLlama));
     assertEq(address(strategyAddresses[1].llamaCore()), address(uninitializedLlama));
@@ -455,19 +434,14 @@ contract Initialize is LlamaCoreTest {
       );
     }
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     LlamaPolicy policy = uninitializedLlama.policy();
 
@@ -490,19 +464,14 @@ contract Initialize is LlamaCoreTest {
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[0], false, false);
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[1], false, false);
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[0], true, true);
     assertEqStrategyStatus(uninitializedLlama, strategyAddresses[1], true, true);
@@ -516,19 +485,19 @@ contract Initialize is LlamaCoreTest {
 
     assertFalse(uninitializedLlama.authorizedStrategyLogics(relativeHolderQuorumLogic));
 
-    modifiedFactory.initialize(
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
       "NewProject",
       ILlamaStrategy(relativeHolderQuorumLogic),
       ILlamaAccount(accountLogic),
       strategyConfigs,
       accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+      policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertTrue(uninitializedLlama.authorizedStrategyLogics(relativeHolderQuorumLogic));
   }
@@ -540,20 +509,16 @@ contract Initialize is LlamaCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, true);
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      ILlamaAccount(accountLogic),
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(accountLogic), strategyConfigs, accounts, policyConfig
     );
+
+    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, true);
+    modifiedFactory.initialize(instanceConfig);
   }
 
   function test_SetsLlamaAccountLogicAddress() public {
@@ -564,19 +529,14 @@ contract Initialize is LlamaCoreTest {
 
     assertFalse(uninitializedLlama.authorizedAccountLogics(accountLogic));
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      ILlamaAccount(accountLogic),
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(accountLogic), strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertTrue(uninitializedLlama.authorizedAccountLogics(accountLogic));
   }
@@ -588,20 +548,16 @@ contract Initialize is LlamaCoreTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.expectEmit();
-    emit AccountLogicAuthorizationSet(accountLogic, true);
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      ILlamaAccount(accountLogic),
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(accountLogic), strategyConfigs, accounts, policyConfig
     );
+
+    emit AccountLogicAuthorizationSet(accountLogic, true);
+    modifiedFactory.initialize(instanceConfig);
   }
 
   function test_AccountsAreDeployedAtExpectedAddress() public {
@@ -618,19 +574,14 @@ contract Initialize is LlamaCoreTest {
     assertEq(address(accountAddresses[0]).code.length, 0);
     assertEq(address(accountAddresses[1]).code.length, 0);
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertGt(address(accountAddresses[0]).code.length, 0);
     assertGt(address(accountAddresses[1]).code.length, 0);
@@ -650,20 +601,16 @@ contract Initialize is LlamaCoreTest {
     vm.expectEmit();
     emit AccountCreated(accountAddresses[0], accountLogic, accounts[0]);
     vm.expectEmit();
-    emit AccountCreated(accountAddresses[1], accountLogic, accounts[1]);
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    emit AccountCreated(accountAddresses[1], accountLogic, accounts[1]);
+    modifiedFactory.initialize(instanceConfig);
   }
 
   function test_AccountsHaveLlamaExecutorAddressInStorage() public {
@@ -677,19 +624,14 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     LlamaExecutor executor = uninitializedLlama.executor();
 
@@ -708,19 +650,14 @@ contract Initialize is LlamaCoreTest {
         lens.computeLlamaAccountAddress(address(accountLogic), accounts[i], address(uninitializedLlama));
     }
 
-    modifiedFactory.initialize(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      rootLlamaRoleDescriptions(),
-      roleHolders,
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      COLOR,
-      LOGO
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(rootLlamaRoleDescriptions(), roleHolders, new RolePermissionData[](0), COLOR, LOGO);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    modifiedFactory.initialize(instanceConfig);
 
     assertEq(LlamaAccount(payable(address(accountAddresses[0]))).name(), "Llama Treasury");
     assertEq(LlamaAccount(payable(address(accountAddresses[1]))).name(), "Llama Grants");

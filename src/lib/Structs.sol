@@ -58,22 +58,22 @@ struct RolePermissionData {
   bool hasPermission; // Whether to assign the permission or remove the permission.
 }
 
-/// @dev Data required to initialize a Llama core.
-struct LlamaCoreInitializationConfig {
-  string name; // The name of the `LlamaCore` instance.
-  ILlamaStrategy strategyLogic; // The Llama Strategy implementation (logic) contract.
-  ILlamaAccount accountLogic; // The Llama Account implementation (logic) contract.
+/// @dev Configuration of a new Llama instance.
+struct LlamaInstanceConfig {
+  string name; // The name of the Llama instance.
+  ILlamaStrategy strategyLogic; // The initial strategy implementation (logic) contract.
+  ILlamaAccount accountLogic; // The initial account implementation (logic) contract.
   bytes[] initialStrategies; // Array of initial strategy configurations.
   bytes[] initialAccounts; // Array of initial account configurations.
-  LlamaPolicyInitializationConfig policyConfig; // configuration struct for `LlamaPolicy`.
+  LlamaPolicyConfig policyConfig; // Configuration of the instance's policy.
 }
 
-/// @dev Data required to initialize a Llama policy.
-struct LlamaPolicyInitializationConfig {
-  RoleDescription[] roleDescriptions; // The role descriptions.
-  RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the role holders.
-  RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the role has the permission of the
-    // role permissions.
-  string color; // The background color as any valid SVG color (e.g. #00FF00) for the deployed Llama instance's NFT.
+/// @dev Configuration of a new Llama policy.
+struct LlamaPolicyConfig {
+  RoleDescription[] roleDescriptions; // The initial role descriptions.
+  RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
+  RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the initial roles have the permission
+    // of the role permissions.
+  string color; // The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
 }

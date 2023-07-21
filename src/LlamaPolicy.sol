@@ -10,11 +10,9 @@ import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {LlamaPolicyInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {LlamaPolicyConfig} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 
 /// @title Llama Policy
 /// @author Llama (devsdosomething@llama.xyz)
@@ -143,13 +141,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Initializes a new `LlamaPolicy` clone.
   /// @param config The struct that contains the configuration for this instance's policy.
   function initialize(
-    string memory name,
-    LlamaPolicyInitializationConfig calldata config,
+    string memory _name,
+    LlamaPolicyConfig calldata config,
     ILlamaPolicyMetadata policyMetadataLogic,
     address executor,
     bytes32 bootstrapPermissionId
   ) external initializer {
-    __initializeERC721MinimalProxy(name, string.concat("LL-", LibString.replace(LibString.upper(name), " ", "-")));
+    __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     llamaExecutor = executor;
 
     // Initialize the roles.

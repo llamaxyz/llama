@@ -6,13 +6,12 @@ import {Test, console2} from "forge-std/Test.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
-import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
   Action,
-  LlamaCoreInitializationConfig,
-  LlamaPolicyInitializationConfig,
+  LlamaInstanceConfig,
+  LlamaPolicyConfig,
   RoleHolderData,
   RolePermissionData,
   PermissionData
@@ -22,7 +21,6 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaFactoryTest is LlamaTestSetup {
   uint96 constant DEFAULT_QUANTITY = 1;
@@ -80,18 +78,14 @@ contract Deploy is LlamaFactoryTest {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    return factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    return factory.deploy(instanceConfig);
   }
 
   function testFuzz_DeployCallsArePublic(address caller) public {
@@ -112,32 +106,17 @@ contract Deploy is LlamaFactoryTest {
     );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
-    factory.deploy(
-      name,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig =
+      LlamaInstanceConfig(name, relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig);
+
+    factory.deploy(instanceConfig);
 
     vm.prank(disapproverDrake);
-    factory.deploy(
-      name,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+
+    factory.deploy(instanceConfig);
   }
 
   function test_AllowSameNamesFromDifferentDeployers(string memory name) public {
@@ -149,32 +128,18 @@ contract Deploy is LlamaFactoryTest {
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
 
     vm.prank(disapproverDiane);
-    factory.deploy(
-      name,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig =
+      LlamaInstanceConfig(name, relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig);
+
+    factory.deploy(instanceConfig);
 
     vm.prank(disapproverDrake);
-    factory.deploy(
-      name,
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      roleDescriptionStrings,
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+
+    factory.deploy(instanceConfig);
   }
 
   function test_RevertIf_RoleId1IsNotFirst() public {
@@ -186,33 +151,27 @@ contract Deploy is LlamaFactoryTest {
     // Overwrite role ID at index 1 to ensure it does not have role 1.
     roleHolders[0].role = 2;
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-    factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(new RoleDescription[](0), roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    factory.deploy(instanceConfig);
 
     // Pass an empty array of role holders.
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-    factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      new RoleHolderData[](0),
-      new RolePermissionData[](0),
-      color,
-      logo
+
+    LlamaPolicyConfig memory policyConfig2 =
+      LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig2 = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig2
     );
+
+    factory.deploy(instanceConfig2);
   }
 
   function test_RevertIf_RoleId1IsFirstWithBadExpiration() public {
@@ -224,50 +183,27 @@ contract Deploy is LlamaFactoryTest {
     // Overwrite role ID at index 1 to have expiration just below `type(uint64).max`
     roleHolders[0].expiration = type(uint64).max - 1;
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-    factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(new RoleDescription[](0), roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
+
+    factory.deploy(instanceConfig);
 
     // Overwrite role ID at index 1 to have expiration of `block.timestamp`
     roleHolders[0].expiration = toUint64(block.timestamp);
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-    factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+
+    factory.deploy(instanceConfig);
 
     // Overwrite role ID at index 1 to have expiration of 0
     roleHolders[0].expiration = 0;
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-    factory.deploy(
-      "NewProject",
-      relativeHolderQuorumLogic,
-      accountLogic,
-      strategyConfigs,
-      accounts,
-      new RoleDescription[](0),
-      roleHolders,
-      new RolePermissionData[](0),
-      color,
-      logo
-    );
+
+    factory.deploy(instanceConfig);
   }
 
   function test_DeploysLlamaCore() public {
@@ -288,11 +224,10 @@ contract Deploy is LlamaFactoryTest {
     bytes[] memory accounts = accountConfigsRootLlama();
 
     vm.expectRevert("Initializable: contract is already initialized");
-    LlamaPolicyInitializationConfig memory policyConfig = LlamaPolicyInitializationConfig(
-      new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo
-    );
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
 
-    LlamaCoreInitializationConfig memory config = LlamaCoreInitializationConfig(
+    LlamaInstanceConfig memory config = LlamaInstanceConfig(
       "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig
     );
     _llama.initialize(config, policyLogic, policyMetadataLogic);
@@ -314,16 +249,9 @@ contract Deploy is LlamaFactoryTest {
     LlamaExecutor _executor = lens.computeLlamaExecutorAddress("NewProject", address(this));
 
     vm.expectRevert("Initializable: contract is already initialized");
-    LlamaPolicyInitializationConfig memory config = LlamaPolicyInitializationConfig(
-      "NewProject",
-      new RoleDescription[](0),
-      new RoleHolderData[](0),
-      new RolePermissionData[](0),
-      policyMetadataLogic,
-      color,
-      logo
-    );
-    _policy.initialize(config, address(_executor), bytes32(0));
+    LlamaPolicyConfig memory config =
+      LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
+    _policy.initialize("NewProject", config, policyMetadataLogic, address(_executor), bytes32(0));
   }
 
   function test_SetsNameOnLlamaCore() public {

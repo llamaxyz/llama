@@ -12,15 +12,13 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {
   Action,
   ActionInfo,
-  LlamaCoreInitializationConfig,
-  LlamaPolicyInitializationConfig,
+  LlamaInstanceConfig,
+  LlamaPolicyConfig,
   PermissionData,
   RoleHolderData,
   RolePermissionData
 } from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 
@@ -255,12 +253,12 @@ contract LlamaCore is Initializable {
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
   function initialize(
-    LlamaCoreInitializationConfig calldata config,
+    LlamaInstanceConfig calldata config,
     LlamaPolicy policyLogic,
     ILlamaPolicyMetadata policyMetadataLogic
   ) external initializer {
     name = config.name;
-    // Deploy Executor.
+    // Deploy the executor
     executor = new LlamaExecutor();
 
     // Since the `LlamaCore` salt is dependent on the name and deployer, we can use a constant salt of 0 here.
@@ -287,7 +285,7 @@ contract LlamaCore is Initializable {
     _setStrategyLogicAuthorization(config.strategyLogic, true);
     _deployStrategies(config.strategyLogic, config.initialStrategies);
 
-    // Check that the bootstrap strategy was deployed and authorized to the precalculated address.
+    // Check that the bootstrap strategy was deployed and authorized to the pre-calculated address.
     if (!strategies[bootstrapStrategy].authorized) revert BootstrapStrategyNotAuthorized();
 
     // Authorize account logic contract and deploy accounts.

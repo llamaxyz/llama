@@ -3,13 +3,9 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
-import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {LlamaCoreInitializationConfig, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
+import {LlamaInstanceConfig} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Factory
@@ -43,7 +39,7 @@ contract LlamaFactory {
   /// @notice The Llama policy metadata implementation (logic) contract.
   ILlamaPolicyMetadata public immutable LLAMA_POLICY_METADATA_LOGIC;
 
-  /// @dev Constructs the Llama Factory.
+  /// @dev Set the logic contracts used to deploy Llama instances.
   constructor(LlamaCore llamaCoreLogic, LlamaPolicy llamaPolicyLogic, ILlamaPolicyMetadata llamaPolicyMetadataLogic) {
     LLAMA_CORE_LOGIC = llamaCoreLogic;
     LLAMA_POLICY_LOGIC = llamaPolicyLogic;
@@ -51,9 +47,9 @@ contract LlamaFactory {
   }
 
   /// @notice Deploys a new Llama instance.
-  /// @param instanceConfig The configuration of this Llama instance.
-  /// @return core The address of the `LlamaCore` of the newly created instance.
-  function deploy(LlamaCoreInitializationConfig memory instanceConfig) external returns (LlamaCore core) {
+  /// @param instanceConfig The configuration of the new Llama instance.
+  /// @return core The address of the `LlamaCore` of the deployed instance.
+  function deploy(LlamaInstanceConfig memory instanceConfig) external returns (LlamaCore core) {
     // There must be at least one role holder with role ID of 1, since that role ID is initially
     // given permission to call `setRolePermission`. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
@@ -69,10 +65,8 @@ contract LlamaFactory {
     );
     core.initialize(instanceConfig, LLAMA_POLICY_LOGIC, LLAMA_POLICY_METADATA_LOGIC);
 
-    LlamaExecutor executor = core.executor();
-    LlamaPolicy policy = core.policy();
-    emit LlamaInstanceCreated(
-      msg.sender, instanceConfig.name, address(core), address(executor), address(policy), block.chainid
-    );
+    address executor = address(core.executor());
+    address policy = address(core.policy());
+    emit LlamaInstanceCreated(msg.sender, instanceConfig.name, address(core), executor, policy, block.chainid);
   }
 }
