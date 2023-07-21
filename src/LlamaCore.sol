@@ -41,6 +41,7 @@ contract LlamaCore is Initializable {
   // ======================================
 
   /// @dev Bootstrap strategy must be deployed and authorized during initialization.
+  /// @dev This should never be thrown in production.
   error BootstrapStrategyNotAuthorized();
 
   /// @dev Policyholder cannot cast if it has 0 quantity of role.
