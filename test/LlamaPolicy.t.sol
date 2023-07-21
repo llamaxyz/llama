@@ -102,10 +102,11 @@ contract NonTransferableToken is LlamaPolicyTest {
 
 contract Constructor is LlamaPolicyTest {
   function test_RevertIf_InitializeImplementationContract() public {
+    string memory name = mpPolicy.name();
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     LlamaPolicyConfig memory config =
       LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
-    policyLogic.initialize(mpPolicy.name(), config, policyMetadataLogic, address(mpExecutor), bytes32(0));
+    policyLogic.initialize(name, config, policyMetadataLogic, address(mpExecutor), bytes32(0));
   }
 }
 
@@ -114,12 +115,13 @@ contract Initialize is LlamaPolicyTest {
 
   function test_RevertIf_NoRolesAssignedAtInitialization() public {
     LlamaPolicy localPolicy = LlamaPolicy(Clones.clone(address(mpPolicy)));
+    string memory name = mpPolicy.name();
     LlamaPolicyConfig memory config =
       LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
     bytes32 permissionId =
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy));
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
-    localPolicy.initialize(mpPolicy.name(), config, policyMetadataLogic, address(mpExecutor), permissionId);
+    localPolicy.initialize(name, config, policyMetadataLogic, address(mpExecutor), permissionId);
   }
 
   function test_SetsNameAndSymbol() public {
@@ -255,7 +257,7 @@ contract Initialize is LlamaPolicyTest {
     localPolicy.initialize(
       "Test Policy",
       config,
-      llamaPolicyMetadata,
+      llamaPolicyMetadataLogic,
       address(mpExecutor),
       lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
     );
