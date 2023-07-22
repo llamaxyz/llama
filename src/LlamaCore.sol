@@ -381,7 +381,7 @@ contract LlamaCore is Initializable {
     action.executed = true;
 
     // Check pre-execution action guard.
-    ILlamaActionGuard guard = actionGuard[actionInfo.target][bytes4(actionInfo.data)];
+    ILlamaActionGuard guard = action.guard;
     if (guard != ILlamaActionGuard(address(0))) guard.validatePreActionExecution(actionInfo);
 
     // Execute action.
@@ -627,7 +627,10 @@ contract LlamaCore is Initializable {
       strategy.validateActionCreation(actionInfo);
 
       ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
-      if (guard != ILlamaActionGuard(address(0))) guard.validateActionCreation(actionInfo);
+      if (guard != ILlamaActionGuard(address(0))) {
+        newAction.guard = guard;
+        newAction.guard.validateActionCreation(actionInfo);
+      }
     }
 
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);

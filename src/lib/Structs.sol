@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
@@ -25,6 +26,8 @@ struct Action {
   bool executed; // Has action executed.
   bool canceled; // Is action canceled.
   bool isScript; // Is the action's target a script.
+  ILlamaActionGuard guard; // The action's guard. This is the address(0) if no guard is set on the action's target and
+    // selector pair.
   uint64 creationTime; // The timestamp when action was created (used for policy snapshots).
   uint64 minExecutionTime; // Only set when an action is queued. The timestamp when action execution can begin.
   uint96 totalApprovals; // The total quantity of policyholder approvals.
