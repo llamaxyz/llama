@@ -535,6 +535,50 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
     assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getApprovalSupply(actionInfo), supply);
     assertEq(LlamaRelativeQuantityQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), supply);
   }
+
+  function test_RevertIf_ApprovalRoleHasZeroSupply() public {
+    // Getting a role with no supply currently and initializing it.
+    uint8 noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    ILlamaStrategy testStrategy = deployRelativeQuantityQuorum(
+      noSupplyRole, uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+    );
+
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
+
+  function test_RevertIf_DisapprovalRoleHasZeroSupply() public {
+    // Getting a role with no supply currently and initializing it.
+    uint8 noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    ILlamaStrategy testStrategy = deployRelativeQuantityQuorum(
+      uint8(Roles.Approver), noSupplyRole, 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+    );
+
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
 }
 
 contract ValidateActionCancelation is LlamaRelativeQuantityQuorumTest {
