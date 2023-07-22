@@ -1321,7 +1321,9 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     parts[7] = LibString.toHexString(address(mpExecutor));
     parts[8] =
       ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
-    string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
+    string memory json = Base64.encode(
+      bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]))
+    );
     string memory encodedContractURI = string.concat("data:application/json;base64,", json);
     assertEq(mpPolicy.contractURI(), encodedContractURI);
   }
@@ -1342,7 +1344,9 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     parts[7] = LibString.toHexString(address(deployedInstance.executor()));
     parts[8] =
       ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
-    string memory json = Base64.encode(bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4])));
+    string memory json = Base64.encode(
+      bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]))
+    );
     string memory encodedContractURI = string.concat("data:application/json;base64,", json);
     assertEq(deployedPolicy.contractURI(), encodedContractURI);
   }
