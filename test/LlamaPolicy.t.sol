@@ -1211,7 +1211,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     string memory name = LibString.concat(truncatedAddress, " Policy");
     string memory policyholder = LibString.toHexString(address(this));
     string memory description1 =
-      LibString.concat("This NFT represents instance in the Llama instance: ", LibString.escapeJSON(mpPolicy.name()));
+      LibString.concat("This NFT represents membership in the Llama instance: ", LibString.escapeJSON(mpPolicy.name()));
     string memory description = string.concat(
       description1,
       ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
