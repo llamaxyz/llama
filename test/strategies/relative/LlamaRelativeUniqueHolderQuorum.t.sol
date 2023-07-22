@@ -325,6 +325,37 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     assertEq(newStrategy.getApprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
   }
+
+  function test_RevertIf_NonRoleHolderCastsApprovalWithForceApprovalRole() public {
+    // Strategy with Approval role of 'TestRole1' and Force approval role of 'ForceApprover'.
+    ILlamaStrategy testStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
+
+    address randomPolicyHolder = makeAddr("randomPolicyHolder");
+
+    // Assigning only TestRole1 role to RandomPolicyHolder.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), randomPolicyHolder, 1, type(uint64).max);
+
+    mineBlock();
+
+    // Testing a quirk in the LlamaRelativeUniqueHolderQuorum strategy for `getApprovalQuantityAt` in isolation. We'll
+    // still get back `type(uint96).max` even though the policy holder does not hold the force approval role.
+    assertEq(
+      testStrategy.getApprovalQuantityAt(randomPolicyHolder, uint8(Roles.ForceApprover), block.timestamp - 1),
+      type(uint96).max
+    );
+
+    // However this is not a problem, since `getDisapprovalQuantityAt` is only used in `_preCastAssertions` in
+    // `LlamaCore` while doing the actual cast (dis)approval. And it will revert if the policy holder
+    // does not hold the force (dis)approval role.
+
+    // Action Process.
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    vm.prank(randomPolicyHolder);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+  }
 }
 
 contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
@@ -484,6 +515,42 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.warp(_timestamp);
 
     assertEq(newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
+  }
+
+  function test_RevertIf_NonRoleHolderCastsDisapprovalWithForceDisapprovalRole() public {
+    // Strategy with Disapproval role of 'TestRole1' and Force disapproval role of 'ForceDisapprover'.
+    ILlamaStrategy testStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
+
+    address randomPolicyHolder = makeAddr("randomPolicyHolder");
+
+    // Assigning only TestRole1 role to RandomPolicyHolder.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), randomPolicyHolder, 1, type(uint64).max);
+
+    mineBlock();
+
+    // Testing a quirk in the LlamaRelativeUniqueHolderQuorum strategy for `getDisapprovalQuantityAt` in isolation. We'll
+    // still get back `type(uint96).max` even though the policy holder does not hold the force disapproval role.
+    assertEq(
+      testStrategy.getDisapprovalQuantityAt(randomPolicyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1),
+      type(uint96).max
+    );
+
+    // However this is not a problem, since `getDisapprovalQuantityAt` is only used in `_preCastAssertions` in
+    // `LlamaCore` while doing the actual cast (dis)approval. And it will revert if the policy holder
+    // does not hold the force (dis)approval role.
+
+    // Action Process.
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+
+    mpCore.queueAction(actionInfo);
+
+    vm.prank(randomPolicyHolder);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
+    mpCore.castDisapproval(uint8(Roles.ForceDisapprover), actionInfo, "");
   }
 }
 
