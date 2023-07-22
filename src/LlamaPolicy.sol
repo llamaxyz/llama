@@ -427,7 +427,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Returns a URI for the storefront-level metadata for your contract.
   /// @return The contract URI for the given Llama instance.
   function contractURI() public view returns (string memory) {
-    return llamaPolicyMetadata.getContractURI(name);
+    return llamaPolicyMetadata.getContractURI(name, llamaExecutor);
   }
 
   // -------- ERC-721 Methods --------

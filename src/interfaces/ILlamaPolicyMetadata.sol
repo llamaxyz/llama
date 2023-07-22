@@ -17,5 +17,6 @@ interface ILlamaPolicyMetadata {
 
   /// @notice Returns the contract URI for a Llama instance's policies.
   /// @param name The name of the Llama instance.
-  function getContractURI(string memory name) external pure returns (string memory);
+  /// @param executor The executor of the Llama instance.
+  function getContractURI(string memory name, address executor) external view returns (string memory);
 }
