@@ -22,8 +22,9 @@ import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeer
 import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
+import {LlamaRelativeQuantityQuorum} from "src/strategies/relative/LlamaRelativeQuantityQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
-import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
+import {LlamaRelativeUniqueHolderQuorum} from "src/strategies/relative/LlamaRelativeUniqueHolderQuorum.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -433,11 +434,9 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-
     mpCore.setStrategyLogicAuthorization(absolutePeerReviewLogic, true);
 
     vm.prank(address(mpExecutor));
-
     mpCore.createStrategies(absolutePeerReviewLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
@@ -457,8 +456,6 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     uint8[] memory _forceApprovalRoles,
     uint8[] memory _forceDisapprovalRoles
   ) internal returns (ILlamaStrategy newStrategy) {
-    LlamaAbsoluteQuorum absoluteQuorumLogic = new LlamaAbsoluteQuorum();
-
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
       approvalPeriod: _approvalPeriod,
       queuingPeriod: _queuingDuration,
@@ -476,15 +473,130 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     strategyConfigs[0] = strategyConfig;
 
     vm.prank(address(mpExecutor));
-
     mpCore.setStrategyLogicAuthorization(absoluteQuorumLogic, true);
 
     vm.prank(address(mpExecutor));
-
     mpCore.createStrategies(absoluteQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
 
     newStrategy = lens.computeLlamaStrategyAddress(
       address(absoluteQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+  function deployRelativeHolderQuorum(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint16 _minApprovalPct,
+    uint16 _minDisapprovalPct,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+    LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovalPct: _minApprovalPct,
+      minDisapprovalPct: _minDisapprovalPct,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    LlamaRelativeStrategyBase.Config[] memory strategyConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeHolderQuorumLogic, true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+  function deployRelativeQuantityQuorum(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint16 _minApprovalPct,
+    uint16 _minDisapprovalPct,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+    LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovalPct: _minApprovalPct,
+      minDisapprovalPct: _minDisapprovalPct,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    LlamaRelativeStrategyBase.Config[] memory strategyConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(relativeQuantityQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
+    );
+  }
+
+  function deployRelativeUniqueHolderQuorum(
+    uint8 _approvalRole,
+    uint8 _disapprovalRole,
+    uint64 _queuingDuration,
+    uint64 _expirationDelay,
+    uint64 _approvalPeriod,
+    bool _isFixedLengthApprovalPeriod,
+    uint16 _minApprovalPct,
+    uint16 _minDisapprovalPct,
+    uint8[] memory _forceApprovalRoles,
+    uint8[] memory _forceDisapprovalRoles
+  ) internal returns (ILlamaStrategy newStrategy) {
+    LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: _approvalPeriod,
+      queuingPeriod: _queuingDuration,
+      expirationPeriod: _expirationDelay,
+      isFixedLengthApprovalPeriod: _isFixedLengthApprovalPeriod,
+      minApprovalPct: _minApprovalPct,
+      minDisapprovalPct: _minDisapprovalPct,
+      approvalRole: _approvalRole,
+      disapprovalRole: _disapprovalRole,
+      forceApprovalRoles: _forceApprovalRoles,
+      forceDisapprovalRoles: _forceDisapprovalRoles
+    });
+
+    LlamaRelativeStrategyBase.Config[] memory strategyConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeUniqueHolderQuorumLogic, true);
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(relativeUniqueHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+
+    newStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeUniqueHolderQuorumLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
   }
 
