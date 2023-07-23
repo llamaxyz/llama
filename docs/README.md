@@ -6,6 +6,7 @@ Llama is an onchain governance framework. It uses non-transferable NFTs to encod
 
 - [Action Creation](https://github.com/llamaxyz/llama/blob/main/docs/action-creation.md)
 - [Policy Management](https://github.com/llamaxyz/llama/blob/main/docs/policy-management.md)
+- [Strategy Comparison](https://github.com/llamaxyz/llama/blob/main/docs/strategy-comparison.md)
 
 ## System Architecture
 
