@@ -628,9 +628,8 @@ contract LlamaCore is Initializable {
 
       ILlamaActionGuard guard = actionGuard[target][bytes4(data)];
       if (guard != ILlamaActionGuard(address(0))) {
+        guard.validateActionCreation(actionInfo);
         newAction.guard = guard;
-        newAction.guard.validateActionCreation(actionInfo);
-      }
     }
 
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
