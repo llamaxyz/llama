@@ -65,6 +65,8 @@ here.
 Once `DeployLlamaFactory` has been run, set a `SCRIPT_DEPLOYER_ADDRESS` in your `.env` that corresponds to the `SCRIPT_PRIVATE_KEY` that you want deploy the Llama instance.
 It does *not* have to be the same address that did the initial deploy, but it could be.
 
+Set `INSTANCE_CONFIG_FILE` to the name of your new instance's JSON configuration file (i.e. deployLlamaInstance.json).
+
 Once your `.env` file is configured and anvil is running, you can perform a dry
 run like this:
 

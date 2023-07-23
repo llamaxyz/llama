@@ -18,7 +18,7 @@ run-script script_name flags='' sig='' args='':
     -vvvv {{flags}}
   mv _test test
 
-run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address)"' '$SCRIPT_DEPLOYER_ADDRESS')
+run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS $INSTANCE_CONFIG_FILE')
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
