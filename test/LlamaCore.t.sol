@@ -5,10 +5,8 @@ import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {MockAccountLogicContract} from "test/mock/MockAccountLogicContract.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
-import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {MockPoorlyImplementedAbsolutePeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
 import {LlamaFactoryWithoutInitialization} from "test/utils/LlamaFactoryWithoutInitialization.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -1284,6 +1282,12 @@ contract ExecuteAction is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
 
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
 
@@ -1296,6 +1300,12 @@ contract ExecuteAction is LlamaCoreTest {
 
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+
+    actionInfo = _createAction();
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
 
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 6 days);
@@ -2650,6 +2660,71 @@ contract SetGuard is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaCore.RestrictedAddress.selector);
     mpCore.setGuard(address(mpPolicy), selector, guard);
+  }
+
+  function test_GuardIsSetAtActionCreation() external {
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(true, false, true, "no action pre-execution"));
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.prank(address(mpExecutor));
+    mpCore.setGuard(address(mockProtocol), bytes4(data), guard);
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
+    Action memory action = mpCore.getAction(actionId);
+    assertEq(address(guard), address(action.guard));
+  }
+
+  function test_GuardIsZeroAddressIfDoesNotExist() external {
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
+    Action memory action = mpCore.getAction(actionId);
+    assertEq(address(0), address(action.guard));
+  }
+
+  function test_GuardCannotBeEnabledDuringAction() external {
+    ILlamaActionGuard guard =
+      ILlamaActionGuard(new MockActionGuard(true, false, false, "no action pre or post-execution"));
+    ActionInfo memory actionInfo = _createAction();
+
+    vm.prank(address(mpExecutor));
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, guard);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    _queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    _executeAction(actionInfo);
+  }
+
+  function test_GuardCannotBeDisabledDuringAction() external {
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
+    vm.prank(address(mpExecutor));
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, guard);
+
+    ActionInfo memory actionInfo = _createAction();
+
+    vm.prank(address(mpExecutor));
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, ILlamaActionGuard(address(0)));
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    vm.warp(block.timestamp + 6 days);
+
+    _queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    vm.expectRevert("no action post-execution");
+    mpCore.executeAction(actionInfo);
   }
 }
 

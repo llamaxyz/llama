@@ -219,7 +219,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @notice Revokes a policyholder's expired role.
   /// @param role Role that has expired.
   /// @param policyholder Policyholder that held the role.
-  /// @dev WARNING: This function needs to be explicitly called to revoke expired roles by monitoring through offchain
+  /// @dev This function needs to be explicitly called to revoke expired roles by monitoring through offchain
   /// infrastructure, otherwise expired roles can continue to create actions (if they have the right permissions) and
   /// take part in the approval/disapproval process if the strategy allows it.
   function revokeExpiredRole(uint8 role, address policyholder) external {
