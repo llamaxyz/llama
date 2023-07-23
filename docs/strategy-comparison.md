@@ -4,9 +4,9 @@ Below is a table comparing the key features of the strategy logic contracts.
 
 ## Key Concepts
 
-- **Threshold:** Is the (dis)approval threshold an absolute value or is it a relative percentage of the supply?
-- **Supply:** For relative strategies, what is the minimum percentage multiplied by to arrive at the threshold? This can be the total quantity of the (dis)approval role at action creation or the total number of role holders at action creation time.
-- **Policyholder weight**: When an eligible policyholder casts, how much weight does their cast carry? This is either hardcoded to 1 or it can be their role quantity.
+- **Threshold:** `Relative` if the (dis)approval threshold is a relative percentage of the supply and `Absolute` if it's an absolute value.
+- **Supply:** This only matters for relative strategies. It is the number that the minimum percentage is multiplied by to arrive at the threshold. This can be the total quantity of the (dis)approval role at action creation or the total number of role holders at action creation.
+- **Policyholder weight**: The weight of an eligible policyholder's cast. This is either hardcoded to 1 or the policyholder's role quantity.
 
 ## Comparison Table
 
