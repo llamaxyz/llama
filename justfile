@@ -18,15 +18,14 @@ run-script script_name flags='' sig='' args='':
     -vvvv {{flags}}
   mv _test test
 
-run-create-action-script flags: (run-script 'CreateAction' flags '--sig "run(address)"' '$SCRIPT_DEPLOYER_ADDRESS')
+run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address)"' '$SCRIPT_DEPLOYER_ADDRESS')
 
-dry-run-deploy: (run-script 'DeployLlama')
+dry-run-deploy: (run-script 'DeployLlamaFactory')
 
-deploy: (run-script 'DeployLlama' '--broadcast --verify')
+deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify')
 
-verify: (run-script 'DeployLlama' '--verify')
+verify: (run-script 'DeployLlamaFactory' '--verify')
 
-dry-run-create-new-llama: (run-create-action-script '')
+dry-run-deploy-new-llama: (run-deploy-instance-script '')
 
-# Verification is unnecessary for this script because it does not create any contracts.
-create-new-llama: (run-create-action-script '--broadcast')
+deploy-new-llama: (run-deploy-instance-script '--broadcast --verify')
