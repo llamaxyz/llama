@@ -170,6 +170,86 @@ contract ValidateActionCreation is LlamaAbsoluteQuorumTest {
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
     mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
   }
+
+  function test_UsesApprovalRoleSupplyFromPreviousTimestamp() public {
+    // Getting a role with no supply currently and initializing it.
+    uint8 noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    ILlamaStrategy testStrategy = deployAbsoluteQuorum(
+      noSupplyRole, uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+    );
+
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Verify that `noSupplyRole` has no supply at `action creation time - 1`.
+    assertEq(mpPolicy.getPastRoleSupplyAsQuantitySum(noSupplyRole, block.timestamp - 1), 0);
+
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+    // Assign 'noSupplyRole` at `action creation time` to the new user to make the role supply 1.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(noSupplyRole, newApprover, 1, type(uint64).max);
+
+    // Verify that `noSupplyRole` has supply of 1 at `action creation time`.
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(noSupplyRole), 1);
+
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
+
+  function test_UsesDisapprovalRoleSupplyFromPreviousTimestamp() public {
+    // Getting a role with no supply currently and initializing it.
+    uint8 noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    ILlamaStrategy testStrategy = deployAbsoluteQuorum(
+      uint8(Roles.Approver), noSupplyRole, 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+    );
+
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Verify that `noSupplyRole` has no supply at `action creation time - 1`.
+    assertEq(mpPolicy.getPastRoleSupplyAsQuantitySum(noSupplyRole, block.timestamp - 1), 0);
+
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+    // Assign 'noSupplyRole` at `action creation time` to the new user to make the role supply 1.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(noSupplyRole, newApprover, 1, type(uint64).max);
+
+    // Verify that `noSupplyRole` has supply of 1 at `action creation time`.
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(noSupplyRole), 1);
+
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
 }
 
 contract IsApprovalEnabled is LlamaAbsoluteQuorumTest {
