@@ -490,8 +490,10 @@ contract GetDisapprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
 }
 
 contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
-
-  function createStrategyWithNoSupplyRole(bool approval) internal returns (uint8 noSupplyRole, ILlamaStrategy testStrategy){
+  function createStrategyWithNoSupplyRole(bool approval)
+    internal
+    returns (uint8 noSupplyRole, ILlamaStrategy testStrategy)
+  {
     // Getting a role with no supply currently and initializing it.
     noSupplyRole = mpPolicy.numRoles() + 1;
     initializeRolesUpTo(noSupplyRole);
@@ -525,7 +527,9 @@ contract ValidateActionCreation is LlamaRelativeQuantityQuorumTest {
     assertEq(mpPolicy.getRoleSupplyAsQuantitySum(noSupplyRole), 1);
   }
 
-  function expectRevertRoleHasZeroSupplyOnActionCreationValidation(uint8 noSupplyRole, ILlamaStrategy testStrategy) internal {
+  function expectRevertRoleHasZeroSupplyOnActionCreationValidation(uint8 noSupplyRole, ILlamaStrategy testStrategy)
+    internal
+  {
     // Give the action creator the ability to use this strategy.
     bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
     vm.prank(address(mpExecutor));
