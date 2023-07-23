@@ -2690,7 +2690,7 @@ contract SetGuard is LlamaCoreTest {
     ActionInfo memory actionInfo = _createAction();
 
     vm.prank(address(mpExecutor));
-    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, guard);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
@@ -2707,12 +2707,12 @@ contract SetGuard is LlamaCoreTest {
   function test_GuardCannotBeDisabledDuringAction() external {
     ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(true, true, false, "no action post-execution"));
     vm.prank(address(mpExecutor));
-    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, guard);
 
     ActionInfo memory actionInfo = _createAction();
 
     vm.prank(address(mpExecutor));
-    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, ILlamaActionGuard(address(0)));
+    mpCore.setGuard(address(mockProtocol), MockProtocol.pause.selector, ILlamaActionGuard(address(0)));
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
