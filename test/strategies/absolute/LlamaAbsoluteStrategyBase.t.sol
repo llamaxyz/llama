@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Test, console2} from "forge-std/Test.sol";
-
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {MockLlamaAbsoluteStrategyBase} from "test/mock/MockLlamaAbsoluteStrategyBase.sol";
@@ -13,10 +11,8 @@ import {DeployUtils} from "script/DeployUtils.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
   uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
