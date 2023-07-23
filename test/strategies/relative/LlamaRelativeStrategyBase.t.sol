@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {MockLlamaRelativeStrategyBase} from "test/mock/MockLlamaRelativeStrategyBase.sol";
-import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {Roles} from "test/utils/LlamaTestSetup.sol";
+import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -13,11 +16,11 @@ import {ActionInfo} from "src/lib/Structs.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
-contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
+contract LlamaRelativeStrategyBaseTest is LlamaStrategyTestSetup {
   MockLlamaRelativeStrategyBase mockLlamaRelativeStrategyBaseLogic;
 
   function setUp() public virtual override {
-    LlamaTestSetup.setUp();
+    LlamaStrategyTestSetup.setUp();
 
     mockLlamaRelativeStrategyBaseLogic = new MockLlamaRelativeStrategyBase();
 

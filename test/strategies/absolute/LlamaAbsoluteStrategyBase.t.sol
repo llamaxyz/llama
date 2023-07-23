@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {MockLlamaAbsoluteStrategyBase} from "test/mock/MockLlamaAbsoluteStrategyBase.sol";
-import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {Roles} from "test/utils/LlamaTestSetup.sol";
+import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -14,7 +17,7 @@ import {ActionState} from "src/lib/Enums.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
-contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
+contract LlamaAbsoluteStrategyBaseTest is LlamaStrategyTestSetup {
   uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
   bytes32 constant DEFAULT_PERMISSION = bytes32(0);
   address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
@@ -29,7 +32,7 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaTestSetup {
   MockLlamaAbsoluteStrategyBase mockLlamaAbsoluteStrategyBaseLogic;
 
   function setUp() public virtual override {
-    LlamaTestSetup.setUp();
+    LlamaStrategyTestSetup.setUp();
 
     mockLlamaAbsoluteStrategyBaseLogic = new MockLlamaAbsoluteStrategyBase();
 

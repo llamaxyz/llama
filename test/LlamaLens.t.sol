@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {PermissionData} from "src/lib/Structs.sol";
