@@ -2667,7 +2667,7 @@ contract SetGuard is LlamaCoreTest {
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
 
     vm.prank(address(mpExecutor));
-    mpCore.setGuard(address(mockProtocol), PAUSE_SELECTOR, guard);
+    mpCore.setGuard(address(mockProtocol), bytes4(data), guard);
 
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
