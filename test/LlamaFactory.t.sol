@@ -44,7 +44,9 @@ contract LlamaFactoryTest is LlamaTestSetup {
   event PolicyMetadataSet(
     ILlamaPolicyMetadata policyMetadata, ILlamaPolicyMetadata indexed policyMetadataLogic, bytes initializationData
   );
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event RolePermissionAssigned(
+    uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission
+  );
 }
 
 contract Constructor is LlamaFactoryTest {

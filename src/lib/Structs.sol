@@ -52,9 +52,8 @@ struct RoleHolderData {
 /// @dev Data required to assign/revoke a permission to/from a role.
 struct RolePermissionData {
   uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
-  // Permission ID to assign to the role. It's a hash computed by taking the keccak256 hash of the concatenation of
-  // each field in the `PermissionData` struct.
-  bytes32 permissionId;
+  PermissionData permissionData; // The target, selector, strategy tuple that will be keccak256 hashed to generate the
+    // permission ID to assign or unassign to the role
   bool hasPermission; // Whether to assign the permission or remove the permission.
 }
 
@@ -72,8 +71,8 @@ struct LlamaInstanceConfig {
 struct LlamaPolicyConfig {
   RoleDescription[] roleDescriptions; // The initial role descriptions.
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
-  RolePermissionData[] rolePermissions; // The `role`, `permissionId` and whether the initial roles have the permission
-    // of the role permissions.
+  RolePermissionData[] rolePermissions; // The `role`, `permissionData` and whether the initial roles have the
+    // permission of the role permissions.
   string color; // The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
 }

@@ -21,7 +21,7 @@ Therefore, we help enforce this at the protocol level with the following behavio
 - Role ID 1 is special-cased to be the corresponding `bootstrapRole` because this role can be used (in tandem with the above) to bootstrap the instance to any configuration.
 - The `LlamaFactory.deploy` method, will verify that at least 1 role holder in the `initialRoleHolders` array has the `bootstrapRole` role ID of 1. If this is not the case, deployment reverts.
 - The `deploy` method will then deploy and initialize the `LlamaCore` contract, and the `LlamaCore` contract will deploy and initialize the `LlamaPolicy` contract.
-- Initialization of the `LlamaCore` contract is where the `bootstrapStrategy` is deployed and the `bootstrapPermissionId` is set. This is the permission ID (the `(target, selector, strategy)` tuple) that can be used to call the `setRolePermission` method.
+- Initialization of the `LlamaCore` contract is where the `bootstrapStrategy` is deployed and the bootstrap permission ID is set. This is the permission ID (the `(target, selector, strategy)` tuple) that can be used to call the `setRolePermission` method.
 
 A key part of ensuring the instance is not misconfigured is ensuring that the `bootstrapStrategy` is a valid strategy that can actually be executed. This is checked in deploy scripts, because the strategy can have any logic, so it's not necessarily possible to check this at the protocol level.
 

@@ -10,7 +10,7 @@ import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {ERC721NonTransferableMinimalProxy} from "src/lib/ERC721NonTransferableMinimalProxy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {LlamaPolicyConfig} from "src/lib/Structs.sol";
+import {LlamaPolicyConfig, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 
@@ -84,7 +84,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   /// @dev Emitted when a permission ID is assigned to a role.
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event RolePermissionAssigned(
+    uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission
+  );
 
   /// @dev Emitted when a new Llama policy metadata contract is set.
   event PolicyMetadataSet(
@@ -143,13 +145,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param config The struct that contains the configuration for this instance's policy.
   /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract.
   /// @param executor The instance's `LlamaExecutor`.
-  /// @param bootstrapPermissionId The permission ID that allows policyholders to change role permissions.
+  /// @param bootstrapPermissionData The permission ID that allows policyholders to change role permissions.
   function initialize(
     string memory _name,
     LlamaPolicyConfig calldata config,
     ILlamaPolicyMetadata policyMetadataLogic,
     address executor,
-    bytes32 bootstrapPermissionId
+    PermissionData memory bootstrapPermissionData
   ) external initializer {
     __initializeERC721MinimalProxy(_name, string.concat("LL-", LibString.replace(LibString.upper(_name), " ", "-")));
     llamaExecutor = executor;
@@ -172,7 +174,9 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     // Assign the role permissions.
     for (uint256 i = 0; i < config.rolePermissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _setRolePermission(
-        config.rolePermissions[i].role, config.rolePermissions[i].permissionId, config.rolePermissions[i].hasPermission
+        config.rolePermissions[i].role,
+        config.rolePermissions[i].permissionData,
+        config.rolePermissions[i].hasPermission
       );
     }
 
@@ -183,7 +187,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
     // Gives holders of role ID 1 permission to change role permissions. This is required to reduce the chance that an
     // instance is deployed with an invalid configuration that results in the instance being unusable.
-    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionId, true);
+    _setRolePermission(BOOTSTRAP_ROLE, bootstrapPermissionData, true);
 
     _setAndInitializePolicyMetadata(policyMetadataLogic, abi.encode(config.color, config.logo));
   }
@@ -210,10 +214,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Assigns a permission ID to a role.
   /// @param role Name of the role to set.
-  /// @param permissionId Permission ID to assign to the role.
+  /// @param permissionData The target, selector, strategy tuple that will be keccak256 hashed to generate the
+  /// permission ID to assign or unassign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
-  function setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) external onlyLlama {
-    _setRolePermission(role, permissionId, hasPermission);
+  function setRolePermission(uint8 role, PermissionData memory permissionData, bool hasPermission) external onlyLlama {
+    _setRolePermission(role, permissionData, hasPermission);
   }
 
   /// @notice Revokes a policyholder's expired role.
@@ -546,10 +551,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Sets a role's permission along with whether that permission is valid or not.
-  function _setRolePermission(uint8 role, bytes32 permissionId, bool hasPermission) internal {
+  function _setRolePermission(uint8 role, PermissionData memory permissionData, bool hasPermission) internal {
     if (role > numRoles) revert RoleNotInitialized(role);
+    bytes32 permissionId = LlamaUtils.computePermissionId(permissionData);
     canCreateAction[role][permissionId] = hasPermission;
-    emit RolePermissionAssigned(role, permissionId, hasPermission);
+    emit RolePermissionAssigned(role, permissionId, permissionData, hasPermission);
   }
 
   /// @dev Mints a policyholder's policy.

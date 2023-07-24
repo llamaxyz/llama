@@ -6,8 +6,9 @@ import {console2, stdJson} from "forge-std/Script.sol";
 
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
@@ -47,7 +48,9 @@ library DeployUtils {
   struct RolePermissionJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
-    bytes32 permissionId;
+    address target;
+    bytes4 selector;
+    ILlamaStrategy strategy;
     uint8 role;
   }
 
@@ -138,8 +141,10 @@ library DeployUtils {
     rolePermissions = new RolePermissionData[](rawRolePermissions.length);
     for (uint256 i = 0; i < rawRolePermissions.length; i++) {
       RolePermissionJsonInputs memory rawRolePermission = rawRolePermissions[i];
+      PermissionData memory permissionData =
+        PermissionData(rawRolePermission.target, rawRolePermission.selector, rawRolePermission.strategy);
       rolePermissions[i].role = rawRolePermission.role;
-      rolePermissions[i].permissionId = rawRolePermission.permissionId;
+      rolePermissions[i].permissionData = permissionData;
       rolePermissions[i].hasPermission = true;
     }
   }

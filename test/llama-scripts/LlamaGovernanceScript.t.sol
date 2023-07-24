@@ -26,7 +26,9 @@ import {DeployUtils} from "script/DeployUtils.sol";
 contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint96 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, bool hasPermission);
+  event RolePermissionAssigned(
+    uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission
+  );
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
 
   LlamaGovernanceScript governanceScript;
