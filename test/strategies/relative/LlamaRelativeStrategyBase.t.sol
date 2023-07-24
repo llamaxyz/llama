@@ -18,6 +18,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 
 contract LlamaRelativeStrategyBaseTest is LlamaStrategyTestSetup {
   MockLlamaRelativeStrategyBase mockLlamaRelativeStrategyBaseLogic;
+  PermissionData defaultPermission = PermissionData(address(0), bytes4(0), ILlamaStrategy(address(0)));
 
   function setUp() public virtual override {
     LlamaStrategyTestSetup.setUp();
@@ -127,7 +128,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       _queuingDuration,
       4 days,
@@ -144,7 +145,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_SetsStrategyStorageExpirationDelay(uint64 _expirationDelay) public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       _expirationDelay,
@@ -161,7 +162,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -178,7 +179,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint64 _approvalPeriod) public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -195,7 +196,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function test_SetsStrategyStoragePolicy() public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -212,7 +213,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function test_SetsStrategyStorageLlama() public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -230,7 +231,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     _percent = bound(_percent, 0, 10_000);
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -247,7 +248,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_SetsStrategyStorageMinDisapprovalPct(uint16 _percent) public {
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -268,7 +269,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     }
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -291,7 +292,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     }
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -314,7 +315,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     forceApprovalRoles[1] = _role;
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -335,7 +336,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
     forceDisapprovalRoles[1] = _role;
     ILlamaStrategy newStrategy = deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -352,7 +353,7 @@ contract Initialize is LlamaRelativeStrategyBaseTest {
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
     deployRelativeBaseAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,

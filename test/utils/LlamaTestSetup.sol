@@ -245,17 +245,16 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
       PermissionData(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1);
 
     // With the protocol deployed, we can set special permissions.
-    pausePermissionId = keccak256(abi.encode(pausePermission)));
-    failPermissionId = keccak256(abi.encode(failPermission)));
-    receiveEthPermissionId = keccak256(abi.encode(receiveEthPermission)));
-    executeActionId = keccak256(abi.encode(executeAction)));
-    setScriptAuthorizationId = keccak256(abi.encode(setScriptAuthorization)));
-    createStrategyId = keccak256(abi.encode(createStrategy)));
-    createAccountId = keccak256(abi.encode(createAccount)));
-    pausePermissionId2 = keccak256(abi.encode(pausePermission2)));
-    executeScriptPermissionId = keccak256(abi.encode(executeScriptPermission)));
-    executeScriptWithValuePermissionId =
-      keccak256(abi.encode(executeScriptWithValuePermission)));
+    pausePermissionId = keccak256(abi.encode(pausePermission));
+    failPermissionId = keccak256(abi.encode(failPermission));
+    receiveEthPermissionId = keccak256(abi.encode(receiveEthPermission));
+    executeActionId = keccak256(abi.encode(executeAction));
+    setScriptAuthorizationId = keccak256(abi.encode(setScriptAuthorization));
+    createStrategyId = keccak256(abi.encode(createStrategy));
+    createAccountId = keccak256(abi.encode(createAccount));
+    pausePermissionId2 = keccak256(abi.encode(pausePermission2));
+    executeScriptPermissionId = keccak256(abi.encode(executeScriptPermission));
+    executeScriptWithValuePermissionId = keccak256(abi.encode(executeScriptWithValuePermission));
 
     vm.startPrank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermission, true);

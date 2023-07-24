@@ -571,18 +571,22 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -593,17 +597,21 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -736,19 +744,23 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -759,17 +771,21 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
