@@ -13,6 +13,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
+import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {
   LlamaInstanceConfig,
@@ -29,7 +30,9 @@ import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
 
 contract LlamaPolicyTest is LlamaTestSetup {
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint96 quantity);
-  event RolePermissionAssigned(uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission);
+  event RolePermissionAssigned(
+    uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission
+  );
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event Transfer(address indexed from, address indexed to, uint256 indexed id);
   event PolicyMetadataSet(
@@ -106,7 +109,7 @@ contract Constructor is LlamaPolicyTest {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     LlamaPolicyConfig memory config =
       LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
-    policyLogic.initialize(name, config, policyMetadataLogic, address(mpExecutor), bytes32(0));
+    policyLogic.initialize(name, config, policyMetadataLogic, address(mpExecutor), pausePermission);
   }
 }
 
@@ -118,10 +121,10 @@ contract Initialize is LlamaPolicyTest {
     string memory name = mpPolicy.name();
     LlamaPolicyConfig memory config =
       LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
-    bytes32 permissionId =
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy));
+    PermissionData memory permissionData =
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy);
     vm.expectRevert(LlamaPolicy.InvalidRoleHolderInput.selector);
-    localPolicy.initialize(name, config, policyMetadataLogic, address(mpExecutor), permissionId);
+    localPolicy.initialize(name, config, policyMetadataLogic, address(mpExecutor), permissionData);
   }
 
   function test_SetsNameAndSymbol() public {
@@ -146,7 +149,7 @@ contract Initialize is LlamaPolicyTest {
       config,
       policyMetadataLogic,
       address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy)
     );
     assertEq(localPolicy.numRoles(), numRoles);
   }
@@ -154,10 +157,10 @@ contract Initialize is LlamaPolicyTest {
   function test_RevertIf_InitializeIsCalledTwice() public {
     LlamaPolicyConfig memory config =
       LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
-    bytes32 permissionId =
-      lens.computePermissionId(PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy));
+    PermissionData memory permissionData =
+      PermissionData(address(mpPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy);
     vm.expectRevert("Initializable: contract is already initialized");
-    mpPolicy.initialize("Test", config, policyMetadataLogic, address(mpExecutor), permissionId);
+    mpPolicy.initialize("Test", config, policyMetadataLogic, address(mpExecutor), permissionData);
   }
 
   function test_SetsRoleDescriptions() public {
@@ -168,7 +171,7 @@ contract Initialize is LlamaPolicyTest {
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermission, true);
 
     vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
@@ -179,7 +182,7 @@ contract Initialize is LlamaPolicyTest {
       config,
       policyMetadataLogic,
       address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy)
     );
   }
 
@@ -191,7 +194,7 @@ contract Initialize is LlamaPolicyTest {
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermission, true);
 
     uint256 prevSupply = localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE);
 
@@ -204,7 +207,7 @@ contract Initialize is LlamaPolicyTest {
       config,
       policyMetadataLogic,
       address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy)
     );
 
     assertEq(localPolicy.getRoleSupplyAsQuantitySum(INIT_TEST_ROLE), prevSupply + DEFAULT_ROLE_QTY);
@@ -220,10 +223,10 @@ contract Initialize is LlamaPolicyTest {
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermission, true);
 
     vm.expectEmit();
-    emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, true);
+    emit RolePermissionAssigned(INIT_TEST_ROLE, pausePermissionId, pausePermission, true);
 
     LlamaPolicyConfig memory config = LlamaPolicyConfig(roleDescriptions, roleHolders, rolePermissions, color, logo);
     localPolicy.initialize(
@@ -231,7 +234,7 @@ contract Initialize is LlamaPolicyTest {
       config,
       policyMetadataLogic,
       address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy)
     );
     assertTrue(localPolicy.canCreateAction(INIT_TEST_ROLE, pausePermissionId));
   }
@@ -248,7 +251,7 @@ contract Initialize is LlamaPolicyTest {
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
     roleHolders[0] = RoleHolderData(INIT_TEST_ROLE, address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](1);
-    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermissionId, true);
+    rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermission, true);
 
     vm.expectEmit();
     emit PolicyMetadataSet(llamaPolicyMetadata, llamaPolicyMetadataLogic, abi.encode(color, logo));
@@ -259,7 +262,7 @@ contract Initialize is LlamaPolicyTest {
       config,
       llamaPolicyMetadataLogic,
       address(mpExecutor),
-      lens.computePermissionId(PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy))
+      PermissionData(address(localPolicy), SET_ROLE_PERMISSION_SELECTOR, mpBootstrapStrategy)
     );
 
     assertEq(address(llamaPolicyMetadata), address(localPolicy.llamaPolicyMetadata()));
@@ -622,14 +625,15 @@ contract SetRolePermission is LlamaPolicyTest {
     vm.expectRevert(LlamaPolicy.OnlyLlama.selector);
 
     vm.prank(caller);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermission, true);
   }
 
-  function test_SetsRolePermission(bytes32 permissionId, bool hasPermission) public {
+  function test_SetsRolePermission(PermissionData memory permissionData, bool hasPermission) public {
+    bytes32 permissionId = lens.computePermissionId(permissionData);
     vm.expectEmit();
-    emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, hasPermission);
+    emit RolePermissionAssigned(uint8(Roles.TestRole1), permissionId, permissionData, hasPermission);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, hasPermission);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionData, hasPermission);
 
     assertEq(mpPolicy.canCreateAction(uint8(Roles.TestRole1), permissionId), hasPermission);
   }
@@ -638,7 +642,7 @@ contract SetRolePermission is LlamaPolicyTest {
     role = uint8(bound(role, mpPolicy.numRoles() + 1, type(uint8).max));
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
-    mpPolicy.setRolePermission(role, pausePermissionId, true);
+    mpPolicy.setRolePermission(role, pausePermission, true);
   }
 }
 
@@ -1065,11 +1069,12 @@ contract HasRoleUint256Overload is LlamaPolicyTest {
 }
 
 contract HasPermissionId is LlamaPolicyTest {
-  function testFuzz_ReturnsTrueIfHolderHasPermission(bytes32 permissionId) public {
-    vm.startPrank(address(mpExecutor));
+  function testFuzz_ReturnsTrueIfHolderHasPermission(PermissionData memory permissionData) public {
+    bytes32 permissionId = lens.computePermissionId(permissionData);
 
+    vm.startPrank(address(mpExecutor));
     vm.warp(100);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), permissionData, true);
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryPolicyholder, DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     assertEq(mpPolicy.hasPermissionId(arbitraryPolicyholder, uint8(Roles.TestRole1), permissionId), true);

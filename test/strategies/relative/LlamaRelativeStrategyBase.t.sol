@@ -12,7 +12,7 @@ import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
@@ -34,7 +34,7 @@ contract LlamaRelativeStrategyBaseTest is LlamaStrategyTestSetup {
 
   function deployRelativeBaseAndSetRole(
     uint8 _role,
-    bytes32 _permission,
+    PermissionData memory _permissionData,
     address _policyHolder,
     uint64 _queuingDuration,
     uint64 _expirationDelay,
@@ -52,7 +52,7 @@ contract LlamaRelativeStrategyBaseTest is LlamaStrategyTestSetup {
       vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
       vm.prank(address(mpExecutor));
-      mpPolicy.setRolePermission(_role, _permission, true);
+      mpPolicy.setRolePermission(_role, _permissionData, true);
     }
 
     LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({

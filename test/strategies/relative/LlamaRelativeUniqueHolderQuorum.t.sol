@@ -13,7 +13,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -21,7 +21,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
   function deployRelativeUniqueHolderQuorumAndSetRole(
     uint8 _role,
-    bytes32 _permission,
+    PermissionData memory _permissionData,
     address _policyHolder,
     uint64 _queuingDuration,
     uint64 _expirationDelay,
@@ -39,7 +39,7 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
       vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
       vm.prank(address(mpExecutor));
-      mpPolicy.setRolePermission(_role, _permission, true);
+      mpPolicy.setRolePermission(_role, _permissionData, true);
     }
 
     LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({
@@ -600,9 +600,9 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
     internal
   {
     // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory newPermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermission, true);
 
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
