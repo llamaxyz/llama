@@ -103,12 +103,54 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
   }
 
+  function mineBlockAndAssertRoleQuantity(uint8 role, uint96 quantity) internal {
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newRoleHolder = makeAddr("newRoleHolder");
+    // Verify that `newRoleHolder` has no quantity at `action creation time - 1`.
+    assertEq(mpPolicy.getPastQuantity(newRoleHolder, role, block.timestamp - 1), 0);
+
+    // Assign 'TestRole1` at `action creation time` to the new role holder with quantity of `threshold + 1` so that
+    // `minApprovals < approvalPolicySupply - actionCreatorApprovalRoleQty`.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(role, newRoleHolder, quantity, type(uint64).max);
+
+    // Verify that `newRoleHolder` has quantity of `threshold + 1` at `action creation time`.
+    assertEq(mpPolicy.getQuantity(newRoleHolder, role), quantity);
+  }
+
   function testFuzz_RevertIf_NotEnoughApprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
     ILlamaStrategy testStrategy =
       createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint96(threshold), _roleQuantity, _otherRoleHolders);
 
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
+    mpCore.createAction(
+      uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
+    );
+  }
+
+  function testFuzz_UsesActionCreatorApprovalRoleQtyFromPreviousTimestamp(
+    uint256 _roleQuantity,
+    uint256 _otherRoleHolders
+  ) public {
+    _roleQuantity = bound(_roleQuantity, 100, 1000);
+    uint256 threshold = _roleQuantity / 2;
+    ILlamaStrategy testStrategy =
+      createAbsolutePeerReviewWithDisproportionateQuantity(true, toUint96(threshold), _roleQuantity, _otherRoleHolders);
+
+    mineBlockAndAssertRoleQuantity(uint8(Roles.TestRole1), toUint96(threshold) + 1);
+
+    // This reverts since quantity of `newRoleHolder` at `action creation time - 1` is 0 and hence 
+    // `minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty`. This verifies that the strategy
+    // uses the quantity of `newRoleHolder` at `action creation time - 1` since `newRoleHolder` has a quantity of
+    // `threshold + 1` at `action creation time`.
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
@@ -121,6 +163,9 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
 
     ILlamaStrategy testStrategy =
       createAbsolutePeerReviewWithDisproportionateQuantity(false, toUint96(threshold), _roleQuantity, _otherRoleHolders);
+
+    // Moving timestamp ahead by 1 second
+    mineBlock();
 
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
