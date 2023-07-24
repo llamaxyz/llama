@@ -33,20 +33,25 @@ contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external view override {
     LlamaPolicy llamaPolicy = policy; // Reduce SLOADs.
-    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, block.timestamp - 1);
+    uint256 checkpointTime = block.timestamp - 1;
+
+    uint256 approvalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(approvalRole, checkpointTime);
     if (approvalPolicySupply == 0) revert RoleHasZeroSupply(approvalRole);
 
-    uint256 disapprovalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(disapprovalRole, block.timestamp - 1);
+    uint256 disapprovalPolicySupply = llamaPolicy.getPastRoleSupplyAsQuantitySum(disapprovalRole, checkpointTime);
     if (disapprovalPolicySupply == 0) revert RoleHasZeroSupply(disapprovalRole);
+
     unchecked {
       // Safety: We check the supply of the role above, and this supply is inclusive of the quantity
       // held by the action creator. Therefore we can reduce the total supply by the quantity held by
       // the action creator without overflow, since a policyholder can never have a quantity greater than
       // the total supply.
-      uint256 actionCreatorApprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, approvalRole);
+      uint256 actionCreatorApprovalRoleQty =
+        llamaPolicy.getPastQuantity(actionInfo.creator, approvalRole, checkpointTime);
       if (minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty) revert InsufficientApprovalQuantity();
 
-      uint256 actionCreatorDisapprovalRoleQty = llamaPolicy.getQuantity(actionInfo.creator, disapprovalRole);
+      uint256 actionCreatorDisapprovalRoleQty =
+        llamaPolicy.getPastQuantity(actionInfo.creator, disapprovalRole, checkpointTime);
       if (
         minDisapprovals != type(uint96).max
           && minDisapprovals > disapprovalPolicySupply - actionCreatorDisapprovalRoleQty
