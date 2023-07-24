@@ -51,7 +51,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
   }
 
-   function mineBlockAndAssertRoleQuantity(uint96 _roleQuantity) internal {
+  function mineBlockAndAssertRoleQuantity(uint96 _roleQuantity) internal {
     // Moving timestamp ahead by 1 second
     mineBlock();
 
@@ -145,7 +145,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
 
     mineBlockAndAssertRoleQuantity(toUint96(_roleQuantity));
 
-    // This reverts since quantity of action creator at `action creation time - 1` is `_roleQuantity` and hence 
+    // This reverts since quantity of action creator at `action creation time - 1` is `_roleQuantity` and hence
     // `minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty`. This verifies that the strategy
     // uses the quantity of action creator at `action creation time - 1` since action creator has a quantity of
     // `1` at `action creation time`.
@@ -182,7 +182,7 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
 
     mineBlockAndAssertRoleQuantity(toUint96(_roleQuantity));
 
-    // This reverts since quantity of `newRoleHolder` at `action creation time - 1` is 0 and hence 
+    // This reverts since quantity of `newRoleHolder` at `action creation time - 1` is 0 and hence
     // `minApprovals > approvalPolicySupply - actionCreatorApprovalRoleQty`. This verifies that the strategy
     // uses the quantity of `newRoleHolder` at `action creation time - 1` since `newRoleHolder` has a quantity of
     // `threshold + 1` at `action creation time`.
