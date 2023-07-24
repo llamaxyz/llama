@@ -438,7 +438,7 @@ contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -468,7 +468,7 @@ contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -501,7 +501,7 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -536,7 +536,7 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -824,7 +824,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       _policyHolder,
       1 days,
       DEFAULT_EXPIRATION_PERIOD,

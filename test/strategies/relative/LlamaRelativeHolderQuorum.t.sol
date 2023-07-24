@@ -226,7 +226,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeHolderQuorumAndSetRole(
       _role,
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,

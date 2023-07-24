@@ -117,19 +117,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   bytes4 public constant EXECUTE_SCRIPT_WITH_VALUE_SELECTOR = 0xcf62157f; // executeScriptWithValue()
   bytes4 public constant SET_ROLE_PERMISSION_SELECTOR = LlamaPolicy.setRolePermission.selector;
 
-  // Permission IDs for those selectors.
-  bytes32 pausePermissionId;
-  bytes32 failPermissionId;
-  bytes32 receiveEthPermissionId;
-  bytes32 executeActionId;
-  bytes32 setScriptAuthorizationId;
-  bytes32 createStrategyId;
-  bytes32 createAccountId;
-  bytes32 pausePermissionId2;
-  bytes32 executeScriptPermissionId;
-  bytes32 executeScriptWithValuePermissionId;
-
-  // Permission data for those permission IDs.
+  // Permission data for those selectors.
   PermissionData pausePermission;
   PermissionData failPermission;
   PermissionData receiveEthPermission;
@@ -140,6 +128,18 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   PermissionData pausePermission2;
   PermissionData executeScriptPermission;
   PermissionData executeScriptWithValuePermission;
+
+  // Permission IDs for the permission data.
+  bytes32 pausePermissionId;
+  bytes32 failPermissionId;
+  bytes32 receiveEthPermissionId;
+  bytes32 executeActionId;
+  bytes32 setScriptAuthorizationId;
+  bytes32 createStrategyId;
+  bytes32 createAccountId;
+  bytes32 pausePermissionId2;
+  bytes32 executeScriptPermissionId;
+  bytes32 executeScriptWithValuePermissionId;
 
   // Other addresses and constants.
   address payable randomLogicAddress = payable(makeAddr("randomLogicAddress"));
@@ -245,17 +245,17 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
       PermissionData(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1);
 
     // With the protocol deployed, we can set special permissions.
-    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
-    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
-    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
-    executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
-    setScriptAuthorizationId = keccak256(abi.encode(address(mpCore), AUTHORIZE_SCRIPT_SELECTOR, mpStrategy1));
-    createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
-    createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
-    pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
-    executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
+    pausePermissionId = keccak256(abi.encode(pausePermission)));
+    failPermissionId = keccak256(abi.encode(failPermission)));
+    receiveEthPermissionId = keccak256(abi.encode(receiveEthPermission)));
+    executeActionId = keccak256(abi.encode(executeAction)));
+    setScriptAuthorizationId = keccak256(abi.encode(setScriptAuthorization)));
+    createStrategyId = keccak256(abi.encode(createStrategy)));
+    createAccountId = keccak256(abi.encode(createAccount)));
+    pausePermissionId2 = keccak256(abi.encode(pausePermission2)));
+    executeScriptPermissionId = keccak256(abi.encode(executeScriptPermission)));
     executeScriptWithValuePermissionId =
-      keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1));
+      keccak256(abi.encode(executeScriptWithValuePermission)));
 
     vm.startPrank(address(mpExecutor));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermission, true);

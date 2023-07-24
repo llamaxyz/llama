@@ -19,6 +19,8 @@ import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeSt
 import {LlamaCore} from "src/LlamaCore.sol";
 
 contract LlamaRelativeQuantityQuorumTest is LlamaRelativeStrategyBaseTest {
+  PermissionData defaultPermission = PermissionData(address(0), bytes4(0), ILlamaStrategy(address(0)));
+
   function deployRelativeQuantityQuorumAndSetRole(
     uint8 _role,
     PermissionData memory _permissionData,
@@ -226,7 +228,7 @@ contract GetApprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
       _role,
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -259,7 +261,7 @@ contract GetApprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       _policyHolder,
       1 days,
       4 days,
@@ -290,7 +292,7 @@ contract GetApprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -318,7 +320,17 @@ contract GetApprovalQuantityAt is LlamaRelativeQuantityQuorumTest {
     forceApproveRoles[0] = _role;
 
     ILlamaStrategy newStrategy = deployRelativeQuantityQuorumAndSetRole(
-      _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, forceApproveRoles, new uint8[](0)
+      _role,
+      defaultPermission,
+      _policyHolder,
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      forceApproveRoles,
+      new uint8[](0)
     );
 
     vm.warp(_timestamp);
