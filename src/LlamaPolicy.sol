@@ -145,7 +145,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param config The struct that contains the configuration for this instance's policy.
   /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract.
   /// @param executor The instance's `LlamaExecutor`.
-  /// @param bootstrapPermissionData The permission ID that allows policyholders to change role permissions.
+  /// @param bootstrapPermissionData The permission data that hashes to the permission ID that allows policyholders to
+  /// change role permissions.
   function initialize(
     string memory _name,
     LlamaPolicyConfig calldata config,
