@@ -81,7 +81,7 @@ It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contrac
 
 To add and remove Permission IDs, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-Strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permission IDs that use that strategy rendering it useless.
+To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
 
 ## Approvals and Disapprovals
 
