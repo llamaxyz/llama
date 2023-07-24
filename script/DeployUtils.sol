@@ -13,6 +13,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 
+/// @dev The `PermissionData` struct in alphabetical order so JSON decodes properly.
 struct PermissionDataInput {
   bytes selector;
   ILlamaStrategy strategy;
@@ -144,8 +145,11 @@ library DeployUtils {
     rolePermissions = new RolePermissionData[](rawRolePermissions.length);
     for (uint256 i = 0; i < rawRolePermissions.length; i++) {
       RolePermissionJsonInputs memory rawRolePermission = rawRolePermissions[i];
-      PermissionData memory permissionData =
-        PermissionData(rawRolePermission.permissionDataInput.target, bytes4(rawRolePermission.permissionDataInput.selector), rawRolePermission.permissionDataInput.strategy);
+      PermissionData memory permissionData = PermissionData(
+        rawRolePermission.permissionDataInput.target,
+        bytes4(rawRolePermission.permissionDataInput.selector),
+        rawRolePermission.permissionDataInput.strategy
+      );
       rolePermissions[i].role = rawRolePermission.role;
       rolePermissions[i].permissionData = permissionData;
       rolePermissions[i].hasPermission = true;
