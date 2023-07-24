@@ -7,18 +7,16 @@ import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {LlamaRelativeStrategyBaseTest} from "test/strategies/relative/LlamaRelativeStrategyBase.t.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
   function deployRelativeUniqueHolderQuorumAndSetRole(
@@ -307,6 +305,55 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     assertEq(newStrategy.getApprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
   }
+
+  function testFuzz_ReturnsMaxValueForForceApprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder) public {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
+    vm.assume(_policyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
+
+    uint8[] memory forceApproveRoles = new uint8[](1);
+    forceApproveRoles[0] = _role;
+
+    ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
+      _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, forceApproveRoles, new uint8[](0)
+    );
+
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getApprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
+  }
+
+  function test_RevertIf_NonRoleHolderCastsApprovalWithForceApprovalRole() public {
+    // Strategy with Approval role of 'TestRole1' and Force approval role of 'ForceApprover'.
+    ILlamaStrategy testStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
+
+    address randomPolicyHolder = makeAddr("randomPolicyHolder");
+
+    // Assigning only TestRole1 role to RandomPolicyHolder.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), randomPolicyHolder, 1, type(uint64).max);
+
+    mineBlock();
+
+    // Testing a quirk in the LlamaRelativeUniqueHolderQuorum strategy for `getApprovalQuantityAt` in isolation. We'll
+    // still get back `type(uint96).max` even though the policy holder does not hold the force approval role.
+    assertEq(
+      testStrategy.getApprovalQuantityAt(randomPolicyHolder, uint8(Roles.ForceApprover), block.timestamp - 1),
+      type(uint96).max
+    );
+
+    // However this is not a problem, since `getDisapprovalQuantityAt` is only used in `_preCastAssertions` in
+    // `LlamaCore` while doing the actual cast (dis)approval. And it will revert if the policy holder
+    // does not hold the force (dis)approval role.
+
+    // Action Process.
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    vm.prank(randomPolicyHolder);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+  }
 }
 
 contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
@@ -447,6 +494,62 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     assertEq(newStrategy.getDisapprovalQuantityAt(address(0xdeadbeef), uint8(Roles.TestRole2), block.timestamp), 0);
   }
+
+  function testFuzz_ReturnsMaxValueForForceDisapprovalRoles(uint256 _timestamp, uint8 _role, address _policyHolder)
+    public
+  {
+    vm.assume(_timestamp > block.timestamp && _timestamp < type(uint64).max);
+    _role = uint8(bound(_role, 1, 8)); // only using roles in the test setup to avoid having to create new roles
+    vm.assume(_policyHolder != address(0));
+    vm.assume(mpPolicy.balanceOf(_policyHolder) == 0);
+
+    uint8[] memory forceDisapproveRoles = new uint8[](1);
+    forceDisapproveRoles[0] = _role;
+
+    ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
+      _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), forceDisapproveRoles
+    );
+
+    vm.warp(_timestamp);
+
+    assertEq(newStrategy.getDisapprovalQuantityAt(_policyHolder, _role, _timestamp - 1), type(uint96).max);
+  }
+
+  function test_RevertIf_NonRoleHolderCastsDisapprovalWithForceDisapprovalRole() public {
+    // Strategy with Disapproval role of 'TestRole1' and Force disapproval role of 'ForceDisapprover'.
+    ILlamaStrategy testStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
+
+    address randomPolicyHolder = makeAddr("randomPolicyHolder");
+
+    // Assigning only TestRole1 role to RandomPolicyHolder.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), randomPolicyHolder, 1, type(uint64).max);
+
+    mineBlock();
+
+    // Testing a quirk in the LlamaRelativeUniqueHolderQuorum strategy for `getDisapprovalQuantityAt` in isolation. We'll
+    // still get back `type(uint96).max` even though the policy holder does not hold the force disapproval role.
+    assertEq(
+      testStrategy.getDisapprovalQuantityAt(randomPolicyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1),
+      type(uint96).max
+    );
+
+    // However this is not a problem, since `getDisapprovalQuantityAt` is only used in `_preCastAssertions` in
+    // `LlamaCore` while doing the actual cast (dis)approval. And it will revert if the policy holder
+    // does not hold the force (dis)approval role.
+
+    // Action Process.
+    ActionInfo memory actionInfo = createAction(testStrategy);
+
+    vm.prank(address(approverAdam));
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
+
+    mpCore.queueAction(actionInfo);
+
+    vm.prank(randomPolicyHolder);
+    vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
+    mpCore.castDisapproval(uint8(Roles.ForceDisapprover), actionInfo, "");
+  }
 }
 
 contract RelativeQuorumHarness is LlamaRelativeHolderQuorum {
@@ -456,6 +559,58 @@ contract RelativeQuorumHarness is LlamaRelativeHolderQuorum {
 }
 
 contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
+  function createStrategyWithNoSupplyRole(bool approval)
+    internal
+    returns (uint8 noSupplyRole, ILlamaStrategy testStrategy)
+  {
+    // Getting a role with no supply currently and initializing it.
+    noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    if (approval) {
+      testStrategy = deployRelativeUniqueHolderQuorum(
+        noSupplyRole, uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+      );
+    } else {
+      testStrategy = deployRelativeUniqueHolderQuorum(
+        uint8(Roles.Approver), noSupplyRole, 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+      );
+    }
+  }
+
+  function mineBlockAndAssertRoleSupply(uint8 noSupplyRole) internal {
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Verify that `noSupplyRole` has no supply at `action creation time - 1`.
+    assertEq(mpPolicy.getPastRoleSupplyAsNumberOfHolders(noSupplyRole, block.timestamp - 1), 0);
+
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+    // Assign 'noSupplyRole` at `action creation time` to the new user to make the role supply 1.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(noSupplyRole, newApprover, 1, type(uint64).max);
+
+    // Verify that `noSupplyRole` has supply of 1 at `action creation time`.
+    assertEq(mpPolicy.getRoleSupplyAsNumberOfHolders(noSupplyRole), 1);
+  }
+
+  function expectRevertRoleHasZeroSupplyOnActionCreationValidation(uint8 noSupplyRole, ILlamaStrategy testStrategy)
+    internal
+  {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(abi.encodeWithSelector(LlamaRelativeStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
+
   function test_CalculateSupplyWhenActionCreatorDoesNotHaveRole(uint256 _numberOfPolicies) external {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
 
@@ -486,6 +641,34 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
 
     assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getApprovalSupply(actionInfo), supply);
     assertEq(LlamaRelativeHolderQuorum(address(testStrategy)).getDisapprovalSupply(actionInfo), supply);
+  }
+
+  function test_RevertIf_ApprovalRoleHasZeroSupply() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(true);
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_RevertIf_DisapprovalRoleHasZeroSupply() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(false);
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_UsesApprovalRoleSupplyFromPreviousTimestamp() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(true);
+    mineBlockAndAssertRoleSupply(noSupplyRole);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_UsesDisapprovalRoleSupplyFromPreviousTimestamp() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(false);
+    mineBlockAndAssertRoleSupply(noSupplyRole);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
   }
 }
 

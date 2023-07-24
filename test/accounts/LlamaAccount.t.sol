@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
@@ -14,9 +13,6 @@ import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaAccountTest is LlamaTestSetup {
   // Testing Parameters

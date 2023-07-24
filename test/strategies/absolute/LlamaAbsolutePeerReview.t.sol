@@ -51,6 +51,58 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
   }
 
+  function createStrategyWithNoSupplyRole(bool approval)
+    internal
+    returns (uint8 noSupplyRole, ILlamaStrategy testStrategy)
+  {
+    // Getting a role with no supply currently and initializing it.
+    noSupplyRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(noSupplyRole);
+
+    // Create the strategy with 0 (dis)approval threshold to not trigger `InvalidMinApprovals` error.
+    if (approval) {
+      testStrategy = deployAbsolutePeerReview(
+        noSupplyRole, uint8(Roles.Disapprover), 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+      );
+    } else {
+      testStrategy = deployAbsolutePeerReview(
+        uint8(Roles.Approver), noSupplyRole, 1 days, 4 days, 1 days, true, 0, 0, new uint8[](0), new uint8[](0)
+      );
+    }
+  }
+
+  function mineBlockAndAssertRoleSupply(uint8 noSupplyRole) internal {
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Verify that `noSupplyRole` has no supply at `action creation time - 1`.
+    assertEq(mpPolicy.getPastRoleSupplyAsQuantitySum(noSupplyRole, block.timestamp - 1), 0);
+
+    // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newApprover = makeAddr("newApprover");
+    // Assign 'noSupplyRole` at `action creation time` to the new user to make the role supply 1.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(noSupplyRole, newApprover, 1, type(uint64).max);
+
+    // Verify that `noSupplyRole` has supply of 1 at `action creation time`.
+    assertEq(mpPolicy.getRoleSupplyAsQuantitySum(noSupplyRole), 1);
+  }
+
+  function expectRevertRoleHasZeroSupplyOnActionCreationValidation(uint8 noSupplyRole, ILlamaStrategy testStrategy)
+    internal
+  {
+    // Give the action creator the ability to use this strategy.
+    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+
+    // Create the action.
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.RoleHasZeroSupply.selector, noSupplyRole));
+    mpCore.createAction(uint8(Roles.ActionCreator), testStrategy, address(mockProtocol), 0, data, "");
+  }
+
   function testFuzz_RevertIf_NotEnoughApprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
@@ -100,6 +152,34 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     vm.expectRevert(LlamaAbsoluteStrategyBase.DisapprovalDisabled.selector);
 
     mpCore.castDisapproval(uint8(Roles.TestRole1), actionInfo, "");
+  }
+
+  function test_RevertIf_ApprovalRoleHasZeroSupply() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(true);
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_RevertIf_DisapprovalRoleHasZeroSupply() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(false);
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_UsesApprovalRoleSupplyFromPreviousTimestamp() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(true);
+    mineBlockAndAssertRoleSupply(noSupplyRole);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
+  }
+
+  function test_UsesDisapprovalRoleSupplyFromPreviousTimestamp() public {
+    (uint8 noSupplyRole, ILlamaStrategy testStrategy) = createStrategyWithNoSupplyRole(false);
+    mineBlockAndAssertRoleSupply(noSupplyRole);
+    // This reverts since supply of `noSupplyRole` at `action creation time - 1` is 0. This verifies that the strategy
+    // uses the supply of `noSupplyRole` at `action creation time - 1` since `noSupplyRole` has a supply of 1 at `action
+    // creation time`.
+    expectRevertRoleHasZeroSupplyOnActionCreationValidation(noSupplyRole, testStrategy);
   }
 }
 

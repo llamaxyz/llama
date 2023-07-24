@@ -6,24 +6,21 @@ import {Test, console2} from "forge-std/Test.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {MockLlamaRelativeStrategyBase} from "test/mock/MockLlamaRelativeStrategyBase.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {Roles} from "test/utils/LlamaTestSetup.sol";
+import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionState} from "src/lib/Enums.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract LlamaRelativeStrategyBaseTest is LlamaTestSetup {
+contract LlamaRelativeStrategyBaseTest is LlamaStrategyTestSetup {
   MockLlamaRelativeStrategyBase mockLlamaRelativeStrategyBaseLogic;
 
   function setUp() public virtual override {
-    LlamaTestSetup.setUp();
+    LlamaStrategyTestSetup.setUp();
 
     mockLlamaRelativeStrategyBaseLogic = new MockLlamaRelativeStrategyBase();
 
