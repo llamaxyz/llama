@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, stdError, console2} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 import {Base64} from "@openzeppelin/utils/Base64.sol";
 
@@ -13,7 +14,6 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
-import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {
   LlamaInstanceConfig,
@@ -643,6 +643,35 @@ contract SetRolePermission is LlamaPolicyTest {
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaPolicy.RoleNotInitialized.selector, role));
     mpPolicy.setRolePermission(role, pausePermission, true);
+  }
+
+  function test_CanReadPermissionDataFromEvent() external {
+    PermissionData memory permissionData;
+    vm.recordLogs();
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermission, true);
+    Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
+
+    // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
+    bytes32 rolePermissionAssignedSig = keccak256("RolePermissionAssigned(uint8,bytes32,(address,bytes4,address),bool)");
+
+    Vm.Log memory _event;
+    for (uint256 i = 0; i < emittedEvents.length; i++) {
+      _event = emittedEvents[i];
+      bytes32 eventSig = _event.topics[0];
+      if (eventSig == rolePermissionAssignedSig) {
+        // event RolePermissionAssigned(
+        //   uint8 indexed role,
+        //   bytes32 indexed permissionId,
+        //   PermissionData permissionData,       <--- What we want.
+        //   bool hasPermission
+        // )
+        (permissionData,) = abi.decode(_event.data, (PermissionData, bool));
+      }
+    }
+    assertEq(pausePermission.target, permissionData.target);
+    assertEq(pausePermission.selector, permissionData.selector);
+    assertEq(address(pausePermission.strategy), address(permissionData.strategy));
   }
 }
 
