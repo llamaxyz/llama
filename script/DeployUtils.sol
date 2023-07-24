@@ -13,6 +13,12 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 
+struct PermissionDataInput {
+  bytes selector;
+  ILlamaStrategy strategy;
+  address target;
+}
+
 library DeployUtils {
   using stdJson for string;
 
@@ -48,7 +54,7 @@ library DeployUtils {
   struct RolePermissionJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
-    PermissionData permissionData;
+    PermissionDataInput permissionDataInput;
     uint8 role;
   }
 
@@ -135,12 +141,13 @@ library DeployUtils {
   {
     bytes memory rolePermissionData = jsonInput.parseRaw(".initialRolePermissions");
     RolePermissionJsonInputs[] memory rawRolePermissions = abi.decode(rolePermissionData, (RolePermissionJsonInputs[]));
-
     rolePermissions = new RolePermissionData[](rawRolePermissions.length);
     for (uint256 i = 0; i < rawRolePermissions.length; i++) {
       RolePermissionJsonInputs memory rawRolePermission = rawRolePermissions[i];
+      PermissionData memory permissionData =
+        PermissionData(rawRolePermission.permissionDataInput.target, bytes4(rawRolePermission.permissionDataInput.selector), rawRolePermission.permissionDataInput.strategy);
       rolePermissions[i].role = rawRolePermission.role;
-      rolePermissions[i].permissionData = rawRolePermission.permissionData;
+      rolePermissions[i].permissionData = permissionData;
       rolePermissions[i].hasPermission = true;
     }
   }
