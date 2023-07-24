@@ -7,12 +7,6 @@ import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {PermissionData} from "src/lib/Structs.sol";
 
-contract XXX is LlamaTestSetup {
-  function test_Juice() external {
-    assertTrue(true);
-  }
-}
-
 contract LlamaLensTestSetup is LlamaTestSetup {}
 
 contract ComputeLlamaCoreAddress is LlamaLensTestSetup {

@@ -48,10 +48,8 @@ library DeployUtils {
   struct RolePermissionJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string comment;
+    PermissionData permissionData;
     uint8 role;
-    bytes4 selector;
-    ILlamaStrategy strategy;
-    address target;
   }
 
   struct AccountJsonInputs {
@@ -137,13 +135,12 @@ library DeployUtils {
   {
     bytes memory rolePermissionData = jsonInput.parseRaw(".initialRolePermissions");
     RolePermissionJsonInputs[] memory rawRolePermissions = abi.decode(rolePermissionData, (RolePermissionJsonInputs[]));
+
     rolePermissions = new RolePermissionData[](rawRolePermissions.length);
     for (uint256 i = 0; i < rawRolePermissions.length; i++) {
       RolePermissionJsonInputs memory rawRolePermission = rawRolePermissions[i];
-      PermissionData memory permissionData =
-        PermissionData(rawRolePermission.target, rawRolePermission.selector, rawRolePermission.strategy);
       rolePermissions[i].role = rawRolePermission.role;
-      rolePermissions[i].permissionData = permissionData;
+      rolePermissions[i].permissionData = rawRolePermission.permissionData;
       rolePermissions[i].hasPermission = true;
     }
   }
