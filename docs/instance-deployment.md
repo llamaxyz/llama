@@ -9,6 +9,8 @@ A list of all official deployed Llama Factory contracts can be found [here](../R
 
 In this section we will dive into configuring your Llama instance
 
+### Instance Config
+
 The deploy method accepts a configuration struct called `LlamaInstanceConfig`.
 Lets look into this struct to see what data it holds.
 
@@ -17,14 +19,112 @@ struct LlamaInstanceConfig {
   string name;
   ILlamaStrategy strategyLogic;
   ILlamaAccount accountLogic;
-  bytes[] initialStrategies; // Array of initial strategy configurations.
-  bytes[] initialAccounts; // Array of initial account configurations.
-  LlamaPolicyConfig policyConfig; // Configuration of the instance's policy.
+  bytes[] initialStrategies;
+  bytes[] initialAccounts;
+  LlamaPolicyConfig policyConfig;
 }
 ```
 
 Lets look at each field one by one:
 
-- Name: The name of the Llama instance.
-- Strategy Logic: The initial strategy implementation (logic) contract. See [here]((../README.md#Deployments)) for a list of deployed strategy logic contracts, and [here](./strategy-comparison.md) learn about their differences.
-- Account Logic: The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
+- **Name**: The name of the Llama instance.
+- **Strategy** Logic: The initial strategy implementation (logic) contract. See [here]((../README.md#Deployments)) for a list of deployed strategy logic contracts, and [here](./strategy-comparison.md) learn about their differences.
+- **Account** Logic: The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
+- **Initial Strategies**: An array of initial strategy configurations.
+  - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](../src/strategies/relative/LlamaRelativeStrategyBase.sol):
+
+    ```JSON
+    "initialStrategies": [
+        {
+            "approvalPeriod": 172800,
+            "approvalRole": 1,
+            "disapprovalRole": 3,
+            "expirationPeriod": 691200,
+            "forceApprovalRoles": [],
+            "forceDisapprovalRoles": [],
+            "isFixedLengthApprovalPeriod": true,
+            "minApprovalPct": 4000,
+            "minDisapprovalPct": 5100,
+            "queuingPeriod": 345600
+        },
+        {
+            ...
+        }
+    ]
+    ```
+
+  - You can read more about what each of these fields mean [here](./strategies.md)
+  
+- **Initial Accounts**: An array of initial account configurations.
+  - All that is needed to configure an account is to give it a name; here is an example JSON blob that configures two accounts:
+
+  ```JSON
+    "initialAccounts": [
+      {
+        "name": "Mock Protocol Treasury"
+      },
+      {
+        "name": "Mock Protocol Grants"
+      }
+    ]
+  ```
+
+- **Policy Config**: The configuration of the instance's policy. Since the policy config struct is fairly complex, we will give it it's own section.
+
+### Policy Config
+
+The policy config takes the form of the following struct:
+
+```solidity
+  struct LlamaPolicyConfig {
+    RoleDescription[] roleDescriptions;
+    RoleHolderData[] roleHolders;
+    RolePermissionData[] rolePermissions;
+    string color;
+    string logo;
+  }
+```
+
+- **Role Descriptions**: An array of the initial role descriptions.
+  - Example JSON blob for role descriptions:
+
+  ```JSON
+  "initialRoleDescriptions": [
+    "ActionCreator",
+    "Approver",
+    "Disapprover",
+    ...
+  ],
+  ```
+
+- **Role Holders**: The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
+  - Example JSON blob for role holder data:
+  
+  ```JSON
+  "initialRoleHolders": [
+    {
+      "policyholder": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "expiration": 18446744073709551615,
+      "quantity": 1,
+      "role": 1
+    }
+  ]
+  ```
+
+  - In this example, we are assigning the policyholder `0xdeadbeef` role 1, with the max expiration (`type(uint64).max`), and a quantity of 1.
+
+- **Role Permissions** The `role`, `permissionId` and whether the initial roles have the permission of the role permissions.
+  - Example JSON blob for Role Permission Data:
+  
+  ```JSON
+  "initialRolePermissions": [
+    {
+      "permissionId": "0x7f2fc4a63a37e0531a5e9f35f09ea48850f610f5966d07b751f0a62c701cd7f5",
+      "role": 1,
+      "hasPermission": true
+    }
+  ]
+  ```
+
+- **Color**: The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
+- **Logo**: The SVG string representing the logo for the deployed Llama instance's NFT.
