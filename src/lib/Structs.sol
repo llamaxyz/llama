@@ -71,8 +71,7 @@ struct LlamaInstanceConfig {
 struct LlamaPolicyConfig {
   RoleDescription[] roleDescriptions; // The initial role descriptions.
   RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
-  RolePermissionData[] rolePermissions; // The `role`, `permissionData` and whether the initial roles have the
-    // permission of the role permissions.
+  RolePermissionData[] rolePermissions; // The `role`, `permissionData`, and  the `hasPermission` boolean.
   string color; // The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
   string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
 }
