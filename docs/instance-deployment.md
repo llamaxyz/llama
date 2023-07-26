@@ -1,6 +1,12 @@
 # Instance Deployment
 
 To start using Llama to manage on-chain privileged access functions, you must first deploy your own instance.
+
+## Key Concepts
+
+- [Factory](../src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances, and there will be one factory per chain that llama supports.
+- [Instance]((https://github.com/llamaxyz/llama/blob/main/diagrams/llama-overview.png)): A Llama instance is a self managed cluster of contracts that enables on-chain access control over priveleged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
+
 To deploy we can call the `deploy` method on [the Llama Factory contract](../src/LlamaFactory.sol).
 Deploying Llama instances requires a non-trivial amount of configuration and set up, since we have to initialize the system with the base set of permissions and rules describing who can do what.
 A list of all official deployed Llama Factory contracts can be found [here](../README.md#Deployments)
@@ -46,9 +52,6 @@ Lets look at each field one by one:
             "minApprovalPct": 4000,
             "minDisapprovalPct": 5100,
             "queuingPeriod": 345600
-        },
-        {
-            ...
         }
     ]
     ```
@@ -86,19 +89,19 @@ The policy config takes the form of the following struct:
 ```
 
 - **Role Descriptions**: An array of the initial role descriptions.
+  - `RoleDescription` is a UDVT, but functions like a `bytes` string under the hood.
   - Example JSON blob for role descriptions:
 
   ```JSON
   "initialRoleDescriptions": [
     "ActionCreator",
     "Approver",
-    "Disapprover",
-    ...
-  ],
+    "Disapprover"
+  ]
   ```
 
 - **Role Holders**: The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
-  - Example JSON blob for role holder data:
+  - Example JSON blob for `RoleHolderData`:
   
   ```JSON
   "initialRoleHolders": [
@@ -113,8 +116,9 @@ The policy config takes the form of the following struct:
 
   - In this example, we are assigning the policyholder `0xdeadbeef` role 1, with the max expiration (`type(uint64).max`), and a quantity of 1.
 
+TODO: update the Role Permissions section after PR 450 merges
 - **Role Permissions** The `role`, `permissionId` and whether the initial roles have the permission of the role permissions.
-  - Example JSON blob for Role Permission Data:
+  - Example JSON blob for `RolePermissionData`:
   
   ```JSON
   "initialRolePermissions": [
@@ -128,3 +132,14 @@ The policy config takes the form of the following struct:
 
 - **Color**: The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
 - **Logo**: The SVG string representing the logo for the deployed Llama instance's NFT.
+
+## Deployed Contracts
+
+After the `deploy` function runs, the following contracts will have been deployed:
+
+- `LlamaCore`
+- `LlamaPolicy`
+- `LlamaExecutor`
+- `LlamaPolicyMetadata`
+- At least one `strategy` contract, optionally more
+- Optional `account` contract(s)
