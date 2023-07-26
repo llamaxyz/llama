@@ -17,8 +17,8 @@ Let's dive into the best practices surrounding policy management.
 
 ## Managing Policies
 
-Users can perform two actions to manage the policy supply: minting and burning policies. 
-Since policies cannot be transferred, users can only hold a policy if it has been explicitly granted to them during deployment or through governance. 
+Users can perform two actions to manage the policy supply: minting and burning policies.
+Since policies cannot be transferred, users can only hold a policy if it has been explicitly granted to them during deployment or through governance.
 Similarly, policyholders cannot burn their own policy; policies can only be revoked through governance.
 
 ### Granting Policies
