@@ -51,20 +51,20 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
-  PermissionData public initializeRolesAndSetRoleHoldersPermissionId;
-  PermissionData public initializeRolesAndSetRolePermissionsPermissionId;
-  PermissionData public initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId;
-  PermissionData public createNewStrategiesAndSetRoleHoldersPermissionId;
-  PermissionData public createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermissionId;
-  PermissionData public createNewStrategiesAndSetRolePermissionsPermissionId;
-  PermissionData public createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId;
-  PermissionData public revokePoliciesAndUpdateRoleDescriptionsPermissionId;
-  PermissionData public revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermissionId;
-  PermissionData public initializeRolesPermissionId;
-  PermissionData public setRoleHoldersPermissionId;
-  PermissionData public setRolePermissionsPermissionId;
-  PermissionData public revokePoliciesPermissionId;
-  PermissionData public updateRoleDescriptionPerimssionId;
+  PermissionData public initializeRolesAndSetRoleHoldersPermission;
+  PermissionData public initializeRolesAndSetRolePermissionsPermission;
+  PermissionData public initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission;
+  PermissionData public createNewStrategiesAndSetRoleHoldersPermission;
+  PermissionData public createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission;
+  PermissionData public createNewStrategiesAndSetRolePermissionsPermission;
+  PermissionData public createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission;
+  PermissionData public revokePoliciesAndUpdateRoleDescriptionsPermission;
+  PermissionData public revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermission;
+  PermissionData public initializeRolesPermission;
+  PermissionData public setRoleHoldersPermission;
+  PermissionData public setRolePermissionsPermission;
+  PermissionData public revokePoliciesPermission;
+  PermissionData public updateRoleDescriptionPerimssion;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -77,62 +77,61 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
     executeActionPermission = PermissionData(address(governanceScript), EXECUTE_ACTION_SELECTOR, mpStrategy2);
     aggregatePermission = PermissionData(address(governanceScript), AGGREGATE_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRoleHoldersPermissionId =
+    initializeRolesAndSetRoleHoldersPermission =
       PermissionData(address(governanceScript), INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRolePermissionsPermissionId =
+    initializeRolesAndSetRolePermissionsPermission =
       PermissionData(address(governanceScript), INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId = PermissionData(
+    initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission = PermissionData(
       address(governanceScript), INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2
     );
-    createNewStrategiesAndSetRoleHoldersPermissionId =
+    createNewStrategiesAndSetRoleHoldersPermission =
       PermissionData(address(governanceScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermissionId = PermissionData(
+    createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission = PermissionData(
       address(governanceScript), CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2
     );
-    createNewStrategiesAndSetRolePermissionsPermissionId =
+    createNewStrategiesAndSetRolePermissionsPermission =
       PermissionData(address(governanceScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId = PermissionData(
+    createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission = PermissionData(
       address(governanceScript),
       CREATE_NEW_STRATEGIES_AND_NEW_ROLES_AND_SET_ROLE_HOLDERS_AND_SET_ROLE_PERMISSIONS_SELECTOR,
       mpStrategy2
     );
-    revokePoliciesAndUpdateRoleDescriptionsPermissionId =
+    revokePoliciesAndUpdateRoleDescriptionsPermission =
       PermissionData(address(governanceScript), REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
-    revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermissionId = PermissionData(
+    revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermission = PermissionData(
       address(governanceScript), REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2
     );
-    initializeRolesPermissionId = PermissionData(address(governanceScript), INITIALIZE_ROLES_SELECTOR, mpStrategy2);
-    setRoleHoldersPermissionId = PermissionData(address(governanceScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    setRolePermissionsPermissionId =
-      PermissionData(address(governanceScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    revokePoliciesPermissionId = PermissionData(address(governanceScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
-    updateRoleDescriptionPerimssionId =
+    initializeRolesPermission = PermissionData(address(governanceScript), INITIALIZE_ROLES_SELECTOR, mpStrategy2);
+    setRoleHoldersPermission = PermissionData(address(governanceScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
+    setRolePermissionsPermission = PermissionData(address(governanceScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    revokePoliciesPermission = PermissionData(address(governanceScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
+    updateRoleDescriptionPerimssion =
       PermissionData(address(governanceScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
 
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRolePermissionsPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRolePermissionsPermission, true);
     mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId, true
+      uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission, true
     );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRoleHoldersPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRoleHoldersPermission, true);
     mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermissionId, true
+      uint8(Roles.ActionCreator), createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission, true
     );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRolePermissionsPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRolePermissionsPermission, true);
     mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermissionId, true
+      uint8(Roles.ActionCreator), createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission, true
     );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesAndUpdateRoleDescriptionsPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesAndUpdateRoleDescriptionsPermission, true);
     mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermissionId, true
+      uint8(Roles.ActionCreator), revokePoliciesAndUpdateRoleDescriptionsAndSetRoleHoldersPermission, true
     );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRoleHoldersPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRolePermissionsPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionPerimssionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRoleHoldersPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRolePermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionPerimssion, true);
 
     vm.stopPrank();
   }
