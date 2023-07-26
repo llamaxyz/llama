@@ -652,7 +652,6 @@ contract SetRolePermission is LlamaPolicyTest {
     mpPolicy.setRolePermission(uint8(Roles.TestRole1), pausePermission, true);
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
-    // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
     bytes32 rolePermissionAssignedSig = keccak256("RolePermissionAssigned(uint8,bytes32,(address,bytes4,address),bool)");
 
     Vm.Log memory _event;

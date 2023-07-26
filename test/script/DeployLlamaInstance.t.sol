@@ -78,7 +78,6 @@ contract Run is DeployLlamaInstanceTest {
     uint8 accountsCount;
     bytes32 accountCreatedSig = keccak256("AccountCreated(address,address,bytes)");
 
-    // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
     LlamaCore llamaInstance = core;
     LlamaExecutor llamaInstanceExecutor = core.executor();
 
