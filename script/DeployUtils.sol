@@ -13,13 +13,6 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 
-/// @dev The `PermissionData` struct in alphabetical order so JSON decodes properly.
-struct PermissionDataInput {
-  bytes selector;
-  ILlamaStrategy strategy;
-  address target;
-}
-
 library DeployUtils {
   using stdJson for string;
 
@@ -62,6 +55,13 @@ library DeployUtils {
   struct AccountJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     string name;
+  }
+
+  struct PermissionDataInput {
+    // Attributes need to be in alphabetical order so JSON decodes properly.
+    bytes selector;
+    ILlamaStrategy strategy;
+    address target;
   }
 
   function print(string memory message) internal view {
