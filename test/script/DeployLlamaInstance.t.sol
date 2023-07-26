@@ -6,22 +6,15 @@ import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
-import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
-import {ActionState} from "src/lib/Enums.sol";
+import {PermissionData} from "src/lib/Structs.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
-import {DeployUtils} from "script/DeployUtils.sol";
-
-import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstance {
   LlamaCore rootLlama;
@@ -85,7 +78,6 @@ contract Run is DeployLlamaInstanceTest {
     uint8 accountsCount;
     bytes32 accountCreatedSig = keccak256("AccountCreated(address,address,bytes)");
 
-    // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
     LlamaCore llamaInstance = core;
     LlamaExecutor llamaInstanceExecutor = core.executor();
 

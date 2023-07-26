@@ -198,7 +198,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     uint256 length = _setRolePermissions.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.setRolePermission(
-        _setRolePermissions[i].role, _setRolePermissions[i].permissionId, _setRolePermissions[i].hasPermission
+        _setRolePermissions[i].role, _setRolePermissions[i].permissionData, _setRolePermissions[i].hasPermission
       );
     }
   }
