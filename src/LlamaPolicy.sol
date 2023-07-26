@@ -215,7 +215,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Assigns a permission ID to a role.
   /// @param role Name of the role to set.
-  /// @param permissionData The (target, selector, strategy) tuple that will be keccak256 hashed to generate the
+  /// @param permissionData The `(target, selector, strategy)` tuple that will be keccak256 hashed to generate the
   /// permission ID to assign or unassign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
   function setRolePermission(uint8 role, PermissionData memory permissionData, bool hasPermission) external onlyLlama {
