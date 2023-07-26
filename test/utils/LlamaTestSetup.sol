@@ -16,7 +16,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo, RoleHolderData} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -117,7 +117,19 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   bytes4 public constant EXECUTE_SCRIPT_WITH_VALUE_SELECTOR = 0xcf62157f; // executeScriptWithValue()
   bytes4 public constant SET_ROLE_PERMISSION_SELECTOR = LlamaPolicy.setRolePermission.selector;
 
-  // Permission IDs for those selectors.
+  // Permission data for those selectors.
+  PermissionData pausePermission;
+  PermissionData failPermission;
+  PermissionData receiveEthPermission;
+  PermissionData executeAction;
+  PermissionData setScriptAuthorization;
+  PermissionData createStrategy;
+  PermissionData createAccount;
+  PermissionData pausePermission2;
+  PermissionData executeScriptPermission;
+  PermissionData executeScriptWithValuePermission;
+
+  // Permission IDs for the permission data.
   bytes32 pausePermissionId;
   bytes32 failPermissionId;
   bytes32 receiveEthPermissionId;
@@ -219,32 +231,44 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     mpAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[0], address(mpCore));
     mpAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), mpAccounts[1], address(mpCore));
 
+    // With the protocol deployed, we can set permission data .
+    pausePermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1);
+    failPermission = PermissionData(address(mockProtocol), FAIL_SELECTOR, mpStrategy1);
+    receiveEthPermission = PermissionData(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1);
+    executeAction = PermissionData(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1);
+    setScriptAuthorization = PermissionData(address(mpCore), AUTHORIZE_SCRIPT_SELECTOR, mpStrategy1);
+    createStrategy = PermissionData(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1);
+    createAccount = PermissionData(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1);
+    pausePermission2 = PermissionData(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2);
+    executeScriptPermission = PermissionData(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1);
+    executeScriptWithValuePermission =
+      PermissionData(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1);
+
     // With the protocol deployed, we can set special permissions.
-    pausePermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy1));
-    failPermissionId = keccak256(abi.encode(address(mockProtocol), FAIL_SELECTOR, mpStrategy1));
-    receiveEthPermissionId = keccak256(abi.encode(address(mockProtocol), RECEIVE_ETH_SELECTOR, mpStrategy1));
-    executeActionId = keccak256(abi.encode(address(mpCore), EXECUTE_ACTION_SELECTOR, mpStrategy1));
-    setScriptAuthorizationId = keccak256(abi.encode(address(mpCore), AUTHORIZE_SCRIPT_SELECTOR, mpStrategy1));
-    createStrategyId = keccak256(abi.encode(address(mpCore), CREATE_STRATEGY_SELECTOR, mpStrategy1));
-    createAccountId = keccak256(abi.encode(address(mpCore), CREATE_ACCOUNT_SELECTOR, mpStrategy1));
-    pausePermissionId2 = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, mpStrategy2));
-    executeScriptPermissionId = keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_SELECTOR, mpStrategy1));
-    executeScriptWithValuePermissionId =
-      keccak256(abi.encode(address(mockScript), EXECUTE_SCRIPT_WITH_VALUE_SELECTOR, mpStrategy1));
+    pausePermissionId = keccak256(abi.encode(pausePermission));
+    failPermissionId = keccak256(abi.encode(failPermission));
+    receiveEthPermissionId = keccak256(abi.encode(receiveEthPermission));
+    executeActionId = keccak256(abi.encode(executeAction));
+    setScriptAuthorizationId = keccak256(abi.encode(setScriptAuthorization));
+    createStrategyId = keccak256(abi.encode(createStrategy));
+    createAccountId = keccak256(abi.encode(createAccount));
+    pausePermissionId2 = keccak256(abi.encode(pausePermission2));
+    executeScriptPermissionId = keccak256(abi.encode(executeScriptPermission));
+    executeScriptWithValuePermissionId = keccak256(abi.encode(executeScriptWithValuePermission));
 
     vm.startPrank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), failPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthorizationId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptWithValuePermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeActionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createStrategyId, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createAccountId, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), pausePermissionId2, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptPermissionId, true);
-    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptWithValuePermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), pausePermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), failPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), receiveEthPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthorization, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeScriptWithValuePermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeAction, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createStrategy, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), createAccount, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), pausePermission2, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole2), executeScriptWithValuePermission, true);
     vm.stopPrank();
 
     // Skip forward one block so the most recent checkpoints are in the past.

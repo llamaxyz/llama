@@ -13,7 +13,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {ActionState} from "src/lib/Enums.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -21,7 +21,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
   function deployRelativeUniqueHolderQuorumAndSetRole(
     uint8 _role,
-    bytes32 _permission,
+    PermissionData memory _permissionData,
     address _policyHolder,
     uint64 _queuingDuration,
     uint64 _expirationDelay,
@@ -39,7 +39,7 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
       vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
       vm.prank(address(mpExecutor));
-      mpPolicy.setRolePermission(_role, _permission, true);
+      mpPolicy.setRolePermission(_role, _permissionData, true);
     }
 
     LlamaRelativeStrategyBase.Config memory strategyConfig = LlamaRelativeStrategyBase.Config({
@@ -172,18 +172,22 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -194,17 +198,21 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -226,7 +234,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       _role,
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -259,7 +267,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       _policyHolder,
       1 days,
       4 days,
@@ -288,7 +296,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -316,7 +324,17 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     forceApproveRoles[0] = _role;
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, forceApproveRoles, new uint8[](0)
+      _role,
+      defaultPermission,
+      _policyHolder,
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      forceApproveRoles,
+      new uint8[](0)
     );
 
     vm.warp(_timestamp);
@@ -359,19 +377,23 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -382,17 +404,21 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -414,7 +440,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       _role,
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -447,7 +473,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       _policyHolder,
       1 days,
       4 days,
@@ -477,7 +503,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(0xdeadbeef),
       1 days,
       4 days,
@@ -507,7 +533,17 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     forceDisapproveRoles[0] = _role;
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumAndSetRole(
-      _role, bytes32(0), _policyHolder, 1 days, 4 days, 1 days, true, 4000, 2000, new uint8[](0), forceDisapproveRoles
+      _role,
+      defaultPermission,
+      _policyHolder,
+      1 days,
+      4 days,
+      1 days,
+      true,
+      4000,
+      2000,
+      new uint8[](0),
+      forceDisapproveRoles
     );
 
     vm.warp(_timestamp);
@@ -600,9 +636,9 @@ contract ValidateActionCreation is LlamaRelativeHolderQuorumTest {
     internal
   {
     // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory newPermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermission, true);
 
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
