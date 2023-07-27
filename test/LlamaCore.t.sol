@@ -1100,17 +1100,16 @@ contract CancelAction is LlamaCoreTest {
 }
 
 contract CancelActionBySig is LlamaCoreTest {
-  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey) internal
+  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey)
+    internal
     view
-    returns (uint8 v, bytes32 r, bytes32 s) {
-      LlamaCoreSigUtils.CancelAction memory cancelAction = LlamaCoreSigUtils.CancelAction({
-        policyholder: actionCreatorAaron,
-        actionInfo: actionInfo,
-        nonce: 0
-      });
-      bytes32 digest = getCancelActionTypedDataHash(cancelAction);
-      (v, r, s) = vm.sign(privateKey, digest);
-    }
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    LlamaCoreSigUtils.CancelAction memory cancelAction =
+      LlamaCoreSigUtils.CancelAction({policyholder: actionCreatorAaron, actionInfo: actionInfo, nonce: 0});
+    bytes32 digest = getCancelActionTypedDataHash(cancelAction);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
 
   function cancelActionBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
     mpCore.cancelActionBySig(actionCreatorAaron, actionInfo, v, r, s);
