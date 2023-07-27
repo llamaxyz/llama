@@ -1099,6 +1099,39 @@ contract CancelAction is LlamaCoreTest {
   }
 }
 
+contract CancelActionBySig is LlamaCoreTest {
+  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey) internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s) {
+      LlamaCoreSigUtils.CancelAction memory cancelAction = LlamaCoreSigUtils.CancelAction({
+        policyholder: actionCreatorAaron,
+        actionInfo: actionInfo,
+        nonce: 0
+      });
+      bytes32 digest = getCancelActionTypedDataHash(cancelAction);
+      (v, r, s) = vm.sign(privateKey, digest);
+    }
+
+  function cancelActionBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.cancelActionBySig(actionCreatorAaron, actionInfo, v, r, s);
+  }
+
+  function test_CancelActionBySig() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    vm.expectEmit();
+    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
+
+    cancelActionBySig(actionInfo, v, r, s);
+
+    uint256 state = uint256(mpCore.getActionState(actionInfo));
+    uint256 canceled = uint256(ActionState.Canceled);
+    assertEq(state, canceled);
+  }
+}
+
 contract QueueAction is LlamaCoreTest {
   function test_RevertIf_NotApproved() public {
     ActionInfo memory actionInfo = _createAction();
