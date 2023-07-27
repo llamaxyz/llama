@@ -26,7 +26,7 @@ Setting the value of queuing period to 0 is also useful for instant execution st
 
 ## Expiration Period
 
-The expiration period is the length of time an action can be executed before it expires.It can be adjusted to suit the nature of the action and how time sensitive it is.
+The expiration period is the length of time an action can be executed before it expires. It can be adjusted to suit the nature of the action and how time sensitive it is.
 Some actions must be executed immediately, while others might not have strict timing requirements.
 We advise you don't set this value to low, in general because it may make for a more difficult UX.
 
