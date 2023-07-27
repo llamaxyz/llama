@@ -3030,4 +3030,3 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
     mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
   }
 }
-
