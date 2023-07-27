@@ -116,9 +116,8 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
   }
 
   function test_UsesActionCreatorApprovalRoleQtyFromPreviousTimestamp() public {
-    // Generate new users so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    // Generate new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
     address newActionCreator = makeAddr("newActionCreator");
-    address otherRoleHolder = makeAddr("otherRoleHolder");
 
     uint96 minApprovals = 2;
 
@@ -126,16 +125,14 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     uint8 newActionCreatorRole = mpPolicy.numRoles() + 1;
     initializeRolesUpTo(newActionCreatorRole);
 
-    // Giving newActionCreator quantity of 5 at `action creation time - 1`.
+    // Giving newActionCreator quantity of 5 at `action creation time - 1`. It is also the only holder of the role.
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 5, type(uint64).max);
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(newActionCreatorRole, otherRoleHolder, 1, type(uint64).max);
 
     // Moving timestamp ahead by 1 second
     mineBlock();
 
-    // Giving newActionCreator quantity of 2 at `action creation time`.
+    // Giving newActionCreator quantity of 2 at `action creation time`. It is also the only holder of the role.
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 2, type(uint64).max);
 
@@ -158,19 +155,21 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(newActionCreatorRole, permissionData, true);
 
-    // The below assertions verify that the strategy uses the quantity of `newActionCreator` at `actionCreationTime - 1`
-    // and it leads to triggering the `InsufficientApprovalQuantity` error. This error would not have been triggered if
-    // the strategy uses the quantity of `newActionCreator` at `actionCreationTime.
+    // 2 > (5 - 5). So, the strategy should revert.
     assertGt(
       minApprovals,
       mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
         - mpPolicy.getPastQuantity(newActionCreator, newActionCreatorRole, block.timestamp - 1)
     );
+    // 2 < (5 - 2). So, the strategy should not revert if there was a bug.
     assertLt(
       minApprovals,
       mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
         - mpPolicy.getQuantity(newActionCreator, newActionCreatorRole)
     );
+    // The below assertion verifies that the strategy uses the approval quantity of `newActionCreator` at
+    // `actionCreationTime - 1` and it leads to triggering the `InsufficientApprovalQuantity` error. This error would
+    // not have been triggered if the strategy uses the approval quantity of `newActionCreator` at `actionCreationTime`.
     vm.prank(newActionCreator);
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
     mpCore.createAction(
@@ -192,9 +191,8 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
   }
 
   function test_UsesActionCreatorDisapprovalRoleQtyFromPreviousTimestamp() public {
-    // Generate new users so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    // Generate new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
     address newActionCreator = makeAddr("newActionCreator");
-    address otherRoleHolder = makeAddr("otherRoleHolder");
 
     uint96 minDisapprovals = 2;
 
@@ -202,16 +200,14 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     uint8 newActionCreatorRole = mpPolicy.numRoles() + 1;
     initializeRolesUpTo(newActionCreatorRole);
 
-    // Giving newActionCreator quantity of 5 at `action creation time - 1`.
+    // Giving newActionCreator quantity of 5 at `action creation time - 1`. It is also the only holder of the role.
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 5, type(uint64).max);
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(newActionCreatorRole, otherRoleHolder, 1, type(uint64).max);
 
     // Moving timestamp ahead by 1 second
     mineBlock();
 
-    // Giving newActionCreator quantity of 2 at `action creation time`.
+    // Giving newActionCreator quantity of 2 at `action creation time`. It is also the only holder of the role.
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 2, type(uint64).max);
 
@@ -234,19 +230,22 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRolePermission(newActionCreatorRole, permissionData, true);
 
-    // The below assertions verify that the strategy uses the quantity of `newActionCreator` at `actionCreationTime - 1`
-    // and it leads to triggering the `InsufficientDisapprovalQuantity` error. This error would not have been triggered
-    // if the strategy uses the quantity of `newActionCreator` at `actionCreationTime.
+    // 2 > (5 - 5). So, the strategy should revert.
     assertGt(
       minDisapprovals,
       mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
         - mpPolicy.getPastQuantity(newActionCreator, newActionCreatorRole, block.timestamp - 1)
     );
+    // 2 < (5 - 2). So, the strategy should not revert if there was a bug.
     assertLt(
       minDisapprovals,
       mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
         - mpPolicy.getQuantity(newActionCreator, newActionCreatorRole)
     );
+    // The below assertion verifies that the strategy uses the disapproval quantity of `newActionCreator` at
+    // `actionCreationTime - 1` and it leads to triggering the `InsufficientDisapprovalQuantity` error. This error would
+    // not have been triggered if the strategy uses the disapproval quantity of `newActionCreator` at
+    // `actionCreationTime`.
     vm.prank(newActionCreator);
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
