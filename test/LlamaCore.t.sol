@@ -1130,6 +1130,62 @@ contract CancelActionBySig is LlamaCoreTest {
     uint256 canceled = uint256(ActionState.Canceled);
     assertEq(state, canceled);
   }
+
+  function test_CheckNonceIncrements() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.cancelActionBySig.selector), 0);
+    cancelActionBySig(actionInfo, v, r, s);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.cancelActionBySig.selector), 1);
+  }
+
+  function test_OperationCannotBeReplayed() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+    cancelActionBySig(actionInfo, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
+  }
+
+  function test_RevertIf_SignerIsNotPolicyHolder() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
+  }
+
+  function test_RevertIf_SignerIsZeroAddress() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, (v + 1), r, s);
+  }
+
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.incrementNonce(LlamaCore.cancelActionBySig.selector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
+  }
 }
 
 contract QueueAction is LlamaCoreTest {
