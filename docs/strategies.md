@@ -7,7 +7,7 @@ There are two main types of strategies, `relative` and `absolute`; first we will
 ## View Functions and Action State
 
 Strategies are composed of entirely view functions (minus the initialize function which acts as the constructor)
-To view the state of an action, strategies should never be queried directly.
+To view the state of an action, strategies should never be queried directly since the state returned by the strategy functions in isolation can be out of date.
 The `getActionState` method on `LlamaCore` is the only method that should be used for this purpose.
 
 ## Approval Period
