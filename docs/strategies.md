@@ -49,4 +49,4 @@ There are many use cases for force roles and it would be impossible to list them
 This is where `relative` and `absolute` strategies differ from one another.
 Relative strategies use `minApprovalPct` and `minDisapprovalPct`, while absolute strategies use `minApprovals` and `minDisapprovals`
 Both are just ways of specifying the threshold at which an action is approved is disapproved.
-To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comarison](./strategy-comparison.md) docs.
+To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comparison](./strategy-comparison.md) docs.
