@@ -12,14 +12,13 @@ import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 
 contract LlamaAbsoluteStrategyBaseTest is LlamaStrategyTestSetup {
   uint8 constant DEFAULT_ROLE = uint8(Roles.TestRole1);
-  bytes32 constant DEFAULT_PERMISSION = bytes32(0);
   address constant DEFAULT_POLICYHOLDER = address(0xdeadbeef);
   uint64 constant DEFAULT_QUEUING_PERIOD = 1 days;
   uint64 constant DEFAULT_EXPIRATION_PERIOD = 4 days;
@@ -27,6 +26,7 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaStrategyTestSetup {
   bool constant DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD = true;
   uint16 constant DEFAULT_DISAPPROVALS = 1;
   uint16 constant DEFAULT_APPROVALS = 1;
+  PermissionData defaultPermission = PermissionData(address(0), bytes4(0), ILlamaStrategy(address(0)));
   uint8[] defaultForceRoles;
 
   MockLlamaAbsoluteStrategyBase mockLlamaAbsoluteStrategyBaseLogic;
@@ -42,7 +42,7 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaStrategyTestSetup {
 
   function deployTestStrategyAndSetRole(
     uint8 _role,
-    bytes32 _permission,
+    PermissionData memory _permissionData,
     address _policyHolder,
     uint64 _queuingDuration,
     uint64 _expirationDelay,
@@ -60,7 +60,7 @@ contract LlamaAbsoluteStrategyBaseTest is LlamaStrategyTestSetup {
       vm.prank(address(mpExecutor));
       mpPolicy.setRoleHolder(_role, _policyHolder, 1, type(uint64).max);
       vm.prank(address(mpExecutor));
-      mpPolicy.setRolePermission(_role, _permission, true);
+      mpPolicy.setRolePermission(_role, _permissionData, true);
 
       mineBlock();
     }
@@ -102,7 +102,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       _queuingDuration,
       DEFAULT_EXPIRATION_PERIOD,
@@ -119,7 +119,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_SetsStrategyStorageExpirationDelay(uint64 _expirationDelay) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       _expirationDelay,
@@ -136,7 +136,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function test_SetsStrategyStorageIsFixedLengthApprovalPeriod(bool _isFixedLengthApprovalPeriod) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -153,7 +153,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_SetsStrategyStorageApprovalPeriod(uint64 _approvalPeriod) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -170,7 +170,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function test_SetsStrategyStoragePolicy() public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -187,7 +187,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function test_SetsStrategyStorageLlama() public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -205,7 +205,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     _approvals = toUint16(bound(_approvals, 0, mpPolicy.getRoleSupplyAsNumberOfHolders(uint8(Roles.TestRole1))));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -222,7 +222,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_SetsStrategyStorageMinDisapprovals(uint16 _disapprovals) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -243,7 +243,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     }
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -266,7 +266,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     }
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -289,7 +289,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     forceApprovalRoles[1] = _role;
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -310,7 +310,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     forceDisapprovalRoles[1] = _role;
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -327,7 +327,7 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_EmitsStrategyCreatedEvent( /*TODO fuzz this test */ ) public {
     deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -438,7 +438,7 @@ contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -468,7 +468,7 @@ contract IsActionApproved is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -501,7 +501,7 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -536,7 +536,7 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy testStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       address(this),
       1 days,
       4 days,
@@ -571,18 +571,22 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
     uint8 _role,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -593,17 +597,21 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -625,7 +633,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       _role,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -657,7 +665,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       _policyHolder,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -686,7 +694,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -715,7 +723,7 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       _role,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       _policyHolder,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -736,19 +744,23 @@ contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
     uint256 _timeUntilPermission,
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeUntilPermission > block.timestamp && _timeUntilPermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
     uint256 _referenceTime = block.timestamp;
     vm.warp(_timeUntilPermission);
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
 
     assertEq(
@@ -759,17 +771,21 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
   function testFuzz_ReturnsQuantityAfterBlockThatAccountGainedPermission(
     uint256 _timeSincePermission, // no assume for this param, we want 0 tested
-    bytes32 _permission,
+    address _target,
+    bytes4 _selector,
+    address _strategy,
     uint8 _role,
     address _policyHolder
   ) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_role > 0);
-    vm.assume(_permission > bytes32(0));
+    vm.assume(_target != address(0));
+    vm.assume(_selector > bytes4(0));
+    vm.assume(_strategy != address(0));
     vm.assume(_policyHolder != address(0));
-
+    PermissionData memory _permissionData = PermissionData(_target, _selector, ILlamaStrategy(_strategy));
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
-      _role, _permission, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
+      _role, _permissionData, _policyHolder, 1 days, 4 days, 1 days, true, 1, 1, new uint8[](0), new uint8[](0)
     );
     vm.warp(_timeSincePermission);
     assertEq(
@@ -791,7 +807,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       _role,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -824,7 +840,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       uint8(Roles.TestRole1),
-      bytes32(0),
+      defaultPermission,
       _policyHolder,
       1 days,
       DEFAULT_EXPIRATION_PERIOD,
@@ -854,7 +870,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       DEFAULT_POLICYHOLDER,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,
@@ -885,7 +901,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
 
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       _role,
-      DEFAULT_PERMISSION,
+      defaultPermission,
       _policyHolder,
       DEFAULT_QUEUING_PERIOD,
       DEFAULT_EXPIRATION_PERIOD,

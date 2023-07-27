@@ -214,9 +214,9 @@ contract LlamaCoreTest is LlamaStrategyTestSetup, LlamaCoreSigUtils {
       address(mockStrategyLogic), DeployUtils.encodeStrategy(strategyConfig), address(mpCore)
     );
 
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, newStrategy));
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, newStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
   }
 
   function createActionUsingAbsolutePeerReview(ILlamaStrategy testStrategy)
@@ -224,9 +224,9 @@ contract LlamaCoreTest is LlamaStrategyTestSetup, LlamaCoreSigUtils {
     returns (ActionInfo memory actionInfo)
   {
     // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
 
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
@@ -803,7 +803,7 @@ contract CreateAction is LlamaCoreTest {
     mpCore.setScriptAuthorization(scriptAddress, true);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionData, true);
 
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(scriptAddress), 0, data, "");
@@ -818,7 +818,7 @@ contract CreateAction is LlamaCoreTest {
     PermissionData memory permissionData = PermissionData(nonScriptAddress, bytes4(data), mpStrategy1);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), keccak256(abi.encode(permissionData)), true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionData, true);
 
     vm.prank(actionCreatorAaron);
     uint256 actionId =

@@ -8,7 +8,7 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 
@@ -45,10 +45,10 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
       new uint8[](0)
     );
 
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory newPermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermission, true);
   }
 
   function createStrategyWithNoSupplyRole(bool approval)
@@ -92,9 +92,9 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     internal
   {
     // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory permissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionData, true);
 
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
