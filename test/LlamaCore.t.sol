@@ -3030,3 +3030,33 @@ contract SetStrategyLogicAuthorization is LlamaCoreTest {
     mpCore.setStrategyLogicAuthorization(ILlamaStrategy(randomLogicAddress), true);
   }
 }
+
+contract LlamaCoreHarness is LlamaCore {
+  function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
+    return _infoHash(actionInfo);
+  }
+}
+
+contract InfoHash is LlamaCoreTest {
+  LlamaCoreHarness llamaCoreHarness;
+
+  function setUp() public override {
+    llamaCoreHarness = new LlamaCoreHarness();
+  }
+
+  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+    bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
+    bytes32 infoHash2 = keccak256(
+      abi.encodePacked(
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        actionInfo.strategy,
+        actionInfo.target,
+        actionInfo.value,
+        actionInfo.data
+      )
+    );
+    assertEq(infoHash1, infoHash2);
+  }
+}
