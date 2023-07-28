@@ -3044,7 +3044,7 @@ contract InfoHash is LlamaCoreTest {
     llamaCoreHarness = new LlamaCoreHarness();
   }
 
-  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+  function testFuzz_InfoHashIsDefinedAsHashingThePackedStruct(ActionInfo calldata actionInfo) public {
     bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
     bytes32 infoHash2 = keccak256(
       abi.encodePacked(
