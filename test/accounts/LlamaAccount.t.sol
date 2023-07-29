@@ -841,6 +841,17 @@ contract Execute is LlamaAccountTest {
     vm.stopPrank();
   }
 
+  function test_RevertIf_DelegatecallWithValue() public {
+    MockExtension mockExtension = new MockExtension();
+
+    vm.startPrank(address(mpExecutor));
+    vm.expectRevert(LlamaAccount.DelegatecallWithValueNotAllowed.selector);
+    mpAccount1LlamaAccount.execute(
+      address(mockExtension), true, ETH_AMOUNT, abi.encodePacked(MockExtension.testFunction.selector, "")
+    );
+    vm.stopPrank();
+  }
+
   function test_RevertIf_NotSuccess() public {
     MockExtension mockExtension = new MockExtension();
 

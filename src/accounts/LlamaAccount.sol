@@ -311,6 +311,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
 
     if (withDelegatecall) {
       if (value > 0) revert DelegatecallWithValueNotAllowed();
+      
       // Whenever we're executing arbitrary code in the context of this account, we want to ensure
       // that none of the storage in this contract changes, as this could let someone who sneaks in
       // a malicious (or buggy) target to take ownership of this contract. Slot 0 contains all
