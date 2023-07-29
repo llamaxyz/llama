@@ -8,6 +8,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
+import {IWETH9} from "test/external/IWETH9.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -65,6 +66,9 @@ contract LlamaAccountTest is LlamaTestSetup {
   uint256 public constant OPENSTORE_ID_2 =
     25_221_312_271_773_506_578_423_917_291_534_224_130_165_348_289_584_384_465_161_209_685_514_687_348_761;
   uint256 public constant OPENSTORE_ID_2_AMOUNT = 1;
+
+  // WETH
+  IWETH9 public constant WETH = IWETH9(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
   address mpAccount1Addr;
   LlamaAccount mpAccount1LlamaAccount;
@@ -788,7 +792,7 @@ contract Execute is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     vm.prank(caller);
     mpAccount1LlamaAccount.execute(
-      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
+      address(mockExtension), true, 0, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
   }
 
@@ -802,7 +806,7 @@ contract Execute is LlamaAccountTest {
     // Rescue Punk by calling execute call
     vm.startPrank(address(mpExecutor));
     mpAccount1LlamaAccount.execute(
-      address(PUNK), false, abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID)
+      address(PUNK), false, 0, abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID)
     );
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
     assertEq(PUNK.balanceOf(mpAccount1Addr), accountNFTBalance - 1);
@@ -816,7 +820,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     bytes memory result = mpAccount1LlamaAccount.execute(
-      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
+      address(mockExtension), true, 0, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
     assertEq(10, uint256(bytes32(result)));
     vm.stopPrank();
@@ -827,7 +831,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, abi.encodePacked("", ""));
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, abi.encodePacked("", ""));
     vm.stopPrank();
   }
 
@@ -837,12 +841,12 @@ contract Execute is LlamaAccountTest {
     bytes memory data = abi.encodeCall(MockMaliciousExtension.attack1, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, data);
 
     data = abi.encodeCall(MockMaliciousExtension.attack2, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, data);
   }
 }
 
