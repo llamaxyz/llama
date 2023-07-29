@@ -832,6 +832,51 @@ contract Execute is LlamaAccountTest {
     vm.stopPrank();
   }
 
+  function test_CallWithValueThroughActionExecution() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    uint256 accountETHBalance = mpAccount1Addr.balance;
+
+    // Giving Action Creator permission to call `LlamaAccount.execute`.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(
+      uint8(Roles.ActionCreator), PermissionData(mpAccount1Addr, LlamaAccount.execute.selector, mpStrategy1), true
+    );
+
+    // Create Action.
+    bytes memory data = abi.encodeCall(
+      LlamaAccount.execute, (address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector))
+    );
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data, "");
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    // Approval process.
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    // Queue action.
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    // Execute action.
+    mpCore.executeAction(actionInfo);
+
+    assertEq(mpAccount1Addr.balance, 0);
+    assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);
+  }
+
   function test_RevertIf_ActionExecutedWithMsgValue() public {
     transferETHToAccount(ETH_AMOUNT);
 
