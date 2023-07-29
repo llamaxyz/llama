@@ -815,6 +815,21 @@ contract Execute is LlamaAccountTest {
     vm.stopPrank();
   }
 
+  function test_CallWithValue() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    uint256 accountETHBalance = mpAccount1Addr.balance;
+
+    // Deposit ETH into WETH contract from Llama account. This shows that the ETH from the Llama account is used and
+    // it's not paid for by the msg.sender.
+    vm.startPrank(address(mpExecutor));
+    mpAccount1LlamaAccount.execute(address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH9.deposit.selector));
+    assertEq(mpAccount1Addr.balance, 0);
+    assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);
+    vm.stopPrank();
+  }
+
   function test_DelegateCallMockExtension() public {
     MockExtension mockExtension = new MockExtension();
 
