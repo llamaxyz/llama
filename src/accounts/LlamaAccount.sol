@@ -99,6 +99,9 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   /// @dev Slot 0 cannot be changed as a result of delegatecalls.
   error Slot0Changed();
 
+  /// @dev Value cannot be sent with delegatecalls.
+  error DelegatecallWithValueNotAllowed();
+
   /// @dev Checks that the caller is the Llama executor and reverts if not.
   modifier onlyLlama() {
     if (msg.sender != llamaExecutor) revert OnlyLlama();
@@ -295,11 +298,11 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   /// the context of this Llama account.
   /// @param target The address of the contract to call.
   /// @param withDelegatecall Whether to use delegatecall or call.
+  /// @param value The amount of ETH to send with the call, taken from the Llama Account.
   /// @param callData The calldata to pass to the contract.
   /// @return The result of the call.
-  function execute(address target, bool withDelegatecall, bytes calldata callData)
+  function execute(address target, bool withDelegatecall, uint256 value, bytes calldata callData)
     external
-    payable
     onlyLlama
     returns (bytes memory)
   {
@@ -307,6 +310,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     bytes memory result;
 
     if (withDelegatecall) {
+      if (value > 0) revert DelegatecallWithValueNotAllowed();
       // Whenever we're executing arbitrary code in the context of this account, we want to ensure
       // that none of the storage in this contract changes, as this could let someone who sneaks in
       // a malicious (or buggy) target to take ownership of this contract. Slot 0 contains all
@@ -326,7 +330,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
       (success, result) = target.delegatecall(callData);
       if (originalStorage != _readSlot0()) revert Slot0Changed();
     } else {
-      (success, result) = target.call{value: msg.value}(callData);
+      (success, result) = target.call{value: value}(callData);
     }
 
     if (!success) revert FailedExecution(result);
