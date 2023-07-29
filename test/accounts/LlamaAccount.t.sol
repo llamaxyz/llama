@@ -8,7 +8,7 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
-import {IWETH9} from "test/external/IWETH9.sol";
+import {IWETH} from "test/external/IWETH.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -68,7 +68,7 @@ contract LlamaAccountTest is LlamaTestSetup {
   uint256 public constant OPENSTORE_ID_2_AMOUNT = 1;
 
   // WETH
-  IWETH9 public constant WETH = IWETH9(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+  IWETH public constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
   address mpAccount1Addr;
   LlamaAccount mpAccount1LlamaAccount;
@@ -823,7 +823,7 @@ contract Execute is LlamaAccountTest {
     // Deposit ETH into WETH contract from Llama account. This shows that the ETH from the Llama account is used and
     // it's not paid for by the msg.sender.
     vm.startPrank(address(mpExecutor));
-    mpAccount1LlamaAccount.execute(address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH9.deposit.selector));
+    mpAccount1LlamaAccount.execute(address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector));
     assertEq(mpAccount1Addr.balance, 0);
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-interface IWETH9 {
+interface IWETH {
   function balanceOf(address) external view returns (uint256);
 
   function allowance(address, address) external view returns (uint256);
