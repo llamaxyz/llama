@@ -848,11 +848,9 @@ contract Execute is LlamaAccountTest {
       LlamaAccount.execute, (address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector))
     );
     vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data, "");
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data, "");
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data);
 
     vm.warp(block.timestamp + 1);
 
