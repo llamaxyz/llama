@@ -11,9 +11,11 @@ import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
 import {IWETH} from "test/external/IWETH.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 
 contract LlamaAccountTest is LlamaTestSetup {
   // Testing Parameters
@@ -828,6 +830,50 @@ contract Execute is LlamaAccountTest {
     assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
     assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);
     vm.stopPrank();
+  }
+
+  function test_RevertIf_ActionExecutedWithMsgValue() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    // Giving Action Creator permission to call `LlamaAccount.execute`.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(
+      uint8(Roles.ActionCreator), PermissionData(mpAccount1Addr, LlamaAccount.execute.selector, mpStrategy1), true
+    );
+
+    // Create Action with `ETH_AMOUNT` as `action.value`.
+    bytes memory data = abi.encodeCall(
+      LlamaAccount.execute, (address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector))
+    );
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, ETH_AMOUNT, data, "");
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, ETH_AMOUNT, data
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    // Approval process.
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    // Queue action.
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    // Giving the caller ETH to execute the action with `action.value`.
+    deal(address(this), ETH_AMOUNT);
+
+    // Execute action. This should fail since the `LlamaAccount.execute` function is not `payable` but a `msg.value` is
+    // being passed in from `tx.origin`.
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.FailedActionExecution.selector, ""));
+    mpCore.executeAction{value: ETH_AMOUNT}(actionInfo);
   }
 
   function test_DelegateCallMockExtension() public {
