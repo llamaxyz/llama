@@ -821,6 +821,8 @@ contract Execute is LlamaAccountTest {
     transferETHToAccount(ETH_AMOUNT);
 
     uint256 accountETHBalance = mpAccount1Addr.balance;
+    assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), 0);
 
     // Deposit ETH into WETH contract from Llama account. This shows that the ETH from the Llama account is used and
     // it's not paid for by the msg.sender.
@@ -836,6 +838,8 @@ contract Execute is LlamaAccountTest {
     transferETHToAccount(ETH_AMOUNT);
 
     uint256 accountETHBalance = mpAccount1Addr.balance;
+    assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), 0);
 
     // Giving Action Creator permission to call `LlamaAccount.execute`.
     vm.prank(address(mpExecutor));
@@ -933,12 +937,11 @@ contract Execute is LlamaAccountTest {
   function test_RevertIf_DelegatecallWithValue() public {
     MockExtension mockExtension = new MockExtension();
 
-    vm.startPrank(address(mpExecutor));
+    vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.CannotDelegatecallWithValue.selector);
     mpAccount1LlamaAccount.execute(
       address(mockExtension), true, ETH_AMOUNT, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
-    vm.stopPrank();
   }
 
   function test_RevertIf_NotSuccess() public {
