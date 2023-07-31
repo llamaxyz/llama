@@ -8,11 +8,14 @@ import {IERC721} from "@openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ICryptoPunk} from "test/external/ICryptoPunk.sol";
+import {IWETH} from "test/external/IWETH.sol";
 import {MockExtension} from "test/mock/MockExtension.sol";
 import {MockMaliciousExtension} from "test/mock/MockMaliciousExtension.sol";
-import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
+import {LlamaTestSetup, Roles} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 
 contract LlamaAccountTest is LlamaTestSetup {
   // Testing Parameters
@@ -65,6 +68,9 @@ contract LlamaAccountTest is LlamaTestSetup {
   uint256 public constant OPENSTORE_ID_2 =
     25_221_312_271_773_506_578_423_917_291_534_224_130_165_348_289_584_384_465_161_209_685_514_687_348_761;
   uint256 public constant OPENSTORE_ID_2_AMOUNT = 1;
+
+  // WETH
+  IWETH public constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
   address mpAccount1Addr;
   LlamaAccount mpAccount1LlamaAccount;
@@ -788,7 +794,7 @@ contract Execute is LlamaAccountTest {
     vm.expectRevert(LlamaAccount.OnlyLlama.selector);
     vm.prank(caller);
     mpAccount1LlamaAccount.execute(
-      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
+      address(mockExtension), true, 0, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
   }
 
@@ -802,7 +808,7 @@ contract Execute is LlamaAccountTest {
     // Rescue Punk by calling execute call
     vm.startPrank(address(mpExecutor));
     mpAccount1LlamaAccount.execute(
-      address(PUNK), false, abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID)
+      address(PUNK), false, 0, abi.encodeWithSelector(ICryptoPunk.transferPunk.selector, PUNK_WHALE, PUNK_ID)
     );
     assertEq(PUNK.balanceOf(mpAccount1Addr), 0);
     assertEq(PUNK.balanceOf(mpAccount1Addr), accountNFTBalance - 1);
@@ -811,15 +817,131 @@ contract Execute is LlamaAccountTest {
     vm.stopPrank();
   }
 
+  function test_CallWithValue() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    uint256 accountETHBalance = mpAccount1Addr.balance;
+    assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), 0);
+
+    // Deposit ETH into WETH contract from Llama account. This shows that the ETH from the Llama account is used and
+    // it's not paid for by the msg.sender.
+    vm.startPrank(address(mpExecutor));
+    mpAccount1LlamaAccount.execute(address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector));
+    assertEq(mpAccount1Addr.balance, 0);
+    assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);
+    vm.stopPrank();
+  }
+
+  function test_CallWithValueThroughActionExecution() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    uint256 accountETHBalance = mpAccount1Addr.balance;
+    assertEq(mpAccount1Addr.balance, ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), 0);
+
+    // Giving Action Creator permission to call `LlamaAccount.execute`.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(
+      uint8(Roles.ActionCreator), PermissionData(mpAccount1Addr, LlamaAccount.execute.selector, mpStrategy1), true
+    );
+
+    // Create Action.
+    bytes memory data = abi.encodeCall(
+      LlamaAccount.execute, (address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector))
+    );
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data, "");
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, 0, data);
+
+    vm.warp(block.timestamp + 1);
+
+    // Approval process.
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    // Queue action.
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    // Execute action.
+    mpCore.executeAction(actionInfo);
+
+    assertEq(mpAccount1Addr.balance, 0);
+    assertEq(mpAccount1Addr.balance, accountETHBalance - ETH_AMOUNT);
+    assertEq(WETH.balanceOf(mpAccount1Addr), ETH_AMOUNT);
+  }
+
+  function test_RevertIf_ActionExecutedWithMsgValue() public {
+    transferETHToAccount(ETH_AMOUNT);
+
+    // Giving Action Creator permission to call `LlamaAccount.execute`.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(
+      uint8(Roles.ActionCreator), PermissionData(mpAccount1Addr, LlamaAccount.execute.selector, mpStrategy1), true
+    );
+
+    // Create Action with `ETH_AMOUNT` as `action.value`.
+    bytes memory data = abi.encodeCall(
+      LlamaAccount.execute, (address(WETH), false, ETH_AMOUNT, abi.encodeWithSelector(IWETH.deposit.selector))
+    );
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, ETH_AMOUNT, data, "");
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, mpAccount1Addr, ETH_AMOUNT, data
+    );
+
+    vm.warp(block.timestamp + 1);
+
+    // Approval process.
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    // Queue action.
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    // Giving the caller ETH to execute the action with `action.value`.
+    deal(address(this), ETH_AMOUNT);
+
+    // Execute action. This should fail since the `LlamaAccount.execute` function is not `payable` but a `msg.value` is
+    // being passed in from `tx.origin`.
+    vm.expectRevert(abi.encodeWithSelector(LlamaCore.FailedActionExecution.selector, ""));
+    mpCore.executeAction{value: ETH_AMOUNT}(actionInfo);
+  }
+
   function test_DelegateCallMockExtension() public {
     MockExtension mockExtension = new MockExtension();
 
     vm.startPrank(address(mpExecutor));
     bytes memory result = mpAccount1LlamaAccount.execute(
-      address(mockExtension), true, abi.encodePacked(MockExtension.testFunction.selector, "")
+      address(mockExtension), true, 0, abi.encodePacked(MockExtension.testFunction.selector, "")
     );
     assertEq(10, uint256(bytes32(result)));
     vm.stopPrank();
+  }
+
+  function test_RevertIf_DelegatecallWithValue() public {
+    MockExtension mockExtension = new MockExtension();
+
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(LlamaAccount.CannotDelegatecallWithValue.selector);
+    mpAccount1LlamaAccount.execute(
+      address(mockExtension), true, ETH_AMOUNT, abi.encodePacked(MockExtension.testFunction.selector, "")
+    );
   }
 
   function test_RevertIf_NotSuccess() public {
@@ -827,7 +949,7 @@ contract Execute is LlamaAccountTest {
 
     vm.startPrank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaAccount.FailedExecution.selector, ""));
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, abi.encodePacked("", ""));
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, abi.encodePacked("", ""));
     vm.stopPrank();
   }
 
@@ -837,12 +959,12 @@ contract Execute is LlamaAccountTest {
     bytes memory data = abi.encodeCall(MockMaliciousExtension.attack1, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, data);
 
     data = abi.encodeCall(MockMaliciousExtension.attack2, ());
     vm.prank(address(mpExecutor));
     vm.expectRevert(LlamaAccount.Slot0Changed.selector);
-    mpAccount1LlamaAccount.execute(address(mockExtension), true, data);
+    mpAccount1LlamaAccount.execute(address(mockExtension), true, 0, data);
   }
 }
 
