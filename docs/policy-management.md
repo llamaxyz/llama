@@ -3,9 +3,7 @@
 Policies are the building blocks of the Llama permissioning system.
 They allow users to create actions, assign roles, authorize strategies, and more.
 Without policies, a Llama instance will be unusable.
-Policies, roles, and permission IDs can be granted on instance deployment, but we are going to focus on policy management for active Llama instances in this section.  
-
-Let's dive into the best practices surrounding policy management.
+Policies, roles, and permission IDs can be granted on instance deployment, but this section focuses on policy management for active Llama instances in this section.
 
 ## Key Concepts
 
@@ -24,20 +22,20 @@ Similarly, policyholders cannot burn their own policy; policies can only be revo
 ### Granting Policies
 
 Llama policies can be granted to EOAs as well as other smart contracts, allowing a great deal of flexibility.
-To grant a policy to a new policyholder, a policyholder with the correct permission must create an action that calls the `setRoleHolder` method on the `LlamaPolicy` contract.
+To grant a new policy, an existing policyholder must create an action that calls the `setRoleHolder` method on the `LlamaPolicy` contract.
 When invoking the `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint128 quantity, uint64 expiration)`.
 
-Lets look at each argument individually:
+`setRoleHolder` takes four arguments:
 
 - **role**: The role being granted to the policyholder.
 - **policyholder**: The policyholder's address.
 - **quantity**: The quantity of approval/disapproval power the policyholder has for the given role.
 - **expiration**: The expiration date of the role (not the policy).
 
-There are a few additional concepts to keep in mind to understand granting policies:
+`setRoleHolder` also has the following properties:
 
 - The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies.
-- When `setRoleHolder` is called and `balanceOf(policyholder) == 0` a new policy NFT is minted to the policyholder address.
+- When `setRoleHolder` is called and `balanceOf(policyholder) == 0`, a new policy NFT is minted to the policyholder address.
 - Every policyholder is automatically assigned the `ALL_HOLDERS_ROLE` when their policy is minted.
 
 ### Revoking Policies
@@ -52,14 +50,14 @@ Roles are of type `uint8`, meaning roles are denominated as unsigned integers an
 Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
 Every role has two supplies that are stored in the `RoleSupply` struct and are always available in storage:
 
-1. Number of holders: The number of unique policy NFTs that hold the given role
-2. Total quantity: The sum of all the quantities that each role holding policy possesses.
+1. Number of holders: The number of unique policy NFTs that hold the given role.
+2. Total quantity: The sum of all the quantities that each role holding the policy possesses.
 
 ### Creating New Roles
 
 When roles are created, a description is provided.
 This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
-The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a bytes32 value.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a `bytes32` value.
 
 ### Editing Existing Roles
 
@@ -133,4 +131,4 @@ Mirrors of the base policy management functions exist as batch methods on the `G
 Not all possible combinations can be predicted and therefore do not exist on the script's interface.
 This is where the `aggregate` method becomes useful.
 `aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
-Since `aggregate` is a very powerful method, we recommend permissioning other methods on the `GovernanceScript` contract unless the use of `aggregate` is deemed necessary, and even then an `ActionGuard` is recommended
+Since `aggregate` is a very powerful method, we recommend permissioning other methods on the `GovernanceScript` contract unless the use of `aggregate` is deemed necessary, and even then, an `ActionGuard` is recommended.

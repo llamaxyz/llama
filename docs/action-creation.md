@@ -1,7 +1,7 @@
 # Action Creation
 
-After your Llama instance is deployed, it's time to start creating actions.
-Actions are proposed transactions initiated by policyholders that are executed onchain.
+In Llama, actions are proposed transactions initiated by policyholders that are executed onchain.
+
 This may include changing protocol parameters, transferring funds from a treasury, activating an emergency pause, etc.
 Actions are how your Llama instance interacts with external contracts.
 Here is the anatomy of an action:
@@ -15,16 +15,16 @@ Here is the anatomy of an action:
 
 ## Key Concepts
 
-- [Core](../src/LlamaCore.sol): Manages the action process from creation to execution.
+- [Core](https://github.com/llamaxyz/llama/src/LlamaCore.sol): Manages the action process from creation to execution.
   - Actions: Proposals made by policyholders to execute onchain transactions.
   - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.
   - Guards: Guards enable custom safety checks and logic to run at action creation, and pre and post action execution. Guards can also be used to add arbitrary logic such as spending limits or calldata permissioning.
   - Scripts: Contracts that are delegate called from the Executor instead of called. Scripts can be used to batch calls together for extended functionality.
-- [Policy](../src/LlamaPolicy.sol): An ERC721 contract where each token is non-transferable, functions as the respective policy for a given policyholder, and has roles assigned to `create`, `approve` and `disapprove` actions.
+- [Policy](https://github.com/llamaxyz/llama/src/LlamaPolicy.sol): An ERC721 contract where each token is non-transferable, functions as the respective policy for a given policyholder, and has roles assigned to `create`, `approve` and `disapprove` actions.
   - Policies: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
   - Permission IDs: A unique identifier that can be assigned to roles to enable action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
-- [Executor](../src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
+- [Executor](https://github.com/llamaxyz/llama/src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
 - Llama Instance: The unique core / policy / executor addresses for a deployment
 
 ## Action State
@@ -81,7 +81,7 @@ It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contrac
 
 To add and remove Permission IDs, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized.
+To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
 
 ## Approvals and Disapprovals
 
@@ -117,4 +117,4 @@ Guards can effectively permission calldata, such as implementing a spending limi
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
-Llama recommends using guards to implement adhoc and protocol specific safety checks.
+Llama recommends using guards to implement adhoc and protocol specific safety checks

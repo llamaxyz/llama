@@ -1,13 +1,13 @@
 # Strategies
 
-Strategies are the contracts that determine action state transition rules.
+Strategies are the contracts that determine action state.
 In this section we will take a look at the different parameters and ways we can configure strategies and use them in various ways.
 There are two main types of strategies, `relative` and `absolute`; first we will look at the parameters that they have in common and then look at some of their differences.
 
 ## View Functions and Action State
 
 Strategies are composed of entirely view functions (minus the initialize function which acts as the constructor)
-To view the state of an action, strategies should never be queried directly since the state returned by the strategy functions in isolation can be out of date.
+To view the state of an action, strategies should never be queried directly.
 The `getActionState` method on `LlamaCore` is the only method that should be used for this purpose.
 
 ## Approval Period
@@ -26,13 +26,15 @@ Setting the value of queuing period to 0 is also useful for instant execution st
 
 ## Expiration Period
 
-The expiration period is the length of time an action can be executed before it expires. It can be adjusted to suit the nature of the action and how time sensitive it is.
+The expiration period is the length of time an action can be executed before it expires.It can be adjusted to suit the nature of the action and how time sensitive it is.
 Some actions must be executed immediately, while others might not have strict timing requirements.
 We advise you don't set this value to low, in general because it may make for a more difficult UX.
 
 ## Is Fixed Length Approval Period
 
 A boolean value that determines if an action can be queued as soon as the action reaches the approval threshold, or if it users must wait the duration of the approval period before queuing the action.
+
+This is useful for scenarios where it's ok to queue an action as soon as the approval quorum is met.
 
 ## Approval / Disapproval Role
 
@@ -41,12 +43,11 @@ The supplies or quantities of these roles are used to calculate quorums for cert
 
 ## Force Approval / Disapproval Roles
 
-Each strategy can optionally have one or more "force roles", which when used cast an approval / disapproval that instantly approves or disapproves the action, regardless of quorum.
+Each strategy can optionally have one or more "force roles", which can cast an approval or disapproval that instantly approves or disapproves the action, regardless of quorum.
 There are many use cases for force roles and it would be impossible to list them all here, but one we can imagine is an optimistic strategy, where a few team members can instantly disapprove an action using a force role if they did not approve of the action.
 
 ## Approval / Disapproval Thresholds
 
-This is where `relative` and `absolute` strategies differ from one another.
-Relative strategies use `minApprovalPct` and `minDisapprovalPct`, while absolute strategies use `minApprovals` and `minDisapprovals`
-Both are just ways of specifying the threshold at which an action is approved is disapproved.
-To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comparison](./strategy-comparison.md) docs.
+Relative and absolute strategies differ in the way they calculate approval and disapproval thresholds.
+Relative strategies use `minApprovalPct` and `minDisapprovalPct`, while absolute strategies use `minApprovals` and `minDisapprovals`.
+To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comarison](./strategy-comparison.md) docs.
