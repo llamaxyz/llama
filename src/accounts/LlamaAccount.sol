@@ -100,7 +100,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   error Slot0Changed();
 
   /// @dev Value cannot be sent with delegatecalls.
-  error DelegatecallWithValueNotAllowed();
+  error CannotDelegatecallWithValue();
 
   /// @dev Checks that the caller is the Llama executor and reverts if not.
   modifier onlyLlama() {
@@ -310,7 +310,7 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
     bytes memory result;
 
     if (withDelegatecall) {
-      if (value > 0) revert DelegatecallWithValueNotAllowed();
+      if (value > 0) revert CannotDelegatecallWithValue();
 
       // Whenever we're executing arbitrary code in the context of this account, we want to ensure
       // that none of the storage in this contract changes, as this could let someone who sneaks in
