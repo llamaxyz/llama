@@ -117,4 +117,4 @@ Guards can effectively permission calldata, such as implementing a spending limi
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
-Llama recommends using guards to implement adhoc and protocol specific safety checks
+Llama recommends using guards to implement adhoc and protocol specific safety checks.
