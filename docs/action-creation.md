@@ -81,7 +81,7 @@ It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contrac
 
 To add and remove Permission IDs, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
+Strategies cannot be explicitly deleted or unauthorized in the Llama system; in order to unauthorize a strategy, we would remove all of the permission IDs that use that strategy rendering it useless.
 
 ## Approvals and Disapprovals
 
@@ -110,11 +110,10 @@ Scripts may also be unauthorized using the same function.
 
 ## Guards
 
-Guards are optional hooks that run at action creation, pre-action execution, and post-action execution.
-They can be set on any pair of target address and function selector.
+Guards are optional hooks that run at action creation, pre-action execution, and post-action execution. They can be set on any pair of target address and function selector.
 The main use-case for guards is to extend the Llama permissioning system.
 Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is as expected in `validatePostActionExecution`.
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
-Llama recommends using guards to implement adhoc and protocol specific safety checks
+Llama recommends using guards to implement adhoc and protocol specific safety checks.
