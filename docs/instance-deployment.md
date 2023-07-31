@@ -1,6 +1,6 @@
 # Instance Deployment
 
-To start using Llama to manage on-chain privileged access functions, you must first deploy your own instance.
+To use Llama to manage onchain privileged access functions, you must first deploy your own instance.
 
 ## Key Concepts
 
