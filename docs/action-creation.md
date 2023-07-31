@@ -111,7 +111,7 @@ Scripts may also be unauthorized using the same function.
 ## Guards
 
 Guards are optional hooks that run at action creation, pre-action execution, and post-action execution.
-They can be set on any pair of target address and function selector.
+They can be set on any target address and function selector pair.
 The main use-case for guards is to extend the Llama permissioning system.
 Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is as expected in `validatePostActionExecution`.
 
