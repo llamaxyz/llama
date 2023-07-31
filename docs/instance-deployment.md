@@ -8,7 +8,7 @@ To start using Llama to manage on-chain privileged access functions, you must fi
 - [Instance]((https://github.com/llamaxyz/llama/blob/main/diagrams/llama-overview.png)): A Llama instance is a self managed cluster of contracts that enables on-chain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
 
 To deploy we can call the `deploy` method on [the Llama Factory contract](../src/LlamaFactory.sol).
-Deploying Llama instances requires a non-trivial amount of configuration and set up, since we have to initialize the system with the base set of permissions and rules describing who can do what.
+Deploying Llama instances requires some configuration and set up, since we have to initialize the system with the base set of permissions and rules describing who can do what.
 A list of all official deployed Llama Factory contracts can be found [here](../README.md#Deployments)
 
 ## Configuration
