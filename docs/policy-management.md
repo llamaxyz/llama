@@ -1,7 +1,7 @@
 # Policy Management
 
-Policies are the building blocks of the Llama permissioning system.
-They allow users to create actions, assign roles, authorize strategies, and more.
+Policies are the building blocks of the Llama permissioning system. 
+They allow users to create actions, assign roles, authorize strategies, and more. 
 Without policies, a Llama instance will be unusable.
 Policies, roles, and permission IDs can be granted on instance deployment, but we are going to focus on policy management for active Llama instances in this section.  
 
@@ -17,8 +17,8 @@ Let's dive into the best practices surrounding policy management.
 
 ## Managing Policies
 
-Users can perform two actions to manage the policy supply: minting and burning policies.
-Since policies cannot be transferred, users can only hold a policy if it has been explicitly granted to them during deployment or through governance.
+Users can perform two actions to manage the policy supply: minting and burning policies. 
+Since policies cannot be transferred, users can only hold a policy if it has been explicitly granted to them during deployment or through governance. 
 Similarly, policyholders cannot burn their own policy; policies can only be revoked through governance.
 
 ### Granting Policies
@@ -28,14 +28,12 @@ To grant a policy to a new policyholder, a policyholder with the correct permiss
 When invoking the `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint128 quantity, uint64 expiration)`.
 
 Lets look at each argument individually:
-
 - **role**: The role being granted to the policyholder.
 - **policyholder**: The policyholder's address.
 - **quantity**: The quantity of approval/disapproval power the policyholder has for the given role.
 - **expiration**: The expiration date of the role (not the policy).
 
 There are a few additional concepts to keep in mind to understand granting policies:
-
 - The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies.
 - When `setRoleHolder` is called and `balanceOf(policyholder) == 0` a new policy NFT is minted to the policyholder address.
 - Every policyholder is automatically assigned the `ALL_HOLDERS_ROLE` when their policy is minted.
@@ -50,16 +48,15 @@ This method burns the policy NFT and revokes all roles from the former policyhol
 Role management involves creating, editing, granting, and revoking roles from Llama policy NFTs.
 Roles are of type `uint8`, meaning roles are denominated as unsigned integers and the maximum number of roles a Llama instance can have is 255.
 Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
-Every role has two supplies that are stored in the `RoleSupply` struct and are always available in storage:
-
+Every role has two supplies that are stored in the `RoleSupply` struct and are always available in storage: 
 1. Number of holders: The number of unique policy NFTs that hold the given role
-2. Total quantity: The sum of all the quantities that each role holding policy possesses.
+2. Total quantity: The sum of all the quantities that each role holding policy possesses. 
 
 ### Creating New Roles
 
 When roles are created, a description is provided.
 This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
-The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a bytes32 value.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a bytes32 value. 
 
 ### Editing Existing Roles
 
@@ -103,7 +100,6 @@ Permission IDs are units of access control that can be assigned to roles to allo
 Policyholders are not allowed to create actions unless they have the corresponding permission.
 
 ## Permission IDs
-
 Permission IDs are calculated by hashing the `PermissionData` struct, which is composed of three fields: the `target`, `selector` & `strategy`.
 The `LlamaLens` contract provides an external view method called `computePermissionId` that allows users to compute permission IDs.
 This is helpful because all of the functions required to manage permission IDs expect users to pass in pre-computed permission IDs.
@@ -134,3 +130,5 @@ Not all possible combinations can be predicted and therefore do not exist on the
 This is where the `aggregate` method becomes useful.
 `aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
 Since `aggregate` is a very powerful method, we recommend permissioning other methods on the `GovernanceScript` contract unless the use of `aggregate` is deemed necessary, and even then an `ActionGuard` is recommended
+
+
