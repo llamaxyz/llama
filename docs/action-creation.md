@@ -112,7 +112,7 @@ Scripts may also be unauthorized using the same function.
 
 Guards are optional hooks that can run at action creation, pre-action execution, and post-action execution.
 They can be set on any target address and function selector pair.
-The main use-case for guards is to extend the Llama permissioning system.
+The main use case for guards is to extend the Llama permission system.
 Guards can effectively permission calldata, such as implementing a spending limit per transaction in the `validatePreActionExecution` function, or verifying the final state of a DeFi transaction is as expected in `validatePostActionExecution`.
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
