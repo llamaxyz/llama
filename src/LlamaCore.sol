@@ -275,14 +275,13 @@ contract LlamaCore is Initializable {
         address(config.strategyLogic), keccak256(config.initialStrategies[0]), address(this)
       )
     );
-    PermissionData memory permission =
+    PermissionData memory bootstrapPermissionData =
       PermissionData(address(policy), LlamaPolicy.setRolePermission.selector, bootstrapStrategy);
-    bytes32 bootstrapPermissionId = LlamaUtils.computePermissionId(permission);
 
     // Initialize `LlamaPolicy` with holders of role ID 1 (Bootstrap Role) given permission to change role
     // permissions. This is required to reduce the chance that an instance is deployed with an invalid configuration
     // that results in the instance being unusable.
-    policy.initialize(config.name, config.policyConfig, policyMetadataLogic, address(executor), bootstrapPermissionId);
+    policy.initialize(config.name, config.policyConfig, policyMetadataLogic, address(executor), bootstrapPermissionData);
 
     // Authorize strategy logic contract and deploy strategies.
     _setStrategyLogicAuthorization(config.strategyLogic, true);

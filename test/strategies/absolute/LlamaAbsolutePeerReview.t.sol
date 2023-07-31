@@ -8,7 +8,7 @@ import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles} from "test/utils/LlamaTestSetup.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo} from "src/lib/Structs.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 
@@ -45,10 +45,10 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
       new uint8[](0)
     );
 
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory newPermission = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.TestRole1), newPermission, true);
   }
 
   function createStrategyWithNoSupplyRole(bool approval)
@@ -92,9 +92,9 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     internal
   {
     // Give the action creator the ability to use this strategy.
-    bytes32 newPermissionId = keccak256(abi.encode(address(mockProtocol), PAUSE_SELECTOR, testStrategy));
+    PermissionData memory permissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionData, true);
 
     // Create the action.
     bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
@@ -115,6 +115,68 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     );
   }
 
+  function test_UsesActionCreatorApprovalRoleQtyFromPreviousTimestamp() public {
+    // Generate new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newActionCreator = makeAddr("newActionCreator");
+
+    uint96 minApprovals = 2;
+
+    // Getting a role with no supply currently and initializing it.
+    uint8 newActionCreatorRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(newActionCreatorRole);
+
+    // Giving newActionCreator quantity of 5 at `action creation time - 1`. It is also the only holder of the role.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 5, type(uint64).max);
+
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Giving newActionCreator quantity of 2 at `action creation time`. It is also the only holder of the role.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 2, type(uint64).max);
+
+    // New AbsolutePeerReview strategy with `minApprovals` of 2 and Approval role of `newActionCreatorRole`.
+    ILlamaStrategy testStrategy = deployAbsolutePeerReview(
+      newActionCreatorRole,
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      minApprovals,
+      0,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    // Give the action creator the ability to use this strategy.
+    PermissionData memory permissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(newActionCreatorRole, permissionData, true);
+
+    // 2 > (5 - 5). So, the strategy should revert.
+    assertGt(
+      minApprovals,
+      mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
+        - mpPolicy.getPastQuantity(newActionCreator, newActionCreatorRole, block.timestamp - 1)
+    );
+    // 2 < (5 - 2). So, the strategy should not revert if there was a bug.
+    assertLt(
+      minApprovals,
+      mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
+        - mpPolicy.getQuantity(newActionCreator, newActionCreatorRole)
+    );
+    // The below assertion verifies that the strategy uses the approval quantity of `newActionCreator` at
+    // `actionCreationTime - 1` and it leads to triggering the `InsufficientApprovalQuantity` error. This error would
+    // not have been triggered if the strategy uses the approval quantity of `newActionCreator` at `actionCreationTime`.
+    vm.prank(newActionCreator);
+    vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientApprovalQuantity.selector);
+    mpCore.createAction(
+      newActionCreatorRole, testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
+    );
+  }
+
   function testFuzz_RevertIf_NotEnoughDisapprovalQuantity(uint256 _roleQuantity, uint256 _otherRoleHolders) external {
     _roleQuantity = bound(_roleQuantity, 100, 1000);
     uint256 threshold = _roleQuantity / 2;
@@ -125,6 +187,69 @@ contract ValidateActionCreation is LlamaAbsolutePeerReviewTest {
     vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
     mpCore.createAction(
       uint8(Roles.TestRole1), testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
+    );
+  }
+
+  function test_UsesActionCreatorDisapprovalRoleQtyFromPreviousTimestamp() public {
+    // Generate new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
+    address newActionCreator = makeAddr("newActionCreator");
+
+    uint96 minDisapprovals = 2;
+
+    // Getting a role with no supply currently and initializing it.
+    uint8 newActionCreatorRole = mpPolicy.numRoles() + 1;
+    initializeRolesUpTo(newActionCreatorRole);
+
+    // Giving newActionCreator quantity of 5 at `action creation time - 1`. It is also the only holder of the role.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 5, type(uint64).max);
+
+    // Moving timestamp ahead by 1 second
+    mineBlock();
+
+    // Giving newActionCreator quantity of 2 at `action creation time`. It is also the only holder of the role.
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(newActionCreatorRole, newActionCreator, 2, type(uint64).max);
+
+    // New AbsolutePeerReview strategy with `minApprovals` of 2 and Approval role of `newActionCreatorRole`.
+    ILlamaStrategy testStrategy = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      newActionCreatorRole,
+      1 days,
+      4 days,
+      1 days,
+      false,
+      0,
+      minDisapprovals,
+      new uint8[](0),
+      new uint8[](0)
+    );
+
+    // Give the action creator the ability to use this strategy.
+    PermissionData memory permissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, testStrategy);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(newActionCreatorRole, permissionData, true);
+
+    // 2 > (5 - 5). So, the strategy should revert.
+    assertGt(
+      minDisapprovals,
+      mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
+        - mpPolicy.getPastQuantity(newActionCreator, newActionCreatorRole, block.timestamp - 1)
+    );
+    // 2 < (5 - 2). So, the strategy should not revert if there was a bug.
+    assertLt(
+      minDisapprovals,
+      mpPolicy.getPastRoleSupplyAsQuantitySum(newActionCreatorRole, block.timestamp - 1)
+        - mpPolicy.getQuantity(newActionCreator, newActionCreatorRole)
+    );
+    // The below assertion verifies that the strategy uses the disapproval quantity of `newActionCreator` at
+    // `actionCreationTime - 1` and it leads to triggering the `InsufficientDisapprovalQuantity` error. This error would
+    // not have been triggered if the strategy uses the disapproval quantity of `newActionCreator` at
+    // `actionCreationTime`.
+    vm.prank(newActionCreator);
+    vm.expectRevert(LlamaAbsoluteStrategyBase.InsufficientDisapprovalQuantity.selector);
+    mpCore.createAction(
+      newActionCreatorRole, testStrategy, address(mockProtocol), 0, abi.encodeCall(MockProtocol.pause, (true)), ""
     );
   }
 

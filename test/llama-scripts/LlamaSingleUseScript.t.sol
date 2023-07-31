@@ -21,12 +21,12 @@ contract LlamaSingleUseScriptTest is LlamaTestSetup {
   }
 
   function createPermissionAndActionAndApproveAndQueue() internal returns (ActionInfo memory actionInfo) {
-    bytes32 permissionId =
-      lens.computePermissionId(PermissionData(address(singleUseScript), MockSingleUseScript.run.selector, mpStrategy1));
+    PermissionData memory permissionData =
+      PermissionData(address(singleUseScript), MockSingleUseScript.run.selector, mpStrategy1);
     bytes memory data = abi.encodeCall(MockSingleUseScript.run, ());
 
     vm.prank(address(mpExecutor));
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionId, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), permissionData, true);
     vm.warp(block.timestamp + 1);
 
     vm.prank(actionCreatorAaron);
