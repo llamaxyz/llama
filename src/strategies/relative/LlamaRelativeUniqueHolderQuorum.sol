@@ -37,7 +37,7 @@ contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
   {
     if (role != disapprovalRole && !forceDisapprovalRole[role]) return 0;
     uint96 quantity = policy.getPastQuantity(policyholder, role, timestamp);
-    return quantity == 0 ? 0 : forceDisapprovalRole[role] ? type(uint96).max : 1;
+    return quantity == 0 ? 0 : (forceDisapprovalRole[role] ? type(uint96).max : 1);
   }
 
   /// @inheritdoc LlamaRelativeStrategyBase
