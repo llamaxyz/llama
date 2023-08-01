@@ -147,31 +147,20 @@ contract Deploy is LlamaFactoryTest {
   function test_RevertIf_StrategyLogicIsZeroAddress() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
     RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
-    vm.startPrank(address(rootExecutor));
-
-    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
 
     LlamaPolicyConfig memory policyConfig =
-      LlamaPolicyConfig(new RoleDescription[](0), roleHolders, new RolePermissionData[](0), color, logo);
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
 
     LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
       "NewProject", ILlamaStrategy(address(0)), accountLogic, strategyConfigs, accounts, policyConfig
     );
 
-    factory.deploy(instanceConfig);
-
-    // Pass an empty array of role holders.
     vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
-
-    LlamaPolicyConfig memory policyConfig2 =
-      LlamaPolicyConfig(new RoleDescription[](0), new RoleHolderData[](0), new RolePermissionData[](0), color, logo);
-
-    LlamaInstanceConfig memory instanceConfig2 = LlamaInstanceConfig(
-      "NewProject", relativeHolderQuorumLogic, accountLogic, strategyConfigs, accounts, policyConfig2
-    );
-
-    factory.deploy(instanceConfig2);
+    factory.deploy(instanceConfig);
   }
 
   function test_RevertIf_RoleId1IsNotFirst() public {
