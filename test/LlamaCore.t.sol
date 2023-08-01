@@ -1037,6 +1037,14 @@ contract CancelAction is LlamaCoreTest {
     mpCore.cancelAction(_actionInfo);
   }
 
+  function test_RevertIf_ActionDoesNotExist() public {
+    uint256 unusedActionId = mpCore.actionsCount();
+    ActionInfo memory _actionInfo =
+      ActionInfo(unusedActionId, address(0), uint8(0), ILlamaStrategy(address(0)), address(0), uint256(0), bytes(abi.encode(0)));
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.cancelAction(_actionInfo);
+  }
+
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
