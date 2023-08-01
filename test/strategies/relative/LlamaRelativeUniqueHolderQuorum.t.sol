@@ -585,7 +585,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     mineBlock();
 
-    // RandomPolicyHolder does not hold the ForceApprover role, so this should return 0.
+    // RandomPolicyHolder does not hold the ForceDisapprover role, so this should return 0.
     assertEq(
       testStrategy.getDisapprovalQuantityAt(randomPolicyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1), 0
     );
