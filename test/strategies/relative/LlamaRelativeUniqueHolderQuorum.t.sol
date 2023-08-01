@@ -365,7 +365,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
   }
 
-  function test_ReturnsZeroQuantityForForceRoleHoldersGrantedAfterTimestamp(
+  function test_ForceQuantityNotGrantedUntilABlockHasPast(
     address _policyHolder,
     uint256 _timeSincePermission
   ) public {
