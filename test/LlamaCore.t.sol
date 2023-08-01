@@ -1679,8 +1679,7 @@ contract CastApproval is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
 
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     actionInfo = _createAction();
 
@@ -1808,8 +1807,7 @@ contract CastApprovalBySig is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
 
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     ActionInfo memory actionInfo = _createAction();
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
@@ -1966,8 +1964,7 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
 
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
 
@@ -2125,8 +2122,7 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
 
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
+    mineBlock();
 
     ActionInfo memory actionInfo = _createApproveAndQueueAction();
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);

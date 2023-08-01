@@ -414,6 +414,7 @@ contract LlamaCore is Initializable {
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the approval by the policyholder.
+  /// @return The quantity of the cast.
   function castApproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external returns (uint96) {
     return _castApproval(msg.sender, role, actionInfo, reason);
   }
@@ -427,6 +428,7 @@ contract LlamaCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
+  /// @return The quantity of the cast.
   function castApprovalBySig(
     address policyholder,
     uint8 role,
@@ -447,6 +449,7 @@ contract LlamaCore is Initializable {
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the disapproval by the policyholder.
+  /// @return The quantity of the cast.
   function castDisapproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason)
     external
     returns (uint96)
@@ -463,6 +466,7 @@ contract LlamaCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
+  /// @return The quantity of the cast.
   function castDisapprovalBySig(
     address policyholder,
     uint8 role,
