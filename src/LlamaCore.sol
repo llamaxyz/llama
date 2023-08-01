@@ -643,7 +643,18 @@ contract LlamaCore is Initializable {
 
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
+
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
+
+    if (!actionInfo.strategy.isFixedLengthApprovalPeriod()) {
+      ActionState currentState = getActionState(actionInfo);
+      if (currentState == ActionState.Approved) {
+        uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
+        if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
+        action.minExecutionTime = minExecutionTime;
+        emit ActionQueued(actionInfo.id, policyholder, actionInfo.strategy, actionInfo.creator, minExecutionTime);
+      }
+    }
   }
 
   /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.

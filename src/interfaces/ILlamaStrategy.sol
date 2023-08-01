@@ -19,6 +19,9 @@ interface ILlamaStrategy {
   /// @notice Returns the name of the Llama policy that this strategy is registered to.
   function policy() external view returns (LlamaPolicy);
 
+  /// @notice Returns the a boolean detesmining whether this strategy has isFixedLengthApprovalPeriod enabled or not.
+  function isFixedLengthApprovalPeriod() external view returns (bool);
+
   // -------- At Strategy Creation --------
 
   /// @notice Initializes a new clone of the strategy.

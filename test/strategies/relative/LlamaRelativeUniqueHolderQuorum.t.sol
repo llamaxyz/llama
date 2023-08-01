@@ -578,9 +578,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
-
-    mpCore.queueAction(actionInfo);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, ""); // Approves and queues the action.
 
     vm.prank(randomPolicyHolder);
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
@@ -723,9 +721,7 @@ contract ValidateActionCancelation is LlamaRelativeHolderQuorumTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
-
-    mpCore.queueAction(actionInfo);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, ""); // Approves and queues the action.
 
     disapproveAction(_actionDisapprovals, actionInfo);
     assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
@@ -748,9 +744,7 @@ contract ValidateActionCancelation is LlamaRelativeHolderQuorumTest {
     ActionInfo memory actionInfo = createAction(testStrategy);
 
     vm.prank(address(approverAdam));
-    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
-
-    mpCore.queueAction(actionInfo);
+    mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, ""); // Approves and queues the action.
 
     disapproveAction(_actionDisapprovals, actionInfo);
     assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));

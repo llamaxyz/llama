@@ -1884,15 +1884,13 @@ contract CastDisapproval is LlamaCoreTest {
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+
     vm.warp(block.timestamp + 1);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
 
     uint256 executionTime = block.timestamp + toAbsolutePeerReview(newStrategy).queuingPeriod();
-    vm.expectEmit();
-    emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
-    mpCore.queueAction(actionInfo);
 
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -2832,7 +2830,7 @@ contract GetActionState is LlamaCoreTest {
     assertEq(currentState, activeState);
   }
 
-  function test_PassedActionsPriorToApprovalPeriodEndHaveStateApproved() public {
+  function test_PassedActionsQueueOnPassingApproval() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
     vm.startPrank(address(mpExecutor));
@@ -2864,8 +2862,8 @@ contract GetActionState is LlamaCoreTest {
     _approveAction(approverAndy, actionInfo);
 
     currentState = uint256(mpCore.getActionState(actionInfo));
-    uint256 approvedState = uint256(ActionState.Approved);
-    assertEq(currentState, approvedState);
+    uint256 queuedState = uint256(ActionState.Queued);
+    assertEq(currentState, queuedState);
   }
 
   function testFuzz_ApprovedActionsHaveStateApproved(uint256 _timeSinceCreation) public {

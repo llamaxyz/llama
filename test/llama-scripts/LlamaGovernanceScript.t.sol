@@ -144,8 +144,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     vm.prank(approverAlicia);
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.prank(approverAndy);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-    mpCore.queueAction(actionInfo);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, ""); // Approves and queues the action.
   }
 }
 
