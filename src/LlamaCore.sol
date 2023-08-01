@@ -631,7 +631,7 @@ contract LlamaCore is Initializable {
     {
       // Save action.
       Action storage newAction = actions[actionId];
-      newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
+      newAction.infoHash = _infoHash(actionInfo);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
 
@@ -773,29 +773,18 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Returns the hash of the `createAction` parameters using the `actionInfo` struct.
-  function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
-    return _infoHash(
-      actionInfo.id,
-      actionInfo.creator,
-      actionInfo.creatorRole,
-      actionInfo.strategy,
-      actionInfo.target,
-      actionInfo.value,
-      actionInfo.data
+  function _infoHash(ActionInfo memory actionInfo) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        actionInfo.strategy,
+        actionInfo.target,
+        actionInfo.value,
+        actionInfo.data
+      )
     );
-  }
-
-  /// @dev Returns the hash of the `createAction` parameters.
-  function _infoHash(
-    uint256 id,
-    address creator,
-    uint8 creatorRole,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data
-  ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
   /// @dev Validates that the hash of the `actionInfo` struct matches the provided hash.
