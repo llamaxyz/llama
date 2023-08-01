@@ -1676,7 +1676,7 @@ contract CastApproval is LlamaCoreTest {
     LlamaRelativeStrategyBase.Config[] memory newConfigs = new LlamaRelativeStrategyBase.Config[](1);
     newConfigs[0] = _createStrategy(1, true);
     ILlamaStrategy newStrategy = lens.computeLlamaStrategyAddress(
-        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newConfigs[0]), address(mpCore)
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newConfigs[0]), address(mpCore)
     );
     vm.prank(address(mpExecutor));
     mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newConfigs));
@@ -1698,7 +1698,7 @@ contract CastApproval is LlamaCoreTest {
     uint8 actionState = uint8(mpCore.getActionState(actionInfo));
 
     assertEq(actionState, uint8(ActionState.Active)); // should still be active since fixed length is true
-    assertEq(newStrategy.isActionApproved(actionInfo), true);    
+    assertEq(newStrategy.isActionApproved(actionInfo), true);
 
     vm.warp(block.timestamp + 1 days);
 
