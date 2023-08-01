@@ -1671,6 +1671,45 @@ contract CastApproval is LlamaCoreTest {
     );
     mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo, "");
   }
+
+  function test_DoesNotAutoQueueWhenFixedLengthApprovalPeriod() public {
+    LlamaRelativeStrategyBase.Config[] memory newConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    newConfigs[0] = _createStrategy(1, true);
+    ILlamaStrategy newStrategy = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newConfigs[0]), address(mpCore)
+    );
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newConfigs));
+
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, newStrategy);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
+
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    uint8 actionState = uint8(mpCore.getActionState(actionInfo));
+
+    assertEq(actionState, uint8(ActionState.Active)); // should still be active since fixed length is true
+    assertEq(newStrategy.isActionApproved(actionInfo), true);    
+
+    vm.warp(block.timestamp + 1 days);
+
+    actionState = uint8(mpCore.getActionState(actionInfo));
+    assertEq(actionState, uint8(ActionState.Approved)); // should be approved now
+
+    _queueAction(actionInfo);
+
+    actionState = uint8(mpCore.getActionState(actionInfo));
+    assertEq(actionState, uint8(ActionState.Queued));
+  }
 }
 
 contract CastApprovalBySig is LlamaCoreTest {
@@ -1889,8 +1928,6 @@ contract CastDisapproval is LlamaCoreTest {
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
-
-    uint256 executionTime = block.timestamp + toAbsolutePeerReview(newStrategy).queuingPeriod();
 
     vm.expectRevert(
       abi.encodeWithSelector(
