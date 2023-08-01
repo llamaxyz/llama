@@ -1586,22 +1586,6 @@ contract CastApproval is LlamaCoreTest {
     actionInfo = _createAction();
   }
 
-  function testFuzz_ReturnQuantity(uint96 quantity) public {
-    vm.assume(quantity > 0 && quantity < type(uint96).max);
-    vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
-
-    vm.roll(block.number + 1);
-    vm.warp(block.timestamp + 1);
-
-    actionInfo = _createAction();
-
-    vm.prank(approverAdam);
-    uint96 returnedQuantity = mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-
-    assertEq(quantity, returnedQuantity);
-  }
-
   function test_SuccessfulApproval() public {
     _approveAction(approverAdam, actionInfo);
     assertEq(mpCore.getAction(0).totalApprovals, 1);
@@ -1686,6 +1670,24 @@ contract CastApproval is LlamaCoreTest {
       )
     );
     mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo, "");
+  }
+
+  function testFuzz_ReturnQuantity(uint96 quantity) public {
+    // We subtract by 2 because total quantity cannot be greater than type(uint96).max.
+    // Two other polycholders already have a quantity of 1.
+    vm.assume(quantity > 0 && quantity < type(uint96).max - 2);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
+
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    actionInfo = _createAction();
+
+    vm.prank(approverAdam);
+    uint96 returnedQuantity = mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    assertEq(quantity, returnedQuantity);
   }
 }
 
@@ -1799,6 +1801,20 @@ contract CastApprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
     vm.prank(actionCreatorAaron);
     castApprovalBySig(actionInfo, v, r, s);
+  }
+
+  function test_ReturnQuantity() public {
+    uint96 quantity = 77;
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
+
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    ActionInfo memory actionInfo = _createAction();
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    uint96 returnedQuantity = mpCore.castApprovalBySig(approverAdam, uint8(Roles.Approver), actionInfo, "", v, r, s);
+    assertEq(quantity, returnedQuantity);
   }
 }
 
@@ -1942,6 +1958,24 @@ contract CastDisapproval is LlamaCoreTest {
 
     mpCore.executeAction(actionInfo); // should not revert
   }
+
+  function testFuzz_ReturnQuantity(uint96 quantity) public {
+    // We subtract by 2 because total quantity cannot be greater than type(uint96).max.
+    // Two other polycholders already have a quantity of 1.
+    vm.assume(quantity > 0 && quantity < type(uint96).max - 2);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
+
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    vm.prank(disapproverDrake);
+    uint96 returnedQuantity = mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
+
+    assertEq(quantity, returnedQuantity);
+  }
 }
 
 contract CastDisapprovalBySig is LlamaCoreTest {
@@ -2084,6 +2118,21 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
     vm.prank(actionCreatorAaron);
     castDisapprovalBySig(actionInfo, v, r, s);
+  }
+
+  function test_ReturnQuantity() public {
+    uint96 quantity = 77;
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
+
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    uint96 returnedQuantity =
+      mpCore.castDisapprovalBySig(disapproverDrake, uint8(Roles.Disapprover), actionInfo, "", v, r, s);
+    assertEq(quantity, returnedQuantity);
   }
 }
 
