@@ -3035,6 +3035,10 @@ contract LlamaCoreHarness is LlamaCore {
   function infoHash_exposed(ActionInfo calldata actionInfo) external pure returns (bytes32) {
     return _infoHash(actionInfo);
   }
+
+  function exposed_newCastCount(uint96 currentCount, uint96 quantity) external pure returns (uint96) {
+    return _newCastCount(currentCount, quantity);
+  }
 }
 
 contract InfoHash is LlamaCoreTest {
