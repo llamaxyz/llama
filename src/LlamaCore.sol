@@ -184,6 +184,11 @@ contract LlamaCore is Initializable {
     "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
   );
 
+  /// @dev EIP-712 cancelAction typehash.
+  bytes32 internal constant CANCEL_ACTION_TYPEHASH = keccak256(
+    "CancelAction(address policyholder,ActionInfo actionInfo,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
+  );
+
   /// @dev EIP-712 castApproval typehash.
   bytes32 internal constant CAST_APPROVAL_TYPEHASH = keccak256(
     "CastApproval(address policyholder,uint8 role,ActionInfo actionInfo,string reason,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
@@ -398,15 +403,23 @@ contract LlamaCore is Initializable {
   /// @dev Rules for cancelation are defined by the strategy.
   /// @param actionInfo Data required to create an action.
   function cancelAction(ActionInfo calldata actionInfo) external {
-    Action storage action = actions[actionInfo.id];
-    _validateActionInfoHash(action.infoHash, actionInfo);
+    _cancelAction(msg.sender, actionInfo);
+  }
 
-    // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
-    // address, and Solidity will revert since there is no code at the zero address.
-    actionInfo.strategy.validateActionCancelation(actionInfo, msg.sender);
-
-    action.canceled = true;
-    emit ActionCanceled(actionInfo.id, msg.sender);
+  /// @notice Cancels an action by its `actionInfo` struct via an off-chain signature.
+  /// @dev Rules for cancelation are defined by the strategy.
+  /// @param policyholder The policyholder that signed the message.
+  /// @param actionInfo Data required to create an action.
+  /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
+  /// @param r ECDSA signature component: x-coordinate of `R`
+  /// @param s ECDSA signature component: `s` value of the signature
+  function cancelActionBySig(address policyholder, ActionInfo calldata actionInfo, uint8 v, bytes32 r, bytes32 s)
+    external
+  {
+    bytes32 digest = _getCancelActionTypedDataHash(policyholder, actionInfo);
+    address signer = ecrecover(digest, v, r, s);
+    if (signer == address(0) || signer != policyholder) revert InvalidSignature();
+    _cancelAction(signer, actionInfo);
   }
 
   /// @notice How policyholders add their support of the approval of an action with a reason.
@@ -623,7 +636,7 @@ contract LlamaCore is Initializable {
     {
       // Save action.
       Action storage newAction = actions[actionId];
-      newAction.infoHash = _infoHash(actionId, policyholder, role, strategy, target, value, data);
+      newAction.infoHash = _infoHash(actionInfo);
       newAction.creationTime = LlamaUtils.toUint64(block.timestamp);
       newAction.isScript = authorizedScripts[target];
 
@@ -638,6 +651,19 @@ contract LlamaCore is Initializable {
     }
 
     emit ActionCreated(actionId, policyholder, role, strategy, target, value, data, description);
+  }
+
+  /// @dev Cancels an action by its `actionInfo` struct.
+  function _cancelAction(address policyholder, ActionInfo calldata actionInfo) internal {
+    Action storage action = actions[actionInfo.id];
+    _validateActionInfoHash(action.infoHash, actionInfo);
+
+    // We don't need an explicit check on action existence because if it doesn't exist the strategy will be the zero
+    // address, and Solidity will revert since there is no code at the zero address.
+    actionInfo.strategy.validateActionCancelation(actionInfo, policyholder);
+
+    action.canceled = true;
+    emit ActionCanceled(actionInfo.id, policyholder);
   }
 
   /// @dev How policyholders that have the right role contribute towards the approval of an action with a reason.
@@ -702,7 +728,7 @@ contract LlamaCore is Initializable {
 
   /// @dev Returns the new total count of approvals or disapprovals.
   function _newCastCount(uint96 currentCount, uint96 quantity) internal pure returns (uint96) {
-    if (currentCount == type(uint96).max || quantity == type(uint96).max) return type(uint96).max;
+    if (uint256(currentCount) + quantity >= type(uint96).max) return type(uint96).max;
     return currentCount + quantity;
   }
 
@@ -756,29 +782,18 @@ contract LlamaCore is Initializable {
   }
 
   /// @dev Returns the hash of the `createAction` parameters using the `actionInfo` struct.
-  function _infoHash(ActionInfo calldata actionInfo) internal pure returns (bytes32) {
-    return _infoHash(
-      actionInfo.id,
-      actionInfo.creator,
-      actionInfo.creatorRole,
-      actionInfo.strategy,
-      actionInfo.target,
-      actionInfo.value,
-      actionInfo.data
+  function _infoHash(ActionInfo memory actionInfo) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        actionInfo.strategy,
+        actionInfo.target,
+        actionInfo.value,
+        actionInfo.data
+      )
     );
-  }
-
-  /// @dev Returns the hash of the `createAction` parameters.
-  function _infoHash(
-    uint256 id,
-    address creator,
-    uint8 creatorRole,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data
-  ) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(id, creator, creatorRole, strategy, target, value, data));
   }
 
   /// @dev Validates that the hash of the `actionInfo` struct matches the provided hash.
@@ -833,6 +848,19 @@ contract LlamaCore is Initializable {
     );
 
     return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), createActionHash));
+  }
+
+  /// @dev Returns the hash of the ABI-encoded EIP-712 message for the `CancelAction` domain, which can be used to
+  /// recover the signer.
+  function _getCancelActionTypedDataHash(address policyholder, ActionInfo calldata actionInfo)
+    internal
+    returns (bytes32)
+  {
+    bytes32 cancelActionHash = keccak256(
+      abi.encode(CANCEL_ACTION_TYPEHASH, policyholder, _getActionInfoHash(actionInfo), _useNonce(policyholder, msg.sig))
+    );
+
+    return keccak256(abi.encodePacked("\x19\x01", _getDomainHash(), cancelActionHash));
   }
 
   /// @dev Returns the hash of the ABI-encoded EIP-712 message for the `CastApproval` domain, which can be used to
