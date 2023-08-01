@@ -693,7 +693,7 @@ contract LlamaCore is Initializable {
 
   /// @dev Returns the new total count of approvals or disapprovals.
   function _newCastCount(uint96 currentCount, uint96 quantity) internal pure returns (uint96) {
-    if (currentCount == type(uint96).max || quantity == type(uint96).max) return type(uint96).max;
+    if (uint256(currentCount) + quantity >= type(uint96).max) return type(uint96).max;
     return currentCount + quantity;
   }
 
