@@ -3135,6 +3135,10 @@ contract LlamaCoreHarness is LlamaCore {
   ) external pure returns (bytes32) {
     return _infoHash(id, creator, role, strategy, target, value, data);
   }
+
+  function exposed_newCastCount(uint96 currentCount, uint96 quantity) external pure returns (uint96) {
+    return _newCastCount(currentCount, quantity);
+  }
 }
 
 contract InfoHash is LlamaCoreTest {
@@ -3156,5 +3160,20 @@ contract InfoHash is LlamaCoreTest {
       actionInfo.data
     );
     assertEq(infoHash1, infoHash2);
+  }
+}
+
+contract NewCastCount is LlamaCoreTest {
+  LlamaCoreHarness llamaCoreHarness;
+
+  function setUp() public override {
+    llamaCoreHarness = new LlamaCoreHarness();
+  }
+
+  function testFuzz_NewCastCountIsUint96OverflowResistant(uint96 currentCount, uint96 quantity) public {
+    // Ensure the sum of the inputs doesn't overflow a uint256.
+    uint256 sum = uint256(currentCount) + quantity;
+    uint256 expectedCount = sum >= type(uint96).max ? type(uint96).max : sum;
+    assertEq(expectedCount, llamaCoreHarness.exposed_newCastCount(currentCount, quantity));
   }
 }
