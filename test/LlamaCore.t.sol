@@ -1705,7 +1705,10 @@ contract CastApproval is LlamaCoreTest {
     actionState = uint8(mpCore.getActionState(actionInfo));
     assertEq(actionState, uint8(ActionState.Approved)); // should be approved now
 
-    _queueAction(actionInfo);
+    uint256 executionTime = block.timestamp + toRelativeQuorum(newStrategy).queuingPeriod();
+    vm.expectEmit();
+    emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
+    mpCore.queueAction(actionInfo);
 
     actionState = uint8(mpCore.getActionState(actionInfo));
     assertEq(actionState, uint8(ActionState.Queued));
