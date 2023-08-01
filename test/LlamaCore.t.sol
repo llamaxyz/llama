@@ -1039,6 +1039,8 @@ contract CancelAction is LlamaCoreTest {
 
   function test_RevertIf_ActionDoesNotExist() public {
     uint256 unusedActionId = mpCore.actionsCount();
+    assertEq((mpCore.getAction(unusedActionId).infoHash), bytes32(0));
+
     ActionInfo memory _actionInfo = ActionInfo(
       unusedActionId, address(0), uint8(0), ILlamaStrategy(address(0)), address(0), uint256(0), bytes(abi.encode(0))
     );
