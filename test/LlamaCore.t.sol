@@ -3060,3 +3060,18 @@ contract InfoHash is LlamaCoreTest {
     assertEq(infoHash1, infoHash2);
   }
 }
+
+contract NewCastCount is LlamaCoreTest {
+  LlamaCoreHarness llamaCoreHarness;
+
+  function setUp() public override {
+    llamaCoreHarness = new LlamaCoreHarness();
+  }
+
+  function testFuzz_NewCastCountIsUint96OverflowResistant(uint96 currentCount, uint96 quantity) public {
+    // Ensure the sum of the inputs doesn't overflow a uint256.
+    uint256 sum = uint256(currentCount) + quantity;
+    uint256 expectedCount = sum >= type(uint96).max ? type(uint96).max : sum;
+    assertEq(expectedCount, llamaCoreHarness.exposed_newCastCount(currentCount, quantity));
+  }
+}
