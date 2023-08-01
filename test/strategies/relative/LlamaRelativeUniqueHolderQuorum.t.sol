@@ -365,10 +365,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
   }
 
-  function test_ForceQuantityNotGrantedUntilABlockHasPast(
-    address _policyHolder,
-    uint256 _timeSincePermission
-  ) public {
+  function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timeSincePermission) public {
     vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
