@@ -1586,6 +1586,22 @@ contract CastApproval is LlamaCoreTest {
     actionInfo = _createAction();
   }
 
+  function testFuzz_ReturnQuantity(uint96 quantity) public {
+    vm.assume(quantity > 0 && quantity < type(uint96).max);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
+
+    vm.roll(block.number + 1);
+    vm.warp(block.timestamp + 1);
+
+    actionInfo = _createAction();
+
+    vm.prank(approverAdam);
+    uint96 returnedQuantity = mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    assertEq(quantity, returnedQuantity);
+  }
+
   function test_SuccessfulApproval() public {
     _approveAction(approverAdam, actionInfo);
     assertEq(mpCore.getAction(0).totalApprovals, 1);
