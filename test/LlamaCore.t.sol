@@ -3036,18 +3036,6 @@ contract LlamaCoreHarness is LlamaCore {
     return _infoHash(actionInfo);
   }
 
-  function infoHash_exposed(
-    uint256 id,
-    address creator,
-    uint8 role,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data
-  ) external pure returns (bytes32) {
-    return _infoHash(id, creator, role, strategy, target, value, data);
-  }
-
   function exposed_newCastCount(uint96 currentCount, uint96 quantity) external pure returns (uint96) {
     return _newCastCount(currentCount, quantity);
   }
@@ -3060,16 +3048,18 @@ contract InfoHash is LlamaCoreTest {
     llamaCoreHarness = new LlamaCoreHarness();
   }
 
-  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+  function testFuzz_InfoHashIsDefinedAsHashingThePackedStruct(ActionInfo calldata actionInfo) public {
     bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
-    bytes32 infoHash2 = llamaCoreHarness.infoHash_exposed(
-      actionInfo.id,
-      actionInfo.creator,
-      actionInfo.creatorRole,
-      actionInfo.strategy,
-      actionInfo.target,
-      actionInfo.value,
-      actionInfo.data
+    bytes32 infoHash2 = keccak256(
+      abi.encodePacked(
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        actionInfo.strategy,
+        actionInfo.target,
+        actionInfo.value,
+        actionInfo.data
+      )
     );
     assertEq(infoHash1, infoHash2);
   }
