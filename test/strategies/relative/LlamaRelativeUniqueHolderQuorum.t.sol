@@ -365,8 +365,8 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
   }
 
-  function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timeSincePermission) public {
-    _timeSincePermission = bound(_timeSincePermission, block.timestamp + 1, type(uint64).max);
+  function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timestampAfterPermissionGranted) public {
+    _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
@@ -384,7 +384,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       0 // the account should still not have any quantity
     );
 
-    vm.warp(_timeSincePermission);
+    vm.warp(_timestampAfterPermissionGranted);
 
     assertEq(
       newStrategy.getApprovalQuantityAt(_policyHolder, uint8(Roles.ForceApprover), _timeSincePermission - 1),
