@@ -365,7 +365,10 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     mpCore.castApproval(uint8(Roles.ForceApprover), actionInfo, "");
   }
 
-  function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timestampAfterPermissionGranted) public {
+  function test_ForceQuantityNotGrantedUntilABlockHasPast(
+    address _policyHolder,
+    uint256 _timestampAfterPermissionGranted
+  ) public {
     _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
@@ -600,7 +603,10 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     mpCore.castDisapproval(uint8(Roles.ForceDisapprover), actionInfo, "");
   }
 
-    function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timestampAfterPermissionGranted) public {
+  function test_ForceQuantityNotGrantedUntilABlockHasPast(
+    address _policyHolder,
+    uint256 _timestampAfterPermissionGranted
+  ) public {
     _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
@@ -622,7 +628,9 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.warp(_timestampAfterPermissionGranted);
 
     assertEq(
-      newStrategy.getDisapprovalQuantityAt(_policyHolder, uint8(Roles.ForceDisapprover), _timestampAfterPermissionGranted - 1),
+      newStrategy.getDisapprovalQuantityAt(
+        _policyHolder, uint8(Roles.ForceDisapprover), _timestampAfterPermissionGranted - 1
+      ),
       type(uint96).max // the account should now have force approval quantity
     );
   }
