@@ -1271,14 +1271,14 @@ contract QueueAction is LlamaCoreTest {
       new uint8[](0)
     );
     ActionInfo memory actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
-     _approveAction(approverAdam, actionInfo);
-     _approveAction(approverAlicia, actionInfo);
-     ActionState actionState = mpCore.getActionState(actionInfo);
-     assertEq(uint8(actionState), uint8(ActionState.Queued));
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+    ActionState actionState = mpCore.getActionState(actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
 
-     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
-     // will revert because action was already queued automatically by the final action approval
-     mpCore.queueAction(actionInfo);
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    // will revert because action was already queued automatically by the final action approval
+    mpCore.queueAction(actionInfo);
   }
 }
 
@@ -1720,6 +1720,27 @@ contract CastApproval is LlamaCoreTest {
     emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, reason);
     vm.prank(approverAdam);
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, reason);
+  }
+
+  function test_SuccessfullyQueuesUponReachingApprovalThreshold() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory _actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+    _approveAction(approverAdam, _actionInfo);
+    _approveAction(approverAlicia, _actionInfo); // should queue the action
+
+    ActionState actionState = mpCore.getActionState(_actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
   }
 
   function test_UsesQuantityFromPreviousTimestamp() public {
