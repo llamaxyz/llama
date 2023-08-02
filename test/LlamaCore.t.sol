@@ -2792,7 +2792,7 @@ contract CreateAccounts is LlamaCoreTest {
     newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
 
     vm.prank(address(mpExecutor));
-    mpCore.setAccountLogicAuthorization(address(0), true);
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(address(0)), true);
 
     vm.expectRevert();
     mpCore.createAccounts(ILlamaAccount(address(0)), DeployUtils.encodeAccountConfigs(newAccounts));
