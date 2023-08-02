@@ -22,6 +22,12 @@ contract LlamaCoreSigUtils {
     uint256 nonce;
   }
 
+  struct CancelAction {
+    address policyholder;
+    ActionInfo actionInfo;
+    uint256 nonce;
+  }
+
   struct CastApproval {
     address policyholder;
     uint8 role;
@@ -45,6 +51,11 @@ contract LlamaCoreSigUtils {
   /// @notice EIP-712 createAction typehash.
   bytes32 internal constant CREATE_ACTION_TYPEHASH = keccak256(
     "CreateAction(address policyholder,uint8 role,address strategy,address target,uint256 value,bytes data,string description,uint256 nonce)"
+  );
+
+  /// @dev EIP-712 cancelAction typehash.
+  bytes32 internal constant CANCEL_ACTION_TYPEHASH = keccak256(
+    "CancelAction(address policyholder,ActionInfo actionInfo,uint256 nonce)ActionInfo(uint256 id,address creator,uint8 creatorRole,address strategy,address target,uint256 value,bytes data)"
   );
 
   /// @notice EIP-712 castApproval typehash.
@@ -98,6 +109,24 @@ contract LlamaCoreSigUtils {
   /// recover the signer.
   function getCreateActionTypedDataHash(CreateAction memory createAction) internal view returns (bytes32) {
     return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getCreateActionHash(createAction)));
+  }
+
+  /// @notice Returns the hash of CancelAction.
+  function getCancelActionHash(CancelAction memory cancelAction) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encode(
+        CANCEL_ACTION_TYPEHASH,
+        cancelAction.policyholder,
+        getActionInfoHash(cancelAction.actionInfo),
+        cancelAction.nonce
+      )
+    );
+  }
+
+  /// @notice Returns the hash of the fully encoded EIP-712 message for the CancelAction domain, which can be used to
+  /// recover the signer.
+  function getCancelActionTypedDataHash(CancelAction memory cancelAction) internal view returns (bytes32) {
+    return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, getCancelActionHash(cancelAction)));
   }
 
   /// @notice Returns the hash of CastApproval.

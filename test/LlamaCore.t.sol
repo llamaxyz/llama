@@ -1037,6 +1037,17 @@ contract CancelAction is LlamaCoreTest {
     mpCore.cancelAction(_actionInfo);
   }
 
+  function test_RevertIf_ActionDoesNotExist() public {
+    uint256 unusedActionId = mpCore.actionsCount();
+    assertEq((mpCore.getAction(unusedActionId).infoHash), bytes32(0));
+
+    ActionInfo memory _actionInfo = ActionInfo(
+      unusedActionId, address(0), uint8(0), ILlamaStrategy(address(0)), address(0), uint256(0), bytes(abi.encode(0))
+    );
+    vm.expectRevert(LlamaCore.InfoHashMismatch.selector);
+    mpCore.cancelAction(_actionInfo);
+  }
+
   function test_RevertIf_AlreadyCanceled() public {
     vm.startPrank(actionCreatorAaron);
     mpCore.cancelAction(actionInfo);
@@ -1096,6 +1107,94 @@ contract CancelAction is LlamaCoreTest {
 
     vm.expectRevert(LlamaRelativeStrategyBase.OnlyActionCreator.selector);
     mpCore.cancelAction(actionInfo);
+  }
+}
+
+contract CancelActionBySig is LlamaCoreTest {
+  function createOffchainSignature(ActionInfo memory actionInfo, uint256 privateKey)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    LlamaCoreSigUtils.CancelAction memory cancelAction =
+      LlamaCoreSigUtils.CancelAction({policyholder: actionCreatorAaron, actionInfo: actionInfo, nonce: 0});
+    bytes32 digest = getCancelActionTypedDataHash(cancelAction);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
+  function cancelActionBySig(ActionInfo memory actionInfo, uint8 v, bytes32 r, bytes32 s) internal {
+    mpCore.cancelActionBySig(actionCreatorAaron, actionInfo, v, r, s);
+  }
+
+  function test_CancelActionBySig() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    vm.expectEmit();
+    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
+
+    cancelActionBySig(actionInfo, v, r, s);
+
+    uint256 state = uint256(mpCore.getActionState(actionInfo));
+    uint256 canceled = uint256(ActionState.Canceled);
+    assertEq(state, canceled);
+  }
+
+  function test_CheckNonceIncrements() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.cancelActionBySig.selector), 0);
+    cancelActionBySig(actionInfo, v, r, s);
+    assertEq(mpCore.nonces(actionCreatorAaron, LlamaCore.cancelActionBySig.selector), 1);
+  }
+
+  function test_OperationCannotBeReplayed() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+    cancelActionBySig(actionInfo, v, r, s);
+    // Invalid Signature error since the recovered signer address during the second call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
+  }
+
+  function test_RevertIf_SignerIsNotPolicyHolder() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (, uint256 randomSignerPrivateKey) = makeAddrAndKey("randomSigner");
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, randomSignerPrivateKey);
+    // Invalid Signature error since the recovered signer address is not the same as the policyholder passed in as
+    // parameter.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
+  }
+
+  function test_RevertIf_SignerIsZeroAddress() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+    // Invalid Signature error since the recovered signer address is zero address due to invalid signature values
+    // (v,r,s).
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, (v + 1), r, s);
+  }
+
+  function test_RevertIf_PolicyholderIncrementsNonce() public {
+    ActionInfo memory actionInfo = _createAction();
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, actionCreatorAaronPrivateKey);
+
+    vm.prank(actionCreatorAaron);
+    mpCore.incrementNonce(LlamaCore.cancelActionBySig.selector);
+
+    // Invalid Signature error since the recovered signer address during the call is not the same as policyholder
+    // since nonce has increased.
+    vm.expectRevert(LlamaCore.InvalidSignature.selector);
+    cancelActionBySig(actionInfo, v, r, s);
   }
 }
 
@@ -3036,18 +3135,6 @@ contract LlamaCoreHarness is LlamaCore {
     return _infoHash(actionInfo);
   }
 
-  function infoHash_exposed(
-    uint256 id,
-    address creator,
-    uint8 role,
-    ILlamaStrategy strategy,
-    address target,
-    uint256 value,
-    bytes calldata data
-  ) external pure returns (bytes32) {
-    return _infoHash(id, creator, role, strategy, target, value, data);
-  }
-
   function exposed_newCastCount(uint96 currentCount, uint96 quantity) external pure returns (uint96) {
     return _newCastCount(currentCount, quantity);
   }
@@ -3060,16 +3147,18 @@ contract InfoHash is LlamaCoreTest {
     llamaCoreHarness = new LlamaCoreHarness();
   }
 
-  function testFuzz_InfoHashMethodsAreEquivalent(ActionInfo calldata actionInfo) public {
+  function testFuzz_InfoHashIsDefinedAsHashingThePackedStruct(ActionInfo calldata actionInfo) public {
     bytes32 infoHash1 = llamaCoreHarness.infoHash_exposed(actionInfo);
-    bytes32 infoHash2 = llamaCoreHarness.infoHash_exposed(
-      actionInfo.id,
-      actionInfo.creator,
-      actionInfo.creatorRole,
-      actionInfo.strategy,
-      actionInfo.target,
-      actionInfo.value,
-      actionInfo.data
+    bytes32 infoHash2 = keccak256(
+      abi.encodePacked(
+        actionInfo.id,
+        actionInfo.creator,
+        actionInfo.creatorRole,
+        actionInfo.strategy,
+        actionInfo.target,
+        actionInfo.value,
+        actionInfo.data
+      )
     );
     assertEq(infoHash1, infoHash2);
   }
