@@ -369,6 +369,8 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     address _policyHolder,
     uint256 _timestampAfterPermissionGranted
   ) public {
+    // the purpose of this test is to check that granting a force role to a policyholder after the action creation,
+    // should not allow them to participate in that action with the force role.
     _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
@@ -384,7 +386,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     assertEq(
       newStrategy.getApprovalQuantityAt(_policyHolder, uint8(Roles.ForceApprover), block.timestamp - 1),
-      0 // the account should still not have any quantity
+      0 // the account should still not have any quantity, even though they now have the force approval role
     );
 
     vm.warp(_timestampAfterPermissionGranted);
@@ -607,6 +609,8 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     address _policyHolder,
     uint256 _timestampAfterPermissionGranted
   ) public {
+    // the purpose of this test is to check that granting a force role to a policyholder after the action creation,
+    // should not allow them to participate in that action with the force role.
     _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
@@ -622,7 +626,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
 
     assertEq(
       newStrategy.getDisapprovalQuantityAt(_policyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1),
-      0 // the account should still not have any quantity
+      0 // the account should still not have any quantity, even though they now have the force disapproval role
     );
 
     vm.warp(_timestampAfterPermissionGranted);
