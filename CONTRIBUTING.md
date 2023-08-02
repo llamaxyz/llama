@@ -6,15 +6,15 @@ NOTE: This format should only be followed after your PR gets approved and you ar
 
 Please consider these guidelines when filing a pull request:
 
-*  Please write tests.
-*  After your PR gets approved, you should squash your commits when merging to main, and follow the convention below.
+* Please write tests.
+* After your PR gets approved, you should squash your commits when merging to main, and follow the convention below.
 
 ## Final Commit Message Format
 
 Commit message consists of a **header**, a **body** and a **footer**.  The header has a special
 format that includes a **type**, a **scope**, **subject**, and should also include the PR number in parenthesis:
 
-```
+```html
 feat(Buttons): Added Button Groups (#622)
 <BLANK LINE>
 <body>
@@ -31,7 +31,8 @@ Finally, describe what effects the change will have. Sometimes this is trivial, 
 ### Example
 
 An example of a fix commit would look like this:
-```
+
+```markdown
 fix: Remove semicolon from N4CC's set of wrappable chars (#201)
 
 **Motivation:**
@@ -50,8 +51,10 @@ the comment is correct. There is no difference in behavior since validation
 happens after unwrapping: a semicolon in a cookie value will cause the
 validation to fail regardless of whether the value is wrapped.
 ```
+
 Another example would be of an feature that contains a breaking change:
-```
+
+```markdown
 feat: Introduce `.withDeadlines` API for admission control (#228)
 
 **Motivation:**
@@ -75,6 +78,7 @@ when adding additional params.
 ```
 
 ### Type
+
 Must be one of the following:
 
 * **feat**: A new feature
