@@ -1772,9 +1772,9 @@ contract CastApproval is LlamaCoreTest {
   }
 
   function testFuzz_ReturnQuantity(uint96 quantity) public {
-    // We subtract by 2 because total quantity cannot be greater than type(uint96).max.
-    // Two other policyholders already have a quantity of 1.
-    vm.assume(quantity > 0 && quantity < type(uint96).max - 2);
+    // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
+    // Two other policyholders already have a quantity of 1 and bound is inclusive.
+    bound(quantity, 1, type(uint96).max - 3);
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
 
@@ -2057,9 +2057,9 @@ contract CastDisapproval is LlamaCoreTest {
   }
 
   function testFuzz_ReturnQuantity(uint96 quantity) public {
-    // We subtract by 2 because total quantity cannot be greater than type(uint96).max.
-    // Two other polycholders already have a quantity of 1.
-    vm.assume(quantity > 0 && quantity < type(uint96).max - 2);
+    // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
+    // Two other policyholders already have a quantity of 1 and bound is inclusive.
+    bound(quantity, 1, type(uint96).max - 3);
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
 
