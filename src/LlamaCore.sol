@@ -683,7 +683,7 @@ contract LlamaCore is Initializable {
     emit DisapprovalCast(actionInfo.id, policyholder, role, quantity, reason);
   }
 
-  /// @dev updates state of an action to `ActionState::Queued` and emits an event. Used in `queueAction` &
+  /// @dev Updates state of an action to `ActionState::Queued` and emits an event. Used in `queueAction` and
   /// `_castApproval`.
   function _queueAction(Action storage action, ActionInfo calldata actionInfo, address policyholder) internal {
     uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
