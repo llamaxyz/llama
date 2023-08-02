@@ -1737,11 +1737,17 @@ contract CastApproval is LlamaCoreTest {
     );
     ActionInfo memory _actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
     _approveAction(approverAdam, _actionInfo);
-    
+
     vm.expectEmit();
     emit ApprovalCast(_actionInfo.id, approverAlicia, uint8(Roles.Approver), 1, "");
     vm.expectEmit();
-    emit ActionQueued(_actionInfo.id, approverAlicia, absolutePeerReview, actionCreatorAaron, absolutePeerReview.minExecutionTime(_actionInfo));
+    emit ActionQueued(
+      _actionInfo.id,
+      approverAlicia,
+      absolutePeerReview,
+      actionCreatorAaron,
+      absolutePeerReview.minExecutionTime(_actionInfo)
+    );
     vm.prank(approverAlicia);
     mpCore.castApproval(uint8(Roles.Approver), _actionInfo, "");
 
