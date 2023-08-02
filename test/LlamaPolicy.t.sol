@@ -1506,4 +1506,10 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
     vm.expectRevert(bytes("Initializable: contract is already initialized"));
     mpPolicyMetadata.initialize(abi.encode(color, logo));
   }
+
+  function test_RevertIf_MetadataLogicIsZeroAddress() public {
+    vm.expectRevert();
+    vm.prank(address(mpExecutor));
+    mpPolicy.setAndInitializePolicyMetadata(ILlamaPolicyMetadata(address(0)), abi.encode(newColor, newLogo));
+  }
 }

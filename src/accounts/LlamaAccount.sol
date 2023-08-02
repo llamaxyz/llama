@@ -130,10 +130,14 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
 
   /// @notice Initializes a new `LlamaAccount` clone.
   /// @param config Llama account initialization configuration.
-  function initialize(bytes memory config) external initializer {
+  /// @return This return statement is harcoded to `true` to ensure that initializing an EOA (like the zero address)
+  /// will revert.
+  function initialize(bytes memory config) external initializer returns (bool) {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
     Config memory accountConfig = abi.decode(config, (Config));
     name = accountConfig.name;
+
+    return true;
   }
 
   // ===========================================

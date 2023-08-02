@@ -159,7 +159,7 @@ contract Deploy is LlamaFactoryTest {
       "NewProject", ILlamaStrategy(address(0)), accountLogic, strategyConfigs, accounts, policyConfig
     );
 
-    vm.expectRevert(LlamaFactory.InvalidDeployConfiguration.selector);
+    vm.expectRevert();
     factory.deploy(instanceConfig);
   }
 

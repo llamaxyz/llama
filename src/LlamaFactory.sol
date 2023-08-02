@@ -50,13 +50,11 @@ contract LlamaFactory {
   /// @param instanceConfig The configuration of the new Llama instance.
   /// @return core The address of the `LlamaCore` of the deployed instance.
   function deploy(LlamaInstanceConfig memory instanceConfig) external returns (LlamaCore core) {
-    // The strategy logic address can't be the zero address. There also must be at least one role
-    // holder with role ID of 1, since that role ID is initially given permission to call
-    // `setRolePermission`. This is required to reduce the chance that an instance is deployed
-    // with an invalid configuration that results in the instance being unusable. Role ID 1
-    // is referred to as the bootstrap role. We require that the bootstrap role is the
+    // There must be at least one role holder with role ID of 1, since that role ID is initially
+    // given permission to call `setRolePermission`. This is required to reduce the chance that an
+    // instance is deployed with an invalid configuration that results in the instance being unusable.
+    // Role ID 1 is referred to as the bootstrap role. We require that the bootstrap role is the
     // first role in the `roleHolders` array, and that it never expires.
-    if (address(instanceConfig.strategyLogic) == address(0)) revert InvalidDeployConfiguration();
     if (instanceConfig.policyConfig.roleHolders.length == 0) revert InvalidDeployConfiguration();
     if (instanceConfig.policyConfig.roleHolders[0].role != BOOTSTRAP_ROLE) revert InvalidDeployConfiguration();
     if (instanceConfig.policyConfig.roleHolders[0].expiration != type(uint64).max) revert InvalidDeployConfiguration();

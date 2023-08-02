@@ -2687,6 +2687,17 @@ contract CreateAccounts is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
   }
+
+  function test_RevertIf_AccountLogicIsZeroAddress() public {
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+
+    vm.prank(address(mpExecutor));
+    mpCore.setAccountLogicAuthorization(address(0), true);
+
+    vm.expectRevert();
+    mpCore.createAccounts(ILlamaAccount(address(0)), DeployUtils.encodeAccountConfigs(newAccounts));
+  }
 }
 
 contract SetGuard is LlamaCoreTest {

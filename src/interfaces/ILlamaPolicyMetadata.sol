@@ -8,7 +8,9 @@ interface ILlamaPolicyMetadata {
   /// @notice Initializes a new clone of the policy metadata contract.
   /// @param config The policy metadata configuration, encoded as bytes to support differing initialization arguments in
   /// different policy metadata logic contracts.
-  function initialize(bytes memory config) external;
+  /// @return This return statement is harcoded to `true` to ensure that initializing an EOA (like the zero address)
+  /// will revert.
+  function initialize(bytes memory config) external returns (bool);
 
   /// @notice Returns the token URI for a given Llama policy ID.
   /// @param name The name of the Llama instance.
