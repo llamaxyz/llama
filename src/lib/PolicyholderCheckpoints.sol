@@ -62,6 +62,11 @@ library PolicyholderCheckpoints {
      * `timestamp`.
      *
      * Returns previous quantity and new quantity.
+     *
+     * @dev Note that the order of the `expiration` and `quantity` parameters is reversed from the ordering used
+     * everywhere else in this file. The struct and other methods have the order as `(expiration, quantity)` but this
+     * method has it as `(quantity, expiration)`. As a result, use caution when editing this method to avoid
+     * accidentally introducing a bug or breaking change.
      */
     function push(History storage self, uint256 quantity, uint256 expiration) internal returns (uint96, uint96) {
         return _insert(self._checkpoints, LlamaUtils.toUint64(block.timestamp), LlamaUtils.toUint64(expiration), LlamaUtils.toUint96(quantity));
