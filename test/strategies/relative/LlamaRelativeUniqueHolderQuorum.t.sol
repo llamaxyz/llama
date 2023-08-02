@@ -387,7 +387,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.warp(_timestampAfterPermissionGranted);
 
     assertEq(
-      newStrategy.getApprovalQuantityAt(_policyHolder, uint8(Roles.ForceApprover), _timeSincePermission - 1),
+      newStrategy.getApprovalQuantityAt(_policyHolder, uint8(Roles.ForceApprover), _timestampAfterPermissionGranted - 1),
       type(uint96).max // the account should now have force approval quantity
     );
   }
