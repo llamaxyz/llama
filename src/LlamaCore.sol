@@ -365,7 +365,7 @@ contract LlamaCore is Initializable {
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
-    _queueAction(action, actionInfo, msg.sender);
+    _queueAction(action, actionInfo);
   }
 
   /// @notice Execute an action by its `actionInfo` struct if it's in Queued state and `minExecutionTime` has passed.
@@ -669,7 +669,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
 
     ActionState currentState = getActionState(actionInfo);
-    if (currentState == ActionState.Approved) _queueAction(action, actionInfo, policyholder);
+    if (currentState == ActionState.Approved) _queueAction(action, actionInfo);
   }
 
   /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
@@ -685,11 +685,11 @@ contract LlamaCore is Initializable {
 
   /// @dev Updates state of an action to `ActionState::Queued` and emits an event. Used in `queueAction` and
   /// `_castApproval`.
-  function _queueAction(Action storage action, ActionInfo calldata actionInfo, address policyholder) internal {
+  function _queueAction(Action storage action, ActionInfo calldata actionInfo) internal {
     uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
     if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
     action.minExecutionTime = minExecutionTime;
-    emit ActionQueued(actionInfo.id, policyholder, actionInfo.strategy, actionInfo.creator, minExecutionTime);
+    emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
