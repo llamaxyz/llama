@@ -1982,6 +1982,40 @@ contract CastApprovalBySig is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     castApprovalBySig(actionInfo, v, r, s);
   }
+
+  function test_SuccessfullyQueuesUponReachingApprovalThreshold() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+    _approveAction(approverAlicia, actionInfo);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    vm.expectEmit();
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, "");
+    vm.expectEmit();
+    emit ActionQueued(
+      actionInfo.id,
+      actionCreatorAaron,
+      absolutePeerReview,
+      actionCreatorAaron,
+      absolutePeerReview.minExecutionTime(actionInfo)
+    );
+    vm.prank(actionCreatorAaron);
+    castApprovalBySig(actionInfo, v, r, s);
+
+    ActionState actionState = mpCore.getActionState(actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
+  }
 }
 
 contract CastDisapproval is LlamaCoreTest {
