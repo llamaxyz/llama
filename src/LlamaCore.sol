@@ -668,6 +668,11 @@ contract LlamaCore is Initializable {
     approvals[actionInfo.id][policyholder] = true;
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
 
+    // We call `getActionState` here to determine if we should queue the action. This works because: The of the ordering
+    // in `LlamaCore.getActionState` checks `.isActionActive()` first, and if not, then it calls `.isActionApproved`. The
+    // strategy's `.isActionActive()` will return true until after the fixed length approval period. At that point, the
+    // strategy's `.isActionActive()` will return false. Then `.isActionApproved()` will be queried and (maybe) return
+    // true. If it does, then we queue.
     ActionState currentState = getActionState(actionInfo);
     if (currentState == ActionState.Approved) _queueAction(action, actionInfo);
   }
