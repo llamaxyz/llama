@@ -366,7 +366,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
   }
 
   function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timeSincePermission) public {
-    vm.assume(_timeSincePermission > block.timestamp && _timeSincePermission < type(uint64).max);
+    _timeSincePermission = bound(_timeSincePermission, block.timestamp + 1, type(uint64).max);
     vm.assume(_policyHolder != address(0));
 
     ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
