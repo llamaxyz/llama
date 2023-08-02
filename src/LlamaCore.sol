@@ -689,7 +689,7 @@ contract LlamaCore is Initializable {
     uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
     if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
     action.minExecutionTime = minExecutionTime;
-    emit ActionQueued(actionInfo.id, policyholder, actionInfo.strategy, actionInfo.creator, minExecutionTime);
+    emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
