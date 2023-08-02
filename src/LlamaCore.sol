@@ -365,10 +365,7 @@ contract LlamaCore is Initializable {
     ActionState currentState = getActionState(actionInfo);
     if (currentState != ActionState.Approved) revert InvalidActionState(currentState);
 
-    uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
-    if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
-    action.minExecutionTime = minExecutionTime;
-    emit ActionQueued(actionInfo.id, msg.sender, actionInfo.strategy, actionInfo.creator, minExecutionTime);
+    _queueAction(action, actionInfo, msg.sender);
   }
 
   /// @notice Execute an action by its `actionInfo` struct if it's in Queued state and `minExecutionTime` has passed.
@@ -673,12 +670,7 @@ contract LlamaCore is Initializable {
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
 
     ActionState currentState = getActionState(actionInfo);
-    if (currentState == ActionState.Approved) {
-      uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
-      if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
-      action.minExecutionTime = minExecutionTime;
-      emit ActionQueued(actionInfo.id, policyholder, actionInfo.strategy, actionInfo.creator, minExecutionTime);
-    }
+    if (currentState == ActionState.Approved) _queueAction(action, actionInfo, policyholder);
   }
 
   /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
@@ -690,6 +682,13 @@ contract LlamaCore is Initializable {
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
     emit DisapprovalCast(actionInfo.id, policyholder, role, quantity, reason);
+  }
+
+  function _queueAction(Action storage action, ActionInfo calldata actionInfo, address policyholder) internal {
+    uint64 minExecutionTime = actionInfo.strategy.minExecutionTime(actionInfo);
+    if (minExecutionTime < block.timestamp) revert MinExecutionTimeCannotBeInThePast();
+    action.minExecutionTime = minExecutionTime;
+    emit ActionQueued(actionInfo.id, policyholder, actionInfo.strategy, actionInfo.creator, minExecutionTime);
   }
 
   /// @dev The only `expectedState` values allowed to be passed into this method are Active or Queued.
