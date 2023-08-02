@@ -666,7 +666,6 @@ contract LlamaCore is Initializable {
 
     action.totalApprovals = _newCastCount(action.totalApprovals, quantity);
     approvals[actionInfo.id][policyholder] = true;
-
     emit ApprovalCast(actionInfo.id, policyholder, role, quantity, reason);
 
     ActionState currentState = getActionState(actionInfo);
