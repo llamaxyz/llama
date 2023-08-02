@@ -1844,7 +1844,7 @@ contract CastApproval is LlamaCoreTest {
     assertEq(actionState, uint8(ActionState.Active)); // should still be active since fixed length is true
     assertEq(newStrategy.isActionApproved(actionInfo), true);
 
-    vm.warp(block.timestamp + 1 days);
+    vm.warp(newStrategy.minExecutionTime(actionInfo));
 
     actionState = uint8(mpCore.getActionState(actionInfo));
     assertEq(actionState, uint8(ActionState.Approved)); // should be approved now
