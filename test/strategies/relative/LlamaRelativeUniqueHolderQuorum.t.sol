@@ -122,7 +122,6 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
-    mpPolicy.setRoleHolder(uint8(Roles.ForceDisapprover), address(approverAdam), 1, type(uint64).max);
   }
 }
 
