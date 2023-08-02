@@ -122,6 +122,7 @@ contract LlamaRelativeHolderQuorumTest is LlamaRelativeStrategyBaseTest {
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.ForceApprover), address(approverAdam), 1, type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.ForceDisapprover), address(approverAdam), 1, type(uint64).max);
   }
 }
 
@@ -598,6 +599,33 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
     vm.prank(randomPolicyHolder);
     vm.expectRevert(LlamaCore.InvalidPolicyholder.selector);
     mpCore.castDisapproval(uint8(Roles.ForceDisapprover), actionInfo, "");
+  }
+
+    function test_ForceQuantityNotGrantedUntilABlockHasPast(address _policyHolder, uint256 _timestampAfterPermissionGranted) public {
+    _timestampAfterPermissionGranted = bound(_timestampAfterPermissionGranted, block.timestamp + 1, type(uint64).max);
+    vm.assume(_policyHolder != address(0));
+
+    ILlamaStrategy newStrategy = deployRelativeUniqueHolderQuorumWithForceApproval();
+
+    assertEq(
+      newStrategy.getDisapprovalQuantityAt(_policyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1),
+      0 // the account should not have quantity
+    );
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.ForceDisapprover), _policyHolder, 1, type(uint64).max);
+
+    assertEq(
+      newStrategy.getDisapprovalQuantityAt(_policyHolder, uint8(Roles.ForceDisapprover), block.timestamp - 1),
+      0 // the account should still not have any quantity
+    );
+
+    vm.warp(_timestampAfterPermissionGranted);
+
+    assertEq(
+      newStrategy.getDisapprovalQuantityAt(_policyHolder, uint8(Roles.ForceDisapprover), _timestampAfterPermissionGranted - 1),
+      type(uint96).max // the account should now have force approval quantity
+    );
   }
 }
 
