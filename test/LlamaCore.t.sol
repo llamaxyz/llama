@@ -1256,6 +1256,30 @@ contract QueueAction is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
     assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
   }
+
+  function test_RevertIf_AlreadyQueuedAutomatically() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+     _approveAction(approverAdam, actionInfo);
+     _approveAction(approverAlicia, actionInfo);
+     ActionState actionState = mpCore.getActionState(actionInfo);
+     assertEq(uint8(actionState), uint8(ActionState.Queued));
+
+     vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+     // will revert because action was already queued automatically by the final action approval
+     mpCore.queueAction(actionInfo);
+  }
 }
 
 contract ExecuteAction is LlamaCoreTest {
