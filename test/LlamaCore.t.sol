@@ -1774,9 +1774,9 @@ contract CastApproval is LlamaCoreTest {
   function testFuzz_ReturnQuantity(uint96 quantity) public {
     // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
     // Two other policyholders already have a quantity of 1 and bound is inclusive.
-    bound(quantity, 1, type(uint96).max - 3);
+    uint96 boundedQuantity = uint96(bound(quantity, 1, type(uint96).max - 3));
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, boundedQuantity, type(uint64).max);
 
     mineBlock();
 
@@ -1785,7 +1785,7 @@ contract CastApproval is LlamaCoreTest {
     vm.prank(approverAdam);
     uint96 returnedQuantity = mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
 
-    assertEq(quantity, returnedQuantity);
+    assertEq(boundedQuantity, returnedQuantity);
   }
 }
 
@@ -2059,9 +2059,9 @@ contract CastDisapproval is LlamaCoreTest {
   function testFuzz_ReturnQuantity(uint96 quantity) public {
     // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
     // Two other policyholders already have a quantity of 1 and bound is inclusive.
-    bound(quantity, 1, type(uint96).max - 3);
+    uint96 boundedQuantity = uint96(bound(quantity, 1, type(uint96).max - 3));
     vm.prank(address(mpExecutor));
-    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, boundedQuantity, type(uint64).max);
 
     mineBlock();
 
@@ -2070,7 +2070,7 @@ contract CastDisapproval is LlamaCoreTest {
     vm.prank(disapproverDrake);
     uint96 returnedQuantity = mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
 
-    assertEq(quantity, returnedQuantity);
+    assertEq(boundedQuantity, returnedQuantity);
   }
 }
 
