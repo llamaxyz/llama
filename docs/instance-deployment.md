@@ -113,7 +113,7 @@ The policy config takes the form of the following struct:
   ]
   ```
 
-  - In this example, we are assigning the policyholder `0xdeadbeef` role 1, with the max expiration (`type(uint64).max`), and a quantity of 1.
+  - In this example, we are assigning the policyholder `0xdeadbeef` role 1 with the max expiration (`type(uint64).max`) and a quantity of 1.
 
 TODO: update the Role Permissions section after PR 450 merges
 

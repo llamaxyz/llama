@@ -17,7 +17,7 @@ Actions are composed of the following parameters:
 - [Core](https://github.com/llamaxyz/llama/blob/main/src/LlamaCore.sol): Manages the action process from creation to execution.
   - Actions: Proposals made by policyholders to execute onchain transactions.
   - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.
-  - Guards: Guards enable custom safety checks and logic to run at action creation, and pre and post action execution. Guards can also be used to add arbitrary logic such as spending limits or calldata permissioning.
+  - Guards: Guards enable custom safety checks and logic to run at action creation, pre-execution, and post-execution. Guards can also be used to add arbitrary logic such as spending limits or calldata permissioning.
   - Scripts: Contracts that are delegate called from the Executor instead of called. Scripts can be used to batch calls together for extended functionality.
 - [Policy](https://github.com/llamaxyz/llama/blob/main/src/LlamaPolicy.sol): An ERC721 contract where each token is non-transferable, functions as the respective policy for a given policyholder, and has roles assigned to `create`, `approve` and `disapprove` actions.
   - Policies: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
@@ -59,7 +59,7 @@ We can call the `getActionState` method on `LlamaCore` to get the current state 
 ## Permissioning Action Creation
 
 Permission IDs are the atomic unit for action creation access control and are managed through the `LlamaPolicy` contract.
-Permission IDs can be assigned to roles, roles are assigned to policies, and accounts (users) hold policies.
+Permission IDs can be assigned to roles, roles are assigned to policies, and externally-owned accounts and smart contracts (users) hold policies.
 Policies can have zero or many roles, and roles can have zero or many permission IDs.
 When creating an action, LlamaCore performs a validation check is done to make sure that the policyholder has a role with the correct permission.
 Additional checks may be run by the strategy or a guard.
@@ -84,7 +84,7 @@ To authorize and unauthorize strategies, we use the `authorizeStrategy` function
 
 ## Approvals and Disapprovals
 
-The ability to cast approvals and disapprovals will typically be controlled by roles defined in a `ILlamaStrategy` contract, and are set explicitly on the strategy contract at deployment.
+The ability to cast approvals and disapprovals will typically be controlled by roles defined in a `ILlamaStrategy` contract and are set explicitly on the strategy contract at deployment.
 Each strategy can have exactly one approval role and one disapproval role.
 Policyholders with the correct approval/disapproval roles are able to cast their approvals/disapprovals on the action, which determines whether or not the action passes or fails.
 Policyholders without the correct approval/disapproval role are not able to cast.
