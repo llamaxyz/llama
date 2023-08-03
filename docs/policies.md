@@ -19,7 +19,7 @@ Similarly, policyholders cannot burn their own policy; policies can only be revo
 
 ### Granting Policies
 
-Llama policies can be granted to EOAs as well as other smart contracts, allowing a great deal of flexibility.
+Llama policies can be granted to both EOAs and smart contracts, allowing a great deal of flexibility.
 To grant a new policy, an existing policyholder must create an action that calls the `setRoleHolder` method on the `LlamaPolicy` contract.
 When calling `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint96 quantity, uint64 expiration)`.
 
