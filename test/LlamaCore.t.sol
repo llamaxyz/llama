@@ -2481,6 +2481,30 @@ contract CreateStrategies is LlamaCoreTest {
 
     assertEqStrategyStatus(mpCore, strategyAddress, true, true);
   }
+
+  function test_RevertIf_StrategyLogicIsZeroAddress() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 4 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    vm.startPrank(address(mpExecutor));
+
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(address(0)), true);
+
+    vm.expectRevert();
+    mpCore.createStrategies(ILlamaStrategy(address(0)), DeployUtils.encodeStrategyConfigs(newStrategies));
+  }
 }
 
 contract AuthorizeStrategy is LlamaCoreTest {
