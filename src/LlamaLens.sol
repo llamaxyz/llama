@@ -111,17 +111,17 @@ contract LlamaLens {
 
   /// @notice Computes the address of a Llama strategy contract with the strategy configuration value.
   /// @param llamaStrategyLogic The Llama strategy logic contract.
-  /// @param strategy The initialization configuration for the new strategy to be created.
+  /// @param strategyConfig The initialization configuration for the new strategy to be created.
   /// @param llamaCore The Llama core to be set.
   /// @return The computed address of the strategy contract.
-  function computeLlamaStrategyAddress(address llamaStrategyLogic, bytes memory strategy, address llamaCore)
+  function computeLlamaStrategyAddress(address llamaStrategyLogic, bytes memory strategyConfig, address llamaCore)
     external
     pure
     returns (ILlamaStrategy)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaStrategyLogic,
-      keccak256(strategy), // salt
+      keccak256(strategyConfig), // salt
       llamaCore // deployer
     );
     return ILlamaStrategy(_computedAddress);
@@ -129,17 +129,17 @@ contract LlamaLens {
 
   /// @notice Computes the address of a Llama account contract with the account configuration value.
   /// @param llamaAccountLogic The Llama account logic contract.
-  /// @param account The initialization configuration for the new account to be created.
+  /// @param accountConfig The initialization configuration for the new account to be created.
   /// @param llamaCore The Llama core to be set.
   /// @return The computed address of the account contract.
-  function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory account, address llamaCore)
+  function computeLlamaAccountAddress(address llamaAccountLogic, bytes memory accountConfig, address llamaCore)
     external
     pure
     returns (ILlamaAccount)
   {
     address _computedAddress = Clones.predictDeterministicAddress(
       llamaAccountLogic,
-      keccak256(account), // salt
+      keccak256(accountConfig), // salt
       llamaCore // deployer
     );
     return ILlamaAccount(_computedAddress);

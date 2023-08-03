@@ -16,9 +16,11 @@ contract MockAccountLogicContract is ILlamaAccount, Initializable {
   address public llamaExecutor;
   uint256 public creationTime;
 
-  function initialize(bytes memory config) external initializer {
+  function initialize(bytes memory config) external initializer returns (bool) {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
     Config memory accountConfig = abi.decode(config, (Config));
     creationTime = accountConfig.creationTime;
+
+    return true;
   }
 }

@@ -15,5 +15,7 @@ interface ILlamaAccount {
   /// @notice Initializes a new clone of the account.
   /// @param config The account configuration, encoded as bytes to support differing constructor arguments in
   /// different account logic contracts.
-  function initialize(bytes memory config) external;
+  /// @return This return statement is harcoded to `true` to ensure that initializing an EOA (like the zero address)
+  /// will revert.
+  function initialize(bytes memory config) external returns (bool);
 }

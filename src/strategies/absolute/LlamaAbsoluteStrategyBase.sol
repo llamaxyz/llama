@@ -133,7 +133,7 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // -------- At Strategy Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function initialize(bytes memory config) external virtual initializer {
+  function initialize(bytes memory config) external virtual initializer returns (bool) {
     Config memory strategyConfig = abi.decode(config, (Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
@@ -169,6 +169,8 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
       _assertValidRole(role, numRoles);
       forceDisapprovalRole[role] = true;
     }
+
+    return true;
   }
 
   // -------- At Action Creation --------

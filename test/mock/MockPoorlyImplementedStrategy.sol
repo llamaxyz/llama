@@ -102,7 +102,7 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
   // -------- At Strategy Creation --------
 
   /// @inheritdoc ILlamaStrategy
-  function initialize(bytes memory config) external initializer {
+  function initialize(bytes memory config) external initializer returns (bool) {
     LlamaAbsoluteStrategyBase.Config memory strategyConfig = abi.decode(config, (LlamaAbsoluteStrategyBase.Config));
     llamaCore = LlamaCore(msg.sender);
     policy = llamaCore.policy();
@@ -141,6 +141,8 @@ contract MockPoorlyImplementedAbsolutePeerReview is ILlamaStrategy, Initializabl
     }
 
     emit StrategyCreated(llamaCore, policy);
+
+    return true;
   }
 
   // -------- At Action Creation --------

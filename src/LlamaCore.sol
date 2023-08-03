@@ -211,8 +211,6 @@ contract LlamaCore is Initializable {
   LlamaExecutor public executor;
 
   /// @notice The ERC721 contract that defines the policies for this Llama instance.
-  /// @dev We intentionally put this first so it's packed with the `Initializable` storage
-  // variables, which are the key variables we want to check before and after a delegatecall.
   LlamaPolicy public policy;
 
   /// @notice Name of this Llama instance.
@@ -426,7 +424,8 @@ contract LlamaCore is Initializable {
   /// @param role The role the policyholder uses to cast their approval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the approval by the policyholder.
-  function castApproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
+  /// @return The quantity of the cast.
+  function castApproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external returns (uint96) {
     return _castApproval(msg.sender, role, actionInfo, reason);
   }
 
@@ -439,6 +438,7 @@ contract LlamaCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
+  /// @return The quantity of the cast.
   function castApprovalBySig(
     address policyholder,
     uint8 role,
@@ -447,7 +447,7 @@ contract LlamaCore is Initializable {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external returns (uint96) {
     bytes32 digest = _getCastApprovalTypedDataHash(policyholder, role, actionInfo, reason);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
@@ -459,7 +459,11 @@ contract LlamaCore is Initializable {
   /// @param role The role the policyholder uses to cast their disapproval.
   /// @param actionInfo Data required to create an action.
   /// @param reason The reason given for the disapproval by the policyholder.
-  function castDisapproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason) external {
+  /// @return The quantity of the cast.
+  function castDisapproval(uint8 role, ActionInfo calldata actionInfo, string calldata reason)
+    external
+    returns (uint96)
+  {
     return _castDisapproval(msg.sender, role, actionInfo, reason);
   }
 
@@ -472,6 +476,7 @@ contract LlamaCore is Initializable {
   /// @param v ECDSA signature component: Parity of the `y` coordinate of point `R`
   /// @param r ECDSA signature component: x-coordinate of `R`
   /// @param s ECDSA signature component: `s` value of the signature
+  /// @return The quantity of the cast.
   function castDisapprovalBySig(
     address policyholder,
     uint8 role,
@@ -480,7 +485,7 @@ contract LlamaCore is Initializable {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external returns (uint96) {
     bytes32 digest = _getCastDisapprovalTypedDataHash(policyholder, role, actionInfo, reason);
     address signer = ecrecover(digest, v, r, s);
     if (signer == address(0) || signer != policyholder) revert InvalidSignature();
@@ -661,6 +666,7 @@ contract LlamaCore is Initializable {
   /// @dev How policyholders that have the right role contribute towards the approval of an action with a reason.
   function _castApproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
+    returns (uint96)
   {
     (Action storage action, uint96 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Active);
 
@@ -674,17 +680,21 @@ contract LlamaCore is Initializable {
     // If `.isActionApproved()` returns `true`, then we queue.
     ActionState currentState = getActionState(actionInfo);
     if (currentState == ActionState.Approved) _queueAction(action, actionInfo);
+
+    return quantity;
   }
 
   /// @dev How policyholders that have the right role contribute towards the disapproval of an action with a reason.
   function _castDisapproval(address policyholder, uint8 role, ActionInfo calldata actionInfo, string memory reason)
     internal
+    returns (uint96)
   {
     (Action storage action, uint96 quantity) = _preCastAssertions(actionInfo, policyholder, role, ActionState.Queued);
 
     action.totalDisapprovals = _newCastCount(action.totalDisapprovals, quantity);
     disapprovals[actionInfo.id][policyholder] = true;
     emit DisapprovalCast(actionInfo.id, policyholder, role, quantity, reason);
+    return quantity;
   }
 
   /// @dev Updates state of an action to `ActionState::Queued` and emits an event. Used in `queueAction` and
