@@ -67,7 +67,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @dev Ensures that none of the ERC721 `transfer` and `approval` functions can be called, so that the policies are
-  /// soulbound.
+  /// non-transferable.
   modifier nonTransferableToken() {
     _; // We put this ahead of the revert so we don't get an unreachable code warning.
     revert NonTransferableToken();

@@ -1256,6 +1256,30 @@ contract QueueAction is LlamaCoreTest {
     mpCore.queueAction(actionInfo);
     assertEq(uint8(mpCore.getActionState(actionInfo)), uint8(ActionState.Queued));
   }
+
+  function test_RevertIf_AlreadyQueuedAutomatically() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+    ActionState actionState = mpCore.getActionState(actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
+
+    vm.expectRevert(abi.encodePacked(LlamaCore.InvalidActionState.selector, uint256(ActionState.Queued)));
+    // will revert because action was already queued automatically by the final action approval
+    mpCore.queueAction(actionInfo);
+  }
 }
 
 contract ExecuteAction is LlamaCoreTest {
@@ -1698,6 +1722,39 @@ contract CastApproval is LlamaCoreTest {
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, reason);
   }
 
+  function test_SuccessfullyQueuesUponReachingApprovalThreshold() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory _actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+    _approveAction(approverAdam, _actionInfo);
+
+    vm.expectEmit();
+    emit ApprovalCast(_actionInfo.id, approverAlicia, uint8(Roles.Approver), 1, "");
+    vm.expectEmit();
+    emit ActionQueued(
+      _actionInfo.id,
+      approverAlicia,
+      absolutePeerReview,
+      actionCreatorAaron,
+      absolutePeerReview.minExecutionTime(_actionInfo)
+    );
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), _actionInfo, "");
+
+    ActionState actionState = mpCore.getActionState(_actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
+  }
+
   function test_UsesQuantityFromPreviousTimestamp() public {
     // Generate a new user so they have no checkpoint history (to ensure checkpoints are monotonically increasing).
     address newApprover = makeAddr("newApprover");
@@ -1769,6 +1826,65 @@ contract CastApproval is LlamaCoreTest {
       )
     );
     mpCore.castApproval(uint8(Roles.ActionCreator), actionInfo, "");
+  }
+
+  function testFuzz_ReturnQuantity(uint96 quantity) public {
+    // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
+    // Two other policyholders already have a quantity of 1 and bound is inclusive.
+    uint96 boundedQuantity = uint96(bound(quantity, 1, type(uint96).max - 3));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, boundedQuantity, type(uint64).max);
+
+    mineBlock();
+
+    actionInfo = _createAction();
+
+    vm.prank(approverAdam);
+    uint96 returnedQuantity = mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    assertEq(boundedQuantity, returnedQuantity);
+  }
+
+  function test_DoesNotAutoQueueWhenFixedLengthApprovalPeriod() public {
+    LlamaRelativeStrategyBase.Config[] memory newConfigs = new LlamaRelativeStrategyBase.Config[](1);
+    newConfigs[0] = _createStrategy(1, true);
+    ILlamaStrategy newStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newConfigs[0]), address(mpCore)
+    );
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(relativeHolderQuorumLogic, DeployUtils.encodeStrategyConfigs(newConfigs));
+
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, newStrategy);
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
+
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+
+    _approveAction(approverAdam, actionInfo);
+    _approveAction(approverAlicia, actionInfo);
+
+    uint8 actionState = uint8(mpCore.getActionState(actionInfo));
+
+    assertEq(actionState, uint8(ActionState.Active)); // should still be active since fixed length is true
+    assertEq(newStrategy.isActionApproved(actionInfo), true);
+
+    vm.warp(newStrategy.minExecutionTime(actionInfo));
+
+    actionState = uint8(mpCore.getActionState(actionInfo));
+    assertEq(actionState, uint8(ActionState.Approved)); // should be approved now
+
+    uint256 executionTime = block.timestamp + toRelativeQuorum(newStrategy).queuingPeriod();
+    vm.expectEmit();
+    emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
+    mpCore.queueAction(actionInfo);
+
+    actionState = uint8(mpCore.getActionState(actionInfo));
+    assertEq(actionState, uint8(ActionState.Queued));
   }
 }
 
@@ -1883,6 +1999,52 @@ contract CastApprovalBySig is LlamaCoreTest {
     vm.prank(actionCreatorAaron);
     castApprovalBySig(actionInfo, v, r, s);
   }
+
+  function test_ReturnQuantity() public {
+    uint96 quantity = 77;
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Approver), approverAdam, quantity, type(uint64).max);
+
+    mineBlock();
+
+    ActionInfo memory actionInfo = _createAction();
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    uint96 returnedQuantity = mpCore.castApprovalBySig(approverAdam, uint8(Roles.Approver), actionInfo, "", v, r, s);
+    assertEq(quantity, returnedQuantity);
+  }
+
+  function test_SuccessfullyQueuesUponReachingApprovalThreshold() public {
+    ILlamaStrategy absolutePeerReview = deployAbsolutePeerReview(
+      uint8(Roles.Approver),
+      uint8(Roles.Disapprover),
+      1 days,
+      4 days,
+      1 days,
+      false,
+      2,
+      1,
+      new uint8[](0),
+      new uint8[](0)
+    );
+    ActionInfo memory actionInfo = createActionUsingAbsolutePeerReview(absolutePeerReview);
+    _approveAction(approverAlicia, actionInfo);
+
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, approverAdamPrivateKey);
+    vm.expectEmit();
+    emit ApprovalCast(actionInfo.id, approverAdam, uint8(Roles.Approver), 1, "");
+    vm.expectEmit();
+    emit ActionQueued(
+      actionInfo.id,
+      address(this),
+      absolutePeerReview,
+      actionCreatorAaron,
+      absolutePeerReview.minExecutionTime(actionInfo)
+    );
+    castApprovalBySig(actionInfo, v, r, s);
+
+    ActionState actionState = mpCore.getActionState(actionInfo);
+    assertEq(uint8(actionState), uint8(ActionState.Queued));
+  }
 }
 
 contract CastDisapproval is LlamaCoreTest {
@@ -1983,15 +2145,11 @@ contract CastDisapproval is LlamaCoreTest {
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data, "");
     ActionInfo memory actionInfo =
       ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), newStrategy, address(mockProtocol), 0, data);
+
     vm.warp(block.timestamp + 1);
 
     _approveAction(approverAdam, actionInfo);
     _approveAction(approverAlicia, actionInfo);
-
-    uint256 executionTime = block.timestamp + toAbsolutePeerReview(newStrategy).queuingPeriod();
-    vm.expectEmit();
-    emit ActionQueued(actionInfo.id, address(this), newStrategy, actionCreatorAaron, executionTime);
-    mpCore.queueAction(actionInfo);
 
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -2024,6 +2182,23 @@ contract CastDisapproval is LlamaCoreTest {
     assertEq(uint8(state), uint8(ActionState.Queued));
 
     mpCore.executeAction(actionInfo); // should not revert
+  }
+
+  function testFuzz_ReturnQuantity(uint96 quantity) public {
+    // We subtract by 3 because total quantity cannot be greater than type(uint96).max.
+    // Two other policyholders already have a quantity of 1 and bound is inclusive.
+    uint96 boundedQuantity = uint96(bound(quantity, 1, type(uint96).max - 3));
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, boundedQuantity, type(uint64).max);
+
+    mineBlock();
+
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+
+    vm.prank(disapproverDrake);
+    uint96 returnedQuantity = mpCore.castDisapproval(uint8(Roles.Disapprover), actionInfo, "");
+
+    assertEq(boundedQuantity, returnedQuantity);
   }
 }
 
@@ -2167,6 +2342,20 @@ contract CastDisapprovalBySig is LlamaCoreTest {
     (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
     vm.prank(actionCreatorAaron);
     castDisapprovalBySig(actionInfo, v, r, s);
+  }
+
+  function test_ReturnQuantity() public {
+    uint96 quantity = 77;
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.Disapprover), disapproverDrake, quantity, type(uint64).max);
+
+    mineBlock();
+
+    ActionInfo memory actionInfo = _createApproveAndQueueAction();
+    (uint8 v, bytes32 r, bytes32 s) = createOffchainSignature(actionInfo, disapproverDrakePrivateKey);
+    uint96 returnedQuantity =
+      mpCore.castDisapprovalBySig(disapproverDrake, uint8(Roles.Disapprover), actionInfo, "", v, r, s);
+    assertEq(quantity, returnedQuantity);
   }
 }
 
@@ -2419,6 +2608,30 @@ contract CreateStrategies is LlamaCoreTest {
     mpCore.executeAction(actionInfo);
 
     assertEqStrategyStatus(mpCore, strategyAddress, true, true);
+  }
+
+  function test_RevertIf_StrategyLogicIsZeroAddress() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 4 days,
+      queuingPeriod: 14 days,
+      expirationPeriod: 3 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 2000,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    vm.startPrank(address(mpExecutor));
+
+    mpCore.setStrategyLogicAuthorization(ILlamaStrategy(address(0)), true);
+
+    vm.expectRevert();
+    mpCore.createStrategies(ILlamaStrategy(address(0)), DeployUtils.encodeStrategyConfigs(newStrategies));
   }
 }
 
@@ -2725,6 +2938,17 @@ contract CreateAccounts is LlamaCoreTest {
     vm.prank(address(mpExecutor));
     mpCore.createAccounts(ILlamaAccount(accountLogic), DeployUtils.encodeAccountConfigs(newAccounts));
   }
+
+  function test_RevertIf_AccountLogicIsZeroAddress() public {
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccount2"});
+
+    vm.prank(address(mpExecutor));
+    mpCore.setAccountLogicAuthorization(ILlamaAccount(address(0)), true);
+
+    vm.expectRevert();
+    mpCore.createAccounts(ILlamaAccount(address(0)), DeployUtils.encodeAccountConfigs(newAccounts));
+  }
 }
 
 contract SetGuard is LlamaCoreTest {
@@ -2931,7 +3155,7 @@ contract GetActionState is LlamaCoreTest {
     assertEq(currentState, activeState);
   }
 
-  function test_PassedActionsPriorToApprovalPeriodEndHaveStateApproved() public {
+  function test_PassedActionsQueueOnPassingApproval() public {
     address actionCreatorAustin = makeAddr("actionCreatorAustin");
 
     vm.startPrank(address(mpExecutor));
@@ -2963,8 +3187,8 @@ contract GetActionState is LlamaCoreTest {
     _approveAction(approverAndy, actionInfo);
 
     currentState = uint256(mpCore.getActionState(actionInfo));
-    uint256 approvedState = uint256(ActionState.Approved);
-    assertEq(currentState, approvedState);
+    uint256 queuedState = uint256(ActionState.Queued);
+    assertEq(currentState, queuedState);
   }
 
   function testFuzz_ApprovedActionsHaveStateApproved(uint256 _timeSinceCreation) public {

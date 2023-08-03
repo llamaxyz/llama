@@ -6,6 +6,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {SolarrayLlama} from "test/utils/SolarrayLlama.sol";
 import {LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {
@@ -141,6 +142,63 @@ contract Deploy is LlamaFactoryTest {
 
     vm.prank(disapproverDrake);
 
+    factory.deploy(instanceConfig);
+  }
+
+  function test_RevertIf_StrategyLogicIsZeroAddress() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", ILlamaStrategy(address(0)), accountLogic, strategyConfigs, accounts, policyConfig
+    );
+
+    vm.expectRevert();
+    factory.deploy(instanceConfig);
+  }
+
+  function test_RevertIf_AccountLogicIsZeroAddress() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(address(0)), strategyConfigs, accounts, policyConfig
+    );
+
+    vm.expectRevert();
+    factory.deploy(instanceConfig);
+  }
+
+  function test_RevertIf_AccountLogicIsEOA() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(approverAdam), strategyConfigs, accounts, policyConfig
+    );
+
+    vm.expectRevert();
     factory.deploy(instanceConfig);
   }
 
