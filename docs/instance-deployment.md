@@ -140,7 +140,7 @@ TODO: update the Role Permissions section after PR 450 merges
   ]
   ```
 
-- **Color:** The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
+- **Color:** The primary color of the SVG representation of the instance's policy specified as a hex rgb value (e.g. #00FF00).
 - **Logo:** The SVG string representing the logo for the deployed Llama instance's NFT.
 
 ## Deployed Contracts
