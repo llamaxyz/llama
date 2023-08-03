@@ -183,6 +183,25 @@ contract Deploy is LlamaFactoryTest {
     factory.deploy(instanceConfig);
   }
 
+  function test_RevertIf_AccountLogicIsEOA() public {
+    bytes[] memory strategyConfigs = strategyConfigsRootLlama();
+    bytes[] memory accounts = accountConfigsRootLlama();
+    RoleDescription[] memory roleDescriptionStrings = SolarrayLlama.roleDescription(
+      "AllHolders", "ActionCreator", "Approver", "Disapprover", "TestRole1", "TestRole2", "MadeUpRole"
+    );
+    RoleHolderData[] memory roleHolders = defaultActionCreatorRoleHolder(actionCreatorAaron);
+
+    LlamaPolicyConfig memory policyConfig =
+      LlamaPolicyConfig(roleDescriptionStrings, roleHolders, new RolePermissionData[](0), color, logo);
+
+    LlamaInstanceConfig memory instanceConfig = LlamaInstanceConfig(
+      "NewProject", relativeHolderQuorumLogic, ILlamaAccount(approverAdam), strategyConfigs, accounts, policyConfig
+    );
+
+    vm.expectRevert();
+    factory.deploy(instanceConfig);
+  }
+
   function test_RevertIf_RoleId1IsNotFirst() public {
     bytes[] memory strategyConfigs = strategyConfigsRootLlama();
     bytes[] memory accounts = accountConfigsRootLlama();
