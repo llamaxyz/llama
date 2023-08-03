@@ -80,12 +80,12 @@ The policy config takes the form of the following struct:
 
 ```solidity
   struct LlamaPolicyConfig {
-    RoleDescription[] roleDescriptions;
-    RoleHolderData[] roleHolders;
-    RolePermissionData[] rolePermissions;
-    string color;
-    string logo;
-  }
+    RoleDescription[] roleDescriptions; // The initial role descriptions.
+    RoleHolderData[] roleHolders; // The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
+    RolePermissionData[] rolePermissions; // The `role`, `permissionData`, and  the `hasPermission` boolean.
+    string color; // The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
+    string logo; // The SVG string representing the logo for the deployed Llama instance's NFT.
+  } 
 ```
 
 - **Role Descriptions**: An array of the initial role descriptions.
@@ -118,14 +118,24 @@ The policy config takes the form of the following struct:
 
 TODO: update the Role Permissions section after PR 450 merges
 
-- **Role Permissions** The `role`, `permissionId` and whether the initial roles have the permission of the role permissions.
+- **Role Permissions** The `role`, `permissionData` and whether the initial roles have the permission of the role permissions.
+  - `role` is the role ID to be assigned
+  - `permissionData` is the `(target, selector, strategy)` tuple that will be keccak256 hashed to generate the permission ID to assign the role.
+    - `selector`: The function selector being permissioned.
+    - `strategy`: The strategy address to be used for this kind of action.
+    - `target`: The target contract address.
+  - `hasPermission` will always be set to true during deployments.
   - Example JSON blob for `RolePermissionData`:
   
   ```JSON
   "initialRolePermissions": [
     {
-      "permissionId": "0x7f2fc4a63a37e0531a5e9f35f09ea48850f610f5966d07b751f0a62c701cd7f5",
       "role": 1,
+      "permissionData": {
+        "selector": "0x51288356",
+        "strategy": "0x9c7e3be11cB2f4D9A7fA0643D7b76569AF838782",
+        "target": "0x6aDaEfec2bC0ee7003e48320d4a346a6Be882950"
+      },
       "hasPermission": true
     }
   ]
