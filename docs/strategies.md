@@ -24,7 +24,7 @@ Setting the approval period to 0 in tandem with the `minApprovals` or `minApprov
 The queuing period is the inverse of the approval period and can also be thought of as the disapproval period.
 It defines the amount of time that policyholders have to disapprove an action.
 The queuing period can be disabled if set to 0, which would mean actions cannot be disapproved after they pass the approval period.
-Setting the queuing period to 0 enables instant execution after the approval period.
+Setting the queuing period to 0 enables immediate execution after the approval period
 
 ### `expirationPeriod`
 
