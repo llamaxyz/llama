@@ -233,7 +233,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (`createAction`,
-  /// `castApproval` and `castDisapproval`) signed by the policyholder.
+  /// `cancelAction`, `castApproval` and `castDisapproval`) signed by the policyholder.
   mapping(address policyholder => mapping(bytes4 selector => uint256 currentNonce)) public nonces;
 
   /// @notice Mapping of target to selector to actionGuard address.
