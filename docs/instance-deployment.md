@@ -1,15 +1,14 @@
 # Instance Deployment
 
-To use Llama to manage onchain privileged access functions, you must first deploy your own instance.
+To use Llama to govern your smart contract system's privileged access functions, you must first deploy your own instance.
 
 ## Key Concepts
 
-- [Factory](../src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances, and there will be one factory per chain supported by Llama.
+- [Factory](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances and there will be one factory per chain supported by Llama.
 - [Instance]((https://github.com/llamaxyz/llama/blob/main/blob/main/diagrams/llama-overview.png)): A Llama instance is a self managed cluster of contracts that enables onchain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
 
-To deploy we can call the `deploy` method on [the Llama Factory contract](../src/LlamaFactory.sol).
+To deploy, call the `deploy` method on [the Llama Factory contract](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol).
 Deploying Llama instances requires some configuration and set up, since we have to initialize the system with the base set of permissions and rules describing who can do what.
-A list of all official deployed Llama Factory contracts can be found [here](../README.md#Deployments)
 
 ## Configuration
 
@@ -33,10 +32,10 @@ struct LlamaInstanceConfig {
 
 Lets look at each field one by one:
 
-- **Name**: The name of the Llama instance.
+- **Name:** The name of the Llama instance.
 - **Strategy** Logic: The initial strategy implementation (logic) contract. See [here]((../README.md#Deployments)) for a list of deployed strategy logic contracts, and [here](./strategy-comparison.md) learn about their differences.
-- **Account Logic**: The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
-- **Initial Strategies**: An array of initial strategy configurations.
+- **Account Logic:** The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
+- **Initial Strategies:** An array of initial strategy configurations.
   - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](../src/strategies/relative/LlamaRelativeStrategyBase.sol):
 
     ```JSON
@@ -56,9 +55,9 @@ Lets look at each field one by one:
     ]
     ```
 
-  - You can read more about what each of these fields mean [here](./strategies.md)
+  - You can read more about what each of these fields mean [here](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md)
   
-- **Initial Accounts**: An array of initial account configurations.
+- **Initial Accounts:** An array of initial account configurations.
   - All that is needed to configure an account is to give it a name; here is an example JSON blob that configures two accounts:
 
   ```JSON
@@ -72,7 +71,7 @@ Lets look at each field one by one:
     ]
   ```
 
-- **Policy Config**: The configuration of the instance's policy. Since the policy config struct is fairly complex, we will give it it's own section.
+- **Policy Config:** The configuration of the instance's policy. Since the policy config struct is fairly complex, we will give it it's own section.
 
 ### Policy Config
 
@@ -88,7 +87,7 @@ The policy config takes the form of the following struct:
   } 
 ```
 
-- **Role Descriptions**: An array of the initial role descriptions.
+- **Role Descriptions:** An array of the initial role descriptions.
   - `RoleDescription` is a UDVT, but functions like a `bytes` string under the hood.
   - Example JSON blob for role descriptions:
 
@@ -100,7 +99,7 @@ The policy config takes the form of the following struct:
   ]
   ```
 
-- **Role Holders**: The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
+- **Role Holders:** The `role`, `policyholder`, `quantity` and `expiration` of the initial role holders.
   - Example JSON blob for `RoleHolderData`:
   
   ```JSON
@@ -141,8 +140,8 @@ TODO: update the Role Permissions section after PR 450 merges
   ]
   ```
 
-- **Color**: The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
-- **Logo**: The SVG string representing the logo for the deployed Llama instance's NFT.
+- **Color:** The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
+- **Logo:** The SVG string representing the logo for the deployed Llama instance's NFT.
 
 ## Deployed Contracts
 

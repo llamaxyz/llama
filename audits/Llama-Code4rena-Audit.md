@@ -2565,7 +2565,7 @@ This way, `quantity` will only ever need to be assigned to policyholders assigne
 
 ### 2.5 No actual way to access role descriptions via mapping
 
-In the `policy-management.md` doc it states that:
+In the `policies.md` doc it states that:
 > When roles are created, a description is provided. This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer. 
 
 However, there is no actual way to access roleId via role descriptions in contract. Policy holders cannot access role descriptions and roleIds convieniently except via protocol UI.

@@ -1,17 +1,16 @@
-# Action Creation
+# Actions
 
-In Llama, actions are proposed transactions initiated by policyholders that are executed onchain.
+Actions are proposed, executable transactions that can be initiated by policyholders.
 
-This may include changing protocol parameters, transferring funds from a treasury, activating an emergency pause, etc.
-Actions are how your Llama instance interacts with external contracts.
-Here is the anatomy of an action:
+They define operations such as transferring funds, updating a registry, changing protocol parameters, or activating an emergency pause. Actions are how your Llama instance interacts with external contracts.
 
-- Target Contract: Contract to be called by the Llama executor.
-- Strategy: Contract that determines the rules the action must follow.
-- Calldata: Function selector and its parameters.
-- Role: Role used to create the action.
-- Value: Amount of Ether (in wei) sent with the call.
-- Description: Markdown text explaining the purpose of the action.
+Actions are composed of the following parameters:
+- **Target Contract:** Contract to be called by the Llama executor.
+- **Strategy:** Contract that determines the rules the action must follow.
+- **Calldata:** Function selector and its parameters.
+- **Role:** Role used to create the action.
+- **Value:** Amount of Ether (in wei) sent with the call.
+- **Description:** Markdown text explaining the purpose of the action.
 
 ## Key Concepts
 
@@ -47,13 +46,13 @@ enum ActionState {
 
 Lets dive into each state and what they mean.
 
-- **Active**: The default state after an action has been created. This is when policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
-- **Canceled**: The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by successfully calling `cancelAction`.
-- **Failed**: An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
-- **Approved**: The action has been approved and is ready to be queued.
-- **Queued**: The action is in the `Queued` period for the queueing duration and policyholders are able to disapprove the action. If the action is disapproved it will fail, otherwise it can be executed after the queuing period ends. Reached by successfully calling `queueAction`.
-- **Expired**: The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if `block.timestamp` is greater than the action's `executionTime + expirationDelay`.
-- **Executed**: This state signifies that the action has been executed successfully. Reached by successfully calling `executeAction`.
+- **Active:** The default state after an action has been created. This is when policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
+- **Canceled:** The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by successfully calling `cancelAction`.
+- **Failed:** An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
+- **Approved:** The action has been approved and is ready to be queued.
+- **Queued:** The action is in the `Queued` period for the queueing duration and policyholders are able to disapprove the action. If the action is disapproved it will fail, otherwise it can be executed after the queuing period ends. Reached by successfully calling `queueAction`.
+- **Expired:** The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if `block.timestamp` is greater than the action's `executionTime + expirationDelay`.
+- **Executed:** This state signifies that the action has been executed successfully. Reached by successfully calling `executeAction`.
 
 We can call the `getActionState` method on `LlamaCore` to get the current state of a given action.
 
