@@ -6,11 +6,11 @@ Llama is an onchain governance and access control framework. Projects can use th
 
 ## System architecture
 
-![Llama Overview](https://github.com/llamaxyz/llama/blob/main/blob/main/diagrams/llama-overview.png)
+![Llama Overview](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-overview.png)
 
 ## Topics
 
-- [Action Creation](https://github.com/llamaxyz/llama/blob/main/blob/main/docs/action-creation.md)
-- [Policy Management](https://github.com/llamaxyz/llama/blob/main/blob/main/docs/policy-management.md)
-- [Strategy Comparison](https://github.com/llamaxyz/llama/blob/main/blob/main/docs/strategy-comparison.md)
+- [Action Creation](https://github.com/llamaxyz/llama/blob/main/docs/action-creation.md)
+- [Policy Management](https://github.com/llamaxyz/llama/blob/main/docs/policy-management.md)
+- [Strategy Comparison](https://github.com/llamaxyz/llama/blob/main/docs/strategy-comparison.md)
 

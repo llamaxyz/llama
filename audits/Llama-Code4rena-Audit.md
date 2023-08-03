@@ -308,14 +308,13 @@ Since the intention is to keep values `actionApprovalSupply` and `actionDisappro
 
 
 **[AustinGreen (Llama) confirmed and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/62#issuecomment-1601259723):**
- > This finding was addressed in this PR: <https://github.com/llamaxyz/llama/blob/main/pull/384> (note our repo is private until we launch)
+ > This finding was addressed in this PR: https://github.com/llamaxyz/llama/pull/384 (note our repo is private until we launch)
+
 
 ***
-
+ 
 # Medium Risk Findings (3)
-
 ## [[M-01] It is not possible to execute actions that require ETH (or other protocol token)](https://github.com/code-423n4/2023-06-llama-findings/issues/247)
-
 *Submitted by [libratus](https://github.com/code-423n4/2023-06-llama-findings/issues/247), also found by [Udsen](https://github.com/code-423n4/2023-06-llama-findings/issues/296), [flacko](https://github.com/code-423n4/2023-06-llama-findings/issues/283), [joestakey](https://github.com/code-423n4/2023-06-llama-findings/issues/255), [n1punp](https://github.com/code-423n4/2023-06-llama-findings/issues/215), [Go-Langer](https://github.com/code-423n4/2023-06-llama-findings/issues/189), [QiuhaoLi](https://github.com/code-423n4/2023-06-llama-findings/issues/176), [sces60107](https://github.com/code-423n4/2023-06-llama-findings/issues/172), [Toshii](https://github.com/code-423n4/2023-06-llama-findings/issues/136), [rvierdiiev](https://github.com/code-423n4/2023-06-llama-findings/issues/118), [minhquanym](https://github.com/code-423n4/2023-06-llama-findings/issues/105), [Madalad](https://github.com/code-423n4/2023-06-llama-findings/issues/78), [BRONZEDISC](https://github.com/code-423n4/2023-06-llama-findings/issues/73), [0xcm](https://github.com/code-423n4/2023-06-llama-findings/issues/63), [ernestognw](https://github.com/code-423n4/2023-06-llama-findings/issues/57), [Co0nan](https://github.com/code-423n4/2023-06-llama-findings/issues/48), [T1MOH](https://github.com/code-423n4/2023-06-llama-findings/issues/30), and [MiniGlome](https://github.com/code-423n4/2023-06-llama-findings/issues/19)*
 
 <https://github.com/code-423n4/2023-06-llama/blob/main/src/LlamaCore.sol#L334> <br><https://github.com/code-423n4/2023-06-llama/blob/main/src/LlamaExecutor.sol#L29>
@@ -433,15 +432,16 @@ index f92ebc0..fe7127e 100644
 ```
 
 **[AustinGreen (Llama) confirmed and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/247#issuecomment-1601098574):**
- > This was resolved in this PR: <https://github.com/llamaxyz/llama/blob/main/pull/367> (note repo is currently private but will be made public before launch)
+ > This was resolved in this PR: https://github.com/llamaxyz/llama/pull/367 (note repo is currently private but will be made public before launch)
 
 **[gzeon (Judge) reduced severity to Medium and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/247#issuecomment-1616583612):**
  > Valid issue, actions that require the executor to forward a call value would not work. However, fund is secure and not stuck since this does not impact the functionality of `LlamaAccount.transferNativeToken` which take the amount from calldata.
 
+
+
 ***
 
 ## [[M-02] User with disapproval role can gas grief the action executor](https://github.com/code-423n4/2023-06-llama-findings/issues/223)
-
 *Submitted by [dirk\_y](https://github.com/code-423n4/2023-06-llama-findings/issues/223), also found by [rvierdiiev](https://github.com/code-423n4/2023-06-llama-findings/issues/80)*
 
 Because disapprovals can be cast after the minimum queue time has expired (i.e. the action is now executable), a user with the disapproval role can frontrun any execute calls to push the action into the disapproved state and cause the execute call to fail, hence gas griefing the execute caller. This is particularly easy to achieve if a user has a force disapproval role.
@@ -482,13 +482,14 @@ I suggest that disapprovals should only be allowed to be cast whilst the timesta
     }
 
 **[AustinGreen (Llama) confirmed and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/223#issuecomment-1601698591):**
- > We confirm this and are working on a fix. It is a duplicate of <https://github.com/code-423n4/2023-06-llama-findings/issues/80>
->
+ > We confirm this and are working on a fix. It is a duplicate of https://github.com/code-423n4/2023-06-llama-findings/issues/80
+> 
 > Not sure if it should be medium or not but don't feel strongly. Llama is a trusted system so this would require malicious user intent or user error.
 
+
 **[Co0nan (Warden) commented](https://github.com/code-423n4/2023-06-llama-findings/issues/223#issuecomment-1622579973):**
- > This is more of an improved design than a security issue. `disapproval` role is a highly privileged role as per the design of the system.
->
+ > This is more of an improved design than a security issue. `disapproval` role is a highly privileged role as per the design of the system. 
+> 
 > The `minExecutionTime` is meant to prevent someone from executing the action early but is not designed to prevent the `disApproval` role. Either he disapproved early or after `minExecutionTime` passed this doesn't break the logic of the function at all, it will be excepted to cancel the action in this case. I believe this is a valid QA.
 
 **[AustinGreen (Llama) confirmed and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/223):**
@@ -497,7 +498,6 @@ I suggest that disapprovals should only be allowed to be cast whilst the timesta
 ***
 
 ## [[M-03] LlamaPolicy could be DOS by creating large amount of actions](https://github.com/code-423n4/2023-06-llama-findings/issues/64)
-
 *Submitted by [ktg](https://github.com/code-423n4/2023-06-llama-findings/issues/64), also found by [auditor0517](https://github.com/code-423n4/2023-06-llama-findings/issues/209), [BLOS](https://github.com/code-423n4/2023-06-llama-findings/issues/144), [Atree](https://github.com/code-423n4/2023-06-llama-findings/issues/142), [Toshii](https://github.com/code-423n4/2023-06-llama-findings/issues/137), [xuwinnie](https://github.com/code-423n4/2023-06-llama-findings/issues/12), and [0xnev](https://github.com/code-423n4/2023-06-llama-findings/issues/10)*
 
 <https://github.com/code-423n4/2023-06-llama/blob/main/src/LlamaPolicy.sol#L404-#L409> <br><https://github.com/code-423n4/2023-06-llama/blob/main/src/LlamaCore.sol#L516-#L562>
@@ -564,7 +564,7 @@ Below is a POC, for ease of testing, place this test case under file LlamaStrate
 I recommend limiting the number of active actions a user can create.
 
 **[AustinGreen (Llama) confirmed and commented](https://github.com/code-423n4/2023-06-llama-findings/issues/64#issuecomment-1608402410):**
- > We are tracking the issue here and deciding on a fix: <https://github.com/llamaxyz/llama/blob/main/issues/393>
+ > We are tracking the issue here and deciding on a fix: https://github.com/llamaxyz/llama/issues/393
 > 
 > This is a duplicate of https://github.com/code-423n4/2023-06-llama-findings/issues/209
 
