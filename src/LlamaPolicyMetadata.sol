@@ -32,7 +32,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @notice Initializes a new `LlamaPolicyMetadata` clone.
   /// @param config Llama policy metadata initialization configuration.
-  /// @return This return statement is harcoded to `true` to ensure that initializing an EOA (like the zero address)
+  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA (like the zero address)
   /// will revert.
   function initialize(bytes memory config) external initializer returns (bool) {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
