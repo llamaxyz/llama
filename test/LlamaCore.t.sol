@@ -2005,12 +2005,11 @@ contract CastApprovalBySig is LlamaCoreTest {
     vm.expectEmit();
     emit ActionQueued(
       actionInfo.id,
-      actionCreatorAaron,
+      address(this),
       absolutePeerReview,
       actionCreatorAaron,
       absolutePeerReview.minExecutionTime(actionInfo)
     );
-    vm.prank(actionCreatorAaron);
     castApprovalBySig(actionInfo, v, r, s);
 
     ActionState actionState = mpCore.getActionState(actionInfo);
