@@ -35,7 +35,6 @@ When calling `setRoleHolder` the caller must pass in the following arguments: `(
 - The `setRoleHolder` function can be used to do the following:
   - Mint a new policy.
   - Grant a role to a policyholder.
-  - Revoke and burn a policy.
   - Revoke a role from a policyholder.
   - Update a policyholder's role `quantity`.
   - Update a policyholder's role `expiration`.
