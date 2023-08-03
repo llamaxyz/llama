@@ -2,7 +2,7 @@
 
 Actions are proposed, executable transactions that can be initiated by policyholders.
 
-They define operations such as transferring funds, updating a registry, changing protocol parameters, or activating an emergency pause. Actions are how your Llama instance interacts with external contracts.
+They can define any arbitrary operation, such as transferring funds, updating a registry, changing protocol parameters, or activating an emergency pause. Actions are how your Llama instance interacts with external contracts.
 
 Actions are composed of the following parameters:
 - **Target Contract:** Contract to be called by the Llama executor.
@@ -14,23 +14,23 @@ Actions are composed of the following parameters:
 
 ## Key Concepts
 
-- [Core](https://github.com/llamaxyz/llama/blob/main/src/LlamaCore.sol): Manages the action process from creation to execution.
+- [`LlamaCore`](https://github.com/llamaxyz/llama/blob/main/src/LlamaCore.sol): Manages the action process from creation to execution.
   - Actions: Proposals made by policyholders to execute onchain transactions.
   - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.
   - Guards: Guards enable custom safety checks and logic to run at action creation, and pre and post action execution. Guards can also be used to add arbitrary logic such as spending limits or calldata permissioning.
-  - Scripts: Contracts that are delegate called from the Executor instead of called. Scripts can be used to batch calls together for extended functionality.
-- [Policy](https://github.com/llamaxyz/llama/blob/main/src/LlamaPolicy.sol): An ERC721 contract where each token is non-transferable, functions as the respective policy for a given policyholder, and has roles assigned to `create`, `approve` and `disapprove` actions.
+  - Scripts: Contracts that are delegatecalled from the Executor instead of called. Scripts can be used to batch calls together for extended functionality.
+- [`LlamaPolicy`](https://github.com/llamaxyz/llama/blob/main/src/LlamaPolicy.sol): An ERC721 contract where each token is non-transferable, and defines the roles permissions held by the policyholder. Roles can be permissioned to `create`, `approve` and `disapprove` actions.
   - Policies: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
   - Permission IDs: A unique identifier that can be assigned to roles to enable action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
-- [Executor](https://github.com/llamaxyz/llama/blob/main/src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
-- Llama Instance: The unique core / policy / executor addresses for a deployment
+- [`LlamaExecutor`](https://github.com/llamaxyz/llama/blob/main/src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
+- Llama Instance: The unique `LlamaCore, `LlamaPolicy`, and `LlamaExecutor` addresses for a deployment
 
 ## Action State
 
 ![Action State Diagram](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-action-state-machine.png)
 
-Action state consists of seven unique states and is represented by the following enum:
+At any time an action is in one of seven states, represented by the following enum:
 
 ```solidity
 enum ActionState {
@@ -46,12 +46,12 @@ enum ActionState {
 
 Lets dive into each state and what they mean.
 
-- **Active:** The default state after an action has been created. This is when policyholders can approve the action. If the action is not approved by the end of the approval period, the action will fail.
+- **Active:** The default state after an action has been created. This is when policyholders can approve the action. If the action is not approved by the end of the approval period, the action will enter the `Failed` state.
 - **Canceled:** The action creator has the opportunity to cancel the action at any time during the action lifecycle. Once an action has been canceled, it cannot be executed. Reached by successfully calling `cancelAction`.
 - **Failed:** An action reaches the failed state if it does not reach the approval quorum by the end of the approval period, or if the action gets disapproved during the queuing period. Once an action has reached the failed state, it cannot be executed.
 - **Approved:** The action has been approved and is ready to be queued.
-- **Queued:** The action is in the `Queued` period for the queueing duration and policyholders are able to disapprove the action. If the action is disapproved it will fail, otherwise it can be executed after the queuing period ends. Reached by successfully calling `queueAction`.
-- **Expired:** The action has passed the queuing period, but was not executed in time. Another way to phrase expiration would be if `block.timestamp` is greater than the action's `executionTime + expirationDelay`.
+- **Queued:** The action is in the `Queued` state during the queueing period, which is when policyholders can disapprove the action. If the action is disapproved it will fail, otherwise it can be executed after the queuing period ends. Reached by successfully calling `queueAction`.
+- **Expired:** The queuing period has elapsed, but the action was not executed. This occurs when a strategy's `isActionExpired` method returns true.
 - **Executed:** This state signifies that the action has been executed successfully. Reached by successfully calling `executeAction`.
 
 We can call the `getActionState` method on `LlamaCore` to get the current state of a given action.
@@ -78,7 +78,7 @@ When creating an action, the permission required to create said action can be ca
 `LlamaCore` calculates the permission ID at action creation.
 It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contract to verify that the action creation role has the corresponding permission.
 
-To add and remove Permission IDs, we use the `setRolePermission` function on the `LlamaPolicy` contract.
+To grant or revoke the ability to create actions with a given Permission ID from a role, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
 To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
 
@@ -116,4 +116,4 @@ Guards can effectively permission calldata, such as implementing a spending limi
 
 Guards have one limitation in that they cannot be used to guard calls to the core or policy contract, since a malfunctioning guard could brick your Llama instance if it were able to guard a core function such as `setRolePermission` or `setGuard` itself.
 
-Llama recommends using guards to implement adhoc and protocol specific safety checks
+Llama recommends using guards to implement adhoc and protocol specific safety checks.
