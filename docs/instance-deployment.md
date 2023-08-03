@@ -88,7 +88,7 @@ The policy config takes the form of the following struct:
 ```
 
 - **Role Descriptions:** An array of the initial role descriptions.
-  - `RoleDescription` is a UDVT, but functions like a `bytes` string under the hood.
+  - `RoleDescription` is a [user-defined value type](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) for `bytes32`, meaning descriptions are limited to strings with a length of 32 bytes.
   - Example JSON blob for role descriptions:
 
   ```JSON
