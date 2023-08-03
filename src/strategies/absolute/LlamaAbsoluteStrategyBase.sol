@@ -22,6 +22,7 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======== Structs ========
   // =========================
 
+  /// @dev Llama strategy initialization configuration.
   struct Config {
     uint64 approvalPeriod; // The length of time of the approval period.
     uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
@@ -272,11 +273,13 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     return block.timestamp > action.minExecutionTime + expirationPeriod;
   }
 
-  // ========================================
-  // ======== Other Public Functions ========
-  // ========================================
+  // ===================================================
+  // ======== Implementation Specific Functions ========
+  // ===================================================
 
   /// @notice Returns the timestamp at which the approval period ends.
+  /// @param actionInfo Data required to create an action.
+  /// @return The timestamp at which the approval period ends.
   function approvalEndTime(ActionInfo calldata actionInfo) public view virtual returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;

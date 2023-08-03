@@ -19,16 +19,10 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///     approved.
 ///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsolutePeerReview is LlamaAbsoluteStrategyBase {
-  // ========================
-  // ======== Errors ========
-  // ========================
-
   /// @dev The action creator cannot approve or disapprove an action.
   error ActionCreatorCannotCast();
 
-  // ==========================================
-  // ======== Interface Implementation ========
-  // ==========================================
+  // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata actionInfo) external view override {

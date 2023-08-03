@@ -25,6 +25,7 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // ======== Structs ========
   // =========================
 
+  /// @dev Llama strategy initialization configuration.
   struct Config {
     uint64 approvalPeriod; // The length of time of the approval period.
     uint64 queuingPeriod; // The length of time of the queuing period. The disapproval period is the queuing period when
@@ -268,20 +269,22 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   }
 
   // ===================================================
-  // ======== Implementation-Specific Functions ========
+  // ======== Implementation Specific Functions ========
   // ===================================================
 
-  /// @dev Given an action, returns the supply of the approval role at the time the action was created.
+  /// @notice Given an action, returns the supply of the approval role at the time the action was created.
+  /// @param actionInfo Data required to create an action.
+  /// @return The supply of the approval role at the time the action was created.
   function getApprovalSupply(ActionInfo calldata actionInfo) public view virtual returns (uint96);
 
-  /// @dev Given an action, returns the supply of the disapproval role at the time the action was created.
+  /// @notice Given an action, returns the supply of the disapproval role at the time the action was created.
+  /// @param actionInfo Data required to create an action.
+  /// @return The supply of the disapproval role at the time the action was created.
   function getDisapprovalSupply(ActionInfo calldata actionInfo) public view virtual returns (uint96);
 
-  // ========================================
-  // ======== Other Public Functions ========
-  // ========================================
-
   /// @notice Returns the timestamp at which the approval period ends.
+  /// @param actionInfo Data required to create an action.
+  /// @return The timestamp at which the approval period ends.
   function approvalEndTime(ActionInfo calldata actionInfo) public view virtual returns (uint256) {
     Action memory action = llamaCore.getAction(actionInfo.id);
     return action.creationTime + approvalPeriod;

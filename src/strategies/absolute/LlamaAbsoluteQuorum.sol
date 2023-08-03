@@ -13,9 +13,7 @@ import {LlamaPolicy} from "src/LlamaPolicy.sol";
 ///   - Action creators are allowed to cast approvals or disapprovals on their own actions within this strategy.
 ///   - Role quantity is used to determine the approval and disapproval weight of a policyholder's cast.
 contract LlamaAbsoluteQuorum is LlamaAbsoluteStrategyBase {
-  // ==========================================
-  // ======== Interface Implementation ========
-  // ==========================================
+  // -------- At Action Creation --------
 
   /// @inheritdoc ILlamaStrategy
   function validateActionCreation(ActionInfo calldata /* actionInfo */ ) external view override {
