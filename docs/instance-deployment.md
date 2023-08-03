@@ -119,7 +119,7 @@ TODO: update the Role Permissions section after PR 450 merges
 
 - **Role Permissions** The `role`, `permissionData` and whether the initial roles have the permission of the role permissions.
   - `role` is the role ID to be assigned
-  - `permissionData` is the `(target, selector, strategy)` tuple that will be keccak256 hashed to generate the permission ID to assign the role.
+  - `permissionData` is the `(target, selector, strategy)` tuple that will be hashed to generate the permission ID to assign the role.
     - `selector`: The function selector being permissioned.
     - `strategy`: The strategy address to be used for this kind of action.
     - `target`: The target contract address.
