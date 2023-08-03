@@ -28,7 +28,7 @@ Actions are composed of the following parameters:
 
 ## Action State
 
-![Action State Diagram](../diagrams/llama-action-state-machine.png)
+![Action State Diagram](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-action-state-machine.png)
 
 Action state consists of seven unique states and is represented by the following enum:
 

@@ -36,7 +36,7 @@ Lets look at each field one by one:
 - **Strategy Logic:** The initial strategy implementation (logic) contract. Look at the [strategy comparison table](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md#comparison-table) to learn about their differences.
 - **Account Logic:** The initial account implementation (logic) contract. There is currently only one account implementation contract but there may be more in the future.
 - **Initial Strategies:** An array of initial strategy configurations.
-  - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](../src/strategies/relative/LlamaRelativeStrategyBase.sol):
+  - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](https://github.com/llamaxyz/llama/blob/main/src/strategies/relative/LlamaRelativeStrategyBase.sol):
 
     ```JSON
     "initialStrategies": [
