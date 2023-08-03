@@ -21,7 +21,7 @@ Similarly, policyholders cannot burn their own policy; policies can only be revo
 
 Llama policies can be granted to EOAs as well as other smart contracts, allowing a great deal of flexibility.
 To grant a new policy, an existing policyholder must create an action that calls the `setRoleHolder` method on the `LlamaPolicy` contract.
-When invoking the `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint128 quantity, uint64 expiration)`.
+When calling `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint96 quantity, uint64 expiration)`.
 
 `setRoleHolder` takes four arguments:
 
@@ -55,7 +55,7 @@ Every role has two supplies that are stored in the `RoleSupply` struct and are a
 
 When roles are created, a description is provided.
 This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
-The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a `bytes32` value.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a [UDVT](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) `RoleDescription` which under the hood is just a `bytes32` value.
 
 ### Editing Existing Roles
 
