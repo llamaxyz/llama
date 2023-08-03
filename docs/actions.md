@@ -23,8 +23,10 @@ Actions are composed of the following parameters:
   - Policies: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
   - Roles: A signifier that is used to permission action creation, approval, and disapproval. Any role can be given to one or more policyholders.
   - Permission IDs: A unique identifier that can be assigned to roles to enable action creation. Permission IDs are represented as a hash of the target contract, function selector, and strategy contract. Actions cannot be created unless a policyholder holds a role with the correct permission.
-- [`LlamaExecutor`](https://github.com/llamaxyz/llama/blob/main/src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance
-- Llama Instance: The unique `LlamaCore, `LlamaPolicy`, and `LlamaExecutor` addresses for a deployment
+- [`LlamaExecutor`](https://github.com/llamaxyz/llama/blob/main/src/LlamaExecutor.sol): The single exit point of a Llama instance. All actions that are executed will be sent from the Llama executor. This is the address that should be the `owner` or other privileged role in a system controlled by the llama instance.
+- Llama Instance: The unique `LlamaCore,`LlamaPolicy`, and`LlamaExecutor` addresses for a deployment.
+- `approvalPeriod`: The length of time that policyholders can approve an action.
+- `queuingPeriod`:The inverse of the approval period that can also be thought of as the disapproval period; defines the amount of time that policyholders have to disapprove an action.
 
 ## Action State
 

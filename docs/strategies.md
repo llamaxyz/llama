@@ -24,7 +24,7 @@ Setting the approval period to 0 in tandem with the `minApprovals` or `minApprov
 The queuing period is the inverse of the approval period and can also be thought of as the disapproval period.
 It defines the amount of time that policyholders have to disapprove an action.
 The queuing period can be disabled if set to 0, which would mean actions cannot be disapproved after they pass the approval period.
-Setting the value of queuing period to 0 is also useful for instant execution strategies.
+Setting the value of queuing period to 0 is how one would configure an instant execution strategy, since the action could automatically move from the `queued` state to being able to be executed.
 
 ### `expirationPeriod`
 
@@ -46,7 +46,7 @@ The supplies or quantities of these roles are used to calculate quorums for cert
 ### `forceApprovalRoles` / `forceDisapprovalRoles`
 
 Each strategy can optionally have one or more "force roles", which can cast an approval or disapproval that instantly approves or disapproves the action, regardless of quorum.
-There are many use cases for force roles and it would be impossible to list them all here, but one we can imagine is an optimistic strategy, where a few team members can instantly disapprove an action using a force role if they did not approve of the action.
+There are many use cases for force roles and it would be impossible to list them all here, but one we can imagine is an grants DAO that leverages an optimistic strategy to allow anyone to propose small transfers of value without an approval period, which gets queued for the grants committee to review. In this scenario each policyholder with the grants commitee role can instantly disapprove an action using their force role; this allows for much faster and iterative approach to governance.
 
 ### Approval / Disapproval Thresholds
 

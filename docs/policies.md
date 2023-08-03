@@ -32,7 +32,13 @@ When calling `setRoleHolder` the caller must pass in the following arguments: `(
 
 `setRoleHolder` also has the following properties:
 
-- The `setRoleHolder` function is used in multiple scenarios and is not exclusive to granting policies.
+- The `setRoleHolder` function can be used to do the following:
+  - Mint a new policy.
+  - Grant a role to a policyholder.
+  - Revoke and burn a policy.
+  - Revoke a role from a policyholder.
+  - Update a policyholder's role `quantity`.
+  - Update a policyholder's role `expiration`.
 - When `setRoleHolder` is called and `balanceOf(policyholder) == 0`, a new policy NFT is minted to the policyholder address.
 - Every policyholder is automatically assigned the `ALL_HOLDERS_ROLE` when their policy is minted.
 
