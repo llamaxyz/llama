@@ -303,6 +303,8 @@ contract LlamaCore is Initializable {
   // ======== External and Public Logic ========
   // ===========================================
 
+  // -------- Action Process Management --------
+
   /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
   /// @dev Use `""` for `description` if there is no description.
@@ -492,6 +494,8 @@ contract LlamaCore is Initializable {
     return _castDisapproval(signer, role, actionInfo, reason);
   }
 
+  // -------- Peripheral Contract Management --------
+
   /// @notice Authorizes a strategy implementation (logic) contract.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
   /// @param strategyLogic The strategy logic contract to authorize.
@@ -550,6 +554,8 @@ contract LlamaCore is Initializable {
     emit ScriptAuthorizationSet(script, authorized);
   }
 
+  // -------- Function Selector Nonce Management --------
+
   /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
   /// signatures that have not been used yet.
   /// @param selector The function selector to increment the nonce for.
@@ -557,6 +563,8 @@ contract LlamaCore is Initializable {
     // Safety: Can never overflow a uint256 by incrementing.
     nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
   }
+
+  // -------- Action and State Getters --------
 
   /// @notice Get an Action struct by `actionId`.
   /// @param actionId ID of the action.
