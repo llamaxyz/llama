@@ -52,7 +52,7 @@ There are many use cases for force roles and it would be impossible to list them
 
 Relative and absolute strategies differ in the way they calculate approval and disapproval thresholds.
 Relative strategies use `minApprovalPct` and `minDisapprovalPct`, while absolute strategies use `minApprovals` and `minDisapprovals`.
-To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comarison](./strategy-comparison.md) docs.
+To learn more about the differences between strategies and how they calculate the thresholds, see the [strategy comparison](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md#comparison-table) docs.
 
 ## Strategy Comparison
 
