@@ -1,6 +1,6 @@
 ![Llama](.github/assets/llama-banner.png)
 
-![CI](https://github.com/llamaxyz/llama/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/llamaxyz/llama/blob/main/actions/workflows/ci.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Llama
@@ -14,7 +14,7 @@ You can find installation instructions in the [Foundry docs](https://book.getfou
 
 We use [just](https://github.com/casey/just) to save and run a few larger, more complex commands.
 You can find installation instructions in the [just docs](https://just.systems/man/en/).
-All commands can be listed by running `just -l` from the repo root, or by viewing the [`justfile`](https://github.com/llamaxyz/llama/blob/main/justfile).
+All commands can be listed by running `just -l` from the repo root, or by viewing the [`justfile`](https://github.com/llamaxyz/llama/blob/main/blob/main/justfile).
 
 ### VS Code
 
@@ -49,7 +49,7 @@ The comments in that file explain what each variable is for and when they're nee
 ### Deploy and Verify
 
 - `just deploy` - deploy and verify payload on mainnet
-- Run `just -l` or see the [`justfile`](https://github.com/llamaxyz/llama/blob/main/justfile) for other commands such as dry runs.
+- Run `just -l` or see the [`justfile`](https://github.com/llamaxyz/llama/blob/main/blob/main/justfile) for other commands such as dry runs.
 
 ## Documentation
 

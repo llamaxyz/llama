@@ -57,7 +57,7 @@ contract LlamaPolicyHandler is BaseHandler {
 }
 
 contract LlamaFactoryInvariants is LlamaCoreTest {
-  // TODO Remove inheritance on LlamaCoreTest once https://github.com/llamaxyz/llama/issues/38 is
+  // TODO Remove inheritance on LlamaCoreTest once https://github.com/llamaxyz/llama/blob/main/issues/38 is
   // completed. Inheriting from it now just to simplify the test setup, but ideally our invariant
   // tests would not be coupled to our unit tests in this way.
 
