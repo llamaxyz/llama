@@ -19,31 +19,31 @@ At action creation time, this number is added to the current `block.timestamp` t
 
 Setting the approval period to 0 in tandem with the `minApprovals` or `minApprovalPct` parameters (in absolute and relative strategies respectively) can be used to enable "Optimistic" strategies that are automatically approved.
 
-### Queuing Period
+### `queuingPeriod`
 
 The queuing period is the inverse of the approval period and can also be thought of as the disapproval period.
 It defines the amount of time that policyholders have to disapprove an action.
 The queuing period can be disabled if set to 0, which would mean actions cannot be disapproved after they pass the approval period.
 Setting the value of queuing period to 0 is also useful for instant execution strategies.
 
-### Expiration Period
+### `expirationPeriod`
 
 The expiration period is the length of time an action has to be executed before it expires. It can be adjusted to suit the nature of the action and how time sensitive it is.
 Some actions must be executed immediately, while others might not have strict timing requirements.
 Setting this value too low can make for a more difficult UX, and setting the value too high means stale actions that have been forgotten about may be suddenly executed.
 
-### Is Fixed Length Approval Period
+### `isFixedLengthApprovalPeriod`
 
 A boolean value that determines if an action can be queued as soon as the action reaches the approval threshold, or if it users must wait the duration of the approval period before queuing the action.
 
 Setting this to false is useful for scenarios where it's ok to queue an action as soon as the approval quorum is met.
 
-### Approval / Disapproval Role
+### `approvalRole` / `disapprovalRole`
 
 Each strategy has a single approval and disapproval role that enables policyholders with these roles to cast approvals and/or disapprovals.
 The supplies or quantities of these roles are used to calculate quorums for certain strategies.
 
-### Force Approval / Disapproval Roles
+### `forceApprovalRoles` / `forceDisapprovalRoles`
 
 Each strategy can optionally have one or more "force roles", which can cast an approval or disapproval that instantly approves or disapproves the action, regardless of quorum.
 There are many use cases for force roles and it would be impossible to list them all here, but one we can imagine is an optimistic strategy, where a few team members can instantly disapprove an action using a force role if they did not approve of the action.
