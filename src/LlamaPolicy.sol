@@ -136,11 +136,13 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev This contract is deployed as a minimal proxy in the core's `initialize` function.
   constructor() {
     _disableInitializers();
   }
 
   /// @notice Initializes a new `LlamaPolicy` clone.
+  /// @dev This function is called by the `initialize` function in the `LlamaCore` contract.
   /// @param _name The ERC-721 name of the policy NFT.
   /// @param config The struct that contains the configuration for this instance's policy.
   /// @param policyMetadataLogic The `LlamaPolicyMetadata` implementation (logic) contract.

@@ -123,6 +123,7 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
   // ======== Constructor ========
   // =============================
 
+  /// @dev This contract is deployed as a minimal proxy in the core's `_deployStrategies` function.
   constructor() {
     _disableInitializers();
   }

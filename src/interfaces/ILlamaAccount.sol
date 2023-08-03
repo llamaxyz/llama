@@ -13,6 +13,7 @@ interface ILlamaAccount {
   // -------- At Account Creation --------
 
   /// @notice Initializes a new clone of the account.
+  /// @dev This function is called by the `_deployAccounts` function in the `LlamaCore` contract.
   /// @param config The account configuration, encoded as bytes to support differing constructor arguments in
   /// different account logic contracts.
   /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA

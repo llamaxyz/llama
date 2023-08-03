@@ -26,14 +26,12 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev This contract is deployed as a minimal proxy in the policy's `_setAndInitializePolicyMetadata` function.
   constructor() {
     _disableInitializers();
   }
 
-  /// @notice Initializes a new `LlamaPolicyMetadata` clone.
-  /// @param config Llama policy metadata initialization configuration.
-  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA
-  /// (like the zero address) will revert.
+  /// @inheritdoc ILlamaPolicyMetadata
   function initialize(bytes memory config) external initializer returns (bool) {
     (string memory _color, string memory _logo) = abi.decode(config, (string, string));
     color = _color;
@@ -42,9 +40,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     return true;
   }
 
-  /// @notice Returns the token URI for a given Llama policyholder.
-  /// @param name The name of the Llama instance.
-  /// @param tokenId The token ID of the Llama policyholder.
+  /// @inheritdoc ILlamaPolicyMetadata
   function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
@@ -128,8 +124,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     return output;
   }
 
-  /// @notice Returns the contract URI for a given Llama policy.
-  /// @param name The name of the Llama instance.
+  /// @inheritdoc ILlamaPolicyMetadata
   function getContractURI(string memory name, address executor) external view returns (string memory) {
     string[9] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';

@@ -124,14 +124,12 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev This contract is deployed as a minimal proxy in the core's `_deployAccounts` function.
   constructor() {
     _disableInitializers();
   }
 
-  /// @notice Initializes a new `LlamaAccount` clone.
-  /// @param config Llama account initialization configuration.
-  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA
-  /// (like the zero address) will revert.
+  /// @inheritdoc ILlamaAccount
   function initialize(bytes memory config) external initializer returns (bool) {
     llamaExecutor = address(LlamaCore(msg.sender).executor());
     Config memory accountConfig = abi.decode(config, (Config));

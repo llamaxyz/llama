@@ -249,11 +249,13 @@ contract LlamaCore is Initializable {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev This contract is deployed as a minimal proxy in the factory's `deploy` function.
   constructor() {
     _disableInitializers();
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
+  /// @dev This function is called by the `deploy` function in the `LlamaFactory` contract.
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
   /// @param policyLogic The `LlamaPolicy` implementation (logic) contract
