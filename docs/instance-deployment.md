@@ -35,7 +35,7 @@ Lets look at each field one by one:
 
 - **Name**: The name of the Llama instance.
 - **Strategy** Logic: The initial strategy implementation (logic) contract. See [here]((../README.md#Deployments)) for a list of deployed strategy logic contracts, and [here](./strategy-comparison.md) learn about their differences.
-- **Account** Logic: The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
+- **Account Logic**: The initial account implementation (logic) contract. You can find the account logic contract [here]((../README.md#Deployments)), there is currently only one account implementation contract but there may be more in the future.
 - **Initial Strategies**: An array of initial strategy configurations.
   - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](../src/strategies/relative/LlamaRelativeStrategyBase.sol):
 

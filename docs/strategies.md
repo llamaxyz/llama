@@ -2,7 +2,7 @@
 
 Strategies are the contracts that determine action state.
 In this section we will take a look at the different parameters and ways we can configure strategies and use them in various ways.
-There are two main types of strategies, `relative` and `absolute`; first we will look at the parameters that they have in common and then look at some of their differences.
+There are two categories of strategies, `relative` and `absolute`; first we will look at the parameters that they have in common and then look at some of their differences.
 
 ## View Functions and Action State
 

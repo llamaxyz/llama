@@ -1,8 +1,6 @@
 # Policy Management
 
-Policies are the building blocks of the Llama permissioning system.
-They allow users to create actions, assign roles, authorize strategies, and more.
-Without policies, a Llama instance will be unusable.
+Policies allow users to create actions, and cast approvals / disapprovals on actions within a Llama instance.
 Policies, roles, and permission IDs can be granted on instance deployment, but this section focuses on policy management for active Llama instances in this section.
 
 ## Key Concepts
