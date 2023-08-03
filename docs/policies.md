@@ -46,7 +46,7 @@ This method burns the policy NFT and revokes all roles from the former policyhol
 Role management involves creating, editing, granting, and revoking roles from Llama policy NFTs.
 Roles are of type `uint8`, meaning roles are denominated as unsigned integers and the maximum number of roles a Llama instance can have is 255.
 Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
-Every role has two supplies that are stored in the `RoleSupply` struct and are always available in storage:
+Every role has two supplies that are stored in the `SupplyCheckpoints.History` checkpoints and are always available in storage:
 
 1. Number of holders: The number of unique policy NFTs that hold the given role.
 2. Total quantity: The sum of all the quantities that each role holding the policy possesses.
