@@ -5,7 +5,7 @@ To use Llama to govern your smart contract system's privileged functions, you mu
 ## Key Concepts
 
 - [Llama Factory](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances and there will be one factory per chain supported by Llama.
-- [Llama Instance]((https://github.com/llamaxyz/llama/blob/main/blob/main/diagrams/llama-overview.png)): A Llama instance is a self managed cluster of contracts that enables onchain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
+- [Llama Instance](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-overview.png): A Llama instance is a self managed cluster of contracts that enables onchain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
 
 To deploy, call the `deploy` method on [the Llama Factory contract](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol).
 Deploying Llama instances requires some configuration and set up, since we have to initialize the system with a set of policyholders, roles, and permissions.
