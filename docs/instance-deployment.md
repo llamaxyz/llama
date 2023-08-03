@@ -1,18 +1,18 @@
 # Instance Deployment
 
-To use Llama to govern your smart contract system's privileged access functions, you must first deploy your own instance.
+To use Llama to govern your smart contract system's privileged functions, you must first deploy your own Llama instance.
 
 ## Key Concepts
 
-- [Factory](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances and there will be one factory per chain supported by Llama.
-- [Instance]((https://github.com/llamaxyz/llama/blob/main/blob/main/diagrams/llama-overview.png)): A Llama instance is a self managed cluster of contracts that enables onchain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
+- [Llama Factory](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol): The `LlamaFactory` contract is the canonical deployer for Llama instances and there will be one factory per chain supported by Llama.
+- [Llama Instance](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-overview.png): A Llama instance is a self managed cluster of contracts that enables onchain access control over privileged functions. The main parts of an instance are the `Core`, `Policy`, and `Executor` contracts.
 
 To deploy, call the `deploy` method on [the Llama Factory contract](https://github.com/llamaxyz/llama/blob/main/src/LlamaFactory.sol).
-Deploying Llama instances requires some configuration and set up, since we have to initialize the system with the base set of permissions and rules describing who can do what.
+Deploying Llama instances requires some configuration and set up, since we have to initialize the system with a set of policyholders, roles, and permissions.
 
 ## Configuration
 
-In this section we will dive into configuring your Llama instance
+In this section we will dive into configuring your Llama instance.
 
 ### Instance Config
 
@@ -35,7 +35,7 @@ Lets look at each field one by one:
 - **Name:** The name of the Llama instance.
 - **Strategy Logic:** The initial strategy implementation (logic) contract. Look at the [strategy comparison table](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md#comparison-table) to learn about their differences.
 - **Account Logic:** The initial account implementation (logic) contract. There is currently only one account implementation contract but there may be more in the future.
-- **Initial Strategies:** An array of initial strategy configurations.
+- **Initial Strategies:** An array of initial strategy configurations. All configurations are for the `strategyLogic` defined above. If you'd like to configure other strategies with different logic contracts, that must be done in an action after deployment
   - Each strategy has a `Config` struct that defines what data is required to initialize the strategy. Each config struct can be unique, but lets look at an example JSON blob which is intended to configure a [relative strategy](https://github.com/llamaxyz/llama/blob/main/src/strategies/relative/LlamaRelativeStrategyBase.sol):
 
     ```JSON
@@ -88,7 +88,7 @@ The policy config takes the form of the following struct:
 ```
 
 - **Role Descriptions:** An array of the initial role descriptions.
-  - `RoleDescription` is a UDVT, but functions like a `bytes` string under the hood.
+  - `RoleDescription` is a [user-defined value type](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) for `bytes32`, meaning descriptions are limited to strings with a length of 32 bytes.
   - Example JSON blob for role descriptions:
 
   ```JSON
@@ -115,11 +115,9 @@ The policy config takes the form of the following struct:
 
   - In this example, we are assigning the policyholder `0xdeadbeef` role 1 with the max expiration (`type(uint64).max`) and a quantity of 1.
 
-TODO: update the Role Permissions section after PR 450 merges
-
 - **Role Permissions** The `role`, `permissionData` and whether the initial roles have the permission of the role permissions.
   - `role` is the role ID to be assigned
-  - `permissionData` is the `(target, selector, strategy)` tuple that will be keccak256 hashed to generate the permission ID to assign the role.
+  - `permissionData` is the `(target, selector, strategy)` tuple that will be hashed to generate the permission ID to assign the role.
     - `selector`: The function selector being permissioned.
     - `strategy`: The strategy address to be used for this kind of action.
     - `target`: The target contract address.
@@ -140,7 +138,7 @@ TODO: update the Role Permissions section after PR 450 merges
   ]
   ```
 
-- **Color:** The primary color of the SVG representation of the instance's policy (e.g. #00FF00).
+- **Color:** The primary color of the SVG representation of the instance's policy specified as a hex rgb value (e.g. #00FF00).
 - **Logo:** The SVG string representing the logo for the deployed Llama instance's NFT.
 
 ## Deployed Contracts

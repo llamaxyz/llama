@@ -1,6 +1,6 @@
 # Policy Management
 
-Policies allow users to create actions, and cast approvals / disapprovals on actions within a Llama instance.
+Policies allow users to create actions and cast approvals / disapprovals on actions within a Llama instance.
 Policies, roles, and permission IDs can be granted on instance deployment, but this section focuses on policy management for active Llama instances in this section.
 
 ## Key Concepts
@@ -19,9 +19,9 @@ Similarly, policyholders cannot burn their own policy; policies can only be revo
 
 ### Granting Policies
 
-Llama policies can be granted to EOAs as well as other smart contracts, allowing a great deal of flexibility.
+Llama policies can be granted to both EOAs and smart contracts, allowing a great deal of flexibility.
 To grant a new policy, an existing policyholder must create an action that calls the `setRoleHolder` method on the `LlamaPolicy` contract.
-When invoking the `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint128 quantity, uint64 expiration)`.
+When calling `setRoleHolder` the caller must pass in the following arguments: `(uint8 role, address policyholder, uint96 quantity, uint64 expiration)`.
 
 `setRoleHolder` takes four arguments:
 
@@ -46,7 +46,7 @@ This method burns the policy NFT and revokes all roles from the former policyhol
 Role management involves creating, editing, granting, and revoking roles from Llama policy NFTs.
 Roles are of type `uint8`, meaning roles are denominated as unsigned integers and the maximum number of roles a Llama instance can have is 255.
 Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
-Every role has two supplies that are stored in the `RoleSupply` struct and are always available in storage:
+Every role has two supplies that are stored in the `SupplyCheckpoints.History` checkpoints and are always available in storage:
 
 1. Number of holders: The number of unique policy NFTs that hold the given role.
 2. Total quantity: The sum of all the quantities that each role holding the policy possesses.
@@ -55,7 +55,7 @@ Every role has two supplies that are stored in the `RoleSupply` struct and are a
 
 When roles are created, a description is provided.
 This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
-The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a UDVT `RoleDescription` which under the hood is just a `bytes32` value.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a [UDVT](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) `RoleDescription` which under the hood is just a `bytes32` value.
 
 ### Editing Existing Roles
 
