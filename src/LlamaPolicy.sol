@@ -205,7 +205,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Assigns a role to a policyholder.
-  /// @param role ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
+  /// @param role ID of the role to set (uint8 ensures onchain enumerability when burning policies).
   /// @param policyholder Policyholder to assign the role to.
   /// @param quantity Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   /// @param expiration When the role expires.

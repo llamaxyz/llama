@@ -43,7 +43,7 @@ struct PermissionData {
 
 /// @dev Data required to assign/revoke a role to/from a policyholder.
 struct RoleHolderData {
-  uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
+  uint8 role; // ID of the role to set (uint8 ensures onchain enumerability when burning policies).
   address policyholder; // Policyholder to assign the role to.
   uint96 quantity; // Quantity of the role to assign to the policyholder, i.e. their (dis)approval quantity.
   uint64 expiration; // When the role expires.
@@ -51,7 +51,7 @@ struct RoleHolderData {
 
 /// @dev Data required to assign/revoke a permission to/from a role.
 struct RolePermissionData {
-  uint8 role; // ID of the role to set (uint8 ensures on-chain enumerability when burning policies).
+  uint8 role; // ID of the role to set (uint8 ensures onchain enumerability when burning policies).
   PermissionData permissionData; // The `(target, selector, strategy)` tuple that will be keccak256 hashed to
     // generate the permission ID to assign or unassign to the role
   bool hasPermission; // Whether to assign the permission or remove the permission.
