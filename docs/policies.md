@@ -1,4 +1,4 @@
-# Policy Management
+# Policies
 
 Policies allow users to create actions and cast approvals / disapprovals on actions within a Llama instance.
 Policies, roles, and permission IDs can be granted on instance deployment, but this section focuses on policy management for active Llama instances in this section.
@@ -45,7 +45,7 @@ This method burns the policy NFT and revokes all roles from the former policyhol
 
 Role management involves creating, editing, granting, and revoking roles from Llama policy NFTs.
 Roles are of type `uint8`, meaning roles are denominated as unsigned integers and the maximum number of roles a Llama instance can have is 255.
-Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint, and cannot be revoked until the policy is revoked.
+Every Llama instance reserves the 0 role for the `ALL_HOLDERS_ROLE`, which is given to every policyholder at mint and cannot be revoked until the policy is revoked.
 Every role has two supplies that are stored in the `SupplyCheckpoints.History` checkpoints and are always available in storage:
 
 1. Number of holders: The number of unique policy NFTs that hold the given role.
@@ -54,8 +54,8 @@ Every role has two supplies that are stored in the `SupplyCheckpoints.History` c
 ### Creating New Roles
 
 When roles are created, a description is provided.
-This description serves as the plaintext mapping from description to role ID, and provides semantic meaning to an otherwise meaningless unsigned integer.
-The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role, and it takes an argument called description that is a [UDVT](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) `RoleDescription` which under the hood is just a `bytes32` value.
+This description serves as the plaintext mapping from description to role ID and provides semantic meaning to an otherwise meaningless unsigned integer.
+The `initializeRole` method on the `LlamaPolicy` contract is used to instantiate a new role. It takes an argument called description that is a [UDVT](https://docs.soliditylang.org/en/v0.8.19/types.html#user-defined-value-types) `RoleDescription` which under the hood is just a `bytes32` value.
 
 ### Editing Existing Roles
 
@@ -76,7 +76,7 @@ To grant a policy with the `ALL_HOLDERS_ROLE` and no other role, call `setRoleHo
 
 To revoke a role, we use the `setRoleHolder` method again.
 Simply pass in the role, the policyholder to revoke it from, and set the quantity and expiration to 0.
-Revoking a role will decrement the total supply of the role by one, and decrement the total quantity of the role by the quantity the policyholder previously held.
+Revoking a role will decrement the total supply of the role by one and decrement the total quantity of the role by the quantity the policyholder previously held.
 
 ### Updating Role Quantity / Expiration
 
@@ -90,7 +90,7 @@ If a role has expired, it can be revoked by anyone using the `revokeExpiredRole`
 The `revokeExpiredRole` does not have the `onlyLlama` modifier, and does not need to go through the normal action creation process as a result.
 When an expired role is revoked, the quantity and total supply will be decremented accordingly.
 
-**Note**: A policyholder can still utilize a role to approve/disapprove, and create actions after the expiry timestamp if it has not been revoked.
+**Note**: A policyholder can still utilize a role to approve, disapprove, and create actions after the expiry timestamp if it has not been revoked.
 Once revoked, the role can no longer be used by the policyholder.
 
 ## Managing Permission IDs
@@ -107,13 +107,13 @@ This is helpful because all of the functions required to manage permission IDs e
 ### Granting Permission IDs
 
 To grant a permission, the `setRolePermission` function is used.
-This function accepts three parameters: The role being granted a permission, the permission id being granted, and a boolean `hasPermission`.
+This function accepts three parameters: The role being granted a permission, the permission ID being granted, and a boolean `hasPermission`.
 When granting permission IDs, `hasPermission` will always be set to true.
 
 ### Revoking Permission IDs
 
 To revoke a permission, the `setRolePermission` function is used.
-This function accepts three parameters: The role being revoked from, the permission id being revoked, and a boolean `hasPermission`.
+This function accepts three parameters: The role being revoked from, the permission ID being revoked, and a boolean `hasPermission`.
 When revoking permission IDs, `hasPermission` will always be set to false.
 
 ## Batching Policy Management Methods Using the Governance Script
@@ -121,11 +121,11 @@ When revoking permission IDs, `hasPermission` will always be set to false.
 All of the base methods to manage Llama policies are singular, meaning new actions must be created for every singular policy, role, and permission users might want to adjust.
 Batching these methods together is an expected usecase, for example granting policies to a group of new users, or removing all permission IDs related to a specific strategy that is being deprecated.
 This is the problem that the `GovernanceScript` aims to solve, by providing an interface that allows users to batch common policy management calls together to provide a substantially better UX.
-The `GovernanceScript` must be permissioned separately from the base policy management functions, as it has an inherently different target address, and various function selectors that can be individually permissioned.
+The `GovernanceScript` must be permissioned separately from the base policy management functions, as it has an inherently different target address and various function selectors that can be individually permissioned.
 
 ### Aggregate Method
 
-Mirrors of the base policy management functions exist as batch methods on the `GovernanceScript` contract, and even some common combinations of these methods.
+Mirrors of the base policy management functions exist as batch methods on the `GovernanceScript` contract and even some common combinations of these methods.
 Not all possible combinations can be predicted and therefore do not exist on the script's interface.
 This is where the `aggregate` method becomes useful.
 `aggregate` allows users to propose any arbitrary calls to the `LlamaCore` and `LlamaPolicy` contracts.
