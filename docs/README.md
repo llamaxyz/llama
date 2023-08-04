@@ -2,11 +2,11 @@
 
 ## Securing onchain governance
 
-Llama is an onchain governance and access control framework for smart contract protocols.
+Llama is an onchain governance and access control framework for smart contracts.
 
-Using Llama, teams can deploy fully independent instances that define granular roles and permissions for executing actions. 
+Using Llama, teams can deploy fully independent instances that define granular roles and permissions for executing transactions, known as "actions". 
 
-Instances can adapt to a changing environment by incrementally adding new participants and expanding the set of available actions. Actions can be any operation that is represented by invoking a smart contract function. This includes transferring funds, updating a registry, changing protocol parameters, or activating an emergency pause.
+Llama instances can adapt to a changing environment by incrementally adding new participants and expanding the set of available actions. Actions can be any operation that is represented by invoking a smart contract function. This includes transferring funds, updating a registry, changing protocol parameters, or activating an emergency pause.
 
 ## How does Llama work?
 
