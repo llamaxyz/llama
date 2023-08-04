@@ -498,7 +498,7 @@ contract LlamaCore is Initializable {
 
   // -------- Peripheral Contract Management --------
 
-  /// @notice Authorizes a strategy implementation (logic) contract.
+  /// @notice Sets `strategyLogic` authorization status, which determines if it can be used to create new strategies.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
   /// @param strategyLogic The strategy logic contract to authorize.
   /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
@@ -521,7 +521,7 @@ contract LlamaCore is Initializable {
     _authorizeStrategy(strategy, authorized);
   }
 
-  /// @notice Authorizes an account implementation (logic) contract.
+  /// @notice Sets `accountLogic` authorization status, which determines if it can be used to create new accounts.
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
   /// @param authorized `true` to authorize the account logic, `false` to unauthorize it.
@@ -546,7 +546,7 @@ contract LlamaCore is Initializable {
     emit ActionGuardSet(target, selector, guard);
   }
 
-  /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
+  /// @notice Sets `script` authorization status, which determines if it can be delegatecalled from the executor.
   /// @dev To unauthorize a `script`, set `authorized` to `false`.
   /// @param script The address of the script contract.
   /// @param authorized `true` to authorize the script, `false` to unauthorize it.
