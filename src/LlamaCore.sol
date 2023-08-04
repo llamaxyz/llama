@@ -305,7 +305,7 @@ contract LlamaCore is Initializable {
   // ======== External and Public Logic ========
   // ===========================================
 
-  // -------- Action Process Management --------
+  // -------- Action Lifecycle Management --------
 
   /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
