@@ -22,7 +22,8 @@ interface ILlamaStrategy {
   // -------- At Strategy Creation --------
 
   /// @notice Initializes a new clone of the strategy.
-  /// @dev This function is called by the `_deployStrategies` function in the `LlamaCore` contract.
+  /// @dev This function is called by the `_deployStrategies` function in the `LlamaCore` contract. The `initializer`
+  /// modifier ensures that this function can be invoked at most once.
   /// @param config The strategy configuration, encoded as bytes to support differing constructor arguments in
   /// different strategies.
   /// @return This return statement must be hardcoded to `true` to ensure that initializing an EOA

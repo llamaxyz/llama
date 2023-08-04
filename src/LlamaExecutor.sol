@@ -11,7 +11,7 @@ contract LlamaExecutor {
   /// @notice The core contract for this Llama instance.
   address public immutable LLAMA_CORE;
 
-  /// @dev This contract is deployed in the core's `initialize` function.
+  /// @dev This contract is deployed from the core's `initialize` function.
   constructor() {
     LLAMA_CORE = msg.sender;
   }

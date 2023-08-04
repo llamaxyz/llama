@@ -124,7 +124,8 @@ contract LlamaAccount is ILlamaAccount, ERC721Holder, ERC1155Holder, Initializab
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  /// @dev This contract is deployed as a minimal proxy in the core's `_deployAccounts` function.
+  /// @dev This contract is deployed as a minimal proxy from the core's `_deployAccounts` function. The
+  /// `_disableInitializers` locks the implementation (logic) contract, preventing any future initialization of it.
   constructor() {
     _disableInitializers();
   }

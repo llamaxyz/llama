@@ -128,7 +128,8 @@ abstract contract LlamaRelativeStrategyBase is ILlamaStrategy, Initializable {
   // ======== Constructor ========
   // =============================
 
-  /// @dev This contract is deployed as a minimal proxy in the core's `_deployStrategies` function.
+  /// @dev This contract is deployed as a minimal proxy from the core's `_deployStrategies` function. The
+  /// `_disableInitializers` locks the implementation (logic) contract, preventing any future initialization of it.
   constructor() {
     _disableInitializers();
   }
