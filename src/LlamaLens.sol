@@ -34,8 +34,7 @@ contract LlamaLens {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
-  /// @notice Sets the Llama factory address, Llama core logic address and Llama policy logic address.
-  /// @param _llamaFactory the Llama factory contract on this chain.
+  /// @dev Sets the Llama factory address, Llama core logic address and Llama policy logic address.
   constructor(address _llamaFactory) {
     LLAMA_FACTORY = _llamaFactory;
     LLAMA_CORE_LOGIC = address(LlamaFactory(LLAMA_FACTORY).LLAMA_CORE_LOGIC());

@@ -6,9 +6,11 @@ pragma solidity 0.8.19;
 /// @notice Interface for utility contract to compute Llama policy metadata.
 interface ILlamaPolicyMetadata {
   /// @notice Initializes a new clone of the policy metadata contract.
+  /// @dev This function is called by the `_setAndInitializePolicyMetadata` function in the `LlamaPolicy` contract. The
+  /// `initializer` modifier ensures that this function can be invoked at most once.
   /// @param config The policy metadata configuration, encoded as bytes to support differing initialization arguments in
   /// different policy metadata logic contracts.
-  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA
+  /// @return This return statement must be hardcoded to `true` to ensure that initializing an EOA
   /// (like the zero address) will revert.
   function initialize(bytes memory config) external returns (bool);
 
