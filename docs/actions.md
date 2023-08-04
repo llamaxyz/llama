@@ -82,7 +82,7 @@ It uses this to check the `canCreateAction` mapping on the `LlamaPolicy` contrac
 
 To grant or revoke the ability to create actions with a given Permission ID from a role, we use the `setRolePermission` function on the `LlamaPolicy` contract.
 
-To authorize and unauthorize strategies, we use the `authorizeStrategy` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
+To authorize and unauthorize strategies, we use the `setStrategyAuthorization` function on the `LlamaCore` contract by passing a `bool` to determine if the strategy should be authorized or unauthorized
 
 ## Approvals and Disapprovals
 

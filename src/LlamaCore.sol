@@ -502,6 +502,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Sets `strategyLogic` authorization status, which determines if it can be used to create new strategies.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
+  /// @dev Be careful not to conflate this with `setStrategyAuthorization`.
   /// @param strategyLogic The strategy logic contract to authorize.
   /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
   function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
@@ -517,10 +518,11 @@ contract LlamaCore is Initializable {
 
   /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
   /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
+  /// @dev Be careful not to conflate this with `setStrategyLogicAuthorization`.
   /// @param strategy The address of the deployed strategy contract.
   /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
-  function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
-    _authorizeStrategy(strategy, authorized);
+  function setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) external onlyLlama {
+    _setStrategyAuthorization(strategy, authorized);
   }
 
   /// @notice Sets `accountLogic` authorization status, which determines if it can be used to create new accounts.
@@ -775,13 +777,13 @@ contract LlamaCore is Initializable {
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy].deployed = true;
-      _authorizeStrategy(strategy, true);
+      _setStrategyAuthorization(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
     }
   }
 
   /// @dev Sets the `strategy` authorization status to `authorized`.
-  function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
+  function _setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) internal {
     if (!strategies[strategy].deployed) revert NonExistentStrategy();
     strategies[strategy].authorized = authorized;
     emit StrategyAuthorizationSet(strategy, authorized);
