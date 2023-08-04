@@ -18,9 +18,11 @@ Instances can also deploy an arbitrary amount of accounts, scripts, and guards. 
 
 ## Why Llama?
 
-Legacy governance systems set many foundational standards, but either trend towards high operational overhead or centralization. Llama is designed for protocols to start simple, but progressively decentralize decision-making. Decentralization is achieved through fine-grained access control, so each governance participant is granted the minimum power needed to perform its function. This precision is meant to help instances manage operational complexity, while preserving strong user guarantees.
+Before building Llama, we contributed to many leading protocols and communities. What we built is a response to our experience with the limitations of existing onchain governance solutions. We’re building the framework we wish we had.
 
+Legacy governance systems helped develop many foundational standards, but either trend towards high operational overhead or centralization. Llama is designed for protocols to start simple, but progressively decentralize decision-making. Decentralization is achieved through fine-grained access control, so each governance participant is granted the minimum power needed to perform its function. This precision is meant to help instances manage operational complexity, while preserving strong user guarantees.
 
+By leveraging the transparency of onchain execution and the safety guarantees of timelocks and vetoes, Llama provides a flexible governance toolkit for protocols. Features like expressive function-specific safeguards, customizable strategies, and the ability to programmatically control funds, allow any onchain organization with the need for privileged access to use Llama to secure their operations.
 
 ## Next steps
 
