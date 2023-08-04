@@ -498,7 +498,7 @@ contract LlamaCore is Initializable {
     return _castDisapproval(signer, role, actionInfo, reason);
   }
 
-  // -------- Peripheral Contract Management --------
+  // -------- Instance Management --------
 
   /// @notice Sets `strategyLogic` authorization status, which determines if it can be used to create new strategies.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
