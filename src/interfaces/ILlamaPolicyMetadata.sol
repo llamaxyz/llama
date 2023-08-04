@@ -9,7 +9,7 @@ interface ILlamaPolicyMetadata {
   /// @dev This function is called by the `_setAndInitializePolicyMetadata` function in the `LlamaPolicy` contract.
   /// @param config The policy metadata configuration, encoded as bytes to support differing initialization arguments in
   /// different policy metadata logic contracts.
-  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA
+  /// @return This return statement must be hardcoded to `true` to ensure that initializing an EOA
   /// (like the zero address) will revert.
   function initialize(bytes memory config) external returns (bool);
 

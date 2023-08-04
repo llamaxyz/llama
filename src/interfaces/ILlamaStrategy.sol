@@ -25,7 +25,7 @@ interface ILlamaStrategy {
   /// @dev This function is called by the `_deployStrategies` function in the `LlamaCore` contract.
   /// @param config The strategy configuration, encoded as bytes to support differing constructor arguments in
   /// different strategies.
-  /// @return This return statement must be harcoded to `true` to ensure that initializing an EOA
+  /// @return This return statement must be hardcoded to `true` to ensure that initializing an EOA
   /// (like the zero address) will revert.
   function initialize(bytes memory config) external returns (bool);
 
