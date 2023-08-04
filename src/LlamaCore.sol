@@ -556,7 +556,7 @@ contract LlamaCore is Initializable {
     emit ScriptAuthorizationSet(script, authorized);
   }
 
-  // -------- Function Selector Nonce Management --------
+  // -------- User Nonce Management --------
 
   /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
   /// signatures that have not been used yet.
