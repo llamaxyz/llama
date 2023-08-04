@@ -44,7 +44,7 @@ contract LlamaRelativeQuantityQuorum is LlamaRelativeStrategyBase {
     return quantity > 0 && forceDisapprovalRole[role] ? type(uint96).max : quantity;
   }
 
-  // -------- Implementation Specific Functions --------
+  // -------- At Action Creation and When Determining Action State --------
 
   /// @inheritdoc LlamaRelativeStrategyBase
   function getApprovalSupply(ActionInfo calldata actionInfo) public view override returns (uint96) {

@@ -46,7 +46,7 @@ contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
     return forceDisapprovalRole[role] ? type(uint96).max : 1;
   }
 
-  // -------- Implementation Specific Functions --------
+  // -------- At Action Creation and When Determining Action State --------
 
   /// @inheritdoc LlamaRelativeStrategyBase
   function getApprovalSupply(ActionInfo calldata actionInfo) public view override returns (uint96) {
