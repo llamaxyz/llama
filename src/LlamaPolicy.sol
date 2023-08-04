@@ -201,7 +201,8 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   // -------- Role and Permission Management --------
 
-  /// @notice Initializes a new role with the given role ID and description
+  /// @notice Initializes the next unassigned role with the given `description`.
+  /// @param description The description of the role to initialize.
   function initializeRole(RoleDescription description) external onlyLlama {
     _initializeRole(description);
   }
@@ -216,7 +217,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Assigns a permission ID to a role.
-  /// @param role Name of the role to set.
+  /// @param role ID of the role to assign permission to.
   /// @param permissionData The `(target, selector, strategy)` tuple that will be keccak256 hashed to generate the
   /// permission ID to assign or unassign to the role.
   /// @param hasPermission Whether to assign the permission or remove the permission.
@@ -238,6 +239,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Revokes all roles from the `policyholder` and burns their policy.
+  /// @param policyholder Policyholder to revoke all roles from.
   function revokePolicy(address policyholder) external onlyLlama {
     if (balanceOf(policyholder) == 0) revert AddressDoesNotHoldPolicy(policyholder);
     // We start from i = 1 here because a value of zero is reserved for the "all holders" role, and
@@ -273,26 +275,38 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   // -------- Role and Permission Getters --------
 
-  /// @notice Returns the quantity of the `role` for the given `policyholder`. The returned value is the
+  /// @notice Returns the latest quantity of the `role` for the given `policyholder`. The returned value is the
   /// quantity of the role when approving/disapproving (regardless of strategy).
+  /// @param policyholder Policyholder to get the role quantity for.
+  /// @param role ID of the role.
+  /// @return The latest quantity of the role for the given policyholder.
   function getQuantity(address policyholder, uint8 role) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].latest();
   }
 
-  /// @notice Returns the quantity of the `role` for the given `policyholder` at `timestamp`. The returned
+  /// @notice Returns the past quantity of the `role` for the given `policyholder` at `timestamp`. The returned
   /// value is the quantity of the role when approving/disapproving (regardless of strategy).
+  /// @param policyholder Policyholder to get the role quantity for.
+  /// @param role ID of the role.
+  /// @param timestamp Timestamp at which to get the quantity of the role for the given policyholder.
+  /// @return The past quantity of the role for the given policyholder at `timestamp`.
   function getPastQuantity(address policyholder, uint8 role, uint256 timestamp) external view returns (uint96) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role].getAtProbablyRecentTimestamp(timestamp);
   }
 
-  /// @notice Returns the total number of role holders for given `role`.
+  /// @notice Returns the latest total number of role holders for given `role`.
+  /// @param role ID of the role.
+  /// @return numberOfHolders The latest total number of role holders for given `role`.
   function getRoleSupplyAsNumberOfHolders(uint8 role) public view returns (uint96 numberOfHolders) {
     (numberOfHolders,) = roleSupplyCkpts[role].latest();
   }
 
-  /// @notice Returns the total number of role holders for given `role` at `timestamp`.
+  /// @notice Returns the past total number of role holders for given `role` at `timestamp`.
+  /// @param role ID of the role.
+  /// @param timestamp Timestamp at which to get the past total number of role holders for given `role`.
+  /// @return numberOfHolders The past total number of role holders for given `role` at `timestamp`.
   function getPastRoleSupplyAsNumberOfHolders(uint8 role, uint256 timestamp)
     external
     view
@@ -301,17 +315,25 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     (numberOfHolders,) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
-  /// @notice Returns the sum of quantity across all role holders for given `role`.
+  /// @notice Returns the latest sum of quantity across all role holders for given `role`.
+  /// @param role ID of the role.
+  /// @return totalQuantity The latest sum of quantity across all role holders for given `role`.
   function getRoleSupplyAsQuantitySum(uint8 role) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].latest();
   }
 
   /// @notice Returns the sum of quantity across all role holders for given `role` at `timestamp`.
+  /// @param role ID of the role.
+  /// @param timestamp Timestamp at which to get the sum of quantity across all role holders for given `role`.
+  /// @return totalQuantity The past sum of quantity across all role holders for given `role` at `timestamp`.
   function getPastRoleSupplyAsQuantitySum(uint8 role, uint256 timestamp) external view returns (uint96 totalQuantity) {
     (, totalQuantity) = roleSupplyCkpts[role].getAtProbablyRecentTimestamp(timestamp);
   }
 
-  /// @notice Returns all checkpoints for the given `policyholder` and `role`.
+  /// @notice Returns all policyholder checkpoints for the given `policyholder` and `role`.
+  /// @param policyholder Policyholder to get the checkpoints for.
+  /// @param role ID of the role.
+  /// @return All policyholder checkpoints for the given `policyholder` and `role`.
   function roleBalanceCheckpoints(address policyholder, uint8 role)
     external
     view
@@ -322,16 +344,19 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   }
 
   /// @notice Returns all supply checkpoints for the given `role`.
+  /// @param role ID of the role.
+  /// @return All supply checkpoints for the given `role`.
   function roleSupplyCheckpoints(uint8 role) external view returns (SupplyCheckpoints.History memory) {
     return roleSupplyCkpts[role];
   }
 
-  /// @notice Returns all checkpoints for the given policyholder and role between `start` and
+  /// @notice Returns all policyholder checkpoints for the given policyholder and role between `start` and
   /// `end`, where `start` is inclusive and `end` is exclusive.
   /// @param policyholder Policyholder to get the checkpoints for.
   /// @param role Role held by policyholder to get the checkpoints for.
   /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
   /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
+  /// @return All policyholder checkpoints for the given policyholder and role between `start` and `end`.
   function roleBalanceCheckpoints(address policyholder, uint8 role, uint256 start, uint256 end)
     external
     view
@@ -355,6 +380,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @param role Role held by policyholder to get the checkpoints for.
   /// @param start Start index of the checkpoints to get from their checkpoint history array. This index is inclusive.
   /// @param end End index of the checkpoints to get from their checkpoint history array. This index is exclusive.
+  /// @return All supply checkpoints for the given role between `start` and `end`.
   function roleSupplyCheckpoints(uint8 role, uint256 start, uint256 end)
     external
     view
@@ -372,8 +398,11 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     return SupplyCheckpoints.History(checkpoints);
   }
 
-  /// @notice Returns the number of checkpoints for the given `policyholder` and `role`.
+  /// @notice Returns the number of policyholder checkpoints for the given `policyholder` and `role`.
   /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleBalanceCheckpoints`.
+  /// @param policyholder Policyholder to get the number of checkpoints for.
+  /// @param role ID of the role.
+  /// @return The number of policyholder checkpoints for the given `policyholder` and `role`.
   function roleBalanceCheckpointsLength(address policyholder, uint8 role) external view returns (uint256) {
     uint256 tokenId = _tokenId(policyholder);
     return roleBalanceCkpts[tokenId][role]._checkpoints.length;
@@ -381,17 +410,26 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the number of supply checkpoints for the given `role`.
   /// @dev Useful for knowing the max index when requesting a range of checkpoints in `roleSupplyCheckpoints`.
+  /// @param role ID of the role.
+  /// @return The number of supply checkpoints for the given `role`.
   function roleSupplyCheckpointsLength(uint8 role) external view returns (uint256) {
     return roleSupplyCkpts[role]._checkpoints.length;
   }
 
   /// @notice Returns `true` if the `policyholder` has the `role`, `false` otherwise.
+  /// @param policyholder Policyholder to check if they have the role.
+  /// @param role ID of the role.
+  /// @return `true` if the `policyholder` has the `role`, `false` otherwise.
   function hasRole(address policyholder, uint8 role) public view returns (bool) {
     uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0;
   }
 
   /// @notice Returns `true` if the `policyholder` has the `role` at `timestamp`, `false` otherwise.
+  /// @param policyholder Policyholder to check if they have the role.
+  /// @param role ID of the role.
+  /// @param timestamp Timestamp to check if the role was held at.
+  /// @return `true` if the `policyholder` has the `role` at `timestamp`, `false` otherwise.
   function hasRole(address policyholder, uint8 role, uint256 timestamp) external view returns (bool) {
     uint256 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].getAtProbablyRecentTimestamp(timestamp);
     return quantity > 0;
@@ -399,18 +437,28 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns `true` if the given `policyholder` has a given `permissionId` under the `role`,
   /// `false` otherwise.
+  /// @param policyholder Policyholder to check if they have the permission under the role.
+  /// @param role ID of the role.
+  /// @param permissionId ID of the permission.
+  /// @return `true` if the given `policyholder` has a given `permissionId` under the `role`, `false` otherwise.
   function hasPermissionId(address policyholder, uint8 role, bytes32 permissionId) external view returns (bool) {
     uint96 quantity = roleBalanceCkpts[_tokenId(policyholder)][role].latest();
     return quantity > 0 && canCreateAction[role][permissionId];
   }
 
   /// @notice Returns `true` if the `role` held by `policyholder` is expired, `false` otherwise.
+  /// @param policyholder Policyholder to check if their role is expired.
+  /// @param role ID of the role.
+  /// @return `true` if the `role` held by `policyholder` is expired, `false` otherwise.
   function isRoleExpired(address policyholder, uint8 role) public view returns (bool) {
     (,, uint64 expiration, uint96 quantity) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return quantity > 0 && block.timestamp > expiration;
   }
 
   /// @notice Returns the expiration timestamp of the `role` held by `policyholder`.
+  /// @param policyholder Policyholder to get the expiration timestamp of their role.
+  /// @param role ID of the role.
+  /// @return The expiration timestamp of the `role` held by `policyholder`.
   function roleExpiration(address policyholder, uint8 role) external view returns (uint64) {
     (,, uint64 expiration,) = roleBalanceCkpts[_tokenId(policyholder)][role].latestCheckpoint();
     return expiration;
@@ -418,6 +466,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
 
   /// @notice Returns the total number of policies in existence.
   /// @dev This is just an alias for convenience/familiarity.
+  /// @return The total number of policies in existence.
   function totalSupply() external view returns (uint256) {
     return getRoleSupplyAsNumberOfHolders(ALL_HOLDERS_ROLE);
   }
