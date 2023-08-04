@@ -494,6 +494,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Authorizes a strategy implementation (logic) contract.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
+  /// @dev Be careful not to conflate this with `setStrategyAuthorization`.
   /// @param strategyLogic The strategy logic contract to authorize.
   /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
   function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
@@ -509,6 +510,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
   /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
+  /// @dev Be careful not to conflate this with `setStrategyLogicAuthorization`.
   /// @param strategy The address of the deployed strategy contract.
   /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
   function setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) external onlyLlama {
