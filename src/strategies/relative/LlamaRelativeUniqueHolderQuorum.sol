@@ -16,6 +16,8 @@ import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeSt
 ///     action's quorum.
 ///   - Policyholders with the corresponding approval or disapproval role have a cast weight of 1.
 contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
+  // -------- When Casting Approval --------
+
   /// @inheritdoc ILlamaStrategy
   function getApprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
@@ -29,6 +31,8 @@ contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
     return forceApprovalRole[role] ? type(uint96).max : 1;
   }
 
+  // -------- When Casting Disapproval --------
+
   /// @inheritdoc ILlamaStrategy
   function getDisapprovalQuantityAt(address policyholder, uint8 role, uint256 timestamp)
     external
@@ -41,6 +45,8 @@ contract LlamaRelativeUniqueHolderQuorum is LlamaRelativeStrategyBase {
     if (quantity == 0) return 0;
     return forceDisapprovalRole[role] ? type(uint96).max : 1;
   }
+
+  // -------- At Action Creation and When Determining Action State --------
 
   /// @inheritdoc LlamaRelativeStrategyBase
   function getApprovalSupply(ActionInfo calldata actionInfo) public view override returns (uint96) {
