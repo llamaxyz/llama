@@ -2635,12 +2635,12 @@ contract CreateStrategies is LlamaCoreTest {
   }
 }
 
-contract AuthorizeStrategy is LlamaCoreTest {
+contract SetStrategyAuthorization is LlamaCoreTest {
   function testFuzz_RevertIf_CallerIsNotLlama(address caller) public {
     vm.assume(caller != address(mpExecutor));
     vm.expectRevert(LlamaCore.OnlyLlama.selector);
     vm.prank(caller);
-    mpCore.authorizeStrategy(mpStrategy1, false);
+    mpCore.setStrategyAuthorization(mpStrategy1, false);
   }
 
   function testFuzz_RevertIf_StrategyIsNotAlreadyDeployed(address strategy) public {
@@ -2648,14 +2648,14 @@ contract AuthorizeStrategy is LlamaCoreTest {
     vm.assume(!strategyDeployed);
     vm.expectRevert(LlamaCore.NonExistentStrategy.selector);
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategy(ILlamaStrategy(strategy), true);
+    mpCore.setStrategyAuthorization(ILlamaStrategy(strategy), true);
   }
 
   function test_UnauthorizeStrategy() public {
     assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
 
     vm.prank(address(mpExecutor));
-    mpCore.authorizeStrategy(mpStrategy1, false);
+    mpCore.setStrategyAuthorization(mpStrategy1, false);
     assertEqStrategyStatus(mpCore, mpStrategy1, true, false);
   }
 
@@ -2663,10 +2663,10 @@ contract AuthorizeStrategy is LlamaCoreTest {
     assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
 
     vm.startPrank(address(mpExecutor));
-    mpCore.authorizeStrategy(mpStrategy1, false);
+    mpCore.setStrategyAuthorization(mpStrategy1, false);
     assertEqStrategyStatus(mpCore, mpStrategy1, true, false);
 
-    mpCore.authorizeStrategy(mpStrategy1, true);
+    mpCore.setStrategyAuthorization(mpStrategy1, true);
     assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
     vm.stopPrank();
   }
@@ -2675,19 +2675,19 @@ contract AuthorizeStrategy is LlamaCoreTest {
     vm.startPrank(address(mpExecutor));
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy1, false);
-    mpCore.authorizeStrategy(mpStrategy1, false);
+    mpCore.setStrategyAuthorization(mpStrategy1, false);
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy1, true);
-    mpCore.authorizeStrategy(mpStrategy1, true);
+    mpCore.setStrategyAuthorization(mpStrategy1, true);
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy2, false);
-    mpCore.authorizeStrategy(mpStrategy2, false);
+    mpCore.setStrategyAuthorization(mpStrategy2, false);
 
     vm.expectEmit();
     emit StrategyAuthorizationSet(mpStrategy2, true);
-    mpCore.authorizeStrategy(mpStrategy2, true);
+    mpCore.setStrategyAuthorization(mpStrategy2, true);
     vm.stopPrank();
   }
 }

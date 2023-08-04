@@ -233,7 +233,7 @@ contract LlamaCore is Initializable {
 
   /// @notice Mapping of policyholders to function selectors to current nonces for EIP-712 signatures.
   /// @dev This is used to prevent replay attacks by incrementing the nonce for each operation (`createAction`,
-  /// `castApproval` and `castDisapproval`) signed by the policyholder.
+  /// `cancelAction`, `castApproval` and `castDisapproval`) signed by the policyholder.
   mapping(address policyholder => mapping(bytes4 selector => uint256 currentNonce)) public nonces;
 
   /// @notice Mapping of target to selector to actionGuard address.
@@ -249,11 +249,15 @@ contract LlamaCore is Initializable {
   // ======== Contract Creation and Initialization ========
   // ======================================================
 
+  /// @dev This contract is deployed as a minimal proxy from the factory's `deploy` function. The `_disableInitializers`
+  /// locks the implementation (logic) contract, preventing any future initialization of it.
   constructor() {
     _disableInitializers();
   }
 
   /// @notice Initializes a new `LlamaCore` clone.
+  /// @dev This function is called by the `deploy` function in the `LlamaFactory` contract. The `initializer` modifier
+  /// ensures that this function can be invoked at most once.
   /// @param config The struct that contains the configuration for this Llama instance. See `Structs.sol` for details on
   /// the parameters
   /// @param policyLogic The `LlamaPolicy` implementation (logic) contract
@@ -302,6 +306,8 @@ contract LlamaCore is Initializable {
   // ===========================================
   // ======== External and Public Logic ========
   // ===========================================
+
+  // -------- Action Lifecycle Management --------
 
   /// @notice Creates an action. The creator needs to hold a policy with the permission ID of the provided
   /// `(target, selector, strategy)`.
@@ -492,8 +498,11 @@ contract LlamaCore is Initializable {
     return _castDisapproval(signer, role, actionInfo, reason);
   }
 
-  /// @notice Authorizes a strategy implementation (logic) contract.
+  // -------- Instance Management --------
+
+  /// @notice Sets `strategyLogic` authorization status, which determines if it can be used to create new strategies.
   /// @dev Unauthorizing a strategy logic contract will not affect previously deployed strategies.
+  /// @dev Be careful not to conflate this with `setStrategyAuthorization`.
   /// @param strategyLogic The strategy logic contract to authorize.
   /// @param authorized `true` to authorize the strategy logic, `false` to unauthorize it.
   function setStrategyLogicAuthorization(ILlamaStrategy strategyLogic, bool authorized) external onlyLlama {
@@ -509,13 +518,14 @@ contract LlamaCore is Initializable {
 
   /// @notice Sets `strategy` authorization status, which determines if it can be used to create actions.
   /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
+  /// @dev Be careful not to conflate this with `setStrategyLogicAuthorization`.
   /// @param strategy The address of the deployed strategy contract.
   /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
-  function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
-    _authorizeStrategy(strategy, authorized);
+  function setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) external onlyLlama {
+    _setStrategyAuthorization(strategy, authorized);
   }
 
-  /// @notice Authorizes an account implementation (logic) contract.
+  /// @notice Sets `accountLogic` authorization status, which determines if it can be used to create new accounts.
   /// @dev Unauthorizing an account logic contract will not affect previously deployed accounts.
   /// @param accountLogic The account logic contract to authorize.
   /// @param authorized `true` to authorize the account logic, `false` to unauthorize it.
@@ -540,7 +550,7 @@ contract LlamaCore is Initializable {
     emit ActionGuardSet(target, selector, guard);
   }
 
-  /// @notice Authorizes `script` to be eligible to be delegatecalled from the executor.
+  /// @notice Sets `script` authorization status, which determines if it can be delegatecalled from the executor.
   /// @dev To unauthorize a `script`, set `authorized` to `false`.
   /// @param script The address of the script contract.
   /// @param authorized `true` to authorize the script, `false` to unauthorize it.
@@ -550,6 +560,8 @@ contract LlamaCore is Initializable {
     emit ScriptAuthorizationSet(script, authorized);
   }
 
+  // -------- User Nonce Management --------
+
   /// @notice Increments the caller's nonce for the given `selector`. This is useful for revoking
   /// signatures that have not been used yet.
   /// @param selector The function selector to increment the nonce for.
@@ -557,6 +569,8 @@ contract LlamaCore is Initializable {
     // Safety: Can never overflow a uint256 by incrementing.
     nonces[msg.sender][selector] = LlamaUtils.uncheckedIncrement(nonces[msg.sender][selector]);
   }
+
+  // -------- Action and State Getters --------
 
   /// @notice Get an Action struct by `actionId`.
   /// @param actionId ID of the action.
@@ -763,13 +777,13 @@ contract LlamaCore is Initializable {
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy].deployed = true;
-      _authorizeStrategy(strategy, true);
+      _setStrategyAuthorization(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
     }
   }
 
   /// @dev Sets the `strategy` authorization status to `authorized`.
-  function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
+  function _setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) internal {
     if (!strategies[strategy].deployed) revert NonExistentStrategy();
     strategies[strategy].authorized = authorized;
     emit StrategyAuthorizationSet(strategy, authorized);
