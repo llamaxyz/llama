@@ -56,7 +56,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Arbitrary Aggregation ========
   // =======================================
 
-  /// @notice Batch call arbitrary targets + selectors permissioned by `LlamaExecutor`, with arbitrary data.
+  /// @notice Batch arbitrary calls to `LlamaCore` and `LlamaPolicy` in a single action.
   /// @dev This method should be assigned carefully, since it allows for arbitrary calls to be made within the context
   /// of `LlamaExecutor` as this script will be delegatecalled. It is safer to permission the functions below as needed
   /// than to permission the aggregate function itself.
