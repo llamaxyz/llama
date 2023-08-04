@@ -511,8 +511,8 @@ contract LlamaCore is Initializable {
   /// @dev To unauthorize a deployed `strategy`, set `authorized` to `false`.
   /// @param strategy The address of the deployed strategy contract.
   /// @param authorized `true` to authorize the strategy, `false` to unauthorize it.
-  function authorizeStrategy(ILlamaStrategy strategy, bool authorized) external onlyLlama {
-    _authorizeStrategy(strategy, authorized);
+  function setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) external onlyLlama {
+    _setStrategyAuthorization(strategy, authorized);
   }
 
   /// @notice Authorizes an account implementation (logic) contract.
@@ -763,13 +763,13 @@ contract LlamaCore is Initializable {
       ILlamaStrategy strategy = ILlamaStrategy(Clones.cloneDeterministic(address(llamaStrategyLogic), salt));
       strategy.initialize(strategyConfigs[i]);
       strategies[strategy].deployed = true;
-      _authorizeStrategy(strategy, true);
+      _setStrategyAuthorization(strategy, true);
       emit StrategyCreated(strategy, llamaStrategyLogic, strategyConfigs[i]);
     }
   }
 
   /// @dev Sets the `strategy` authorization status to `authorized`.
-  function _authorizeStrategy(ILlamaStrategy strategy, bool authorized) internal {
+  function _setStrategyAuthorization(ILlamaStrategy strategy, bool authorized) internal {
     if (!strategies[strategy].deployed) revert NonExistentStrategy();
     strategies[strategy].authorized = authorized;
     emit StrategyAuthorizationSet(strategy, authorized);
