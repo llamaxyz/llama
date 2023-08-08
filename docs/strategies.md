@@ -56,7 +56,7 @@ To learn more about the differences between strategies and how they calculate th
 
 ## Strategy Comparison
 
-Below is a table comparing the key features of the strategy logic contracts.
+Llama instances can create new types of strategies by authorizing additional strategy logic contracts. Below is a table comparing the key features of the recommended strategy logic contracts.
 
 ### Definitions
 
