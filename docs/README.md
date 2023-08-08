@@ -32,3 +32,4 @@ To learn more about how the Llama framework works, read our documentation and us
 - [Actions](https://github.com/llamaxyz/llama/blob/main/docs/actions.md)
 - [Policies](https://github.com/llamaxyz/llama/blob/main/docs/policies.md)
 - [Strategies](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md)
+- [Accounts](https://github.com/llamaxyz/llama/blob/main/docs/accounts.md)
