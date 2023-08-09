@@ -8,7 +8,7 @@ Instances can receive native assets such as ETH or tokens such as USDC and use L
 
 There are separate functions for transfers and approvals, along with functions for ERC-721 and ERC-1155 operator approvals. There are also additional functions to batch transfer tokens to multiple recipients in a single transaction.
 
-Instances can deploy dedicated accounts for different organizational functions and permission each function independently. For more granular fund management rules, instances can implement [guards](https://github.com/llamaxyz/llama/blob/main/docs/actions.md#guards) to set requirements based on token amount, frequency of transfer, market conditions, or any other rule that can be expressed as code.
+Instances can deploy dedicated accounts for different organizational functions and permission each function independently. For more granular fund management rules, instances can implement [guards](https://github.com/llamaxyz/llama/blob/main/docs/actions.md#guards) to set requirements based on token amount, frequency of transfer, market conditions, or any other rule(s) that can be expressed as code.
 
 ## Arbitrary execute
 
