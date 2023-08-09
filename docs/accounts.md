@@ -6,7 +6,7 @@ Accounts are contracts that can be deployed directly by Llama instances to manag
 
 Instances can receive native assets such as ETH or tokens such as USDC and use Llama to set permissions on how these tokens can be approved and transferred.
 
-There are separate functions for transfers, approvals, and operator approvals for ERC-721 and ERC-1155. There are also additional functions to batch transfer tokens to multiple recipients in a single transaction.
+There are separate functions for transfers and approvals, along with functions for ERC-721 and ERC-1155 operator approvals. There are also additional functions to batch transfer tokens to multiple recipients in a single transaction.
 
 Instances can deploy dedicated accounts for different organizational functions and permission each function independently. For more granular fund management rules, instances can implement [guards](https://github.com/llamaxyz/llama/blob/main/docs/actions.md#guards) to change requirements based on token amount, frequency of transfer, market conditions, or any other rule that can be expressed as code.
 
