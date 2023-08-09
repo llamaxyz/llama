@@ -1,6 +1,6 @@
 # Accounts
 
-Accounts are contracts that can be deployed directly by Llama instances to manage onchain assets. Instances can deploy many accounts and create new types by authorizing additional account logic contracts. Llama’s recommended account logic contract includes functions to manage native assets, ERC-20 tokens, ERC-721 tokens, ERC-1155 tokens, and an arbitrary execute function that can be used to support non–standard token types and extend an account’s functionality.
+Accounts are contracts that can be deployed directly by Llama instances to manage onchain assets. Instances can deploy many accounts and create new types by authorizing additional account logic contracts. Llama’s recommended account logic contract includes functions to manage native assets (e.g. ETH), ERC-20 tokens, ERC-721 tokens, ERC-1155 tokens, and an arbitrary execute function that can be used to support non–standard token types and extend an account’s functionality.
 
 ## Managing Tokens
 
