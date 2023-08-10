@@ -28,7 +28,8 @@ By leveraging the transparency of onchain execution and the safety guarantees of
 
 To learn more about how the Llama framework works, read our documentation and use the [forge doc](https://github.com/llamaxyz/llama#documentation) command to generate and view the Llama smart contract reference.
 
-- [Instance deployment](https://github.com/llamaxyz/llama/blob/main/docs/instance-deployment.md)
 - [Actions](https://github.com/llamaxyz/llama/blob/main/docs/actions.md)
 - [Policies](https://github.com/llamaxyz/llama/blob/main/docs/policies.md)
 - [Strategies](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md)
+- [Accounts](https://github.com/llamaxyz/llama/blob/main/docs/accounts.md)
+- [Instance deployment](https://github.com/llamaxyz/llama/blob/main/docs/instance-deployment.md)
