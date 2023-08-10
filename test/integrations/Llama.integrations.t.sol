@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Test, console2} from "forge-std/Test.sol";
+
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
+import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 
@@ -15,25 +18,25 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
-contract LlamaIntegrationsTest is LlamaTestSetup {
-  function setUp() public virtual override {
-    LlamaTestSetup.setUp();
-  }
+contract LlamaIntegrationsTest is DeployLlamaFactory, DeployLlamaInstance, Test {
+  // function setUp() public virtual override {
+  //   LlamaTestSetup.setUp();
+  // }
 }
 
-contract Setup is LlamaIntegrationsTest {
-  function test_setUp() public {
-    assertEq(mpCore.name(), "Mock Protocol Llama");
+contract Setup {
+  // function test_setUp() public {
+  //   assertEq(mpCore.name(), "Mock Protocol Llama");
 
-    assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
-    assertEqStrategyStatus(mpCore, mpStrategy2, true, true);
+  //   assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
+  //   assertEqStrategyStatus(mpCore, mpStrategy2, true, true);
 
-    vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    mpAccount1.initialize("LlamaAccount0");
+  //   vm.expectRevert(bytes("Initializable: contract is already initialized"));
+  //   mpAccount1.initialize("LlamaAccount0");
 
-    vm.expectRevert(bytes("Initializable: contract is already initialized"));
-    mpAccount2.initialize("LlamaAccount1");
-  }
+  //   vm.expectRevert(bytes("Initializable: contract is already initialized"));
+  //   mpAccount2.initialize("LlamaAccount1");
+  // }
 }
 
 contract LlamaOrgIntegration is LlamaIntegrationsTest {
@@ -43,6 +46,11 @@ contract LlamaOrgIntegration is LlamaIntegrationsTest {
   Founders,
   Ranchers
 }
+
+  // This is the address that we're using with the CreateAction script to
+  // automate action creation to deploy new llamaCore instances. It could be
+  // replaced with any address that we hold the private key for.
+  address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
 
   LlamaCore llamaInstanceCore;
   LlamaExecutor llamaInstanceExecutor;
@@ -64,27 +72,25 @@ contract LlamaOrgIntegration is LlamaIntegrationsTest {
   address llamaDev3;
   uint256 llamaDevPK;
 
-  
+  function setUp() public virtual {
 
-  function setUp() public virtual override {
-    LlamaTestSetup.setUp();
+    // Deploy the factory
+    DeployLlamaFactory.run();
+
     (shreyas, shreyasPK) = makeAddrAndKey("Shreyas");
     (austin, austinPK) = makeAddrAndKey("Austin");
     (llamaDev1, llamaDev1PK) = makeAddrAndKey("LlamaDev1");
     (llamaDev2, llamaDev2PK) = makeAddrAndKey("LlamaDev2");
     (llamaDev3, llamaDevPK) = makeAddrAndKey("LlamaDev3");
 
-    // this line overwrites a global variable from LlamaTestSetup, and takes advantage of the helper functions defined in LlamaTestSetup. Because this is in `setUp()`, it will only overwrite this value for the tests in this contract block.
-    createActionScriptInput = DeployUtils.readScriptInput("mockLlamaIntegration.json");
-
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "mockLlamaIntegration.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
 
     llamaInstanceCore = core;
-    llamaInstancePolicy = mpCore.policy();
-    llamaInstanceExecutor = mpCore.executor();
-    llamaInstancePolicyMetadata = mpPolicy.llamaPolicyMetadata();
+    llamaInstancePolicy = llamaInstanceCore.policy();
+    llamaInstanceExecutor = llamaInstanceCore.executor();
+    llamaInstancePolicyMetadata = llamaInstancePolicy.llamaPolicyMetadata();
 
-    bytes[] memory instanceStrategyConfigs = DeployUtils.readRelativeStrategies("mockLlamaIntegration.json");
+    // bytes[] memory instanceStrategyConfigs = DeployUtils.readRelativeStrategies("mockLlamaIntegration.json");
     // bytes[] memory rootAccounts = DeployUtils.readAccounts("mockLlamaIntegration.json");
 
     // llamaInstanceAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
