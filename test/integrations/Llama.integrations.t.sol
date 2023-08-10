@@ -83,7 +83,7 @@ contract LlamaOrgIntegration is LlamaIntegrationsTest {
     (llamaDev2, llamaDev2PK) = makeAddrAndKey("LlamaDev2");
     (llamaDev3, llamaDevPK) = makeAddrAndKey("LlamaDev3");
 
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
+    // DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "mockLlamaIntegration.json");
 
     llamaInstanceCore = core;
     llamaInstancePolicy = llamaInstanceCore.policy();

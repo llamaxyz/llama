@@ -23,6 +23,7 @@ import {
   RolePermissionData
 } from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
+import {SupplyCheckpoints} from "src/lib/SupplyCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -1511,5 +1512,29 @@ contract SetAndInitializePolicyMetadata is LlamaPolicyTest {
     vm.expectRevert();
     vm.prank(address(mpExecutor));
     mpPolicy.setAndInitializePolicyMetadata(ILlamaPolicyMetadata(address(0)), abi.encode(newColor, newLogo));
+  }
+}
+
+contract RoleSupplyCheckpoints is LlamaPolicyTest {
+  function test_ReturnsCurrentSupply(uint256 timestamp, uint96 quantity) public {
+    timestamp = bound(timestamp, block.timestamp, DEFAULT_ROLE_EXPIRATION - 1);
+    quantity = uint96(bound(quantity, 1, type(uint96).max));
+    uint supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.TestRole1));
+
+    assertEq(supplyCheckpointLength, 0);
+
+    vm.warp(timestamp);
+
+    vm.prank(address(mpExecutor));
+    mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, quantity, DEFAULT_ROLE_EXPIRATION);
+    
+    supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.TestRole1));
+    assertEq(supplyCheckpointLength, 1);
+
+    SupplyCheckpoints.History memory supplyCheckpoint = mpPolicy.roleSupplyCheckpoints(uint8(Roles.TestRole1));
+
+    assertEq(supplyCheckpoint._checkpoints[0].timestamp, timestamp);
+    assertEq(supplyCheckpoint._checkpoints[0].numberOfHolders, 1);
+    assertEq(supplyCheckpoint._checkpoints[0].totalQuantity, quantity);
   }
 }
