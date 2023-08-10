@@ -1538,10 +1538,17 @@ contract RoleSupplyCheckpoints is LlamaPolicyTest {
     assertEq(supplyCheckpoint._checkpoints[0].totalQuantity, quantity);
   }
 
-  function test_RevertsIf_InvalidIndices(uint256 start, uint256 end) public {
+  function test_RevertsIf_StartIsGreaterThanEnd(uint256 start, uint256 end) public {
     end = bound(end, 1, type(uint256).max - 1);
     start = bound(start, end, type(uint256).max);
     vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
     mpPolicy.roleSupplyCheckpoints(uint8(Roles.TestRole1), start, end);
+  }
+
+  function test_RevertsIf_EndIsGreaterThenLength(uint256 end) public {
+    uint supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.AllHolders));
+    end = bound(end, supplyCheckpointLength + 1, type(uint256).max);
+    vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
+    mpPolicy.roleSupplyCheckpoints(uint8(Roles.AllHolders), 0, end);
   }
 }
