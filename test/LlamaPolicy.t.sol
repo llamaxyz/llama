@@ -1519,7 +1519,7 @@ contract RoleSupplyCheckpoints is LlamaPolicyTest {
   function test_ReturnsCurrentSupply(uint256 timestamp, uint96 quantity) public {
     timestamp = bound(timestamp, block.timestamp, DEFAULT_ROLE_EXPIRATION - 1);
     quantity = uint96(bound(quantity, 1, type(uint96).max));
-    uint supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.TestRole1));
+    uint256 supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.TestRole1));
 
     assertEq(supplyCheckpointLength, 0);
 
@@ -1527,7 +1527,7 @@ contract RoleSupplyCheckpoints is LlamaPolicyTest {
 
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), arbitraryAddress, quantity, DEFAULT_ROLE_EXPIRATION);
-    
+
     supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.TestRole1));
     assertEq(supplyCheckpointLength, 1);
 
@@ -1546,7 +1546,7 @@ contract RoleSupplyCheckpoints is LlamaPolicyTest {
   }
 
   function test_RevertsIf_EndIsGreaterThenLength(uint256 end) public {
-    uint supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.AllHolders));
+    uint256 supplyCheckpointLength = mpPolicy.roleSupplyCheckpointsLength(uint8(Roles.AllHolders));
     end = bound(end, supplyCheckpointLength + 1, type(uint256).max);
     vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
     mpPolicy.roleSupplyCheckpoints(uint8(Roles.AllHolders), 0, end);

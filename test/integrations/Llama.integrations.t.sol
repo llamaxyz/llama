@@ -19,33 +19,32 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract LlamaIntegrationsTest is DeployLlamaFactory, DeployLlamaInstance, Test {
-  // function setUp() public virtual override {
-  //   LlamaTestSetup.setUp();
-  // }
+// function setUp() public virtual override {
+//   LlamaTestSetup.setUp();
+// }
 }
 
 contract Setup {
-  // function test_setUp() public {
-  //   assertEq(mpCore.name(), "Mock Protocol Llama");
+// function test_setUp() public {
+//   assertEq(mpCore.name(), "Mock Protocol Llama");
 
-  //   assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
-  //   assertEqStrategyStatus(mpCore, mpStrategy2, true, true);
+//   assertEqStrategyStatus(mpCore, mpStrategy1, true, true);
+//   assertEqStrategyStatus(mpCore, mpStrategy2, true, true);
 
-  //   vm.expectRevert(bytes("Initializable: contract is already initialized"));
-  //   mpAccount1.initialize("LlamaAccount0");
+//   vm.expectRevert(bytes("Initializable: contract is already initialized"));
+//   mpAccount1.initialize("LlamaAccount0");
 
-  //   vm.expectRevert(bytes("Initializable: contract is already initialized"));
-  //   mpAccount2.initialize("LlamaAccount1");
-  // }
+//   vm.expectRevert(bytes("Initializable: contract is already initialized"));
+//   mpAccount2.initialize("LlamaAccount1");
+// }
 }
 
 contract LlamaOrgIntegration is LlamaIntegrationsTest {
-
   enum LlamaRoles {
-  AllHolders,
-  Founders,
-  Ranchers
-}
+    AllHolders,
+    Founders,
+    Ranchers
+  }
 
   // This is the address that we're using with the CreateAction script to
   // automate action creation to deploy new llamaCore instances. It could be
@@ -73,34 +72,36 @@ contract LlamaOrgIntegration is LlamaIntegrationsTest {
   uint256 llamaDevPK;
 
   function setUp() public virtual {
-
     // Deploy the factory
-    DeployLlamaFactory.run();
+    // DeployLlamaFactory.run();
 
-    (shreyas, shreyasPK) = makeAddrAndKey("Shreyas");
-    (austin, austinPK) = makeAddrAndKey("Austin");
-    (llamaDev1, llamaDev1PK) = makeAddrAndKey("LlamaDev1");
-    (llamaDev2, llamaDev2PK) = makeAddrAndKey("LlamaDev2");
-    (llamaDev3, llamaDevPK) = makeAddrAndKey("LlamaDev3");
+    // (shreyas, shreyasPK) = makeAddrAndKey("Shreyas");
+    // (austin, austinPK) = makeAddrAndKey("Austin");
+    // (llamaDev1, llamaDev1PK) = makeAddrAndKey("LlamaDev1");
+    // (llamaDev2, llamaDev2PK) = makeAddrAndKey("LlamaDev2");
+    // (llamaDev3, llamaDevPK) = makeAddrAndKey("LlamaDev3");
 
     // DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "mockLlamaIntegration.json");
 
-    llamaInstanceCore = core;
-    llamaInstancePolicy = llamaInstanceCore.policy();
-    llamaInstanceExecutor = llamaInstanceCore.executor();
-    llamaInstancePolicyMetadata = llamaInstancePolicy.llamaPolicyMetadata();
+    // llamaInstanceCore = core;
+    // llamaInstancePolicy = llamaInstanceCore.policy();
+    // llamaInstanceExecutor = llamaInstanceCore.executor();
+    // llamaInstancePolicyMetadata = llamaInstancePolicy.llamaPolicyMetadata();
 
     // bytes[] memory instanceStrategyConfigs = DeployUtils.readRelativeStrategies("mockLlamaIntegration.json");
     // bytes[] memory rootAccounts = DeployUtils.readAccounts("mockLlamaIntegration.json");
 
-    // llamaInstanceAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0], address(rootCore));
-    // llamaInstanceAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1], address(rootCore));
+    // llamaInstanceAccount1 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[0],
+    // address(rootCore));
+    // llamaInstanceAccount2 = lens.computeLlamaAccountAddress(address(accountLogic), rootAccounts[1],
+    // address(rootCore));
 
     // rootStrategy1 =
-    //   lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[1], address(rootCore));
+    //   lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[1],
+    // address(rootCore));
     // rootStrategy2 =
-    //   lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[2], address(rootCore));
-
+    //   lens.computeLlamaStrategyAddress(address(relativeHolderQuorumLogic), instanceStrategyConfigs[2],
+    // address(rootCore));
   }
 
   function test_CompleteActionFlow() public {
