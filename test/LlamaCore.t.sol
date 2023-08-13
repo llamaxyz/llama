@@ -2633,6 +2633,52 @@ contract CreateStrategies is LlamaCoreTest {
     vm.expectRevert();
     mpCore.createStrategies(ILlamaStrategy(address(0)), DeployUtils.encodeStrategyConfigs(newStrategies));
   }
+
+  function test_ActionsCanBeCreatedQueuedAndExecutedInOneBlock() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 0,
+      queuingPeriod: 0,
+      expirationPeriod: 2 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 10_001,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, strategyAddress);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.startPrank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
+    mpCore.createStrategies(relativeQuantityQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
+    vm.stopPrank();
+
+    mineBlock();
+
+    uint256 preExecutionTimestamp = block.timestamp;
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), strategyAddress, address(mockProtocol), 0, data, "");
+
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), strategyAddress, address(mockProtocol), 0, data
+    );
+    mpCore.queueAction(actionInfo);
+    mpCore.executeAction(actionInfo);
+
+    uint256 postExecutionTimestamp = block.timestamp;
+    assertEq(postExecutionTimestamp, preExecutionTimestamp);
+  }
 }
 
 contract SetStrategyAuthorization is LlamaCoreTest {
