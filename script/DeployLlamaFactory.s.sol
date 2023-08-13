@@ -5,7 +5,6 @@ import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
@@ -30,7 +29,6 @@ contract DeployLlamaFactory is Script {
   LlamaAccount accountLogic;
   LlamaPolicy policyLogic;
   LlamaPolicyMetadata policyMetadataLogic;
-  LlamaExecutor llamaExecutor;
 
   // Factory and lens contracts.
   LlamaFactory factory;
@@ -92,11 +90,5 @@ contract DeployLlamaFactory is Script {
     DeployUtils.print(
       string.concat("  LlamaRelativeUniqueHolderQuorumLogic:", vm.toString(address(relativeUniqueHolderQuorumLogic)))
     );
-
-    // By deploying and verifying an unused executor in this script, we ensure that instances will have their executor
-    // automatically verified.
-    vm.broadcast();
-    llamaExecutor = new LlamaExecutor();
-    DeployUtils.print(string.concat("  LlamaExecutor:", vm.toString(address(llamaExecutor))));
   }
 }
