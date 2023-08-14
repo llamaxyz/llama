@@ -587,7 +587,9 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
     mpCore.cancelAction(actionInfo);
 
     // state == ActionState.Canceled
-    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.CannotCancelInState.selector, ActionState.Canceled));
+    vm.expectRevert(
+      abi.encodeWithSelector(LlamaAbsoluteStrategyBase.CannotCancelInState.selector, ActionState.Canceled)
+    );
     testStrategy.validateActionCancelation(actionInfo, actionInfo.creator);
 
     // state == ActionState.Expired
@@ -600,7 +602,8 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
     // state == ActionState.Failed
     actionInfo = createAction(testStrategy);
     mpCore.queueAction(actionInfo);
-    vm.prank(address(approverAdam)); // using approver adam to disapprove here since deployTestStrategyAndSetRole sets one role for both approvals and disapprovals
+    vm.prank(address(approverAdam)); // using approver adam to disapprove here since deployTestStrategyAndSetRole sets
+      // one role for both approvals and disapprovals
     mpCore.castDisapproval(uint8(Roles.Approver), actionInfo, "");
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.CannotCancelInState.selector, ActionState.Failed));
     testStrategy.validateActionCancelation(actionInfo, actionInfo.creator);
@@ -610,10 +613,12 @@ contract ValidateActionCancelation is LlamaAbsoluteStrategyBaseTest {
     mpCore.queueAction(actionInfo);
     vm.warp(block.timestamp + 2 days); // queueing period
     mpCore.executeAction(actionInfo);
-    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.CannotCancelInState.selector, ActionState.Executed));
+    vm.expectRevert(
+      abi.encodeWithSelector(LlamaAbsoluteStrategyBase.CannotCancelInState.selector, ActionState.Executed)
+    );
     testStrategy.validateActionCancelation(actionInfo, actionInfo.creator);
   }
-  }
+}
 
 contract GetApprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
   function testFuzz_ReturnsZeroQuantityPriorToAccountGainingPermission(
