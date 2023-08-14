@@ -1031,6 +1031,7 @@ contract RoleBalanceCheckpointsOverload is RoleBalanceCheckpointTest {
   function test_RevertIf_EndIsGreaterThanArrayLength() public {
     uint256 length = mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1))._checkpoints.length;
     uint256 end = length + 1;
+    vm.assume(end > 2); // we use 2 as start so we need to check that its always greater than that
     vm.expectRevert(LlamaPolicy.InvalidIndices.selector);
     mpPolicy.roleBalanceCheckpoints(arbitraryPolicyholder, uint8(Roles.TestRole1), 2, end);
   }
