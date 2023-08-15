@@ -6,6 +6,8 @@ import {Test, console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {stdJson} from "forge-std/Script.sol";
 
+import {MockInstanceUpdateScript} from "test/mock/MockInstanceUpdateScript.sol";
+import {MockInstanceUpdateVersion1} from "test/mock/MockInstanceUpdateVersion1.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {MockScript} from "test/mock/MockScript.sol";
 
@@ -23,7 +25,10 @@ import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
+  event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
+
   address llamaAlice;
   uint256 llamaAlicePrivateKey;
   address llamaBob;
@@ -35,6 +40,17 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
   address llamaErica;
   uint256 llamaEricaPrivateKey;
 
+  address mockAlice;
+  uint256 mockAlicePrivateKey;
+  address mockBob;
+  uint256 mockBobPrivateKey;
+  address mockCharlie;
+  uint256 mockCharliePrivateKey;
+  address mockDale;
+  uint256 mockDalePrivateKey;
+  address mockErica;
+  uint256 mockEricaPrivateKey;
+
   LlamaCore llamaInstanceCore;
   LlamaPolicy llamaInstancePolicy;
   LlamaExecutor llamaInstanceExecutor;
@@ -43,18 +59,32 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
   LlamaPolicy mockPolicy;
   LlamaExecutor mockExecutor;
 
+  ILlamaStrategy MOCK_VOTING_STRATEGY = ILlamaStrategy(0x225D6692B4DD673C6ad57B4800846341d027BC66);
+  ILlamaStrategy MOCK_OPTIMISTIC_STRATEGY = ILlamaStrategy(0xF7E4BB5159c3fdc50e1Ef6b80BD69988DD6f438d);
+  ILlamaStrategy LLAMA_VOTING_STRATEGY = ILlamaStrategy(0x881E25C4470136B1B2D64a4942b5346e41477fB6);
+
+  MockInstanceUpdateScript mockInstanceUpdateScript;
+  MockInstanceUpdateVersion1 mockInstanceUpdateVersion1;
+
   function mineBlock() internal {
     vm.roll(block.number + 1);
     vm.warp(block.timestamp + 1);
   }
 
   function setUp() public virtual {
-    // Setting up user addresses and private keys.
+    // Setting up user addresses and private keys for Llama.
     (llamaAlice, llamaAlicePrivateKey) = makeAddrAndKey("llamaAlice");
     (llamaBob, llamaBobPrivateKey) = makeAddrAndKey("llamaBob");
     (llamaCharlie, llamaCharliePrivateKey) = makeAddrAndKey("llamaCharlie");
     (llamaDale, llamaDalePrivateKey) = makeAddrAndKey("llamaDale");
     (llamaErica, llamaEricaPrivateKey) = makeAddrAndKey("llamaErica");
+
+    // Setting up user addresses and private keys for Mock.
+    (mockAlice, mockAlicePrivateKey) = makeAddrAndKey("mockAlice");
+    (mockBob, mockBobPrivateKey) = makeAddrAndKey("mockBob");
+    (mockCharlie, mockCharliePrivateKey) = makeAddrAndKey("mockCharlie");
+    (mockDale, mockDalePrivateKey) = makeAddrAndKey("mockDale");
+    (mockErica, mockEricaPrivateKey) = makeAddrAndKey("mockErica");
 
     // Deploy the factory
     DeployLlamaFactory.run();
@@ -72,11 +102,82 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
     mockExecutor = mockCore.executor();
 
     mineBlock();
+
+    mockInstanceUpdateScript = new MockInstanceUpdateScript();
+
+    // In practice this can either happen as an initial action post deployment or we can normalize a post deployment
+    // configuration flow.
+    // This would work by deploying with an instant execution strategy and role holder which is an address under our
+    // control. This address would use its root authority to setup the instance and then remove itself from the system.
+    // The user could confirm that none of these root permissions are still active before transferring ownership.
+    vm.startPrank(address(mockExecutor));
+    mockCore.setScriptAuthorization(address(mockInstanceUpdateScript), true);
+    mockPolicy.setRolePermission(
+      uint8(2),
+      PermissionData(
+        address(mockInstanceUpdateScript),
+        MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
+        MOCK_VOTING_STRATEGY
+      ),
+      true
+    );
+    mockPolicy.setRolePermission(
+      uint8(2),
+      PermissionData(
+        address(mockInstanceUpdateScript),
+        MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
+        MOCK_OPTIMISTIC_STRATEGY
+      ),
+      true
+    );
+    vm.stopPrank();
+
+    // Deploy the version 1 update script
+    mockInstanceUpdateVersion1 = new MockInstanceUpdateVersion1();
+
+    // Now that llama has permission to create actions for `mockInstanceUpdateScript`, it needs a permission in its own
+    // instance for calling createAction.
+    vm.prank(address(llamaInstanceExecutor));
+    llamaInstancePolicy.setRolePermission(
+      uint8(1), PermissionData(address(mockCore), LlamaCore.createAction.selector, LLAMA_VOTING_STRATEGY), true
+    );
+  }
+
+  function _llamaApproveAction(address _policyholder, ActionInfo memory actionInfo) public {
+    vm.expectEmit();
+    emit ApprovalCast(actionInfo.id, _policyholder, uint8(1), 1, "");
+    vm.prank(_policyholder);
+    llamaInstanceCore.castApproval(uint8(1), actionInfo, "");
   }
 }
 
-contract InitialTest is MultipleInstanceTestSetup {
-  function test_InitiaXl() external {
+contract MultipleInstanceTest is MultipleInstanceTestSetup {
+  function test_createsActionToAuthorizeScript() external {
+    PermissionData memory permissionData = PermissionData(
+      address(mockInstanceUpdateVersion1), MockInstanceUpdateVersion1.updateInstance.selector, MOCK_VOTING_STRATEGY
+    );
+    bytes memory actionData = abi.encodeCall(MockInstanceUpdateScript.authorizeScriptAndSetPermission, (permissionData));
+    bytes memory data = abi.encodeCall(
+      LlamaCore.createAction, (uint8(2), MOCK_VOTING_STRATEGY, address(mockInstanceUpdateScript), 0, actionData, "")
+    );
+    vm.prank(llamaAlice);
+    uint256 actionId = llamaInstanceCore.createAction(uint8(1), LLAMA_VOTING_STRATEGY, address(mockCore), 0, data, "");
+    ActionInfo memory actionInfo =
+      ActionInfo(actionId, llamaAlice, uint8(1), LLAMA_VOTING_STRATEGY, address(mockCore), 0, data);
+
+    mineBlock();
+
+    _llamaApproveAction(llamaBob, actionInfo);
+    _llamaApproveAction(llamaCharlie, actionInfo);
+    _llamaApproveAction(llamaDale, actionInfo);
+
+    // Executing llama's action creates an action for the mock instance
+    vm.expectEmit();
+    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
+    llamaInstanceCore.executeAction(actionInfo);
+
+    assertEq();
+
     // SCRIPT OPTIMIZATION
 
     /*
@@ -88,6 +189,7 @@ contract InitialTest is MultipleInstanceTestSetup {
     3. The script will have a function that allows a call to setScriptAuthorization and to setRolePermission to the
     governance maintenance role with one
    of the two strategies, the script being authorized, any target.
+   
     4. Llama will deploy an upgrade contract and use a multisig like strategy to propose calling the governance script
     with this as a parameter.
     5. Now mock instance governance decides if they want to authorize this upgrade script, give llama the role
@@ -146,12 +248,5 @@ contract InitialTest is MultipleInstanceTestSetup {
     to propose calling this newly created target's execute finction with the voting strategy
       7. Core team member creates action to call upgrade with voting, LlamaV1Upgrade script, execute function
     */
-
-    bytes memory scriptCalldata = abi.encodeWithSignature("setScriptAuthorization(address,bool)", address(0), true);
-    console2.log(address(llamaInstanceExecutor));
-    vm.prank(address(llamaInstanceExecutor));
-    mockCore.createAction(
-      2, ILlamaStrategy(0x25B47aEb31b20254E2D8c1814E2648Aa1A68CCC3), address(mockCore), 0, scriptCalldata, "Hello"
-    );
   }
 }
