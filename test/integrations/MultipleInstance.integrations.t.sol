@@ -4,30 +4,36 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 
 import {Vm} from "forge-std/Vm.sol";
-import {stdJson} from "forge-std/Script.sol";
 
 import {MockInstanceUpdateScript} from "test/mock/MockInstanceUpdateScript.sol";
 import {MockInstanceUpdateVersion1} from "test/mock/MockInstanceUpdateVersion1.sol";
-import {MockProtocol} from "test/mock/MockProtocol.sol";
-import {MockScript} from "test/mock/MockScript.sol";
 
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
-import {DeployUtils} from "script/DeployUtils.sol";
 
-import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
-import {ILlamaPolicyMetadata} from "src/interfaces/ILlamaPolicyMetadata.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
-import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
+import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 
 contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   event ApprovalCast(uint256 id, address indexed policyholder, uint8 indexed role, uint256 quantity, string reason);
+  event ActionCreated(
+    uint256 id,
+    address indexed creator,
+    uint8 role,
+    ILlamaStrategy indexed strategy,
+    address indexed target,
+    uint256 value,
+    bytes data,
+    string description
+  );
 
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
+
+  uint8 CORE_TEAM_ROLE = uint8(1);
+  uint8 GOVERNANCE_MAINTAINER_ROLE = uint8(2);
 
   address llamaAlice;
   uint256 llamaAlicePrivateKey;
@@ -113,7 +119,7 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
     vm.startPrank(address(mockExecutor));
     mockCore.setScriptAuthorization(address(mockInstanceUpdateScript), true);
     mockPolicy.setRolePermission(
-      uint8(2),
+      GOVERNANCE_MAINTAINER_ROLE,
       PermissionData(
         address(mockInstanceUpdateScript),
         MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
@@ -122,7 +128,7 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
       true
     );
     mockPolicy.setRolePermission(
-      uint8(2),
+      GOVERNANCE_MAINTAINER_ROLE,
       PermissionData(
         address(mockInstanceUpdateScript),
         MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
@@ -143,22 +149,24 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
     );
   }
 
-  function _llamaApproveAction(address _policyholder, ActionInfo memory actionInfo) public {
+  function _approveAction(LlamaCore _core, address _policyholder, ActionInfo memory actionInfo) public {
     vm.expectEmit();
     emit ApprovalCast(actionInfo.id, _policyholder, uint8(1), 1, "");
     vm.prank(_policyholder);
-    llamaInstanceCore.castApproval(uint8(1), actionInfo, "");
+    _core.castApproval(uint8(1), actionInfo, "");
   }
-}
 
-contract MultipleInstanceTest is MultipleInstanceTestSetup {
-  function test_createsActionToAuthorizeScript() external {
+  function createActionToAuthorizeScriptAndSetPermission(ILlamaStrategy strategyForMockInstance)
+    public
+    returns (ActionInfo memory)
+  {
     PermissionData memory permissionData = PermissionData(
-      address(mockInstanceUpdateVersion1), MockInstanceUpdateVersion1.updateInstance.selector, MOCK_VOTING_STRATEGY
+      address(mockInstanceUpdateVersion1), MockInstanceUpdateVersion1.updateInstance.selector, strategyForMockInstance
     );
     bytes memory actionData = abi.encodeCall(MockInstanceUpdateScript.authorizeScriptAndSetPermission, (permissionData));
     bytes memory data = abi.encodeCall(
-      LlamaCore.createAction, (uint8(2), MOCK_VOTING_STRATEGY, address(mockInstanceUpdateScript), 0, actionData, "")
+      LlamaCore.createAction,
+      (GOVERNANCE_MAINTAINER_ROLE, strategyForMockInstance, address(mockInstanceUpdateScript), 0, actionData, "")
     );
     vm.prank(llamaAlice);
     uint256 actionId = llamaInstanceCore.createAction(uint8(1), LLAMA_VOTING_STRATEGY, address(mockCore), 0, data, "");
@@ -167,86 +175,144 @@ contract MultipleInstanceTest is MultipleInstanceTestSetup {
 
     mineBlock();
 
-    _llamaApproveAction(llamaBob, actionInfo);
-    _llamaApproveAction(llamaCharlie, actionInfo);
-    _llamaApproveAction(llamaDale, actionInfo);
+    _approveAction(llamaInstanceCore, llamaBob, actionInfo);
+    _approveAction(llamaInstanceCore, llamaCharlie, actionInfo);
+    _approveAction(llamaInstanceCore, llamaDale, actionInfo);
 
     // Executing llama's action creates an action for the mock instance
     vm.expectEmit();
-    emit ActionCanceled(actionInfo.id, actionCreatorAaron);
+    emit ActionCreated(
+      0,
+      address(llamaInstanceExecutor),
+      GOVERNANCE_MAINTAINER_ROLE,
+      strategyForMockInstance,
+      address(mockInstanceUpdateScript),
+      0,
+      actionData,
+      ""
+    );
     llamaInstanceCore.executeAction(actionInfo);
 
-    assertEq();
+    return ActionInfo(
+      0,
+      address(llamaInstanceExecutor),
+      GOVERNANCE_MAINTAINER_ROLE,
+      strategyForMockInstance,
+      address(mockInstanceUpdateScript),
+      0,
+      actionData
+    );
+  }
+}
 
-    // SCRIPT OPTIMIZATION
+contract MultipleInstanceTest is MultipleInstanceTestSetup {
+  function test_instanceCanDelegateUpdateRoleToOtherInstance() external {
+    // Action is created for mock instance to call `MockInstanceUpdateScript`
+    ActionInfo memory actionInfo = createActionToAuthorizeScriptAndSetPermission(MOCK_VOTING_STRATEGY);
 
-    /*
-    1. Deploy llama and mock protocol instances
-    2. Mock instance needs to have some authorized GovernanceScript and reserve a role for llama with permission to
-    create actions for the functions on this
-    script with an optimistic and high approval strategy. The permissioning happens in the config but the script must be
-    authorized through an action.
-    3. The script will have a function that allows a call to setScriptAuthorization and to setRolePermission to the
-    governance maintenance role with one
-   of the two strategies, the script being authorized, any target.
-   
-    4. Llama will deploy an upgrade contract and use a multisig like strategy to propose calling the governance script
-    with this as a parameter.
-    5. Now mock instance governance decides if they want to authorize this upgrade script, give llama the role
-    permission to propose calling it. The upgrade script
-   has the logic to unauthorize itself and remove all permissions after being called.
-    6. The action executes.
-    7. Llama proposes calling the script. The governance script forced llama to only have permission to make this
-    proposal with high buy in
-    8. Mock instance executes the action, the script is called, the script is unauthed and all permissions are removed.    */
+    mineBlock();
 
-    // BASE CASE
+    _approveAction(mockCore, mockBob, actionInfo);
+    _approveAction(mockCore, mockCharlie, actionInfo);
+    _approveAction(mockCore, mockDale, actionInfo);
+    _approveAction(mockCore, mockErica, actionInfo);
 
-    /*
-      1. Deploy llama and mock protocol instances ✅
-    2. Mock protocol instance config has a role reserved for llama with proposal permissions for setScriptAuthorization.
-    Proposal permission for calling the script
-    needs to be set after it's deployed. The execute function of the script will also remove the permission from the
-    role and unauth the script. The role
-    includes two permissions: one to setScriptAuthorization with a long optimistic timelock and the other with high buy
-    in shorter timelock. Mock also gives
-    llama permission to propose calling setRolePermission so they can propose to give themselves the proposal perission
-    to call the script.
-    3. Llama adds a permission to call createAction on the mock instance shortly after instance launches. This action
-    still needs to go through their governance
-         and can be canceled so a simple multisig like permission will suffice.  
-      4. Llama deploys a script
-    5. The test starts with llama using either strategy to create, queue, execute calling setScriptAuth through mock's
-    createAction.
-      6. This goes through mock's governance with minimal input from them.
-    7. Once the script is authorized, llama then goes through their action process to call mock's createAction to give
-    themselves permission to call the script.
-    8. Once that's complete llama goes through their action process to call mock's createAction to execute the script
-    9. This requires high buy-in and when it executes it removes the permission to call it from the llama role and
-    unauthorizes the script
-    */
+    // Script is authorized and llama has permission to create an action for it.
+    mockCore.executeAction(actionInfo);
 
-    // ARCHIVE
-    /*
-      1. Llama instance adds permission to role 1:
-          {
-    "comment": "This gives role #1 permission to call `createAction` on the mock protocol's core with the third
-    strategy.",
-      "permissionData": {
-        "selector": "0xb3c678b0",
-        "strategy": "0xa359FE9c585FbD6DAAEE4efF9c3bF6bd45D498bC",
-        "target": "0x0845B312d2D91bD864FAb7C8B732783E81e6CAd4"
-      },
-      "role": 1
-    }
-      2. Deploy script contract
-      3. llamaAlice calls createAction on llama instance to create action instantly on mock protocol
-      4. We test that the action creation, queueAction, executeAction can happen in the same block
-    5. Mock protocol gives llama instance a permission to create actions for (target: upgradeScript, strategy:
-    optimistic, target: authorizeScriptAndGivePermissionToCoreTeamToCall)
-    6. Optimistically passes so the mock protocol instance authorize the LlamaV1Upgrade script and role 1 has permission
-    to propose calling this newly created target's execute finction with the voting strategy
-      7. Core team member creates action to call upgrade with voting, LlamaV1Upgrade script, execute function
-    */
+    PermissionData memory permissionData = PermissionData(
+      address(mockInstanceUpdateVersion1), MockInstanceUpdateVersion1.updateInstance.selector, MOCK_VOTING_STRATEGY
+    );
+    bytes memory actionData = abi.encodeCall(MockInstanceUpdateVersion1.updateInstance, (permissionData));
+    bytes memory data = abi.encodeCall(
+      LlamaCore.createAction,
+      (GOVERNANCE_MAINTAINER_ROLE, MOCK_VOTING_STRATEGY, address(mockInstanceUpdateVersion1), 0, actionData, "")
+    );
+    vm.prank(llamaAlice);
+    uint256 actionId = llamaInstanceCore.createAction(uint8(1), LLAMA_VOTING_STRATEGY, address(mockCore), 0, data, "");
+    actionInfo = ActionInfo(actionId, llamaAlice, uint8(1), LLAMA_VOTING_STRATEGY, address(mockCore), 0, data);
+
+    mineBlock();
+
+    _approveAction(llamaInstanceCore, llamaBob, actionInfo);
+    _approveAction(llamaInstanceCore, llamaCharlie, actionInfo);
+    _approveAction(llamaInstanceCore, llamaDale, actionInfo);
+
+    // Executing llama's action creates an action for the mock instance to call the update script.
+    vm.expectEmit();
+    emit ActionCreated(
+      actionId,
+      address(llamaInstanceExecutor),
+      GOVERNANCE_MAINTAINER_ROLE,
+      MOCK_VOTING_STRATEGY,
+      address(mockInstanceUpdateVersion1),
+      0,
+      actionData,
+      ""
+    );
+    llamaInstanceCore.executeAction(actionInfo);
+
+    actionInfo = ActionInfo(
+      actionId,
+      address(llamaInstanceExecutor),
+      GOVERNANCE_MAINTAINER_ROLE,
+      MOCK_VOTING_STRATEGY,
+      address(mockInstanceUpdateVersion1),
+      0,
+      actionData
+    );
+
+    mineBlock();
+
+    _approveAction(mockCore, mockBob, actionInfo);
+    _approveAction(mockCore, mockCharlie, actionInfo);
+    _approveAction(mockCore, mockDale, actionInfo);
+    _approveAction(mockCore, mockErica, actionInfo);
+
+    // Script is executed, unauthorized, and the permission is removed.
+    mockCore.executeAction(actionInfo);
+    bytes32 votingPermission = keccak256(
+      abi.encode(
+        PermissionData(
+          address(mockInstanceUpdateScript),
+          MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
+          MOCK_VOTING_STRATEGY
+        )
+      )
+    );
+
+    bytes32 optimisticPermission = keccak256(
+      abi.encode(
+        PermissionData(
+          address(mockInstanceUpdateScript),
+          MockInstanceUpdateScript.authorizeScriptAndSetPermission.selector,
+          MOCK_OPTIMISTIC_STRATEGY
+        )
+      )
+    );
+
+    bytes32 upgradeScriptPermission = keccak256(
+      abi.encode(
+        PermissionData(
+          address(mockInstanceUpdateVersion1), MockInstanceUpdateVersion1.updateInstance.selector, MOCK_VOTING_STRATEGY
+        )
+      )
+    );
+
+    assertTrue(mockPolicy.hasPermissionId(address(llamaInstanceExecutor), GOVERNANCE_MAINTAINER_ROLE, votingPermission));
+    assertTrue(
+      mockPolicy.hasPermissionId(address(llamaInstanceExecutor), GOVERNANCE_MAINTAINER_ROLE, optimisticPermission)
+    );
+    assertTrue(mockCore.authorizedScripts(address(mockInstanceUpdateScript)));
+
+    // Assert that upgrade script was executed
+    assertTrue(mockCore.authorizedStrategyLogics(ILlamaStrategy(0xBb2180ebd78ce97360503434eD37fcf4a1Df61c3)));
+    assertTrue(mockCore.authorizedStrategyLogics(ILlamaStrategy(0xd21060559c9beb54fC07aFd6151aDf6cFCDDCAeB)));
+
+    // Assert that upgrade script unauthorized itself and removed the permission
+    assertFalse(mockCore.authorizedScripts(address(mockInstanceUpdateVersion1)));
+    assertFalse(
+      mockPolicy.hasPermissionId(address(llamaInstanceExecutor), GOVERNANCE_MAINTAINER_ROLE, upgradeScriptPermission)
+    );
   }
 }
