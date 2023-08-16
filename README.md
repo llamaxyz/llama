@@ -53,18 +53,6 @@ The comments in that file explain what each variable is for and when they're nee
 
 ## Deployments
 
-LlamaCoreLogic
-LlamaRelativeHolderQuorumLogic
-LlamaAbsolutePeerReviewLogic
-LlamaAccountLogic
-LlamaPolicyLogic
-LlamaPolicyMetadataLogic
-LlamaFactory
-LlamaLens
-LlamaAbsoluteQuorumLogic
-LlamaRelativeQuantityQuorumLogic
-LlamaRelativeUniqueHolderQuorumLogic
-
 | Name                                  | Goerli Address                                                                                                               | Sepolia Address                                                                                                               | 
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------  | 
 |_Factory_|
