@@ -40,7 +40,7 @@
       "forceDisapprovalRoles": [],
       "isFixedLengthApprovalPeriod": false,
       "minApprovalPct": 0,
-      "minDisapprovalPct": 0,
+      "minDisapprovalPct": 10100,
       "queuingPeriod": 0
     }
   ],
