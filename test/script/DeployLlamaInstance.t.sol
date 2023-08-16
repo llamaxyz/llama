@@ -187,7 +187,7 @@ contract Run is DeployLlamaInstanceTest {
 
   function test_NewInstanceHasRolesInitialized() public {
     vm.expectEmit();
-    emit RoleInitialized(0, RoleDescription.wrap("All Holders Role"));
+    emit RoleInitialized(0, RoleDescription.wrap("All Holders"));
     vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("ActionCreator"));
     vm.expectEmit();

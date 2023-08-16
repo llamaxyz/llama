@@ -162,7 +162,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
     llamaExecutor = executor;
 
     // Initialize the roles.
-    emit RoleInitialized(ALL_HOLDERS_ROLE, RoleDescription.wrap("All Holders Role"));
+    emit RoleInitialized(ALL_HOLDERS_ROLE, RoleDescription.wrap("All Holders"));
     for (uint256 i = 0; i < config.roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       _initializeRole(config.roleDescriptions[i]);
     }
