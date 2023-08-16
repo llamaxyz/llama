@@ -174,6 +174,8 @@ contract Initialize is LlamaPolicyTest {
     rolePermissions[0] = RolePermissionData(INIT_TEST_ROLE, pausePermission, true);
 
     vm.expectEmit();
+    emit RoleInitialized(ALL_HOLDERS_ROLE, RoleDescription.wrap("All Holders"));
+    vm.expectEmit();
     emit RoleInitialized(1, RoleDescription.wrap("Test Policy"));
 
     LlamaPolicyConfig memory config = LlamaPolicyConfig(roleDescriptions, roleHolders, rolePermissions, color, logo);

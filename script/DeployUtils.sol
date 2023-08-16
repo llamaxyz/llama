@@ -115,10 +115,11 @@ library DeployUtils {
 
   function readRoleDescriptions(string memory jsonInput) internal returns (RoleDescription[] memory roleDescriptions) {
     string[] memory descriptions = jsonInput.readStringArray(".initialRoleDescriptions");
+    roleDescriptions = new RoleDescription[](descriptions.length);
     for (uint256 i = 0; i < descriptions.length; i++) {
       require(bytes(descriptions[i]).length <= 32, "Role description is too long");
+      roleDescriptions[i] = RoleDescription.wrap(bytes32(bytes(descriptions[i])));
     }
-    roleDescriptions = abi.decode(abi.encode(descriptions), (RoleDescription[]));
   }
 
   function readRoleHolders(string memory jsonInput) internal pure returns (RoleHolderData[] memory roleHolders) {

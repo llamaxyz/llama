@@ -7,6 +7,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {PermissionData} from "src/lib/Structs.sol";
+import {RoleDescription} from "src/lib/UDVTs.sol";
 import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -23,6 +24,8 @@ contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstanc
   // replaced with any address that we hold the private key for.
   address LLAMA_INSTANCE_DEPLOYER = 0x3d9fEa8AeD0249990133132Bb4BC8d07C6a8259a;
   uint8 ACTION_CREATOR_ROLE_ID = 1;
+
+  event RoleInitialized(uint8 indexed role, RoleDescription description);
 
   function setUp() public virtual {
     DeployLlamaFactory.run();
@@ -180,6 +183,29 @@ contract Run is DeployLlamaInstanceTest {
       )
     );
     assertTrue(policy.canCreateAction(ACTION_CREATOR_ROLE_ID, permissionId));
+  }
+
+  function test_NewInstanceHasRolesInitialized() public {
+    vm.expectEmit();
+    emit RoleInitialized(0, RoleDescription.wrap("All Holders"));
+    vm.expectEmit();
+    emit RoleInitialized(1, RoleDescription.wrap("ActionCreator"));
+    vm.expectEmit();
+    emit RoleInitialized(2, RoleDescription.wrap("Approver"));
+    vm.expectEmit();
+    emit RoleInitialized(3, RoleDescription.wrap("Disapprover"));
+    vm.expectEmit();
+    emit RoleInitialized(4, RoleDescription.wrap("ForceApprover"));
+    vm.expectEmit();
+    emit RoleInitialized(5, RoleDescription.wrap("ForceDisapprover"));
+    vm.expectEmit();
+    emit RoleInitialized(6, RoleDescription.wrap("TestRole1"));
+    vm.expectEmit();
+    emit RoleInitialized(7, RoleDescription.wrap("TestRole2"));
+    vm.expectEmit();
+    emit RoleInitialized(8, RoleDescription.wrap("MadeUpRole"));
+
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
   }
 
   function assertEqStrategyStatus(
