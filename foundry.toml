@@ -15,16 +15,12 @@
   solc = "0.8.19"
   via_ir = false
 
-[profile.default.optimizer_details]
-  constantOptimizer = true
-  yul = true
-
 [profile.ci]
   fuzz = { runs = 5000 }
   invariant = { runs = 1000, depth = 100 }
   optimizer = true
   optimizer_runs = 10_000_000
-  via_ir = true
+  via_ir = false
 
 [rpc_endpoints]
   mainnet = "${MAINNET_RPC_URL}"

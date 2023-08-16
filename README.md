@@ -51,6 +51,39 @@ The comments in that file explain what each variable is for and when they're nee
 - `just deploy` - deploy and verify payload on mainnet
 - Run `just -l` or see the [`justfile`](https://github.com/llamaxyz/llama/blob/main/justfile) for other commands such as dry runs.
 
+## Deployments
+
+LlamaCoreLogic
+LlamaRelativeHolderQuorumLogic
+LlamaAbsolutePeerReviewLogic
+LlamaAccountLogic
+LlamaPolicyLogic
+LlamaPolicyMetadataLogic
+LlamaFactory
+LlamaLens
+LlamaAbsoluteQuorumLogic
+LlamaRelativeQuantityQuorumLogic
+LlamaRelativeUniqueHolderQuorumLogic
+
+| Name                                  | Goerli Address                                                                                                               | Sepolia Address                                                                                                               | 
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------  | 
+|_Factory_|
+| LlamaFactory                          | [0x9f79a7d30e9ed7fc35bd23f389766c18d6f54ea6](https://goerli.etherscan.io/address/0x9f79a7d30e9ed7fc35bd23f389766c18d6f54ea6) | [0x9f79a7d30e9ed7fc35bd23f389766c18d6f54ea6](https://sepolia.etherscan.io/address/0x9f79a7d30e9ed7fc35bd23f389766c18d6f54ea6) |
+|_Main instance contracts_|
+| LlamaCore (logic contract)            | [0x678af27e1b003dc53303709ef9415d63d87aeaae](https://goerli.etherscan.io/address/0x678af27e1b003dc53303709ef9415d63d87aeaae) | [0x678af27e1b003dc53303709ef9415d63d87aeaae](https://sepolia.etherscan.io/address/0x678af27e1b003dc53303709ef9415d63d87aeaae) |  
+| LlamaPolicy (logic contract)          | [0x9948d8bb62bdbc69ef6c719661ad1e25e14283df](https://goerli.etherscan.io/address/0x9948d8bb62bdbc69ef6c719661ad1e25e14283df) | [0x9948d8bb62bdbc69ef6c719661ad1e25e14283df](https://sepolia.etherscan.io/address/0x9948d8bb62bdbc69ef6c719661ad1e25e14283df) |
+| LlamaPolicyMetadata  (logic contract) | [0xd7D2137ee8df4F948D4E4Db64125F99f9550bAc1](https://goerli.etherscan.io/address/0xd7D2137ee8df4F948D4E4Db64125F99f9550bAc1) | [0xd7D2137ee8df4F948D4E4Db64125F99f9550bAc1](https://sepolia.etherscan.io/address/0xd7D2137ee8df4F948D4E4Db64125F99f9550bAc1) |
+|_Strategy logic contracts_|
+| LlamaRelativeQuantityQuorum           | [0x4Ac1f27666431ecB522DE4a28125fB94A7e66C33](https://goerli.etherscan.io/address/0x4Ac1f27666431ecB522DE4a28125fB94A7e66C33) | [0x4Ac1f27666431ecB522DE4a28125fB94A7e66C33](https://sepolia.etherscan.io/address/0x4Ac1f27666431ecB522DE4a28125fB94A7e66C33) |
+| LlamaRelativeHolderQuorum             | [0x73d1f8fc00eb4115640fa270071fd6498c6e2877](https://goerli.etherscan.io/address/0x73d1f8fc00eb4115640fa270071fd6498c6e2877) | [0x73d1f8fc00eb4115640fa270071fd6498c6e2877](https://sepolia.etherscan.io/address/0x73d1f8fc00eb4115640fa270071fd6498c6e2877) |
+| LlamaRelativeUniqueHolderQuorum       | [0x829a49179C4Ffa99C6e5115e2dDE183f0E9b1E72](https://goerli.etherscan.io/address/0x829a49179C4Ffa99C6e5115e2dDE183f0E9b1E72) | [0x829a49179C4Ffa99C6e5115e2dDE183f0E9b1E72](https://sepolia.etherscan.io/address/0x829a49179C4Ffa99C6e5115e2dDE183f0E9b1E72) |
+| LlamaAbsoluteQuorum                   | [0xfa9cFDE292078908C4BF3C894d7cC22e2C34c3DD](https://goerli.etherscan.io/address/0xfa9cFDE292078908C4BF3C894d7cC22e2C34c3DD) | [0xfa9cFDE292078908C4BF3C894d7cC22e2C34c3DD](https://sepolia.etherscan.io/address/0xfa9cFDE292078908C4BF3C894d7cC22e2C34c3DD) |
+| LlamaAbsolutePeerReview               | [0x5e09dde1b306dea40b9944632c87dca680888b17](https://goerli.etherscan.io/address/0x5e09dde1b306dea40b9944632c87dca680888b17) | [0x5e09dde1b306dea40b9944632c87dca680888b17](https://sepolia.etherscan.io/address/0x5e09dde1b306dea40b9944632c87dca680888b17) |
+|_Account logic contract_|
+| LlamaAccount (logic contract)         | [0x4515869e25d0a31c1f7cb4ea8b1ec21d108bbbae](https://goerli.etherscan.io/address/0x4515869e25d0a31c1f7cb4ea8b1ec21d108bbbae) | [0x4515869e25d0a31c1f7cb4ea8b1ec21d108bbbae](https://sepolia.etherscan.io/address/0x4515869e25d0a31c1f7cb4ea8b1ec21d108bbbae) |
+|_Helper contract_|
+| LlamaLens                             | [0xa3f43FF2B0f8718356d5B7df1B5154d71524e571](https://goerli.etherscan.io/address/0xa3f43FF2B0f8718356d5B7df1B5154d71524e571) | [0xa3f43FF2B0f8718356d5B7df1B5154d71524e571](https://sepolia.etherscan.io/address/0xa3f43FF2B0f8718356d5B7df1B5154d71524e571) |
+
 ## Documentation
 
 Run the following command to generate smart contract reference documentation from this project's NatSpec comments and serve those static files locally:
