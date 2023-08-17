@@ -7,7 +7,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 
 /// @dev A mock contract that can create, queue, and execute actions in a single function.
 contract MockAtomicActionExecutor {
-  LlamaCore immutable core;
+  LlamaCore immutable CORE;
 
   constructor(LlamaCore _core) {
     core = _core;
