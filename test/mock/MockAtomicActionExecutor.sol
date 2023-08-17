@@ -10,7 +10,7 @@ contract MockAtomicActionExecutor {
   LlamaCore immutable CORE;
 
   constructor(LlamaCore _core) {
-    core = _core;
+    CORE = _core;
   }
 
   function createQueueAndExecute(
@@ -25,10 +25,10 @@ contract MockAtomicActionExecutor {
     bytes32 r,
     bytes32 s
   ) external returns (uint256 actionId) {
-    actionId = core.createActionBySig(policyholder, role, strategy, target, value, data, description, v, r, s);
+    actionId = CORE.createActionBySig(policyholder, role, strategy, target, value, data, description, v, r, s);
 
     ActionInfo memory actionInfo = ActionInfo(actionId, policyholder, role, strategy, target, value, data);
-    core.queueAction(actionInfo);
-    core.executeAction(actionInfo);
+    CORE.queueAction(actionInfo);
+    CORE.executeAction(actionInfo);
   }
 }
