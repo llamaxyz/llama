@@ -5,6 +5,7 @@ import {Test, console2, StdStorage, stdStorage} from "forge-std/Test.sol";
 
 import {MockAccountLogicContract} from "test/mock/MockAccountLogicContract.sol";
 import {MockActionGuard} from "test/mock/MockActionGuard.sol";
+import {MockAtomicActionExecutor} from "test/mock/MockAtomicActionExecutor.sol";
 import {MockPoorlyImplementedAbsolutePeerReview} from "test/mock/MockPoorlyImplementedStrategy.sol";
 import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {LlamaCoreSigUtils} from "test/utils/LlamaCoreSigUtils.sol";
@@ -859,6 +860,25 @@ contract CreateActionBySig is LlamaCoreTest {
     (v, r, s) = vm.sign(privateKey, digest);
   }
 
+  function createOffchainSignatureForInstantExecution(uint256 privateKey, ILlamaStrategy strategy)
+    internal
+    view
+    returns (uint8 v, bytes32 r, bytes32 s)
+  {
+    LlamaCoreSigUtils.CreateAction memory createAction = LlamaCoreSigUtils.CreateAction({
+      role: uint8(Roles.ActionCreator),
+      strategy: address(strategy),
+      target: address(mockProtocol),
+      value: 0,
+      data: abi.encodeCall(MockProtocol.pause, (true)),
+      description: "",
+      policyholder: actionCreatorAaron,
+      nonce: 0
+    });
+    bytes32 digest = getCreateActionTypedDataHash(createAction);
+    (v, r, s) = vm.sign(privateKey, digest);
+  }
+
   function createActionBySig(uint8 v, bytes32 r, bytes32 s) internal returns (uint256 actionId) {
     actionId = mpCore.createActionBySig(
       actionCreatorAaron,
@@ -984,6 +1004,57 @@ contract CreateActionBySig is LlamaCoreTest {
     // since nonce has increased.
     vm.expectRevert(LlamaCore.InvalidSignature.selector);
     createActionBySig(v, r, s);
+  }
+
+  function test_ActionCanBeCreatedQueuedAndExecutedInOneBlock() public {
+    // Create the instant execution strategy and assign the permission to `Roles.ActionCreator`
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 0,
+      queuingPeriod: 0,
+      expirationPeriod: 2 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 10_001,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+    ILlamaStrategy instantExecutionStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+    PermissionData memory newPermissionData =
+      PermissionData(address(mockProtocol), PAUSE_SELECTOR, instantExecutionStrategy);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.startPrank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
+    mpCore.createStrategies(relativeQuantityQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
+    vm.stopPrank();
+
+    (uint8 v, bytes32 r, bytes32 s) =
+      createOffchainSignatureForInstantExecution(actionCreatorAaronPrivateKey, instantExecutionStrategy);
+
+    MockAtomicActionExecutor mockAtomicActionExecutor = new MockAtomicActionExecutor(mpCore);
+
+    mineBlock();
+
+    vm.expectEmit();
+    emit ActionExecuted(0, address(mockAtomicActionExecutor), instantExecutionStrategy, actionCreatorAaron, bytes(""));
+    mockAtomicActionExecutor.createQueueAndExecute(
+      actionCreatorAaron,
+      uint8(Roles.ActionCreator),
+      instantExecutionStrategy,
+      address(mockProtocol),
+      0,
+      data,
+      "",
+      v,
+      r,
+      s
+    );
   }
 }
 
@@ -2632,6 +2703,52 @@ contract CreateStrategies is LlamaCoreTest {
 
     vm.expectRevert();
     mpCore.createStrategies(ILlamaStrategy(address(0)), DeployUtils.encodeStrategyConfigs(newStrategies));
+  }
+
+  function test_ActionCanBeCreatedQueuedAndExecutedInOneBlock() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 0,
+      queuingPeriod: 0,
+      expirationPeriod: 2 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 10_001,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+
+    ILlamaStrategy strategyAddress = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+    PermissionData memory newPermissionData = PermissionData(address(mockProtocol), PAUSE_SELECTOR, strategyAddress);
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+
+    vm.startPrank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(relativeQuantityQuorumLogic, true);
+    mpCore.createStrategies(relativeQuantityQuorumLogic, DeployUtils.encodeStrategyConfigs(newStrategies));
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), newPermissionData, true);
+    vm.stopPrank();
+
+    mineBlock();
+
+    uint256 preExecutionTimestamp = block.timestamp;
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), strategyAddress, address(mockProtocol), 0, data, "");
+
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), strategyAddress, address(mockProtocol), 0, data
+    );
+    mpCore.queueAction(actionInfo);
+    mpCore.executeAction(actionInfo);
+
+    uint256 postExecutionTimestamp = block.timestamp;
+    assertEq(postExecutionTimestamp, preExecutionTimestamp);
   }
 }
 
