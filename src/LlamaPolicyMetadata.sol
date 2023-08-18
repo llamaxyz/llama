@@ -42,7 +42,7 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
   }
 
   /// @inheritdoc ILlamaPolicyMetadata
-  function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory) {
+  function getTokenURI(string memory name, address executor, uint256 tokenId) external view returns (string memory) {
     string[21] memory parts;
     string memory policyholder = LibString.toHexString(address(uint160(tokenId)));
     string memory truncatedAddress =
@@ -104,6 +104,9 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
     string memory output2 =
       string.concat(parts[9], parts[10], parts[11], parts[12], parts[13], parts[14], parts[15], parts[16], parts[17]);
     string memory output = string.concat(output1, output2, parts[18], parts[19], parts[20]);
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/", LibString.toString(block.chainid), ":", LibString.toHexString(executor)
+    );
 
     string memory json = Base64.encode(
       bytes(
@@ -112,9 +115,13 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
           truncatedAddress,
           ' Policy", "description": "This NFT represents membership in the Llama instance: ',
           LibString.escapeJSON(name),
-          ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+          ". The owner of this NFT can participate in governance according to their roles and permissions. Visit ",
+          instanceUrl,
+          "/policies/",
           policyholder,
-          ' to view their profile page.", "external_url": "https://app.llama.xyz", "image": "data:image/svg+xml;base64,',
+          ' to see more details.", "external_url": "',
+          instanceUrl,
+          '", "image": "data:image/svg+xml;base64,',
           Base64.encode(bytes(output)),
           '"}'
         )
@@ -127,17 +134,19 @@ contract LlamaPolicyMetadata is ILlamaPolicyMetadata, Initializable {
 
   /// @inheritdoc ILlamaPolicyMetadata
   function getContractURI(string memory name, address executor) external view returns (string memory) {
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/", LibString.toString(block.chainid), ":", LibString.toHexString(executor)
+    );
     string[9] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);
     parts[2] = '", "description": "This collection includes all members of the Llama instance: ';
     parts[3] = LibString.escapeJSON(name);
-    parts[4] = ". Visit https://app.llama.xyz/";
-    parts[5] = LibString.toString(block.chainid);
-    parts[6] = "/";
-    parts[7] = LibString.toHexString(executor);
-    parts[8] =
-      ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+    parts[4] = ". Visit ";
+    parts[5] = instanceUrl;
+    parts[6] = ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "';
+    parts[7] = instanceUrl;
+    parts[8] = '", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(
       bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]))
     );

@@ -1245,13 +1245,18 @@ contract PolicyMetadata is LlamaPolicyTest {
     Metadata memory metadata = parseMetadata(uri);
     string memory name = LibString.concat(truncatedAddress, " Policy");
     string memory policyholder = LibString.toHexString(address(this));
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/", LibString.toString(block.chainid), ":", LibString.toHexString(address(mpExecutor))
+    );
     string memory description1 =
       LibString.concat("This NFT represents membership in the Llama instance: ", LibString.escapeJSON(mpPolicy.name()));
     string memory description = string.concat(
       description1,
-      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit ",
+      instanceUrl,
+      "/policies/",
       policyholder,
-      " to view their profile page."
+      " to see more details."
     );
 
     assertEq(metadata.description, description);
@@ -1266,7 +1271,7 @@ contract PolicyMetadata is LlamaPolicyTest {
     uint256 tokenId = uint256(uint160(policyholder));
 
     string memory name = "Mock Protocol Llama";
-    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.getTokenURI(name, tokenId));
+    assertEq(mpPolicy.tokenURI(tokenId), mpPolicyMetadata.getTokenURI(name, address(mpExecutor), tokenId));
   }
 
   function test_ReturnsCorrectTokenURIEscapesJson() public {
@@ -1286,13 +1291,21 @@ contract PolicyMetadata is LlamaPolicyTest {
     Metadata memory metadata = parseMetadata(uri);
     string memory name = LibString.concat(truncatedAddress, " Policy");
     string memory policyholder = LibString.toHexString(address(this));
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/",
+      LibString.toString(block.chainid),
+      ":",
+      LibString.toHexString(address(deployedExecutor))
+    );
     string memory description1 =
       LibString.concat("This NFT represents membership in the Llama instance: ", nameWithQuotes);
     string memory description = string.concat(
       description1,
-      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit https://app.llama.xyz/profiles/",
+      ". The owner of this NFT can participate in governance according to their roles and permissions. Visit ",
+      instanceUrl,
+      "/policies/",
       policyholder,
-      " to view their profile page."
+      " to see more details."
     );
 
     assertEq(LibString.escapeJSON(metadata.description), description);
@@ -1332,30 +1345,35 @@ contract PolicyMetadataExternalUrl is LlamaPolicyTest {
   }
 
   function test_ReturnsCorrectExternalUrl() public {
+    string memory external_url = string.concat(
+      "https://app.llama.xyz/orgs/", LibString.toString(block.chainid), ":", LibString.toHexString(address(mpExecutor))
+    );
+
     vm.prank(address(mpExecutor));
     mpPolicy.setRoleHolder(uint8(Roles.TestRole1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
     string memory uri = mpPolicy.tokenURI(uint256(uint160(address(this))));
     Metadata memory metadata = parseMetadata(uri);
-    string memory external_url = "https://app.llama.xyz";
     assertEq(metadata.external_url, external_url);
   }
 }
 
 contract PolicyMetadataContractURI is LlamaPolicyTest {
   function test_ReturnsCorrectContractURI() external {
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/", LibString.toString(block.chainid), ":", LibString.toHexString(address(mpExecutor))
+    );
     string memory name = "Mock Protocol Llama";
     string[9] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = LibString.escapeJSON(name);
     parts[2] = '", "description": "This collection includes all members of the Llama instance: ';
     parts[3] = LibString.escapeJSON(name);
-    parts[4] = ". Visit https://app.llama.xyz/";
-    parts[5] = LibString.toString(block.chainid);
-    parts[6] = "/";
-    parts[7] = LibString.toHexString(address(mpExecutor));
-    parts[8] =
-      ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+    parts[4] = ". Visit ";
+    parts[5] = instanceUrl;
+    parts[6] = ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "';
+    parts[7] = instanceUrl;
+    parts[8] = '", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(
       bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]))
     );
@@ -1367,18 +1385,23 @@ contract PolicyMetadataContractURI is LlamaPolicyTest {
     (LlamaCore deployedInstance) = deployLlamaWithQuotesInName();
     LlamaPolicy deployedPolicy = deployedInstance.policy();
     string memory escapedName = '\\"name\\": \\"Mock Protocol Llama\\"';
+    string memory instanceUrl = string.concat(
+      "https://app.llama.xyz/orgs/",
+      LibString.toString(block.chainid),
+      ":",
+      LibString.toHexString(address(deployedInstance.executor()))
+    );
 
     string[9] memory parts;
     parts[0] = '{ "name": "Llama Policies: ';
     parts[1] = escapedName;
     parts[2] = '", "description": "This collection includes all members of the Llama instance: ';
     parts[3] = escapedName;
-    parts[4] = ". Visit https://app.llama.xyz/";
-    parts[5] = LibString.toString(block.chainid);
-    parts[6] = "/";
-    parts[7] = LibString.toHexString(address(deployedInstance.executor()));
-    parts[8] =
-      ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "https://app.llama.xyz", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
+    parts[4] = ". Visit ";
+    parts[5] = instanceUrl;
+    parts[6] = ' to learn more.", "image":"https://llama.xyz/policy-nft/llama-profile.png", "external_link": "';
+    parts[7] = instanceUrl;
+    parts[8] = '", "banner":"https://llama.xyz/policy-nft/llama-banner.png" }';
     string memory json = Base64.encode(
       bytes(string.concat(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]))
     );

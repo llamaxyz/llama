@@ -16,8 +16,9 @@ interface ILlamaPolicyMetadata {
 
   /// @notice Returns the token URI for a given Llama policy ID.
   /// @param name The name of the Llama instance.
+  /// @param executor The executor of the Llama instance.
   /// @param tokenId The token ID of the Llama policyholder.
-  function getTokenURI(string memory name, uint256 tokenId) external view returns (string memory);
+  function getTokenURI(string memory name, address executor, uint256 tokenId) external view returns (string memory);
 
   /// @notice Returns the contract URI for a Llama instance's policies.
   /// @param name The name of the Llama instance.
