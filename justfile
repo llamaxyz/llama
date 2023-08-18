@@ -26,6 +26,6 @@ deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --build-info --bu
 
 verify: (run-script 'DeployLlamaFactory' '--verify')
 
-dry-run-deploy-new-llama: (run-deploy-instance-script '')
+dry-run-deploy-instance: (run-deploy-instance-script '')
 
-deploy-new-llama: (run-deploy-instance-script '--broadcast --verify')
+deploy-instance: (run-deploy-instance-script '--broadcast --verify')
