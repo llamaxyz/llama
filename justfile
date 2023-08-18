@@ -22,7 +22,7 @@ run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
-deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --build-info --build-info-path build_info')
+deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --ledger --build-info --build-info-path build_info')
 
 verify: (run-script 'DeployLlamaFactory' '--verify')
 
