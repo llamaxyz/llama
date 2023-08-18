@@ -481,7 +481,7 @@ contract LlamaPolicy is ERC721NonTransferableMinimalProxy {
   /// @return The token URI for the given `tokenId` of this Llama instance.
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
     ownerOf(tokenId); // ensure token exists, will revert with NOT_MINTED error if not
-    return llamaPolicyMetadata.getTokenURI(name, tokenId);
+    return llamaPolicyMetadata.getTokenURI(name, llamaExecutor, tokenId);
   }
 
   /// @notice Returns a URI for the storefront-level metadata for your contract.

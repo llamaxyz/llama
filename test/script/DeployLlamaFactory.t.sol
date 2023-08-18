@@ -75,7 +75,9 @@ contract Run is DeployLlamaFactoryTest {
     DeployLlamaFactory.run();
 
     assertFalse(address(policyMetadataLogic) == address(0));
-    assertFalse(keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", 42))) == keccak256(abi.encode("")));
+    assertFalse(
+      keccak256(abi.encode(policyMetadataLogic.getTokenURI("MyLlama", address(0), 42))) == keccak256(abi.encode(""))
+    );
   }
 
   function test_DeploysLens() public {
