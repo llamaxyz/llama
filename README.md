@@ -74,7 +74,7 @@ The comments in that file explain what each variable is for and when they're nee
 
 ## Documentation
 
-To read all of our documentation, visit https://docs.llama.xyz. To view Llama framework documentation only, visit the [docs directory](https://github.com/llamaxyz/llama/tree/main/docs).
+To read all of our documentation, visit [https://docs.llama.xyz](https://docs.llama.xyz). To view Llama framework documentation only, visit the [docs directory](https://github.com/llamaxyz/llama/tree/main/docs).
 
 ### Smart contract reference
 
