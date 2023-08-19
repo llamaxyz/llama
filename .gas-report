@@ -1,148 +1,328 @@
-| src/LlamaAccount.sol:LlamaAccount contract |                 |       |        |       |         |
-|--------------------------------------------|-----------------|-------|--------|-------|---------|
-| Deployment Cost                            | Deployment Size |       |        |       |         |
-| 2122273                                    | 10683           |       |        |       |         |
-| Function Name                              | min             | avg   | median | max   | # calls |
-| approveERC20                               | 2693            | 24852 | 27433  | 46433 | 15      |
-| approveERC721                              | 2671            | 19195 | 27458  | 27458 | 3       |
-| approveOperatorERC1155                     | 2649            | 18035 | 19431  | 30631 | 4       |
-| approveOperatorERC721                      | 2759            | 18015 | 19368  | 30568 | 4       |
-| batchApproveERC20                          | 2994            | 40299 | 40299  | 77605 | 2       |
-| batchApproveERC721                         | 2758            | 27308 | 27308  | 51859 | 2       |
-| batchApproveOperatorERC1155                | 2670            | 30779 | 30779  | 58888 | 2       |
-| batchApproveOperatorERC721                 | 2604            | 30678 | 30678  | 58752 | 2       |
-| batchTransferERC20                         | 3013            | 10438 | 3343   | 24960 | 3       |
-| batchTransferERC721                        | 2626            | 10788 | 2956   | 26784 | 3       |
-| batchTransferMultipleERC1155               | 2682            | 8758  | 3033   | 20560 | 3       |
-| batchTransferNativeToken                   | 2766            | 16043 | 3033   | 42331 | 3       |
-| batchTransferSingleERC1155                 | 2402            | 5211  | 2502   | 10730 | 3       |
-| execute                                    | 2850            | 4898  | 4489   | 7668  | 6       |
-| initialize                                 | 1449            | 48486 | 48743  | 48743 | 1611    |
-| llamaExecutor                              | 429             | 714   | 429    | 2429  | 7       |
-| name                                       | 929             | 1214  | 929    | 2929  | 7       |
-| onERC1155Received                          | 1134            | 1134  | 1134   | 1134  | 10      |
-| onERC721Received                           | 782             | 782   | 782    | 782   | 1       |
-| receive                                    | 67              | 67    | 67     | 67    | 1       |
-| transferERC1155                            | 2467            | 4015  | 2562   | 7017  | 3       |
-| transferERC20                              | 2583            | 6374  | 2663   | 13876 | 3       |
-| transferERC721                             | 2517            | 5650  | 2600   | 11833 | 3       |
-| transferNativeToken                        | 2495            | 4874  | 2578   | 9549  | 3       |
-
-
-| src/LlamaCore.sol:LlamaCore contract                                                                 |                 |                     |         |                     |         |
-|------------------------------------------------------------------------------------------------------|-----------------|---------------------|---------|---------------------|---------|
-| Deployment Cost                                                                                      | Deployment Size |                     |         |                     |         |
-| 3950311                                                                                              | 19817           |                     |         |                     |         |
-| Function Name                                                                                        | min             | avg                 | median  | max                 | # calls |
-| actionGuard                                                                                          | 1204            | 1204                | 1204    | 1204                | 1       |
-| actionsCount                                                                                         | 593             | 735                 | 593     | 2593                | 14      |
-| approvals                                                                                            | 926             | 926                 | 926     | 926                 | 2       |
-| setScriptAuthorization                                                                               | 2408            | 17321               | 23909   | 28909               | 20      |
-| authorizedScripts                                                                                    | 685             | 685                 | 685     | 685                 | 1       |
-| cancelAction                                                                                         | 3887            | 20807               | 19226   | 32870               | 12      |
-| castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                            | 4051            | 63252               | 72811   | 129624              | 691     |
-| castApproval((uint256,address,uint8,address,address,uint256,bytes),uint8,string)                     | 95304           | 95304               | 95304   | 95304               | 1       |
-| castApprovalBySig                                                                                    | 7721            | 62163               | 67388   | 105156              | 8       |
-| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8)                         | 3992            | 62110               | 64941   | 85847               | 74      |
-| castDisapproval((uint256,address,uint8,address,address,uint256,bytes),uint8,string)                  | 68166           | 68166               | 68166   | 68166               | 1       |
-| castDisapprovalBySig                                                                                 | 7528            | 63033               | 96022   | 98022               | 9       |
-| createAccounts                                                                                       | 2823            | 2199436671924133232 | 194776  | 8797746687696142856 | 8       |
-| createAction(uint8,address,address,uint256,bytes)(uint256)                                           | 3052            | 151038              | 158220  | 577695              | 499     |
-| createAction(uint8,address,address,uint256,bytes,string)(uint256)                                    | 162261          | 162261              | 162261  | 162261              | 1       |
-| createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32)(uint256)        | 7359            | 92923               | 31259   | 191088              | 7       |
-| createActionBySig(uint8,address,address,uint256,bytes,address,uint8,bytes32,bytes32,string)(uint256) | 191559          | 191559              | 191559  | 191559              | 1       |
-| createStrategies                                                                                     | 2598            | 288450711072275045  | 167659  | 8797746687696136360 | 61      |
-| disapprovals                                                                                         | 735             | 735                 | 735     | 735                 | 2       |
-| executeAction                                                                                        | 3528            | 1403462             | 1465436 | 15058665            | 405     |
-| executor                                                                                             | 903             | 903                 | 903     | 903                 | 2767    |
-| factory                                                                                              | 922             | 1922                | 1922    | 2922                | 2       |
-| getAction                                                                                            | 1811            | 1994                | 1811    | 3811                | 5242    |
-| getActionState                                                                                       | 2324            | 16289               | 15751   | 45829               | 48      |
-| getLastActionTimestamp                                                                               | 617             | 744                 | 617     | 4617                | 13873   |
-| incrementNonce                                                                                       | 770             | 17195               | 22670   | 22670               | 4       |
-| initialize                                                                                           | 1733            | 973253              | 975398  | 1073030             | 793     |
-| llamaAccountLogic                                                                                    | 768             | 1768                | 1768    | 2768                | 2       |
-| name                                                                                                 | 938             | 970                 | 938     | 2938                | 125     |
-| nonces                                                                                               | 1129            | 1929                | 1129    | 3129                | 10      |
-| policy                                                                                               | 280             | 316                 | 280     | 2280                | 3197    |
-| queueAction                                                                                          | 3606            | 25224               | 25648   | 86611               | 429     |
-| setGuard                                                                                             | 3049            | 18346               | 29259   | 29259               | 7       |
-| strategies                                                                                           | 597             | 977                 | 597     | 2597                | 21      |
+| src/LlamaCore.sol:LlamaCore contract |                 |                     |         |                     |         |
+|--------------------------------------|-----------------|---------------------|---------|---------------------|---------|
+| Deployment Cost                      | Deployment Size |                     |         |                     |         |
+| 4728408                              | 23741           |                     |         |                     |         |
+| Function Name                        | min             | avg                 | median  | max                 | # calls |
+| actionGuard                          | 755             | 755                 | 755     | 755                 | 1       |
+| actionsCount                         | 340             | 2095                | 2340    | 2340                | 98      |
+| approvals                            | 683             | 2460                | 2683    | 2683                | 18      |
+| authorizedAccountLogics              | 602             | 1268                | 602     | 2602                | 6       |
+| authorizedScripts                    | 624             | 624                 | 624     | 624                 | 3       |
+| authorizedStrategyLogics             | 624             | 1124                | 624     | 2624                | 8       |
+| cancelAction                         | 2417            | 23608               | 20184   | 48732               | 18      |
+| cancelActionBySig                    | 7026            | 31276               | 30926   | 47676               | 7       |
+| castApproval                         | 5008            | 67556               | 53784   | 1250390             | 593     |
+| castApprovalBySig                    | 7578            | 73513               | 106564  | 112614              | 10      |
+| castDisapproval                      | 5052            | 76455               | 84832   | 86906               | 148     |
+| castDisapprovalBySig                 | 7512            | 73147               | 103487  | 111669              | 10      |
+| createAccounts                       | 756             | 1173032891692916721 | 100872  | 8797746687696139243 | 15      |
+| createAction                         | 3456            | 112370              | 101264  | 1550918             | 234     |
+| createActionBySig                    | 6984            | 96267               | 138902  | 163194              | 9       |
+| createStrategies                     | 1023            | 104735079615668082  | 177410  | 8797746687696137628 | 168     |
+| disapprovals                         | 683             | 2111                | 2683    | 2683                | 7       |
+| executeAction                        | 4448            | 1021801             | 59761   | 46088432            | 52      |
+| executor                             | 368             | 368                 | 368     | 2368                | 5438    |
+| getAction                            | 1676            | 1930                | 1676    | 7676                | 5316    |
+| getActionState                       | 2763            | 24731               | 26546   | 68304               | 748     |
+| incrementNonce                       | 710             | 18230               | 22610   | 22610               | 5       |
+| initialize                           | 1047            | 5224901             | 5063462 | 5611900             | 1105    |
+| name                                 | 1297            | 1319                | 1297    | 3297                | 179     |
+| nonces                               | 752             | 1585                | 752     | 2752                | 12      |
+| policy                               | 349             | 397                 | 349     | 2349                | 6708    |
+| queueAction                          | 4516            | 28554               | 26067   | 55812               | 70      |
+| setAccountLogicAuthorization         | 1915            | 16084               | 24293   | 26293               | 11      |
+| setGuard                             | 2430            | 17215               | 22937   | 28937               | 11      |
+| setScriptAuthorization               | 2019            | 17590               | 24423   | 28423               | 27      |
+| setStrategyAuthorization             | 2100            | 4834                | 2867    | 9424                | 9       |
+| setStrategyLogicAuthorization        | 1932            | 19551               | 24314   | 26314               | 509     |
+| strategies                           | 628             | 1378                | 628     | 2628                | 24      |
 
 
 | src/LlamaFactory.sol:LlamaFactory contract |                 |         |         |         |         |
 |--------------------------------------------|-----------------|---------|---------|---------|---------|
 | Deployment Cost                            | Deployment Size |         |         |         |         |
-| 3673240                                    | 15659           |         |         |         |         |
+| 870268                                     | 4682            |         |         |         |         |
 | Function Name                              | min             | avg     | median  | max     | # calls |
-| LLAMA_ACCOUNT_LOGIC                        | 164             | 164     | 164     | 164     | 385     |
-| LLAMA_CORE_LOGIC                           | 386             | 386     | 386     | 386     | 385     |
-| LLAMA_POLICY_LOGIC                         | 298             | 298     | 298     | 298     | 385     |
-| LLAMA_POLICY_TOKEN_URI_PARAM_REGISTRY      | 452             | 452     | 452     | 452     | 383     |
-| ROOT_LLAMA_CORE                            | 342             | 342     | 342     | 342     | 752     |
-| ROOT_LLAMA_EXECUTOR                        | 408             | 408     | 408     | 408     | 375     |
-| setStrategyLogicAuthorization              | 409             | 19944   | 23708   | 23708   | 30      |
-| authorizedStrategyLogics                   | 600             | 826     | 600     | 2600    | 450     |
-| contractURI                                | 44070           | 44070   | 44070   | 44070   | 1       |
-| deploy                                     | 5205            | 1400836 | 1425170 | 1652591 | 393     |
-| llamaCount                                 | 285             | 1035    | 285     | 2285    | 8       |
-| llamaPolicyMetadata                        | 533             | 1533    | 1533    | 2533    | 2       |
-| setPolicyTokenMetadata                     | 291             | 3356    | 3356    | 6421    | 2       |
-| tokenURI                                   | 1690056         | 1690056 | 1690056 | 1690056 | 4       |
+| LLAMA_CORE_LOGIC                           | 214             | 214     | 214     | 214     | 542     |
+| LLAMA_POLICY_LOGIC                         | 192             | 192     | 192     | 192     | 542     |
+| LLAMA_POLICY_METADATA_LOGIC                | 236             | 236     | 236     | 236     | 9       |
+| deploy                                     | 7923            | 5290148 | 5140829 | 5688772 | 1094    |
 
 
-| src/LlamaLens.sol:LlamaLens contract          |                 |      |        |      |         |
-|-----------------------------------------------|-----------------|------|--------|------|---------|
-| Deployment Cost                               | Deployment Size |      |        |      |         |
-| 543560                                        | 3316            |      |        |      |         |
-| Function Name                                 | min             | avg  | median | max  | # calls |
-| computeLlamaAccountAddress                    | 993             | 993  | 993    | 993  | 3003    |
-| computeLlamaCoreAddress                       | 1150            | 1150 | 1150   | 1150 | 6       |
-| computeLlamaExecutorAddress(address)(address) | 586             | 586  | 586    | 586  | 4       |
-| computeLlamaExecutorAddress(string)(address)  | 1533            | 1533 | 1533   | 1533 | 2       |
-| computeLlamaPolicyAddress                     | 1290            | 1290 | 1290   | 1290 | 6       |
-| computeLlamaStrategyAddress                   | 1142            | 1156 | 1142   | 3483 | 1566    |
-| computePermissionId                           | 495             | 495  | 495    | 495  | 3       |
+| src/LlamaLens.sol:LlamaLens contract                 |                 |      |        |      |         |
+|------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                      | Deployment Size |      |        |      |         |
+| 647145                                               | 3684            |      |        |      |         |
+| Function Name                                        | min             | avg  | median | max  | # calls |
+| computeLlamaAccountAddress                           | 1134            | 1169 | 1170   | 1170 | 4267    |
+| computeLlamaCoreAddress                              | 1375            | 1375 | 1375   | 1381 | 9       |
+| computeLlamaExecutorAddress(address)(address)        | 760             | 760  | 760    | 760  | 5       |
+| computeLlamaExecutorAddress(string,address)(address) | 1708            | 1709 | 1708   | 1714 | 5       |
+| computeLlamaPolicyAddress                            | 1670            | 1670 | 1670   | 1676 | 7       |
+| computeLlamaPolicyMetadataAddress                    | 3083            | 3083 | 3083   | 3083 | 7       |
+| computeLlamaStrategyAddress                          | 1323            | 1335 | 1323   | 3664 | 2831    |
+| computePermissionId                                  | 923             | 923  | 923    | 923  | 149     |
 
 
-| src/LlamaPolicy.sol:LlamaPolicy contract                                           |                 |         |         |         |         |
-|------------------------------------------------------------------------------------|-----------------|---------|---------|---------|---------|
-| Deployment Cost                                                                    | Deployment Size |         |         |         |         |
-| 3468491                                                                            | 17411           |         |         |         |         |
-| Function Name                                                                      | min             | avg     | median  | max     | # calls |
-| ALL_HOLDERS_ROLE                                                                   | 244             | 244     | 244     | 244     | 1       |
-| approve                                                                            | 289             | 289     | 289     | 289     | 1       |
-| balanceOf                                                                          | 781             | 2734    | 2781    | 2781    | 1113    |
-| canCreateAction                                                                    | 1187            | 1687    | 1187    | 3187    | 4       |
-| contractURI                                                                        | 55323           | 55323   | 55323   | 55323   | 1       |
-| factory                                                                            | 903             | 903     | 903     | 903     | 2       |
-| finalizeInitialization                                                             | 2581            | 24725   | 24753   | 24753   | 792     |
-| getPastQuantity                                                                    | 1342            | 2238    | 2211    | 10506   | 787     |
-| getQuantity                                                                        | 1178            | 2157    | 1364    | 3178    | 58      |
-| getRoleSupplyAsNumberOfHolders                                                     | 1005            | 1256    | 1005    | 3005    | 977     |
-| getRoleSupplyAsQuantitySum                                                         | 1288            | 1948    | 1288    | 3288    | 100     |
-| hasPermissionId                                                                    | 1632            | 2752    | 1898    | 7898    | 504     |
-| hasRole(address,uint8)(bool)                                                       | 1299            | 1366    | 1299    | 3113    | 27      |
-| hasRole(address,uint8,uint256)(bool)                                               | 1956            | 2841    | 2283    | 6283    | 773     |
-| initialize                                                                         | 1994            | 502365  | 322164  | 770517  | 799     |
-| initializeRole                                                                     | 705             | 2247    | 2221    | 7021    | 1608    |
-| isRoleExpired                                                                      | 827             | 1117    | 1262    | 1262    | 3       |
-| llamaExecutor                                                                      | 447             | 447     | 447     | 447     | 2       |
-| name                                                                               | 918             | 1584    | 918     | 2918    | 6       |
-| numRoles                                                                           | 683             | 710     | 683     | 2683    | 4113    |
-| revokeExpiredRole                                                                  | 1441            | 23171   | 25200   | 30700   | 9       |
-| revokePolicy                                                                       | 2863            | 55360   | 63894   | 105067  | 11      |
-| roleBalanceCheckpoints(address,uint8)(((uint64,uint64,uint128)[]))                 | 2598            | 8262    | 11661   | 11661   | 8       |
-| roleBalanceCheckpoints(address,uint8,uint256,uint256)(((uint64,uint64,uint128)[])) | 568             | 2518    | 2229    | 5480    | 12      |
-| roleBalanceCheckpointsLength                                                       | 1243            | 1243    | 1243    | 1243    | 1       |
-| roleExpiration                                                                     | 1441            | 1441    | 1441    | 1441    | 20      |
-| safeTransferFrom(address,address,uint256)                                          | 542             | 542     | 542     | 542     | 1       |
-| safeTransferFrom(address,address,uint256,bytes)                                    | 1047            | 1047    | 1047    | 1047    | 1       |
-| setApprovalForAll                                                                  | 806             | 806     | 806     | 806     | 1       |
-| setRoleHolder                                                                      | 2055            | 142601  | 145101  | 182801  | 13857   |
-| setRolePermission                                                                  | 1084            | 24561   | 25098   | 27098   | 4100    |
-| symbol                                                                             | 3358            | 3358    | 3358    | 3358    | 1       |
-| tokenURI                                                                           | 1765690         | 1765690 | 1765690 | 1765690 | 3       |
-| totalSupply                                                                        | 485             | 485     | 485     | 485     | 1       |
-| transferFrom                                                                       | 476             | 476     | 476     | 476     | 1       |
-| updateRoleDescription                                                              | 1204            | 2973    | 3146    | 4569    | 3       |
+| src/LlamaPolicy.sol:LlamaPolicy contract                                          |                 |         |         |         |         |
+|-----------------------------------------------------------------------------------|-----------------|---------|---------|---------|---------|
+| Deployment Cost                                                                   | Deployment Size |         |         |         |         |
+| 3858037                                                                           | 19395           |         |         |         |         |
+| Function Name                                                                     | min             | avg     | median  | max     | # calls |
+| approve                                                                           | 432             | 432     | 432     | 432     | 1       |
+| balanceOf                                                                         | 659             | 2188    | 2659    | 2659    | 3981    |
+| canCreateAction                                                                   | 691             | 1091    | 691     | 2691    | 5       |
+| contractURI                                                                       | 62803           | 66583   | 68473   | 68473   | 3       |
+| getPastQuantity                                                                   | 1563            | 1985    | 1902    | 10481   | 818     |
+| getPastRoleSupplyAsNumberOfHolders                                                | 1410            | 2915    | 1769    | 5769    | 1412    |
+| getPastRoleSupplyAsQuantitySum                                                    | 973             | 2503    | 1791    | 5791    | 339     |
+| getQuantity                                                                       | 902             | 1320    | 1180    | 2902    | 41      |
+| getRoleSupplyAsNumberOfHolders                                                    | 702             | 1085    | 999     | 2702    | 36      |
+| getRoleSupplyAsQuantitySum                                                        | 745             | 1708    | 1042    | 5042    | 71      |
+| hasPermissionId                                                                   | 1202            | 5082    | 5452    | 7452    | 242     |
+| hasRole(address,uint8)(bool)                                                      | 1152            | 1299    | 1152    | 2874    | 35      |
+| hasRole(address,uint8,uint256)(bool)                                              | 1099            | 2858    | 1897    | 5897    | 747     |
+| initialize                                                                        | 1977            | 4150376 | 3994107 | 4734246 | 1112    |
+| initializeRole                                                                    | 720             | 2575    | 2543    | 7343    | 4641    |
+| isRoleExpired                                                                     | 1008            | 1280    | 1416    | 1416    | 3       |
+| llamaExecutor                                                                     | 437             | 2403    | 2437    | 2437    | 120     |
+| llamaPolicyMetadata                                                               | 402             | 402     | 402     | 402     | 1062    |
+| name                                                                              | 1320            | 2570    | 3320    | 3320    | 8       |
+| numRoles                                                                          | 380             | 419     | 380     | 2380    | 7922    |
+| revokeExpiredRole                                                                 | 1403            | 48947   | 54890   | 54890   | 9       |
+| revokePolicy                                                                      | 2549            | 84756   | 100844  | 151255  | 11      |
+| roleBalanceCheckpoints(address,uint8)(((uint64,uint64,uint96)[]))                 | 1649            | 9148    | 10648   | 10648   | 6       |
+| roleBalanceCheckpoints(address,uint8,uint256,uint256)(((uint64,uint64,uint96)[])) | 578             | 2126    | 1878    | 4526    | 12      |
+| roleBalanceCheckpointsLength                                                      | 795             | 795     | 795     | 795     | 1       |
+| roleExpiration                                                                    | 970             | 1335    | 1362    | 1362    | 30      |
+| safeTransferFrom(address,address,uint256)                                         | 519             | 519     | 519     | 519     | 1       |
+| safeTransferFrom(address,address,uint256,bytes)                                   | 726             | 726     | 726     | 726     | 1       |
+| setAndInitializePolicyMetadata                                                    | 3957            | 2394596 | 3574281 | 3574281 | 6       |
+| setApprovalForAll                                                                 | 477             | 477     | 477     | 477     | 1       |
+| setRoleHolder                                                                     | 1043            | 146074  | 147045  | 221290  | 16229   |
+| setRolePermission                                                                 | 1237            | 26337   | 26555   | 28555   | 6774    |
+| symbol                                                                            | 3339            | 3339    | 3339    | 3339    | 1       |
+| tokenURI                                                                          | 2603            | 2171873 | 2668524 | 2668524 | 6       |
+| totalSupply                                                                       | 912             | 912     | 912     | 912     | 2       |
+| transferFrom                                                                      | 496             | 496     | 496     | 496     | 1       |
+| updateRoleDescription                                                             | 776             | 2512    | 2596    | 4165    | 3       |
+
+
+| src/accounts/LlamaAccount.sol:LlamaAccount contract |                 |       |        |       |         |
+|-----------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                     | Deployment Size |       |        |       |         |
+| 2205216                                             | 11141           |       |        |       |         |
+| Function Name                                       | min             | avg   | median | max   | # calls |
+| approveERC20                                        | 2536            | 25206 | 27804  | 46804 | 15      |
+| approveERC721                                       | 2558            | 19157 | 27457  | 27457 | 3       |
+| approveOperatorERC1155                              | 2536            | 18086 | 19536  | 30736 | 4       |
+| approveOperatorERC721                               | 2535            | 17955 | 19362  | 30562 | 4       |
+| batchApproveERC20                                   | 2708            | 40560 | 40560  | 78412 | 2       |
+| batchApproveERC721                                  | 2666            | 27325 | 27325  | 51984 | 2       |
+| batchApproveOperatorERC1155                         | 2710            | 31019 | 31019  | 59329 | 2       |
+| batchApproveOperatorERC721                          | 2710            | 30984 | 30984  | 59259 | 2       |
+| batchTransferERC20                                  | 2730            | 10560 | 3143   | 25807 | 3       |
+| batchTransferERC721                                 | 2666            | 10979 | 3079   | 27192 | 3       |
+| batchTransferMultipleERC1155                        | 2668            | 9059  | 3182   | 21327 | 3       |
+| batchTransferNativeToken                            | 2624            | 16146 | 3031   | 42784 | 3       |
+| batchTransferSingleERC1155                          | 2556            | 5495  | 2735   | 11194 | 3       |
+| execute                                             | 168             | 9687  | 4520   | 32069 | 10      |
+| initialize                                          | 1255            | 49067 | 49256  | 49256 | 2224    |
+| llamaExecutor                                       | 392             | 792   | 392    | 2392  | 5       |
+| name                                                | 1319            | 1719  | 1319   | 3319  | 5       |
+| onERC1155Received                                   | 954             | 954   | 954    | 954   | 10      |
+| onERC721Received                                    | 966             | 966   | 966    | 966   | 1       |
+| receive                                             | 55              | 55    | 55     | 55    | 1       |
+| transferERC1155                                     | 2555            | 4211  | 2734   | 7346  | 3       |
+| transferERC20                                       | 2559            | 6569  | 2738   | 14411 | 3       |
+| transferERC721                                      | 2536            | 5767  | 2715   | 12051 | 3       |
+| transferNativeToken                                 | 2437            | 4924  | 2610   | 9725  | 3       |
+
+
+
+Ran 140 test suites: 636 tests passed, 4 failed, 0 skipped (640 total tests)
+
+Failing tests:
+Encountered 2 failing tests in test/invariants/LlamaCore.invariants.t.sol:LlamaFactoryInvariants
+[31m[FAIL. Reason: Assertion failed.]
+	[Sequence]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[689269959333428076918747749862805401606909965301 [2;49;39m[6.892e47][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[481574845234910485762858682986652549534898777998470142353624282142712664627 [2;49;39m[4.815e74][0m, 0, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[7955]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[2442164733290490681206517469651395962402111358148877877383 [2;49;39m[2.442e57][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[17699 [2;49;39m[1.769e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[1]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[18790387253168041314813299860646578359 [2;49;39m[1.879e37][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[6845]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[221383717355198611977125201936875238946836543994820251841724416 [2;49;39m[2.213e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[36893488147419967234 [2;49;39m[3.689e19][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[28725847 [2;49;39m[2.872e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[10059887637435470686893085298257241505253021808638446043067361383608259444736 [2;49;39m[1.005e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[2]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[196432207380 [2;49;39m[1.964e11][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[28124927 [2;49;39m[2.812e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[23641836 [2;49;39m[2.364e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[71762058387919520632769145005705385665109610485754531 [2;49;39m[7.176e52][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[3435647 [2;49;39m[3.435e6][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m, 1362817415286152970445896503231 [2;49;39m[1.362e30][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[12837792842704319740448459986893855343644212964101375766353590823 [2;49;39m[1.283e64][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[1141]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[1032859440 [2;49;39m[1.032e9][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[16443 [2;49;39m[1.644e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[3251299690447850388112177092585075645413803527276797973110188 [2;49;39m[3.251e60][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[13437 [2;49;39m[1.343e4][0m, 30049578511147215784808879450479816186906080602978579265266336096260534042624 [2;49;39m[3.004e76][0m, 11230 [2;49;39m[1.123e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[30049578511147215784808879450479860788392208598486896166261426009501960503296 [2;49;39m[3.004e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[40915878233232559559647979536984774493256194428072389 [2;49;39m[4.091e52][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[8755]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[115792089237316195423546465080034053631536251113206159092519684181958208782334 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[0]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[3785]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[1804]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[359918151178678617578116121562999150907815571562669701597233153 [2;49;39m[3.599e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[3867454566656 [2;49;39m[3.867e12][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[3, 2, 15806702267875837 [2;49;39m[1.58e16][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[10255905510886099146329397822271992331906407465079500590893370 [2;49;39m[1.025e61][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[25422335588102018656200148364648352200055353249557204590133503 [2;49;39m[2.542e61][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[58026139015542918020476496478314074092412 [2;49;39m[5.802e40][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[20109065 [2;49;39m[2.01e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[0]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[606147520617249009868056591 [2;49;39m[6.061e26][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[490014197320263841922153472715077148 [2;49;39m[4.9e35][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[3, 1493113930438326023085738755922948778331832915334583517984093546089319 [2;49;39m[1.493e69][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[410395195064575418544062551140646821938486345971241730818703361 [2;49;39m[4.103e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[2]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[1189, 13548 [2;49;39m[1.354e4][0m, 20442739425127367630371953143291429617294381950879827645829535066419964751416 [2;49;39m[2.044e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[2]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[45887587944385529442775496190105943274854696770996749803402141832502216499231 [2;49;39m[4.588e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[30206820676133 [2;49;39m[3.02e13][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[121724306336257166806995208083668912488763043887922855454703616 [2;49;39m[1.217e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m, 144669194016517893 [2;49;39m[1.446e17][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[5957]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[4576]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[52652740481754350615927600957203149092155974947355246331762681569063971349873 [2;49;39m[5.265e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[2570]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[8585]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[19649199295569632 [2;49;39m[1.964e16][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m, 5056000195640509380761873757653 [2;49;39m[5.056e30][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[1096135064283779491996466501308 [2;49;39m[1.096e30][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[249630639821765043563875369 [2;49;39m[2.496e26][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+
+[0m invariant_AllCoreInvariants() (runs: 25, calls: 2479, reverts: 1)
+[31m[FAIL. Reason: Assertion failed.]
+	[Sequence]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[29556751822654619290722904501947257910685290556957843884258206978039878853161 [2;49;39m[2.955e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[579]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[821715107601367660413943422774664637222632676340999253161 [2;49;39m[8.217e56][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[701609854751230468806452614127827203798388189698603701231419391 [2;49;39m[7.016e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[1279220888491512225129363853355266495563583954510561410599 [2;49;39m[1.279e57][0m, 1620446514297893071149633453527536907702455802505306810065020 [2;49;39m[1.62e60][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[14818 [2;49;39m[1.481e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[17693505 [2;49;39m[1.769e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[9905]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[24525965670791559936914865744156174522915326323271639771404365844546958732850 [2;49;39m[2.452e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m, 102574971559721452796519661767545705568632806470980537977609013156761869 [2;49;39m[1.025e71][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[21466592 [2;49;39m[2.146e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[58437642287041681777612173408563445106352443479263006825734428653230772177099 [2;49;39m[5.843e76][0m, 34123413360879322640837555646489463543843183086490321391080271531130709052076 [2;49;39m[3.412e76][0m, 25420347963288401897654369593104335223063003164440175792494374139225177143353 [2;49;39m[2.542e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[1]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[270142478200819270646636785360577114510940112299948116428193792 [2;49;39m[2.701e62][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[10938641777190157132425316645803243386231 [2;49;39m[1.093e40][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[3049421 [2;49;39m[3.049e6][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[83376 [2;49;39m[8.337e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[8176, 15373 [2;49;39m[1.537e4][0m, 6046]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[1]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[279554162911509398289512682 [2;49;39m[2.795e26][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[455]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[305783133064729 [2;49;39m[3.057e14][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[2]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[1328673876 [2;49;39m[1.328e9][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[9453541906437218102593857649055777916813345135662061904828210162 [2;49;39m[9.453e63][0m, 12598034925534486451323654209463462225 [2;49;39m[1.259e37][0m, 3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[25419940545521779988981228962673540666620754829257972083280202047796397551154 [2;49;39m[2.541e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[5964]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[58]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[2]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[284123390827853197682426345235864259120661056824886187179547 [2;49;39m[2.841e59][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[21625976302639593001678792621933866942241406250318140409303843998266972580 [2;49;39m[2.162e73][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[0]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[10022 [2;49;39m[1.002e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[28783 [2;49;39m[2.878e4][0m, 57464101454600193347948324276159065227711989666914768754662245682811352702283 [2;49;39m[5.746e76][0m, 22374741 [2;49;39m[2.237e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[99294454396775772263951211965212546834465696293453 [2;49;39m[9.929e49][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[16438457 [2;49;39m[1.643e7][0m, 21195041 [2;49;39m[2.119e7][0m, 3479311743 [2;49;39m[3.479e9][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[1859]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[23688 [2;49;39m[2.368e4][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[21878201 [2;49;39m[2.187e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[30049578511147215784808879450479816099113224907418102148615686577539560505344 [2;49;39m[3.004e76][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[1]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[401726524894879 [2;49;39m[4.017e14][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[32582604553596735485447667136126047017916807475 [2;49;39m[3.258e46][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[1, 329771396980660805802323072309523586414636669265601105532 [2;49;39m[3.297e56][0m, 2410297856164901293920331267484569 [2;49;39m[2.41e33][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[3189906844860866359536 [2;49;39m[3.189e21][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m, 115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m, 839642839429608519918 [2;49;39m[8.396e20][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[147811285454 [2;49;39m[1.478e11][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[180844592286545293368802036089599165817375 [2;49;39m[1.808e41][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639932 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_createAction(uint256,uint256,uint256), args=[52114930822296286211793764957479193906449036453441455269146116973141733412313 [2;49;39m[5.211e76][0m, 8518956368618523266598936515067373545870275003536644 [2;49;39m[8.518e51][0m, 3826632993870 [2;49;39m[3.826e12][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[1460091553420887819654255443444255999331982500849841654 [2;49;39m[1.46e54][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_queueAction(uint256), args=[155217592192475139132122347194717496188811073080762 [2;49;39m[1.552e50][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[251969497050 [2;49;39m[2.519e11][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_addActor(), args=[]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[16828121 [2;49;39m[1.682e7][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[3]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[3746]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castApproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_cancelAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639933 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=handler_increaseTimestampBy(uint256), args=[284461023148296583362 [2;49;39m[2.844e20][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_executeAction(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639935 [2;49;39m[1.157e77][0m]
+		sender=0x1804c8ab1f12e6bbf3894d4083f33e07309d1f38 addr=[test/invariants/LlamaCore.invariants.t.sol:LlamaCoreHandler]0xf62849f9a0b5bf2913b396098f7c7019b51a820a calldata=llamaCore_castDisapproval(uint256), args=[115792089237316195423570985008687907853269984665640564039457584007913129639934 [2;49;39m[1.157e77][0m]
+
+[0m invariant_CallSummary() (runs: 61, calls: 6087, reverts: 1)
+
+Encountered 1 failing test in test/llama-scripts/LlamaGovernanceScript.t.sol:SetRoleHolders
+[31m[FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)][0m testFuzz_setRoleHolders((uint8,address,uint96,uint64)[]) (runs: 558, μ: 784702, ~: 499982)
+
+Encountered 1 failing test in test/llama-scripts/LlamaGovernanceScript.t.sol:UpdateRoleDescriptions
+[31m[FAIL. Reason: The `vm.assume` cheatcode rejected too many inputs (65536 allowed)][0m testFuzz_updateRoleDescriptions((uint8,bytes32)[]) (runs: 2734, μ: 540403, ~: 544871)
+
+Encountered a total of [31m4[0m failing tests, [32m636[0m tests succeeded

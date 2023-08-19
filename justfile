@@ -18,14 +18,14 @@ run-script script_name flags='' sig='' args='':
     -vvvv {{flags}}
   mv _test test
 
-run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "deployLlamaInstance.json"')
+run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "llamaInstanceConfig.json"')
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
-deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify')
+deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --build-info --build-info-path build_info')
 
 verify: (run-script 'DeployLlamaFactory' '--verify')
 
-dry-run-deploy-new-llama: (run-deploy-instance-script '')
+dry-run-deploy-instance: (run-deploy-instance-script '')
 
-deploy-new-llama: (run-deploy-instance-script '--broadcast --verify')
+deploy-instance: (run-deploy-instance-script '--broadcast --verify')
