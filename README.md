@@ -5,7 +5,7 @@
 
 # Llama
 
-Llama is an onchain governance framework. It uses non-transferable NFTs to encode access control, features programmatic control of funds, and includes modular strategies to define action execution rules.
+Llama is an onchain governance and access control framework for smart contracts. It uses non-transferable NFTs to encode access control, features programmatic control of funds, and includes modular strategies to define action execution rules.
 
 ## Prerequisites
 
@@ -74,11 +74,22 @@ The comments in that file explain what each variable is for and when they're nee
 
 ## Documentation
 
-Run the following command to generate smart contract reference documentation from this project's NatSpec comments and serve those static files locally:
+To read all of our documentation, visit https://docs.llama.xyz. To view Llama framework documentation only, visit the [docs directory](https://github.com/llamaxyz/llama/tree/main/docs).
+
+### Smart contract reference
+
+Run the following command to generate smart contract reference documentation from our NatSpec comments and serve those static files locally:
 
 ```sh
 $ forge doc -o reference/ -b -s
 ```
+
+## Audits
+
+We received audits from Spearbit and Code4rena. You can find links to the reports below:
+
+- [Llama Spearbit Audit](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit.pdf)
+- [Llama Code4rena Audit](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Code4rena-Audit.md)
 
 ## Slither
 

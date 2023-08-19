@@ -69,11 +69,11 @@ Once your `.env` file is configured and anvil is running, you can perform a dry
 run like this:
 
 ```shell
-just dry-run-create-new-llama
+just dry-run-deploy-instance
 ```
 
 If all goes well, broadcast as follows:
 
 ```shell
-just create-new-llama
+just deploy-instance
 ```

@@ -1,5 +1,5 @@
 {
-  "comment": "This is Llama's instance on Sepolia. The strategy logic is the `LlamaRelativeQuantityQuorum` contract.",
+  "comment": "This is Llama's instance on Optimism. The strategy logic is the `LlamaRelativeQuantityQuorum` contract.",
   "factory": "0x1711567DC0dd5667fb0AA1Cc8A400E5D724fe6c6",
   "instanceName": "Llama",
   "instanceColor": "#6A45EC",
