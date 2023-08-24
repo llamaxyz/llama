@@ -1,7 +1,7 @@
 ---
 sponsor: "Llama"
 slug: "2023-06-llama"
-date: "2023-07-⭕⭕"  # the date this report is published to the C4 website
+date: "2023-07-26"  # the date this report is published to the C4 website
 title: "Llama"
 findings: "https://github.com/code-423n4/2023-06-llama-findings/issues"
 contest: 246

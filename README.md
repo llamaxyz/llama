@@ -113,7 +113,7 @@ We received two audits from Spearbit and one from Code4rena. You can find links 
 
 - [Llama Spearbit Audit (June 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit.pdf)
 - [Llama Code4rena Audit](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Code4rena-Audit.md)
-- [Llama Spearbit Audit (August 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit-2.md)
+- [Llama Spearbit Audit (August 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit-2.pdf)
 
 ### Bug bounty program
 
