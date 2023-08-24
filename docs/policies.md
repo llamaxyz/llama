@@ -3,6 +3,8 @@
 Policies allow users to create actions and cast approvals / disapprovals on actions within a Llama instance.
 Policies, roles, and permission IDs can be granted on instance deployment, but this section focuses on policy management for active Llama instances in this section.
 
+![Llama Policy Overview](https://github.com/llamaxyz/llama/blob/main/diagrams/llama-policy-overview.png)
+
 ## Key Concepts
 
 - **Policies**: Non-transferable NFTs encoded with roles and permission IDs for an individual Llama instance.
