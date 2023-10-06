@@ -527,7 +527,43 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 
-  function testFuzz_RevertIfQuantityIsLoweredInSameBlockAndActionCountIsZero(uint256 _numberOfPolicies) public {
+  function testFuzz_NoRevertIfQuantityIsIncreasedInSameBlockAndActionCountIsZero(uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    generateAndSetRoleHolders(_numberOfPolicies);
+    uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 minApprovals = totalQuantity + 1;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaAbsoluteStrategyBaseLogic, true);
+
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: toUint96(minApprovals),
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
+    });
+
+    LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    // Set quantity to 100 for `Roles.TestRole1` role holders.
+    for (uint256 i = 0; i < _numberOfPolicies; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      vm.prank(address(mpExecutor));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 100, 18_446_744_073_709_551_615);
+    }
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function testFuzz_RevertIf_QuantityIsLoweredInSameBlockAndActionCountIsZero(uint256 _numberOfPolicies) public {
     _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
     generateAndSetRoleHolders(_numberOfPolicies);
     uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
