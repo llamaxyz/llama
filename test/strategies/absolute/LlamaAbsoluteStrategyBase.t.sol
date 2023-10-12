@@ -598,6 +598,9 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
       mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 0, 0);
     }
 
+    // Assert that actions count is 0 before creating the strategy
+    assertEq(mpCore.actionsCount(), 0);
+
     vm.prank(address(mpExecutor));
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidMinApprovals.selector, minApprovals));
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
