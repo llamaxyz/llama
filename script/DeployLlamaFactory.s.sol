@@ -111,6 +111,10 @@ contract DeployLlamaFactory is Script {
     DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
 
     vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
     absoluteQuorumLogic = new LlamaAbsoluteQuorum();
     DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
 
