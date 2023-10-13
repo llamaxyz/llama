@@ -169,7 +169,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     DeployLlamaFactory.run();
 
     // Deploy the root Llama instance and set the instance variables
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json", "relative");
     rootCore = core;
     rootExecutor = rootCore.executor();
     rootPolicy = rootCore.policy();
@@ -182,7 +182,7 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
     bytes[] memory rootAccounts = accountConfigsRootLlama();
 
     // Deploy the root Llama instance and set the instance variables
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json", "relative");
     mpCore = core;
     mpPolicy = mpCore.policy();
     mpExecutor = mpCore.executor();
@@ -320,11 +320,11 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   }
 
   function strategyConfigsRootLlama() internal view returns (bytes[] memory) {
-    return DeployUtils.readRelativeStrategies(deployScriptInput);
+    return DeployUtils.readStrategies(deployScriptInput, "relative");
   }
 
   function strategyConfigsLlamaInstance() internal view returns (bytes[] memory) {
-    return DeployUtils.readRelativeStrategies(createActionScriptInput);
+    return DeployUtils.readStrategies(createActionScriptInput, "relative");
   }
 
   function accountConfigsRootLlama() internal view returns (bytes[] memory) {
