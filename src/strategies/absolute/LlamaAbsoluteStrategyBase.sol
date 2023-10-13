@@ -145,7 +145,12 @@ abstract contract LlamaAbsoluteStrategyBase is ILlamaStrategy, Initializable {
     isFixedLengthApprovalPeriod = strategyConfig.isFixedLengthApprovalPeriod;
     approvalPeriod = strategyConfig.approvalPeriod;
 
-    uint256 roleSupply = policy.getPastRoleSupplyAsQuantitySum(strategyConfig.approvalRole, block.timestamp - 1);
+    // If the actions count is 0, then the instance is in the process of being deployed. This means that the current
+    // role supply must be used.
+    uint256 roleSupply = llamaCore.actionsCount() == 0
+      ? policy.getRoleSupplyAsQuantitySum(strategyConfig.approvalRole)
+      : policy.getPastRoleSupplyAsQuantitySum(strategyConfig.approvalRole, block.timestamp - 1);
+
     if (strategyConfig.minApprovals > roleSupply) revert InvalidMinApprovals(strategyConfig.minApprovals);
 
     minApprovals = strategyConfig.minApprovals;

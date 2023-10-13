@@ -6,13 +6,14 @@ import {Test, console2} from "forge-std/Test.sol";
 import {FixedPointMathLib} from "@solmate/utils/FixedPointMathLib.sol";
 
 import {MockLlamaAbsoluteStrategyBase} from "test/mock/MockLlamaAbsoluteStrategyBase.sol";
+import {MockProtocol} from "test/mock/MockProtocol.sol";
 import {Roles} from "test/utils/LlamaTestSetup.sol";
 import {LlamaStrategyTestSetup} from "test/strategies/LlamaStrategyTestSetup.sol";
 
 import {DeployUtils} from "script/DeployUtils.sol";
 
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {ActionState} from "src/lib/Enums.sol";
 import {LlamaAbsoluteStrategyBase} from "src/strategies/absolute/LlamaAbsoluteStrategyBase.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
@@ -99,6 +100,30 @@ contract Constructor is LlamaAbsoluteStrategyBaseTest {
 }
 
 contract Initialize is LlamaAbsoluteStrategyBaseTest {
+  function _executeCompleteActionFlow() internal returns (ActionInfo memory actionInfo) {
+    bytes memory data = abi.encodeCall(MockProtocol.pause, (true));
+    vm.prank(actionCreatorAaron);
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data, "");
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(mockProtocol), 0, data);
+    vm.warp(block.timestamp + 1);
+
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    assertEq(mpStrategy1.isActionApproved(actionInfo), true);
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    mpCore.executeAction(actionInfo);
+  }
+
   function testFuzz_SetsStrategyStorageQueuingDuration(uint64 _queuingDuration) public {
     ILlamaStrategy newStrategy = deployTestStrategyAndSetRole(
       DEFAULT_ROLE,
@@ -418,6 +443,166 @@ contract Initialize is LlamaAbsoluteStrategyBaseTest {
     vm.prank(address(mpExecutor));
 
     vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidRole.selector, uint8(Roles.AllHolders)));
+    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function testFuzz_NoRevertIfQuantityIsLoweredInSameBlock(uint256 _numberOfPolicies) public {
+    // Guarantees that actionCount > 0
+    _executeCompleteActionFlow();
+
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    generateAndSetRoleHolders(_numberOfPolicies);
+    uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 minApprovals = totalQuantity;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaAbsoluteStrategyBaseLogic, true);
+
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: toUint96(minApprovals),
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
+    });
+
+    LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    // Set quantity to 0 for `Roles.TestRole1` role holders.
+    for (uint256 i = 0; i < _numberOfPolicies; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      vm.prank(address(mpExecutor));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 0, 0);
+    }
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function testFuzz_RevertIf_QuantityIsLoweredInPreviousBlock(uint256 _numberOfPolicies) public {
+    // Guarantees that actionCount > 0
+    _executeCompleteActionFlow();
+
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    generateAndSetRoleHolders(_numberOfPolicies);
+    uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 minApprovals = totalQuantity;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaAbsoluteStrategyBaseLogic, true);
+
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: toUint96(minApprovals),
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
+    });
+
+    LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    // Set quantity to 0 for `Roles.TestRole1` role holders.
+    for (uint256 i = 0; i < _numberOfPolicies; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      vm.prank(address(mpExecutor));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 0, 0);
+    }
+
+    mineBlock();
+
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidMinApprovals.selector, minApprovals));
+    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function testFuzz_NoRevertIfQuantityIsIncreasedInSameBlockAndActionCountIsZero(uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    generateAndSetRoleHolders(_numberOfPolicies);
+    uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 minApprovals = totalQuantity + 1;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaAbsoluteStrategyBaseLogic, true);
+
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: toUint96(minApprovals),
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
+    });
+
+    LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    // Set quantity to 100 for `Roles.TestRole1` role holders.
+    for (uint256 i = 0; i < _numberOfPolicies; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      vm.prank(address(mpExecutor));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 100, type(uint64).max);
+    }
+
+    // Assert that actions count is 0 before creating the strategy
+    assertEq(mpCore.actionsCount(), 0);
+
+    vm.prank(address(mpExecutor));
+    mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
+  }
+
+  function testFuzz_RevertIf_QuantityIsLoweredInSameBlockAndActionCountIsZero(uint256 _numberOfPolicies) public {
+    _numberOfPolicies = bound(_numberOfPolicies, 2, 100);
+    generateAndSetRoleHolders(_numberOfPolicies);
+    uint256 totalQuantity = mpPolicy.getRoleSupplyAsQuantitySum(uint8(Roles.TestRole1));
+    uint256 minApprovals = totalQuantity;
+
+    vm.prank(address(mpExecutor));
+    mpCore.setStrategyLogicAuthorization(mockLlamaAbsoluteStrategyBaseLogic, true);
+
+    LlamaAbsoluteStrategyBase.Config memory strategyConfig = LlamaAbsoluteStrategyBase.Config({
+      approvalPeriod: DEFAULT_APPROVAL_PERIOD,
+      queuingPeriod: DEFAULT_QUEUING_PERIOD,
+      expirationPeriod: DEFAULT_EXPIRATION_PERIOD,
+      minApprovals: toUint96(minApprovals),
+      minDisapprovals: DEFAULT_DISAPPROVALS,
+      isFixedLengthApprovalPeriod: DEFAULT_FIXED_LENGTH_APPROVAL_PERIOD,
+      approvalRole: DEFAULT_ROLE,
+      disapprovalRole: DEFAULT_ROLE,
+      forceApprovalRoles: defaultForceRoles,
+      forceDisapprovalRoles: defaultForceRoles
+    });
+
+    LlamaAbsoluteStrategyBase.Config[] memory strategyConfigs = new LlamaAbsoluteStrategyBase.Config[](1);
+    strategyConfigs[0] = strategyConfig;
+
+    // Set quantity to 0 for `Roles.TestRole1` role holders.
+    for (uint256 i = 0; i < _numberOfPolicies; i++) {
+      address _policyHolder = address(uint160(i + 100));
+      vm.prank(address(mpExecutor));
+      mpPolicy.setRoleHolder(uint8(Roles.TestRole1), _policyHolder, 0, 0);
+    }
+
+    // Assert that actions count is 0 before creating the strategy
+    assertEq(mpCore.actionsCount(), 0);
+
+    vm.prank(address(mpExecutor));
+    vm.expectRevert(abi.encodeWithSelector(LlamaAbsoluteStrategyBase.InvalidMinApprovals.selector, minApprovals));
     mpCore.createStrategies(mockLlamaAbsoluteStrategyBaseLogic, DeployUtils.encodeStrategyConfigs(strategyConfigs));
   }
 }
