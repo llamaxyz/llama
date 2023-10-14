@@ -2,7 +2,8 @@
 
 The current Llama scripts are:
 * `DeployLlamaFactory.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
-* `DeployLlamaInstance.s.sol`, which deploys new Llama instances
+* `DeployLlamaInstance.s.sol`, which deploys new Llama instances using a JSON-based configuration
+* `ConfigureAdvancedInstance.s.sol`, which completes the initialization of advanced instance deployments with a code-based configuration
 
 Additionally, both `DeployLlamaFactory` and `DeployLlamaInstance` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
@@ -24,6 +25,12 @@ Therefore, we help enforce this at the protocol level with the following behavio
 - Initialization of the `LlamaCore` contract is where the `bootstrapStrategy` is deployed and the bootstrap permission ID is set. This is the permission ID (the `(target, selector, strategy)` tuple) that can be used to call the `setRolePermission` method.
 
 A key part of ensuring the instance is not misconfigured is ensuring that the `bootstrapStrategy` is a valid strategy that can actually be executed. This is checked in deploy scripts, because the strategy can have any logic, so it's not necessarily possible to check this at the protocol level.
+
+### Standard vs Advanced Deployments
+
+Standard deployments define their instance configuration in a JSON file. The `DeployLlamaInstance` script uses this JSON-based configuration as the input to call the `LlamaFactory` deploy function. This is the preferential deployment method for most instances. 
+
+For instances that want a more flexible, code-based deployment method, they can use the `DeployLlamaInstance` script along with the `ConfigureAdvancedInstance` script. This can be used to handle advanced use cases such as configuring both absolute and relative strategies. 
 
 ## DeployLlamaFactory
 

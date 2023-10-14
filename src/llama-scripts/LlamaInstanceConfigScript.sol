@@ -19,7 +19,7 @@ import {RoleDescription} from "src/lib/UDVTs.sol";
 ///   - The "Batch Policy Functions" section has public methods that (1) can be called directly as part of an action,
 ///     and (2) are also used by methods in the "Common Aggregate Calls" section.
 ///   - The "Common Aggregate Calls" section has external methods for common batch actions.
-contract LlamaGovernanceScript is LlamaBaseScript {
+contract LlamaInstanceConfigScript is LlamaBaseScript {
   // ==========================
   // ========= Structs ========
   // ==========================
