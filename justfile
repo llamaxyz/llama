@@ -18,6 +18,14 @@ run-script script_name flags='' sig='' args='':
     -vvvv {{flags}}
   mv _test test
 
+run-compute-script script_name sig='' args='':
+  # To speed up compilation we temporarily rename the test directory.
+  mv test _test
+  # We hyphenate so that we still cleanup the directory names even if the deploy fails.
+  - forge script script/{{script_name}}.s.sol {{sig}} {{args}} \
+    --rpc-url $SCRIPT_RPC_URL
+  mv _test test
+
 run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string,string)"' '$SCRIPT_DEPLOYER_ADDRESS "llamaInstanceConfig.json" "relative"')
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
@@ -29,3 +37,5 @@ verify: (run-script 'DeployLlamaFactory' '--verify --resume')
 dry-run-deploy-instance: (run-deploy-instance-script '')
 
 deploy-instance: (run-deploy-instance-script '--broadcast --verify')
+
+compute-strategies: (run-compute-script 'ComputeStrategies' '--sig "run(address,address,string,string)"' '$SCRIPT_DEPLOYER_ADDRESS 0x1D74803D4939aFa3CC9fF1B8667bE4d119d925cB "llamaInstanceConfig.json" "relative"')
