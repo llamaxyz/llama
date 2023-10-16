@@ -52,6 +52,18 @@ contract LlamaInstanceConfigScript is LlamaBaseScript {
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
+  function execute() external {
+    // At beginning call:
+    // updateRoleDescription(1, "New role 1 name");
+    // setRolePermission(1, bootstrapPermission, false); optional
+    // BODY
+    // At the end script call:
+    // revokePolicy(bot);
+    // unauth script
+    // setStrategyLogicAuthorization(relative, false); optional
+    // setStrategyAuthorization(instance, false); optional
+  }
+
   // =======================================
   // ======== Arbitrary Aggregation ========
   // =======================================
