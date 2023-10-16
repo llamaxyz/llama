@@ -10,7 +10,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-abstract contract LlamaInstanceConfigScript is LlamaBaseScript {
+contract LlamaInstanceConfigScript is LlamaBaseScript {
   uint8 constant CONFIG_ROLE = 1;
   /// @dev Address of the executor contract. We save it off in order to access the setScriptAuthorization method in
   /// `LlamaCore`.
