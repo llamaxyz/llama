@@ -13,15 +13,22 @@ import {DeployUtils} from "script/DeployUtils.sol";
 contract DeployLlamaInstance is Script {
   using stdJson for string;
 
+  error InvalidStrategyType();
+
   // The core of the deployed Llama instance.
   LlamaCore core;
 
-  function run(address deployer, string memory configFile) public {
+  function run(address deployer, string memory configFile, string memory strategyType) public {
+    if (
+      keccak256(abi.encode(strategyType)) != keccak256(abi.encode("absolute"))
+        && keccak256(abi.encode(strategyType)) != keccak256(abi.encode("relative"))
+    ) revert InvalidStrategyType();
+
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
     // ensure it can be used to pass actions.
     // NOTE: This check currently only supports relative strategies.
-    DeployUtils.bootstrapSafetyCheck(configFile);
+    DeployUtils.bootstrapSafetyCheck(configFile, strategyType);
     // ======== END SAFETY CHECK ========
 
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
@@ -41,7 +48,7 @@ contract DeployLlamaInstance is Script {
       llamaInstanceName,
       ILlamaStrategy(jsonInput.readAddress(".strategyLogic")),
       ILlamaAccount(jsonInput.readAddress(".accountLogic")),
-      DeployUtils.readRelativeStrategies(jsonInput),
+      DeployUtils.readStrategies(jsonInput, strategyType),
       DeployUtils.readAccounts(jsonInput),
       policyConfig
     );

@@ -13,6 +13,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
@@ -32,7 +33,7 @@ contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstanc
 
     // Deploy the root llama instance
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json", "relative");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
@@ -68,7 +69,7 @@ contract Run is DeployLlamaInstanceTest {
 
   function test_newInstanceCanBeDeployed() public {
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json", "relative");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     // There are three strategies we expect to have been deployed.
@@ -205,7 +206,7 @@ contract Run is DeployLlamaInstanceTest {
     vm.expectEmit();
     emit RoleInitialized(8, RoleDescription.wrap("MadeUpRole"));
 
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json", "relative");
   }
 
   function assertEqStrategyStatus(
