@@ -9,7 +9,7 @@
   "initialStrategies": [
     {
       "approvalPeriod": 0,
-      "approvalRole": 0,
+      "approvalRole": 1,
       "disapprovalRole": 0,
       "expirationPeriod": 432000,
       "forceApprovalRoles": [],
