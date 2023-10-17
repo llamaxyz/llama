@@ -47,9 +47,11 @@ contract DeployLlamaFactory is Script {
       string.concat("  LlamaRelativeHolderQuorumLogic:", vm.toString(address(relativeHolderQuorumLogic)))
     );
 
+    // This 0 value, 0x bytecode self-call ensures that deployments on new chains will maintain address consistency with
+    // chains deployed before the absolute strategy update.
     vm.broadcast();
-    absolutePeerReviewLogic = new LlamaAbsolutePeerReview();
-    DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
+    (bool success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
 
     vm.broadcast();
     accountLogic = new LlamaAccount();
@@ -75,9 +77,11 @@ contract DeployLlamaFactory is Script {
     lens = new LlamaLens(address(factory));
     DeployUtils.print(string.concat("  LlamaLens:", vm.toString(address(lens))));
 
+    // This 0 value, 0x bytecode self-call ensures that deployments on new chains will maintain address consistency with
+    // chains deployed before the absolute strategy update.
     vm.broadcast();
-    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
-    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
 
     vm.broadcast();
     relativeQuantityQuorumLogic = new LlamaRelativeQuantityQuorum();
@@ -90,5 +94,32 @@ contract DeployLlamaFactory is Script {
     DeployUtils.print(
       string.concat("  LlamaRelativeUniqueHolderQuorumLogic:", vm.toString(address(relativeUniqueHolderQuorumLogic)))
     );
+
+    // These 0 value, 0x bytecode self-calls ensure that deployments on new chains will maintain address consistency
+    // with chains deployed before the absolute strategy update.
+
+    vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
+    absoluteQuorumLogic = new LlamaAbsoluteQuorum();
+    DeployUtils.print(string.concat("  LlamaAbsoluteQuorumLogic:", vm.toString(address(absoluteQuorumLogic))));
+
+    vm.broadcast();
+    absolutePeerReviewLogic = new LlamaAbsolutePeerReview();
+    DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
   }
 }
