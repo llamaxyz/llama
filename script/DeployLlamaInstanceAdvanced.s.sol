@@ -8,9 +8,10 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
+import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaInstanceConfigScript} from "src/llama-scripts/LlamaInstanceConfigScript.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
-import {Action, ActionInfo} from "src/lib/Structs.sol";
+import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
 
@@ -21,14 +22,99 @@ contract DeployLlamaInstanceAdvanced is Script, DeployLlamaInstance {
   uint8 constant CONFIG_ROLE = 1;
 
   function _authorizeScript(address deployer, ILlamaStrategy bootstrapStrategy) internal {
+    LlamaPolicy policy = core.policy();
+    PermissionData memory authorizePermission =
+      PermissionData(address(core), LlamaCore.setScriptAuthorization.selector, bootstrapStrategy);
+    bytes memory authPermissionData =
+      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, authorizePermission, true));
+
+    vm.broadcast();
+    uint256 authPermissionActionId = core.createAction(
+      CONFIG_ROLE,
+      bootstrapStrategy,
+      address(policy),
+      0,
+      authPermissionData,
+      "# Grant permission to authorize configuration script\n\n"
+    );
+    ActionInfo memory authPermissionActionInfo = ActionInfo(
+      authPermissionActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(policy), 0, authPermissionData
+    );
+
+    vm.broadcast();
+    core.queueAction(authPermissionActionInfo);
+
+    vm.broadcast();
+    core.executeAction(authPermissionActionInfo);
+
     bytes memory authorizeData = abi.encodeCall(LlamaCore.setScriptAuthorization, (address(configurationScript), true));
+
+    vm.broadcast();
     uint256 authorizeActionId = core.createAction(
       CONFIG_ROLE, bootstrapStrategy, address(core), 0, authorizeData, "# Authorize configuration script\n\n"
     );
     ActionInfo memory authorizeActionInfo =
       ActionInfo(authorizeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(core), 0, authorizeData);
+
+    vm.broadcast();
     core.queueAction(authorizeActionInfo);
+
+    vm.broadcast();
     core.executeAction(authorizeActionInfo);
+  }
+
+  function _executeScript(address deployer, ILlamaStrategy bootstrapStrategy, string memory updatedRoleDescription)
+    internal
+  {
+    LlamaPolicy policy = core.policy();
+    PermissionData memory executePermission =
+      PermissionData(address(configurationScript), LlamaInstanceConfigScript.execute.selector, bootstrapStrategy);
+    bytes memory executePermissionData =
+      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, executePermission, true));
+
+    vm.broadcast();
+    uint256 executePermissionActionId = core.createAction(
+      CONFIG_ROLE,
+      bootstrapStrategy,
+      address(policy),
+      0,
+      executePermissionData,
+      "# Grant permission to execute configuration script\n\n"
+    );
+    ActionInfo memory executePermissionActionInfo = ActionInfo(
+      executePermissionActionId,
+      deployer,
+      CONFIG_ROLE,
+      bootstrapStrategy,
+      address(configurationScript),
+      0,
+      executePermissionData
+    );
+
+    vm.broadcast();
+    core.queueAction(executePermissionActionInfo);
+
+    vm.broadcast();
+    core.executeAction(executePermissionActionInfo);
+
+    RoleDescription updatedDescription = RoleDescription.wrap(bytes32(bytes(updatedRoleDescription)));
+    bytes memory executeData =
+      abi.encodeCall(LlamaInstanceConfigScript.execute, (deployer, bootstrapStrategy, updatedDescription));
+
+    vm.broadcast();
+    uint256 executeActionId = core.createAction(
+      CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData, "# Execute configuration script\n\n"
+    );
+
+    ActionInfo memory executeActionInfo = ActionInfo(
+      executeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData
+    );
+
+    vm.broadcast();
+    core.queueAction(executeActionInfo);
+
+    vm.broadcast();
+    core.executeAction(executeActionInfo);
   }
 
   function run(
@@ -37,10 +123,8 @@ contract DeployLlamaInstanceAdvanced is Script, DeployLlamaInstance {
     string memory strategyType,
     string memory updatedRoleDescription
   ) public {
-    RoleDescription updatedDescription = RoleDescription.wrap(bytes32(bytes(updatedRoleDescription)));
     // Deploy Llama instance
     super.run(deployer, configFile, strategyType);
-    LlamaExecutor executor = core.executor();
 
     // Get bootstrap strategy
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
@@ -50,23 +134,14 @@ contract DeployLlamaInstanceAdvanced is Script, DeployLlamaInstance {
       ILlamaStrategy(Clones.predictDeterministicAddress(strategyLogic, keccak256(encodedStrategies[0]), address(core)));
 
     // Deploy configuration script
-    vm.broadcast(deployer);
-    configurationScript = new LlamaInstanceConfigScript(executor);
-    DeployUtils.print(string.concat("  LlamaInstanceConfigScript:", vm.toString(address(configurationScript))));
+    vm.broadcast();
+    configurationScript = new LlamaInstanceConfigScript();
+    DeployUtils.print(string.concat("  LlamaInstanceConfigScript: ", vm.toString(address(configurationScript))));
 
     // Authorize script
     _authorizeScript(deployer, bootstrapStrategy);
 
     // Execute script
-    bytes memory executeData =
-      abi.encodeCall(LlamaInstanceConfigScript.execute, (deployer, bootstrapStrategy, updatedDescription));
-    uint256 executeActionId = core.createAction(
-      CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData, "# Execute configuration script\n\n"
-    );
-    ActionInfo memory executeActionInfo = ActionInfo(
-      executeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData
-    );
-    core.queueAction(executeActionInfo);
-    core.executeAction(executeActionInfo);
+    _executeScript(deployer, bootstrapStrategy, updatedRoleDescription);
   }
 }
