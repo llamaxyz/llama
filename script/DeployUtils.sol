@@ -22,10 +22,16 @@ library DeployUtils {
   uint8 public constant BOOTSTRAP_ROLE = 1;
   uint256 internal constant ONE_HUNDRED_IN_BPS = 10_000;
 
+  enum StrategyType {
+    Absolute,
+    Relative
+  }
+
   struct AbsoluteQuorumJsonInputs {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 approvalPeriod;
     uint8 approvalRole;
+    string comment;
     uint8 disapprovalRole;
     uint64 expirationPeriod;
     uint8[] forceApprovalRoles;
@@ -40,6 +46,7 @@ library DeployUtils {
     // Attributes need to be in alphabetical order so JSON decodes properly.
     uint64 approvalPeriod;
     uint8 approvalRole;
+    string comment;
     uint8 disapprovalRole;
     uint64 expirationPeriod;
     uint8[] forceApprovalRoles;
@@ -91,9 +98,11 @@ library DeployUtils {
     return VM.readFile(string.concat(inputDir, chainDir, filename));
   }
 
-  function readStrategies(string memory jsonInput, string memory strategyType) internal pure returns (bytes[] memory) {
+  function readStrategies(string memory jsonInput) internal pure returns (bytes[] memory) {
     bytes memory strategyData = jsonInput.parseRaw(".initialStrategies");
-    return keccak256(abi.encode(strategyType)) == keccak256(abi.encode("absolute"))
+    uint256 strategyType = abi.decode(jsonInput.parseRaw(".strategyType"), (uint256));
+
+    return StrategyType(strategyType) == StrategyType.Absolute
       ? _readAbsoluteStrategies(strategyData)
       : _readRelativeStrategies(strategyData);
   }
@@ -204,10 +213,11 @@ library DeployUtils {
     }
   }
 
-  function bootstrapSafetyCheck(string memory filename, string memory strategyType) internal view {
+  function bootstrapSafetyCheck(string memory filename) internal view {
     // -------- Read data --------
     // Read the raw, encoded input file
     string memory jsonInput = readScriptInput(filename);
+    uint256 strategyType = abi.decode(jsonInput.parseRaw(".strategyType"), (uint256));
 
     // Get the list of role holders.
     RoleHolderData[] memory roleHolderData = readRoleHolders(jsonInput);
@@ -230,7 +240,7 @@ library DeployUtils {
 
     // Get the bootstrap strategy, which is the first strategy in the list.
     bytes memory encodedStrategyConfigs = jsonInput.parseRaw(".initialStrategies");
-    keccak256(abi.encode(strategyType)) == keccak256(abi.encode("absolute"))
+    StrategyType(strategyType) == StrategyType.Absolute
       ? _absoluteBootstrapSafetyCheck(bootstrapRoleSupply, encodedStrategyConfigs)
       : _relativeBootstrapSafetyCheck(bootstrapRoleSupply, encodedStrategyConfigs);
   }

@@ -43,13 +43,14 @@ Lets look at each field one by one:
         {
             "approvalPeriod": 172800,
             "approvalRole": 1,
+            "comment": "Community majority",
             "disapprovalRole": 3,
             "expirationPeriod": 691200,
             "forceApprovalRoles": [],
             "forceDisapprovalRoles": [],
             "isFixedLengthApprovalPeriod": true,
-            "minApprovalPct": 4000,
-            "minDisapprovalPct": 5100,
+            "minApprovalPct": 5100,
+            "minDisapprovalPct": 2000,
             "queuingPeriod": 345600
         }
     ]

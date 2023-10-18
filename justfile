@@ -18,7 +18,7 @@ run-script script_name flags='' sig='' args='':
     -vvvv {{flags}}
   mv _test test
 
-run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string,string)"' '$SCRIPT_DEPLOYER_ADDRESS "llamaInstanceConfig.json" "relative"')
+run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "llamaInstanceConfig.json"')
 
 run-deploy-advanced-instance-script flags: (run-script 'DeployLlamaInstanceAdvanced' flags '--sig "run(address,string,string,string)"' '$SCRIPT_DEPLOYER_ADDRESS "advancedInstanceConfig.json" "relative" "Core Team"')
 
