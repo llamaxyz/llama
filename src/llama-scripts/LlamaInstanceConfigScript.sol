@@ -44,8 +44,10 @@ contract LlamaInstanceConfigScript is LlamaBaseScript {
     external
     onlyDelegateCall
   {
+    LlamaCore core = LlamaCore(msg.sender);
+
     // Insert configuration code here
 
-    _postConfigurationCleanup(configPolicyHolder, LlamaCore(msg.sender), bootstrapStrategy, description);
+    _postConfigurationCleanup(configPolicyHolder, core, bootstrapStrategy, description);
   }
 }
