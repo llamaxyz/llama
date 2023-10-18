@@ -83,16 +83,13 @@ contract DeployLlamaInstanceAdvanced is Script {
       "# Grant permission to execute configuration script\n\n"
     );
     ActionInfo memory executePermissionActionInfo = ActionInfo(
-      executePermissionActionId,
-      deployer,
-      CONFIG_ROLE,
-      bootstrapStrategy,
-      address(configurationScript),
-      0,
-      executePermissionData
+      executePermissionActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(policy), 0, executePermissionData
     );
 
+    vm.broadcast();
     core.queueAction(executePermissionActionInfo);
+
+    vm.broadcast();
     core.executeAction(executePermissionActionInfo);
 
     RoleDescription updatedDescription = RoleDescription.wrap(bytes32(bytes(updatedRoleDescription)));
