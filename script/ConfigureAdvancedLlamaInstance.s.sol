@@ -13,7 +13,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-contract DeployLlamaInstanceAdvanced is Script {
+contract ConfigureAdvancedLlamaInstance is Script {
   using stdJson for string;
 
   LlamaInstanceConfigScript configurationScript;

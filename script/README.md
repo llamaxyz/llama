@@ -3,7 +3,7 @@
 The current Llama scripts are:
 * `DeployLlamaFactory.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
 * `DeployLlamaInstance.s.sol`, which deploys new Llama instances using a JSON-based configuration
-* `DeployLlamaInstanceAdvanced.s.sol`, which completes the initialization of advanced instance deployments with a code-based configuration
+* `ConfigureAdvancedLlamaInstance.s.sol`, which completes the initialization of advanced instance deployments with a code-based configuration
 
 Additionally, both `DeployLlamaFactory` and `DeployLlamaInstance` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
