@@ -26,7 +26,7 @@
     {
       "comment": "This assigns the Configuration Bot role to the configuration bot.",
       "expiration": 18446744073709551615,
-      "policyholder": "0xCF468ee5E8eCfaCE78851da762E850Ed0Fc7E7A0",
+      "policyholder": "0x144316A2AAdB8E36cCD32F07cB22484E96e58AD7",
       "quantity": 1,
       "role": 1
     }
