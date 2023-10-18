@@ -96,13 +96,13 @@ contract MultipleInstanceTestSetup is DeployLlamaFactory, DeployLlamaInstance, T
     DeployLlamaFactory.run();
 
     // Deploy llama's Llama instance
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "llamaInstanceConfig.json", "relative");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "llamaInstanceConfig.json");
     llamaInstanceCore = core;
     llamaInstancePolicy = llamaInstanceCore.policy();
     llamaInstanceExecutor = llamaInstanceCore.executor();
 
     // Deploy mock protocol's Llama instance
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "mockProtocolInstanceConfig.json", "relative");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "mockProtocolInstanceConfig.json");
     mockCore = core;
     mockPolicy = mockCore.policy();
     mockExecutor = mockCore.executor();

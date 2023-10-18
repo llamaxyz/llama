@@ -33,7 +33,7 @@ contract DeployLlamaInstanceTest is Test, DeployLlamaFactory, DeployLlamaInstanc
 
     // Deploy the root llama instance
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json", "relative");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployRootLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     // Gets emitted when the deploy call completes, exposing the deployed LlamaCore address.
@@ -69,7 +69,7 @@ contract Run is DeployLlamaInstanceTest {
 
   function test_newInstanceCanBeDeployed() public {
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json", "relative");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     // There are three strategies we expect to have been deployed.
@@ -206,7 +206,7 @@ contract Run is DeployLlamaInstanceTest {
     vm.expectEmit();
     emit RoleInitialized(8, RoleDescription.wrap("MadeUpRole"));
 
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json", "relative");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "deployLlamaInstance.json");
   }
 
   function assertEqStrategyStatus(

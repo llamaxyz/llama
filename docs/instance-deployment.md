@@ -43,6 +43,7 @@ Lets look at each field one by one:
         {
             "approvalPeriod": 172800,
             "approvalRole": 1,
+"comment": "",
             "disapprovalRole": 3,
             "expirationPeriod": 691200,
             "forceApprovalRoles": [],
