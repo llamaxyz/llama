@@ -226,7 +226,7 @@ contract AbsoluteStrategyRun is DeployLlamaInstanceTest {
 
   function test_newInstanceCanBeDeployed() public {
     vm.recordLogs();
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "absoluteLlamaInstance.json", "absolute");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "absoluteLlamaInstance.json");
     Vm.Log[] memory emittedEvents = vm.getRecordedLogs();
 
     // There are three strategies we expect to have been deployed.
@@ -363,6 +363,6 @@ contract AbsoluteStrategyRun is DeployLlamaInstanceTest {
     vm.expectEmit();
     emit RoleInitialized(8, RoleDescription.wrap("MadeUpRole"));
 
-    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "absoluteLlamaInstance.json", "absolute");
+    DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "absoluteLlamaInstance.json");
   }
 }

@@ -20,7 +20,7 @@ run-script script_name flags='' sig='' args='':
 
 run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "advancedInstanceConfig.json"')
 
-run-configure-advanced-instance-script flags: (run-script 'ConfigureAdvancedLlamaInstance' flags '--sig "run(address,address,string)"' '$SCRIPT_DEPLOYER_ADDRESS <DEPLOYED_CORE> "advancedInstanceConfig.json"')
+run-configure-advanced-instance-script flags: (run-script 'ConfigureAdvancedLlamaInstance' flags '--sig "run(address,address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "advancedInstanceConfig.json" <DEPLOYED_CORE>')
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
