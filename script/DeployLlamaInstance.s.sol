@@ -15,13 +15,15 @@ contract DeployLlamaInstance is Script {
 
   error InvalidStrategyType();
 
+  uint256 constant MAX_STRATEGY_TYPE_INDEX = 1;
+
   // The core of the deployed Llama instance.
   LlamaCore core;
 
   function run(address deployer, string memory configFile) public {
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
     uint256 strategyType = abi.decode(jsonInput.parseRaw(".strategyType"), (uint256));
-    if (strategyType > 1) revert InvalidStrategyType();
+    if (strategyType > MAX_STRATEGY_TYPE_INDEX) revert InvalidStrategyType();
 
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
