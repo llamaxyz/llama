@@ -21,7 +21,7 @@ contract DeployLlamaInstance is Script {
   function run(address deployer, string memory configFile) public {
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
     uint256 strategyType = abi.decode(jsonInput.parseRaw(".strategyType"), (uint256));
-    if (strategyType != 0 && strategyType != 1) revert InvalidStrategyType();
+    if (strategyType > 1) revert InvalidStrategyType();
 
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
