@@ -320,11 +320,11 @@ contract LlamaTestSetup is DeployLlamaFactory, DeployLlamaInstance, Test {
   }
 
   function strategyConfigsRootLlama() internal view returns (bytes[] memory) {
-    return DeployUtils.readRelativeStrategies(deployScriptInput);
+    return DeployUtils.readStrategies(deployScriptInput);
   }
 
   function strategyConfigsLlamaInstance() internal view returns (bytes[] memory) {
-    return DeployUtils.readRelativeStrategies(createActionScriptInput);
+    return DeployUtils.readStrategies(createActionScriptInput);
   }
 
   function accountConfigsRootLlama() internal view returns (bytes[] memory) {
