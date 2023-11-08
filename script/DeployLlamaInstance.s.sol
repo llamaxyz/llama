@@ -16,7 +16,7 @@ contract DeployLlamaInstance is Script {
   // The core of the deployed Llama instance.
   LlamaCore core;
 
-  function run(address deployer, string memory configFile) public {
+  function run(address deployer, string memory configFile) public virtual {
     // ======== START SAFETY CHECK ========
     // Before deploying the factory, we ensure the bootstrap strategy is configured properly to
     // ensure it can be used to pass actions.
