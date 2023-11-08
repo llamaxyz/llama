@@ -23,6 +23,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
   ILlamaStrategy bootstrapStrategy;
 
   function _authorizeScript(address deployer, LlamaCore core) internal {
+    // Grant the CONFIG_ROLE permission to authorize scripts with the instant execution strategy
     LlamaPolicy policy = core.policy();
     PermissionData memory authorizePermission =
       PermissionData(address(core), LlamaCore.setScriptAuthorization.selector, bootstrapStrategy);
@@ -65,6 +66,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
   }
 
   function _executeScript(address deployer, LlamaCore core, string memory updatedRoleDescription) internal {
+    // Grant the CONFIG_ROLE permission to execute the deployed script with the instant execution strategy
     LlamaPolicy policy = core.policy();
     PermissionData memory executePermission =
       PermissionData(address(configurationScript), LlamaInstanceConfigScript.execute.selector, bootstrapStrategy);
