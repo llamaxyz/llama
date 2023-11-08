@@ -112,9 +112,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
     core.executeAction(executeActionInfo);
   }
 
-  function run(address deployer, string memory configFile, LlamaCore core) public {
-    string memory updatedRoleDescription = "Core team";
-
+  function run(address deployer, string memory configFile, LlamaCore core, string memory updatedRoleDescription) public {
     // Get bootstrap strategy
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
     address strategyLogic = address(jsonInput.readAddress(".strategyLogic"));

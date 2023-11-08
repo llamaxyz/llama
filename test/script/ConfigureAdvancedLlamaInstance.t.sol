@@ -30,7 +30,7 @@ contract ConfigureAdvancedLlamaInstanceTest is
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "advancedInstanceConfig.json");
 
     mineBlock();
-    ConfigureAdvancedLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "advancedInstanceConfig.json", core);
+    ConfigureAdvancedLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "advancedInstanceConfig.json", core, "Core Team");
     mineBlock();
   }
 
