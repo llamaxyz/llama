@@ -20,7 +20,7 @@ contract DeployLlamaInstance is Script {
   // The core of the deployed Llama instance.
   LlamaCore core;
 
-  function run(address deployer, string memory configFile) public {
+  function run(address deployer, string memory configFile) public virtual {
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
     uint256 strategyType = abi.decode(jsonInput.parseRaw(".strategyType"), (uint256));
     if (strategyType > MAX_STRATEGY_TYPE_INDEX) revert InvalidStrategyType();
