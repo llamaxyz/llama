@@ -16,7 +16,7 @@ contract DeployLlamaInstance is Script {
   error InvalidStrategyType();
 
   uint256 constant MAX_STRATEGY_TYPE_INDEX = 1;
-  
+
   // The core of the deployed Llama instance.
   LlamaCore core;
 
