@@ -24,10 +24,10 @@ contract ConfigureAdvancedLlamaInstance is Script {
   function _authorizeScript(address deployer, LlamaCore core, address configurationScript) internal {
     // Grant the CONFIG_ROLE permission to authorize scripts with the instant execution strategy
     LlamaPolicy policy = core.policy();
-    PermissionData memory authorizePermission =
+    PermissionData memory scriptAuthorizePermission =
       PermissionData(address(core), LlamaCore.setScriptAuthorization.selector, bootstrapStrategy);
     bytes memory authPermissionData =
-      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, authorizePermission, true));
+      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, scriptAuthorizePermission, true));
 
     vm.broadcast(deployer);
     uint256 authPermissionActionId = core.createAction(
@@ -80,10 +80,10 @@ contract ConfigureAdvancedLlamaInstance is Script {
     LlamaPolicy policy = core.policy();
 
     // This assumes that the selector matches the execute function's selector in LlamaInstanceConfigScriptTemplate
-    PermissionData memory executePermission =
+    PermissionData memory scriptExecutePermission =
       PermissionData(configurationScript, LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy);
     bytes memory executePermissionData =
-      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, executePermission, true));
+      abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, scriptExecutePermission, true));
 
     vm.broadcast(deployer);
     uint256 executePermissionActionId = core.createAction(
