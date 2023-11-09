@@ -13,6 +13,8 @@ contract LlamaInstanceConfigScriptTemplate is LlamaInstanceConfigBase {
     onlyDelegateCall
   {
     LlamaCore core = LlamaCore(msg.sender);
+
+    // The selector needs to be this contract's execute function
     PermissionData memory executePermission =
       PermissionData(SELF, LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy);
 
