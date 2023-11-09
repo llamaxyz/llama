@@ -8,7 +8,7 @@ import {Clones} from "@openzeppelin/proxy/Clones.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaInstanceConfigScript} from "src/llama-scripts/LlamaInstanceConfigScript.sol";
+import {LlamaInstanceConfigScriptTemplate} from "src/llama-scripts/LlamaInstanceConfigScriptTemplate.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
 import {Action, ActionInfo, PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
@@ -18,11 +18,9 @@ contract ConfigureAdvancedLlamaInstance is Script {
 
   uint8 constant CONFIG_ROLE = 1;
 
-  LlamaInstanceConfigScript configurationScript;
-
   ILlamaStrategy bootstrapStrategy;
 
-  function _authorizeScript(address deployer, LlamaCore core) internal {
+  function _authorizeScript(address deployer, LlamaCore core, address configurationScript) internal {
     // Grant the CONFIG_ROLE permission to authorize scripts with the instant execution strategy
     LlamaPolicy policy = core.policy();
     PermissionData memory authorizePermission =
@@ -49,7 +47,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
     vm.broadcast(deployer);
     core.executeAction(authPermissionActionInfo);
 
-    bytes memory authorizeData = abi.encodeCall(LlamaCore.setScriptAuthorization, (address(configurationScript), true));
+    bytes memory authorizeData = abi.encodeCall(LlamaCore.setScriptAuthorization, (configurationScript, true));
 
     vm.broadcast(deployer);
     uint256 authorizeActionId = core.createAction(
@@ -65,11 +63,16 @@ contract ConfigureAdvancedLlamaInstance is Script {
     core.executeAction(authorizeActionInfo);
   }
 
-  function _executeScript(address deployer, LlamaCore core, string memory updatedRoleDescription) internal {
+  function _executeScript(
+    address deployer,
+    LlamaCore core,
+    address configurationScript,
+    string memory updatedRoleDescription
+  ) internal {
     // Grant the CONFIG_ROLE permission to execute the deployed script with the instant execution strategy
     LlamaPolicy policy = core.policy();
     PermissionData memory executePermission =
-      PermissionData(address(configurationScript), LlamaInstanceConfigScript.execute.selector, bootstrapStrategy);
+      PermissionData(configurationScript, LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy);
     bytes memory executePermissionData =
       abi.encodeCall(LlamaPolicy.setRolePermission, (CONFIG_ROLE, executePermission, true));
 
@@ -94,16 +97,15 @@ contract ConfigureAdvancedLlamaInstance is Script {
 
     RoleDescription updatedDescription = RoleDescription.wrap(bytes32(bytes(updatedRoleDescription)));
     bytes memory executeData =
-      abi.encodeCall(LlamaInstanceConfigScript.execute, (deployer, bootstrapStrategy, updatedDescription));
+      abi.encodeCall(LlamaInstanceConfigScriptTemplate.execute, (deployer, bootstrapStrategy, updatedDescription));
 
     vm.broadcast(deployer);
     uint256 executeActionId = core.createAction(
-      CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData, "# Execute configuration script\n\n"
+      CONFIG_ROLE, bootstrapStrategy, configurationScript, 0, executeData, "# Execute configuration script\n\n"
     );
 
-    ActionInfo memory executeActionInfo = ActionInfo(
-      executeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(configurationScript), 0, executeData
-    );
+    ActionInfo memory executeActionInfo =
+      ActionInfo(executeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, configurationScript, 0, executeData);
 
     vm.broadcast(deployer);
     core.queueAction(executeActionInfo);
@@ -112,7 +114,13 @@ contract ConfigureAdvancedLlamaInstance is Script {
     core.executeAction(executeActionInfo);
   }
 
-  function run(address deployer, string memory configFile, LlamaCore core, string memory updatedRoleDescription) public {
+  function run(
+    address deployer,
+    string memory configFile,
+    LlamaCore core,
+    address configurationScript,
+    string memory updatedRoleDescription
+  ) public {
     // Get bootstrap strategy
     string memory jsonInput = DeployUtils.readScriptInput(configFile);
     address strategyLogic = address(jsonInput.readAddress(".strategyLogic"));
@@ -120,15 +128,10 @@ contract ConfigureAdvancedLlamaInstance is Script {
     bootstrapStrategy =
       ILlamaStrategy(Clones.predictDeterministicAddress(strategyLogic, keccak256(encodedStrategies[0]), address(core)));
 
-    // Deploy configuration script
-    vm.broadcast(deployer);
-    configurationScript = new LlamaInstanceConfigScript();
-    DeployUtils.print(string.concat("  LlamaInstanceConfigScript: ", vm.toString(address(configurationScript))));
-
     // Authorize script
-    _authorizeScript(deployer, core);
+    _authorizeScript(deployer, core, configurationScript);
 
     // Execute script
-    _executeScript(deployer, core, updatedRoleDescription);
+    _executeScript(deployer, core, configurationScript, updatedRoleDescription);
   }
 }

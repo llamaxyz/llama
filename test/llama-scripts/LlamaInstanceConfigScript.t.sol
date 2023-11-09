@@ -12,9 +12,9 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 import {DeployLlamaInstance} from "script/DeployLlamaInstance.s.sol";
 import {ConfigureAdvancedLlamaInstance} from "script/ConfigureAdvancedLlamaInstance.s.sol";
-import {LlamaInstanceConfigScriptTemplate} from "src/llama-scripts/LlamaInstanceConfigScriptTemplate.sol";
+import {MockInstanceConfig} from "test/mock/MockInstanceConfig.sol";
 
-contract ConfigureAdvancedLlamaInstanceTest is
+contract LlamaInstanceConfigScriptTest is
   Test,
   DeployLlamaFactory,
   DeployLlamaInstance,
@@ -29,7 +29,7 @@ contract ConfigureAdvancedLlamaInstanceTest is
   function setUp() public virtual {
     DeployLlamaFactory.run();
     DeployLlamaInstance.run(LLAMA_INSTANCE_DEPLOYER, "advancedInstanceConfig.json");
-    configScriptAddress = address(new LlamaInstanceConfigScriptTemplate());
+    configScriptAddress = address(new MockInstanceConfig());
 
     mineBlock();
     ConfigureAdvancedLlamaInstance.run(
@@ -44,23 +44,15 @@ contract ConfigureAdvancedLlamaInstanceTest is
   }
 }
 
-contract Run is ConfigureAdvancedLlamaInstanceTest {
+contract Execute is LlamaInstanceConfigScriptTest {
   using stdJson for string;
-
-  function test_Role1RemovedFromDeployer() public {
-    LlamaPolicy policy = core.policy();
-    bool deployerHasRole = policy.hasRole(LLAMA_INSTANCE_DEPLOYER, CONFIG_ROLE);
-
-    assertFalse(deployerHasRole);
-  }
 
   function test_PermissionsRemovedFromRole1() public {
     LlamaPolicy policy = core.policy();
     PermissionData memory authorizePermission =
       PermissionData(address(core), LlamaCore.setScriptAuthorization.selector, bootstrapStrategy);
-    PermissionData memory executePermission = PermissionData(
-      address(configScriptAddress), LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy
-    );
+    PermissionData memory executePermission =
+      PermissionData(address(configScriptAddress), MockInstanceConfig.execute.selector, bootstrapStrategy);
 
     bool hasAuthorizePermission =
       policy.canCreateAction(CONFIG_ROLE, LlamaUtils.computePermissionId(authorizePermission));

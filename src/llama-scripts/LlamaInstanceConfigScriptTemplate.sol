@@ -7,14 +7,14 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
-contract LlamaInstanceConfigScript is LlamaInstanceConfigBase {
+contract LlamaInstanceConfigScriptTemplate is LlamaInstanceConfigBase {
   function execute(address configPolicyHolder, ILlamaStrategy bootstrapStrategy, RoleDescription description)
     external
     onlyDelegateCall
   {
     LlamaCore core = LlamaCore(msg.sender);
     PermissionData memory executePermission =
-      PermissionData(SELF, LlamaInstanceConfigScript.execute.selector, bootstrapStrategy);
+      PermissionData(SELF, LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy);
 
     // Insert configuration code here
 
