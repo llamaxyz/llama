@@ -32,6 +32,8 @@ Standard deployments define their instance configuration in a JSON file. The `De
 
 For instances that want a more flexible, code-based deployment method, they can use the `DeployLlamaInstance` script along with the `ConfigureAdvancedInstance` script. This can be used to handle advanced use cases such as configuring both absolute and relative strategies. The `DeployLlamaInstance` script is run using a configuration similar to `script/input/31337/advancedInstanceConfig.json`. This deploys the instance with a single configuration bot policyholder. The configuration file for advanced deployments must have an instant execution strategy as the bootstrap strategy (first strategy in `initialStrategies`) and role #1 must be assigned to the deployer of the `ConfigureAdvancedInstance` script.
 
+We've provided `src/scripts/LlamaInstanceConfigBase.sol` as a parent contract for configuration scripts to simplify the process of removing all traces of the config bot from the instance post-configuration. Please note that the body of the instance configuration script must assign roles, permissions, and strategies in a functional way or else there's a risk that the instance will be unaccessible. We recommend using the JSON-based configuration by default because it has built-in protection against these user errors.
+
 ## DeployLlamaFactory
 
 To perform a dry-run of the `DeployLlamaFactory` script on a network, first set the
