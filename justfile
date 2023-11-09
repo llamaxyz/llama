@@ -20,6 +20,8 @@ run-script script_name flags='' sig='' args='':
 
 run-deploy-instance-script flags: (run-script 'DeployLlamaInstance' flags '--sig "run(address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "llamaInstanceConfig.json"')
 
+run-configure-advanced-instance-script flags: (run-script 'ConfigureAdvancedLlamaInstance' flags '--sig "run(address,string,address,address,string)"' '$SCRIPT_DEPLOYER_ADDRESS "advancedInstanceConfig.json" <DEPLOYED_LLAMA_CORE> <DEPLOYED_INSTANCE_CONFIG_SCRIPT> <UPDATED_ROLE_DESCRIPTION>')
+
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
 deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --build-info --build-info-path build_info')
@@ -29,3 +31,7 @@ verify: (run-script 'DeployLlamaFactory' '--verify --resume')
 dry-run-deploy-instance: (run-deploy-instance-script '')
 
 deploy-instance: (run-deploy-instance-script '--broadcast --verify')
+
+dry-run-configure-advanced-instance: (run-configure-advanced-instance-script '')
+
+configure-advanced-instance: (run-configure-advanced-instance-script '--broadcast --verify')

@@ -2,7 +2,8 @@
 
 The current Llama scripts are:
 * `DeployLlamaFactory.s.sol`, which deploys the LlamaFactory, logic/implementation contracts, and LlamaLens to new chains
-* `DeployLlamaInstance.s.sol`, which deploys new Llama instances
+* `DeployLlamaInstance.s.sol`, which deploys new Llama instances using a JSON-based configuration
+* `ConfigureAdvancedLlamaInstance.s.sol`, which completes the initialization of advanced instance deployments with a code-based configuration
 
 Additionally, both `DeployLlamaFactory` and `DeployLlamaInstance` are called during the test bootstrap process to establish the state against which most of the test suite runs.
 
@@ -24,6 +25,14 @@ Therefore, we help enforce this at the protocol level with the following behavio
 - Initialization of the `LlamaCore` contract is where the `bootstrapStrategy` is deployed and the bootstrap permission ID is set. This is the permission ID (the `(target, selector, strategy)` tuple) that can be used to call the `setRolePermission` method.
 
 A key part of ensuring the instance is not misconfigured is ensuring that the `bootstrapStrategy` is a valid strategy that can actually be executed. This is checked in deploy scripts, because the strategy can have any logic, so it's not necessarily possible to check this at the protocol level.
+
+### Standard vs Advanced Deployments
+
+Standard deployments define their instance configuration in a JSON file. The `DeployLlamaInstance` script uses this JSON-based configuration as the input to call the `LlamaFactory` deploy function. This is the preferred deployment method for most instances. 
+
+For instances that want a more flexible, code-based deployment method, they can use the `DeployLlamaInstance` script along with the `ConfigureAdvancedInstance` script. This can be used to handle advanced use cases such as configuring both absolute and relative strategies. The `DeployLlamaInstance` script is run using a configuration similar to `script/input/31337/advancedInstanceConfig.json`. This deploys the instance with a single configuration bot policyholder. The configuration file for advanced deployments must have an instant execution strategy as the bootstrap strategy (first strategy in `initialStrategies`) and role #1 must be assigned to the deployer of the `ConfigureAdvancedInstance` script.
+
+We've provided `src/scripts/LlamaInstanceConfigBase.sol` as a parent contract for configuration scripts to simplify the process of removing all traces of the config bot from the instance post-configuration. Please note that the body of the instance configuration script must assign roles, permissions, and strategies in a functional way or else there's a risk that the instance will be unaccessible. We recommend using the JSON-based configuration by default because it has built-in protection against these user errors.
 
 ## DeployLlamaFactory
 

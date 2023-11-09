@@ -2,19 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {Vm} from "forge-std/Vm.sol";
 
 import {DeployLlamaFactory} from "script/DeployLlamaFactory.s.sol";
 
-import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
-import {PolicyholderCheckpoints} from "src/lib/PolicyholderCheckpoints.sol";
 import {PermissionData} from "src/lib/Structs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
-import {LlamaFactory} from "src/LlamaFactory.sol";
-import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaPolicy} from "src/LlamaPolicy.sol";
-import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
 
 contract DeployLlamaFactoryTest is Test, DeployLlamaFactory {
   function setUp() public virtual {}
