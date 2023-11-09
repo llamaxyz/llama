@@ -18,6 +18,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
 
   uint8 constant CONFIG_ROLE = 1;
 
+  // The bootstrap strategy must be set as an instant execution strategy for this script to run
   ILlamaStrategy bootstrapStrategy;
 
   function _authorizeScript(address deployer, LlamaCore core, address configurationScript) internal {
@@ -35,7 +36,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
       address(policy),
       0,
       authPermissionData,
-      "# Grant permission to authorize configuration script\n\n"
+      "# Grant permission to authorize configuration script\n\nGrant the configuration bot permission to authorize scripts."
     );
     ActionInfo memory authPermissionActionInfo = ActionInfo(
       authPermissionActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(policy), 0, authPermissionData
@@ -47,11 +48,17 @@ contract ConfigureAdvancedLlamaInstance is Script {
     vm.broadcast(deployer);
     core.executeAction(authPermissionActionInfo);
 
+    // Create an action to authorize the instance configuration script
     bytes memory authorizeData = abi.encodeCall(LlamaCore.setScriptAuthorization, (configurationScript, true));
 
     vm.broadcast(deployer);
     uint256 authorizeActionId = core.createAction(
-      CONFIG_ROLE, bootstrapStrategy, address(core), 0, authorizeData, "# Authorize configuration script\n\n"
+      CONFIG_ROLE,
+      bootstrapStrategy,
+      address(core),
+      0,
+      authorizeData,
+      "# Authorize configuration script\n\nAuthorize the instance configuration script."
     );
     ActionInfo memory authorizeActionInfo =
       ActionInfo(authorizeActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(core), 0, authorizeData);
@@ -69,8 +76,10 @@ contract ConfigureAdvancedLlamaInstance is Script {
     address configurationScript,
     string memory updatedRoleDescription
   ) internal {
-    // Grant the CONFIG_ROLE permission to execute the deployed script with the instant execution strategy
+    //Grant the CONFIG_ROLE permission to execute the deployed script with the instant execution strategy
     LlamaPolicy policy = core.policy();
+
+    // This assumes that the selector matches the execute function's selector in LlamaInstanceConfigScriptTemplate
     PermissionData memory executePermission =
       PermissionData(configurationScript, LlamaInstanceConfigScriptTemplate.execute.selector, bootstrapStrategy);
     bytes memory executePermissionData =
@@ -83,7 +92,7 @@ contract ConfigureAdvancedLlamaInstance is Script {
       address(policy),
       0,
       executePermissionData,
-      "# Grant permission to execute configuration script\n\n"
+      "# Grant permission to execute configuration script\n\nGive the config bot permission to call the execute function on the instance configuration script."
     );
     ActionInfo memory executePermissionActionInfo = ActionInfo(
       executePermissionActionId, deployer, CONFIG_ROLE, bootstrapStrategy, address(policy), 0, executePermissionData
@@ -95,13 +104,19 @@ contract ConfigureAdvancedLlamaInstance is Script {
     vm.broadcast(deployer);
     core.executeAction(executePermissionActionInfo);
 
+    // Create an action to call execute on the instance configuration script
     RoleDescription updatedDescription = RoleDescription.wrap(bytes32(bytes(updatedRoleDescription)));
     bytes memory executeData =
       abi.encodeCall(LlamaInstanceConfigScriptTemplate.execute, (deployer, bootstrapStrategy, updatedDescription));
 
     vm.broadcast(deployer);
     uint256 executeActionId = core.createAction(
-      CONFIG_ROLE, bootstrapStrategy, configurationScript, 0, executeData, "# Execute configuration script\n\n"
+      CONFIG_ROLE,
+      bootstrapStrategy,
+      configurationScript,
+      0,
+      executeData,
+      "# Execute configuration script\n\nExecute the instance configuration script."
     );
 
     ActionInfo memory executeActionInfo =
@@ -128,10 +143,11 @@ contract ConfigureAdvancedLlamaInstance is Script {
     bootstrapStrategy =
       ILlamaStrategy(Clones.predictDeterministicAddress(strategyLogic, keccak256(encodedStrategies[0]), address(core)));
 
-    // Authorize script
+    // Grant the config bot permission to authorize scripts and authorize the instance configuration script
     _authorizeScript(deployer, core, configurationScript);
 
-    // Execute script
+    // Grant the config bot permission to execute the instance configuration script and execute the instance
+    // configuration script
     _executeScript(deployer, core, configurationScript, updatedRoleDescription);
   }
 }
