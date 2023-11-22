@@ -144,7 +144,6 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   function _approveAction(ActionInfo memory actionInfo) internal {
     vm.warp(block.timestamp + 1);
-
     vm.prank(approverAdam);
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
     vm.prank(approverAlicia);
@@ -171,6 +170,21 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
       forceDisapprovalRoles: new uint8[](0)
     });
   }
+
+  function _assumeInitializeRoles(RoleDescription[] memory descriptions) public {
+    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+  }
+
+  function _assumeRoleHolders(RoleHolderData[] memory roleHolders) public {
+    vm.assume(roleHolders.length < 50);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
+      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
+      vm.assume(roleHolders[i].policyholder != address(0));
+      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
+    }
+  }
 }
 
 contract Aggregate is LlamaGovernanceScriptTest {
@@ -178,7 +192,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
   bytes[] public calls;
 
   function test_aggregate(RoleDescription[] memory descriptions) public {
-    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+    _assumeInitializeRoles(descriptions);
     for (uint256 i = 0; i < descriptions.length; i++) {
       targets.push(address(mpPolicy));
       calls.push(abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, descriptions[i]));
@@ -235,15 +249,8 @@ contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
     RoleDescription[] memory descriptions,
     RoleHolderData[] memory roleHolders
   ) public {
-    vm.assume(roleHolders.length < 50);
-    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
-      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
-    }
+    _assumeInitializeRoles(descriptions);
+    _assumeRoleHolders(roleHolders);
 
     bytes memory data =
       abi.encodeWithSelector(INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, descriptions, roleHolders);
@@ -277,7 +284,7 @@ contract InitializeRolesAndSetRolePermissions is LlamaGovernanceScriptTest {
     RolePermissionData[] memory rolePermissions
   ) public {
     vm.assume(rolePermissions.length < 50);
-    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+    _assumeInitializeRoles(descriptions);
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       // Cannot be 0 (all holders role) and cannot be greater than numRoles
       rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
@@ -314,13 +321,13 @@ contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanc
     RolePermissionData[] memory rolePermissions
   ) public {
     vm.assume(rolePermissions.length < 10);
-    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+    _assumeInitializeRoles(descriptions);
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       // Cannot be 0 (all holders role) and cannot be greater than numRoles
       rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
     }
 
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the test takes too long
     roleHolders[0] = RoleHolderData({
       policyholder: address(uint160(1)),
       role: uint8(Roles.ActionCreator),
@@ -373,14 +380,7 @@ contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {
     uint256 salt3,
     bool isFixedLengthApprovalPeriod
   ) public {
-    vm.assume(roleHolders.length < 10);
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
-      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
-    }
+    _assumeRoleHolders(roleHolders);
 
     LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
     ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
@@ -445,7 +445,84 @@ contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {
   }
 }
 
-contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {}
+contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
+  function test_CreateNewStrategiesAndSetRoleHolders(
+    RoleDescription[] memory descriptions,
+    RoleHolderData[] memory roleHolders,
+    uint256 salt1,
+    uint256 salt2,
+    uint256 salt3,
+    bool isFixedLengthApprovalPeriod
+  ) public {
+    _assumeInitializeRoles(descriptions);
+    _assumeRoleHolders(roleHolders);
+
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](3);
+    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
+
+    vm.assume(salt1 != salt2);
+    vm.assume(salt1 != salt3);
+    vm.assume(salt2 != salt3);
+
+    newStrategies[0] = _createStrategy(salt1, isFixedLengthApprovalPeriod);
+    newStrategies[1] = _createStrategy(salt2, isFixedLengthApprovalPeriod);
+    newStrategies[2] = _createStrategy(salt3, isFixedLengthApprovalPeriod);
+
+    LlamaGovernanceScript.CreateStrategies memory strategies;
+    strategies.llamaStrategyLogic = relativeHolderQuorumLogic;
+    strategies.strategies = DeployUtils.encodeStrategyConfigs(newStrategies);
+
+    bytes memory data =
+      abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, descriptions, roleHolders);
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
+
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
+    );
+
+    vm.warp(block.timestamp + 1);
+    _approveAction(actionInfo);
+
+    for (uint256 i = 0; i < newStrategies.length; i++) {
+      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
+        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
+      );
+    }
+
+    vm.startPrank(address(mpExecutor));
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(strategyAddresses[0], true);
+    vm.expectEmit();
+    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(strategyAddresses[1], true);
+    vm.expectEmit();
+    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(strategyAddresses[2], true);
+    vm.expectEmit();
+    emit StrategyCreated(strategyAddresses[2], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      vm.expectEmit();
+      emit RoleAssigned(
+        roleHolders[i].policyholder, roleHolders[i].role, roleHolders[i].expiration, roleHolders[i].quantity
+      );
+    // TODO expect these events
+    // for (uint256 j = 0; j < descriptions.length; j++) {
+    //   vm.expectEmit();
+    //   emit RoleInitialized(uint8(j + 9), descriptions[j]);
+    // }
+      rolesHoldersSeen[roleHolders[i].role]++;
+      rolesQuantitySeen[roleHolders[i].role] += roleHolders[i].quantity;
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract CreateNewStrategiesAndSetRolePermissions is LlamaGovernanceScriptTest {}
 
@@ -457,7 +534,7 @@ contract RevokePoliciesAndUpdateRoleDescriptionsAndSetRoleHolders is LlamaGovern
 
 contract InitializeRoles is LlamaGovernanceScriptTest {
   function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
-    vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+    _assumeInitializeRoles(descriptions);
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
     vm.prank(actionCreatorAaron);
     uint256 actionId =
@@ -477,14 +554,7 @@ contract InitializeRoles is LlamaGovernanceScriptTest {
 
 contract SetRoleHolders is LlamaGovernanceScriptTest {
   function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
-    vm.assume(roleHolders.length < 500);
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
-      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
-    }
+    _assumeRoleHolders(roleHolders);
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
     vm.prank(actionCreatorAaron);
     uint256 actionId =
