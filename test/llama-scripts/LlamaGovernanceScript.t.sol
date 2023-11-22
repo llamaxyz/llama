@@ -314,8 +314,6 @@ contract Aggregate is LlamaGovernanceScriptTest {
   }
 }
 
-// TODO: write tests for all of the functions below
-
 contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
   function testFuzz_initializeRolesAndSetRoleHolders(
     RoleDescription[] memory descriptions,
@@ -428,11 +426,10 @@ contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernan
     );
    (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
-
     _expectCreateStrategiesEvents(newStrategies);
-    //TODO uncomment
-    //_expectInitializeRolesEvents(descriptions);
-    // _expectRoleHolderEvents(roleHolders);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+
     vm.startPrank(address(mpExecutor));
     mpCore.executeAction(actionInfo);
   }
