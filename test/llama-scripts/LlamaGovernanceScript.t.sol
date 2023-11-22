@@ -194,6 +194,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   }
 
   function _createAction(bytes memory data) internal returns (ActionInfo memory actionInfo, uint256 actionId) {
+    vm.prank(actionCreatorAaron);
     actionId =
       mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
     actionInfo = ActionInfo(
@@ -237,15 +238,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
-    vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
-
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
+    (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
@@ -271,7 +264,6 @@ contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
 
     bytes memory data =
       abi.encodeWithSelector(INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, descriptions, roleHolders);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
@@ -300,7 +292,6 @@ contract InitializeRolesAndSetRolePermissions is LlamaGovernanceScriptTest {
 
     bytes memory data =
       abi.encodeWithSelector(INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, descriptions, rolePermissions);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
@@ -341,7 +332,6 @@ contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanc
       roleHolders,
       rolePermissions
     );
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
@@ -393,16 +383,7 @@ contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {
 
     bytes memory data =
       abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, roleHolders);
-    vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
-
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
+    (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
     for (uint256 i = 0; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
@@ -469,16 +450,7 @@ contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernan
     bytes memory data = abi.encodeWithSelector(
       CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, descriptions, roleHolders
     );
-    vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
-
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
+   (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
     for (uint256 i = 0; i < newStrategies.length; i++) {
       strategyAddresses[i] = lens.computeLlamaStrategyAddress(
@@ -531,7 +503,6 @@ contract InitializeRoles is LlamaGovernanceScriptTest {
   function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
     _assumeInitializeRoles(descriptions);
     bytes memory data = abi.encodeWithSelector(INITIALIZE_ROLES_SELECTOR, descriptions);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
@@ -545,7 +516,6 @@ contract SetRoleHolders is LlamaGovernanceScriptTest {
   function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
     _assumeRoleHolders(roleHolders);
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < roleHolders.length; i++) {
       vm.expectEmit();
@@ -563,7 +533,6 @@ contract SetRolePermissions is LlamaGovernanceScriptTest {
   function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
     _boundRolePermissions(rolePermissions);
     bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     for (uint256 i = 0; i < rolePermissions.length; i++) {
       bytes32 permissionId = lens.computePermissionId(rolePermissions[i].permissionData);
@@ -583,7 +552,6 @@ contract RevokePolicies is LlamaGovernanceScriptTest {
   function test_revokePolicies() public {
     revokePolicies.push(disapproverDave);
     bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
-    vm.prank(actionCreatorAaron);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
     vm.expectEmit();
     emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
@@ -599,14 +567,9 @@ contract UpdateRoleDescriptions is LlamaGovernanceScriptTest {
     for (uint256 i = 0; i < roleDescriptions.length; i++) {
       roleDescriptions[i].role = uint8(i);
     }
-    vm.prank(actionCreatorAaron);
     bytes memory data = abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTIONS_SELECTOR, roleDescriptions);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
-    _approveAction(actionInfo);
+    (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
+
     for (uint256 i = 0; i < roleDescriptions.length; i++) {
       vm.expectEmit();
       emit RoleInitialized(uint8(i), roleDescriptions[i].description);
