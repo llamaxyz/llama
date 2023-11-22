@@ -399,30 +399,10 @@ contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {
       abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, roleHolders);
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
-    for (uint256 i = 0; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
-      );
-    }
+    _expectCreateStrategiesEvents(newStrategies);
+    _expectRoleHolderEvents(roleHolders);
 
     vm.startPrank(address(mpExecutor));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[0], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[1], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[2], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[2], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
-
-    _expectRoleHolderEvents(roleHolders);
     mpCore.executeAction(actionInfo);
   }
 }
@@ -457,31 +437,12 @@ contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernan
     );
    (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
-    for (uint256 i = 0; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
-      );
-    }
 
-    vm.startPrank(address(mpExecutor));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[0], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[1], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[2], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[2], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    _expectCreateStrategiesEvents(newStrategies);
     //TODO uncomment
     //_expectInitializeRolesEvents(descriptions);
     // _expectRoleHolderEvents(roleHolders);
+    vm.startPrank(address(mpExecutor));
     mpCore.executeAction(actionInfo);
   }
 }
@@ -513,7 +474,6 @@ contract CreateNewStrategiesAndSetRolePermissions is LlamaGovernanceScriptTest {
     (ActionInfo memory actionInfo, uint256 actionId) = _createAction(data);
 
     _expectCreateStrategiesEvents(newStrategies);
-
     _expectRolePermissionEvents(rolePermissions);
 
     vm.startPrank(address(mpExecutor));
