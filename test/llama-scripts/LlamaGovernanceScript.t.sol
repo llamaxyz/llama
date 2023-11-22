@@ -185,6 +185,13 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
       roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
     }
   }
+
+  function _boundRolePermissions(RolePermissionData[] memory rolePermissions) public {
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
+    }
+  }
 }
 
 contract Aggregate is LlamaGovernanceScriptTest {
@@ -285,10 +292,7 @@ contract InitializeRolesAndSetRolePermissions is LlamaGovernanceScriptTest {
   ) public {
     vm.assume(rolePermissions.length < 50);
     _assumeInitializeRoles(descriptions);
-    for (uint256 i = 0; i < rolePermissions.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
-    }
+    _boundRolePermissions(rolePermissions);
 
     bytes memory data =
       abi.encodeWithSelector(INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, descriptions, rolePermissions);
@@ -322,10 +326,7 @@ contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanc
   ) public {
     vm.assume(rolePermissions.length < 10);
     _assumeInitializeRoles(descriptions);
-    for (uint256 i = 0; i < rolePermissions.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
-    }
+    _boundRolePermissions(rolePermissions);
 
     RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the test takes too long
     roleHolders[0] = RoleHolderData({
@@ -578,10 +579,7 @@ contract SetRoleHolders is LlamaGovernanceScriptTest {
 
 contract SetRolePermissions is LlamaGovernanceScriptTest {
   function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
-    for (uint256 i = 0; i < rolePermissions.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
-    }
+    _boundRolePermissions(rolePermissions);
     bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
     vm.prank(actionCreatorAaron);
     uint256 actionId =
