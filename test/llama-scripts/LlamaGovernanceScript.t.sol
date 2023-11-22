@@ -328,7 +328,8 @@ contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanc
     _assumeInitializeRoles(descriptions);
     _boundRolePermissions(rolePermissions);
 
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the test takes too long
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the
+      // test takes too long
     roleHolders[0] = RoleHolderData({
       policyholder: address(uint160(1)),
       role: uint8(Roles.ActionCreator),
@@ -473,8 +474,9 @@ contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernan
     strategies.llamaStrategyLogic = relativeHolderQuorumLogic;
     strategies.strategies = DeployUtils.encodeStrategyConfigs(newStrategies);
 
-    bytes memory data =
-      abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, descriptions, roleHolders);
+    bytes memory data = abi.encodeWithSelector(
+      CREATE_NEW_STRATEGIES_AND_INITIALIZE_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, descriptions, roleHolders
+    );
     vm.prank(actionCreatorAaron);
     uint256 actionId =
       mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
@@ -513,11 +515,11 @@ contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernan
       emit RoleAssigned(
         roleHolders[i].policyholder, roleHolders[i].role, roleHolders[i].expiration, roleHolders[i].quantity
       );
-    // TODO expect these events
-    // for (uint256 j = 0; j < descriptions.length; j++) {
-    //   vm.expectEmit();
-    //   emit RoleInitialized(uint8(j + 9), descriptions[j]);
-    // }
+      // TODO expect these events
+      // for (uint256 j = 0; j < descriptions.length; j++) {
+      //   vm.expectEmit();
+      //   emit RoleInitialized(uint8(j + 9), descriptions[j]);
+      // }
       rolesHoldersSeen[roleHolders[i].role]++;
       rolesQuantitySeen[roleHolders[i].role] += roleHolders[i].quantity;
     }
