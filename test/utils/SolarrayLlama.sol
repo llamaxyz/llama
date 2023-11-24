@@ -212,7 +212,7 @@ library SolarrayLlama {
   {
     uint256 length1 = arr1.length;
     uint256 length2 = arr2.length;
-    newArr = new RoleDescription[](length1+ length2);
+    newArr = new RoleDescription[](length1 + length2);
     for (uint256 i = 0; i < length1;) {
       newArr[i] = arr1[i];
       unchecked {
