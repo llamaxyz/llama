@@ -214,7 +214,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
-  function createAccountsAndSetPermissions(
+  function createAccountsAndSetRolePermissions(
     CreateAccounts[] calldata accounts,
     uint8[] calldata roles,
     ILlamaStrategy[] calldata strategies
@@ -253,6 +253,26 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
       setRolePermissions(permissions);
     }
+  }
+
+  function setScriptAuthorizationAndSetRolePermissions(
+    address script,
+    bool authorized,
+    uint8 role,
+    bytes4[] calldata selectors,
+    ILlamaStrategy[] calldata strategies,
+    bool[] calldata hasPermissions
+  ) external onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    if (selectors.length != strategies.length && strategies.length != hasPermissions.length) revert MismatchedArrayLengths();
+    core.setScriptAuthorization(script, authorized);
+    RolePermissionData[] memory permissions = new RolePermissionData[](selectors.length);
+    for (uint256 i = 0; i < selectors.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissions[i] = RolePermissionData(
+        role, PermissionData(address(script), selectors[i], strategies[i]), hasPermissions[i]
+      );
+    }
+    setRolePermissions(permissions);
   }
 
   // ========================================
@@ -372,48 +392,3 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 }
 
-/*
-We should discuss adding the following functions. Everything else in core and policy looks covered:
-
-setStrategyAuthorization
-setStrategyLogicAuthorization
-setAccountLogicAuthorization
-setGuard
-setScriptAuthorization
-Member
-@0xrajath 0xrajath 14 hours ago
-+1
-
-Member
-@0xrajath 0xrajath 14 hours ago • 
-Plus CreateAccounts and permission all the transfer and approve functions in there.
-
-Member
-@0xrajath 0xrajath 14 hours ago
-Another one is single use scripts that need to be batched together:
-
-Create Action to authorize that single use script
-Create Action to give permission to call the single use script's execute() function
-Create Action to execute script.
-Member
-Author
-@dd0sxx dd0sxx 1 hour ago • 
-methods we could include:
--setGuards
--setStrategyAuthorizations
--setScriptAuthorization
--createAccountsAndSetAllPermissions
--createAccountsAndSetGuard
--setScriptAuthorizations
--setScriptAuthorizationsAndSetRolePermission
-I feel like logics can be single actions, since that's a pretty big deal to authorize a new logic contract. anyone
-disagree?
-
-Member
-@AustinGreen AustinGreen 1 hour ago • 
-Function for setScriptAuthorization and setRolePermissions for functions on that script
-Function for createAccounts and setRolePermissions for functions on those accounts
-Function to batch call setStrategyLogicAuthorization - todo tests
-Function to batch call setAccountLogicAuthorization - todo tests
-Function to batch call setStrategyAuthorization - todo tests
-Function to call setStrategyLogicAuthorization and use that logic contract to create strategies - todo tests*/
