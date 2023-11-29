@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
+import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
@@ -206,6 +207,38 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   // ========================================
+  // ======== Batch Core Functions ========
+  // ========================================
+
+  function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized) public onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    if(strategyLogics.length != authorized.length) revert MismatchedArrayLengths();
+    for(uint256 i = 0; i < strategyLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      core.setStrategyLogicAuthorization(strategyLogics[i], authorized[i]);
+    }
+  }
+
+  function setAccountLogicAuthorization(ILlamaAccount[] calldata accountLogic, bool[] calldata authorized) public onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    if(accountLogic.length != authorized.length) revert MismatchedArrayLengths();
+    for(uint256 i = 0; i < accountLogic.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      core.setAccountLogicAuthorization(accountLogic[i], authorized[i]);
+    }
+  }
+  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool[] calldata authorized) public onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    if(strategies.length != authorized.length) revert MismatchedArrayLengths();
+    for(uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      core.setStrategyAuthorization(strategies[i], authorized[i]);
+    }
+  }
+
+  function setStrategyLogicAuthorizationAndCreateStrategies(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized) public onlyDelegateCall {
+    setStrategyLogicAuthorizations(strategyLogics, authorized);
+    //todo
+  }
+
+  // ========================================
   // ======== Batch Policy Functions ========
   // ========================================
 
@@ -274,3 +307,50 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     policy = LlamaPolicy(core.policy());
   }
 }
+
+
+/*
+We should discuss adding the following functions. Everything else in core and policy looks covered:
+
+setStrategyAuthorization
+setStrategyLogicAuthorization
+setAccountLogicAuthorization
+setGuard
+setScriptAuthorization
+Member
+@0xrajath 0xrajath 14 hours ago
++1
+
+Member
+@0xrajath 0xrajath 14 hours ago • 
+Plus CreateAccounts and permission all the transfer and approve functions in there.
+
+Member
+@0xrajath 0xrajath 14 hours ago
+Another one is single use scripts that need to be batched together:
+
+Create Action to authorize that single use script
+Create Action to give permission to call the single use script's execute() function
+Create Action to execute script.
+Member
+Author
+@dd0sxx dd0sxx 1 hour ago • 
+methods we could include:
+-setGuards
+-setStrategyAuthorizations
+-setScriptAuthorization
+-createAccountsAndSetAllPermissions
+-createAccountsAndSetGuard
+-setScriptAuthorizations
+-setScriptAuthorizationsAndSetRolePermission
+I feel like logics can be single actions, since that's a pretty big deal to authorize a new logic contract. anyone disagree?
+
+Member
+@AustinGreen AustinGreen 1 hour ago • 
+Function for setScriptAuthorization and setRolePermissions for functions on that script
+Function for createAccounts and setRolePermissions for functions on those accounts
+Function to batch call setStrategyLogicAuthorization - todo tests
+Function to batch call setAccountLogicAuthorization - todo tests
+Function to batch call setStrategyAuthorization - todo tests
+Function to call setStrategyLogicAuthorization and use that logic contract to create strategies
+*/
