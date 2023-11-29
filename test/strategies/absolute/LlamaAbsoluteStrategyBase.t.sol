@@ -1001,8 +1001,7 @@ contract GetDisapprovalQuantityAt is LlamaAbsoluteStrategyBaseTest {
       DEFAULT_APPROVALS,
       DEFAULT_DISAPPROVALS,
       new uint8[](0),
-      new
-      uint8[](0)
+      new uint8[](0)
     );
 
     vm.warp(_timestamp);

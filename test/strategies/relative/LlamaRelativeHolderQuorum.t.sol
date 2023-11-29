@@ -243,8 +243,7 @@ contract GetApprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       4000,
       2000,
       new uint8[](0),
-      new
-      uint8[](0)
+      new uint8[](0)
     );
 
     vm.warp(_timestamp);
@@ -418,8 +417,7 @@ contract GetDisapprovalQuantityAt is LlamaRelativeHolderQuorumTest {
       4000,
       2000,
       new uint8[](0),
-      new
-      uint8[](0)
+      new uint8[](0)
     );
 
     vm.warp(_timestamp);
