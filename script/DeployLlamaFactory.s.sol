@@ -66,11 +66,7 @@ contract DeployLlamaFactory is Script {
     DeployUtils.print(string.concat("  LlamaPolicyMetadataLogic:", vm.toString(address(policyMetadataLogic))));
 
     vm.broadcast();
-    factory = new LlamaFactory(
-      coreLogic,
-      policyLogic,
-      policyMetadataLogic
-    );
+    factory = new LlamaFactory(coreLogic, policyLogic, policyMetadataLogic);
     DeployUtils.print(string.concat("  LlamaFactory:", vm.toString(address(factory))));
 
     vm.broadcast();

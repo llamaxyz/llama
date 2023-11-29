@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
+import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
@@ -8,7 +11,7 @@ import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
-import {RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
+import {PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 
 /// @title Llama Governance Script
@@ -35,6 +38,11 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   struct CreateStrategies {
     ILlamaStrategy llamaStrategyLogic; // Logic contract for the strategies.
     bytes[] strategies; // Array of configurations to initialize new strategies with.
+  }
+
+  struct CreateAccounts {
+    ILlamaAccount accountLogic;
+    bytes config;
   }
 
   // ========================
@@ -206,36 +214,92 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
+  function createAccountsAndSetPermissions(
+    CreateAccounts[] calldata accounts,
+    uint8[] calldata roles,
+    ILlamaStrategy[] calldata strategies
+  ) external onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    if (accounts.length != roles.length && roles.length != strategies.length) revert MismatchedArrayLengths();
+    RolePermissionData[] memory permissions = new RolePermissionData[](6);
+    bytes[] memory configs = new bytes[](1);
+    for (uint256 i = 0; i < accounts.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      configs[0] = accounts[i].config;
+      core.createAccounts(accounts[i].accountLogic, configs);
+
+      bytes32 salt = keccak256(accounts[i].config);
+      ILlamaAccount account = ILlamaAccount(Clones.cloneDeterministic(address(accounts[i].accountLogic), salt));
+
+      permissions[0] = RolePermissionData(
+        roles[i], PermissionData(address(account), LlamaAccount.batchTransferNativeToken.selector, strategies[i]), true
+      );
+      permissions[1] = RolePermissionData(
+        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC20.selector, strategies[i]), true
+      );
+      permissions[2] = RolePermissionData(
+        roles[i], PermissionData(address(account), LlamaAccount.batchApproveERC20.selector, strategies[i]), true
+      );
+      permissions[3] = RolePermissionData(
+        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC721.selector, strategies[i]), true
+      );
+      permissions[4] = RolePermissionData(
+        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC721.selector, strategies[i]), true
+      );
+      permissions[5] = RolePermissionData(
+        roles[i],
+        PermissionData(address(account), LlamaAccount.batchApproveOperatorERC721.selector, strategies[i]),
+        true
+      );
+
+      setRolePermissions(permissions);
+    }
+  }
+
   // ========================================
   // ======== Batch Core Functions ========
   // ========================================
 
-  function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized) public onlyDelegateCall {
+  function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized)
+    public
+    onlyDelegateCall
+  {
     (LlamaCore core,) = _context();
-    if(strategyLogics.length != authorized.length) revert MismatchedArrayLengths();
-    for(uint256 i = 0; i < strategyLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    if (strategyLogics.length != authorized.length) revert MismatchedArrayLengths();
+    for (uint256 i = 0; i < strategyLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyLogicAuthorization(strategyLogics[i], authorized[i]);
     }
   }
 
-  function setAccountLogicAuthorization(ILlamaAccount[] calldata accountLogic, bool[] calldata authorized) public onlyDelegateCall {
+  function setAccountLogicAuthorization(ILlamaAccount[] calldata accountLogic, bool[] calldata authorized)
+    public
+    onlyDelegateCall
+  {
     (LlamaCore core,) = _context();
-    if(accountLogic.length != authorized.length) revert MismatchedArrayLengths();
-    for(uint256 i = 0; i < accountLogic.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    if (accountLogic.length != authorized.length) revert MismatchedArrayLengths();
+    for (uint256 i = 0; i < accountLogic.length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setAccountLogicAuthorization(accountLogic[i], authorized[i]);
     }
   }
-  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool[] calldata authorized) public onlyDelegateCall {
+
+  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool[] calldata authorized)
+    public
+    onlyDelegateCall
+  {
     (LlamaCore core,) = _context();
-    if(strategies.length != authorized.length) revert MismatchedArrayLengths();
-    for(uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    if (strategies.length != authorized.length) revert MismatchedArrayLengths();
+    for (uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyAuthorization(strategies[i], authorized[i]);
     }
   }
 
-  function setStrategyLogicAuthorizationAndCreateStrategies(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized) public onlyDelegateCall {
-    setStrategyLogicAuthorizations(strategyLogics, authorized);
-    //todo
+  function setStrategyLogicAuthorizationAndCreateStrategies(
+    ILlamaStrategy strategyLogic,
+    bool authorized,
+    bytes[] calldata strategies
+  ) public onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    core.setStrategyLogicAuthorization(strategyLogic, authorized);
+    core.createStrategies(strategyLogic, strategies);
   }
 
   // ========================================
@@ -269,7 +333,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Batch set role permissions with the provided data.
   /// @param _setRolePermissions Array of role permissions to set.
-  function setRolePermissions(RolePermissionData[] calldata _setRolePermissions) public onlyDelegateCall {
+  function setRolePermissions(RolePermissionData[] memory _setRolePermissions) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     uint256 length = _setRolePermissions.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
@@ -308,7 +372,6 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 }
 
-
 /*
 We should discuss adding the following functions. Everything else in core and policy looks covered:
 
@@ -343,7 +406,8 @@ methods we could include:
 -createAccountsAndSetGuard
 -setScriptAuthorizations
 -setScriptAuthorizationsAndSetRolePermission
-I feel like logics can be single actions, since that's a pretty big deal to authorize a new logic contract. anyone disagree?
+I feel like logics can be single actions, since that's a pretty big deal to authorize a new logic contract. anyone
+disagree?
 
 Member
 @AustinGreen AustinGreen 1 hour ago • 
@@ -352,5 +416,4 @@ Function for createAccounts and setRolePermissions for functions on those accoun
 Function to batch call setStrategyLogicAuthorization - todo tests
 Function to batch call setAccountLogicAuthorization - todo tests
 Function to batch call setStrategyAuthorization - todo tests
-Function to call setStrategyLogicAuthorization and use that logic contract to create strategies
-*/
+Function to call setStrategyLogicAuthorization and use that logic contract to create strategies - todo tests*/

@@ -52,11 +52,7 @@ contract LlamaFactoryTest is LlamaTestSetup {
 
 contract Constructor is LlamaFactoryTest {
   function deployLlamaFactory() internal returns (LlamaFactory) {
-    return new LlamaFactory(
-      coreLogic,
-      policyLogic,
-      policyMetadataLogic
-    );
+    return new LlamaFactory(coreLogic, policyLogic, policyMetadataLogic);
   }
 
   function test_SetsLlamaCoreLogicAddress() public {
