@@ -167,7 +167,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param description Array of role descriptions to initialize.
   /// @param _setRoleHolders Array of role holders to set.
   /// @param _setRolePermissions Array of role permissions to set.
-  function createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissions(
+  function createNewStrategiesAndInitializeRolesAndSetRoleHoldersAndSetRolePermissions(
     CreateStrategies calldata _createStrategies,
     RoleDescription[] calldata description,
     RoleHolderData[] calldata _setRoleHolders,
