@@ -678,10 +678,10 @@ contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
 
 contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
     function test_setStrategyAuthorizations() public {
-      ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
+      ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
       strategies[0] = mpStrategy1;
 
-      bool[] memory authorizations = new bool[](3);
+      bool[] memory authorizations = new bool[](1);
       authorizations[0] = false;
 
       bytes memory data = abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorizations);
