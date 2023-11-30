@@ -264,13 +264,14 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     bool[] calldata hasPermissions
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
-    if (selectors.length != strategies.length && strategies.length != hasPermissions.length) revert MismatchedArrayLengths();
+    if (selectors.length != strategies.length && strategies.length != hasPermissions.length) {
+      revert MismatchedArrayLengths();
+    }
     core.setScriptAuthorization(script, authorized);
     RolePermissionData[] memory permissions = new RolePermissionData[](selectors.length);
     for (uint256 i = 0; i < selectors.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      permissions[i] = RolePermissionData(
-        role, PermissionData(address(script), selectors[i], strategies[i]), hasPermissions[i]
-      );
+      permissions[i] =
+        RolePermissionData(role, PermissionData(address(script), selectors[i], strategies[i]), hasPermissions[i]);
     }
     setRolePermissions(permissions);
   }
@@ -391,4 +392,3 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     policy = LlamaPolicy(core.policy());
   }
 }
-

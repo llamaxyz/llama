@@ -17,6 +17,7 @@ import {DeployUtils} from "script/DeployUtils.sol";
 
 contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
+  event AccountLogicAuthorizationSet(ILlamaAccount indexed accountLogic, bool authorized);
   event RoleAssigned(address indexed policyholder, uint8 indexed role, uint64 expiration, uint96 quantity);
   event RoleInitialized(uint8 indexed role, RoleDescription description);
   event RolePermissionAssigned(
@@ -59,8 +60,11 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   bytes4 public constant SET_ROLE_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setRolePermissions.selector;
   bytes4 public constant REVOKE_POLICIES_SELECTOR = LlamaGovernanceScript.revokePolicies.selector;
   bytes4 public constant UPDATE_ROLE_DESCRIPTIONS_SELECTOR = LlamaGovernanceScript.updateRoleDescriptions.selector;
-  bytes4 public constant SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR = LlamaGovernanceScript.setStrategyLogicAuthorizations.selector;
+  bytes4 public constant SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR =
+    LlamaGovernanceScript.setStrategyLogicAuthorizations.selector;
   bytes4 public constant SET_STRATEGY_AUTHORIZATIONS_SELECTOR = LlamaGovernanceScript.setStrategyAuthorizations.selector;
+  bytes4 public constant SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR =
+    LlamaGovernanceScript.setAccountLogicAuthorization.selector;
 
   PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
@@ -80,6 +84,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   PermissionData public updateRoleDescriptionPerimssion;
   PermissionData public setStrategyLogicAuthorizationsPermission;
   PermissionData public setStrategyAuthorizationsPermission;
+  PermissionData public setAccountLogicAuthorizationsPermission;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -122,12 +127,12 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     revokePoliciesPermission = PermissionData(address(governanceScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
     updateRoleDescriptionPerimssion =
       PermissionData(address(governanceScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
-    setStrategyLogicAuthorizationsPermission = PermissionData(
-      address(governanceScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2
-    );
-    setStrategyAuthorizationsPermission = PermissionData(
-      address(governanceScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2
-    );
+    setStrategyLogicAuthorizationsPermission =
+      PermissionData(address(governanceScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+    setStrategyAuthorizationsPermission =
+      PermissionData(address(governanceScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+    setAccountLogicAuthorizationsPermission =
+      PermissionData(address(governanceScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
 
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
@@ -155,6 +160,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionPerimssion, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthorizationsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyAuthorizationsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
 
     vm.stopPrank();
   }
@@ -662,7 +668,8 @@ contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
     authorizations[1] = true;
     authorizations[2] = true;
 
-    bytes memory data = abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorizations);
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorizations);
     (ActionInfo memory actionInfo,) = _createAction(data);
 
     vm.expectEmit();
@@ -677,21 +684,39 @@ contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
 }
 
 contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
-    function test_setStrategyAuthorizations() public {
-      ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
-      strategies[0] = mpStrategy1;
+  function test_setStrategyAuthorizations() public {
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
+    strategies[0] = mpStrategy1;
 
-      bool[] memory authorizations = new bool[](1);
-      authorizations[0] = false;
+    bool[] memory authorizations = new bool[](1);
+    authorizations[0] = false;
 
-      bytes memory data = abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorizations);
-      (ActionInfo memory actionInfo,) = _createAction(data);
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorizations);
+    (ActionInfo memory actionInfo,) = _createAction(data);
 
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, false);
+
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetAccountLogicAuthorization is LlamaGovernanceScriptTest {
+  function test_SetAccountLogicAuthorization(ILlamaAccount[] calldata accountLogics, bool[] calldata authorized) public {
+    vm.assume(accountLogics.length == authorized.length);
+
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorization.selector, accountLogics, authorized);
+    (ActionInfo memory actionInfo,) = _createAction(data);
+
+    for (uint256 i = 0; i < accountLogics.length; i++) {
       vm.expectEmit();
-      emit StrategyAuthorizationSet(mpStrategy1, false);
-
-      mpCore.executeAction(actionInfo);
+      emit AccountLogicAuthorizationSet(accountLogics[i], authorized[i]);
     }
+
+    mpCore.executeAction(actionInfo);
+  }
 }
 
 /*
