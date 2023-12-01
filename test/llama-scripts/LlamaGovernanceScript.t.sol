@@ -775,7 +775,7 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
     (ActionInfo memory actionInfo) = _createAction(data);
 
     vm.expectEmit();
-    emit ScriptAuthorizationSet(address(governanceScript), true);
+    emit ScriptAuthorizationSet(script, authorized);
     for (uint256 i = 0; i < selectors.length; i++) {
       PermissionData memory permissionData = PermissionData(script, selectors[i], mpStrategy2);
       bytes32 permissionId = lens.computePermissionId(permissionData);
