@@ -361,6 +361,42 @@ contract Aggregate is LlamaGovernanceScriptTest {
     emit AccountCreated(accountAddresses[0], accountLogic, DeployUtils.encodeAccount(newAccounts[0]));
     mpCore.executeAction(actionInfo);
   }
+
+  function test_RevertsIf_CallReverted(RoleDescription description) public {
+    targets.push(address(0));
+    calls.push(abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, description));
+
+    bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
+
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectRevert();
+    // CallReverted error cannot be reached because we get a "FailedActionExecution" error first.
+    mpCore.executeAction(actionInfo);
+  }
+
+  function test_RevertsIf_UnauthorizedTarget(address target) public {
+    vm.assume(target != address(mpPolicy) && target != address(mpCore));
+    targets.push(address(target));
+    calls.push(abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, "test"));
+
+    bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectRevert();
+    // UnauthorizedTarget error cannot be reached because we get a "FailedActionExecution" error first.
+    mpCore.executeAction(actionInfo);
+  }
+
+  function test_RevertsIf_MismatchedArrayLength(address[] calldata _targets, bytes[] calldata _calls) public {
+    vm.assume(targets.length != calls.length);
+    bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, _targets, _calls);
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectRevert();
+    // MismatchedArrayLength error cannot be reached because we get a "FailedActionExecution" error first.
+    mpCore.executeAction(actionInfo);
+  }
 }
 
 contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
