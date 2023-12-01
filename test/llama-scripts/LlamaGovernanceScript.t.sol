@@ -712,39 +712,38 @@ contract SetAccountLogicAuthorization is LlamaGovernanceScriptTest {
 }
 
 contract SetStrategyLogicAuthorizationAndCreateStrategies is LlamaGovernanceScriptTest {
-// function test_SetStrategyLogicAuthorizationAndCreateStrategies() public {
-//   LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
-//   newStrategies[0] = LlamaRelativeStrategyBase.Config({
-//     approvalPeriod: 0,
-//     queuingPeriod: 0,
-//     expirationPeriod: 2 days,
-//     isFixedLengthApprovalPeriod: false,
-//     minApprovalPct: 0,
-//     minDisapprovalPct: 10_001,
-//     approvalRole: uint8(Roles.Approver),
-//     disapprovalRole: uint8(Roles.Disapprover),
-//     forceApprovalRoles: new uint8[](0),
-//     forceDisapprovalRoles: new uint8[](0)
-//   });
-//   ILlamaStrategy instantExecutionStrategy = lens.computeLlamaStrategyAddress(
-//     address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
-//   );
-//   bytes memory data = abi.encodeWithSelector(
-//     LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector,
-//     relativeQuantityQuorumLogic,
-//     true,
-//     DeployUtils.encodeStrategyConfigs(newStrategies)
-//   );
-//   (ActionInfo memory actionInfo) = _createAction(data);
+  function test_SetStrategyLogicAuthorizationAndCreateStrategies() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 0,
+      queuingPeriod: 0,
+      expirationPeriod: 2 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 10_001,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+    ILlamaStrategy instantExecutionStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector,
+      relativeQuantityQuorumLogic,
+      DeployUtils.encodeStrategyConfigs(newStrategies)
+    );
+    (ActionInfo memory actionInfo) = _createAction(data);
 
-//   vm.expectEmit();
-//   emit StrategyLogicAuthorizationSet(relativeQuantityQuorumLogic, true);
-//   vm.expectEmit();
-//   emit StrategyCreated(
-//     instantExecutionStrategy, relativeQuantityQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0])
-//   );
-//   mpCore.executeAction(actionInfo);
-// }
+    vm.expectEmit();
+    emit StrategyLogicAuthorizationSet(relativeQuantityQuorumLogic, true);
+    vm.expectEmit();
+    emit StrategyCreated(
+      instantExecutionStrategy, relativeQuantityQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0])
+    );
+    mpCore.executeAction(actionInfo);
+  }
 }
 
 // TODO setScriptAuthorizationAndSetRolePermissions
