@@ -23,6 +23,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event RolePermissionAssigned(
     uint8 indexed role, bytes32 indexed permissionId, PermissionData permissionData, bool hasPermission
   );
+  event ScriptAuthorizationSet(address indexed script, bool authorized);
   event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool authorized);
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
@@ -66,6 +67,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     LlamaGovernanceScript.setAccountLogicAuthorization.selector;
   bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
     LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
+  bytes4 SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
 
   PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
@@ -87,6 +89,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   PermissionData public setStrategyAuthorizationsPermission;
   PermissionData public setAccountLogicAuthorizationsPermission;
   PermissionData public setStrategyLogicAuthAndNewStrategiesPermission;
+  PermissionData public setScriptAuthAndSetPermissionsPermission;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -131,6 +134,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
       PermissionData(address(governanceScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
     setStrategyLogicAuthAndNewStrategiesPermission =
       PermissionData(address(governanceScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
+    setScriptAuthAndSetPermissionsPermission =
+      PermissionData(address(governanceScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
 
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
@@ -158,6 +163,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyAuthorizationsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthAndNewStrategiesPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthAndSetPermissionsPermission, true);
 
     vm.stopPrank();
   }
@@ -746,4 +752,36 @@ contract SetStrategyLogicAuthorizationAndCreateStrategies is LlamaGovernanceScri
   }
 }
 
-// TODO setScriptAuthorizationAndSetRolePermissions
+contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
+  function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
+
+    bool[] memory hasPermissions = new bool[](selectors.length);
+
+    for (uint256 i = 0; i < selectors.length; i++) {
+      hasPermissions[i] = true;
+      strategies[i] = mpStrategy2;
+    }
+
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
+      script,
+      authorized,
+      uint8(Roles.ActionCreator),
+      selectors,
+      strategies,
+      hasPermissions
+    );
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectEmit();
+    emit ScriptAuthorizationSet(address(governanceScript), true);
+    for (uint256 i = 0; i < selectors.length; i++) {
+      PermissionData memory permissionData = PermissionData(script, selectors[i], mpStrategy2);
+      bytes32 permissionId = lens.computePermissionId(permissionData);
+      vm.expectEmit();
+      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, true);
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
