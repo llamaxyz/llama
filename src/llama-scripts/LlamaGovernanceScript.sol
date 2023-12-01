@@ -214,6 +214,10 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
+  /// @notice Create Accounts and set common permissions to allow the given role to approve and transfer tokens.
+  /// @param accounts Array of accounts to create.
+  /// @param roles Array of roles to assign permissions to.
+  /// @param strategies Array of strategies used for the permissions.
   function createAccountsAndSetRolePermissions(
     CreateAccounts[] calldata accounts,
     uint8[] calldata roles,
@@ -255,6 +259,13 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     }
   }
 
+  /// @notice Sets script authorization and sets role permissions.
+  /// @param script Address of the script to set authorization for.
+  /// @param authorized Whether or not the script is authorized.
+  /// @param role Role to set permissions for.
+  /// @param selectors Array of selectors  to use as part of the permissions.
+  /// @param strategies Array of strategies to use as part of the permissions.
+  /// @param hasPermissions Array of booleans to use as part of the permissions.
   function setScriptAuthorizationAndSetRolePermissions(
     address script,
     bool authorized,
@@ -280,6 +291,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Batch Core Functions ========
   // ========================================
 
+  /// @notice Batch set strategy logic authorizations.
+  /// @param strategyLogics Array of strategy logic contracts to set authorization for.
+  /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
   function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized)
     public
     onlyDelegateCall
@@ -291,6 +305,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     }
   }
 
+  /// @notice Batch set account logic authorizations.
+  /// @param accountLogic Array of account logic contracts to set authorization for.
+  /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
   function setAccountLogicAuthorization(ILlamaAccount[] calldata accountLogic, bool[] calldata authorized)
     public
     onlyDelegateCall
@@ -302,6 +319,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     }
   }
 
+  /// @notice Batch set strategy authorizations.
+  /// @param strategies Array of strategies to set authorization for.
+  /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
   function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool[] calldata authorized)
     public
     onlyDelegateCall
@@ -313,13 +333,15 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     }
   }
 
-  function setStrategyLogicAuthorizationAndCreateStrategies(
-    ILlamaStrategy strategyLogic,
-    bool authorized,
-    bytes[] calldata strategies
-  ) public onlyDelegateCall {
+  /// @notice Set strategy logic authorization and create new strategies.
+  /// @param strategyLogic Array of strategy logic contracts to set authorization for.
+  /// @param strategies Array of configurations to initialize new strategies with.
+  function setStrategyLogicAuthorizationAndCreateStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
+    public
+    onlyDelegateCall
+  {
     (LlamaCore core,) = _context();
-    core.setStrategyLogicAuthorization(strategyLogic, authorized);
+    core.setStrategyLogicAuthorization(strategyLogic, true);
     core.createStrategies(strategyLogic, strategies);
   }
 
@@ -328,12 +350,12 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ========================================
 
   /// @notice Batch initialize new roles with the provided data.
-  /// @param description Array of role descriptions to initialize.
-  function initializeRoles(RoleDescription[] calldata description) public onlyDelegateCall {
+  /// @param descriptions Array of role descriptions to initialize.
+  function initializeRoles(RoleDescription[] calldata descriptions) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    uint256 length = description.length;
+    uint256 length = descriptions.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
-      policy.initializeRole(description[i]);
+      policy.initializeRole(descriptions[i]);
     }
   }
 
