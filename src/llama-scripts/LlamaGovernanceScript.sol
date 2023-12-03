@@ -61,10 +61,6 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
 
-  /// @dev The target address is not an account.
-  /// @param target The target address provided.
-  error TargetNotAccount(address target);
-
   // =======================================
   // ======== Arbitrary Aggregation ========
   // =======================================
