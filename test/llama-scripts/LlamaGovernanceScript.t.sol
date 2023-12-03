@@ -34,8 +34,6 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   uint8[] public roles;
   address[] public revokePolicies;
 
-  LlamaGovernanceScript governanceScript;
-
   bytes4 public constant AGGREGATE_SELECTOR = LlamaGovernanceScript.aggregate.selector;
   bytes4 public constant INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR =
     LlamaGovernanceScript.initRolesAndSetRoleHolders.selector;
@@ -93,8 +91,6 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
-
-    governanceScript = new LlamaGovernanceScript();
 
     vm.startPrank(address(mpExecutor));
 
