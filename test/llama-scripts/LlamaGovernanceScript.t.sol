@@ -8,6 +8,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
@@ -33,6 +34,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   uint8[] public roles;
   address[] public revokePolicies;
+
+  LlamaGovernanceScript govScript;
 
   bytes4 public constant AGGREGATE_SELECTOR = LlamaGovernanceScript.aggregate.selector;
   bytes4 public constant INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR =
@@ -66,6 +69,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
     LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
   bytes4 SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
+  bytes4 CREATE_ACCOUNTS_AND_SET_ROLE_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.createAccountsAndSetRolePermissions.selector;
 
   PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
@@ -88,50 +93,54 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   PermissionData public setAccountLogicAuthorizationsPermission;
   PermissionData public setStrategyLogicAuthAndNewStrategiesPermission;
   PermissionData public setScriptAuthAndSetPermissionsPermission;
+  PermissionData public createAccountsAndSetRolePermissionsPermission;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
 
+    govScript = new LlamaGovernanceScript();
+
     vm.startPrank(address(mpExecutor));
 
-    mpCore.setScriptAuthorization(address(governanceScript), true);
+    mpCore.setScriptAuthorization(address(govScript), true);
 
-    executeActionPermission = PermissionData(address(governanceScript), EXECUTE_ACTION_SELECTOR, mpStrategy2);
-    aggregatePermission = PermissionData(address(governanceScript), AGGREGATE_SELECTOR, mpStrategy2);
+    executeActionPermission = PermissionData(address(govScript), EXECUTE_ACTION_SELECTOR, mpStrategy2);
+    aggregatePermission = PermissionData(address(govScript), AGGREGATE_SELECTOR, mpStrategy2);
     initializeRolesAndSetRoleHoldersPermission =
-      PermissionData(address(governanceScript), INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
     initializeRolesAndSetRolePermissionsPermission =
-      PermissionData(address(governanceScript), INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
     initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission =
-      PermissionData(address(governanceScript), INIT_ROLES_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), INIT_ROLES_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, mpStrategy2);
     createNewStrategiesAndSetRoleHoldersPermission =
-      PermissionData(address(governanceScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
     createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission =
-      PermissionData(address(governanceScript), CREATE_STRATEGIES_AND_INIT_ROLES_AND_HOLDERS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), CREATE_STRATEGIES_AND_INIT_ROLES_AND_HOLDERS_SELECTOR, mpStrategy2);
     createNewStrategiesAndSetRolePermissionsPermission =
-      PermissionData(address(governanceScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
     createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission =
-      PermissionData(address(governanceScript), CREATE_STRATEGIES_WITH_ROLES_AND_PERMISSIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), CREATE_STRATEGIES_WITH_ROLES_AND_PERMISSIONS_SELECTOR, mpStrategy2);
     revokePoliciesAndUpdateRoleDescriptionsPermission =
-      PermissionData(address(governanceScript), REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
     revokePoliciesAndSetRoleDescsAndHolders =
-      PermissionData(address(governanceScript), REVOKE_POLICIES_AND_SET_ROLE_DESCS_AND_HOLDERS_SELECTOR, mpStrategy2);
-    initializeRolesPermission = PermissionData(address(governanceScript), INIT_ROLES_SELECTOR, mpStrategy2);
-    setRoleHoldersPermission = PermissionData(address(governanceScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    setRolePermissionsPermission = PermissionData(address(governanceScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    revokePoliciesPermission = PermissionData(address(governanceScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
-    updateRoleDescriptionPerimssion =
-      PermissionData(address(governanceScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), REVOKE_POLICIES_AND_SET_ROLE_DESCS_AND_HOLDERS_SELECTOR, mpStrategy2);
+    initializeRolesPermission = PermissionData(address(govScript), INIT_ROLES_SELECTOR, mpStrategy2);
+    setRoleHoldersPermission = PermissionData(address(govScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
+    setRolePermissionsPermission = PermissionData(address(govScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    revokePoliciesPermission = PermissionData(address(govScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
+    updateRoleDescriptionPerimssion = PermissionData(address(govScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
     setStrategyLogicAuthorizationsPermission =
-      PermissionData(address(governanceScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
     setStrategyAuthorizationsPermission =
-      PermissionData(address(governanceScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2);
     setAccountLogicAuthorizationsPermission =
-      PermissionData(address(governanceScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
     setStrategyLogicAuthAndNewStrategiesPermission =
-      PermissionData(address(governanceScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
     setScriptAuthAndSetPermissionsPermission =
-      PermissionData(address(governanceScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
+      PermissionData(address(govScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
+    createAccountsAndSetRolePermissionsPermission =
+      PermissionData(address(govScript), CREATE_ACCOUNTS_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
 
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
@@ -160,6 +169,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthAndNewStrategiesPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthAndSetPermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createAccountsAndSetRolePermissionsPermission, true);
 
     vm.stopPrank();
   }
@@ -228,11 +238,9 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   function _createAction(bytes memory data) internal returns (ActionInfo memory actionInfo) {
     vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data, "");
-    actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(governanceScript), 0, data
-    );
+    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
+    actionInfo =
+      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data);
     vm.warp(block.timestamp + 1);
     _approveAction(actionInfo);
   }
@@ -814,6 +822,82 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
       vm.expectEmit();
       emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, true);
     }
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract CreateAccountsAndSetRolePermissions is LlamaGovernanceScriptTest {
+  function test_CreateAccountsAndSetRolePermissions() public {
+    LlamaGovernanceScript.CreateAccounts[] memory accounts = new LlamaGovernanceScript.CreateAccounts[](1);
+    accounts[0].accountLogic = accountLogic;
+    accounts[0].config = abi.encode(LlamaAccount.Config({name: "mockAccount"}));
+
+    ILlamaAccount accountAddress =
+      lens.computeLlamaAccountAddress(address(accountLogic), accounts[0].config, address(mpCore));
+
+    PermissionData memory permissionData1 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+    PermissionData memory permissionData2 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC20.selector, mpStrategy2);
+    PermissionData memory permissionData3 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC20.selector, mpStrategy2);
+    PermissionData memory permissionData4 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC721.selector, mpStrategy2);
+    PermissionData memory permissionData5 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC721.selector, mpStrategy2);
+    PermissionData memory permissionData6 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveOperatorERC721.selector, mpStrategy2);
+
+    uint8[] memory _roles = new uint8[](1);
+    _roles[0] = uint8(Roles.ActionCreator);
+
+    ILlamaStrategy[] memory _strategies = new ILlamaStrategy[](1);
+    _strategies[0] = mpStrategy2;
+
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.createAccountsAndSetRolePermissions.selector, accounts, _roles, _strategies
+    );
+
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectEmit();
+    emit AccountCreated(accountAddress, accountLogic, accounts[0].config);
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData1), permissionData1, true
+    // );
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData2), permissionData2, true
+    // );
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData3), permissionData3, true
+    // );
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData3), permissionData3, true
+    // );
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData4), permissionData4, true
+    // );
+
+    // vm.expectEmit();
+    // emit RolePermissionAssigned(
+    //   uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData5), permissionData5, true
+    // );
+
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData6), permissionData6, true
+    );
+
     mpCore.executeAction(actionInfo);
   }
 }
