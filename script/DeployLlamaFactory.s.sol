@@ -9,6 +9,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.sol";
 import {LlamaRelativeHolderQuorum} from "src/strategies/relative/LlamaRelativeHolderQuorum.sol";
@@ -33,6 +34,9 @@ contract DeployLlamaFactory is Script {
   // Factory and lens contracts.
   LlamaFactory factory;
   LlamaLens lens;
+
+  // Llama scripts
+  LlamaGovernanceScript governanceScript;
 
   function run() public {
     DeployUtils.print(string.concat("Deploying Llama factory to chain:", vm.toString(block.chainid)));
@@ -117,5 +121,9 @@ contract DeployLlamaFactory is Script {
     vm.broadcast();
     absolutePeerReviewLogic = new LlamaAbsolutePeerReview();
     DeployUtils.print(string.concat("  LlamaAbsolutePeerReviewLogic:", vm.toString(address(absolutePeerReviewLogic))));
+
+    vm.broadcast();
+    governanceScript = new LlamaGovernanceScript();
+    DeployUtils.print(string.concat("  LlamaGovernanceScript:", vm.toString(address(governanceScript))));
   }
 }
