@@ -796,21 +796,13 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
   function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
 
-    bool[] memory hasPermissions = new bool[](selectors.length);
-
-    for (uint256 i = 0; i < selectors.length; i++) {
-      hasPermissions[i] = true;
-      strategies[i] = mpStrategy2;
-    }
-
     bytes memory data = abi.encodeWithSelector(
       LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
       script,
       authorized,
       uint8(Roles.ActionCreator),
       selectors,
-      strategies,
-      hasPermissions
+      strategies
     );
     (ActionInfo memory actionInfo) = _createAction(data);
 
@@ -820,7 +812,7 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
       PermissionData memory permissionData = PermissionData(script, selectors[i], mpStrategy2);
       bytes32 permissionId = lens.computePermissionId(permissionData);
       vm.expectEmit();
-      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, true);
+      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
     }
     mpCore.executeAction(actionInfo);
   }

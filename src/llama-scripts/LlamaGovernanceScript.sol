@@ -234,24 +234,20 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param role Role to set permissions for.
   /// @param selectors Array of selectors  to use as part of the permissions.
   /// @param strategies Array of strategies to use as part of the permissions.
-  /// @param hasPermissions Array of booleans to use as part of the permissions.
   function setScriptAuthAndSetPermissions(
     address script,
     bool authorized,
     uint8 role,
     bytes4[] calldata selectors,
-    ILlamaStrategy[] calldata strategies,
-    bool[] calldata hasPermissions
+    ILlamaStrategy[] calldata strategies
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
-    if (selectors.length != strategies.length && strategies.length != hasPermissions.length) {
-      revert MismatchedArrayLengths();
-    }
+    if (selectors.length != strategies.length) revert MismatchedArrayLengths();
     core.setScriptAuthorization(script, authorized);
     RolePermissionData[] memory permissions = new RolePermissionData[](selectors.length);
     for (uint256 i = 0; i < selectors.length; i = LlamaUtils.uncheckedIncrement(i)) {
       permissions[i] =
-        RolePermissionData(role, PermissionData(address(script), selectors[i], strategies[i]), hasPermissions[i]);
+        RolePermissionData(role, PermissionData(address(script), selectors[i], strategies[i]), authorized);
     }
     setRolePermissions(permissions);
   }
