@@ -247,7 +247,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
         roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC721.selector, strategies[i]), true
       );
       permissions[4] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC721.selector, strategies[i]), true
+        roles[i], PermissionData(address(account), LlamaAccount.batchApproveERC721.selector, strategies[i]), true
       );
       permissions[5] = RolePermissionData(
         roles[i],
