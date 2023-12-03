@@ -42,7 +42,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   struct CreateAccounts {
     ILlamaAccount accountLogic;
-    bytes config;
+    bytes[] config;
   }
 
   // ========================
@@ -60,6 +60,10 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
+
+  /// @dev The target address is not an account.
+  /// @param target The target address provided.
+  error TargetNotAccount(address target);
 
   // =======================================
   // ======== Arbitrary Aggregation ========
@@ -216,47 +220,16 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Create Accounts and set common permissions to allow the given role to approve and transfer tokens.
   /// @param accounts Array of accounts to create.
-  /// @param roles Array of roles to assign permissions to.
-  /// @param strategies Array of strategies used for the permissions.
+  /// @param _permissions Array of permissions to set.
   function createAccountsAndSetRolePermissions(
     CreateAccounts[] calldata accounts,
-    uint8[] calldata roles,
-    ILlamaStrategy[] calldata strategies
+    RolePermissionData[] calldata _permissions
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
-    if (accounts.length != roles.length && roles.length != strategies.length) revert MismatchedArrayLengths();
-    RolePermissionData[] memory permissions = new RolePermissionData[](6);
-    bytes[] memory configs = new bytes[](1);
     for (uint256 i = 0; i < accounts.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      configs[0] = accounts[i].config;
-      core.createAccounts(accounts[i].accountLogic, configs);
-
-      bytes32 salt = keccak256(accounts[i].config);
-      ILlamaAccount account = ILlamaAccount(Clones.cloneDeterministic(address(accounts[i].accountLogic), salt));
-
-      permissions[0] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchTransferNativeToken.selector, strategies[i]), true
-      );
-      permissions[1] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC20.selector, strategies[i]), true
-      );
-      permissions[2] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchApproveERC20.selector, strategies[i]), true
-      );
-      permissions[3] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchTransferERC721.selector, strategies[i]), true
-      );
-      permissions[4] = RolePermissionData(
-        roles[i], PermissionData(address(account), LlamaAccount.batchApproveERC721.selector, strategies[i]), true
-      );
-      permissions[5] = RolePermissionData(
-        roles[i],
-        PermissionData(address(account), LlamaAccount.batchApproveOperatorERC721.selector, strategies[i]),
-        true
-      );
-
-      setRolePermissions(permissions);
+      core.createAccounts(accounts[i].accountLogic, accounts[i].config);
     }
+    setRolePermissions(_permissions);
   }
 
   /// @notice Sets script authorization and sets role permissions.
