@@ -242,7 +242,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Sets script authorization and sets role permissions.
   /// @param script Address of the script to set authorization for.
-  /// @param authorized Whether or not the script is authorized.
+  /// @param authorized Whether or not the script is authorized. This also determines if `hasPermission` is true or false.
   /// @param role Role to set permissions for.
   /// @param selectors Array of selectors to use as part of the permissions.
   /// @param strategies Array of strategies to use as part of the permissions.
