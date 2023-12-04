@@ -219,7 +219,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
-  /// @notice Create Accounts and set common permissions to allow the given role to approve and transfer tokens.
+  /// @notice Create Account and set common permissions to allow the given role to approve and transfer tokens.
   /// @param account Account to create.
   /// @param _permissions Array of permissions to set.
   function createAccountAndSetRolePermissions(
@@ -244,7 +244,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param script Address of the script to set authorization for.
   /// @param authorized Whether or not the script is authorized.
   /// @param role Role to set permissions for.
-  /// @param selectors Array of selectors  to use as part of the permissions.
+  /// @param selectors Array of selectors to use as part of the permissions.
   /// @param strategies Array of strategies to use as part of the permissions.
   function setScriptAuthAndSetPermissions(
     address script,
