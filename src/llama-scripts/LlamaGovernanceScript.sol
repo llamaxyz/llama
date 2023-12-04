@@ -305,7 +305,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   /// @notice Set strategy logic authorization and create new strategies.
-  /// @param strategyLogic Strategy logic contracts to set authorization for.
+  /// @param strategyLogic Strategy logic contract to set authorization for.
   /// @param strategies Array of configurations to initialize new strategies with.
   function setStrategyLogicAuthAndNewStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
     public
