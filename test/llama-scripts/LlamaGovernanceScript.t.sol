@@ -69,8 +69,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
     LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
   bytes4 SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
-  bytes4 CREATE_ACCOUNTS_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.createAccountsAndSetRolePermissions.selector;
+  bytes4 CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.createAccountAndSetRolePermissions.selector;
 
   PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
@@ -93,7 +93,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   PermissionData public setAccountLogicAuthorizationsPermission;
   PermissionData public setStrategyLogicAuthAndNewStrategiesPermission;
   PermissionData public setScriptAuthAndSetPermissionsPermission;
-  PermissionData public createAccountsAndSetRolePermissionsPermission;
+  PermissionData public createAccountAndSetRolePermissionsPermission;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -139,8 +139,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
       PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
     setScriptAuthAndSetPermissionsPermission =
       PermissionData(address(govScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
-    createAccountsAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), CREATE_ACCOUNTS_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    createAccountAndSetRolePermissionsPermission =
+      PermissionData(address(govScript), CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
 
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
@@ -169,7 +169,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthAndNewStrategiesPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthAndSetPermissionsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createAccountsAndSetRolePermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createAccountAndSetRolePermissionsPermission, true);
 
     vm.stopPrank();
   }
@@ -810,35 +810,25 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
   }
 }
 
-contract CreateAccountsAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_CreateAccountsAndSetRolePermissions() public {
-    LlamaGovernanceScript.CreateAccounts[] memory accounts = new LlamaGovernanceScript.CreateAccounts[](2);
-    bytes[] memory config1 = new bytes[](1);
-    bytes[] memory config2 = new bytes[](1);
-    accounts[0].accountLogic = accountLogic;
-    accounts[1].accountLogic = accountLogic;
+contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
+  function test_CreateAccountAndSetRolePermissions() public {
+    bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
+    LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
 
-    config1[0] = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
-    config2[0] = abi.encode(LlamaAccount.Config({name: "mockAccountERC721"}));
-    accounts[0].config = config1;
-    accounts[1].config = config2;
-
-    ILlamaAccount accountAddress1 = lens.computeLlamaAccountAddress(address(accountLogic), config1[0], address(mpCore));
-
-    ILlamaAccount accountAddress2 = lens.computeLlamaAccountAddress(address(accountLogic), config2[0], address(mpCore));
+    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
 
     PermissionData memory permissionData1 =
-      PermissionData(address(accountAddress1), LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
     PermissionData memory permissionData2 =
-      PermissionData(address(accountAddress1), LlamaAccount.batchTransferERC20.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC20.selector, mpStrategy2);
     PermissionData memory permissionData3 =
-      PermissionData(address(accountAddress1), LlamaAccount.batchApproveERC20.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC20.selector, mpStrategy2);
     PermissionData memory permissionData4 =
-      PermissionData(address(accountAddress2), LlamaAccount.batchTransferERC721.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC721.selector, mpStrategy2);
     PermissionData memory permissionData5 =
-      PermissionData(address(accountAddress2), LlamaAccount.batchApproveERC721.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC721.selector, mpStrategy2);
     PermissionData memory permissionData6 =
-      PermissionData(address(accountAddress2), LlamaAccount.batchApproveOperatorERC721.selector, mpStrategy2);
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveOperatorERC721.selector, mpStrategy2);
 
     RolePermissionData[] memory _permissions = new RolePermissionData[](6);
     _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData1, true);
@@ -849,14 +839,12 @@ contract CreateAccountsAndSetRolePermissions is LlamaGovernanceScriptTest {
     _permissions[5] = RolePermissionData(uint8(Roles.ActionCreator), permissionData6, true);
 
     bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.createAccountsAndSetRolePermissions.selector, accounts, _permissions);
+      abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, _permissions);
 
     (ActionInfo memory actionInfo) = _createAction(data);
 
     vm.expectEmit();
-    emit AccountCreated(accountAddress1, accountLogic, config1[0]);
-    vm.expectEmit();
-    emit AccountCreated(accountAddress2, accountLogic, config2[0]);
+    emit AccountCreated(accountAddress, accountLogic, config);
 
     vm.expectEmit();
     emit RolePermissionAssigned(

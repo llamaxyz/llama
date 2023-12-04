@@ -12,6 +12,7 @@ import {PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Struct
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
+import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Governance Script
@@ -42,7 +43,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   struct CreateAccounts {
     ILlamaAccount accountLogic;
-    bytes[] config;
+    bytes config;
   }
 
   // ========================
@@ -60,6 +61,10 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
+
+  /// @dev The target address is not the created account.
+  /// @param target The target address provided.
+  error TargetIsNotAccount(address target);
 
   // =======================================
   // ======== Arbitrary Aggregation ========
@@ -215,15 +220,23 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   /// @notice Create Accounts and set common permissions to allow the given role to approve and transfer tokens.
-  /// @param accounts Array of accounts to create.
+  /// @param account Account to create.
   /// @param _permissions Array of permissions to set.
-  function createAccountsAndSetRolePermissions(
-    CreateAccounts[] calldata accounts,
+  function createAccountAndSetRolePermissions(
+    CreateAccounts calldata account,
     RolePermissionData[] calldata _permissions
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
-    for (uint256 i = 0; i < accounts.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      core.createAccounts(accounts[i].accountLogic, accounts[i].config);
+    bytes[] memory config = new bytes[](1);
+    config[0] = account.config;
+    core.createAccounts(account.accountLogic, config);
+    address accountAddress = Clones.predictDeterministicAddress(
+      address(account.accountLogic), keccak256(account.config), LlamaExecutor(address(this)).LLAMA_CORE()
+    );
+    for (uint256 i = 0; i < _permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      if (_permissions[i].permissionData.target != accountAddress) {
+        revert TargetIsNotAccount(_permissions[i].permissionData.target);
+      }
     }
     setRolePermissions(_permissions);
   }
