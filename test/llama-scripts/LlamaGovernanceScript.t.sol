@@ -392,8 +392,12 @@ contract Aggregate is LlamaGovernanceScriptTest {
     mpCore.executeAction(actionInfo);
   }
 
-  function test_RevertsIf_MismatchedArrayLength(address[] calldata _targets, bytes[] calldata _calls) public {
-    vm.assume(targets.length != calls.length);
+  function test_RevertsIf_MismatchedArrayLength(address[] calldata _targets, uint8 length) public {
+    vm.assume(targets.length != length);
+    bytes[] memory _calls = new bytes[](length);
+    for (uint256 i = 0; i < length; i++) {
+      _calls[i] = abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, "test");
+    }
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, _targets, _calls);
     (ActionInfo memory actionInfo) = _createAction(data);
 
