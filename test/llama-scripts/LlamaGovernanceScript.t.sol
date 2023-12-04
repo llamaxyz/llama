@@ -65,7 +65,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     LlamaGovernanceScript.setStrategyLogicAuthorizations.selector;
   bytes4 public constant SET_STRATEGY_AUTHORIZATIONS_SELECTOR = LlamaGovernanceScript.setStrategyAuthorizations.selector;
   bytes4 public constant SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR =
-    LlamaGovernanceScript.setAccountLogicAuthorization.selector;
+    LlamaGovernanceScript.setAccountLogicAuthorizations.selector;
   bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
     LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
   bytes4 SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
@@ -736,8 +736,8 @@ contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
   }
 }
 
-contract SetAccountLogicAuthorization is LlamaGovernanceScriptTest {
-  function test_SetAccountLogicAuthorization(ILlamaAccount[] calldata accountLogics) public {
+contract SetAccountLogicAuthorizations is LlamaGovernanceScriptTest {
+  function test_SetAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics) public {
     vm.assume(accountLogics.length < 5);
     bool[] memory authorized = new bool[](accountLogics.length);
     for (uint256 i = 0; i < accountLogics.length; i++) {
@@ -745,7 +745,7 @@ contract SetAccountLogicAuthorization is LlamaGovernanceScriptTest {
     }
 
     bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorization.selector, accountLogics, authorized);
+      abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorizations.selector, accountLogics, authorized);
     (ActionInfo memory actionInfo) = _createAction(data);
 
     for (uint256 i = 0; i < accountLogics.length; i++) {
