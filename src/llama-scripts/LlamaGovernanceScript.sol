@@ -230,9 +230,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     bytes[] memory config = new bytes[](1);
     config[0] = account.config;
     core.createAccounts(account.accountLogic, config);
-    address accountAddress = Clones.predictDeterministicAddress(
-      address(account.accountLogic), keccak256(account.config), LlamaExecutor(address(this)).LLAMA_CORE()
-    );
+    address accountAddress =
+      Clones.predictDeterministicAddress(address(account.accountLogic), keccak256(account.config), address(core));
     for (uint256 i = 0; i < _permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
       if (_permissions[i].permissionData.target != accountAddress) {
         revert TargetIsNotAccount(_permissions[i].permissionData.target);
