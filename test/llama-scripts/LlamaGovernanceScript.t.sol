@@ -878,4 +878,28 @@ contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
 
     mpCore.executeAction(actionInfo);
   }
+
+  function test_RevertsIf_TargetIsNotAccount(address notAccount) public {
+    bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
+    LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
+
+    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
+
+    vm.assume(notAccount != address(accountAddress));
+
+    PermissionData memory permissionData =
+      PermissionData(notAccount, LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+
+    RolePermissionData[] memory _permissions = new RolePermissionData[](1);
+    _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData, true);
+
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, _permissions);
+
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    vm.expectRevert(); // reverts with FailedActionExecution and does not reach the TargetIsNotAccount error
+
+    mpCore.executeAction(actionInfo);
+  }
 }
