@@ -242,7 +242,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Sets script authorization and sets role permissions.
   /// @param script Address of the script to set authorization for.
-  /// @param authorized Whether or not the script is authorized. This also determines if `hasPermission` is true or false.
+  /// @param authorized Whether or not the script is authorized. This also determines if `hasPermission` is true or
+  /// false.
   /// @param role Role to set permissions for.
   /// @param selectors Array of selectors to use as part of the permissions.
   /// @param strategies Array of strategies to use as part of the permissions.
@@ -272,7 +273,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param strategyLogics Array of strategy logic contracts to set authorization for.
   /// @param authorized Boolean to determine whether an address is being authorized or unauthorized.
   function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool authorized)
-    public
+    external
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
@@ -285,7 +286,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param accountLogics Array of account logic contracts to set authorization for.
   /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
   function setAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool authorized)
-    public
+    external
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
@@ -297,7 +298,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @notice Batch set strategy authorizations.
   /// @param strategies Array of strategies to set authorization for.
   /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
-  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool authorized) public onlyDelegateCall {
+  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool authorized) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     for (uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyAuthorization(strategies[i], authorized);
@@ -308,7 +309,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param strategyLogic Strategy logic contracts to set authorization for.
   /// @param strategies Array of configurations to initialize new strategies with.
   function setStrategyLogicAuthAndNewStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
-    public
+    external
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
