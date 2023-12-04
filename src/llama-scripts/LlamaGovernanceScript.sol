@@ -270,7 +270,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Batch set strategy logic authorizations.
   /// @param strategyLogics Array of strategy logic contracts to set authorization for.
-  /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
+  /// @param authorized Boolean to determine whether an address is being authorized or unauthorized.
   function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool authorized)
     public
     onlyDelegateCall
