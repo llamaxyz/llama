@@ -809,7 +809,7 @@ contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
     vm.expectEmit();
     emit ScriptAuthorizationSet(script, authorized);
     for (uint256 i = 0; i < selectors.length; i++) {
-      PermissionData memory permissionData = PermissionData(script, selectors[i], mpStrategy2);
+      PermissionData memory permissionData = PermissionData(script, selectors[i], strategies[i]);
       bytes32 permissionId = lens.computePermissionId(permissionData);
       vm.expectEmit();
       emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
