@@ -259,47 +259,41 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @notice Batch set strategy logic authorizations.
   /// @param strategyLogics Array of strategy logic contracts to set authorization for.
   /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
-  function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool[] calldata authorized)
+  function setStrategyLogicAuthorizations(ILlamaStrategy[] calldata strategyLogics, bool authorized)
     public
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
-    if (strategyLogics.length != authorized.length) revert MismatchedArrayLengths();
     for (uint256 i = 0; i < strategyLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      core.setStrategyLogicAuthorization(strategyLogics[i], authorized[i]);
+      core.setStrategyLogicAuthorization(strategyLogics[i], authorized);
     }
   }
 
   /// @notice Batch set account logic authorizations.
   /// @param accountLogics Array of account logic contracts to set authorization for.
   /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
-  function setAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool[] calldata authorized)
+  function setAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool authorized)
     public
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
-    if (accountLogics.length != authorized.length) revert MismatchedArrayLengths();
     for (uint256 i = 0; i < accountLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      core.setAccountLogicAuthorization(accountLogics[i], authorized[i]);
+      core.setAccountLogicAuthorization(accountLogics[i], authorized);
     }
   }
 
   /// @notice Batch set strategy authorizations.
   /// @param strategies Array of strategies to set authorization for.
   /// @param authorized Array of booleans to determine whether an address is being authorized or unauthorized.
-  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool[] calldata authorized)
-    public
-    onlyDelegateCall
-  {
+  function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool authorized) public onlyDelegateCall {
     (LlamaCore core,) = _context();
-    if (strategies.length != authorized.length) revert MismatchedArrayLengths();
     for (uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      core.setStrategyAuthorization(strategies[i], authorized[i]);
+      core.setStrategyAuthorization(strategies[i], authorized);
     }
   }
 
   /// @notice Set strategy logic authorization and create new strategies.
-  /// @param strategyLogic Array of strategy logic contracts to set authorization for.
+  /// @param strategyLogic Strategy logic contracts to set authorization for.
   /// @param strategies Array of configurations to initialize new strategies with.
   function setStrategyLogicAuthAndNewStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
     public

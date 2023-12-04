@@ -691,58 +691,46 @@ contract UpdateRoleDescriptions is LlamaGovernanceScriptTest {
 }
 
 contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
-  function test_setStrategyLogicAuthorizations() public {
+  function test_setStrategyLogicAuthorizations(bool authorized) public {
     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
     strategies[0] = relativeHolderQuorumLogic;
     strategies[1] = absolutePeerReviewLogic;
     strategies[2] = absoluteQuorumLogic;
 
-    bool[] memory authorizations = new bool[](3);
-    authorizations[0] = false;
-    authorizations[1] = true;
-    authorizations[2] = true;
-
     bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorizations);
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorized);
     (ActionInfo memory actionInfo) = _createAction(data);
 
     vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, false);
+    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, authorized);
     vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(absolutePeerReviewLogic, true);
+    emit StrategyLogicAuthorizationSet(absolutePeerReviewLogic, authorized);
     vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(absoluteQuorumLogic, true);
+    emit StrategyLogicAuthorizationSet(absoluteQuorumLogic, authorized);
 
     mpCore.executeAction(actionInfo);
   }
 }
 
 contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
-  function test_setStrategyAuthorizations() public {
+  function test_setStrategyAuthorizations(bool authorized) public {
     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
     strategies[0] = mpStrategy1;
 
-    bool[] memory authorizations = new bool[](1);
-    authorizations[0] = false;
-
     bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorizations);
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorized);
     (ActionInfo memory actionInfo) = _createAction(data);
 
     vm.expectEmit();
-    emit StrategyAuthorizationSet(mpStrategy1, false);
+    emit StrategyAuthorizationSet(mpStrategy1, authorized);
 
     mpCore.executeAction(actionInfo);
   }
 }
 
 contract SetAccountLogicAuthorizations is LlamaGovernanceScriptTest {
-  function test_SetAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics) public {
+  function test_SetAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool authorized) public {
     vm.assume(accountLogics.length < 5);
-    bool[] memory authorized = new bool[](accountLogics.length);
-    for (uint256 i = 0; i < accountLogics.length; i++) {
-      authorized[i] = true;
-    }
 
     bytes memory data =
       abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorizations.selector, accountLogics, authorized);
@@ -750,7 +738,7 @@ contract SetAccountLogicAuthorizations is LlamaGovernanceScriptTest {
 
     for (uint256 i = 0; i < accountLogics.length; i++) {
       vm.expectEmit();
-      emit AccountLogicAuthorizationSet(accountLogics[i], authorized[i]);
+      emit AccountLogicAuthorizationSet(accountLogics[i], authorized);
     }
 
     mpCore.executeAction(actionInfo);
