@@ -98,35 +98,10 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Common Aggregate Calls ========
   // ========================================
 
-  // TODO: Should this be init role and then assign that role to role holders? Is there a need to init multiple roles
-  // and assign multiple of them?
-  /// @notice Initialize new roles and set their holders with the provided data.
-  /// @param descriptions Array of role descriptions to initialize.
-  /// @param _setRoleHolders Array of role holders to set.
-  function initRolesAndSetRoleHolders(
-    RoleDescription[] calldata descriptions,
-    RoleHolderData[] calldata _setRoleHolders
-  ) external onlyDelegateCall {
-    initRoles(descriptions);
-    setRoleHolders(_setRoleHolders);
-  }
+  // TODO: init one role, optionally grant role holders that one role, and optionally assign permissions to that one
+  // role. Removing role holders or permissions is not permitted. Although removal is not allowed passing empty arrays
+  // is allowed to skip the operation.
 
-  // TODO: Should this be init role and then assign permissions only to that role? Is there a need to init multiple
-  // roles and assign permissions to many of them?
-  /// @notice Initialize new roles and set their permissions with the provided data.
-  /// @param descriptions Array of role descriptions to initialize.
-  /// @param _setRolePermissions Array of role permissions to set.
-  function initRolesAndSetRolePermissions(
-    RoleDescription[] calldata descriptions,
-    RolePermissionData[] calldata _setRolePermissions
-  ) external onlyDelegateCall {
-    initRoles(descriptions);
-    setRolePermissions(_setRolePermissions);
-  }
-
-  // TODO: Should this be init role and then assign only that role to role holders and assign permissions to only that
-  // role? Is there a need to init multiple roles and assign multiple of them? Is there a need to remove roles or
-  // permissions?
   /// @notice Initialize new roles, set their holders, and set their permissions with the provided data.
   /// @param descriptions Array of role descriptions to initialize.
   /// @param _setRoleHolders Array of role holders to set.
@@ -141,7 +116,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRolePermissions(_setRolePermissions);
   }
 
-  // TODO: Turn this into create strategy and only that strategy can be used in these permissions
+  // TODO: Turn this into create strategy and only that strategy can be used in these permissions and hasPermission has
+  // to be true
   /// @notice Create new strategies and set role permissions with the provided data.
   /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
   /// @param _setRolePermissions Array of role permissions to set.
@@ -152,25 +128,6 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
     setRolePermissions(_setRolePermissions);
-  }
-
-  // TODO: Create one strategy, one role, and then assign that role to policyholders and assign permissions to that role
-  // with that strategy
-  /// @notice Create new strategies, initialize new roles, set their holders and set their permissions with the provided
-  /// data.
-  /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
-  /// @param descriptions Array of role descriptions to initialize.
-  /// @param _setRoleHolders Array of role holders to set.
-  /// @param _setRolePermissions Array of role permissions to set.
-  function createStrategiesWithRolesAndPermissions(
-    CreateStrategies calldata _createStrategies,
-    RoleDescription[] calldata descriptions,
-    RoleHolderData[] calldata _setRoleHolders,
-    RolePermissionData[] calldata _setRolePermissions
-  ) external onlyDelegateCall {
-    (LlamaCore core,) = _context();
-    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
-    initRolesAndHoldersAndPermissions(descriptions, _setRoleHolders, _setRolePermissions);
   }
 
   /// @notice Revoke policies and update role descriptions with the provided data.
@@ -184,6 +141,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     updateRoleDescriptions(_updateRoleDescriptions);
   }
 
+  // TODO: should we encorce restrictions here?
   /// @notice Revoke policies, update role descriptions, and set role holders with the provided data.
   /// @param _revokePolicies Array of policies to revoke.
   /// @param _updateRoleDescriptions Array of role descriptions to update.
