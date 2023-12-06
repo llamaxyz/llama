@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
-import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaBaseScript} from "src/llama-scripts/LlamaBaseScript.sol";
@@ -12,7 +11,6 @@ import {PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Struct
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaExecutor} from "src/LlamaExecutor.sol";
-import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 
 /// @title Llama Governance Script
@@ -100,73 +98,54 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Common Aggregate Calls ========
   // ========================================
 
+  // TODO: Should this be init role and then assign that role to role holders? Is there a need to init multiple roles
+  // and assign multiple of them?
   /// @notice Initialize new roles and set their holders with the provided data.
-  /// @param description Array of role descriptions to initialize.
+  /// @param descriptions Array of role descriptions to initialize.
   /// @param _setRoleHolders Array of role holders to set.
-  function initRolesAndSetRoleHolders(RoleDescription[] calldata description, RoleHolderData[] calldata _setRoleHolders)
-    external
-    onlyDelegateCall
-  {
-    initRoles(description);
+  function initRolesAndSetRoleHolders(
+    RoleDescription[] calldata descriptions,
+    RoleHolderData[] calldata _setRoleHolders
+  ) external onlyDelegateCall {
+    initRoles(descriptions);
     setRoleHolders(_setRoleHolders);
   }
 
+  // TODO: Should this be init role and then assign permissions only to that role? Is there a need to init multiple
+  // roles and assign permissions to many of them?
   /// @notice Initialize new roles and set their permissions with the provided data.
-  /// @param description Array of role descriptions to initialize.
+  /// @param descriptions Array of role descriptions to initialize.
   /// @param _setRolePermissions Array of role permissions to set.
   function initRolesAndSetRolePermissions(
-    RoleDescription[] calldata description,
+    RoleDescription[] calldata descriptions,
     RolePermissionData[] calldata _setRolePermissions
   ) external onlyDelegateCall {
-    initRoles(description);
+    initRoles(descriptions);
     setRolePermissions(_setRolePermissions);
   }
 
+  // TODO: Should this be init role and then assign only that role to role holders and assign permissions to only that
+  // role? Is there a need to init multiple roles and assign multiple of them? Is there a need to remove roles or
+  // permissions?
   /// @notice Initialize new roles, set their holders, and set their permissions with the provided data.
-  /// @param description Array of role descriptions to initialize.
+  /// @param descriptions Array of role descriptions to initialize.
   /// @param _setRoleHolders Array of role holders to set.
   /// @param _setRolePermissions Array of role permissions to set.
   function initRolesAndHoldersAndPermissions(
-    RoleDescription[] calldata description,
+    RoleDescription[] calldata descriptions,
     RoleHolderData[] calldata _setRoleHolders,
     RolePermissionData[] calldata _setRolePermissions
-  ) external onlyDelegateCall {
-    initRoles(description);
+  ) public onlyDelegateCall {
+    initRoles(descriptions);
     setRoleHolders(_setRoleHolders);
     setRolePermissions(_setRolePermissions);
   }
 
-  /// @notice Create new strategies and set role holders with the provided data.
-  /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
-  /// @param _setRoleHolders Array of role holders to set.
-  function createNewStrategiesAndSetRoleHolders(
-    CreateStrategies calldata _createStrategies,
-    RoleHolderData[] calldata _setRoleHolders
-  ) external onlyDelegateCall {
-    (LlamaCore core,) = _context();
-    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
-    setRoleHolders(_setRoleHolders);
-  }
-
-  /// @notice Create new strategies, initialize new roles and set their holders with the provided data.
-  /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
-  /// @param description Array of role descriptions to initialize.
-  /// @param _setRoleHolders Array of role holders to set.
-  function createStrategiesAndInitRolesAndHolders(
-    CreateStrategies calldata _createStrategies,
-    RoleDescription[] calldata description,
-    RoleHolderData[] calldata _setRoleHolders
-  ) external onlyDelegateCall {
-    (LlamaCore core,) = _context();
-    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
-    initRoles(description);
-    setRoleHolders(_setRoleHolders);
-  }
-
+  // TODO: Turn this into create strategy and only that strategy can be used in these permissions
   /// @notice Create new strategies and set role permissions with the provided data.
   /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
   /// @param _setRolePermissions Array of role permissions to set.
-  function createNewStrategiesAndSetRolePermissions(
+  function createStrategiesAndSetRolePermissions(
     CreateStrategies calldata _createStrategies,
     RolePermissionData[] calldata _setRolePermissions
   ) external onlyDelegateCall {
@@ -175,23 +154,23 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRolePermissions(_setRolePermissions);
   }
 
+  // TODO: Create one strategy, one role, and then assign that role to policyholders and assign permissions to that role
+  // with that strategy
   /// @notice Create new strategies, initialize new roles, set their holders and set their permissions with the provided
   /// data.
   /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
-  /// @param description Array of role descriptions to initialize.
+  /// @param descriptions Array of role descriptions to initialize.
   /// @param _setRoleHolders Array of role holders to set.
   /// @param _setRolePermissions Array of role permissions to set.
   function createStrategiesWithRolesAndPermissions(
     CreateStrategies calldata _createStrategies,
-    RoleDescription[] calldata description,
+    RoleDescription[] calldata descriptions,
     RoleHolderData[] calldata _setRoleHolders,
     RolePermissionData[] calldata _setRolePermissions
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
-    initRoles(description);
-    setRoleHolders(_setRoleHolders);
-    setRolePermissions(_setRolePermissions);
+    initRolesAndHoldersAndPermissions(descriptions, _setRoleHolders, _setRolePermissions);
   }
 
   /// @notice Revoke policies and update role descriptions with the provided data.
@@ -219,6 +198,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
+  // TODO: Remove need for user to provide account target
   /// @notice Create Account and set common permissions to allow the given role to approve and transfer tokens.
   /// @param account Account to create.
   /// @param _permissions Array of permissions to set.
