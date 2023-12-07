@@ -112,6 +112,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ========================================
 
   /// @notice Initialize a new role, grant this role to role holders, and grant permissions to this role.
+  /// @dev Permissions can only be granted and not removed.
   /// @param description Role description to initialize.
   /// @param _setRoleHolders Array of role holders to grant the new role.
   /// @param targets Array of targets to use as part of the permissions.
@@ -148,6 +149,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   /// @notice Create new strategy and grant role permissions using that strategy.
+  /// @dev Permissions can only be granted and not removed.
   /// @param strategy Struct of data for the `createStrategies` method in `LlamaCore`. `strategies` config array
   /// must have a length of 1.
   /// @param roles Array of roles to use as part of the permissions.
@@ -192,7 +194,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRoleHolders(_setRoleHolders);
   }
 
-  /// @notice Create account and grant permissions to role with the account as a target.
+  /// @notice Create account and grant permissions to multiple roles with the account as a target.
+  /// @dev Permissions can only be granted and not removed.
   /// @param account Configuration of new account.
   /// @param roles Roles to set permissions for.
   /// @param selectors Array of selectors to use as part of the permissions.
