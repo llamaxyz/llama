@@ -48,6 +48,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Errors ========
   // ========================
 
+  /// @dev The provided array does not have a length of 1.
+  error ArrayLengthMustBeOne();
+
   /// @dev The call did not succeed.
   /// @param index Index of the arbitrary function being called.
   /// @param revertData Data returned by the called function.
@@ -59,6 +62,16 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @dev The target address is neither the `LlamaCore` nor the `LlamaPolicy`.
   /// @param target The target address provided.
   error UnauthorizedTarget(address target);
+
+  /// @dev The role provided is not the role being updated.
+  /// @param role The role provided.
+  error RoleIsNotUpdatedRole(uint8 role);
+
+  /// @dev The role being granted must be the newly initialized role.
+  error RoleMustBeInitializedRole();
+
+  /// @dev The role provided has a quantity equal to 0.
+  error RoleQuantityMustBeGreaterThanZero();
 
   /// @dev The target address is not the created account.
   /// @param target The target address provided.
@@ -98,84 +111,114 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ======== Common Aggregate Calls ========
   // ========================================
 
-  // TODO: init one role, optionally grant role holders that one role, and optionally assign permissions to that one
-  // role. Removing role holders or permissions is not permitted. Although removal is not allowed passing empty arrays
-  // is allowed to skip the operation.
-
-  /// @notice Initialize new roles, set their holders, and set their permissions with the provided data.
-  /// @param descriptions Array of role descriptions to initialize.
-  /// @param _setRoleHolders Array of role holders to set.
-  /// @param _setRolePermissions Array of role permissions to set.
-  function initRolesAndHoldersAndPermissions(
-    RoleDescription[] calldata descriptions,
+  /// @notice Initialize a new role, grant this role to role holders, and grant permissions to this role.
+  /// @param description Role description to initialize.
+  /// @param _setRoleHolders Array of role holders to grant the new role.
+  /// @param targets Array of targets to use as part of the permissions.
+  /// @param selectors Array of selectors to use as part of the permissions.
+  /// @param strategies Array of strategies to use as part of the permissions.
+  function initRoleAndHoldersAndPermissions(
+    RoleDescription description,
     RoleHolderData[] calldata _setRoleHolders,
-    RolePermissionData[] calldata _setRolePermissions
+    address[] calldata targets,
+    bytes4[] calldata selectors,
+    ILlamaStrategy[] calldata strategies
   ) public onlyDelegateCall {
-    initRoles(descriptions);
-    setRoleHolders(_setRoleHolders);
-    setRolePermissions(_setRolePermissions);
+    if (targets.length != selectors.length || selectors.length != strategies.length) revert MismatchedArrayLengths();
+    (, LlamaPolicy policy) = _context();
+    policy.initializeRole(description);
+    uint8 initializedRole = policy.numRoles();
+
+    if (_setRoleHolders.length > 0) {
+      for (uint256 i = 0; i < _setRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+        if (_setRoleHolders[i].quantity == 0) revert RoleQuantityMustBeGreaterThanZero();
+        if (_setRoleHolders[i].role != initializedRole) revert RoleMustBeInitializedRole();
+      }
+      setRoleHolders(_setRoleHolders);
+    }
+
+    if (targets.length > 0) {
+      RolePermissionData[] memory permissions = new RolePermissionData[](targets.length);
+      for (uint256 i = 0; i < targets.length; i = LlamaUtils.uncheckedIncrement(i)) {
+        permissions[i] =
+          RolePermissionData(initializedRole, PermissionData(targets[i], selectors[i], strategies[i]), true);
+      }
+      setRolePermissions(permissions);
+    }
   }
 
-  // TODO: Turn this into create strategy and only that strategy can be used in these permissions and hasPermission has
-  // to be true
-  /// @notice Create new strategies and set role permissions with the provided data.
-  /// @param _createStrategies Struct of data for the `createStrategies` method in `LlamaCore`.
-  /// @param _setRolePermissions Array of role permissions to set.
-  function createStrategiesAndSetRolePermissions(
-    CreateStrategies calldata _createStrategies,
-    RolePermissionData[] calldata _setRolePermissions
+  /// @notice Create new strategy and grant role permissions using that strategy.
+  /// @param strategy Struct of data for the `createStrategies` method in `LlamaCore`. `strategies` config array
+  /// must have a length of 1.
+  /// @param roles Array of roles to use as part of the permissions.
+  /// @param targets Array of targets to use as part of the permissions.
+  /// @param selectors Array of selectors to use as part of the permissions.
+  function createStrategyAndSetRolePermissions(
+    CreateStrategies calldata strategy,
+    uint8[] calldata roles,
+    address[] calldata targets,
+    bytes4[] calldata selectors
   ) external onlyDelegateCall {
+    if (strategy.strategies.length != 1) revert ArrayLengthMustBeOne();
+    if (targets.length != selectors.length || selectors.length != roles.length) revert MismatchedArrayLengths();
     (LlamaCore core,) = _context();
-    core.createStrategies(_createStrategies.llamaStrategyLogic, _createStrategies.strategies);
-    setRolePermissions(_setRolePermissions);
+    core.createStrategies(strategy.llamaStrategyLogic, strategy.strategies);
+
+    address strategyAddress = Clones.predictDeterministicAddress(
+      address(strategy.llamaStrategyLogic), keccak256(strategy.strategies[0]), address(core)
+    );
+
+    RolePermissionData[] memory permissions = new RolePermissionData[](selectors.length);
+    for (uint256 i = 0; i < selectors.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissions[i] =
+        RolePermissionData(roles[i], PermissionData(targets[i], selectors[i], ILlamaStrategy(strategyAddress)), true);
+    }
+    setRolePermissions(permissions);
   }
 
-  /// @notice Revoke policies and update role descriptions with the provided data.
-  /// @param _revokePolicies Array of policies to revoke.
-  /// @param _updateRoleDescriptions Array of role descriptions to update.
-  function revokePoliciesAndUpdateRoleDescriptions(
-    address[] calldata _revokePolicies,
-    UpdateRoleDescription[] calldata _updateRoleDescriptions
-  ) external onlyDelegateCall {
-    revokePolicies(_revokePolicies);
-    updateRoleDescriptions(_updateRoleDescriptions);
-  }
-
-  // TODO: should we encorce restrictions here?
-  /// @notice Revoke policies, update role descriptions, and set role holders with the provided data.
-  /// @param _revokePolicies Array of policies to revoke.
-  /// @param _updateRoleDescriptions Array of role descriptions to update.
+  /// @notice Update a role descriptions and set role holders for the updated role.
+  /// @param _updateRoleDescription Array of length 1 with role description to update.
   /// @param _setRoleHolders Array of role holders to set.
-  function revokePoliciesAndSetRoleDescsAndHolders(
-    address[] calldata _revokePolicies,
-    UpdateRoleDescription[] calldata _updateRoleDescriptions,
+  function updateRoleDescriptionAndRoleHolders(
+    UpdateRoleDescription[] calldata _updateRoleDescription,
     RoleHolderData[] calldata _setRoleHolders
   ) external onlyDelegateCall {
-    revokePolicies(_revokePolicies);
-    updateRoleDescriptions(_updateRoleDescriptions);
+    if (_updateRoleDescription.length != 1) revert ArrayLengthMustBeOne();
+    updateRoleDescriptions(_updateRoleDescription);
+
+    for (uint256 i = 0; i < _setRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      if (_setRoleHolders[i].role != _updateRoleDescription[0].role) {
+        revert RoleIsNotUpdatedRole(_setRoleHolders[i].role);
+      }
+    }
     setRoleHolders(_setRoleHolders);
   }
 
-  // TODO: Remove need for user to provide account target
-  /// @notice Create Account and set common permissions to allow the given role to approve and transfer tokens.
-  /// @param account Account to create.
-  /// @param _permissions Array of permissions to set.
+  /// @notice Create account and grant permissions to role with the account as a target.
+  /// @param account Configuration of new account.
+  /// @param role Role to set permissions for.
+  /// @param selectors Array of selectors to use as part of the permissions.
+  /// @param strategies Array of strategies to use as part of the permissions.
   function createAccountAndSetRolePermissions(
     CreateAccounts calldata account,
-    RolePermissionData[] calldata _permissions
+    uint8 role,
+    bytes4[] calldata selectors,
+    ILlamaStrategy[] calldata strategies
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
+    if (selectors.length != strategies.length) revert MismatchedArrayLengths();
+
     bytes[] memory config = new bytes[](1);
     config[0] = account.config;
     core.createAccounts(account.accountLogic, config);
     address accountAddress =
       Clones.predictDeterministicAddress(address(account.accountLogic), keccak256(account.config), address(core));
-    for (uint256 i = 0; i < _permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (_permissions[i].permissionData.target != accountAddress) {
-        revert TargetIsNotAccount(_permissions[i].permissionData.target);
-      }
+
+    RolePermissionData[] memory permissions = new RolePermissionData[](selectors.length);
+    for (uint256 i = 0; i < selectors.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissions[i] = RolePermissionData(role, PermissionData(accountAddress, selectors[i], strategies[i]), true);
     }
-    setRolePermissions(_permissions);
+    setRolePermissions(permissions);
   }
 
   /// @notice Sets script authorization and sets role permissions.
