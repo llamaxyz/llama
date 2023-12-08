@@ -12,6 +12,7 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
@@ -162,6 +163,17 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
   function _assumeInitializeRoles(RoleDescription[] memory descriptions) public pure {
     vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
+  }
+
+  function _assumeRoleHolder(RoleHolderData[] memory roleHolders, uint8 role) public view {
+    vm.assume(roleHolders.length < 10);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      // Must be equal to role provided
+      vm.assume(roleHolders[i].role == role);
+      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
+      vm.assume(roleHolders[i].policyholder != address(0));
+      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
+    }
   }
 
   function _assumeRoleHolders(RoleHolderData[] memory roleHolders) public view {
@@ -364,21 +376,87 @@ contract Aggregate is LlamaGovernanceScriptTest {
   }
 }
 
-// contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
-//   function testFuzz_initializeRolesAndSetRoleHolders(
-//     RoleDescription[] memory descriptions,
-//     RoleHolderData[] memory roleHolders
-//   ) public {
-//     _assumeInitializeRoles(descriptions);
-//     _assumeRoleHolders(roleHolders);
+contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
+  function test_RevertIf_RoleQuantityIsZero() public {
+    LlamaGovernanceScript.NewRoleHolderData[] memory roleHolders = new LlamaGovernanceScript.NewRoleHolderData[](1);
+    roleHolders[0] = LlamaGovernanceScript.NewRoleHolderData(address(this), uint96(0), DEFAULT_ROLE_EXPIRATION);
+    PermissionData[] memory permissionData = new PermissionData[](0);
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
 
-//     bytes memory data = abi.encodeWithSelector(INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, descriptions, roleHolders);
-//     (ActionInfo memory actionInfo) = _createAction(data);
-//     _expectInitializeRolesEvents(descriptions);
-//     _expectRoleHolderEvents(roleHolders);
-//     mpCore.executeAction(actionInfo);
-//   }
-// }
+    bytes memory data =
+      abi.encodeWithSelector(INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, roleHolders, permissionData);
+    (ActionInfo memory actionInfo) = _createAction(data);
+
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(LlamaGovernanceScript.RoleQuantityMustBeGreaterThanZero.selector)
+    );
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function testFuzz_initRolesSetRoleHolders(RoleDescription description, RoleHolderData[] memory roleHolders) public {
+    uint8 newRole = mpPolicy.numRoles() + 1;
+    _assumeRoleHolder(roleHolders, newRole);
+    RolePermissionData[] memory permissionData = new RolePermissionData[](0);
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    descriptions[0] = description;
+    bytes memory data =
+      abi.encodeWithSelector(INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, roleHolders, permissionData);
+    (ActionInfo memory actionInfo) = _createAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+    _expectRolePermissionEvents(permissionData);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function testFuzz_initRolesAndSetPermissions(RoleDescription description, PermissionData[] memory permissions) public {
+    uint8 newRole = mpPolicy.numRoles() + 1;
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](0);
+    RolePermissionData[] memory permissionData = new RolePermissionData[](permissions.length);
+    for (uint256 i = 0; i < permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissionData[i] = RolePermissionData(
+        newRole, PermissionData(permissions[i].target, permissions[i].selector, permissions[i].strategy), true
+      );
+    }
+
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    descriptions[0] = description;
+    bytes memory data =
+      abi.encodeWithSelector(INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, roleHolders, permissions);
+    (ActionInfo memory actionInfo) = _createAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+    _expectRolePermissionEvents(permissionData);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function testFuzz_initRolesSetRoleHoldersAndSetPermissions(
+    RoleDescription description,
+    RoleHolderData[] memory roleHolders,
+    PermissionData[] memory permissions
+  ) public {
+    uint8 newRole = mpPolicy.numRoles() + 1;
+    _assumeRoleHolder(roleHolders, newRole);
+
+    RolePermissionData[] memory permissionData = new RolePermissionData[](permissions.length);
+    for (uint256 i = 0; i < permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissionData[i] = RolePermissionData(
+        newRole, PermissionData(permissions[i].target, permissions[i].selector, permissions[i].strategy), true
+      );
+    }
+
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    descriptions[0] = description;
+    bytes memory data =
+      abi.encodeWithSelector(INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, roleHolders, permissions);
+    (ActionInfo memory actionInfo) = _createAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+    _expectRolePermissionEvents(permissionData);
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 // contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
 //   function test_CreateNewStrategiesAndSetRolePermissions(
