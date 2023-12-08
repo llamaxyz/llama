@@ -398,7 +398,7 @@ contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
   function testFuzz_initRolesSetRoleHolders(RoleDescription description, RoleHolderData[] memory roleHolders) public {
     uint8 newRole = mpPolicy.numRoles() + 1;
     _assumeRoleHolder(roleHolders, newRole);
-    RolePermissionData[] memory permissionData = new RolePermissionData[](0);
+    PermissionData[] memory permissionData = new PermissionData[](0);
     RoleDescription[] memory descriptions = new RoleDescription[](1);
     descriptions[0] = description;
     bytes memory data =
@@ -406,7 +406,6 @@ contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
     (ActionInfo memory actionInfo) = _createAction(data);
     _expectInitializeRolesEvents(descriptions);
     _expectRoleHolderEvents(roleHolders);
-    _expectRolePermissionEvents(permissionData);
     mpCore.executeAction(actionInfo);
   }
 
