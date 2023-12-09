@@ -540,7 +540,49 @@ contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
   }
 }
 
-contract UpdateRoleDescriptionAndRoleHolders is LlamaGovernanceScriptTest {}
+contract UpdateRoleDescriptionAndRoleHolders is LlamaGovernanceScriptTest {
+  function test_RevertIf_RoleIsNotUpdatedRole() external {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    LlamaGovernanceScript.UpdateRoleDescription memory roleDescription =
+      LlamaGovernanceScript.UpdateRoleDescription(uint8(1), description);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(uint8(i), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    bytes memory data =
+      abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR, roleDescription, roleHolders);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(LlamaGovernanceScript.RoleIsNotUpdatedRole.selector, (0))
+    );
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function test_UpdateDescriptionAndRoleHolders() external {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    LlamaGovernanceScript.UpdateRoleDescription memory roleDescription =
+      LlamaGovernanceScript.UpdateRoleDescription(uint8(1), description);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(uint8(1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    bytes memory data =
+      abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR, roleDescription, roleHolders);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    vm.expectEmit();
+    emit RoleInitialized(uint8(1), description);
+    _expectRoleHolderEvents(roleHolders);
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 // contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
 //   function test_CreateAccountAndSetRolePermissions() public {

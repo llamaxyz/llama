@@ -215,17 +215,17 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   /// @notice Update a role description and set role holders for the updated role.
-  /// @param _updateRoleDescription Role description to update.
+  /// @param roleDescription Role description to update.
   /// @param _setRoleHolders Array of role holders to set.
   function updateRoleDescriptionAndRoleHolders(
-    UpdateRoleDescription calldata _updateRoleDescription,
+    UpdateRoleDescription calldata roleDescription,
     RoleHolderData[] calldata _setRoleHolders
   ) external onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    policy.updateRoleDescription(_updateRoleDescription.role, _updateRoleDescription.description);
+    policy.updateRoleDescription(roleDescription.role, roleDescription.description);
 
     for (uint256 i = 0; i < _setRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (_setRoleHolders[i].role != _updateRoleDescription.role) revert RoleIsNotUpdatedRole(_setRoleHolders[i].role);
+      if (_setRoleHolders[i].role != roleDescription.role) revert RoleIsNotUpdatedRole(_setRoleHolders[i].role);
     }
     setRoleHolders(_setRoleHolders);
   }
