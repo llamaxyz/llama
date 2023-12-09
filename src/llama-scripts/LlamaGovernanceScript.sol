@@ -220,19 +220,19 @@ contract LlamaGovernanceScript is LlamaBaseScript {
 
   /// @notice Update a role description and set role holders for the updated role.
   /// @param roleDescription Role description to update.
-  /// @param _setRoleHolders Array of role holders to set.
+  /// @param roleHolderData Array of role holders to set.
   function updateRoleDescriptionAndRoleHolders(
     UpdateRoleDescription calldata roleDescription,
-    RoleHolderData[] calldata _setRoleHolders
+    RoleHolderData[] calldata roleHolderData
   ) external onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
     policy.updateRoleDescription(roleDescription.role, roleDescription.description);
 
-    uint256 length = _setRoleHolders.length;
+    uint256 length = roleHolderData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
-      if (_setRoleHolders[i].role != roleDescription.role) revert RoleIsNotUpdatedRole(_setRoleHolders[i].role);
+      if (roleHolderData[i].role != roleDescription.role) revert RoleIsNotUpdatedRole(roleHolderData[i].role);
     }
-    setRoleHolders(_setRoleHolders);
+    setRoleHolders(roleHolderData);
   }
 
   /// @notice Create account and grant permissions to one or many roles with the account as a target.
@@ -367,39 +367,36 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   }
 
   /// @notice Batch set role holders with the provided data.
-  /// @param _setRoleHolders Array of role holders to set.
-  function setRoleHolders(RoleHolderData[] memory _setRoleHolders) public onlyDelegateCall {
+  /// @param roleHolderData Array of role holders to set.
+  function setRoleHolders(RoleHolderData[] memory roleHolderData) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    uint256 length = _setRoleHolders.length;
+    uint256 length = roleHolderData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.setRoleHolder(
-        _setRoleHolders[i].role,
-        _setRoleHolders[i].policyholder,
-        _setRoleHolders[i].quantity,
-        _setRoleHolders[i].expiration
+        roleHolderData[i].role, roleHolderData[i].policyholder, roleHolderData[i].quantity, roleHolderData[i].expiration
       );
     }
   }
 
   /// @notice Batch set role permissions with the provided data.
-  /// @param _setRolePermissions Array of role permissions to set.
-  function setRolePermissions(RolePermissionData[] memory _setRolePermissions) public onlyDelegateCall {
+  /// @param rolePermissionData Array of role permissions to set.
+  function setRolePermissions(RolePermissionData[] memory rolePermissionData) public onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    uint256 length = _setRolePermissions.length;
+    uint256 length = rolePermissionData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.setRolePermission(
-        _setRolePermissions[i].role, _setRolePermissions[i].permissionData, _setRolePermissions[i].hasPermission
+        rolePermissionData[i].role, rolePermissionData[i].permissionData, rolePermissionData[i].hasPermission
       );
     }
   }
 
   /// @notice Batch revoke policies with the provided data.
-  /// @param _revokePolicies Array of policies to revoke.
-  function revokePolicies(address[] calldata _revokePolicies) external onlyDelegateCall {
+  /// @param policies Array of policies to revoke.
+  function revokePolicies(address[] calldata policies) external onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    uint256 length = _revokePolicies.length;
+    uint256 length = policies.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
-      policy.revokePolicy(_revokePolicies[i]);
+      policy.revokePolicy(policies[i]);
     }
   }
 
