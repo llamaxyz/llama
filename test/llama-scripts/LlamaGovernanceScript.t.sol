@@ -446,29 +446,34 @@ contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
 
   function testFuzz_initRolesSetRoleHoldersAndSetPermissions(
     RoleDescription description,
-    LlamaGovernanceScript.NewRoleHolderData[] memory newRoleHolders,
-    PermissionData[] memory permissionData
+    LlamaGovernanceScript.NewRoleHolderData memory newRoleHolder,
+    PermissionData memory permission,
+    LlamaGovernanceScript.NewRoleHolderData memory newRoleHolder2,
+    PermissionData memory permission2
   ) public {
-    vm.assume(newRoleHolders.length < 10);
-    for (uint256 i = 0; i < newRoleHolders.length; i++) {
-      vm.assume(newRoleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(newRoleHolders[i].policyholder != address(0));
-      newRoleHolders[i].quantity = uint96(bound(newRoleHolders[i].quantity, 1, 100));
-    }
-
-    vm.assume(permissionData.length < 10);
-    for (uint256 i = 0; i < permissionData.length; i++) {
-      vm.assume(address(permissionData[i].target) != address(0));
-      vm.assume(address(permissionData[i].strategy) != address(0));
-    }
+    vm.assume(newRoleHolder.expiration > block.timestamp + 1 days);
+    vm.assume(newRoleHolder.policyholder != address(0));
+    newRoleHolder.quantity = uint96(bound(newRoleHolder.quantity, 1, 100));
+    vm.assume(address(permission.target) != address(0));
+    vm.assume(address(permission.strategy) != address(0));
+    vm.assume(newRoleHolder2.expiration > block.timestamp + 1 days);
+    vm.assume(newRoleHolder2.policyholder != address(0));
+    newRoleHolder2.quantity = uint96(bound(newRoleHolder2.quantity, 1, 100));
+    vm.assume(address(permission2.target) != address(0));
+    vm.assume(address(permission2.strategy) != address(0));
 
     RoleDescription[] memory descriptions = new RoleDescription[](1);
+    LlamaGovernanceScript.NewRoleHolderData[] memory newRoleHolders = new LlamaGovernanceScript.NewRoleHolderData[](2);
+    PermissionData[] memory permissionData = new PermissionData[](2);
     descriptions[0] = description;
+    newRoleHolders[0] = newRoleHolder;
+    permissionData[0] = permission;
+    newRoleHolders[1] = newRoleHolder2;
+    permissionData[1] = permission2;
     uint8 newRole = mpPolicy.numRoles() + 1;
 
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](newRoleHolders.length);
     for (uint256 i = 0; i < newRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
-      console2.log(newRoleHolders[i].quantity);
       roleHolders[i] = RoleHolderData(
         newRole, newRoleHolders[i].policyholder, newRoleHolders[i].quantity, newRoleHolders[i].expiration
       );
@@ -485,9 +490,9 @@ contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
       INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, newRoleHolders, permissionData
     );
     (ActionInfo memory actionInfo) = _createAction(data);
-    // _expectInitializeRolesEvents(descriptions);
-    // _expectRoleHolderEvents(roleHolders);
-    // _expectRolePermissionEvents(permissions);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+    _expectRolePermissionEvents(permissions);
     mpCore.executeAction(actionInfo);
   }
 }
