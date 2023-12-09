@@ -148,17 +148,6 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
   }
 
-  function _assumeRoleHolders(RoleHolderData[] memory roleHolders) public view {
-    vm.assume(roleHolders.length < 10);
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
-      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
-    }
-  }
-
   function _assumeUpdateRoleDescriptions(LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions) public pure {
     vm.assume(descriptions.length <= 9); //number of roles in the Roles enum
     for (uint256 i = 0; i < descriptions.length; i++) {
@@ -668,23 +657,33 @@ contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
 }
 
 contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
-  function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
+  function test_SetScriptAuthAndSetPermissions(address script, bool authorized) public {
+    LlamaGovernanceScript.NewRolePermissionsData[] memory newRolePermissionsData =
+      new LlamaGovernanceScript.NewRolePermissionsData[](2);
+
+    newRolePermissionsData[0] = LlamaGovernanceScript.NewRolePermissionsData(
+      uint8(Roles.ActionCreator),
+      LlamaGovernanceScript.SelectorStrategy(
+        LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector, mpStrategy1
+      )
+    );
+
+    newRolePermissionsData[1] = LlamaGovernanceScript.NewRolePermissionsData(
+      uint8(Roles.ActionCreator),
+      LlamaGovernanceScript.SelectorStrategy(LlamaGovernanceScript.initRoles.selector, mpStrategy2)
+    );
 
     bytes memory data = abi.encodeWithSelector(
-      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
-      script,
-      authorized,
-      uint8(Roles.ActionCreator),
-      selectors,
-      strategies
+      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector, script, authorized, newRolePermissionsData
     );
     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     vm.expectEmit();
     emit ScriptAuthorizationSet(script, authorized);
-    for (uint256 i = 0; i < selectors.length; i++) {
-      PermissionData memory permissionData = PermissionData(script, selectors[i], strategies[i]);
+    for (uint256 i = 0; i < newRolePermissionsData.length; i++) {
+      PermissionData memory permissionData = PermissionData(
+        script, newRolePermissionsData[i].permissionData.selector, newRolePermissionsData[i].permissionData.strategy
+      );
       bytes32 permissionId = lens.computePermissionId(permissionData);
       vm.expectEmit();
       emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
@@ -794,8 +793,14 @@ contract InitRoles is LlamaGovernanceScriptTest {
 }
 
 contract SetRoleHolders is LlamaGovernanceScriptTest {
-  function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
-    _assumeRoleHolders(roleHolders);
+  function testFuzz_setRoleHolders(uint256 salt) public {
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](salt == 0 ? 0 : 9 % salt);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      roleHolders[i].role = uint8(i == 0 ? 1 : i);
+      roleHolders[i].expiration = uint64(block.timestamp + 1 days);
+      roleHolders[i].policyholder = address(this);
+      roleHolders[i].quantity = DEFAULT_ROLE_QTY;
+    }
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
     _expectRoleHolderEvents(roleHolders);
