@@ -584,127 +584,114 @@ contract UpdateRoleDescriptionAndRoleHolders is LlamaGovernanceScriptTest {
   }
 }
 
-// contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
-//   function test_CreateAccountAndSetRolePermissions() public {
-//     bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
-//     LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
+contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
+  function test_CreateAccountAndSetRolePermissions() public {
+    bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
+    LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
 
-//     ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
+    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
 
-//     PermissionData memory permissionData1 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
-//     PermissionData memory permissionData2 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchTransferERC20.selector, mpStrategy2);
-//     PermissionData memory permissionData3 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchApproveERC20.selector, mpStrategy2);
-//     PermissionData memory permissionData4 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchTransferERC721.selector, mpStrategy2);
-//     PermissionData memory permissionData5 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchApproveERC721.selector, mpStrategy2);
-//     PermissionData memory permissionData6 =
-//       PermissionData(address(accountAddress), LlamaAccount.batchApproveOperatorERC721.selector, mpStrategy2);
+    PermissionData memory permissionData1 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+    PermissionData memory permissionData2 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC20.selector, mpStrategy2);
+    PermissionData memory permissionData3 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC20.selector, mpStrategy2);
+    PermissionData memory permissionData4 =
+      PermissionData(address(accountAddress), LlamaAccount.batchTransferERC721.selector, mpStrategy2);
+    PermissionData memory permissionData5 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveERC721.selector, mpStrategy2);
+    PermissionData memory permissionData6 =
+      PermissionData(address(accountAddress), LlamaAccount.batchApproveOperatorERC721.selector, mpStrategy2);
 
-//     RolePermissionData[] memory _permissions = new RolePermissionData[](6);
-//     _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData1, true);
-//     _permissions[1] = RolePermissionData(uint8(Roles.ActionCreator), permissionData2, true);
-//     _permissions[2] = RolePermissionData(uint8(Roles.ActionCreator), permissionData3, true);
-//     _permissions[3] = RolePermissionData(uint8(Roles.ActionCreator), permissionData4, true);
-//     _permissions[4] = RolePermissionData(uint8(Roles.ActionCreator), permissionData5, true);
-//     _permissions[5] = RolePermissionData(uint8(Roles.ActionCreator), permissionData6, true);
+    RolePermissionData[] memory _permissions = new RolePermissionData[](6);
+    _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData1, true);
+    _permissions[1] = RolePermissionData(uint8(Roles.ActionCreator), permissionData2, true);
+    _permissions[2] = RolePermissionData(uint8(Roles.ActionCreator), permissionData3, true);
+    _permissions[3] = RolePermissionData(uint8(Roles.ActionCreator), permissionData4, true);
+    _permissions[4] = RolePermissionData(uint8(Roles.ActionCreator), permissionData5, true);
+    _permissions[5] = RolePermissionData(uint8(Roles.ActionCreator), permissionData6, true);
 
-//     bytes memory data =
-//       abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account,
-// _permissions);
+    LlamaGovernanceScript.NewRolePermissionsData[] memory newRolePermissionsData =
+      new LlamaGovernanceScript.NewRolePermissionsData[](6);
 
-//     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    for (uint256 i = 0; i < newRolePermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      newRolePermissionsData[i] = LlamaGovernanceScript.NewRolePermissionsData(
+        _permissions[i].role,
+        LlamaGovernanceScript.SelectorStrategy(
+          _permissions[i].permissionData.selector, _permissions[i].permissionData.strategy
+        )
+      );
+    }
 
-//     vm.expectEmit();
-//     emit AccountCreated(accountAddress, accountLogic, config);
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, newRolePermissionsData
+    );
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData1), permissionData1, true
-//     );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData2), permissionData2, true
-//     );
+    vm.expectEmit();
+    emit AccountCreated(accountAddress, accountLogic, config);
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData3), permissionData3, true
-//     );
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData1), permissionData1, true
+    );
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData4), permissionData4, true
-//     );
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData2), permissionData2, true
+    );
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData5), permissionData5, true
-//     );
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData3), permissionData3, true
+    );
 
-//     vm.expectEmit();
-//     emit RolePermissionAssigned(
-//       uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData6), permissionData6, true
-//     );
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData4), permissionData4, true
+    );
 
-//     mpCore.executeAction(actionInfo);
-//   }
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData5), permissionData5, true
+    );
 
-//   function test_RevertsIf_TargetIsNotAccount(address notAccount) public {
-//     bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
-//     LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
+    vm.expectEmit();
+    emit RolePermissionAssigned(
+      uint8(Roles.ActionCreator), LlamaUtils.computePermissionId(permissionData6), permissionData6, true
+    );
 
-//     ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
+    mpCore.executeAction(actionInfo);
+  }
+}
 
-//     vm.assume(notAccount != address(accountAddress));
+contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
+  function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
 
-//     PermissionData memory permissionData =
-//       PermissionData(notAccount, LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
+      script,
+      authorized,
+      uint8(Roles.ActionCreator),
+      selectors,
+      strategies
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
-//     RolePermissionData[] memory _permissions = new RolePermissionData[](1);
-//     _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData, true);
-
-//     bytes memory data =
-//       abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account,
-// _permissions);
-
-//     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
-
-//     vm.expectRevert(); // reverts with FailedActionExecution and does not reach the TargetIsNotAccount error
-
-//     mpCore.executeAction(actionInfo);
-//   }
-// }
-
-// contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
-//   function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
-//     ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
-
-//     bytes memory data = abi.encodeWithSelector(
-//       LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
-//       script,
-//       authorized,
-//       uint8(Roles.ActionCreator),
-//       selectors,
-//       strategies
-//     );
-//     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
-
-//     vm.expectEmit();
-//     emit ScriptAuthorizationSet(script, authorized);
-//     for (uint256 i = 0; i < selectors.length; i++) {
-//       PermissionData memory permissionData = PermissionData(script, selectors[i], strategies[i]);
-//       bytes32 permissionId = lens.computePermissionId(permissionData);
-//       vm.expectEmit();
-//       emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
-//     }
-//     mpCore.executeAction(actionInfo);
-//   }
-// }
+    vm.expectEmit();
+    emit ScriptAuthorizationSet(script, authorized);
+    for (uint256 i = 0; i < selectors.length; i++) {
+      PermissionData memory permissionData = PermissionData(script, selectors[i], strategies[i]);
+      bytes32 permissionId = lens.computePermissionId(permissionData);
+      vm.expectEmit();
+      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
 
 contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
   function test_setStrategyLogicAuthorizations(bool authorized) public {
