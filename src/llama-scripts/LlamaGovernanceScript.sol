@@ -156,9 +156,12 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     policy.initializeRole(description);
     uint8 initializedRole = policy.numRoles();
 
-    if (newRoleHolders.length > 0) {
-      RoleHolderData[] memory roleHolders = new RoleHolderData[](newRoleHolders.length);
-      for (uint256 i = 0; i < newRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 holdersLength = newRoleHolders.length;
+    uint256 permissionsLength = newRolePermissionData.length;
+
+    if (holdersLength > 0) {
+      RoleHolderData[] memory roleHolders = new RoleHolderData[](holdersLength);
+      for (uint256 i = 0; i < holdersLength; i = LlamaUtils.uncheckedIncrement(i)) {
         if (newRoleHolders[i].quantity == 0) revert RoleQuantityMustBeGreaterThanZero();
         roleHolders[i] = RoleHolderData(
           initializedRole, newRoleHolders[i].policyholder, newRoleHolders[i].quantity, newRoleHolders[i].expiration
@@ -167,9 +170,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
       setRoleHolders(roleHolders);
     }
 
-    if (newRolePermissionData.length > 0) {
-      RolePermissionData[] memory permissions = new RolePermissionData[](newRolePermissionData.length);
-      for (uint256 i = 0; i < newRolePermissionData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    if (permissionsLength > 0) {
+      RolePermissionData[] memory permissions = new RolePermissionData[](permissionsLength);
+      for (uint256 i = 0; i < permissionsLength; i = LlamaUtils.uncheckedIncrement(i)) {
         permissions[i] = RolePermissionData(
           initializedRole,
           PermissionData(
@@ -199,8 +202,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
       address(strategy.llamaStrategyLogic), keccak256(strategy.strategies[0]), address(core)
     );
 
-    RolePermissionData[] memory permissions = new RolePermissionData[](newStrategyRolesAndPermissionsData.length);
-    for (uint256 i = 0; i < newStrategyRolesAndPermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = newStrategyRolesAndPermissionsData.length;
+    RolePermissionData[] memory permissions = new RolePermissionData[](length);
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       permissions[i] = RolePermissionData(
         newStrategyRolesAndPermissionsData[i].role,
         PermissionData(
@@ -224,7 +228,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     (, LlamaPolicy policy) = _context();
     policy.updateRoleDescription(roleDescription.role, roleDescription.description);
 
-    for (uint256 i = 0; i < _setRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = _setRoleHolders.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       if (_setRoleHolders[i].role != roleDescription.role) revert RoleIsNotUpdatedRole(_setRoleHolders[i].role);
     }
     setRoleHolders(_setRoleHolders);
@@ -246,8 +251,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     address accountAddress =
       Clones.predictDeterministicAddress(address(account.accountLogic), keccak256(account.config), address(core));
 
-    RolePermissionData[] memory permissions = new RolePermissionData[](newRolePermissionsData.length);
-    for (uint256 i = 0; i < newRolePermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = newRolePermissionsData.length;
+    RolePermissionData[] memory permissions = new RolePermissionData[](length);
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       permissions[i] = RolePermissionData(
         newRolePermissionsData[i].role,
         PermissionData(
@@ -275,8 +281,9 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   ) external onlyDelegateCall {
     (LlamaCore core,) = _context();
     core.setScriptAuthorization(script, authorized);
-    RolePermissionData[] memory permissions = new RolePermissionData[](newRolePermissionsData.length);
-    for (uint256 i = 0; i < newRolePermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = newRolePermissionsData.length;
+    RolePermissionData[] memory permissions = new RolePermissionData[](length);
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       permissions[i] = RolePermissionData(
         newRolePermissionsData[i].role,
         PermissionData(
@@ -302,7 +309,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
-    for (uint256 i = 0; i < strategyLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = strategyLogics.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyLogicAuthorization(strategyLogics[i], authorized);
     }
   }
@@ -315,7 +323,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     onlyDelegateCall
   {
     (LlamaCore core,) = _context();
-    for (uint256 i = 0; i < accountLogics.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = accountLogics.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setAccountLogicAuthorization(accountLogics[i], authorized);
     }
   }
@@ -325,7 +334,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param authorized Boolean to determine whether a strategy is being authorized or unauthorized.
   function setStrategyAuthorizations(ILlamaStrategy[] calldata strategies, bool authorized) external onlyDelegateCall {
     (LlamaCore core,) = _context();
-    for (uint256 i = 0; i < strategies.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = strategies.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyAuthorization(strategies[i], authorized);
     }
   }
@@ -387,7 +397,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param _revokePolicies Array of policies to revoke.
   function revokePolicies(address[] calldata _revokePolicies) external onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    for (uint256 i = 0; i < _revokePolicies.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = _revokePolicies.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.revokePolicy(_revokePolicies[i]);
     }
   }
@@ -396,7 +407,8 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @param roleDescriptions Array of role descriptions to update.
   function updateRoleDescriptions(UpdateRoleDescription[] calldata roleDescriptions) external onlyDelegateCall {
     (, LlamaPolicy policy) = _context();
-    for (uint256 i = 0; i < roleDescriptions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+    uint256 length = roleDescriptions.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       policy.updateRoleDescription(roleDescriptions[i].role, roleDescriptions[i].description);
     }
   }
