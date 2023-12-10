@@ -3,18 +3,23 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
+import {Clones} from "@openzeppelin/proxy/Clones.sol";
+
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo, PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
 import {RoleDescription} from "src/lib/UDVTs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
+import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaRelativeStrategyBase} from "src/strategies/relative/LlamaRelativeStrategyBase.sol";
 import {DeployUtils} from "script/DeployUtils.sol";
+import {MockActionGuard} from "test/mock/MockActionGuard.sol";
 
 contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event AccountCreated(ILlamaAccount account, ILlamaAccount indexed accountLogic, bytes initializationData);
@@ -28,6 +33,7 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   event StrategyAuthorizationSet(ILlamaStrategy indexed strategy, bool authorized);
   event StrategyLogicAuthorizationSet(ILlamaStrategy indexed strategyLogic, bool authorized);
   event StrategyCreated(ILlamaStrategy strategy, ILlamaStrategy indexed strategyLogic, bytes initializationData);
+  event ActionGuardSet(address indexed target, bytes4 indexed selector, ILlamaActionGuard actionGuard);
 
   mapping(uint8 => uint96) public rolesHoldersSeen;
   mapping(uint8 => uint96) public rolesQuantitySeen;
@@ -38,62 +44,46 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   LlamaGovernanceScript govScript;
 
   bytes4 public constant AGGREGATE_SELECTOR = LlamaGovernanceScript.aggregate.selector;
-  bytes4 public constant INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR =
-    LlamaGovernanceScript.initRolesAndSetRoleHolders.selector;
-  bytes4 public constant INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.initRolesAndSetRolePermissions.selector;
-  bytes4 public constant INIT_ROLES_AND_HOLDERS_AND_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.initRolesAndHoldersAndPermissions.selector;
-  bytes4 public constant CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR =
-    LlamaGovernanceScript.createNewStrategiesAndSetRoleHolders.selector;
-  bytes4 public constant CREATE_STRATEGIES_AND_INIT_ROLES_AND_HOLDERS_SELECTOR =
-    LlamaGovernanceScript.createStrategiesAndInitRolesAndHolders.selector;
-  bytes4 public constant CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.createNewStrategiesAndSetRolePermissions.selector;
-  bytes4 public constant CREATE_STRATEGIES_WITH_ROLES_AND_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.createStrategiesWithRolesAndPermissions.selector;
-  bytes4 public constant REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR =
-    LlamaGovernanceScript.revokePoliciesAndUpdateRoleDescriptions.selector;
-  bytes4 public constant REVOKE_POLICIES_AND_SET_ROLE_DESCS_AND_HOLDERS_SELECTOR =
-    LlamaGovernanceScript.revokePoliciesAndSetRoleDescsAndHolders.selector;
+  bytes4 public constant INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.initRoleAndHoldersAndPermissions.selector;
+  bytes4 public constant CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.createStrategyAndSetRolePermissions.selector;
+  bytes4 public constant UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR =
+    LlamaGovernanceScript.updateRoleDescriptionAndRoleHolders.selector;
+  bytes4 public constant CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.createAccountAndSetRolePermissions.selector;
+  bytes4 public constant SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR =
+    LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
+  bytes4 public constant SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR =
+    LlamaGovernanceScript.setStrategyLogicAuthorizations.selector;
+  bytes4 public constant SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR =
+    LlamaGovernanceScript.setAccountLogicAuthorizations.selector;
+  bytes4 public constant SET_STRATEGY_AUTHORIZATIONS_SELECTOR = LlamaGovernanceScript.setStrategyAuthorizations.selector;
+  bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
+    LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
+  bytes4 public constant SET_GUARDS_SELECTOR = LlamaGovernanceScript.setGuards.selector;
   bytes4 public constant INIT_ROLES_SELECTOR = LlamaGovernanceScript.initRoles.selector;
   bytes4 public constant SET_ROLE_HOLDERS_SELECTOR = LlamaGovernanceScript.setRoleHolders.selector;
   bytes4 public constant SET_ROLE_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setRolePermissions.selector;
   bytes4 public constant REVOKE_POLICIES_SELECTOR = LlamaGovernanceScript.revokePolicies.selector;
   bytes4 public constant UPDATE_ROLE_DESCRIPTIONS_SELECTOR = LlamaGovernanceScript.updateRoleDescriptions.selector;
-  bytes4 public constant SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR =
-    LlamaGovernanceScript.setStrategyLogicAuthorizations.selector;
-  bytes4 public constant SET_STRATEGY_AUTHORIZATIONS_SELECTOR = LlamaGovernanceScript.setStrategyAuthorizations.selector;
-  bytes4 public constant SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR =
-    LlamaGovernanceScript.setAccountLogicAuthorizations.selector;
-  bytes4 public constant SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR =
-    LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector;
-  bytes4 SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR = LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector;
-  bytes4 CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR =
-    LlamaGovernanceScript.createAccountAndSetRolePermissions.selector;
 
-  PermissionData public executeActionPermission;
   PermissionData public aggregatePermission;
-  PermissionData public initializeRolesAndSetRoleHoldersPermission;
-  PermissionData public initializeRolesAndSetRolePermissionsPermission;
-  PermissionData public initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission;
-  PermissionData public createNewStrategiesAndSetRoleHoldersPermission;
-  PermissionData public createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission;
-  PermissionData public createNewStrategiesAndSetRolePermissionsPermission;
-  PermissionData public createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission;
-  PermissionData public revokePoliciesAndUpdateRoleDescriptionsPermission;
-  PermissionData public revokePoliciesAndSetRoleDescsAndHolders;
-  PermissionData public initializeRolesPermission;
+  PermissionData public initRoleAndHoldersAndPermissionsPermission;
+  PermissionData public createStrategyAndSetRolePermissionsPermission;
+  PermissionData public updateRoleDescriptionAndRoleHoldersPermission;
+  PermissionData public createAccountAndSetRolePermissionsPermission;
+  PermissionData public setScriptAuthAndSetPermissionsPermission;
+  PermissionData public setStrategyLogicAuthorizationsPermission;
+  PermissionData public setAccountLogicAuthorizationsPermission;
+  PermissionData public setStrategyAuthorizationsPermission;
+  PermissionData public setStrategyLogicAuthAndNewStrategiesPermission;
+  PermissionData public setGuardsPermission;
+  PermissionData public initRolesPermission;
   PermissionData public setRoleHoldersPermission;
   PermissionData public setRolePermissionsPermission;
   PermissionData public revokePoliciesPermission;
-  PermissionData public updateRoleDescriptionPerimssion;
-  PermissionData public setStrategyLogicAuthorizationsPermission;
-  PermissionData public setStrategyAuthorizationsPermission;
-  PermissionData public setAccountLogicAuthorizationsPermission;
-  PermissionData public setStrategyLogicAuthAndNewStrategiesPermission;
-  PermissionData public setScriptAuthAndSetPermissionsPermission;
-  PermissionData public createAccountAndSetRolePermissionsPermission;
+  PermissionData public updateRoleDescriptionsPermission;
 
   function setUp() public virtual override {
     LlamaTestSetup.setUp();
@@ -104,72 +94,49 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
 
     mpCore.setScriptAuthorization(address(govScript), true);
 
-    executeActionPermission = PermissionData(address(govScript), EXECUTE_ACTION_SELECTOR, mpStrategy2);
     aggregatePermission = PermissionData(address(govScript), AGGREGATE_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRoleHoldersPermission =
-      PermissionData(address(govScript), INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), INIT_ROLES_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndSetRoleHoldersPermission =
-      PermissionData(address(govScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission =
-      PermissionData(address(govScript), CREATE_STRATEGIES_AND_INIT_ROLES_AND_HOLDERS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
-    createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), CREATE_STRATEGIES_WITH_ROLES_AND_PERMISSIONS_SELECTOR, mpStrategy2);
-    revokePoliciesAndUpdateRoleDescriptionsPermission =
-      PermissionData(address(govScript), REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
-    revokePoliciesAndSetRoleDescsAndHolders =
-      PermissionData(address(govScript), REVOKE_POLICIES_AND_SET_ROLE_DESCS_AND_HOLDERS_SELECTOR, mpStrategy2);
-    initializeRolesPermission = PermissionData(address(govScript), INIT_ROLES_SELECTOR, mpStrategy2);
+    initRoleAndHoldersAndPermissionsPermission =
+      PermissionData(address(govScript), INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, mpStrategy2);
+    createStrategyAndSetRolePermissionsPermission =
+      PermissionData(address(govScript), CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    updateRoleDescriptionAndRoleHoldersPermission =
+      PermissionData(address(govScript), UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR, mpStrategy2);
+    createAccountAndSetRolePermissionsPermission =
+      PermissionData(address(govScript), CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    setScriptAuthAndSetPermissionsPermission =
+      PermissionData(address(govScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
+    setStrategyLogicAuthorizationsPermission =
+      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+    setAccountLogicAuthorizationsPermission =
+      PermissionData(address(govScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+    setStrategyAuthorizationsPermission =
+      PermissionData(address(govScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2);
+    setStrategyLogicAuthAndNewStrategiesPermission =
+      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
+    setGuardsPermission = PermissionData(address(govScript), SET_GUARDS_SELECTOR, mpStrategy2);
+    initRolesPermission = PermissionData(address(govScript), INIT_ROLES_SELECTOR, mpStrategy2);
     setRoleHoldersPermission = PermissionData(address(govScript), SET_ROLE_HOLDERS_SELECTOR, mpStrategy2);
     setRolePermissionsPermission = PermissionData(address(govScript), SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
     revokePoliciesPermission = PermissionData(address(govScript), REVOKE_POLICIES_SELECTOR, mpStrategy2);
-    updateRoleDescriptionPerimssion = PermissionData(address(govScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
-    setStrategyLogicAuthorizationsPermission =
-      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
-    setStrategyAuthorizationsPermission =
-      PermissionData(address(govScript), SET_STRATEGY_AUTHORIZATIONS_SELECTOR, mpStrategy2);
-    setAccountLogicAuthorizationsPermission =
-      PermissionData(address(govScript), SET_ACCOUNT_LOGIC_AUTHORIZATIONS_SELECTOR, mpStrategy2);
-    setStrategyLogicAuthAndNewStrategiesPermission =
-      PermissionData(address(govScript), SET_STRATEGY_LOGIC_AUTH_AND_NEW_STRATEGIES_SELECTOR, mpStrategy2);
-    setScriptAuthAndSetPermissionsPermission =
-      PermissionData(address(govScript), SET_SCRIPT_AUTH_AND_SET_PERMISSIONS_SELECTOR, mpStrategy2);
-    createAccountAndSetRolePermissionsPermission =
-      PermissionData(address(govScript), CREATE_ACCOUNT_AND_SET_ROLE_PERMISSIONS_SELECTOR, mpStrategy2);
+    updateRoleDescriptionsPermission =
+      PermissionData(address(govScript), UPDATE_ROLE_DESCRIPTIONS_SELECTOR, mpStrategy2);
 
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), executeActionPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), aggregatePermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesAndSetRolePermissionsPermission, true);
-    mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), initializeRolesAndSetRoleHoldersAndSetRolePermissionsPermission, true
-    );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRoleHoldersPermission, true);
-    mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), createNewStrategiesAndInitializeRolesAndSetRoleHoldersPermission, true
-    );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createNewStrategiesAndSetRolePermissionsPermission, true);
-    mpPolicy.setRolePermission(
-      uint8(Roles.ActionCreator), createNewStrategiesAndNewRolesAndSetRoleHoldersAndSetRolePermissionsPermission, true
-    );
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesAndUpdateRoleDescriptionsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesAndSetRoleDescsAndHolders, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initializeRolesPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initRoleAndHoldersAndPermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createStrategyAndSetRolePermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionAndRoleHoldersPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createAccountAndSetRolePermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthAndSetPermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthorizationsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyAuthorizationsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthAndNewStrategiesPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setGuardsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), initRolesPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRoleHoldersPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setRolePermissionsPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), revokePoliciesPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionPerimssion, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthorizationsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyAuthorizationsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setAccountLogicAuthorizationsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setStrategyLogicAuthAndNewStrategiesPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), setScriptAuthAndSetPermissionsPermission, true);
-    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), createAccountAndSetRolePermissionsPermission, true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), updateRoleDescriptionsPermission, true);
 
     vm.stopPrank();
   }
@@ -184,42 +151,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     mpCore.castApproval(uint8(Roles.Approver), actionInfo, ""); // Approves and queues the action.
   }
 
-  function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
-    internal
-    pure
-    returns (LlamaRelativeStrategyBase.Config memory)
-  {
-    return LlamaRelativeStrategyBase.Config({
-      approvalPeriod: toUint64(salt % 1000 days),
-      queuingPeriod: toUint64(salt % 1001 days),
-      expirationPeriod: toUint64(salt % 1002 days),
-      isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
-      minApprovalPct: toUint16(salt % 10_000),
-      minDisapprovalPct: toUint16(salt % 10_100),
-      approvalRole: uint8(Roles.Approver),
-      disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: new uint8[](0),
-      forceDisapprovalRoles: new uint8[](0)
-    });
-  }
-
   function _assumeInitializeRoles(RoleDescription[] memory descriptions) public pure {
     vm.assume(descriptions.length < 247); // max unit8 (255) - total number of exisitng roles (8)
-  }
-
-  function _assumeRoleHolders(RoleHolderData[] memory roleHolders) public view {
-    vm.assume(roleHolders.length < 10);
-    for (uint256 i = 0; i < roleHolders.length; i++) {
-      // Cannot be 0 (all holders role) and cannot be greater than numRoles
-      roleHolders[i].role = uint8(bound(roleHolders[i].role, 1, mpPolicy.numRoles()));
-      vm.assume(roleHolders[i].expiration > block.timestamp + 1 days);
-      vm.assume(roleHolders[i].policyholder != address(0));
-      roleHolders[i].quantity = uint96(bound(roleHolders[i].quantity, 1, 100));
-    }
-  }
-
-  function _assumeStrategies(uint256 salt1, uint256 salt2, uint256 salt3) public pure {
-    vm.assume(salt1 != salt2 && salt1 != salt3 && salt2 != salt3);
   }
 
   function _assumeUpdateRoleDescriptions(LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions) public pure {
@@ -236,7 +169,17 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     }
   }
 
-  function _createAction(bytes memory data) internal returns (ActionInfo memory actionInfo) {
+  function _boundRolePermissions(LlamaGovernanceScript.NewStrategyRolesAndPermissionsData[] memory rolePermissions)
+    public
+    view
+  {
+    for (uint256 i = 0; i < rolePermissions.length; i++) {
+      // Cannot be 0 (all holders role) and cannot be greater than numRoles
+      rolePermissions[i].role = uint8(bound(rolePermissions[i].role, 1, mpPolicy.numRoles()));
+    }
+  }
+
+  function _createAndApproveAndQueueAction(bytes memory data) internal returns (ActionInfo memory actionInfo) {
     vm.prank(actionCreatorAaron);
     uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
     actionInfo =
@@ -245,22 +188,25 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     _approveAction(actionInfo);
   }
 
-  function _createStrategies(uint256 salt1, uint256 salt2, uint256 salt3, bool isFixedLengthApprovalPeriod)
+  function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
     internal
     view
-    returns (
-      LlamaRelativeStrategyBase.Config[] memory newStrategies,
-      LlamaGovernanceScript.CreateStrategies memory strategies
-    )
+    returns (LlamaRelativeStrategyBase.Config memory newStrategy, LlamaGovernanceScript.CreateStrategy memory strategy)
   {
-    newStrategies = new LlamaRelativeStrategyBase.Config[](3);
-    // ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
-
-    newStrategies[0] = _createStrategy(salt1, isFixedLengthApprovalPeriod);
-    newStrategies[1] = _createStrategy(salt2, isFixedLengthApprovalPeriod);
-    newStrategies[2] = _createStrategy(salt3, isFixedLengthApprovalPeriod);
-    strategies.llamaStrategyLogic = relativeHolderQuorumLogic;
-    strategies.strategies = DeployUtils.encodeStrategyConfigs(newStrategies);
+    newStrategy = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: toUint64(salt % 1000 days),
+      queuingPeriod: toUint64(salt % 1001 days),
+      expirationPeriod: toUint64(salt % 1002 days),
+      isFixedLengthApprovalPeriod: isFixedLengthApprovalPeriod,
+      minApprovalPct: toUint16(salt % 10_000),
+      minDisapprovalPct: toUint16(salt % 10_100),
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+    strategy.llamaStrategyLogic = relativeHolderQuorumLogic;
+    strategy.config = DeployUtils.encodeStrategy(newStrategy);
   }
 
   function _expectInitializeRolesEvents(RoleDescription[] memory descriptions) internal {
@@ -291,28 +237,14 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     }
   }
 
-  function _expectCreateStrategiesEvents(LlamaRelativeStrategyBase.Config[] memory newStrategies) internal {
-    ILlamaStrategy[] memory strategyAddresses = new ILlamaStrategy[](3);
-    for (uint256 i = 0; i < newStrategies.length; i++) {
-      strategyAddresses[i] = lens.computeLlamaStrategyAddress(
-        address(relativeHolderQuorumLogic), DeployUtils.encodeStrategy(newStrategies[i]), address(mpCore)
-      );
-    }
-
+  function _expectCreateStrategyEvents(
+    LlamaRelativeStrategyBase.Config memory newStrategy,
+    ILlamaStrategy strategyAddress
+  ) internal {
     vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[0], true);
+    emit StrategyAuthorizationSet(strategyAddress, true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[0], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[1], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[1], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[1]));
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(strategyAddresses[2], true);
-    vm.expectEmit();
-    emit StrategyCreated(strategyAddresses[2], relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[2]));
+    emit StrategyCreated(strategyAddress, relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategy));
   }
 
   function _expectUpdateRoleDescriptionsEvents(LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions)
@@ -321,6 +253,13 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
     for (uint256 i = 0; i < descriptions.length; i++) {
       vm.expectEmit();
       emit RoleInitialized(uint8(i), descriptions[i].description);
+    }
+  }
+
+  function _expectSetGuardsEvents(address target, bytes4[] memory selectors, ILlamaActionGuard guard) internal {
+    for (uint256 i = 0; i < selectors.length; i++) {
+      vm.expectEmit();
+      emit ActionGuardSet(target, selectors[i], guard);
     }
   }
 }
@@ -358,7 +297,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
-    (ActionInfo memory actionInfo) = _createAction(data);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     _expectInitializeRolesEvents(descriptions);
     vm.expectEmit();
@@ -372,7 +311,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
 
-    (ActionInfo memory actionInfo) = _createAction(data);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     vm.expectRevert();
     // CallReverted error cannot be reached because we get a "FailedActionExecution" error first.
@@ -385,7 +324,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
     calls.push(abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, "test"));
 
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, targets, calls);
-    (ActionInfo memory actionInfo) = _createAction(data);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     vm.expectRevert();
     // UnauthorizedTarget error cannot be reached because we get a "FailedActionExecution" error first.
@@ -399,7 +338,7 @@ contract Aggregate is LlamaGovernanceScriptTest {
       _calls[i] = abi.encodeWithSelector(LlamaPolicy.initializeRole.selector, "test");
     }
     bytes memory data = abi.encodeWithSelector(AGGREGATE_SELECTOR, _targets, _calls);
-    (ActionInfo memory actionInfo) = _createAction(data);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     vm.expectRevert();
     // MismatchedArrayLength error cannot be reached because we get a "FailedActionExecution" error first.
@@ -407,405 +346,219 @@ contract Aggregate is LlamaGovernanceScriptTest {
   }
 }
 
-contract InitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
-  function testFuzz_initializeRolesAndSetRoleHolders(
-    RoleDescription[] memory descriptions,
-    RoleHolderData[] memory roleHolders
-  ) public {
-    _assumeInitializeRoles(descriptions);
-    _assumeRoleHolders(roleHolders);
-
-    bytes memory data = abi.encodeWithSelector(INIT_ROLES_AND_SET_ROLE_HOLDERS_SELECTOR, descriptions, roleHolders);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectInitializeRolesEvents(descriptions);
-    _expectRoleHolderEvents(roleHolders);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract InitializeRolesAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_initializesRolesAndSetRolePermissions(
-    RoleDescription[] memory descriptions,
-    RolePermissionData[] memory rolePermissions
-  ) public {
-    vm.assume(rolePermissions.length < 50);
-    _assumeInitializeRoles(descriptions);
-    _boundRolePermissions(rolePermissions);
-
-    bytes memory data =
-      abi.encodeWithSelector(INITIALIZE_ROLES_AND_SET_ROLE_PERMISSIONS_SELECTOR, descriptions, rolePermissions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectInitializeRolesEvents(descriptions);
-    _expectRolePermissionEvents(rolePermissions);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract InitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_InitializeRolesAndSetRoleHoldersAndSetRolePermissions(
-    RoleDescription[] memory descriptions,
-    RolePermissionData[] memory rolePermissions
-  ) public {
-    vm.assume(rolePermissions.length < 10);
-    _assumeInitializeRoles(descriptions);
-    _boundRolePermissions(rolePermissions);
-
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the
-      // test takes too long
-    roleHolders[0] = RoleHolderData({
-      policyholder: address(uint160(1)),
-      role: uint8(Roles.ActionCreator),
-      expiration: type(uint64).max,
-      quantity: 1
-    });
+contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
+  function test_RevertIf_RoleQuantityIsZero() public {
+    LlamaGovernanceScript.NewRoleHolderData[] memory roleHolders = new LlamaGovernanceScript.NewRoleHolderData[](1);
+    roleHolders[0] = LlamaGovernanceScript.NewRoleHolderData(address(this), uint96(0), DEFAULT_ROLE_EXPIRATION);
+    PermissionData[] memory newRolePermissionData = new PermissionData[](0);
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
 
     bytes memory data = abi.encodeWithSelector(
-      INIT_ROLES_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, descriptions, roleHolders, rolePermissions
+      INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, roleHolders, newRolePermissionData
     );
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectInitializeRolesEvents(descriptions);
-    _expectRoleHolderEvents(roleHolders);
-    _expectRolePermissionEvents(rolePermissions);
-    mpCore.executeAction(actionInfo);
-  }
-}
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
-contract CreateNewStrategiesAndSetRoleHolders is LlamaGovernanceScriptTest {
-  function test_CreateNewStrategiesAndSetRoleHolders(
-    RoleHolderData[] memory roleHolders,
-    uint256 salt1,
-    uint256 salt2,
-    uint256 salt3,
-    bool isFixedLengthApprovalPeriod
-  ) public {
-    _assumeRoleHolders(roleHolders);
-    _assumeStrategies(salt1, salt2, salt3);
-
-    (LlamaRelativeStrategyBase.Config[] memory newStrategies, LlamaGovernanceScript.CreateStrategies memory strategies)
-    = _createStrategies(salt1, salt2, salt3, isFixedLengthApprovalPeriod);
-
-    bytes memory data =
-      abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_SET_ROLE_HOLDERS_SELECTOR, strategies, roleHolders);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    _expectCreateStrategiesEvents(newStrategies);
-    _expectRoleHolderEvents(roleHolders);
-
-    vm.startPrank(address(mpExecutor));
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract CreateNewStrategiesAndInitializeRolesAndSetRoleHolders is LlamaGovernanceScriptTest {
-  function test_CreateNewStrategiesAndSetRoleHolders(
-    RoleDescription[] memory descriptions,
-    RoleHolderData[] memory roleHolders,
-    uint256 salt1,
-    uint256 salt2,
-    uint256 salt3,
-    bool isFixedLengthApprovalPeriod
-  ) public {
-    _assumeInitializeRoles(descriptions);
-    _assumeRoleHolders(roleHolders);
-    _assumeStrategies(salt1, salt2, salt3);
-
-    (LlamaRelativeStrategyBase.Config[] memory newStrategies, LlamaGovernanceScript.CreateStrategies memory strategies)
-    = _createStrategies(salt1, salt2, salt3, isFixedLengthApprovalPeriod);
-
-    bytes memory data = abi.encodeWithSelector(
-      CREATE_STRATEGIES_AND_INIT_ROLES_AND_HOLDERS_SELECTOR, strategies, descriptions, roleHolders
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(LlamaGovernanceScript.RoleQuantityMustBeGreaterThanZero.selector)
     );
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    _expectCreateStrategiesEvents(newStrategies);
-    _expectInitializeRolesEvents(descriptions);
-    _expectRoleHolderEvents(roleHolders);
-
-    vm.startPrank(address(mpExecutor));
+    vm.expectRevert(expectedErr);
     mpCore.executeAction(actionInfo);
   }
-}
 
-contract CreateNewStrategiesAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_CreateNewStrategiesAndSetRolePermissions(
-    RolePermissionData[] memory rolePermissions,
-    uint256 salt1,
-    uint256 salt2,
-    uint256 salt3,
-    bool isFixedLengthApprovalPeriod
-  ) public {
-    _boundRolePermissions(rolePermissions);
-    _assumeStrategies(salt1, salt2, salt3);
+  function test_initRolesSetRoleHolders() public {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    descriptions[0] = description;
+    PermissionData[] memory newRolePermissionData = new PermissionData[](0);
 
-    (LlamaRelativeStrategyBase.Config[] memory newStrategies, LlamaGovernanceScript.CreateStrategies memory strategies)
-    = _createStrategies(salt1, salt2, salt3, isFixedLengthApprovalPeriod);
+    uint8 newRole = mpPolicy.numRoles() + 1;
+    LlamaGovernanceScript.NewRoleHolderData[] memory newRoleHolders = new LlamaGovernanceScript.NewRoleHolderData[](3);
+    newRoleHolders[0] =
+      LlamaGovernanceScript.NewRoleHolderData(address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    newRoleHolders[1] =
+      LlamaGovernanceScript.NewRoleHolderData(address(0x1337), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    newRoleHolders[2] =
+      LlamaGovernanceScript.NewRoleHolderData(address(0x1338), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
 
-    bytes memory data =
-      abi.encodeWithSelector(CREATE_NEW_STRATEGIES_AND_SET_ROLE_PERMISSIONS_SELECTOR, strategies, rolePermissions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    _expectCreateStrategiesEvents(newStrategies);
-    _expectRolePermissionEvents(rolePermissions);
-
-    vm.startPrank(address(mpExecutor));
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract CreateNewStrategiesAndInitializeRolesAndSetRoleHoldersAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_CreateNewStrategiesAndInitializeRolesAndSetRoleHoldersAndSetRolePermissions(
-    RoleDescription[] memory descriptions,
-    RolePermissionData[] memory rolePermissions,
-    uint256 salt1,
-    uint256 salt2,
-    uint256 salt3,
-    bool isFixedLengthApprovalPeriod
-  ) public {
-    _assumeInitializeRoles(descriptions);
-    _boundRolePermissions(rolePermissions);
-    _assumeStrategies(salt1, salt2, salt3);
-
-    (LlamaRelativeStrategyBase.Config[] memory newStrategies, LlamaGovernanceScript.CreateStrategies memory strategies)
-    = _createStrategies(salt1, salt2, salt3, isFixedLengthApprovalPeriod);
-
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the
-      // test takes too long
-    roleHolders[0] = RoleHolderData({
-      policyholder: address(uint160(1)),
-      role: uint8(Roles.ActionCreator),
-      expiration: type(uint64).max,
-      quantity: 1
-    });
-
-    bytes memory data = abi.encodeWithSelector(
-      CREATE_STRATEGIES_WITH_ROLES_AND_PERMISSIONS_SELECTOR, strategies, descriptions, roleHolders, rolePermissions
-    );
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    _expectCreateStrategiesEvents(newStrategies);
-    _expectInitializeRolesEvents(descriptions);
-    _expectRoleHolderEvents(roleHolders);
-    _expectRolePermissionEvents(rolePermissions);
-
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract RevokePoliciesAndUpdateRoleDescriptions is LlamaGovernanceScriptTest {
-  function test_RevokePoliciesAndUpdateRoleDescriptions(
-    LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions
-  ) public {
-    revokePolicies.push(disapproverDave);
-    _assumeUpdateRoleDescriptions(descriptions);
-
-    bytes memory data =
-      abi.encodeWithSelector(REVOKE_POLICIES_AND_UPDATE_ROLE_DESCRIPTIONS_SELECTOR, revokePolicies, descriptions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
-    _expectUpdateRoleDescriptionsEvents(descriptions);
-
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract RevokePoliciesAndSetRoleDescsAndHolders is LlamaGovernanceScriptTest {
-  function test_RevokePoliciesAndSetRoleDescsAndHolders(
-    LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions
-  ) public {
-    revokePolicies.push(disapproverDave);
-    _assumeUpdateRoleDescriptions(descriptions);
-
-    RoleHolderData[] memory roleHolders = new RoleHolderData[](1); // we don't fuzz the roleholders here because the
-    // test takes too long
-    roleHolders[0] = RoleHolderData({
-      policyholder: address(uint160(1)),
-      role: uint8(Roles.ActionCreator),
-      expiration: type(uint64).max,
-      quantity: 1
-    });
-
-    bytes memory data = abi.encodeWithSelector(
-      REVOKE_POLICIES_AND_SET_ROLE_DESCS_AND_HOLDERS_SELECTOR, revokePolicies, descriptions, roleHolders
-    );
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
-    _expectUpdateRoleDescriptionsEvents(descriptions);
-    _expectRoleHolderEvents(roleHolders);
-
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract InitializeRoles is LlamaGovernanceScriptTest {
-  function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
-    _assumeInitializeRoles(descriptions);
-    bytes memory data = abi.encodeWithSelector(INIT_ROLES_SELECTOR, descriptions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectInitializeRolesEvents(descriptions);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract SetRoleHolders is LlamaGovernanceScriptTest {
-  function testFuzz_setRoleHolders(RoleHolderData[] memory roleHolders) public {
-    _assumeRoleHolders(roleHolders);
-    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectRoleHolderEvents(roleHolders);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract SetRolePermissions is LlamaGovernanceScriptTest {
-  function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
-    _boundRolePermissions(rolePermissions);
-    bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    _expectRolePermissionEvents(rolePermissions);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract RevokePolicies is LlamaGovernanceScriptTest {
-  function test_revokePolicies() public {
-    revokePolicies.push(disapproverDave);
-    bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
-    (ActionInfo memory actionInfo) = _createAction(data);
-    vm.expectEmit();
-    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract UpdateRoleDescriptions is LlamaGovernanceScriptTest {
-  function testFuzz_updateRoleDescriptions(LlamaGovernanceScript.UpdateRoleDescription[] memory roleDescriptions)
-    public
-  {
-    _assumeUpdateRoleDescriptions(roleDescriptions);
-    bytes memory data = abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTIONS_SELECTOR, roleDescriptions);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    _expectUpdateRoleDescriptionsEvents(roleDescriptions);
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
-  function test_setStrategyLogicAuthorizations(bool authorized) public {
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
-    strategies[0] = relativeHolderQuorumLogic;
-    strategies[1] = absolutePeerReviewLogic;
-    strategies[2] = absoluteQuorumLogic;
-
-    bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorized);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, authorized);
-    vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(absolutePeerReviewLogic, authorized);
-    vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(absoluteQuorumLogic, authorized);
-
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
-  function test_setStrategyAuthorizations(bool authorized) public {
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
-    strategies[0] = mpStrategy1;
-
-    bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorized);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    vm.expectEmit();
-    emit StrategyAuthorizationSet(mpStrategy1, authorized);
-
-    mpCore.executeAction(actionInfo);
-  }
-}
-
-contract SetAccountLogicAuthorizations is LlamaGovernanceScriptTest {
-  function test_SetAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool authorized) public {
-    vm.assume(accountLogics.length < 5);
-
-    bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorizations.selector, accountLogics, authorized);
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    for (uint256 i = 0; i < accountLogics.length; i++) {
-      vm.expectEmit();
-      emit AccountLogicAuthorizationSet(accountLogics[i], authorized);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+    for (uint256 i = 0; i < newRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(
+        newRole, newRoleHolders[i].policyholder, newRoleHolders[i].quantity, newRoleHolders[i].expiration
+      );
     }
 
+    bytes memory data = abi.encodeWithSelector(
+      INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, newRoleHolders, newRolePermissionData
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
     mpCore.executeAction(actionInfo);
   }
-}
 
-contract SetStrategyLogicAuthorizationAndCreateStrategies is LlamaGovernanceScriptTest {
-  function test_SetStrategyLogicAuthorizationAndCreateStrategies() public {
-    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
-    newStrategies[0] = LlamaRelativeStrategyBase.Config({
-      approvalPeriod: 0,
-      queuingPeriod: 0,
-      expirationPeriod: 2 days,
-      isFixedLengthApprovalPeriod: false,
-      minApprovalPct: 0,
-      minDisapprovalPct: 10_001,
-      approvalRole: uint8(Roles.Approver),
-      disapprovalRole: uint8(Roles.Disapprover),
-      forceApprovalRoles: new uint8[](0),
-      forceDisapprovalRoles: new uint8[](0)
-    });
-    ILlamaStrategy instantExecutionStrategy = lens.computeLlamaStrategyAddress(
-      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
-    );
-    bytes memory data = abi.encodeWithSelector(
-      LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector,
-      relativeQuantityQuorumLogic,
-      DeployUtils.encodeStrategyConfigs(newStrategies)
-    );
-    (ActionInfo memory actionInfo) = _createAction(data);
+  function test_initRolesAndSetPermissions() public {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    descriptions[0] = description;
+    LlamaGovernanceScript.NewRoleHolderData[] memory newRoleHolders = new LlamaGovernanceScript.NewRoleHolderData[](0);
 
-    vm.expectEmit();
-    emit StrategyLogicAuthorizationSet(relativeQuantityQuorumLogic, true);
-    vm.expectEmit();
-    emit StrategyCreated(
-      instantExecutionStrategy, relativeQuantityQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0])
-    );
-    mpCore.executeAction(actionInfo);
-  }
-}
+    uint8 newRole = mpPolicy.numRoles() + 1;
+    PermissionData[] memory permissionData = new PermissionData[](3);
+    permissionData[0] = PermissionData(address(this), LlamaCore.executeAction.selector, mpStrategy2);
+    permissionData[1] = PermissionData(address(0x1337), LlamaCore.executeAction.selector, mpStrategy2);
+    permissionData[2] = PermissionData(address(0x1338), LlamaCore.executeAction.selector, mpStrategy2);
 
-contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
-  function test_SetScriptAuthAndSetPermissions(address script, bool authorized, bytes4[] calldata selectors) public {
-    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](selectors.length);
-
-    bytes memory data = abi.encodeWithSelector(
-      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector,
-      script,
-      authorized,
-      uint8(Roles.ActionCreator),
-      selectors,
-      strategies
-    );
-    (ActionInfo memory actionInfo) = _createAction(data);
-
-    vm.expectEmit();
-    emit ScriptAuthorizationSet(script, authorized);
-    for (uint256 i = 0; i < selectors.length; i++) {
-      PermissionData memory permissionData = PermissionData(script, selectors[i], strategies[i]);
-      bytes32 permissionId = lens.computePermissionId(permissionData);
-      vm.expectEmit();
-      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
+    RolePermissionData[] memory permissions = new RolePermissionData[](3);
+    for (uint256 i = 0; i < permissions.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissions[i] = RolePermissionData(
+        newRole, PermissionData(permissionData[i].target, permissionData[i].selector, permissionData[i].strategy), true
+      );
     }
+
+    bytes memory data = abi.encodeWithSelector(
+      INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, newRoleHolders, permissionData
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRolePermissionEvents(permissions);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function testFuzz_initRolesSetRoleHoldersAndSetPermissions(
+    RoleDescription description,
+    LlamaGovernanceScript.NewRoleHolderData memory newRoleHolder,
+    PermissionData memory permission,
+    LlamaGovernanceScript.NewRoleHolderData memory newRoleHolder2,
+    PermissionData memory permission2
+  ) public {
+    vm.assume(newRoleHolder.expiration > block.timestamp + 1 days);
+    vm.assume(newRoleHolder.policyholder != address(0));
+    newRoleHolder.quantity = uint96(bound(newRoleHolder.quantity, 1, 100));
+    vm.assume(address(permission.target) != address(0));
+    vm.assume(address(permission.strategy) != address(0));
+    vm.assume(newRoleHolder2.expiration > block.timestamp + 1 days);
+    vm.assume(newRoleHolder2.policyholder != address(0));
+    newRoleHolder2.quantity = uint96(bound(newRoleHolder2.quantity, 1, 100));
+    vm.assume(address(permission2.target) != address(0));
+    vm.assume(address(permission2.strategy) != address(0));
+
+    RoleDescription[] memory descriptions = new RoleDescription[](1);
+    LlamaGovernanceScript.NewRoleHolderData[] memory newRoleHolders = new LlamaGovernanceScript.NewRoleHolderData[](2);
+    PermissionData[] memory permissionData = new PermissionData[](2);
+    descriptions[0] = description;
+    newRoleHolders[0] = newRoleHolder;
+    permissionData[0] = permission;
+    newRoleHolders[1] = newRoleHolder2;
+    permissionData[1] = permission2;
+    uint8 newRole = mpPolicy.numRoles() + 1;
+
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](newRoleHolders.length);
+    for (uint256 i = 0; i < newRoleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(
+        newRole, newRoleHolders[i].policyholder, newRoleHolders[i].quantity, newRoleHolders[i].expiration
+      );
+    }
+
+    RolePermissionData[] memory permissions = new RolePermissionData[](permissionData.length);
+    for (uint256 i = 0; i < permissionData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      permissions[i] = RolePermissionData(
+        newRole, PermissionData(permissionData[i].target, permissionData[i].selector, permissionData[i].strategy), true
+      );
+    }
+
+    bytes memory data = abi.encodeWithSelector(
+      INIT_ROLE_AND_HOLDERS_AND_PERMISSIONS_SELECTOR, description, newRoleHolders, permissionData
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    _expectRoleHolderEvents(roleHolders);
+    _expectRolePermissionEvents(permissions);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
+  function testFuzz_CreateStrategyAndSetRolePermissions(
+    LlamaGovernanceScript.NewStrategyRolesAndPermissionsData[] memory newStrategyRolesAndPermissionsData,
+    uint256 salt,
+    bool isFixedLengthApprovalPeriod
+  ) public {
+    _boundRolePermissions(newStrategyRolesAndPermissionsData);
+
+    (LlamaRelativeStrategyBase.Config memory newStrategy, LlamaGovernanceScript.CreateStrategy memory strategy) =
+      _createStrategy(salt, isFixedLengthApprovalPeriod);
+
+    bytes memory data = abi.encodeWithSelector(
+      CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR, strategy, newStrategyRolesAndPermissionsData
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    address strategyAddress = Clones.predictDeterministicAddress(
+      address(strategy.llamaStrategyLogic), keccak256(strategy.config), address(core)
+    );
+
+    RolePermissionData[] memory rolePermissions = new RolePermissionData[](newStrategyRolesAndPermissionsData.length);
+    for (uint256 i = 0; i < newStrategyRolesAndPermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      rolePermissions[i] = RolePermissionData(
+        newStrategyRolesAndPermissionsData[i].role,
+        PermissionData(
+          newStrategyRolesAndPermissionsData[i].permissionData.target,
+          newStrategyRolesAndPermissionsData[i].permissionData.selector,
+          ILlamaStrategy(strategyAddress)
+        ),
+        true
+      );
+    }
+
+    _expectCreateStrategyEvents(newStrategy, ILlamaStrategy(strategyAddress));
+    _expectRolePermissionEvents(rolePermissions);
+
+    vm.startPrank(address(mpExecutor));
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract UpdateRoleDescriptionAndRoleHolders is LlamaGovernanceScriptTest {
+  function test_RevertIf_RoleIsNotUpdatedRole() external {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    LlamaGovernanceScript.UpdateRoleDescription memory roleDescription =
+      LlamaGovernanceScript.UpdateRoleDescription(uint8(1), description);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(uint8(i), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    bytes memory data =
+      abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR, roleDescription, roleHolders);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    bytes memory expectedErr = abi.encodeWithSelector(
+      LlamaCore.FailedActionExecution.selector,
+      abi.encodeWithSelector(LlamaGovernanceScript.RoleIsNotUpdatedRole.selector, (0))
+    );
+    vm.expectRevert(expectedErr);
+    mpCore.executeAction(actionInfo);
+  }
+
+  function test_UpdateDescriptionAndRoleHolders() external {
+    RoleDescription description = RoleDescription.wrap(bytes32(bytes("Test")));
+    LlamaGovernanceScript.UpdateRoleDescription memory roleDescription =
+      LlamaGovernanceScript.UpdateRoleDescription(uint8(1), description);
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](3);
+
+    for (uint256 i = 0; i < roleHolders.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      roleHolders[i] = RoleHolderData(uint8(1), address(this), DEFAULT_ROLE_QTY, DEFAULT_ROLE_EXPIRATION);
+    }
+
+    bytes memory data =
+      abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTION_AND_ROLE_HOLDERS_SELECTOR, roleDescription, roleHolders);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    vm.expectEmit();
+    emit RoleInitialized(uint8(1), description);
+    _expectRoleHolderEvents(roleHolders);
     mpCore.executeAction(actionInfo);
   }
 }
@@ -838,10 +591,23 @@ contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
     _permissions[4] = RolePermissionData(uint8(Roles.ActionCreator), permissionData5, true);
     _permissions[5] = RolePermissionData(uint8(Roles.ActionCreator), permissionData6, true);
 
-    bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, _permissions);
+    LlamaGovernanceScript.NewRolePermissionsData[] memory newRolePermissionsData =
+      new LlamaGovernanceScript.NewRolePermissionsData[](6);
 
-    (ActionInfo memory actionInfo) = _createAction(data);
+    for (uint256 i = 0; i < newRolePermissionsData.length; i = LlamaUtils.uncheckedIncrement(i)) {
+      newRolePermissionsData[i] = LlamaGovernanceScript.NewRolePermissionsData(
+        _permissions[i].role,
+        LlamaGovernanceScript.SelectorStrategy(
+          _permissions[i].permissionData.selector, _permissions[i].permissionData.strategy
+        )
+      );
+    }
+
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, newRolePermissionsData
+    );
+
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     vm.expectEmit();
     emit AccountCreated(accountAddress, accountLogic, config);
@@ -878,28 +644,204 @@ contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
 
     mpCore.executeAction(actionInfo);
   }
+}
 
-  function test_RevertsIf_TargetIsNotAccount(address notAccount) public {
-    bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
-    LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
+contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
+  function test_SetScriptAuthAndSetPermissions(address script, bool authorized) public {
+    LlamaGovernanceScript.NewRolePermissionsData[] memory newRolePermissionsData =
+      new LlamaGovernanceScript.NewRolePermissionsData[](2);
 
-    ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
+    newRolePermissionsData[0] = LlamaGovernanceScript.NewRolePermissionsData(
+      uint8(Roles.ActionCreator),
+      LlamaGovernanceScript.SelectorStrategy(
+        LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector, mpStrategy1
+      )
+    );
 
-    vm.assume(notAccount != address(accountAddress));
+    newRolePermissionsData[1] = LlamaGovernanceScript.NewRolePermissionsData(
+      uint8(Roles.ActionCreator),
+      LlamaGovernanceScript.SelectorStrategy(LlamaGovernanceScript.initRoles.selector, mpStrategy2)
+    );
 
-    PermissionData memory permissionData =
-      PermissionData(notAccount, LlamaAccount.batchTransferNativeToken.selector, mpStrategy2);
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.setScriptAuthAndSetPermissions.selector, script, authorized, newRolePermissionsData
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
-    RolePermissionData[] memory _permissions = new RolePermissionData[](1);
-    _permissions[0] = RolePermissionData(uint8(Roles.ActionCreator), permissionData, true);
+    vm.expectEmit();
+    emit ScriptAuthorizationSet(script, authorized);
+    for (uint256 i = 0; i < newRolePermissionsData.length; i++) {
+      PermissionData memory permissionData = PermissionData(
+        script, newRolePermissionsData[i].permissionData.selector, newRolePermissionsData[i].permissionData.strategy
+      );
+      bytes32 permissionId = lens.computePermissionId(permissionData);
+      vm.expectEmit();
+      emit RolePermissionAssigned(uint8(Roles.ActionCreator), permissionId, permissionData, authorized);
+    }
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetStrategyLogicAuthorizations is LlamaGovernanceScriptTest {
+  function test_setStrategyLogicAuthorizations(bool authorized) public {
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](3);
+    strategies[0] = relativeHolderQuorumLogic;
+    strategies[1] = absolutePeerReviewLogic;
+    strategies[2] = absoluteQuorumLogic;
 
     bytes memory data =
-      abi.encodeWithSelector(LlamaGovernanceScript.createAccountAndSetRolePermissions.selector, account, _permissions);
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyLogicAuthorizations.selector, strategies, authorized);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
-    (ActionInfo memory actionInfo) = _createAction(data);
+    vm.expectEmit();
+    emit StrategyLogicAuthorizationSet(relativeHolderQuorumLogic, authorized);
+    vm.expectEmit();
+    emit StrategyLogicAuthorizationSet(absolutePeerReviewLogic, authorized);
+    vm.expectEmit();
+    emit StrategyLogicAuthorizationSet(absoluteQuorumLogic, authorized);
 
-    vm.expectRevert(); // reverts with FailedActionExecution and does not reach the TargetIsNotAccount error
+    mpCore.executeAction(actionInfo);
+  }
+}
 
+contract SetAccountLogicAuthorizations is LlamaGovernanceScriptTest {
+  function test_SetAccountLogicAuthorizations(ILlamaAccount[] calldata accountLogics, bool authorized) public {
+    vm.assume(accountLogics.length < 5);
+
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.setAccountLogicAuthorizations.selector, accountLogics, authorized);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    for (uint256 i = 0; i < accountLogics.length; i++) {
+      vm.expectEmit();
+      emit AccountLogicAuthorizationSet(accountLogics[i], authorized);
+    }
+
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetStrategyAuthorizations is LlamaGovernanceScriptTest {
+  function test_setStrategyAuthorizations(bool authorized) public {
+    ILlamaStrategy[] memory strategies = new ILlamaStrategy[](1);
+    strategies[0] = mpStrategy1;
+
+    bytes memory data =
+      abi.encodeWithSelector(LlamaGovernanceScript.setStrategyAuthorizations.selector, strategies, authorized);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    vm.expectEmit();
+    emit StrategyAuthorizationSet(mpStrategy1, authorized);
+
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetStrategyLogicAuthAndNewStrategies is LlamaGovernanceScriptTest {
+  function test_SetStrategyLogicAuthorizationAndCreateStrategies() public {
+    LlamaRelativeStrategyBase.Config[] memory newStrategies = new LlamaRelativeStrategyBase.Config[](1);
+    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+      approvalPeriod: 0,
+      queuingPeriod: 0,
+      expirationPeriod: 2 days,
+      isFixedLengthApprovalPeriod: false,
+      minApprovalPct: 0,
+      minDisapprovalPct: 10_001,
+      approvalRole: uint8(Roles.Approver),
+      disapprovalRole: uint8(Roles.Disapprover),
+      forceApprovalRoles: new uint8[](0),
+      forceDisapprovalRoles: new uint8[](0)
+    });
+    ILlamaStrategy instantExecutionStrategy = lens.computeLlamaStrategyAddress(
+      address(relativeQuantityQuorumLogic), DeployUtils.encodeStrategy(newStrategies[0]), address(mpCore)
+    );
+    bytes memory data = abi.encodeWithSelector(
+      LlamaGovernanceScript.setStrategyLogicAuthAndNewStrategies.selector,
+      relativeQuantityQuorumLogic,
+      DeployUtils.encodeStrategyConfigs(newStrategies)
+    );
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    vm.expectEmit();
+    emit StrategyLogicAuthorizationSet(relativeQuantityQuorumLogic, true);
+    vm.expectEmit();
+    emit StrategyCreated(
+      instantExecutionStrategy, relativeQuantityQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0])
+    );
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract InitRoles is LlamaGovernanceScriptTest {
+  function testFuzz_initializeRoles(RoleDescription[] memory descriptions) public {
+    _assumeInitializeRoles(descriptions);
+    bytes memory data = abi.encodeWithSelector(INIT_ROLES_SELECTOR, descriptions);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectInitializeRolesEvents(descriptions);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetRoleHolders is LlamaGovernanceScriptTest {
+  function testFuzz_setRoleHolders(uint256 salt) public {
+    RoleHolderData[] memory roleHolders = new RoleHolderData[](salt == 0 ? 0 : 9 % salt);
+    for (uint256 i = 0; i < roleHolders.length; i++) {
+      roleHolders[i].role = uint8(i == 0 ? 1 : i);
+      roleHolders[i].expiration = uint64(block.timestamp + 1 days);
+      roleHolders[i].policyholder = address(this);
+      roleHolders[i].quantity = DEFAULT_ROLE_QTY;
+    }
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolders);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectRoleHolderEvents(roleHolders);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetRolePermissions is LlamaGovernanceScriptTest {
+  function testFuzz_setRolePermissions(RolePermissionData[] memory rolePermissions) public {
+    _boundRolePermissions(rolePermissions);
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_PERMISSIONS_SELECTOR, rolePermissions);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    _expectRolePermissionEvents(rolePermissions);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract RevokePolicies is LlamaGovernanceScriptTest {
+  function test_revokePolicies() public {
+    revokePolicies.push(disapproverDave);
+    bytes memory data = abi.encodeWithSelector(REVOKE_POLICIES_SELECTOR, revokePolicies);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+    vm.expectEmit();
+    emit RoleAssigned(address(disapproverDave), uint8(Roles.Disapprover), 0, 0);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract UpdateRoleDescriptions is LlamaGovernanceScriptTest {
+  function testFuzz_updateRoleDescriptions(LlamaGovernanceScript.UpdateRoleDescription[] memory roleDescriptions)
+    public
+  {
+    _assumeUpdateRoleDescriptions(roleDescriptions);
+    bytes memory data = abi.encodeWithSelector(UPDATE_ROLE_DESCRIPTIONS_SELECTOR, roleDescriptions);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    _expectUpdateRoleDescriptionsEvents(roleDescriptions);
+    mpCore.executeAction(actionInfo);
+  }
+}
+
+contract SetGuards is LlamaGovernanceScriptTest {
+  function testFuzz_setGuards(address target, bytes4[] memory selectors) public {
+    vm.assume(target != address(mpCore));
+    vm.assume(target != address(mpPolicy));
+    ILlamaActionGuard guard = ILlamaActionGuard(new MockActionGuard(false, true, true, "no action creation"));
+
+    bytes memory data = abi.encodeWithSelector(SET_GUARDS_SELECTOR, target, selectors, guard);
+    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
+
+    _expectSetGuardsEvents(target, selectors, guard);
     mpCore.executeAction(actionInfo);
   }
 }
