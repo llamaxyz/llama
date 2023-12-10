@@ -184,13 +184,9 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   function _createStrategy(uint256 salt, bool isFixedLengthApprovalPeriod)
     internal
     view
-    returns (
-      LlamaRelativeStrategyBase.Config[] memory newStrategies,
-      LlamaGovernanceScript.CreateStrategy memory strategies
-    )
+    returns (LlamaRelativeStrategyBase.Config memory newStrategy, LlamaGovernanceScript.CreateStrategy memory strategy)
   {
-    newStrategies = new LlamaRelativeStrategyBase.Config[](1);
-    newStrategies[0] = LlamaRelativeStrategyBase.Config({
+    newStrategy = LlamaRelativeStrategyBase.Config({
       approvalPeriod: toUint64(salt % 1000 days),
       queuingPeriod: toUint64(salt % 1001 days),
       expirationPeriod: toUint64(salt % 1002 days),
@@ -202,8 +198,8 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
       forceApprovalRoles: new uint8[](0),
       forceDisapprovalRoles: new uint8[](0)
     });
-    strategies.llamaStrategyLogic = relativeHolderQuorumLogic;
-    strategies.strategies = DeployUtils.encodeStrategyConfigs(newStrategies);
+    strategy.llamaStrategyLogic = relativeHolderQuorumLogic;
+    strategy.config = DeployUtils.encodeStrategy(newStrategy);
   }
 
   function _expectInitializeRolesEvents(RoleDescription[] memory descriptions) internal {
@@ -235,13 +231,13 @@ contract LlamaGovernanceScriptTest is LlamaTestSetup {
   }
 
   function _expectCreateStrategyEvents(
-    LlamaRelativeStrategyBase.Config[] memory newStrategies,
+    LlamaRelativeStrategyBase.Config memory newStrategy,
     ILlamaStrategy strategyAddress
   ) internal {
     vm.expectEmit();
     emit StrategyAuthorizationSet(strategyAddress, true);
     vm.expectEmit();
-    emit StrategyCreated(strategyAddress, relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategies[0]));
+    emit StrategyCreated(strategyAddress, relativeHolderQuorumLogic, DeployUtils.encodeStrategy(newStrategy));
   }
 
   function _expectUpdateRoleDescriptionsEvents(LlamaGovernanceScript.UpdateRoleDescription[] memory descriptions)
@@ -469,26 +465,6 @@ contract InitRoleAndHoldersAndPermissions is LlamaGovernanceScriptTest {
 }
 
 contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
-  function test_RevertIf_StrategiesLengthIsNotOne(bytes[] memory strategies) external {
-    vm.assume(strategies.length != 1);
-    LlamaGovernanceScript.NewStrategyRolesAndPermissionsData[] memory newStrategyRolesAndPermissionsData =
-      new LlamaGovernanceScript.NewStrategyRolesAndPermissionsData[](0);
-    LlamaGovernanceScript.CreateStrategy memory newStrategy =
-      LlamaGovernanceScript.CreateStrategy(relativeHolderQuorumLogic, strategies);
-
-    bytes memory data = abi.encodeWithSelector(
-      CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR, newStrategy, newStrategyRolesAndPermissionsData
-    );
-    (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
-
-    bytes memory expectedErr = abi.encodeWithSelector(
-      LlamaCore.FailedActionExecution.selector,
-      abi.encodeWithSelector(LlamaGovernanceScript.ArrayLengthMustBeOne.selector)
-    );
-    vm.expectRevert(expectedErr);
-    mpCore.executeAction(actionInfo);
-  }
-
   function testFuzz_CreateStrategyAndSetRolePermissions(
     LlamaGovernanceScript.NewStrategyRolesAndPermissionsData[] memory newStrategyRolesAndPermissionsData,
     uint256 salt,
@@ -496,16 +472,16 @@ contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
   ) public {
     _boundRolePermissions(newStrategyRolesAndPermissionsData);
 
-    (LlamaRelativeStrategyBase.Config[] memory newStrategies, LlamaGovernanceScript.CreateStrategy memory strategies) =
+    (LlamaRelativeStrategyBase.Config memory newStrategy, LlamaGovernanceScript.CreateStrategy memory strategy) =
       _createStrategy(salt, isFixedLengthApprovalPeriod);
 
     bytes memory data = abi.encodeWithSelector(
-      CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR, strategies, newStrategyRolesAndPermissionsData
+      CREATE_STRATEGY_AND_SET_ROLE_PERMISSIONS_SELECTOR, strategy, newStrategyRolesAndPermissionsData
     );
     (ActionInfo memory actionInfo) = _createAndApproveAndQueueAction(data);
 
     address strategyAddress = Clones.predictDeterministicAddress(
-      address(strategies.llamaStrategyLogic), keccak256(strategies.strategies[0]), address(core)
+      address(strategy.llamaStrategyLogic), keccak256(strategy.config), address(core)
     );
 
     RolePermissionData[] memory rolePermissions = new RolePermissionData[](newStrategyRolesAndPermissionsData.length);
@@ -521,7 +497,7 @@ contract CreateStrategyAndSetRolePermissions is LlamaGovernanceScriptTest {
       );
     }
 
-    _expectCreateStrategyEvents(newStrategies, ILlamaStrategy(strategyAddress));
+    _expectCreateStrategyEvents(newStrategy, ILlamaStrategy(strategyAddress));
     _expectRolePermissionEvents(rolePermissions);
 
     vm.startPrank(address(mpExecutor));

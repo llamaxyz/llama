@@ -39,7 +39,7 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   /// @dev Struct for the data to call the `createStrategies` method in `LlamaCore`.
   struct CreateStrategy {
     ILlamaStrategy llamaStrategyLogic; // Logic contract for the strategies.
-    bytes[] strategies; // Array of configurations to initialize new strategies with.
+    bytes config; // Array of configurations to initialize new strategies with.
   }
 
   /// @dev Struct for the data required to assign a newly intialized role to a policyholder.
@@ -194,12 +194,14 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     CreateStrategy calldata strategy,
     NewStrategyRolesAndPermissionsData[] calldata newStrategyRolesAndPermissionsData
   ) external onlyDelegateCall {
-    if (strategy.strategies.length != 1) revert ArrayLengthMustBeOne();
     (LlamaCore core,) = _context();
-    core.createStrategies(strategy.llamaStrategyLogic, strategy.strategies);
+    bytes[] memory strategies = new bytes[](1);
+    strategies[0] = strategy.config;
+
+    core.createStrategies(strategy.llamaStrategyLogic, strategies);
 
     address strategyAddress = Clones.predictDeterministicAddress(
-      address(strategy.llamaStrategyLogic), keccak256(strategy.strategies[0]), address(core)
+      address(strategy.llamaStrategyLogic), keccak256(strategy.config), address(core)
     );
 
     uint256 length = newStrategyRolesAndPermissionsData.length;
