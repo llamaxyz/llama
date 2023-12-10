@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Clones} from "@openzeppelin/proxy/Clones.sol";
 
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {ILlamaStrategy} from "src/interfaces/ILlamaStrategy.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {PermissionData, RoleHolderData, RolePermissionData} from "src/lib/Structs.sol";
@@ -84,9 +85,6 @@ contract LlamaGovernanceScript is LlamaBaseScript {
   // ========================
   // ======== Errors ========
   // ========================
-
-  /// @dev The provided array does not have a length of 1.
-  error ArrayLengthMustBeOne();
 
   /// @dev The call did not succeed.
   /// @param index Index of the arbitrary function being called.
@@ -351,6 +349,18 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     uint256 length = strategies.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyAuthorization(strategies[i], authorized);
+    }
+  }
+
+  /// @notice Set a guard on multiple selectors on a single target.
+  /// @param target The target contract where the `guard` will apply.
+  /// @param selectors An array of selectors to apply the guard to.
+  /// @param guard The guard being applied.
+  function setGuards(address target, bytes4[] calldata selectors, ILlamaActionGuard guard) external onlyDelegateCall {
+    (LlamaCore core,) = _context();
+    uint256 length = selectors.length;
+    for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
+      core.setGuard(target, selectors[i], guard);
     }
   }
 
