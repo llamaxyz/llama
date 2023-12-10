@@ -299,6 +299,18 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     setRolePermissions(permissions);
   }
 
+  /// @notice Set strategy logic authorization and create new strategies.
+  /// @param strategyLogic Strategy logic contract to set authorization for.
+  /// @param strategies Array of configurations to initialize new strategies with.
+  function setStrategyLogicAuthAndNewStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
+    external
+    onlyDelegateCall
+  {
+    (LlamaCore core,) = _context();
+    core.setStrategyLogicAuthorization(strategyLogic, true);
+    core.createStrategies(strategyLogic, strategies);
+  }
+
   // ========================================
   // ======== Batch Core Functions ========
   // ========================================
@@ -340,18 +352,6 @@ contract LlamaGovernanceScript is LlamaBaseScript {
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       core.setStrategyAuthorization(strategies[i], authorized);
     }
-  }
-
-  /// @notice Set strategy logic authorization and create new strategies.
-  /// @param strategyLogic Strategy logic contract to set authorization for.
-  /// @param strategies Array of configurations to initialize new strategies with.
-  function setStrategyLogicAuthAndNewStrategies(ILlamaStrategy strategyLogic, bytes[] calldata strategies)
-    external
-    onlyDelegateCall
-  {
-    (LlamaCore core,) = _context();
-    core.setStrategyLogicAuthorization(strategyLogic, true);
-    core.createStrategies(strategyLogic, strategies);
   }
 
   // ========================================
