@@ -41,11 +41,15 @@ contract LlamaAccountTokenDelegationScript is LlamaBaseScript {
   // ========================================
 
   /// @notice Delegate voting tokens from an account to a delegatee.
-  /// @param account The Llama account that holds the voting tokens.
-  /// @param token The address of the token contract.
-  /// @param delegatee The address of the delegatee.
-  function delegateTokenFromAccount(LlamaAccount account, IVotes token, address delegatee) public onlyDelegateCall {
-    account.execute(address(token), WITH_DELEGATECALL, VALUE, abi.encodeWithSelector(DELEGATE_SELECTOR, delegatee));
+  /// @param accountTokenDelegateData A struct that contains the Llama account that holds the voting tokens, the address
+  /// of the token contract, and the address of the delegatee.
+  function delegateTokenFromAccount(AccountTokenDelegateData memory accountTokenDelegateData) public onlyDelegateCall {
+    accountTokenDelegateData.account.execute(
+      address(accountTokenDelegateData.token),
+      WITH_DELEGATECALL,
+      VALUE,
+      abi.encodeWithSelector(DELEGATE_SELECTOR, accountTokenDelegateData.delegatee)
+    );
   }
 
   /// @notice Delegate multiple voting tokens from an account to a delegatee.
@@ -58,7 +62,9 @@ contract LlamaAccountTokenDelegationScript is LlamaBaseScript {
     uint256 length = accountTokenDelegateData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
       delegateTokenFromAccount(
-        accountTokenDelegateData[i].account, accountTokenDelegateData[i].token, accountTokenDelegateData[i].delegatee
+        AccountTokenDelegateData(
+          accountTokenDelegateData[i].account, accountTokenDelegateData[i].token, accountTokenDelegateData[i].delegatee
+        )
       );
     }
   }
