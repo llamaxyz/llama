@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {IVotes} from "@openzeppelin/governance/utils/IVotes.sol";
-import {Address} from "@openzeppelin/utils/Address.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
@@ -12,7 +11,9 @@ import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 /// @notice This contract is the standard LlamaAccount with an additional delegate and batch delegate function for
 /// voting tokens.
 contract LlamaAccountWithDelegation is LlamaAccount {
-  using Address for address payable;
+  // ==========================
+  // ========= Structs ========
+  // ==========================
 
   /// @dev Data for delegating voting tokens to delegatees.
   struct TokenDelegateData {
@@ -29,6 +30,10 @@ contract LlamaAccountWithDelegation is LlamaAccount {
   constructor() {
     _disableInitializers();
   }
+
+  // ===========================================
+  // ======== External and Public Logic ========
+  // ===========================================
 
   // -------- Voting Tokens --------
 
