@@ -50,39 +50,11 @@ contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
   }
 }
 
-contract DelegateToExecutor is LlamaAccountTokenDelegationScriptTest {
+contract DelegateTokenFromAccount is LlamaAccountTokenDelegationScriptTest {
   function executeDelegateTokenAction(
     LlamaAccountTokenDelegationScript.AccountTokenDelegateData memory tokenDelegateData
   ) internal {
     bytes memory data = abi.encodeCall(LlamaAccountTokenDelegationScript.delegateTokenFromAccount, (tokenDelegateData));
-
-    vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data, "");
-
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data
-    );
-    vm.warp(block.timestamp + 1);
-
-    vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-    vm.prank(approverAlicia);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-
-    vm.warp(block.timestamp + 6 days);
-
-    mpCore.queueAction(actionInfo);
-
-    vm.warp(block.timestamp + 5 days);
-
-    mpCore.executeAction(actionInfo);
-  }
-
-  function executeDelegateTokensAction(
-    LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData
-  ) internal {
-    bytes memory data = abi.encodeCall(LlamaAccountTokenDelegationScript.delegateTokensFromAccount, (tokenDelegateData));
 
     vm.prank(actionCreatorAaron);
     uint256 actionId =
@@ -140,6 +112,36 @@ contract DelegateToExecutor is LlamaAccountTokenDelegationScriptTest {
     // address
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
     assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), delegatee);
+  }
+}
+
+contract DelegateTokensFromAccount is LlamaAccountTokenDelegationScriptTest {
+  function executeDelegateTokensAction(
+    LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData
+  ) internal {
+    bytes memory data = abi.encodeCall(LlamaAccountTokenDelegationScript.delegateTokensFromAccount, (tokenDelegateData));
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data, "");
+
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data
+    );
+    vm.warp(block.timestamp + 1);
+
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    mpCore.executeAction(actionInfo);
   }
 
   function test_DelegateTokensFromAccounts(address delegatee1, address delegatee2) external {

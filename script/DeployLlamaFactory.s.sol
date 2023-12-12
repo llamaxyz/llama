@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
+import {LlamaAccountWithDelegation} from "src/accounts/LlamaAccountWithDelegation.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
@@ -28,6 +29,7 @@ contract DeployLlamaFactory is Script {
   LlamaAbsolutePeerReview absolutePeerReviewLogic;
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
+  LlamaAccountWithDelegation accountWithDelegationLogic;
   LlamaPolicy policyLogic;
   LlamaPolicyMetadata policyMetadataLogic;
 
@@ -125,5 +127,11 @@ contract DeployLlamaFactory is Script {
     vm.broadcast();
     governanceScript = new LlamaGovernanceScript();
     DeployUtils.print(string.concat("  LlamaGovernanceScript:", vm.toString(address(governanceScript))));
+
+    vm.broadcast();
+    accountWithDelegationLogic = new LlamaAccountWithDelegation();
+    DeployUtils.print(
+      string.concat("  LlamaAccountWithDelegationLogic:", vm.toString(address(accountWithDelegationLogic)))
+    );
   }
 }
