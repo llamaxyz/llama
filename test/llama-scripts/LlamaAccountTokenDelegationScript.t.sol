@@ -98,7 +98,8 @@ contract DelegateTokenFromAccount is LlamaAccountTokenDelegationScriptTest {
     assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(mpExecutor));
   }
 
-  function test_TokensDelegatedToAnyAddress(address delegatee) external {
+  function test_TokensDelegatedToOtherAddress() external {
+    address delegatee = makeAddr("scriptDelegatee");
     // Assert that the account has 1,000 UNI tokens and hasn't delegated them yet
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
     assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(0));
@@ -146,7 +147,9 @@ contract DelegateTokensFromAccount is LlamaAccountTokenDelegationScriptTest {
     mpCore.executeAction(actionInfo);
   }
 
-  function test_DelegateTokensFromAccounts(address delegatee1, address delegatee2) external {
+  function test_DelegateTokensFromAccounts() external {
+    address delegatee1 = makeAddr("scriptDelegate1");
+    address delegatee2 = makeAddr("scriptDelegate2");
     // Assert that the accounts have 1,000 UNI tokens and hasn't delegated them yet
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
     assertEq(UNI.balanceOf(address(mpAccount2)), 1000e18);
@@ -156,13 +159,12 @@ contract DelegateTokensFromAccount is LlamaAccountTokenDelegationScriptTest {
     LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData =
       new LlamaAccountTokenDelegationScript.AccountTokenDelegateData[](2);
 
-    for (uint256 i = 0; i < 2; LlamaUtils.uncheckedIncrement(i)) {
-      tokenDelegateData[i] = LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
-        LlamaAccount(payable(address(i % 2 == 0 ? mpAccount1 : mpAccount2))),
-        IVotes(address(UNI)),
-        i % 2 == 0 ? delegatee1 : delegatee2
-      );
-    }
+    tokenDelegateData[0] = LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
+      LlamaAccount(payable(address(mpAccount1))), IVotes(address(UNI)), delegatee1
+    );
+    tokenDelegateData[1] = LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
+      LlamaAccount(payable(address(mpAccount2))), IVotes(address(UNI)), delegatee2
+    );
 
     executeDelegateTokensAction(tokenDelegateData);
 

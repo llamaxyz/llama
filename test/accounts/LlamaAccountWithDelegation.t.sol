@@ -13,7 +13,6 @@ import {DeployUtils} from "script/DeployUtils.sol";
 import {ILlamaAccount} from "src/interfaces/ILlamaAccount.sol";
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaAccountWithDelegation} from "src/accounts/LlamaAccountWithDelegation.sol";
-import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 
