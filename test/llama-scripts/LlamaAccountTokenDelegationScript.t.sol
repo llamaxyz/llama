@@ -9,13 +9,13 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {IVotes} from "@openzeppelin/governance/utils/IVotes.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
+import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {LlamaAccountTokenDelegationScript} from "src/llama-scripts/LlamaAccountTokenDelegationScript.sol";
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 
 contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
   IERC20 public constant UNI = IERC20(0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984);
-  address public constant UNI_WHALE = 0x878f0822A9e77c1dD7883E543747147Be8D63C3B;
   uint256 public constant UNI_AMOUNT = 1000e18;
 
   address delegationScriptAddress;
@@ -152,7 +152,7 @@ contract DelegateToExecutor is LlamaAccountTokenDelegationScriptTest {
     LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData =
       new LlamaAccountTokenDelegationScript.AccountTokenDelegateData[](2);
 
-    for (uint256 i = 0; i < 2; i = i++) {
+    for (uint256 i = 0; i < 2; LlamaUtils.uncheckedIncrement(i)) {
       tokenDelegateData[i] = LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
         LlamaAccount(payable(address(i % 2 == 0 ? mpAccount1 : mpAccount2))),
         IVotes(address(UNI)),
