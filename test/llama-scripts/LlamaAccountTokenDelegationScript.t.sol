@@ -22,7 +22,7 @@ contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
 
   PermissionData public delegateTokenPermission;
   PermissionData public delegateTokensPermission;
-
+    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
   function setUp() public virtual override {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 18_642_270);
     LlamaTestSetup.setUp();
