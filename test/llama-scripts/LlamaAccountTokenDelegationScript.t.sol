@@ -91,12 +91,11 @@ contract DelegateTokenFromAccount is LlamaAccountTokenDelegationScriptTest {
       LlamaAccount(payable(address(mpAccount1))), IVotes(address(UNI)), address(mpExecutor)
     );
 
-    vm.expectEmit();
-    emit DelegateChanged(address(mpAccount1), address(0), address(mpExecutor));
     executeDelegateTokenAction(tokenDelegateData);
 
     // After the action executes the account should still have 1,000 UNI tokens
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(mpExecutor));
   }
 
   function test_TokensDelegatedToAnyAddress(address delegatee) external {
