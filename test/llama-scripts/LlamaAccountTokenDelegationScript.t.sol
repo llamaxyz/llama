@@ -20,6 +20,7 @@ contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
 
   address delegationScriptAddress;
 
+  PermissionData public delegateTokenPermission;
   PermissionData public delegateTokensPermission;
 
   function setUp() public virtual override {
@@ -27,25 +28,61 @@ contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
     LlamaTestSetup.setUp();
 
     deal(address(UNI), address(mpAccount1), UNI_AMOUNT);
+    deal(address(UNI), address(mpAccount2), UNI_AMOUNT);
 
     delegationScriptAddress = address(new LlamaAccountTokenDelegationScript());
 
-    delegateTokensPermission = PermissionData(
+    delegateTokenPermission = PermissionData(
       address(delegationScriptAddress), LlamaAccountTokenDelegationScript.delegateTokenFromAccount.selector, mpStrategy1
+    );
+
+    delegateTokensPermission = PermissionData(
+      address(delegationScriptAddress),
+      LlamaAccountTokenDelegationScript.delegateTokensFromAccount.selector,
+      mpStrategy1
     );
 
     vm.startPrank(address(mpExecutor));
     mpCore.setScriptAuthorization(address(delegationScriptAddress), true);
+    mpPolicy.setRolePermission(uint8(Roles.ActionCreator), delegateTokenPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), delegateTokensPermission, true);
     vm.stopPrank();
   }
 }
 
 contract DelegateToExecutor is LlamaAccountTokenDelegationScriptTest {
-  function executeDelegateTokensAction(
+  function executeDelegateTokenAction(
     LlamaAccountTokenDelegationScript.AccountTokenDelegateData memory tokenDelegateData
   ) internal {
     bytes memory data = abi.encodeCall(LlamaAccountTokenDelegationScript.delegateTokenFromAccount, (tokenDelegateData));
+
+    vm.prank(actionCreatorAaron);
+    uint256 actionId =
+      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data, "");
+
+    ActionInfo memory actionInfo = ActionInfo(
+      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, delegationScriptAddress, 0, data
+    );
+    vm.warp(block.timestamp + 1);
+
+    vm.prank(approverAdam);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+    vm.prank(approverAlicia);
+    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
+
+    vm.warp(block.timestamp + 6 days);
+
+    mpCore.queueAction(actionInfo);
+
+    vm.warp(block.timestamp + 5 days);
+
+    mpCore.executeAction(actionInfo);
+  }
+
+  function executeDelegateTokensAction(
+    LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData
+  ) internal {
+    bytes memory data = abi.encodeCall(LlamaAccountTokenDelegationScript.delegateTokensFromAccount, (tokenDelegateData));
 
     vm.prank(actionCreatorAaron);
     uint256 actionId =
@@ -80,10 +117,55 @@ contract DelegateToExecutor is LlamaAccountTokenDelegationScriptTest {
       LlamaAccount(payable(address(mpAccount1))), IVotes(address(UNI)), address(mpExecutor)
     );
 
-    executeDelegateTokensAction(tokenDelegateData);
+    executeDelegateTokenAction(tokenDelegateData);
 
     // After the action executes the account should still have 1,000 UNI tokens but the delegate is the executor address
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
     assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(mpExecutor));
+  }
+
+  function test_TokensDelegatedToAnyAddress(address delegatee) external {
+    // Assert that the account has 1,000 UNI tokens and hasn't delegated them yet
+    assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(0));
+
+    LlamaAccountTokenDelegationScript.AccountTokenDelegateData memory tokenDelegateData =
+    LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
+      LlamaAccount(payable(address(mpAccount1))), IVotes(address(UNI)), delegatee
+    );
+
+    executeDelegateTokenAction(tokenDelegateData);
+
+    // After the action executes the account should still have 1,000 UNI tokens but the delegate is the delegatee
+    // address
+    assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), delegatee);
+  }
+
+  function test_DelegateTokensFromAccounts(address delegatee1, address delegatee2) external {
+    // Assert that the accounts have 1,000 UNI tokens and hasn't delegated them yet
+    assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
+    assertEq(UNI.balanceOf(address(mpAccount2)), 1000e18);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(0));
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount2)), address(0));
+
+    LlamaAccountTokenDelegationScript.AccountTokenDelegateData[] memory tokenDelegateData =
+      new LlamaAccountTokenDelegationScript.AccountTokenDelegateData[](2);
+
+    for (uint256 i = 0; i < 2; i = i++) {
+      tokenDelegateData[i] = LlamaAccountTokenDelegationScript.AccountTokenDelegateData(
+        LlamaAccount(payable(address(i % 2 == 0 ? mpAccount1 : mpAccount2))),
+        IVotes(address(UNI)),
+        i % 2 == 0 ? delegatee1 : delegatee2
+      );
+    }
+
+    executeDelegateTokensAction(tokenDelegateData);
+
+    // After the action executes the accounts should still have 1,000 UNI tokens but the delegate is the delegatee
+    assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
+    assertEq(UNI.balanceOf(address(mpAccount2)), 1000e18);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), delegatee1);
+    assertEq(IVotes(address(UNI)).delegates(address(mpAccount2)), delegatee2);
   }
 }
