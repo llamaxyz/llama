@@ -15,6 +15,8 @@ import {LlamaAccountTokenDelegationScript} from "src/llama-scripts/LlamaAccountT
 import {ActionInfo, PermissionData} from "src/lib/Structs.sol";
 
 contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
+  event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+
   IERC20 public constant UNI = IERC20(0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984);
   uint256 public constant UNI_AMOUNT = 1000e18;
 
@@ -22,7 +24,7 @@ contract LlamaAccountTokenDelegationScriptTest is LlamaTestSetup {
 
   PermissionData public delegateTokenPermission;
   PermissionData public delegateTokensPermission;
-    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
+
   function setUp() public virtual override {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 18_642_270);
     LlamaTestSetup.setUp();
@@ -89,11 +91,12 @@ contract DelegateTokenFromAccount is LlamaAccountTokenDelegationScriptTest {
       LlamaAccount(payable(address(mpAccount1))), IVotes(address(UNI)), address(mpExecutor)
     );
 
+    vm.expectEmit();
+    emit DelegateChanged(address(mpAccount1), address(0), address(mpExecutor));
     executeDelegateTokenAction(tokenDelegateData);
 
-    // After the action executes the account should still have 1,000 UNI tokens but the delegate is the executor address
+    // After the action executes the account should still have 1,000 UNI tokens
     assertEq(UNI.balanceOf(address(mpAccount1)), 1000e18);
-    assertEq(IVotes(address(UNI)).delegates(address(mpAccount1)), address(mpExecutor));
   }
 
   function test_TokensDelegatedToAnyAddress(address delegatee) external {
