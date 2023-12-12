@@ -566,7 +566,7 @@ contract UpdateRoleDescriptionAndRoleHolders is LlamaGovernanceScriptTest {
 contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
   function test_CreateAccountAndSetRolePermissions() public {
     bytes memory config = abi.encode(LlamaAccount.Config({name: "mockAccountERC20"}));
-    LlamaGovernanceScript.CreateAccounts memory account = LlamaGovernanceScript.CreateAccounts(accountLogic, config);
+    LlamaGovernanceScript.CreateAccount memory account = LlamaGovernanceScript.CreateAccount(accountLogic, config);
 
     ILlamaAccount accountAddress = lens.computeLlamaAccountAddress(address(accountLogic), config, address(mpCore));
 
