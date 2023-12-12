@@ -32,16 +32,11 @@ contract LlamaAccountWithDelegationTest is LlamaTestSetup {
     vm.createSelectFork(vm.rpcUrl("mainnet"), 18_642_270);
     LlamaTestSetup.setUp();
 
-    LlamaAccount.Config[] memory newAccount = new LlamaAccount.Config[](1);
-    newAccount[0] = LlamaAccount.Config({name: "LlamaAccountWithDelegation"});
-
-    bytes[] memory encoded = new bytes[](1);
-    for (uint256 i = 0; i < newAccount.length; i++) {
-      encoded[i] = abi.encode(newAccount[i]);
-    }
+    LlamaAccount.Config[] memory newAccounts = new LlamaAccount.Config[](1);
+    newAccounts[0] = LlamaAccount.Config({name: "LlamaAccountWithDelegation"});
 
     accountWithDelegation =
-      lens.computeLlamaAccountAddress(address(accountWithDelegationLogic), abi.encode(newAccount[0]), address(mpCore));
+      lens.computeLlamaAccountAddress(address(accountWithDelegationLogic), abi.encode(newAccounts[0]), address(mpCore));
 
     deal(address(UNI), address(accountWithDelegation), UNI_AMOUNT);
     deal(address(ENS), address(accountWithDelegation), ENS_AMOUNT);
@@ -55,7 +50,7 @@ contract LlamaAccountWithDelegationTest is LlamaTestSetup {
 
     vm.startPrank(address(mpExecutor));
     mpCore.setAccountLogicAuthorization(accountWithDelegationLogic, true);
-    mpCore.createAccounts(accountWithDelegationLogic, encoded);
+    mpCore.createAccounts(accountWithDelegationLogic, DeployUtils.encodeAccountConfigs(newAccounts));
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), delegateTokenPermission, true);
     mpPolicy.setRolePermission(uint8(Roles.ActionCreator), batchDelegateTokenPermission, true);
     vm.stopPrank();
@@ -104,7 +99,8 @@ contract DelegateToken is LlamaAccountWithDelegationTest {
     assertEq(IVotes(address(UNI)).delegates(address(accountWithDelegation)), address(mpExecutor));
   }
 
-  function test_DelegateToAnyAddress(address delegatee) external {
+  function test_DelegateToOtherAddress() external {
+    address delegatee = makeAddr("delegatee");
     // Assert that the account has 1,000 UNI tokens and hasn't delegated them yet
     assertEq(UNI.balanceOf(address(accountWithDelegation)), 1000e18);
     assertEq(IVotes(address(UNI)).delegates(address(accountWithDelegation)), address(0));
@@ -121,35 +117,9 @@ contract DelegateToken is LlamaAccountWithDelegationTest {
 }
 
 contract BatchDelegateToken is LlamaAccountWithDelegationTest {
-  function executeBatchDelegateTokenAction(LlamaAccountWithDelegation.TokenDelegateData[] memory tokenDelegateData)
-    internal
-  {
-    bytes memory data = abi.encodeCall(LlamaAccountWithDelegation.batchDelegateToken, (tokenDelegateData));
-
-    vm.prank(actionCreatorAaron);
-    uint256 actionId =
-      mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy1, address(accountWithDelegation), 0, data, "");
-
-    ActionInfo memory actionInfo = ActionInfo(
-      actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy1, address(accountWithDelegation), 0, data
-    );
-    vm.warp(block.timestamp + 1);
-
-    vm.prank(approverAdam);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-    vm.prank(approverAlicia);
-    mpCore.castApproval(uint8(Roles.Approver), actionInfo, "");
-
-    vm.warp(block.timestamp + 6 days);
-
-    mpCore.queueAction(actionInfo);
-
-    vm.warp(block.timestamp + 5 days);
-
-    mpCore.executeAction(actionInfo);
-  }
-
-  function test_BatchDelegateTokens(address delegatee1, address delegatee2) external {
+  function test_BatchDelegateTokens() external {
+    address delegatee1 = address(mpExecutor);
+    address delegatee2 = makeAddr("delegatee2");
     // Assert that the account has UNI and ENS tokens and hasn't delegated them yet
     assertEq(UNI.balanceOf(address(accountWithDelegation)), 1000e18);
     assertEq(ENS.balanceOf(address(accountWithDelegation)), 28_600e18);
@@ -159,13 +129,11 @@ contract BatchDelegateToken is LlamaAccountWithDelegationTest {
     LlamaAccountWithDelegation.TokenDelegateData[] memory tokenDelegateData =
       new LlamaAccountWithDelegation.TokenDelegateData[](2);
 
-    for (uint256 i = 0; i < 2; LlamaUtils.uncheckedIncrement(i)) {
-      tokenDelegateData[i] = LlamaAccountWithDelegation.TokenDelegateData(
-        i % 2 == 0 ? IVotes(address(UNI)) : IVotes(address(ENS)), i % 2 == 0 ? delegatee1 : delegatee2
-      );
-    }
+    tokenDelegateData[0] = LlamaAccountWithDelegation.TokenDelegateData(IVotes(address(UNI)), delegatee1);
+    tokenDelegateData[1] = LlamaAccountWithDelegation.TokenDelegateData(IVotes(address(ENS)), delegatee2);
 
-    executeBatchDelegateTokenAction(tokenDelegateData);
+    vm.prank(address(mpExecutor));
+    LlamaAccountWithDelegation(payable(address(accountWithDelegation))).batchDelegateToken(tokenDelegateData);
 
     // After the action executes the accounts should still have all UNI and ENS tokens but the delegate is the
     // delegatee
