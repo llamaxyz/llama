@@ -10,6 +10,7 @@ import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaAccountTokenDelegationScript} from "src/llama-scripts/LlamaAccountTokenDelegationScript.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.sol";
@@ -39,6 +40,7 @@ contract DeployLlamaFactory is Script {
 
   // Llama scripts
   LlamaGovernanceScript governanceScript;
+  LlamaAccountTokenDelegationScript accountTokenDelegationScript;
 
   function run() public {
     DeployUtils.print(string.concat("Deploying Llama factory to chain:", vm.toString(block.chainid)));
@@ -132,6 +134,12 @@ contract DeployLlamaFactory is Script {
     accountWithDelegationLogic = new LlamaAccountWithDelegation();
     DeployUtils.print(
       string.concat("  LlamaAccountWithDelegationLogic:", vm.toString(address(accountWithDelegationLogic)))
+    );
+
+    vm.broadcast();
+    accountTokenDelegationScript = new LlamaAccountTokenDelegationScript();
+    DeployUtils.print(
+      string.concat("  LlamaAccountTokenDelegationScript:", vm.toString(address(accountTokenDelegationScript)))
     );
   }
 }
