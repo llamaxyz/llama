@@ -648,6 +648,8 @@ contract CreateAccountAndSetRolePermissions is LlamaGovernanceScriptTest {
 
 contract SetScriptAuthAndSetPermissions is LlamaGovernanceScriptTest {
   function test_SetScriptAuthAndSetPermissions(address script, bool authorized) public {
+    vm.assume(script != address(mpCore));
+    vm.assume(script != address(mpPolicy));
     LlamaGovernanceScript.NewRolePermissionsData[] memory newRolePermissionsData =
       new LlamaGovernanceScript.NewRolePermissionsData[](2);
 
