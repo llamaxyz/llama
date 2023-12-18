@@ -4,11 +4,13 @@ pragma solidity 0.8.19;
 import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
+import {LlamaAccountWithDelegation} from "src/accounts/LlamaAccountWithDelegation.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
 import {LlamaPolicy} from "src/LlamaPolicy.sol";
 import {LlamaPolicyMetadata} from "src/LlamaPolicyMetadata.sol";
+import {LlamaAccountTokenDelegationScript} from "src/llama-scripts/LlamaAccountTokenDelegationScript.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {LlamaAbsolutePeerReview} from "src/strategies/absolute/LlamaAbsolutePeerReview.sol";
 import {LlamaAbsoluteQuorum} from "src/strategies/absolute/LlamaAbsoluteQuorum.sol";
@@ -28,6 +30,7 @@ contract DeployLlamaFactory is Script {
   LlamaAbsolutePeerReview absolutePeerReviewLogic;
   LlamaAbsoluteQuorum absoluteQuorumLogic;
   LlamaAccount accountLogic;
+  LlamaAccountWithDelegation accountWithDelegationLogic;
   LlamaPolicy policyLogic;
   LlamaPolicyMetadata policyMetadataLogic;
 
@@ -37,6 +40,7 @@ contract DeployLlamaFactory is Script {
 
   // Llama scripts
   LlamaGovernanceScript governanceScript;
+  LlamaAccountTokenDelegationScript accountTokenDelegationScript;
 
   function run() public {
     DeployUtils.print(string.concat("Deploying Llama factory to chain:", vm.toString(block.chainid)));
@@ -125,5 +129,17 @@ contract DeployLlamaFactory is Script {
     vm.broadcast();
     governanceScript = new LlamaGovernanceScript();
     DeployUtils.print(string.concat("  LlamaGovernanceScript:", vm.toString(address(governanceScript))));
+
+    vm.broadcast();
+    accountWithDelegationLogic = new LlamaAccountWithDelegation();
+    DeployUtils.print(
+      string.concat("  LlamaAccountWithDelegationLogic:", vm.toString(address(accountWithDelegationLogic)))
+    );
+
+    vm.broadcast();
+    accountTokenDelegationScript = new LlamaAccountTokenDelegationScript();
+    DeployUtils.print(
+      string.concat("  LlamaAccountTokenDelegationScript:", vm.toString(address(accountTokenDelegationScript)))
+    );
   }
 }
