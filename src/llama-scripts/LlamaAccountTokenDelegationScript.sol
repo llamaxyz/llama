@@ -34,7 +34,7 @@ contract LlamaAccountTokenDelegationScript is LlamaBaseScript {
   uint256 internal constant VALUE = 0;
 
   /// @notice The function selector of the `IVotes` `delegate(address)` function.
-  bytes4 internal constant DELEGATE_SELECTOR = 0x5c19a95c;
+  bytes4 internal constant DELEGATE_SELECTOR = IVotes.delegate.selector;
 
   // ========================================
   // ======= Delegate token functions =======
