@@ -61,11 +61,7 @@ contract LlamaAccountTokenDelegationScript is LlamaBaseScript {
   {
     uint256 length = accountTokenDelegateData.length;
     for (uint256 i = 0; i < length; i = LlamaUtils.uncheckedIncrement(i)) {
-      delegateTokenFromAccount(
-        AccountTokenDelegateData(
-          accountTokenDelegateData[i].account, accountTokenDelegateData[i].token, accountTokenDelegateData[i].delegatee
-        )
-      );
+      delegateTokenFromAccount(accountTokenDelegateData[i]);
     }
   }
 }
