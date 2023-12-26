@@ -101,13 +101,14 @@ Like the name suggests, if a policyholder with a force role casts their approval
 
 ## Scripts
 
-Scripts are the term used to refer to target contracts that are called via `DELEGATECALL` instead of a normal `CALL`.
-The main use-case for scripts is to batch multiple calls together into one action.
-In particular, scripts should be used to batch calls that are regularly made in tandem with one another to perform maintenance or other recurring tasks.
+By default [LlamaExecutor](https://github.com/llamaxyz/llama/blob/main/src/LlamaExecutor.sol) will call its targets using a low level `call` unless that target is a script.
+Scripts are target contracts that are called using `delegatecall` instead of `call`.
+To specify a target as a script, a policyholder must create an action that calls the `setScriptAuthorization` function on `LlamaCore` with the target address and `isAuthorized` set to `true`.
+Targets can be removed as scripts by creating an action that calls the `setScriptAuthorization` function with the same target address and `isAuthorized` set to `false`.
 
-`DELEGATECALL` is dangerous to use by default, so scripts must be authorized before use.
-To authorize a script, a policyholder must create an action that calls the `setScriptAuthorization` function on `LlamaCore`.
-Scripts may also be unauthorized using the same function.
+Scripts allow Llama instances to execute arbitrary code in the context of `LlamaExecutor`.
+This makes them useful for defining repeatable workflows that aren't included in the `LlamaCore`, `LlamaPolicy`, or in the instance's protocol contracts.
+Although most scripts will be protocol specific, the [Scripts](https://github.com/llamaxyz/llama/blob/main/docs/scripts.md) section documents examples that are useful across all instances.
 
 ## Guards
 

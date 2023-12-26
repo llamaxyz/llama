@@ -13,9 +13,16 @@ There are also additional functions to batch transfer tokens to multiple recipie
 Instances can deploy dedicated accounts for different organizational functions and permission each function independently.
 For more granular fund management rules, instances can implement [guards](https://github.com/llamaxyz/llama/blob/main/docs/actions.md#guards) to set requirements based on token amount, frequency of transfer, market conditions, or any other rule(s) that can be expressed as code.
 
-## Arbitrary execute
+## Arbitrary Execute
 
 The account contract also includes an `execute` function that allows for arbitrary calls and code execution. Actions that call this function can be used to call or delegatecall a target contract with specified calldata. This ensures that non-standard tokens will not be stuck in the account and accounts can interact directly with external contracts when necessary.
 Allowing delegatecalls means that accounts can expand their functionality over time. They can use periphery contracts that enable token streaming, vesting, swapping, and allow those contracts to execute code in the account’s context. Arbitrary execution is a powerful concept with important security considerations, so best practices should be followed when using this function.
 
 Instances should stick to the [principle of least privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege) and limit which policyholders are granted permission to create actions for this function. Guards are recommended to define which targets can be called, whether it uses a call or delegatecall, and to limit acceptable parameters that can be used.
+
+## Account With Token Delegation
+
+In addition to the standard [LlamaAccount](https://github.com/llamaxyz/llama/blob/main/src/accounts/LlamaAccount.sol) logic contract, we've also created a logic contract for governance token delegation.
+[LlamaAccountWithDelegation](https://github.com/llamaxyz/llama/blob/main/src/accounts/LlamaAccountWithDelegation.sol) inherits all the functionality provided in [LlamaAccount](https://github.com/llamaxyz/llama/blob/main/src/accounts/LlamaAccount.sol), but also includes functions for delegating governance tokens to a delegatee and batch delegating multiple governance tokens to multiple delegates.
+This is useful for unlocking the voting power of governance tokens.
+For example, these tokens can be delegated to an instance's executor contract, so the instance can vote with the governance tokens held in its accounts.

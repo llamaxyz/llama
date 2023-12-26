@@ -33,3 +33,4 @@ To learn more about how the Llama framework works, read our documentation and us
 - [Strategies](https://github.com/llamaxyz/llama/blob/main/docs/strategies.md)
 - [Accounts](https://github.com/llamaxyz/llama/blob/main/docs/accounts.md)
 - [Instance deployment](https://github.com/llamaxyz/llama/blob/main/docs/instance-deployment.md)
+- [Scripts](https://github.com/llamaxyz/llama/blob/main/docs/scripts.md)
