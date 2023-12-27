@@ -117,11 +117,12 @@ $ forge doc -o reference/ -b -s
 
 ### Audits
 
-We received two audits from Spearbit and one from Code4rena. You can find links to the reports below:
+We've received three audits from Spearbit and one from Code4rena. You can find links to the reports below:
 
 - [Llama Spearbit Audit (June 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit.pdf)
 - [Llama Code4rena Audit](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Code4rena-Audit.md)
 - [Llama Spearbit Audit (August 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit-2.pdf)
+- Llama v1.1.0 Spearbit Audit (report coming soon)
 
 ### Bug bounty program
 
