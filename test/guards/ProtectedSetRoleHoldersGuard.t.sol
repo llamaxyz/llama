@@ -10,6 +10,7 @@ import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {LlamaGovernanceScriptTest} from "test/llama-scripts/LlamaGovernanceScript.t.sol";
 
 contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
+  event AuthorizedSetRoleHolder(uint8 indexed setterRole, uint8 indexed targetRole, bool isAuthorized);
 
   ProtectedSetRoleHoldersGuard public guard;
 
@@ -19,43 +20,94 @@ contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
   }
-
-  function _createAndApproveAndQueueActionWithRole(bytes memory data, uint8 role)
-    internal
-    returns (ActionInfo memory actionInfo)
-  {
-    vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
-    actionInfo =
-      ActionInfo(actionId, actionCreatorAaron, uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data);
-    vm.warp(block.timestamp + 1);
-    _approveAction(actionInfo);
-  }
 }
 
 contract ValidateActionCreation is ProtectedSetRoleHolderTest {
   function test_RevertIf_UnauthorizedSetRoleHolder(uint8 targetRole) public {
-    targetRole = uint8(bound(targetRole, 0, 8));
+    targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
     RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
     roleHolderData[0] = RoleHolderData({role: targetRole, policyholder: approverAdam, quantity: 1, expiration: 0});
 
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
 
-    ActionInfo memory actionInfo = ActionInfo(
-      0,
-      actionCreatorAaron,
-      uint8(Roles.ActionCreator),
-      mpStrategy2,
-      address(govScript),
-      0,
-      data
-    );
-
+    // There is no bypass role, and we have not set any authorizations, so this should always revert.
     vm.expectRevert(
-      abi.encodeWithSelector(ProtectedSetRoleHoldersGuard.UnauthorizedSetRoleHolder.selector, uint8(Roles.ActionCreator), targetRole)
+      abi.encodeWithSelector(
+        ProtectedSetRoleHoldersGuard.UnauthorizedSetRoleHolder.selector, uint8(Roles.ActionCreator), targetRole
+      )
     );
     vm.prank(actionCreatorAaron);
-    uint256 actionId = mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
+    mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
+  }
+
+  function test_BypassProtectionRoleWorksWithAllExisingRoles(uint8 targetRole) public {
+    targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
+
+    // create a new guard with a bypass role
+    guard = new ProtectedSetRoleHoldersGuard(uint8(Roles.ActionCreator), address(mpExecutor));
+    vm.prank(address(mpExecutor));
+    mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
+
+    RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
+    roleHolderData[0] =
+      RoleHolderData({role: targetRole, policyholder: approverAdam, quantity: 1, expiration: type(uint64).max});
+
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
+
+    ActionInfo memory actionInfo = _createAndApproveAndQueueAction(data);
+    mpCore.executeAction(actionInfo);
+
+    assertEq(mpPolicy.hasRole(approverAdam, targetRole), true);
+  }
+
+  function test_AuthorizedSetRoleHolder(uint8 targetRole) public {
+    targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
+
+    // set role authorization
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+
+    RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
+    roleHolderData[0] =
+      RoleHolderData({role: targetRole, policyholder: approverAdam, quantity: 1, expiration: type(uint64).max});
+
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
+
+    ActionInfo memory actionInfo = _createAndApproveAndQueueAction(data);
+
+    mpCore.executeAction(actionInfo);
+
+    assertEq(mpPolicy.hasRole(approverAdam, targetRole), true);
+  }
+
+  function test_IfAuthorizationChangesBeforeExecution(uint8 targetRole) public {
+    targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
+
+    // set role authorization
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+
+    RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
+    roleHolderData[0] =
+      RoleHolderData({role: targetRole, policyholder: approverAdam, quantity: 1, expiration: type(uint64).max});
+
+    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
+
+    ActionInfo memory actionInfo = _createAndApproveAndQueueAction(data);
+
+    // setting role authorization to false mid action
+    vm.prank(address(mpExecutor));
+    vm.expectEmit();
+    emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, false);
+    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, false);
+
+    mpCore.executeAction(actionInfo);
+
+    assertEq(mpPolicy.hasRole(approverAdam, targetRole), true);
   }
 }
