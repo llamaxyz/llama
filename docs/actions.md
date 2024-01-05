@@ -14,7 +14,7 @@ Actions are composed of the following parameters:
 
 ## Key Concepts
 
-- Llama Instance: The unique `LlamaCore`,`LlamaPolicy`, and `LlamaExecutor` addresses for a deployment.
+- Llama Instance: The unique `LlamaCore`, `LlamaPolicy`, and `LlamaExecutor` addresses for a deployment.
 - [`LlamaCore`](https://github.com/llamaxyz/llama/blob/main/src/LlamaCore.sol): Manages the action process from creation to execution.
   - Actions: Proposals made by policyholders to execute onchain transactions.
   - Strategies: A contract that holds all of the logic to determine the rules and state of an action. For example, strategies determine whether or not an action is approved/disapproved, canceled, or able to be executed. They also determine details around who is allowed to cast approvals/disapprovals.

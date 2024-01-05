@@ -122,7 +122,7 @@ We've received three audits from Spearbit and one from Code4rena. You can find l
 - [Llama Spearbit Audit (June 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit.pdf)
 - [Llama Code4rena Audit](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Code4rena-Audit.md)
 - [Llama Spearbit Audit (August 2023)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit-2.pdf)
-- Llama v1.1.0 Spearbit Audit (report coming soon)
+- [Llama v1.1.0 Spearbit Audit (January 2024)](https://github.com/llamaxyz/llama/blob/main/audits/Llama-Spearbit-Audit-3.pdf)
 
 ### Bug bounty program
 
@@ -132,14 +132,14 @@ Llama policyholders are trusted participants of a Llama instance based on what t
 
 We adapted the [Immunefi Vulnerability Severity Classification System](https://immunefi.com/immunefi-vulnerability-severity-classification-system-v2-3/) to determine classification.
 
-| **Level**   | **Example**                                                                                                                                                                                                                                                                            | **Maximum Bug Bounty** |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 5. Critical | - Unauthorized action state transitions<br>- Major manipulation of approval or disapproval results<br>- Vulnerabilities in the roles and permissions system that result in unauthorized ability to create, approve, or disapprove actions<br>- Permanent freezing of funds in accounts | Up to 100,000 USDC     |
+| **Level**   | **Example**                                                                                                                                                                                                                                                                             | **Maximum Bug Bounty** |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 5. Critical | - Unauthorized action state transitions<br>- Major manipulation of approval or disapproval results<br>- Vulnerabilities in the roles and permissions system that result in unauthorized ability to create, approve, or disapprove actions<br>- Permanent freezing of funds in accounts  | Up to 100,000 USDC     |
 | 4. High     | - Minor manipulation of approval or disapproval results that are unlikely to affect outcomes<br>- Minor vulnerabilities in the roles and permissions system that are unlikely to affect outcomes<br>- Temporary freezing of funds in accounts                                           | Up to 20,000 USDC      |
-| 3. Medium   | - Griefing that disrupts an instance's action flow                                                                                                                                                                                                                                     | Up to 5,000 USDC       |
-| 2. Low      | - Contract fails to deliver promised returns, but doesn't lose value                                                                                                                                                                                                                   | Up to 1,000 USDC       |
-| 1. None     | - Best practices                                                                                                                                                                                                                                                                       |                        |
-| Not sure?   |                                                                                                                                                                                                                                                                                        | Email us               |
+| 3. Medium   | - Griefing that disrupts an instance's action flow                                                                                                                                                                                                                                      | Up to 5,000 USDC       |
+| 2. Low      | - Contract fails to deliver promised returns, but doesn't lose value                                                                                                                                                                                                                    | Up to 1,000 USDC       |
+| 1. None     | - Best practices                                                                                                                                                                                                                                                                        |                        |
+| Not sure?   |                                                                                                                                                                                                                                                                                         | Email us               |
 
 Email us at [security@llama.xyz](mailto:security@llama.xyz) to get in contact.
 
