@@ -27,7 +27,7 @@ contract ProtectedSetRoleHoldersGuard is ILlamaActionGuard {
 
   constructor(uint8 _BYPASS_PROTECTION_ROLE, address _executor) {
     BYPASS_PROTECTION_ROLE = _BYPASS_PROTECTION_ROLE;
-    EXECUTOR = _eExecutor;
+    EXECUTOR = _executor;
   }
 
   /// @inheritdoc ILlamaActionGuard
