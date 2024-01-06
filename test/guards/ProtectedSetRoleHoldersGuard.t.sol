@@ -48,7 +48,9 @@ contract ValidateActionCreation is ProtectedSetRoleHolderTest {
     targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
     // create a new guard with a bypass role
-    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(uint8(Roles.ActionCreator), address(mpExecutor));
+    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(
+      uint8(Roles.ActionCreator), address(mpExecutor)
+    );
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
 
