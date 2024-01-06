@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 
 import {ProtectedSetRoleHoldersGuard} from "src/guards/ProtectedSetRoleHoldersGuard.sol";
+import {ProtectedSetRoleHoldersGuardFactory} from "src/guards/ProtectedSetRoleHoldersGuardFactory.sol";
 import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -13,10 +14,12 @@ contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
   event AuthorizedSetRoleHolder(uint8 indexed setterRole, uint8 indexed targetRole, bool isAuthorized);
 
   ProtectedSetRoleHoldersGuard public guard;
+  ProtectedSetRoleHoldersGuardFactory public protectedSetRoleHoldersGuardFactory;
 
   function setUp() public override {
     LlamaGovernanceScriptTest.setUp();
-    guard = new ProtectedSetRoleHoldersGuard(uint8(0), address(mpExecutor));
+    protectedSetRoleHoldersGuardFactory = new ProtectedSetRoleHoldersGuardFactory();
+    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(uint8(0), address(mpExecutor));
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
   }
@@ -45,7 +48,7 @@ contract ValidateActionCreation is ProtectedSetRoleHolderTest {
     targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
     // create a new guard with a bypass role
-    guard = new ProtectedSetRoleHoldersGuard(uint8(Roles.ActionCreator), address(mpExecutor));
+    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(uint8(Roles.ActionCreator), address(mpExecutor));
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
 
