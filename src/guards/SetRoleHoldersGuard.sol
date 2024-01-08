@@ -16,7 +16,8 @@ contract SetRoleHoldersGuard is ILlamaActionGuard {
 
   /// @dev Thrown if called by any account other than the EXECUTOR.
   error OnlyLlamaExecutor();
-  /// @dev Throw if the `actionCreatorRole` is not authorized to set the `targetRole`.
+
+  /// @dev Thrown if the `actionCreatorRole` is not authorized to set the `targetRole`.
   error UnauthorizedSetRoleHolder(uint8 actionCreatorRole, uint8 targetRole);
 
   // =========================
