@@ -3,8 +3,8 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {ProtectedSetRoleHoldersGuard} from "src/guards/ProtectedSetRoleHoldersGuard.sol";
-import {ProtectedSetRoleHoldersGuardFactory} from "src/guards/ProtectedSetRoleHoldersGuardFactory.sol";
+import {SetRoleHoldersGuard} from "src/guards/SetRoleHoldersGuard.sol";
+import {SetRoleHoldersGuardFactory} from "src/guards/SetRoleHoldersGuardFactory.sol";
 import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -13,13 +13,13 @@ import {LlamaGovernanceScriptTest} from "test/llama-scripts/LlamaGovernanceScrip
 contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
   event AuthorizedSetRoleHolder(uint8 indexed setterRole, uint8 indexed targetRole, bool isAuthorized);
 
-  ProtectedSetRoleHoldersGuard public guard;
-  ProtectedSetRoleHoldersGuardFactory public protectedSetRoleHoldersGuardFactory;
+  SetRoleHoldersGuard public guard;
+  SetRoleHoldersGuardFactory public setRoleHoldersGuardFactory;
 
   function setUp() public override {
     LlamaGovernanceScriptTest.setUp();
-    protectedSetRoleHoldersGuardFactory = new ProtectedSetRoleHoldersGuardFactory();
-    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(uint8(0), address(mpExecutor));
+    setRoleHoldersGuardFactory = new SetRoleHoldersGuardFactory();
+    guard = setRoleHoldersGuardFactory.deploySetRoleHoldersGuard(uint8(0), address(mpExecutor));
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
   }
@@ -37,7 +37,7 @@ contract ValidateActionCreation is ProtectedSetRoleHolderTest {
     // There is no bypass role, and we have not set any authorizations, so this should always revert.
     vm.expectRevert(
       abi.encodeWithSelector(
-        ProtectedSetRoleHoldersGuard.UnauthorizedSetRoleHolder.selector, uint8(Roles.ActionCreator), targetRole
+        SetRoleHoldersGuard.UnauthorizedSetRoleHolder.selector, uint8(Roles.ActionCreator), targetRole
       )
     );
     vm.prank(actionCreatorAaron);
@@ -48,7 +48,7 @@ contract ValidateActionCreation is ProtectedSetRoleHolderTest {
     targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
     // create a new guard with a bypass role
-    guard = protectedSetRoleHoldersGuardFactory.deployProtectedSetRoleHoldersGuard(
+    guard = setRoleHoldersGuardFactory.deploySetRoleHoldersGuard(
       uint8(Roles.ActionCreator), address(mpExecutor)
     );
     vm.prank(address(mpExecutor));
