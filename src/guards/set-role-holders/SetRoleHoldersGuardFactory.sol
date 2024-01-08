@@ -20,6 +20,6 @@ contract SetRoleHoldersGuardFactory {
     returns (SetRoleHoldersGuard guard)
   {
     guard = new SetRoleHoldersGuard(bypassProtectionRole, executor);
-    emit SetRoleHoldersGuardDeployed(address(guard), bypassProtectionRole, executor);
+    emit SetRoleHoldersGuardCreated(msg.sender, executor, address(guard), bypassProtectionRole);
   }
 }

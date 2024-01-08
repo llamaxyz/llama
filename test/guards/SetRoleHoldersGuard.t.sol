@@ -10,7 +10,7 @@ import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
 import {LlamaGovernanceScriptTest} from "test/llama-scripts/LlamaGovernanceScript.t.sol";
 
-contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
+contract SetRoleHolderTest is LlamaGovernanceScriptTest {
   event AuthorizedSetRoleHolder(uint8 indexed setterRole, uint8 indexed targetRole, bool isAuthorized);
 
   SetRoleHoldersGuard public guard;
@@ -25,7 +25,7 @@ contract ProtectedSetRoleHolderTest is LlamaGovernanceScriptTest {
   }
 }
 
-contract ValidateActionCreation is ProtectedSetRoleHolderTest {
+contract ValidateActionCreation is SetRoleHolderTest {
   function test_RevertIf_UnauthorizedSetRoleHolder(uint8 targetRole) public {
     targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
