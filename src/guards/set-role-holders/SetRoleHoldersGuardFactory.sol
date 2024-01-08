@@ -8,8 +8,8 @@ import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGua
 /// @notice A factory contract that deploys `SetRoleHoldersGuard` contracts.
 contract SetRoleHoldersGuardFactory {
   /// @notice Emitted when a new `SetRoleHoldersGuard` contract is deployed.
-  event SetRoleHoldersGuardDeployed(
-    address indexed guard, uint8 indexed bypassProtectionRole, address indexed executor
+  event SetRoleHoldersGuardCreated(
+    address indexed deployer, address indexed executor, address guard, uint8 bypassProtectionRole
   );
 
   /// @notice Deploys a new `SetRoleHoldersGuard` contract.
