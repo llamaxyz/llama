@@ -3,8 +3,8 @@ pragma solidity ^0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
 
-import {SetRoleHoldersGuard} from "src/guards/SetRoleHoldersGuard.sol";
-import {SetRoleHoldersGuardFactory} from "src/guards/SetRoleHoldersGuardFactory.sol";
+import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGuard.sol";
+import {SetRoleHoldersGuardFactory} from "src/guards/set-role-holders/SetRoleHoldersGuardFactory.sol";
 import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";

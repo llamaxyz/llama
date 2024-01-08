@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {SetRoleHoldersGuard} from "src/guards/SetRoleHoldersGuard.sol";
+import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGuard.sol";
 
 /// @title Protected Set Role Holder Guard Factory
 /// @author Llama (devsdosomething@llama.xyz)
