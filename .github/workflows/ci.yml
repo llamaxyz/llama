@@ -19,6 +19,8 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: 2bcb4a1aded22c7f5c1263462acb6c75409dabeb
 
       - name: Build contracts
         run: |
@@ -33,6 +35,8 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: 2bcb4a1aded22c7f5c1263462acb6c75409dabeb
 
       - name: Run tests
         run: forge test -vvv
@@ -45,6 +49,8 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: 2bcb4a1aded22c7f5c1263462acb6c75409dabeb
 
       - name: Run coverage
         run: forge coverage --report summary --report lcov
@@ -88,6 +94,8 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: 2bcb4a1aded22c7f5c1263462acb6c75409dabeb
 
       - name: Check formatting
         run: forge fmt --check
@@ -100,6 +108,8 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: 2bcb4a1aded22c7f5c1263462acb6c75409dabeb
 
       - name: Install scopelint
         uses: engineerd/configurator@v0.0.8
