@@ -6,6 +6,8 @@ import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGua
 /// @title Protected Set Role Holder Guard Factory
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A factory contract that deploys `SetRoleHoldersGuard` contracts.
+/// The `SetRoleHoldersGuard` contract is used to specify which roles are allowed to set other roles, by setting a guard
+/// on the `setRoleHolders` function in the `LlamaGovernanceScript` contract.
 contract SetRoleHoldersGuardFactory {
   /// @notice Emitted when a new `SetRoleHoldersGuard` contract is deployed.
   event SetRoleHoldersGuardCreated(
