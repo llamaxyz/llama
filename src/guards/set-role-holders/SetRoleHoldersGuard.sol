@@ -5,7 +5,7 @@ import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo, RoleHolderData} from "src/lib/Structs.sol";
 
-/// @title Protected Set Role Holder Guard
+/// @title Set Role Holders Guard
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A guard that regulates which roles are allowed to set other roles.
 /// @dev This guard should be used to protect the `setRoleHolders` function in the `LlamaGovernanceScript` contract

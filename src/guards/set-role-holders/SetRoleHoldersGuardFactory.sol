@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGuard.sol";
 
-/// @title Protected Set Role Holder Guard Factory
+/// @title Set Role Holders Guard Factory
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A factory contract that deploys `SetRoleHoldersGuard` contracts.
 /// The `SetRoleHoldersGuard` contract is used to specify which roles are allowed to set other roles, by setting a guard
