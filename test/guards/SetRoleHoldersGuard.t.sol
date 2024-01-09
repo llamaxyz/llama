@@ -4,7 +4,10 @@ pragma solidity ^0.8.19;
 import {Test, console2} from "forge-std/Test.sol";
 
 import {SetRoleHoldersGuard} from "src/guards/set-role-holders/SetRoleHoldersGuard.sol";
-import {SetRoleHoldersGuardFactory} from "src/guards/set-role-holders/SetRoleHoldersGuardFactory.sol";
+import {
+  SetRoleHoldersGuardFactory,
+  AuthorizeSetRoleHolderData
+} from "src/guards/set-role-holders/SetRoleHoldersGuardFactory.sol";
 import {ActionInfo, PermissionData, RoleHolderData} from "src/lib/Structs.sol";
 import {LlamaGovernanceScript} from "src/llama-scripts/LlamaGovernanceScript.sol";
 import {Roles, LlamaTestSetup} from "test/utils/LlamaTestSetup.sol";
@@ -19,7 +22,8 @@ contract SetRoleHolderTest is LlamaGovernanceScriptTest {
   function setUp() public override {
     LlamaGovernanceScriptTest.setUp();
     setRoleHoldersGuardFactory = new SetRoleHoldersGuardFactory();
-    guard = setRoleHoldersGuardFactory.deploySetRoleHoldersGuard(uint8(0), address(mpExecutor));
+    guard =
+      setRoleHoldersGuardFactory.deploySetRoleHoldersGuard(address(mpExecutor), new AuthorizeSetRoleHolderData[](0));
     vm.prank(address(mpExecutor));
     mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
   }
@@ -34,7 +38,7 @@ contract ValidateActionCreation is SetRoleHolderTest {
 
     bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
 
-    // There is no bypass role, and we have not set any authorizations, so this should always revert.
+    // We have not set any authorizations, so this should always revert.
     vm.expectRevert(
       abi.encodeWithSelector(
         SetRoleHoldersGuard.UnauthorizedSetRoleHolder.selector, uint8(Roles.ActionCreator), targetRole
@@ -44,34 +48,20 @@ contract ValidateActionCreation is SetRoleHolderTest {
     mpCore.createAction(uint8(Roles.ActionCreator), mpStrategy2, address(govScript), 0, data, "");
   }
 
-  function test_BypassProtectionRoleWorksWithAllExisingRoles(uint8 targetRole) public {
-    targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
-
-    // create a new guard with a bypass role
-    guard = setRoleHoldersGuardFactory.deploySetRoleHoldersGuard(uint8(Roles.ActionCreator), address(mpExecutor));
-    vm.prank(address(mpExecutor));
-    mpCore.setGuard(address(govScript), SET_ROLE_HOLDERS_SELECTOR, guard);
-
-    RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
-    roleHolderData[0] =
-      RoleHolderData({role: targetRole, policyholder: approverAdam, quantity: 1, expiration: type(uint64).max});
-
-    bytes memory data = abi.encodeWithSelector(SET_ROLE_HOLDERS_SELECTOR, roleHolderData);
-
-    ActionInfo memory actionInfo = _createAndApproveAndQueueAction(data);
-    mpCore.executeAction(actionInfo);
-
-    assertEq(mpPolicy.hasRole(approverAdam, targetRole), true);
-  }
-
   function test_AuthorizedSetRoleHolder(uint8 targetRole) public {
     targetRole = uint8(bound(targetRole, 1, 8)); // number of existing roles excluding all holders role
 
     // set role authorization
     vm.prank(address(mpExecutor));
     vm.expectEmit();
+    AuthorizeSetRoleHolderData[] memory authorizeSetRoleHolderData = new AuthorizeSetRoleHolderData[](1);
+    authorizeSetRoleHolderData[0] = AuthorizeSetRoleHolderData({
+      actionCreatorRole: uint8(Roles.ActionCreator),
+      targetRole: targetRole,
+      isAuthorized: true
+    });
     emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
-    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+    guard.setAuthorizedSetRoleHolder(authorizeSetRoleHolderData);
 
     RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
     roleHolderData[0] =
@@ -92,8 +82,14 @@ contract ValidateActionCreation is SetRoleHolderTest {
     // set role authorization
     vm.prank(address(mpExecutor));
     vm.expectEmit();
+    AuthorizeSetRoleHolderData[] memory authorizeSetRoleHolderData = new AuthorizeSetRoleHolderData[](1);
+    authorizeSetRoleHolderData[0] = AuthorizeSetRoleHolderData({
+      actionCreatorRole: uint8(Roles.ActionCreator),
+      targetRole: targetRole,
+      isAuthorized: true
+    });
     emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
-    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, true);
+    guard.setAuthorizedSetRoleHolder(authorizeSetRoleHolderData);
 
     RoleHolderData[] memory roleHolderData = new RoleHolderData[](1);
     roleHolderData[0] =
@@ -106,8 +102,9 @@ contract ValidateActionCreation is SetRoleHolderTest {
     // setting role authorization to false mid action
     vm.prank(address(mpExecutor));
     vm.expectEmit();
+    authorizeSetRoleHolderData[0].isAuthorized = false;
     emit AuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, false);
-    guard.setAuthorizedSetRoleHolder(uint8(Roles.ActionCreator), targetRole, false);
+    guard.setAuthorizedSetRoleHolder(authorizeSetRoleHolderData);
 
     mpCore.executeAction(actionInfo);
 

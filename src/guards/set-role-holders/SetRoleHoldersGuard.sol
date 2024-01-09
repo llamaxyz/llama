@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo, RoleHolderData} from "src/lib/Structs.sol";
+import {AuthorizeSetRoleHolderData} from "src/guards/set-role-holders/SetRoleHoldersGuardFactory.sol";
 
 /// @title Set Role Holders Guard
 /// @author Llama (devsdosomething@llama.xyz)
@@ -31,9 +32,6 @@ contract SetRoleHoldersGuard is ILlamaActionGuard {
   // ======== Storage Variables ========
   // ===================================
 
-  /// @notice BYPASS_PROTECTION_ROLE can be set to 0 to disable this feature.
-  /// This also means the all holders role cannot be set as the BYPASS_PROTECTION_ROLE.
-  uint8 public immutable BYPASS_PROTECTION_ROLE;
   /// @notice The `LlamaExecutor` contract address that controls this guard contract.
   address public immutable EXECUTOR;
 
@@ -44,9 +42,9 @@ contract SetRoleHoldersGuard is ILlamaActionGuard {
   // ======== Contract Creation ========
   // ===================================
 
-  constructor(uint8 _BYPASS_PROTECTION_ROLE, address _executor) {
-    BYPASS_PROTECTION_ROLE = _BYPASS_PROTECTION_ROLE;
+  constructor(address _executor, AuthorizeSetRoleHolderData[] memory authorizeSetRoleHolderData) {
     EXECUTOR = _executor;
+    _setAuthorizedSetRoleHolder(authorizeSetRoleHolderData);
   }
 
   // ================================
@@ -56,25 +54,20 @@ contract SetRoleHoldersGuard is ILlamaActionGuard {
   /// @inheritdoc ILlamaActionGuard
   /// @notice Performs a validation check at action creation time that the action creator is authorized to set the role.
   function validateActionCreation(ActionInfo calldata actionInfo) external view {
-    if (BYPASS_PROTECTION_ROLE == 0 || actionInfo.creatorRole != BYPASS_PROTECTION_ROLE) {
-      RoleHolderData[] memory roleHolderData = abi.decode(actionInfo.data[4:], (RoleHolderData[])); // skip selector
-      uint256 length = roleHolderData.length;
-      for (uint256 i = 0; i < length; LlamaUtils.uncheckedIncrement(i)) {
-        if (!authorizedSetRoleHolder[actionInfo.creatorRole][roleHolderData[i].role]) {
-          revert UnauthorizedSetRoleHolder(actionInfo.creatorRole, roleHolderData[i].role);
-        }
+    RoleHolderData[] memory roleHolderData = abi.decode(actionInfo.data[4:], (RoleHolderData[])); // skip selector
+    uint256 length = roleHolderData.length;
+    for (uint256 i = 0; i < length; LlamaUtils.uncheckedIncrement(i)) {
+      if (!authorizedSetRoleHolder[actionInfo.creatorRole][roleHolderData[i].role]) {
+        revert UnauthorizedSetRoleHolder(actionInfo.creatorRole, roleHolderData[i].role);
       }
     }
   }
 
   /// @notice Allows the EXECUTOR to set the authorizedSetRoleHolder mapping.
-  /// @param actionCreatorRole The role that is is being authorized or unauthorized to set the targetRole.
-  /// @param targetRole The role that the actionCreatorRole is being authorized or unauthorized to set.
-  /// @param isAuthorized Whether the actionCreatorRole is authorized to set the targetRole.
-  function setAuthorizedSetRoleHolder(uint8 actionCreatorRole, uint8 targetRole, bool isAuthorized) external {
+  /// @param authorizeSetRoleHolderData The data to set the authorizedSetRoleHolder mapping.
+  function setAuthorizedSetRoleHolder(AuthorizeSetRoleHolderData[] memory authorizeSetRoleHolderData) external {
     if (msg.sender != EXECUTOR) revert OnlyLlamaExecutor();
-    authorizedSetRoleHolder[actionCreatorRole][targetRole] = isAuthorized;
-    emit AuthorizedSetRoleHolder(actionCreatorRole, targetRole, isAuthorized);
+    _setAuthorizedSetRoleHolder(authorizeSetRoleHolderData);
   }
 
   /// @inheritdoc ILlamaActionGuard
@@ -82,4 +75,15 @@ contract SetRoleHoldersGuard is ILlamaActionGuard {
 
   /// @inheritdoc ILlamaActionGuard
   function validatePostActionExecution(ActionInfo calldata actionInfo) external pure {}
+
+  // ================================
+  // ======== Internal Logic ========
+  // ================================
+  function _setAuthorizedSetRoleHolder(AuthorizeSetRoleHolderData[] memory data) internal {
+    uint256 length = data.length;
+    for (uint256 i = 0; i < length; LlamaUtils.uncheckedIncrement(i)) {
+      authorizedSetRoleHolder[data[i].actionCreatorRole][data[i].targetRole] = data[i].isAuthorized;
+      emit AuthorizedSetRoleHolder(data[i].actionCreatorRole, data[i].targetRole, data[i].isAuthorized);
+    }
+  }
 }
