@@ -5,7 +5,7 @@
 
 # Llama
 
-Llama is an onchain governance and access control framework for smart contracts. It uses non-transferable NFTs to encode access control, features programmatic control of funds, and includes modular strategies to define action execution rules.
+Llama is an onchain governance and access control framework for smart contracts. It encodes access control policies, features programmatic control of funds, and includes modular strategies to define action execution rules.
 
 ## Prerequisites
 
