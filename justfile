@@ -24,7 +24,7 @@ run-configure-advanced-instance-script flags: (run-script 'ConfigureAdvancedLlam
 
 dry-run-deploy: (run-script 'DeployLlamaFactory')
 
-deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --build-info --build-info-path build_info')
+deploy: (run-script 'DeployLlamaFactory' '--broadcast --verify --slow --build-info --build-info-path build_info')
 
 verify: (run-script 'DeployLlamaFactory' '--verify --resume')
 
