@@ -82,7 +82,10 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuard, Initializable {
   // ================================
 
   /// @inheritdoc ILlamaActionGuard
-  function validateActionCreation(ActionInfo calldata actionInfo) external view {}
+  function validateActionCreation(ActionInfo calldata actionInfo) external view {
+    (address target, bool withDelegatecall,,) = abi.decode(actionInfo.data, (address, bool, uint256, bytes));
+    if (!authorizedTargets[target][withDelegatecall]) revert UnauthorizedTarget(target, withDelegatecall);
+  }
 
   /// @notice Allows the llama executor to set the authorized targets and their call type.
   /// @param data The data to set the authorized targets and their call type.
