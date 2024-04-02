@@ -19,7 +19,6 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
 
   /// @dev Llama account execute guard initialization configuration.
   struct Config {
-    address executor; // The address of the `LlamaExecutor` contract.
     AuthorizedTargetConfig[] authorizedTargets; // The authorized targets and their call type.
   }
 
@@ -68,9 +67,9 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
   }
 
   /// @inheritdoc ILlamaActionGuardMinimalProxy
-  function initialize(bytes memory config) external initializer returns (bool) {
+  function initialize(address _llamaExecutor, bytes memory config) external initializer returns (bool) {
+    llamaExecutor = _llamaExecutor;
     Config memory guardConfig = abi.decode(config, (Config));
-    llamaExecutor = guardConfig.executor;
     _setAuthorizedTargets(guardConfig.authorizedTargets);
     return true;
   }

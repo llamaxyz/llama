@@ -11,6 +11,7 @@ import {ILlamaActionGuardMinimalProxy} from "src/interfaces/ILlamaActionGuardMin
 contract LlamaActionGuardFactory {
   /// @dev Configuration of new Llama action guard.
   struct LlamaActionGuardConfig {
+    address llamaExecutor; // The address of the Llama executor.
     ILlamaActionGuardMinimalProxy actionGuardLogic; // The logic contract of the new action guard.
     bytes initializationData; // The initialization data for the new action guard.
     uint256 nonce; // The nonce of the new action guard.
@@ -19,6 +20,7 @@ contract LlamaActionGuardFactory {
   /// @dev Emitted when a new Llama action guard is created.
   event LlamaActionGuardCreated(
     address indexed deployer,
+    address indexed llamaExecutor,
     ILlamaActionGuardMinimalProxy indexed actionGuardLogic,
     ILlamaActionGuardMinimalProxy actionGuard,
     bytes initializationData,
@@ -33,16 +35,16 @@ contract LlamaActionGuardFactory {
     external
     returns (ILlamaActionGuardMinimalProxy actionGuard)
   {
-    bytes32 salt =
-      keccak256(abi.encodePacked(msg.sender, actionGuardConfig.initializationData, actionGuardConfig.nonce));
+    bytes32 salt = keccak256(abi.encodePacked(msg.sender, actionGuardConfig.llamaExecutor, actionGuardConfig.nonce));
 
     // Deploy and initialize Llama action guard
     actionGuard =
       ILlamaActionGuardMinimalProxy(Clones.cloneDeterministic(address(actionGuardConfig.actionGuardLogic), salt));
-    actionGuard.initialize(actionGuardConfig.initializationData);
+    actionGuard.initialize(actionGuardConfig.llamaExecutor, actionGuardConfig.initializationData);
 
     emit LlamaActionGuardCreated(
       msg.sender,
+      actionGuardConfig.llamaExecutor,
       actionGuardConfig.actionGuardLogic,
       actionGuard,
       actionGuardConfig.initializationData,
