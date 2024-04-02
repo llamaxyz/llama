@@ -80,7 +80,8 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
 
   /// @inheritdoc ILlamaActionGuard
   function validateActionCreation(ActionInfo calldata actionInfo) external view {
-    (address target, bool withDelegatecall,,) = abi.decode(actionInfo.data, (address, bool, uint256, bytes));
+    // Decode the action calldata to get the LlamaAccount execute target and call type.
+    (address target, bool withDelegatecall,,) = abi.decode(actionInfo.data[4:], (address, bool, uint256, bytes));
     if (!authorizedTargets[target][withDelegatecall]) revert UnauthorizedTarget(target, withDelegatecall);
   }
 
