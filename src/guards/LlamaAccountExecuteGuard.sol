@@ -10,7 +10,7 @@ import {ActionInfo} from "src/lib/Structs.sol";
 
 /// @title Llama Account Execute Guard
 /// @author Llama (devsdosomething@llama.xyz)
-/// @notice A guard that only allows authorized targets to be called from a Llama Account.
+/// @notice A guard that only allows authorized targets to be called from a Llama account's execute function.
 /// @dev This guard should be used to protect the `execute` function in the `LlamaAccount` contract
 contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializable {
   // =========================
