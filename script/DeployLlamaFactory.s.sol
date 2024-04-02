@@ -5,6 +5,8 @@ import {Script, stdJson} from "forge-std/Script.sol";
 
 import {LlamaAccount} from "src/accounts/LlamaAccount.sol";
 import {LlamaAccountWithDelegation} from "src/accounts/LlamaAccountWithDelegation.sol";
+import {LlamaAccountExecuteGuard} from "src/guards/LlamaAccountExecuteGuard.sol";
+import {LlamaActionGuardFactory} from "src/guards/LlamaActionGuardFactory.sol";
 import {LlamaCore} from "src/LlamaCore.sol";
 import {LlamaFactory} from "src/LlamaFactory.sol";
 import {LlamaLens} from "src/LlamaLens.sol";
@@ -33,9 +35,11 @@ contract DeployLlamaFactory is Script {
   LlamaAccountWithDelegation accountWithDelegationLogic;
   LlamaPolicy policyLogic;
   LlamaPolicyMetadata policyMetadataLogic;
+  LlamaAccountExecuteGuard accountExecuteGuardLogic;
 
   // Factory and lens contracts.
   LlamaFactory factory;
+  LlamaActionGuardFactory actionGuardFactory;
   LlamaLens lens;
 
   // Llama scripts
@@ -141,5 +145,17 @@ contract DeployLlamaFactory is Script {
     DeployUtils.print(
       string.concat("  LlamaAccountTokenDelegationScript:", vm.toString(address(accountTokenDelegationScript)))
     );
+
+    vm.broadcast();
+    (success,) = msg.sender.call("");
+    DeployUtils.print(string.concat("  Self call succeeded? ", vm.toString(success)));
+
+    vm.broadcast();
+    actionGuardFactory = new LlamaActionGuardFactory();
+    DeployUtils.print(string.concat("  LlamaActionGuardFactory:", vm.toString(address(actionGuardFactory))));
+
+    vm.broadcast();
+    accountExecuteGuardLogic = new LlamaAccountExecuteGuard();
+    DeployUtils.print(string.concat("  LlamaAccountExecuteGuardLogic:", vm.toString(address(accountExecuteGuardLogic))));
   }
 }
