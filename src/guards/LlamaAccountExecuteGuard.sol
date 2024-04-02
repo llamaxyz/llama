@@ -3,7 +3,8 @@ pragma solidity 0.8.19;
 
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
-import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
+import {ILlamaActionGuardMinimalProxy} from "src/interfaces/ILlamaActionGuardMinimalProxy.sol";
+import {ILlamaActionGuard} from "./../interfaces/ILlamaActionGuard.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 
@@ -11,7 +12,7 @@ import {ActionInfo} from "src/lib/Structs.sol";
 /// @author Llama (devsdosomething@llama.xyz)
 /// @notice A guard that only allows authorized targets to be called from a Llama Account.
 /// @dev This guard should be used to protect the `execute` function in the `LlamaAccount` contract
-contract LlamaAccountExecuteGuard is ILlamaActionGuard, Initializable {
+contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializable {
   // =========================
   // ======== Structs ========
   // =========================
@@ -66,15 +67,12 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuard, Initializable {
     _disableInitializers();
   }
 
-  /// @notice Initializes a new `LlamaAccountExecuteGuard` clone.
-  /// @dev This function is called by the `deploy` function in the `LlamaGuardFactory` contract. The `initializer`
-  /// modifier ensures that this function can be invoked at most once.
-  /// @param config The guard configuration, encoded as bytes to support differing constructor arguments in
-  /// different guard logic contracts.
-  function initialize(bytes memory config) external initializer {
+  /// @inheritdoc ILlamaActionGuardMinimalProxy
+  function initialize(bytes memory config) external initializer returns (bool) {
     Config memory guardConfig = abi.decode(config, (Config));
     llamaExecutor = guardConfig.executor;
     _setAuthorizedTargets(guardConfig.authorizedTargets);
+    return true;
   }
 
   // ================================
