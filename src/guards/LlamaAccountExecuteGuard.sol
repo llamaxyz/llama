@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {Initializable} from "@openzeppelin/proxy/utils/Initializable.sol";
 
 import {ILlamaActionGuardMinimalProxy} from "src/interfaces/ILlamaActionGuardMinimalProxy.sol";
-import {ILlamaActionGuard} from "./../interfaces/ILlamaActionGuard.sol";
+import {ILlamaActionGuard} from "src/interfaces/ILlamaActionGuard.sol";
 import {LlamaUtils} from "src/lib/LlamaUtils.sol";
 import {ActionInfo} from "src/lib/Structs.sol";
 
