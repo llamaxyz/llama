@@ -17,16 +17,16 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
   // ======== Structs ========
   // =========================
 
-  /// @dev Llama account execute guard initialization configuration.
-  struct Config {
-    AuthorizedTargetConfig[] authorizedTargets; // The authorized targets and their call type.
-  }
-
   /// @dev Authorized target configuration.
   struct AuthorizedTargetConfig {
     address target; // The target contract.
     bool withDelegatecall; // Call type.
     bool isAuthorized; // Is the target authorized.
+  }
+
+  /// @dev Llama account execute guard initialization configuration.
+  struct Config {
+    AuthorizedTargetConfig[] authorizedTargets; // The authorized targets and their call type.
   }
 
   // =========================
