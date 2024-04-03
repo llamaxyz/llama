@@ -10,10 +10,11 @@ interface ILlamaActionGuardMinimalProxy is ILlamaActionGuard {
   /// @notice Initializes a new clone of the action guard.
   /// @dev This function is called by the `deploy` function in the `LlamaActionGuardFactory` contract. The `initializer`
   /// modifier ensures that this function can be invoked at most once.
+  /// @param name The name of the new action guard.
   /// @param llamaExecutor The address of the Llama executor.
   /// @param config The guard configuration, encoded as bytes to support differing constructor arguments in
   /// different guard logic contracts.
   /// @return This return statement must be hardcoded to `true` to ensure that initializing an EOA
   /// (like the zero address) will revert.
-  function initialize(address llamaExecutor, bytes memory config) external returns (bool);
+  function initialize(string memory name, address llamaExecutor, bytes memory config) external returns (bool);
 }

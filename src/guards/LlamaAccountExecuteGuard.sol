@@ -50,6 +50,9 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
   // ======== Storage Variables ========
   // ===================================
 
+  /// @notice Name of this action guard.
+  string public name;
+
   /// @notice The Llama instance's executor.
   address public llamaExecutor;
 
@@ -67,7 +70,12 @@ contract LlamaAccountExecuteGuard is ILlamaActionGuardMinimalProxy, Initializabl
   }
 
   /// @inheritdoc ILlamaActionGuardMinimalProxy
-  function initialize(address _llamaExecutor, bytes memory config) external initializer returns (bool) {
+  function initialize(string memory _name, address _llamaExecutor, bytes memory config)
+    external
+    initializer
+    returns (bool)
+  {
+    name = _name;
     llamaExecutor = _llamaExecutor;
     Config memory guardConfig = abi.decode(config, (Config));
     _setAuthorizedTargets(guardConfig.authorizedTargets);

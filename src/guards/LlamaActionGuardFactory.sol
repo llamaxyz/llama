@@ -11,21 +11,22 @@ import {ILlamaActionGuardMinimalProxy} from "src/interfaces/ILlamaActionGuardMin
 contract LlamaActionGuardFactory {
   /// @dev Configuration of new Llama action guard.
   struct LlamaActionGuardConfig {
+    string name; // The name of the new action guard.
     address llamaExecutor; // The address of the Llama executor.
+    uint256 nonce; // The nonce of the new action guard.
     ILlamaActionGuardMinimalProxy actionGuardLogic; // The logic contract of the new action guard.
     bytes initializationData; // The initialization data for the new action guard.
-    uint256 nonce; // The nonce of the new action guard.
   }
 
   /// @dev Emitted when a new Llama action guard is created.
   event LlamaActionGuardCreated(
     address indexed deployer,
+    string name,
     address indexed llamaExecutor,
-    ILlamaActionGuardMinimalProxy indexed actionGuardLogic,
-    ILlamaActionGuardMinimalProxy actionGuard,
-    bytes initializationData,
     uint256 nonce,
-    uint256 chainId
+    ILlamaActionGuardMinimalProxy actionGuard,
+    ILlamaActionGuardMinimalProxy indexed actionGuardLogic,
+    bytes initializationData
   );
 
   /// @notice Deploys a new Llama action guard.
@@ -35,21 +36,25 @@ contract LlamaActionGuardFactory {
     external
     returns (ILlamaActionGuardMinimalProxy actionGuard)
   {
-    bytes32 salt = keccak256(abi.encodePacked(msg.sender, actionGuardConfig.llamaExecutor, actionGuardConfig.nonce));
+    bytes32 salt = keccak256(
+      abi.encodePacked(msg.sender, actionGuardConfig.name, actionGuardConfig.llamaExecutor, actionGuardConfig.nonce)
+    );
 
     // Deploy and initialize Llama action guard
     actionGuard =
       ILlamaActionGuardMinimalProxy(Clones.cloneDeterministic(address(actionGuardConfig.actionGuardLogic), salt));
-    actionGuard.initialize(actionGuardConfig.llamaExecutor, actionGuardConfig.initializationData);
+    actionGuard.initialize(
+      actionGuardConfig.name, actionGuardConfig.llamaExecutor, actionGuardConfig.initializationData
+    );
 
     emit LlamaActionGuardCreated(
       msg.sender,
+      actionGuardConfig.name,
       actionGuardConfig.llamaExecutor,
-      actionGuardConfig.actionGuardLogic,
-      actionGuard,
-      actionGuardConfig.initializationData,
       actionGuardConfig.nonce,
-      block.chainid
+      actionGuard,
+      actionGuardConfig.actionGuardLogic,
+      actionGuardConfig.initializationData
     );
   }
 }
