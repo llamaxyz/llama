@@ -1,0 +1,207 @@
+{
+  "comment": "This is River's instance on River Testnet. The strategy logic is the `LlamaRelativeQuantityQuorum` contract.",
+  "factory": "0xFf5d4E226D9A3496EECE31083a8F493edd79AbEB",
+  "instanceName": "River",
+  "instanceColor": "#ffffff",
+  "instanceLogo": "<g fill='#fff'><path d='m33.199 457.977 9.927-8.161a10.295 10.295 0 0 0 3.753-7.955v-.79c0-2.8-2.264-5.071-5.058-5.071h-8.46A1.357 1.357 0 0 0 32 437.359v20.05c0 .621.718.962 1.199.568ZM78.486 439.736l-14.935.003a2.681 2.681 0 0 0-2.652 2.326c-.026.187-.017.382.006.569v.026a2.3 2.3 0 0 0 1.078 1.649l-2.188.622a19.51 19.51 0 0 0-7.057 3.692L32.56 465.159c-.354.29-.561.728-.561 1.187v9.92c0 .402.33.734.732.734h12.083a.74.74 0 0 0 .73-.672c.333-3.076 2.935-5.474 6.091-5.474 3.157 0 5.758 2.395 6.092 5.474a.74.74 0 0 0 .73.672h2.855a.739.739 0 0 0 .664-.421l11.312-23.981a16.608 16.608 0 0 1 4.096-5.423l1.456-1.273c.239-.21.378-.512.378-.832v-4.6a.735.735 0 0 0-.733-.734Zm-9.28 5.737a1.776 1.776 0 0 1 0-3.553 1.776 1.776 0 0 1 0 3.553ZM115.169 463.984c-.168-2.641-1.293-4.13-3.511-4.743a.412.412 0 0 1-.056-.775c2.557-1.158 3.975-3.355 3.975-6.62 0-5.701-4.834-8.632-10.725-8.632H91.883a.805.805 0 0 0-.803.805v27.306c0 .444.36.805.803.805h6.358a.805.805 0 0 0 .803-.805v-9.053h4.267c2.802 0 3.9.773 4.063 3.177l.396 5.929a.803.803 0 0 0 .8.752h6.384a.798.798 0 0 0 .797-.867l-.582-7.277v-.002Zm-11.779-8.103h-4.346v-6.273h4.346c2.64 0 4.064 1.099 4.064 3.177 0 2.078-1.424 3.093-4.064 3.093v.003ZM126.913 450.547h-6.275a.804.804 0 0 0-.803.805v19.973c0 .445.36.805.803.805h6.275c.444 0 .803-.36.803-.805v-19.973a.803.803 0 0 0-.803-.805ZM198.197 450.547h-1.973c-2.681 0-4.346 1.589-5.241 4.6l-.1-3.819a.803.803 0 0 0-.804-.781h-6.094a.805.805 0 0 0-.803.805v19.976c0 .444.36.805.803.805h6.277a.806.806 0 0 0 .804-.805V460.73c0-3.135 1.382-4.6 5.076-4.6h2.055a.805.805 0 0 0 .803-.805v-3.97a.805.805 0 0 0-.803-.805v-.003ZM168.728 450.058c-7.149 0-11.862 4.479-11.862 11.279s4.713 11.279 11.862 11.279c4.969 0 8.959-2.241 10.633-5.853a.805.805 0 0 0-.673-1.142l-6.222-.421a.815.815 0 0 0-.75.403c-.594.983-1.745 1.637-2.988 1.637-2.153 0-3.535-1.548-3.615-3.949h14.053a.896.896 0 0 0 .895-.856c.283-7.534-4.551-12.38-11.333-12.38v.003Zm-3.621 9.08c.163-2.28 1.545-3.707 3.615-3.707 1.869 0 3.331 1.261 3.493 3.707h-7.108ZM127.034 443.217h-6.517a.804.804 0 0 0-.803.805v3.319c0 .444.359.805.803.805h6.517a.805.805 0 0 0 .803-.805v-3.319a.805.805 0 0 0-.803-.805ZM154.734 450.547h-6.304a.801.801 0 0 0-.762.553l-4.329 13.212-4.328-13.212a.805.805 0 0 0-.762-.553h-6.266a.803.803 0 0 0-.75 1.086l7.444 19.976a.804.804 0 0 0 .75.524h7.825a.798.798 0 0 0 .75-.521l7.48-19.976a.803.803 0 0 0-.75-1.086l.002-.003Z'/></g>",
+  "strategyLogic": "0x81F7D26fD7d814bFcEF78239a32c0BA5282C98Dc",
+  "strategyType": 1,
+  "accountLogic": "0x915Af6753f03D2687Fa923b2987625e21e2991aE",
+  "initialStrategies": [
+    {
+      "approvalPeriod": 864000,
+      "approvalRole": 1,
+      "comment": "Core Approval",
+      "disapprovalRole": 0,
+      "expirationPeriod": 432000,
+      "forceApprovalRoles": [],
+      "forceDisapprovalRoles": [],
+      "isFixedLengthApprovalPeriod": false,
+      "minApprovalPct": 5000,
+      "minDisapprovalPct": 10001,
+      "queuingPeriod": 0
+    }
+  ],
+  "initialAccounts": [],
+  "initialRoleDescriptions": ["Core"],
+  "initialRoleHolders": [
+    {
+      "comment": "Assigning the Core role to 0x73eE1624826495Fdca90e6dD1a6e262A598B5a1a",
+      "expiration": 18446744073709551615,
+      "policyholder": "0x73eE1624826495Fdca90e6dD1a6e262A598B5a1a",
+      "quantity": 1,
+      "role": 1
+    },
+    {
+      "comment": "Assigning the Core role to 0x8016401D260726539BcbF1c05f6620944C04eD46",
+      "expiration": 18446744073709551615,
+      "policyholder": "0x8016401D260726539BcbF1c05f6620944C04eD46",
+      "quantity": 1,
+      "role": 1
+    }
+  ],
+  "initialRolePermissions": [
+    {
+      "comment": "Core: (Core Approval, River: LlamaCore, createAccounts)",
+      "permissionData": {
+        "target": "0xA547373eB2b3c93AdeB27ec72133Fb7B92F70F7f",
+        "selector": "0x90010bb0",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, River: LlamaCore, createStrategies)",
+      "permissionData": {
+        "target": "0xA547373eB2b3c93AdeB27ec72133Fb7B92F70F7f",
+        "selector": "0x0f47de5a",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, River: LlamaCore, setScriptAuthorization)",
+      "permissionData": {
+        "target": "0xA547373eB2b3c93AdeB27ec72133Fb7B92F70F7f",
+        "selector": "0x0a853184",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, createAccountAndSetRolePermissions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x3e67a168",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, createStrategyAndSetRolePermissions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xf050a32b",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, initRoleAndHoldersAndPermissions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x1102a95a",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, initRoles)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x00c397b9",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, revokePolicies)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x543582f6",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setGuards)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xa68bab7c",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setRoleHolders)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xe052dbcb",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setRolePermissions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x9ec3871e",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setScriptAuthAndSetPermissions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xc87a18a5",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setStrategyAuthorizations)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xc303f004",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setStrategyLogicAuthAndNewStrategies)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x6b3b493e",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, setStrategyLogicAuthorizations)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0xa3b97911",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, updateRoleDescriptionAndRoleHolders)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x8e5de424",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, Llama: Governance Script, updateRoleDescriptions)",
+      "permissionData": {
+        "target": "0x21f45e61213a13Dc6B7Ba2eC157c4e95810cD335",
+        "selector": "0x67694299",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    },
+    {
+      "comment": "Core: (Core Approval, River: Registry Diamond, approveOperator)",
+      "permissionData": {
+        "target": "0xEE75eC5501d9952Dc5F380b34e89F4A3f9E88327",
+        "selector": "0x242cae9f",
+        "strategy": "0xBa746280AEE58bD773F8dB02BD3E6B12a26BE4f8"
+      },
+      "role": 1
+    }
+  ]
+}

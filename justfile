@@ -15,6 +15,9 @@ run-script script_name flags='' sig='' args='':
   - FOUNDRY_PROFILE=ci forge script script/{{script_name}}.s.sol {{sig}} {{args}} \
     --rpc-url $SCRIPT_RPC_URL \
     --private-key $SCRIPT_PRIVATE_KEY \
+    --verifier=blockscout \
+    --verifier-url=https://towns-devnet.explorer.caldera.xyz/api? \
+    --with-gas-price 40000000 \
     -vvvv {{flags}}
   mv _test test
 
